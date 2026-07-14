@@ -1,0 +1,16 @@
+{
+  "name": "openada",
+  "owner": {
+    "name": "Simra Tech"
+  },
+  "metadata": {
+    "description": "OpenADA plugins and skills for agent-driven open-source EDA workflows."
+  },
+  "plugins": [
+    {
+      "name": "openada",
+      "source": "./",
+      "description": "Open agent-EDA contracts and deterministic drivers for open-source EDA tools."
+    }
+  ]
+}

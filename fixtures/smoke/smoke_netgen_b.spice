@@ -1,0 +1,4 @@
+.subckt inv a y vdd vss
+M1 y a vdd vdd pmos w=1u l=0.15u
+M2 y a vss vss nmos w=0.5u l=0.15u
+.ends inv

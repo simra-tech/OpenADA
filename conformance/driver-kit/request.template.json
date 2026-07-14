@@ -1,0 +1,63 @@
+{
+  "schema": "openada.request/v0alpha1",
+  "request_id": "018f4f8c-6d3a-7b2e-8c41-9d2f7a6b5c10",
+  "operation_profile": "openada.operation/circuit.simulate/v1alpha1",
+  "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+  "target": {
+    "kind": "testbench",
+    "locator": {
+      "type": "filesystem",
+      "path": "conformance/circuit-simulate/fixtures/rc-transient.cir",
+      "extensions": {}
+    },
+    "extensions": {}
+  },
+  "configuration": [],
+  "parameters": {
+    "analysis": {
+      "type": "tran",
+      "step_s": 1e-07,
+      "stop_s": 2e-06,
+      "extensions": {}
+    },
+    "extensions": {}
+  },
+  "evidence_policy": {
+    "required_artifact_roles": [
+      "simulation.result",
+      "simulation.log"
+    ],
+    "retain_native_artifacts": true,
+    "retain_native_logs": true,
+    "provenance": "bounded",
+    "identity_requirement": "content-digest",
+    "extensions": {}
+  },
+  "evidence_destination": {
+    "locator": {
+      "type": "filesystem",
+      "path": "/tmp/openada-circuit-simulate-example",
+      "extensions": {}
+    },
+    "collision_policy": "fail-if-present",
+    "extensions": {}
+  },
+  "execution_constraints": {
+    "completion": "wait",
+    "timeout_ms": 120000,
+    "max_log_bytes": 16777216,
+    "max_artifact_bytes": 268435456,
+    "side_effects": "evidence-only",
+    "extensions": {}
+  },
+  "driver_selector": {
+    "driver_id": "org.example.openada.driver.example-spice",
+    "driver_version": "0.1.0",
+    "transport_id": "local-json-stdio",
+    "required_features": [
+      "openada.feature/simulation.analysis.tran/v1alpha1"
+    ],
+    "extensions": {}
+  },
+  "extensions": {}
+}

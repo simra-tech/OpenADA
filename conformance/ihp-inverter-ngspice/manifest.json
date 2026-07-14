@@ -1,0 +1,201 @@
+{
+  "schema": "openada.ngspice-conformance/v0alpha1",
+  "id": "ihp-inverter-xschem-ngspice-deck-output",
+  "design": {
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    }
+  },
+  "runtime": {
+    "image": {
+      "name": "hpretl/iic-osic-tools",
+      "tag": "2026.06",
+      "manifest_digest": "sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+      "config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+      "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+      "platform": "linux/amd64"
+    },
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "revision": "144f811cdffda49b71d28f64e8a92b697b61cf06",
+      "commit_file": {
+        "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+        "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+      },
+      "xschem_rcfile": {
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+        "sha256": "d6d8fa5157ad2072e6d1ce63bda5f5d593ef4eb84631f23eed5e9ae3886f18b5"
+      },
+      "ngspice_init": {
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+        "sha256": "56ec1880a943fa481c3c321d62857b6240387e39d5aa8ded403835c34edb515d"
+      }
+    },
+    "ngspice_system_init": {
+      "path": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+      "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
+    }
+  },
+  "policy": {
+    "setup_network": "allowed for the pinned Git fetch and image pull only",
+    "eda_network": "none",
+    "openada_mount": "read-only",
+    "design_mount": "read-only",
+    "container_root": "read-only",
+    "evidence_directory": "new and writable",
+    "local_user_ngspice_init": "disabled with -n",
+    "system_ngspice_init": "pinned and observed"
+  },
+  "tools": {
+    "xschem": {
+      "path": "/foss/tools/xschem/bin/xschem",
+      "version": "XSCHEM V3.4.8RC"
+    },
+    "ngspice": {
+      "path": "/foss/tools/ngspice/bin/ngspice",
+      "version": "** ngspice-46 : Circuit level simulation program"
+    }
+  },
+  "workflow": {
+    "netlist": {
+      "result_filename": "netlist.json",
+      "container_timeout_seconds": 360,
+      "arguments": {
+        "schematic": "/design/modules/module_0_foundations/inverter/inverter_tb.sch",
+        "output": "/evidence/work/inverter_tb.spice",
+        "rcfile": "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+        "timeout_seconds": 120
+      },
+      "inputs": [
+        {
+          "path": "/design/modules/module_0_foundations/inverter/inverter_tb.sch",
+          "kind": "xschem-schematic",
+          "role": "input",
+          "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
+        },
+        {
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+          "kind": "xschem-rcfile",
+          "role": "configuration",
+          "sha256": "d6d8fa5157ad2072e6d1ce63bda5f5d593ef4eb84631f23eed5e9ae3886f18b5"
+        }
+      ],
+      "artifact": {
+        "path": "/evidence/work/inverter_tb.spice",
+        "filename": "work/inverter_tb.spice",
+        "kind": "spice-netlist",
+        "role": "output"
+      },
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "pass",
+        "missing_symbol_count": 0
+      }
+    },
+    "simulate": {
+      "result_filename": "simulate.json",
+      "container_timeout_seconds": 360,
+      "arguments": {
+        "spice_file": "/evidence/work/inverter_tb.spice",
+        "output_dir": "/evidence/simulation",
+        "workdir": "/evidence/work",
+        "execution_mode": "control",
+        "expect_output": "raw=test_inverter.raw",
+        "init_file": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+        "system_init_file": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+        "timeout_seconds": 180
+      },
+      "inputs": [
+        {
+          "path": "/evidence/work/inverter_tb.spice",
+          "kind": "spice-netlist",
+          "role": "input"
+        },
+        {
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+          "kind": "ngspice-init",
+          "role": "configuration",
+          "sha256": "56ec1880a943fa481c3c321d62857b6240387e39d5aa8ded403835c34edb515d"
+        },
+        {
+          "path": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+          "kind": "ngspice-system-init",
+          "role": "configuration",
+          "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "/evidence/simulation/inverter_tb.log",
+          "filename": "simulation/inverter_tb.log",
+          "kind": "simulation-log",
+          "role": "evidence"
+        },
+        {
+          "path": "/evidence/simulation/inverter_tb.openada-control.sp",
+          "filename": "simulation/inverter_tb.openada-control.sp",
+          "kind": "ngspice-control-script",
+          "role": "evidence"
+        },
+        {
+          "path": "/evidence/work/test_inverter.raw",
+          "filename": "work/test_inverter.raw",
+          "kind": "ngspice-raw",
+          "role": "output"
+        }
+      ],
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "pass",
+        "converged": true,
+        "output_origin": "deck",
+        "output_status": "valid"
+      }
+    }
+  },
+  "waveform": {
+    "plotname": "Transient Analysis",
+    "flags": "real",
+    "encoding": "binary",
+    "acceptable_point_counts": [
+      80,
+      81
+    ],
+    "start_seconds": 0.0,
+    "stop_seconds": 0.000002,
+    "required_variables": [
+      "time",
+      "v(vdd)",
+      "v(vin)",
+      "v(vout)"
+    ],
+    "vdd_min": 1.19,
+    "vdd_max": 1.21,
+    "settled_windows": [
+      {
+        "start_seconds": 0.0000002,
+        "stop_seconds": 0.00000045,
+        "vin_max": 0.05,
+        "vout_min": 1.1
+      },
+      {
+        "start_seconds": 0.0000007,
+        "stop_seconds": 0.0000013,
+        "vin_min": 1.15,
+        "vout_max": 0.1
+      },
+      {
+        "start_seconds": 0.0000017,
+        "stop_seconds": 0.00000195,
+        "vin_max": 0.05,
+        "vout_min": 1.1
+      }
+    ]
+  }
+}

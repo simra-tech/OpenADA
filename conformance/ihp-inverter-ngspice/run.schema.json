@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/conformance/ihp-inverter-ngspice/run.schema.json",
+  "title": "OpenADA IHP Xschem/ngspice conformance run metadata v0alpha1",
+  "type": "object",
+  "required": [
+    "schema",
+    "conformance_id",
+    "conformance_manifest_sha256",
+    "created_at",
+    "design_revision",
+    "image",
+    "openada_checkout",
+    "network",
+    "container_command",
+    "runtime_observation"
+  ],
+  "properties": {
+    "schema": {
+      "const": "openada.ngspice-conformance-run/v0alpha1"
+    },
+    "conformance_id": {
+      "const": "ihp-inverter-xschem-ngspice-deck-output"
+    },
+    "conformance_manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+    },
+    "design_revision": {
+      "const": "133ecf657572e021b5921b5a1b7693abfb209623"
+    },
+    "image": {
+      "type": "object",
+      "required": [
+        "reference",
+        "id",
+        "os",
+        "architecture"
+      ],
+      "properties": {
+        "reference": {
+          "const": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"
+        },
+        "id": {
+          "const": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb"
+        },
+        "os": {
+          "const": "linux"
+        },
+        "architecture": {
+          "const": "amd64"
+        }
+      },
+      "additionalProperties": false
+    },
+    "openada_checkout": {
+      "type": "object",
+      "required": [
+        "before",
+        "after",
+        "state_unchanged",
+        "commit_exact"
+      ],
+      "properties": {
+        "before": {
+          "$ref": "#/$defs/checkoutState"
+        },
+        "after": {
+          "$ref": "#/$defs/checkoutState"
+        },
+        "state_unchanged": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "commit_exact": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "network": {
+      "const": "none during EDA execution"
+    },
+    "container_command": {
+      "type": "array",
+      "minItems": 45,
+      "maxItems": 45,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8192
+      }
+    },
+    "runtime_observation": {
+      "type": "object",
+      "required": [
+        "schema",
+        "pdk",
+        "ngspice_system_init",
+        "openada_invocations",
+        "completed_operations"
+      ],
+      "properties": {
+        "schema": {
+          "const": "openada.ngspice-container-observation/v0alpha1"
+        },
+        "pdk": {
+          "type": "object",
+          "required": [
+            "name",
+            "revision",
+            "commit_file",
+            "xschem_rcfile",
+            "ngspice_init"
+          ],
+          "properties": {
+            "name": {
+              "const": "ihp-sg13g2"
+            },
+            "revision": {
+              "const": "144f811cdffda49b71d28f64e8a92b697b61cf06"
+            },
+            "commit_file": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/fileRecord"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "value"
+                  ],
+                  "properties": {
+                    "value": {
+                      "const": "144f811cdffda49b71d28f64e8a92b697b61cf06"
+                    }
+                  }
+                }
+              ]
+            },
+            "xschem_rcfile": {
+              "$ref": "#/$defs/fileRecord"
+            },
+            "ngspice_init": {
+              "$ref": "#/$defs/fileRecord"
+            }
+          },
+          "additionalProperties": false
+        },
+        "ngspice_system_init": {
+          "type": "object",
+          "required": [
+            "path",
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "const": "/foss/tools/ngspice/share/ngspice/scripts/spinit"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16777216
+            },
+            "sha256": {
+              "const": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
+            }
+          },
+          "additionalProperties": false
+        },
+        "openada_invocations": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "operation",
+              "cwd",
+              "argv"
+            ],
+            "properties": {
+              "operation": {
+                "enum": [
+                  "netlist",
+                  "simulate"
+                ]
+              },
+              "cwd": {
+                "enum": [
+                  "/design/modules/module_0_foundations/inverter",
+                  "/evidence/work"
+                ]
+              },
+              "argv": {
+                "type": "array",
+                "minItems": 8,
+                "maxItems": 32,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 8192
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "completed_operations": {
+          "const": [
+            "netlist",
+            "simulate"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "fileRecord": {
+      "type": "object",
+      "required": [
+        "path",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/foss/pdks/ihp-sg13g2/"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "checkoutState": {
+      "type": "object",
+      "required": [
+        "commit",
+        "tracked_files_modified",
+        "untracked_files_present",
+        "working_tree_modified",
+        "status_entry_count",
+        "status_sha256"
+      ],
+      "properties": {
+        "commit": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tracked_files_modified": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "untracked_files_present": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "working_tree_modified": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "status_entry_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "status_sha256": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "schema": "openada.conformance/v0alpha1",
+  "id": "ihp-inverter-drc-lvs",
+  "description": "Pinned IHP SG13G2 inverter DRC and LVS reference workflow.",
+  "design": {
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    }
+  },
+  "runtime": {
+    "image": {
+      "name": "hpretl/iic-osic-tools",
+      "tag": "2026.06",
+      "platform": "linux/amd64",
+      "manifest_digest": "sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+      "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"
+    },
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "source": "bundled in the pinned runtime image",
+      "revision": "144f811cdffda49b71d28f64e8a92b697b61cf06",
+      "revision_file": "/foss/pdks/ihp-sg13g2/COMMIT",
+      "revision_file_sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+    }
+  },
+  "policy": {
+    "setup_network": "allowed for the pinned Git fetch and image pull only",
+    "eda_network": "none",
+    "openada_mount": "read-only",
+    "design_mount": "read-only",
+    "evidence_directory": "new and writable"
+  },
+  "operations": {
+    "drc": {
+      "tool": "klayout",
+      "tool_identity": {
+        "path": "/foss/tools/klayout/klayout",
+        "version": "KLayout 0.30.9"
+      },
+      "container_timeout_seconds": 240,
+      "arguments": {
+        "gds": "/design/modules/module_0_foundations/PEX_Demo/layout/inverter.gds",
+        "rules": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+        "report": "/evidence/inverter.drc.lyrdb",
+        "top_cell": "inverter",
+        "provenance_inputs": [
+          "/foss/pdks/ihp-sg13g2/COMMIT"
+        ],
+        "timeout_seconds": 180
+      },
+      "inputs": [
+        {
+          "path": "/design/modules/module_0_foundations/PEX_Demo/layout/inverter.gds",
+          "kind": "gds",
+          "role": "input",
+          "sha256": "9ed664d54d8c1b82a86a0d02e59a21c7593c94d1a3ca1bcc6aec614726007cd1"
+        },
+        {
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+          "kind": "klayout-drc-deck",
+          "role": "rules",
+          "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961"
+        },
+        {
+          "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+          "kind": "klayout-rules-input",
+          "role": "rules-dependency",
+          "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+        }
+      ],
+      "artifact": {
+        "path": "/evidence/inverter.drc.lyrdb",
+        "filename": "inverter.drc.lyrdb",
+        "kind": "klayout-lyrdb",
+        "role": "evidence"
+      },
+      "transcript_artifact": {
+        "path": "/evidence/inverter.drc.lyrdb.openada.log",
+        "filename": "inverter.drc.lyrdb.openada.log",
+        "kind": "klayout-transcript",
+        "role": "evidence"
+      },
+      "native_report": {
+        "generator": "drc: script='/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc'",
+        "top_cell": "inverter",
+        "minimum_categories": 1
+      },
+      "result_filename": "drc.json",
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "pass",
+        "drc_clean": true,
+        "total_violations": 0
+      }
+    },
+    "lvs": {
+      "tool": "netgen",
+      "tool_identity": {
+        "path": "/foss/tools/netgen/bin/netgen",
+        "version": "Netgen 1.5.321 compiled on Mon Jun 22 11:31:27 AM CEST 2026"
+      },
+      "container_timeout_seconds": 240,
+      "arguments": {
+        "layout_netlist": "/design/modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir",
+        "schematic_netlist": "/design/modules/module_0_foundations/PEX_Demo/simulations/inverter.spice",
+        "cell": "inverter",
+        "setup": "/foss/pdks/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl",
+        "report": "/evidence/inverter.lvs.comp",
+        "provenance_inputs": [
+          "/foss/pdks/ihp-sg13g2/COMMIT"
+        ],
+        "timeout_seconds": 180
+      },
+      "inputs": [
+        {
+          "path": "/design/modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir",
+          "kind": "layout-netlist",
+          "role": "input",
+          "sha256": "ea05ff8402661fdb09978f2210b3d985ad6b679c1b69b0e564d047b135bc14a9"
+        },
+        {
+          "path": "/design/modules/module_0_foundations/PEX_Demo/simulations/inverter.spice",
+          "kind": "schematic-netlist",
+          "role": "reference",
+          "sha256": "d6e54b972bbd3140498081f79b1bfa06f6da29f6528ebda1065d47499dc5f8f9"
+        },
+        {
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl",
+          "kind": "netgen-setup",
+          "role": "rules",
+          "sha256": "9981101e0bbe9d8f6af656f03475d0d00fb7507559645e85e4d9d5f704b3878e"
+        },
+        {
+          "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+          "kind": "netgen-rules-input",
+          "role": "rules-dependency",
+          "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+        }
+      ],
+      "artifact": {
+        "path": "/evidence/inverter.lvs.comp",
+        "filename": "inverter.lvs.comp",
+        "kind": "netgen-comparison",
+        "role": "evidence"
+      },
+      "json_artifact": {
+        "path": "/evidence/inverter.lvs.json",
+        "filename": "inverter.lvs.json",
+        "kind": "netgen-comparison-json",
+        "role": "evidence"
+      },
+      "transcript_artifact": {
+        "path": "/evidence/inverter.lvs.comp.openada.log",
+        "filename": "inverter.lvs.comp.openada.log",
+        "kind": "netgen-transcript",
+        "role": "evidence"
+      },
+      "result_filename": "lvs.json",
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "pass",
+        "lvs_match": true,
+        "mismatch_count": 0
+      }
+    }
+  }
+}

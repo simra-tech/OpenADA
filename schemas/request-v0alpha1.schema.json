@@ -1,0 +1,532 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/request-v0alpha1.schema.json",
+  "title": "OpenADA request v0alpha1",
+  "description": "A transport-neutral request envelope for one versioned OpenADA operation and assertion profile.",
+  "type": "object",
+  "required": [
+    "schema",
+    "request_id",
+    "operation_profile",
+    "assertion_profile",
+    "target",
+    "configuration",
+    "parameters",
+    "evidence_policy",
+    "evidence_destination",
+    "execution_constraints",
+    "extensions"
+  ],
+  "properties": {
+    "schema": {
+      "const": "openada.request/v0alpha1"
+    },
+    "request_id": {
+      "$ref": "#/$defs/requestId"
+    },
+    "operation_profile": {
+      "$ref": "#/$defs/operationProfileId"
+    },
+    "assertion_profile": {
+      "$ref": "#/$defs/assertionProfileId"
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "configuration": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "$ref": "#/$defs/configurationReference"
+      }
+    },
+    "parameters": {
+      "description": "Operation-owned parameters. The referenced operation profile supplies the closed parameter schema.",
+      "type": "object"
+    },
+    "evidence_policy": {
+      "$ref": "#/$defs/evidencePolicy"
+    },
+    "evidence_destination": {
+      "$ref": "#/$defs/evidenceDestination"
+    },
+    "execution_constraints": {
+      "$ref": "#/$defs/executionConstraints"
+    },
+    "driver_selector": {
+      "$ref": "#/$defs/driverSelector"
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "requestId": {
+      "description": "Caller-generated UUID used only for correlation and idempotency; it carries no engineering meaning.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "versionedProfileId": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^(?:openada|[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+)\\.(?:operation|assertion)/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "operationProfileId": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/versionedProfileId"
+        },
+        {
+          "pattern": "\\.operation/"
+        }
+      ]
+    },
+    "assertionProfileId": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/versionedProfileId"
+        },
+        {
+          "pattern": "\\.assertion/"
+        }
+      ]
+    },
+    "driverId": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$"
+    },
+    "semanticVersion": {
+      "type": "string",
+      "maxLength": 100,
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "featureId": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^(?:openada|[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+)\\.feature/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "role": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "kind",
+        "locator",
+        "extensions"
+      ],
+      "properties": {
+        "kind": {
+          "description": "Logical design-object kind; the operation profile defines the accepted values.",
+          "$ref": "#/$defs/role"
+        },
+        "locator": {
+          "$ref": "#/$defs/resourceLocator"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "resourceLocator": {
+      "description": "A discriminated reference. Drivers must not reinterpret one locator type as another.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/filesystemLocator"
+        },
+        {
+          "$ref": "#/$defs/sessionLocator"
+        },
+        {
+          "$ref": "#/$defs/artifactLocator"
+        },
+        {
+          "$ref": "#/$defs/uriLocator"
+        },
+        {
+          "$ref": "#/$defs/workspaceLocator"
+        }
+      ]
+    },
+    "filesystemLocator": {
+      "type": "object",
+      "required": [
+        "type",
+        "path",
+        "extensions"
+      ],
+      "properties": {
+        "type": {
+          "const": "filesystem"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sessionLocator": {
+      "type": "object",
+      "required": [
+        "type",
+        "session_id",
+        "object_ref",
+        "extensions"
+      ],
+      "properties": {
+        "type": {
+          "const": "eda-session"
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "object_ref": {
+          "description": "Opaque native object reference, such as a library/cell/view path. It is interpreted only by the selected driver.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifactLocator": {
+      "type": "object",
+      "required": [
+        "type",
+        "artifact_id",
+        "extensions"
+      ],
+      "properties": {
+        "type": {
+          "const": "artifact"
+        },
+        "artifact_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 4096
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "uriLocator": {
+      "type": "object",
+      "required": [
+        "type",
+        "uri",
+        "extensions"
+      ],
+      "properties": {
+        "type": {
+          "const": "uri"
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 4096
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "workspaceLocator": {
+      "type": "object",
+      "required": [
+        "type",
+        "workspace_id",
+        "path",
+        "extensions"
+      ],
+      "properties": {
+        "type": {
+          "const": "workspace"
+        },
+        "workspace_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "configurationReference": {
+      "type": "object",
+      "required": [
+        "role",
+        "locator",
+        "required",
+        "extensions"
+      ],
+      "properties": {
+        "role": {
+          "$ref": "#/$defs/role"
+        },
+        "locator": {
+          "$ref": "#/$defs/resourceLocator"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidencePolicy": {
+      "type": "object",
+      "required": [
+        "required_artifact_roles",
+        "retain_native_artifacts",
+        "retain_native_logs",
+        "provenance",
+        "identity_requirement",
+        "extensions"
+      ],
+      "properties": {
+        "required_artifact_roles": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/role"
+          }
+        },
+        "retain_native_artifacts": {
+          "type": "boolean"
+        },
+        "retain_native_logs": {
+          "type": "boolean"
+        },
+        "provenance": {
+          "enum": [
+            "bounded",
+            "complete-required"
+          ]
+        },
+        "identity_requirement": {
+          "description": "Required evidence identity mechanism. A driver must decline rather than claim a stronger identity than it can observe.",
+          "enum": [
+            "content-digest",
+            "native-revision",
+            "snapshot",
+            "best-available"
+          ]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidenceDestination": {
+      "description": "The caller-authorized location for retained current-run evidence. Filesystem paths are absolute; workspace paths are resolved only inside the named workspace. This does not authorize design mutation.",
+      "type": "object",
+      "required": [
+        "locator",
+        "collision_policy",
+        "extensions"
+      ],
+      "properties": {
+        "locator": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/filesystemLocator"
+            },
+            {
+              "$ref": "#/$defs/workspaceLocator"
+            }
+          ]
+        },
+        "collision_policy": {
+          "description": "fail-if-present requires an absent destination. replace-driver-owned permits replacement only of the exact artifact paths declared by the selected operation; unrelated files remain untouched.",
+          "enum": [
+            "fail-if-present",
+            "replace-driver-owned"
+          ]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "locator": {
+                "properties": {
+                  "type": {
+                    "const": "filesystem"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "locator"
+            ]
+          },
+          "then": {
+            "properties": {
+              "locator": {
+                "properties": {
+                  "path": {
+                    "pattern": "^/"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "executionConstraints": {
+      "type": "object",
+      "required": [
+        "completion",
+        "timeout_ms",
+        "max_log_bytes",
+        "max_artifact_bytes",
+        "side_effects",
+        "extensions"
+      ],
+      "properties": {
+        "completion": {
+          "enum": [
+            "wait",
+            "submit"
+          ]
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 604800000
+        },
+        "max_log_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1073741824
+        },
+        "max_artifact_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1099511627776
+        },
+        "side_effects": {
+          "description": "The maximum caller-authorized side effect. A driver may always use a stricter policy.",
+          "enum": [
+            "read-only",
+            "evidence-only",
+            "transactional-design-write"
+          ]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "driverSelector": {
+      "type": "object",
+      "required": [
+        "driver_id",
+        "extensions"
+      ],
+      "properties": {
+        "driver_id": {
+          "$ref": "#/$defs/driverId"
+        },
+        "driver_version": {
+          "$ref": "#/$defs/semanticVersion"
+        },
+        "transport_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+        },
+        "required_features": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/featureId"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "extensions": {
+      "description": "Optional non-semantic metadata keyed by a reverse-DNS namespace. Extensions must not change the operation or assertion meaning.",
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
+}

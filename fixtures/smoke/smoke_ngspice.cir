@@ -1,0 +1,8 @@
+* ngspice smoke: RC operating/transient point
+V1 in 0 DC 1
+R1 in out 1k
+C1 out 0 1p
+.op
+.tran 1p 10p
+.print tran v(out)
+.end

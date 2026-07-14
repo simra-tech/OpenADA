@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openada.dev/schemas/evaluation/trace-v0alpha1.schema.json",
+  "title": "OpenADA paired-agent content-free Codex trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "source",
+    "stream",
+    "identity",
+    "actions",
+    "aggregates",
+    "usage",
+    "usage_observed_valid",
+    "adapter_duration_ms",
+    "eligibility"
+  ],
+  "properties": {
+    "schema": {
+      "const": "openada.eval.trace/v0alpha1"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "codex_cli_version", "parser_version"],
+      "properties": {
+        "kind": {"const": "codex_exec_jsonl"},
+        "codex_cli_version": {
+          "oneOf": [
+            {"const": "0.144.3"},
+            {"type": "null"}
+          ]
+        },
+        "parser_version": {"const": 1}
+      }
+    },
+    "stream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "event_count",
+        "action_count",
+        "action_record_count",
+        "terminal",
+        "process_exit_bucket",
+        "issues"
+      ],
+      "properties": {
+        "complete": {"type": "boolean"},
+        "event_count": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "action_count": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "action_record_count": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "terminal": {
+          "enum": ["completed", "failed", "missing", "conflict"]
+        },
+        "process_exit_bucket": {
+          "enum": ["zero", "nonzero", "unknown"]
+        },
+        "issues": {
+          "type": "array",
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/reason"}
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "native_thread_observed",
+        "native_turn_observed",
+        "api_request_observed",
+        "execution_context_observed",
+        "identifiers_synthesized",
+        "fresh_single_turn_declared"
+      ],
+      "properties": {
+        "native_thread_observed": {"type": "boolean"},
+        "native_turn_observed": {"const": false},
+        "api_request_observed": {"const": false},
+        "execution_context_observed": {"const": false},
+        "identifiers_synthesized": {"const": false},
+        "fresh_single_turn_declared": {"type": "boolean"}
+      }
+    },
+    "actions": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/action"}
+    },
+    "aggregates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_counts", "command_result_observed_characters"],
+      "properties": {
+        "action_counts": {"$ref": "#/$defs/actionCounts"},
+        "command_result_observed_characters": {
+          "oneOf": [
+            {"type": "integer", "minimum": 0, "maximum": 16777216},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "usage": {
+      "oneOf": [
+        {"$ref": "#/$defs/usage"},
+        {"type": "null"}
+      ]
+    },
+    "usage_observed_valid": {"type": "boolean"},
+    "adapter_duration_ms": {
+      "oneOf": [
+        {"type": "integer", "minimum": 0, "maximum": 4503599627370495},
+        {"type": "null"}
+      ]
+    },
+    "eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_metrics",
+        "usage_metrics",
+        "duration_metrics",
+        "session_metrics",
+        "provider_request_metrics",
+        "engineering_outcome_metrics",
+        "model_context_bytes_metrics"
+      ],
+      "properties": {
+        "action_metrics": {"$ref": "#/$defs/metricEligibility"},
+        "usage_metrics": {"$ref": "#/$defs/metricEligibility"},
+        "duration_metrics": {"$ref": "#/$defs/metricEligibility"},
+        "session_metrics": {"$ref": "#/$defs/ineligibleMetric"},
+        "provider_request_metrics": {"$ref": "#/$defs/ineligibleMetric"},
+        "engineering_outcome_metrics": {"$ref": "#/$defs/ineligibleMetric"},
+        "model_context_bytes_metrics": {"$ref": "#/$defs/ineligibleMetric"}
+      }
+    }
+  },
+  "$defs": {
+    "actionKind": {
+      "enum": [
+        "agent_message",
+        "reasoning",
+        "command_execution",
+        "file_change",
+        "mcp_tool_call",
+        "collab_tool_call",
+        "web_search",
+        "todo_list",
+        "error"
+      ]
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "kind", "status", "exit_bucket"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "kind": {"$ref": "#/$defs/actionKind"},
+        "status": {
+          "enum": ["in_progress", "completed", "failed", "declined"]
+        },
+        "exit_bucket": {
+          "enum": ["zero", "nonzero", "missing", "declined", "not_applicable"]
+        },
+        "elapsed_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4503599627370495
+        }
+      }
+    },
+    "actionCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_message",
+        "reasoning",
+        "command_execution",
+        "file_change",
+        "mcp_tool_call",
+        "collab_tool_call",
+        "web_search",
+        "todo_list",
+        "error"
+      ],
+      "properties": {
+        "agent_message": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "reasoning": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "command_execution": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "file_change": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "mcp_tool_call": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "collab_tool_call": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "web_search": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "todo_list": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "error": {"type": "integer", "minimum": 0, "maximum": 10000}
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_tokens",
+        "cached_input_tokens",
+        "output_tokens",
+        "reasoning_output_tokens"
+      ],
+      "properties": {
+        "input_tokens": {"type": "integer", "minimum": 0, "maximum": 4503599627370495},
+        "cached_input_tokens": {"type": "integer", "minimum": 0, "maximum": 4503599627370495},
+        "output_tokens": {"type": "integer", "minimum": 0, "maximum": 4503599627370495},
+        "reasoning_output_tokens": {"type": "integer", "minimum": 0, "maximum": 4503599627370495}
+      }
+    },
+    "metricEligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligible", "reasons"],
+      "properties": {
+        "eligible": {"type": "boolean"},
+        "reasons": {
+          "type": "array",
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/reason"}
+        }
+      }
+    },
+    "ineligibleMetric": {
+      "allOf": [
+        {"$ref": "#/$defs/metricEligibility"},
+        {
+          "type": "object",
+          "properties": {"eligible": {"const": false}}
+        }
+      ]
+    },
+    "reason": {
+      "enum": [
+        "unknown_event_variant",
+        "lifecycle_conflict",
+        "event_after_terminal",
+        "incomplete_terminal",
+        "public_action_cap_exceeded",
+        "process_exit_unknown",
+        "process_terminal_inconsistent",
+        "usage_missing_or_invalid",
+        "collab_coverage_gap",
+        "stream_incomplete",
+        "terminal_not_completed",
+        "fresh_single_turn_not_declared",
+        "adapter_duration_unavailable",
+        "native_turn_id_unavailable",
+        "execution_context_unavailable",
+        "api_request_id_unavailable",
+        "provider_request_events_unavailable",
+        "independent_evidence_required",
+        "model_context_bytes_unavailable",
+        "adapter_input_rejected",
+        "source_identity_mismatch"
+      ]
+    }
+  }
+}

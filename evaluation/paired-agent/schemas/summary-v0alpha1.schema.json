@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/evaluation/paired-agent/schemas/summary-v0alpha1.schema.json",
+  "title": "OpenADA paired-agent descriptive summary v0alpha1",
+  "type": "object",
+  "required": [
+    "schema",
+    "campaign_id",
+    "campaign_sha256",
+    "plan_sha256",
+    "created_at",
+    "evidence",
+    "randomization",
+    "accounting",
+    "comparison",
+    "conditions",
+    "metrics",
+    "seal"
+  ],
+  "properties": {
+    "schema": {"const": "openada.eval.summary/v0alpha1"},
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "campaign_sha256": {"$ref": "#/$defs/sha256"},
+    "plan_sha256": {"$ref": "#/$defs/sha256"},
+    "created_at": {"$ref": "#/$defs/timestamp"},
+    "evidence": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {"$ref": "#/$defs/evidenceRecord"}
+    },
+    "randomization": {
+      "type": "object",
+      "required": ["seed_sha256", "seed_hex", "schedule_verified"],
+      "properties": {
+        "seed_sha256": {"$ref": "#/$defs/sha256"},
+        "seed_hex": {
+          "oneOf": [
+            {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            {"type": "null"}
+          ]
+        },
+        "schedule_verified": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "accounting": {
+      "type": "object",
+      "required": [
+        "planned_pairs",
+        "planned_trials",
+        "received_trial_records",
+        "unique_planned_trials_received",
+        "missing_trial_ids",
+        "duplicate_trial_ids",
+        "complete_pairs",
+        "protocol_eligible_pairs",
+        "execution_schedule_verified"
+      ],
+      "properties": {
+        "planned_pairs": {"type": "integer", "minimum": 5},
+        "planned_trials": {"type": "integer", "minimum": 10},
+        "received_trial_records": {"type": "integer", "minimum": 0},
+        "unique_planned_trials_received": {"type": "integer", "minimum": 0},
+        "missing_trial_ids": {"$ref": "#/$defs/trialIds"},
+        "duplicate_trial_ids": {"$ref": "#/$defs/trialIds"},
+        "complete_pairs": {"type": "integer", "minimum": 0},
+        "protocol_eligible_pairs": {"type": "integer", "minimum": 0},
+        "execution_schedule_verified": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "comparison": {
+      "type": "object",
+      "required": ["status", "reason_codes", "minimum_pairs", "descriptive_only"],
+      "properties": {
+        "status": {"enum": ["ready", "refused"]},
+        "reason_codes": {"$ref": "#/$defs/reasonCodes"},
+        "minimum_pairs": {"const": 5},
+        "descriptive_only": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "conditions": {
+      "type": "object",
+      "required": ["raw", "openada"],
+      "properties": {
+        "raw": {"$ref": "#/$defs/condition"},
+        "openada": {"$ref": "#/$defs/condition"}
+      },
+      "additionalProperties": false
+    },
+    "metrics": {
+      "type": "object",
+      "maxProperties": 32,
+      "patternProperties": {
+        "^[a-z][a-z0-9_]{0,63}$": {"$ref": "#/$defs/metricSummary"}
+      },
+      "additionalProperties": false
+    },
+    "seal": {"$ref": "#/$defs/seal"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+    },
+    "trialIds": {
+      "type": "array",
+      "maxItems": 2000,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^trial-[0-9a-f]{24}$"}
+    },
+    "evidenceRecord": {
+      "type": "object",
+      "required": [
+        "sequence",
+        "trial_id",
+        "trial_sha256",
+        "signature_sha256"
+      ],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1, "maximum": 2000},
+        "trial_id": {"type": "string", "pattern": "^trial-[0-9a-f]{24}$"},
+        "trial_sha256": {"$ref": "#/$defs/sha256"},
+        "signature_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "seal": {
+      "type": "object",
+      "required": ["algorithm", "key_id", "signature_hex"],
+      "properties": {
+        "algorithm": {"const": "ed25519"},
+        "key_id": {"$ref": "#/$defs/sha256"},
+        "signature_hex": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{128}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "reasonCodes": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_.-]{0,127}$"
+      }
+    },
+    "condition": {
+      "type": "object",
+      "required": [
+        "planned_trials",
+        "received_trials",
+        "missing_trials",
+        "protocol_eligible_trials",
+        "engineering_eligible_trials",
+        "termination_counts",
+        "verified_artifact_complete_counts"
+      ],
+      "properties": {
+        "planned_trials": {"type": "integer", "minimum": 0},
+        "received_trials": {"type": "integer", "minimum": 0},
+        "missing_trials": {"type": "integer", "minimum": 0},
+        "protocol_eligible_trials": {"type": "integer", "minimum": 0},
+        "engineering_eligible_trials": {"type": "integer", "minimum": 0},
+        "termination_counts": {
+          "type": "object",
+          "required": [
+            "completed",
+            "timed_out",
+            "budget_exhausted",
+            "agent_failed",
+            "adapter_failed",
+            "supervisor_aborted"
+          ],
+          "properties": {
+            "completed": {"type": "integer", "minimum": 0},
+            "timed_out": {"type": "integer", "minimum": 0},
+            "budget_exhausted": {"type": "integer", "minimum": 0},
+            "agent_failed": {"type": "integer", "minimum": 0},
+            "adapter_failed": {"type": "integer", "minimum": 0},
+            "supervisor_aborted": {"type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        },
+        "verified_artifact_complete_counts": {
+          "type": "object",
+          "required": ["true", "false", "unknown"],
+          "properties": {
+            "true": {"type": "integer", "minimum": 0},
+            "false": {"type": "integer", "minimum": 0},
+            "unknown": {"type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "distribution": {
+      "type": "object",
+      "required": ["count", "minimum", "maximum", "median", "true_count"],
+      "properties": {
+        "count": {"type": "integer", "minimum": 1},
+        "minimum": {"type": "number"},
+        "maximum": {"type": "number"},
+        "median": {"type": "number"},
+        "true_count": {"type": ["integer", "null"], "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "delta": {
+      "type": "object",
+      "required": ["definition", "count", "minimum", "maximum", "median"],
+      "properties": {
+        "definition": {"const": "openada_minus_raw"},
+        "count": {"type": "integer", "minimum": 1},
+        "minimum": {"type": "number"},
+        "maximum": {"type": "number"},
+        "median": {"type": "number"}
+      },
+      "additionalProperties": false
+    },
+    "metricSummary": {
+      "type": "object",
+      "required": [
+        "eligible",
+        "kind",
+        "direction",
+        "reason_codes",
+        "pair_count",
+        "raw",
+        "openada",
+        "paired_delta"
+      ],
+      "properties": {
+        "eligible": {"type": "boolean"},
+        "kind": {"enum": ["boolean", "integer", "number"]},
+        "direction": {"enum": ["higher", "lower"]},
+        "reason_codes": {"$ref": "#/$defs/reasonCodes"},
+        "pair_count": {"type": "integer", "minimum": 0},
+        "raw": {"oneOf": [{"$ref": "#/$defs/distribution"}, {"type": "null"}]},
+        "openada": {"oneOf": [{"$ref": "#/$defs/distribution"}, {"type": "null"}]},
+        "paired_delta": {"oneOf": [{"$ref": "#/$defs/delta"}, {"type": "null"}]}
+      },
+      "additionalProperties": false
+    }
+  }
+}

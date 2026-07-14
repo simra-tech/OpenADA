@@ -1,0 +1,4 @@
+# Minimal KLayout DRC smoke deck for a generated layer 1/0 rectangle.
+source($input)
+report("OpenADA smoke DRC", $report)
+input(1, 0).width(0.5.um).output("M1.W", "Minimum width is 0.5 um")

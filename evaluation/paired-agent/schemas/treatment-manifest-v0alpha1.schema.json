@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/evaluation/paired-agent/schemas/treatment-manifest-v0alpha1.schema.json",
+  "title": "OpenADA paired-agent treatment bundle manifest v0alpha1",
+  "type": "object",
+  "required": ["schema", "distribution", "participant_files"],
+  "properties": {
+    "schema": {"const": "openada.eval.treatment-manifest/v0alpha1"},
+    "distribution": {
+      "type": "object",
+      "required": ["filename", "bytes", "sha256", "media_type"],
+      "properties": {
+        "filename": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,255}\\.whl$"
+        },
+        "bytes": {"type": "integer", "minimum": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "media_type": {"const": "application/vnd.python.wheel"}
+      },
+      "additionalProperties": false
+    },
+    "participant_files": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 10000,
+      "items": {"$ref": "#/$defs/participantFile"}
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "participantFile": {
+      "type": "object",
+      "required": ["role", "participant_path", "bytes", "sha256", "mode", "media_type"],
+      "properties": {
+        "role": {
+          "enum": [
+            "openada-cli",
+            "openada-package",
+            "openada-schema",
+            "openada-skill",
+            "support"
+          ]
+        },
+        "participant_path": {
+          "type": "string",
+          "pattern": "^/(?:[A-Za-z0-9._+-]+/)*[A-Za-z0-9._+-]+$",
+          "maxLength": 2000
+        },
+        "bytes": {"type": "integer", "minimum": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "mode": {"type": "string", "pattern": "^0[0-7]{3}$"},
+        "media_type": {"type": "string", "minLength": 1, "maxLength": 255}
+      },
+      "additionalProperties": false
+    }
+  }
+}

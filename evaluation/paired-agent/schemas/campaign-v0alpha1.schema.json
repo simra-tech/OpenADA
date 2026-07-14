@@ -1,0 +1,338 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/evaluation/paired-agent/schemas/campaign-v0alpha1.schema.json",
+  "title": "OpenADA paired-agent evaluation campaign v0alpha1",
+  "type": "object",
+  "required": [
+    "schema",
+    "campaign_id",
+    "created_at",
+    "task",
+    "planned_pairs",
+    "agent",
+    "trial_signing",
+    "execution_clock",
+    "runtime",
+    "treatment",
+    "policies",
+    "budgets",
+    "primary_metric",
+    "metrics"
+  ],
+  "properties": {
+    "schema": {
+      "const": "openada.eval.campaign/v0alpha1"
+    },
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "created_at": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "task": {
+      "type": "object",
+      "required": ["id", "manifest", "prompt", "response_schema", "scorer"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "manifest": {
+          "$ref": "#/$defs/fileIdentity"
+        },
+        "prompt": {
+          "$ref": "#/$defs/fileIdentity"
+        },
+        "response_schema": {
+          "$ref": "#/$defs/fileIdentity"
+        },
+        "scorer": {
+          "$ref": "#/$defs/fileIdentity"
+        }
+      },
+      "additionalProperties": false
+    },
+    "planned_pairs": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 1000
+    },
+    "agent": {
+      "type": "object",
+      "required": [
+        "provider",
+        "model",
+        "release",
+        "release_is_immutable",
+        "reasoning",
+        "harness",
+        "adapter"
+      ],
+      "properties": {
+        "provider": {"$ref": "#/$defs/nonempty"},
+        "model": {"$ref": "#/$defs/nonempty"},
+        "release": {"$ref": "#/$defs/nonempty"},
+        "release_is_immutable": {"const": true},
+        "reasoning": {"$ref": "#/$defs/nonempty"},
+        "harness": {"$ref": "#/$defs/harnessIdentity"},
+        "adapter": {"$ref": "#/$defs/adapterIdentity"}
+      },
+      "additionalProperties": false
+    },
+    "trial_signing": {
+      "type": "object",
+      "required": ["algorithm", "public_key_hex", "key_id"],
+      "properties": {
+        "algorithm": {"const": "ed25519"},
+        "public_key_hex": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "key_id": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "execution_clock": {
+      "type": "object",
+      "required": ["domain_id", "origin"],
+      "properties": {
+        "domain_id": {"$ref": "#/$defs/sha256"},
+        "origin": {"const": "first_dispatch_zero_ms"}
+      },
+      "additionalProperties": false
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["image", "design", "pdk", "tools", "startup_files"],
+      "properties": {
+        "image": {
+          "type": "object",
+          "required": ["reference", "digest", "config_digest", "os", "architecture"],
+          "properties": {
+            "reference": {"$ref": "#/$defs/nonempty"},
+            "digest": {"$ref": "#/$defs/prefixedSha256"},
+            "config_digest": {"$ref": "#/$defs/prefixedSha256"},
+            "os": {"$ref": "#/$defs/nonempty"},
+            "architecture": {"$ref": "#/$defs/nonempty"}
+          },
+          "additionalProperties": false
+        },
+        "design": {
+          "type": "object",
+          "required": ["repository", "revision"],
+          "properties": {
+            "repository": {"$ref": "#/$defs/nonempty"},
+            "revision": {"$ref": "#/$defs/nonempty"}
+          },
+          "additionalProperties": false
+        },
+        "pdk": {
+          "type": "object",
+          "required": ["name", "revision", "identity_files"],
+          "properties": {
+            "name": {"$ref": "#/$defs/nonempty"},
+            "revision": {"$ref": "#/$defs/nonempty"},
+            "identity_files": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {"$ref": "#/$defs/fileIdentity"}
+            }
+          },
+          "additionalProperties": false
+        },
+        "tools": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": ["name", "path", "version", "binary_sha256"],
+            "properties": {
+              "name": {"$ref": "#/$defs/nonempty"},
+              "path": {"$ref": "#/$defs/nonempty"},
+              "version": {"$ref": "#/$defs/nonempty"},
+              "binary_sha256": {"$ref": "#/$defs/sha256"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "startup_files": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/fileIdentity"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "treatment": {
+      "type": "object",
+      "required": [
+        "openada_commit",
+        "openada_version",
+        "result_schema",
+        "bundle_manifest",
+        "distribution_sha256",
+        "cli_sha256",
+        "skill_tree_sha256"
+      ],
+      "properties": {
+        "openada_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "openada_version": {"$ref": "#/$defs/nonempty"},
+        "result_schema": {
+          "const": "openada.result/v0alpha1"
+        },
+        "bundle_manifest": {"$ref": "#/$defs/fileIdentity"},
+        "distribution_sha256": {"$ref": "#/$defs/sha256"},
+        "cli_sha256": {"$ref": "#/$defs/sha256"},
+        "skill_tree_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "policies": {
+      "type": "object",
+      "required": [
+        "task_network",
+        "model_transport_network",
+        "approval_policy",
+        "source_workspace",
+        "output_workspace",
+        "condition_isolation",
+        "user_intervention",
+        "pair_max_span_seconds"
+      ],
+      "properties": {
+        "task_network": {"const": "none"},
+        "model_transport_network": {
+          "enum": ["none", "provider-only"]
+        },
+        "approval_policy": {"$ref": "#/$defs/nonempty"},
+        "source_workspace": {"const": "fresh-read-only"},
+        "output_workspace": {"const": "fresh-writable"},
+        "condition_isolation": {"const": "raw-absent-treatment-exact"},
+        "user_intervention": {"enum": ["none", "counted"]},
+        "pair_max_span_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        }
+      },
+      "additionalProperties": false
+    },
+    "budgets": {
+      "type": "object",
+      "required": [
+        "wall_time_seconds",
+        "max_agent_actions",
+        "max_api_requests",
+        "max_input_tokens",
+        "max_output_tokens"
+      ],
+      "properties": {
+        "wall_time_seconds": {"$ref": "#/$defs/positiveInteger"},
+        "max_agent_actions": {"$ref": "#/$defs/positiveInteger"},
+        "max_api_requests": {"$ref": "#/$defs/positiveInteger"},
+        "max_input_tokens": {"$ref": "#/$defs/positiveInteger"},
+        "max_output_tokens": {"$ref": "#/$defs/positiveInteger"}
+      },
+      "additionalProperties": false
+    },
+    "primary_metric": {
+      "const": "verified_artifact_complete"
+    },
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "direction", "primary"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "kind": {"enum": ["boolean", "integer", "number"]},
+          "direction": {"enum": ["higher", "lower"]},
+          "primary": {"type": "boolean"}
+        },
+        "additionalProperties": false
+      },
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {"const": "verified_artifact_complete"},
+          "kind": {"const": "boolean"},
+          "direction": {"const": "higher"},
+          "primary": {"const": true}
+        },
+        "required": ["id", "kind", "direction", "primary"]
+      },
+      "minContains": 1,
+      "maxContains": 1
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "nonempty": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "prefixedSha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+    },
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4503599627370495
+    },
+    "fileIdentity": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "harnessIdentity": {
+      "type": "object",
+      "required": ["name", "version", "binary_sha256"],
+      "properties": {
+        "name": {"$ref": "#/$defs/nonempty"},
+        "version": {"$ref": "#/$defs/nonempty"},
+        "binary_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "adapterIdentity": {
+      "type": "object",
+      "required": ["name", "version", "sha256"],
+      "properties": {
+        "name": {"$ref": "#/$defs/nonempty"},
+        "version": {"$ref": "#/$defs/nonempty"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

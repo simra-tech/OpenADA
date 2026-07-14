@@ -1,0 +1,891 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/operation-profile-v0alpha1.schema.json",
+  "title": "OpenADA operation profile v0alpha1",
+  "description": "An immutable machine-readable definition of one versioned engineering operation, one primary assertion, and their request and evidence semantics.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "status",
+    "operation",
+    "assertion",
+    "request",
+    "normalized_result",
+    "evidence",
+    "features",
+    "diagnostics",
+    "native_mappings",
+    "compatibility",
+    "extensions"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://json-schema.org/draft/2020-12/schema"
+    },
+    "schema": {
+      "const": "openada.operation-profile/v0alpha1"
+    },
+    "status": {
+      "enum": [
+        "alpha",
+        "beta",
+        "stable",
+        "deprecated"
+      ]
+    },
+    "operation": {
+      "$ref": "#/$defs/operation"
+    },
+    "assertion": {
+      "$ref": "#/$defs/assertion"
+    },
+    "request": {
+      "$ref": "#/$defs/request"
+    },
+    "normalized_result": {
+      "$ref": "#/$defs/normalizedResult"
+    },
+    "evidence": {
+      "$ref": "#/$defs/evidence"
+    },
+    "features": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/feature"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "native_mappings": {
+      "description": "Independent backend mappings that demonstrate the assertion is not defined around one executable.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nativeMapping"
+      }
+    },
+    "compatibility": {
+      "$ref": "#/$defs/compatibility"
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "operation": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "summary",
+        "side_effect_mode",
+        "target_kinds",
+        "locator_types",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/operationProfileId"
+        },
+        "title": {
+          "$ref": "#/$defs/nonEmptyText"
+        },
+        "summary": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "side_effect_mode": {
+          "enum": [
+            "read-only",
+            "evidence-only",
+            "transactional-design-write"
+          ]
+        },
+        "target_kinds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/role"
+          }
+        },
+        "locator_types": {
+          "$ref": "#/$defs/locatorTypes"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "assertion": {
+      "type": "object",
+      "required": [
+        "id",
+        "statement",
+        "non_goals",
+        "truth_table",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/assertionProfileId"
+        },
+        "statement": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "non_goals": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "truth_table": {
+          "type": "object",
+          "required": [
+            "pass",
+            "fail",
+            "unknown"
+          ],
+          "properties": {
+            "pass": {
+              "$ref": "#/$defs/statusRule"
+            },
+            "fail": {
+              "$ref": "#/$defs/statusRule"
+            },
+            "unknown": {
+              "$ref": "#/$defs/statusRule"
+            }
+          },
+          "additionalProperties": false
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "statusRule": {
+      "type": "object",
+      "required": [
+        "meaning",
+        "allowed_execution_statuses",
+        "required_evidence",
+        "extensions"
+      ],
+      "properties": {
+        "meaning": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "allowed_execution_statuses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/executionStatus"
+          }
+        },
+        "required_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "base_schema",
+        "configuration_roles",
+        "parameters_schema",
+        "semantic_constraints",
+        "extensions"
+      ],
+      "properties": {
+        "base_schema": {
+          "const": "openada.request/v0alpha1"
+        },
+        "configuration_roles": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/configurationRole"
+          }
+        },
+        "parameters_schema": {
+          "$ref": "#/$defs/closedObjectSchema"
+        },
+        "semantic_constraints": {
+          "description": "Normative constraints that Draft 2020-12 cannot express locally, such as comparisons between two numeric fields.",
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "configurationRole": {
+      "type": "object",
+      "required": [
+        "role",
+        "required",
+        "locator_types",
+        "identity_requirement",
+        "description",
+        "extensions"
+      ],
+      "properties": {
+        "role": {
+          "$ref": "#/$defs/role"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "locator_types": {
+          "$ref": "#/$defs/locatorTypes"
+        },
+        "identity_requirement": {
+          "enum": [
+            "content-digest",
+            "native-revision",
+            "snapshot",
+            "best-available"
+          ]
+        },
+        "description": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "normalizedResult": {
+      "type": "object",
+      "required": [
+        "result_schema",
+        "data_schema",
+        "facts",
+        "extensions"
+      ],
+      "properties": {
+        "result_schema": {
+          "$ref": "#/$defs/resultSchemaId"
+        },
+        "data_schema": {
+          "$ref": "#/$defs/closedObjectSchema"
+        },
+        "facts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/normalizedFact"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "normalizedFact": {
+      "type": "object",
+      "required": [
+        "path",
+        "type",
+        "required_for",
+        "description",
+        "extensions"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 300,
+          "pattern": "^data(?:\\.[a-z][a-z0-9_]*)+$"
+        },
+        "type": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/jsonTypeName"
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 7,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/jsonTypeName"
+              }
+            }
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "required_for": {
+          "$ref": "#/$defs/engineeringStatuses"
+        },
+        "description": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "bounds": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "artifact_roles",
+        "integrity_rules",
+        "provenance_limitations",
+        "limits",
+        "extensions"
+      ],
+      "properties": {
+        "artifact_roles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/artifactRole"
+          }
+        },
+        "integrity_rules": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "provenance_limitations": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "limits": {
+          "$ref": "#/$defs/evidenceLimits"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifactRole": {
+      "type": "object",
+      "required": [
+        "role",
+        "kind",
+        "required_for",
+        "freshness",
+        "integrity",
+        "native_authority",
+        "extensions"
+      ],
+      "properties": {
+        "role": {
+          "$ref": "#/$defs/role"
+        },
+        "kind": {
+          "$ref": "#/$defs/role"
+        },
+        "required_for": {
+          "type": "array",
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/engineeringStatus"
+          }
+        },
+        "freshness": {
+          "enum": [
+            "fresh-per-invocation",
+            "immutable-input",
+            "as-available"
+          ]
+        },
+        "integrity": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "native_authority": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidenceLimits": {
+      "type": "object",
+      "required": [
+        "max_log_bytes",
+        "max_artifact_bytes",
+        "max_artifact_count",
+        "extensions"
+      ],
+      "properties": {
+        "max_log_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_artifact_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_artifact_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "feature": {
+      "type": "object",
+      "required": [
+        "id",
+        "parameter_path",
+        "parameter_values",
+        "request_effect",
+        "conformance_case",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/featureId"
+        },
+        "parameter_path": {
+          "type": "string",
+          "maxLength": 300,
+          "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)*$"
+        },
+        "parameter_values": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "integer",
+              "boolean"
+            ]
+          }
+        },
+        "request_effect": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "conformance_case": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": [
+        "code",
+        "severity",
+        "condition",
+        "next_action",
+        "extensions"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/role"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "next_action": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "nativeMapping": {
+      "type": "object",
+      "required": [
+        "driver_id",
+        "native_product_id",
+        "backend_name",
+        "supported_analyses",
+        "analysis_commands",
+        "native_actions",
+        "artifact_bindings",
+        "limitations",
+        "extensions"
+      ],
+      "properties": {
+        "driver_id": {
+          "$ref": "#/$defs/driverId"
+        },
+        "native_product_id": {
+          "$ref": "#/$defs/productId"
+        },
+        "backend_name": {
+          "$ref": "#/$defs/nonEmptyText"
+        },
+        "supported_analyses": {
+          "description": "The subset of the operation profile's analyses this native mapping can faithfully implement. Capability manifests may advertise an equal or smaller conformance-tested subset.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "op",
+              "dc",
+              "ac",
+              "tran"
+            ]
+          }
+        },
+        "analysis_commands": {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "op": {
+              "$ref": "#/$defs/nonEmptyText"
+            },
+            "dc": {
+              "$ref": "#/$defs/nonEmptyText"
+            },
+            "ac": {
+              "$ref": "#/$defs/nonEmptyText"
+            },
+            "tran": {
+              "$ref": "#/$defs/nonEmptyText"
+            }
+          },
+          "additionalProperties": false
+        },
+        "native_actions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "artifact_bindings": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/artifactBinding"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/boundedText"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifactBinding": {
+      "type": "object",
+      "required": [
+        "native_kind",
+        "canonical_role",
+        "extensions"
+      ],
+      "properties": {
+        "native_kind": {
+          "$ref": "#/$defs/nonEmptyText"
+        },
+        "canonical_role": {
+          "$ref": "#/$defs/role"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "compatibility": {
+      "type": "object",
+      "required": [
+        "published_identifiers_immutable",
+        "breaking_change_requires_new_identifier",
+        "normative_surfaces",
+        "change_policy",
+        "extensions"
+      ],
+      "properties": {
+        "published_identifiers_immutable": {
+          "const": true
+        },
+        "breaking_change_requires_new_identifier": {
+          "const": true
+        },
+        "normative_surfaces": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nonEmptyText"
+          }
+        },
+        "change_policy": {
+          "$ref": "#/$defs/boundedText"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "closedObjectSchema": {
+      "description": "An embedded Draft 2020-12 JSON Schema whose root is a closed object. Hosts must also run the Draft 2020-12 schema check on this value.",
+      "type": "object",
+      "required": [
+        "$schema",
+        "type",
+        "required",
+        "properties",
+        "additionalProperties"
+      ],
+      "properties": {
+        "$schema": {
+          "const": "https://json-schema.org/draft/2020-12/schema"
+        },
+        "$id": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 4096
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "type": {
+          "const": "object"
+        },
+        "required": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "properties": {
+          "type": "object"
+        },
+        "allOf": {
+          "type": "array"
+        },
+        "anyOf": {
+          "type": "array"
+        },
+        "oneOf": {
+          "type": "array"
+        },
+        "$defs": {
+          "type": "object"
+        },
+        "additionalProperties": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "executionStatus": {
+      "enum": [
+        "completed",
+        "timed_out",
+        "not_available",
+        "invalid_request",
+        "failed"
+      ]
+    },
+    "jsonTypeName": {
+      "enum": [
+        "null",
+        "boolean",
+        "integer",
+        "number",
+        "string",
+        "object",
+        "array"
+      ]
+    },
+    "engineeringStatus": {
+      "enum": [
+        "pass",
+        "fail",
+        "unknown"
+      ]
+    },
+    "engineeringStatuses": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/engineeringStatus"
+      }
+    },
+    "locatorTypes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "filesystem",
+          "eda-session",
+          "artifact",
+          "uri",
+          "workspace"
+        ]
+      }
+    },
+    "operationProfileId": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^(?:openada|[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+)\\.operation/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "assertionProfileId": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^(?:openada|[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+)\\.assertion/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "featureId": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^(?:openada|[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+)\\.feature/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "resultSchemaId": {
+      "type": "string",
+      "maxLength": 120,
+      "pattern": "^openada\\.result/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "driverId": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$"
+    },
+    "productId": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$"
+    },
+    "role": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+    },
+    "nonEmptyText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "boundedText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "extensions": {
+      "description": "Optional non-semantic metadata keyed by a reverse-DNS namespace. Extensions must not change a published profile's meaning.",
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
+}

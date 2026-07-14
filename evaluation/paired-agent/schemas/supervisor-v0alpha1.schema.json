@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/evaluation/paired-agent/schemas/supervisor-v0alpha1.schema.json",
+  "title": "OpenADA paired-agent trusted supervisor record v0alpha1",
+  "type": "object",
+  "required": [
+    "schema",
+    "campaign_id",
+    "campaign_sha256",
+    "plan_sha256",
+    "pair_id",
+    "trial_id",
+    "condition",
+    "created_at",
+    "timing",
+    "attempt",
+    "dispatch",
+    "pair_execution",
+    "termination",
+    "files",
+    "workspace",
+    "attestations",
+    "condition_observation",
+    "authority"
+  ],
+  "properties": {
+    "schema": {"const": "openada.eval.supervisor/v0alpha1"},
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "campaign_sha256": {"$ref": "#/$defs/sha256"},
+    "plan_sha256": {"$ref": "#/$defs/sha256"},
+    "pair_id": {"$ref": "#/$defs/pairId"},
+    "trial_id": {"$ref": "#/$defs/trialId"},
+    "condition": {"enum": ["raw", "openada"]},
+    "created_at": {"$ref": "#/$defs/timestamp"},
+    "timing": {
+      "type": "object",
+      "required": ["started_at", "finished_at", "wall_time_ms"],
+      "properties": {
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "finished_at": {"$ref": "#/$defs/timestamp"},
+        "wall_time_ms": {"type": "integer", "minimum": 0, "maximum": 4503599627370495}
+      },
+      "additionalProperties": false
+    },
+    "attempt": {
+      "type": "object",
+      "required": ["attempt_count", "assignment_launched_once", "prior_attempt_absent"],
+      "properties": {
+        "attempt_count": {"type": "integer", "minimum": 1},
+        "assignment_launched_once": {"type": "boolean"},
+        "prior_attempt_absent": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "dispatch": {
+      "type": "object",
+      "required": [
+        "sequence_observed",
+        "clock_domain_id",
+        "monotonic_started_ms",
+        "monotonic_finished_ms"
+      ],
+      "properties": {
+        "sequence_observed": {"type": "integer", "minimum": 1},
+        "clock_domain_id": {"$ref": "#/$defs/sha256"},
+        "monotonic_started_ms": {"$ref": "#/$defs/nonnegativeInteger"},
+        "monotonic_finished_ms": {"$ref": "#/$defs/nonnegativeInteger"}
+      },
+      "additionalProperties": false
+    },
+    "pair_execution": {
+      "type": "object",
+      "required": ["clock_domain_id", "first", "second"],
+      "properties": {
+        "clock_domain_id": {"$ref": "#/$defs/sha256"},
+        "first": {"$ref": "#/$defs/pairTrialTiming"},
+        "second": {"$ref": "#/$defs/pairTrialTiming"}
+      },
+      "additionalProperties": false
+    },
+    "termination": {
+      "enum": [
+        "completed",
+        "timed_out",
+        "budget_exhausted",
+        "agent_failed",
+        "adapter_failed",
+        "supervisor_aborted"
+      ]
+    },
+    "files": {
+      "type": "object",
+      "required": ["trace", "submission"],
+      "properties": {
+        "trace": {"$ref": "#/$defs/fileRecord"},
+        "submission": {"$ref": "#/$defs/fileRecord"}
+      },
+      "additionalProperties": false
+    },
+    "workspace": {
+      "type": "object",
+      "required": ["root"],
+      "properties": {
+        "root": {"$ref": "#/$defs/path"}
+      },
+      "additionalProperties": false
+    },
+    "attestations": {
+      "type": "object",
+      "required": [
+        "prompt_exact",
+        "agent_configuration_exact",
+        "runtime_identity_exact",
+        "approval_policy_exact",
+        "budgets_exact",
+        "fresh_agent_context",
+        "prior_session_absent",
+        "memory_absent",
+        "web_disabled",
+        "subagents_disabled",
+        "credentials_absent_from_executor",
+        "participant_host_shell_absent",
+        "participant_container_socket_absent",
+        "workspace_fresh",
+        "required_outputs_absent_before",
+        "source_read_only",
+        "design_read_only",
+        "pdk_read_only",
+        "startup_files_read_only",
+        "source_unchanged_after",
+        "task_network_none",
+        "task_network_enforced",
+        "extra_condition_difference_absent",
+        "user_intervention_count"
+      ],
+      "properties": {
+        "prompt_exact": {"type": "boolean"},
+        "agent_configuration_exact": {"type": "boolean"},
+        "runtime_identity_exact": {"type": "boolean"},
+        "approval_policy_exact": {"type": "boolean"},
+        "budgets_exact": {"type": "boolean"},
+        "fresh_agent_context": {"type": "boolean"},
+        "prior_session_absent": {"type": "boolean"},
+        "memory_absent": {"type": "boolean"},
+        "web_disabled": {"type": "boolean"},
+        "subagents_disabled": {"type": "boolean"},
+        "credentials_absent_from_executor": {"type": "boolean"},
+        "participant_host_shell_absent": {"type": "boolean"},
+        "participant_container_socket_absent": {"type": "boolean"},
+        "workspace_fresh": {"type": "boolean"},
+        "required_outputs_absent_before": {"type": "boolean"},
+        "source_read_only": {"type": "boolean"},
+        "design_read_only": {"type": "boolean"},
+        "pdk_read_only": {"type": "boolean"},
+        "startup_files_read_only": {"type": "boolean"},
+        "source_unchanged_after": {"type": "boolean"},
+        "task_network_none": {"type": "boolean"},
+        "task_network_enforced": {"type": "boolean"},
+        "extra_condition_difference_absent": {"type": "boolean"},
+        "user_intervention_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "condition_observation": {
+      "type": "object",
+      "required": [
+        "openada_distribution_present",
+        "openada_cli_present",
+        "openada_skill_present",
+        "openada_package_present",
+        "openada_treatment_schema_present",
+        "openada_repository_present",
+        "openada_prior_output_present",
+        "openada_system_context_present",
+        "treatment_bundle_manifest_sha256",
+        "openada_identity_exact",
+        "openada_used"
+      ],
+      "properties": {
+        "openada_distribution_present": {"type": "boolean"},
+        "openada_cli_present": {"type": "boolean"},
+        "openada_skill_present": {"type": "boolean"},
+        "openada_package_present": {"type": "boolean"},
+        "openada_treatment_schema_present": {"type": "boolean"},
+        "openada_repository_present": {"type": "boolean"},
+        "openada_prior_output_present": {"type": "boolean"},
+        "openada_system_context_present": {"type": "boolean"},
+        "treatment_bundle_manifest_sha256": {
+          "oneOf": [
+            {"$ref": "#/$defs/sha256"},
+            {"type": "null"}
+          ]
+        },
+        "openada_identity_exact": {"type": "boolean"},
+        "openada_used": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "authority": {
+      "type": "object",
+      "required": [
+        "native_session_observed",
+        "native_turn_observed",
+        "provider_request_ids_observed",
+        "identifiers_synthesized"
+      ],
+      "properties": {
+        "native_session_observed": {"type": "boolean"},
+        "native_turn_observed": {"type": "boolean"},
+        "provider_request_ids_observed": {"type": "boolean"},
+        "identifiers_synthesized": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "nonnegativeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4503599627370495
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+    },
+    "pairId": {"type": "string", "pattern": "^pair-[0-9a-f]{24}$"},
+    "trialId": {"type": "string", "pattern": "^trial-[0-9a-f]{24}$"},
+    "path": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "fileRecord": {
+      "type": "object",
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": {"$ref": "#/$defs/path"},
+        "bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "pairTrialTiming": {
+      "type": "object",
+      "required": [
+        "trial_id",
+        "started_at",
+        "finished_at",
+        "monotonic_started_ms",
+        "monotonic_finished_ms"
+      ],
+      "properties": {
+        "trial_id": {"$ref": "#/$defs/trialId"},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "finished_at": {"$ref": "#/$defs/timestamp"},
+        "monotonic_started_ms": {"$ref": "#/$defs/nonnegativeInteger"},
+        "monotonic_finished_ms": {"$ref": "#/$defs/nonnegativeInteger"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

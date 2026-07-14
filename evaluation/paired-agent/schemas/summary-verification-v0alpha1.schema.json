@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/evaluation/paired-agent/schemas/summary-verification-v0alpha1.schema.json",
+  "title": "OpenADA paired-agent summary verification v0alpha1",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "mode",
+    "campaign_sha256",
+    "plan_sha256",
+    "canonical_summary_sha256",
+    "evidence_records"
+  ],
+  "properties": {
+    "schema": {"const": "openada.eval.summary-verification/v0alpha1"},
+    "status": {"const": "valid"},
+    "mode": {"enum": ["summary-only", "full"]},
+    "campaign_sha256": {"$ref": "#/$defs/sha256"},
+    "plan_sha256": {"$ref": "#/$defs/sha256"},
+    "canonical_summary_sha256": {"$ref": "#/$defs/sha256"},
+    "evidence_records": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

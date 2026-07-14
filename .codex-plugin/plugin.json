@@ -1,0 +1,37 @@
+{
+  "name": "openada",
+  "version": "0.1.0",
+  "description": "Open agent-EDA contracts and deterministic drivers for open-source EDA tools.",
+  "author": {
+    "name": "Simra Tech",
+    "url": "https://github.com/simra-tech"
+  },
+  "homepage": "https://github.com/simra-tech/OpenADA",
+  "repository": "https://github.com/simra-tech/OpenADA",
+  "license": "MIT",
+  "keywords": [
+    "eda",
+    "semiconductors",
+    "agents",
+    "xschem",
+    "ngspice",
+    "klayout"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "OpenADA",
+    "shortDescription": "Agent-ready contracts for open-source EDA",
+    "longDescription": "Help Codex discover, invoke, and reason over open-source EDA tools through bounded, versioned engineering results.",
+    "developerName": "Simra Tech",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Execute"
+    ],
+    "websiteURL": "https://github.com/simra-tech/OpenADA",
+    "defaultPrompt": [
+      "Inspect this EDA workspace and report available tools and PDKs.",
+      "Netlist and simulate this design with structured evidence.",
+      "Run the applicable DRC or LVS check and summarize violations."
+    ]
+  }
+}

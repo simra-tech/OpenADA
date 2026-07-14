@@ -1,0 +1,5 @@
+read_verilog scripts/smoke_yosys.v
+hierarchy -check -top and2
+proc; opt; techmap; opt
+stat
+write_json evidence/yosys_smoke.json

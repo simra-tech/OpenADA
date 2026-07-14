@@ -1,0 +1,741 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/driver-manifest-v0alpha1.schema.json",
+  "title": "OpenADA driver manifest v0alpha1",
+  "description": "A machine-readable declaration of a driver's identity, native products, transports, semantic capabilities, and conformance evidence.",
+  "type": "object",
+  "required": [
+    "schema",
+    "driver",
+    "native_products",
+    "transports",
+    "capabilities",
+    "conformance_records",
+    "extensions"
+  ],
+  "properties": {
+    "schema": {
+      "const": "openada.driver-manifest/v0alpha1"
+    },
+    "driver": {
+      "$ref": "#/$defs/driver"
+    },
+    "native_products": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/nativeProduct"
+      }
+    },
+    "transports": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/transport"
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {
+        "$ref": "#/$defs/capability"
+      }
+    },
+    "conformance_records": {
+      "type": "array",
+      "maxItems": 2048,
+      "items": {
+        "$ref": "#/$defs/conformanceRecord"
+      }
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "driver": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "version",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/driverId"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "version": {
+          "$ref": "#/$defs/semanticVersion"
+        },
+        "homepage": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 4096
+        },
+        "source": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 4096
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "nativeProduct": {
+      "type": "object",
+      "required": [
+        "product_id",
+        "name",
+        "vendor",
+        "roles",
+        "version_policy",
+        "extensions"
+      ],
+      "properties": {
+        "product_id": {
+          "$ref": "#/$defs/productId"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "vendor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/role"
+          }
+        },
+        "version_policy": {
+          "$ref": "#/$defs/versionPolicy"
+        },
+        "executable_names": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "versionPolicy": {
+      "type": "object",
+      "required": [
+        "mode",
+        "tested_versions",
+        "extensions"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "probe-and-record",
+            "pinned-only"
+          ]
+        },
+        "tested_versions": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "pinned-only"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "tested_versions": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "transport": {
+      "description": "A discriminated invocation binding. Credentials and deployment secrets are supplied out of band.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/localCliTransport"
+        },
+        {
+          "$ref": "#/$defs/sessionApiTransport"
+        },
+        {
+          "$ref": "#/$defs/remoteJobTransport"
+        }
+      ]
+    },
+    "localCliTransport": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "argv",
+        "request_encoding",
+        "result_encoding",
+        "completion_modes",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/localId"
+        },
+        "type": {
+          "const": "local-cli"
+        },
+        "argv": {
+          "description": "Literal argv prefix; consumers must execute it without a shell.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "request_encoding": {
+          "const": "json-stdin"
+        },
+        "result_encoding": {
+          "const": "json-stdout"
+        },
+        "completion_modes": {
+          "$ref": "#/$defs/completionModes"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sessionApiTransport": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "protocol",
+        "endpoint_template",
+        "method",
+        "request_encoding",
+        "result_encoding",
+        "completion_modes",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/localId"
+        },
+        "type": {
+          "const": "session-api"
+        },
+        "protocol": {
+          "$ref": "#/$defs/role"
+        },
+        "endpoint_template": {
+          "description": "Non-secret endpoint template whose placeholders are resolved by the host integration.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "request_encoding": {
+          "const": "json"
+        },
+        "result_encoding": {
+          "const": "json"
+        },
+        "completion_modes": {
+          "$ref": "#/$defs/completionModes"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "remoteJobTransport": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "protocol",
+        "endpoint",
+        "request_encoding",
+        "result_encoding",
+        "completion_modes",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/localId"
+        },
+        "type": {
+          "const": "remote-job"
+        },
+        "protocol": {
+          "$ref": "#/$defs/role"
+        },
+        "endpoint": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 4096
+        },
+        "request_encoding": {
+          "const": "json"
+        },
+        "result_encoding": {
+          "const": "json"
+        },
+        "completion_modes": {
+          "$ref": "#/$defs/completionModes"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "capability": {
+      "type": "object",
+      "required": [
+        "operation_profile",
+        "assertion_profiles",
+        "result_schema_ids",
+        "features",
+        "locator_types",
+        "completion_modes",
+        "side_effect_modes",
+        "transport_ids",
+        "native_product_ids",
+        "maturity",
+        "conformance_record_ids",
+        "extensions"
+      ],
+      "properties": {
+        "operation_profile": {
+          "$ref": "#/$defs/operationProfileId"
+        },
+        "assertion_profiles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/assertionProfileId"
+          }
+        },
+        "result_schema_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/resultSchemaId"
+          }
+        },
+        "features": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/featureId"
+          }
+        },
+        "locator_types": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "filesystem",
+              "eda-session",
+              "artifact",
+              "uri",
+              "workspace"
+            ]
+          }
+        },
+        "completion_modes": {
+          "$ref": "#/$defs/completionModes"
+        },
+        "side_effect_modes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "read-only",
+              "evidence-only",
+              "transactional-design-write"
+            ]
+          }
+        },
+        "transport_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/localId"
+          }
+        },
+        "native_product_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/productId"
+          }
+        },
+        "maturity": {
+          "enum": [
+            "discovered",
+            "structured",
+            "workflow-validated"
+          ]
+        },
+        "conformance_record_ids": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/conformanceId"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "maturity": {
+                "enum": [
+                  "structured",
+                  "workflow-validated"
+                ]
+              }
+            },
+            "required": [
+              "maturity"
+            ]
+          },
+          "then": {
+            "properties": {
+              "conformance_record_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "conformanceRecord": {
+      "type": "object",
+      "required": [
+        "record_id",
+        "level",
+        "case",
+        "operation_profile",
+        "assertion_profile",
+        "status",
+        "result_schema_id",
+        "driver_version",
+        "verified_at",
+        "evidence",
+        "native_product_versions",
+        "environment",
+        "extensions"
+      ],
+      "properties": {
+        "record_id": {
+          "$ref": "#/$defs/conformanceId"
+        },
+        "level": {
+          "enum": [
+            "structured",
+            "workflow-validated"
+          ]
+        },
+        "case": {
+          "enum": [
+            "success",
+            "engineering-failure",
+            "invalid-request",
+            "unavailable",
+            "malformed-evidence",
+            "other"
+          ]
+        },
+        "operation_profile": {
+          "$ref": "#/$defs/operationProfileId"
+        },
+        "assertion_profile": {
+          "$ref": "#/$defs/assertionProfileId"
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail"
+          ]
+        },
+        "result_schema_id": {
+          "$ref": "#/$defs/resultSchemaId"
+        },
+        "driver_version": {
+          "$ref": "#/$defs/semanticVersion"
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+        },
+        "evidence": {
+          "$ref": "#/$defs/conformanceEvidence"
+        },
+        "native_product_versions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/nativeProductVersion"
+          }
+        },
+        "environment": {
+          "$ref": "#/$defs/environment"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "conformanceEvidence": {
+      "type": "object",
+      "required": [
+        "uri",
+        "sha256",
+        "extensions"
+      ],
+      "properties": {
+        "uri": {
+          "description": "Immutable or content-addressed conformance record or bundle.",
+          "type": "string",
+          "format": "uri",
+          "maxLength": 4096
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "nativeProductVersion": {
+      "type": "object",
+      "required": [
+        "product_id",
+        "version",
+        "extensions"
+      ],
+      "properties": {
+        "product_id": {
+          "$ref": "#/$defs/productId"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "operating_system",
+        "architecture",
+        "runtime",
+        "extensions"
+      ],
+      "properties": {
+        "operating_system": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "runtime": {
+          "description": "Pinned container, environment, or host-runtime identity when available.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "completionModes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "wait",
+          "submit"
+        ]
+      }
+    },
+    "driverId": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$"
+    },
+    "productId": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$"
+    },
+    "semanticVersion": {
+      "type": "string",
+      "maxLength": 100,
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+    "versionedProfileId": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^(?:openada|[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+)\\.(?:operation|assertion)/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "operationProfileId": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/versionedProfileId"
+        },
+        {
+          "pattern": "\\.operation/"
+        }
+      ]
+    },
+    "assertionProfileId": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/versionedProfileId"
+        },
+        {
+          "pattern": "\\.assertion/"
+        }
+      ]
+    },
+    "featureId": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^(?:openada|[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+)\\.feature/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "conformanceId": {
+      "type": "string",
+      "maxLength": 300,
+      "pattern": "^(?:openada|[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+)\\.conformance/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "resultSchemaId": {
+      "type": "string",
+      "pattern": "^openada\\.result/v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$"
+    },
+    "localId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+    },
+    "role": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "extensions": {
+      "description": "Optional non-semantic metadata keyed by a reverse-DNS namespace. Extensions must not change an advertised profile's meaning.",
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
+}

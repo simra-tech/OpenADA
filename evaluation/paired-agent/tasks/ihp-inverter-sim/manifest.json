@@ -1,0 +1,116 @@
+{
+  "schema": "openada.eval.task/v0alpha1",
+  "id": "ihp-inverter-xschem-ngspice-paired",
+  "design": {
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "license": "Apache-2.0"
+  },
+  "runtime": {
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "platform": "linux/amd64",
+    "pdk": "ihp-sg13g2",
+    "pdk_revision": "144f811cdffda49b71d28f64e8a92b697b61cf06"
+  },
+  "tools": [
+    {
+      "name": "xschem",
+      "path": "/foss/tools/xschem/bin/xschem",
+      "version": "XSCHEM V3.4.8RC",
+      "binary_sha256": "c960e786685939e03fb76619bad6aed886190b0d5d1eed2941b745565eb95c22"
+    },
+    {
+      "name": "ngspice",
+      "path": "/foss/tools/ngspice/bin/ngspice",
+      "version": "** ngspice-46 : Circuit level simulation program",
+      "binary_sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
+    }
+  ],
+  "inputs": [
+    {
+      "role": "schematic",
+      "path": "/design/modules/module_0_foundations/inverter/inverter_tb.sch",
+      "bytes": 1606,
+      "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
+    },
+    {
+      "role": "xschem-rcfile",
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+      "bytes": 19794,
+      "sha256": "d6d8fa5157ad2072e6d1ce63bda5f5d593ef4eb84631f23eed5e9ae3886f18b5"
+    },
+    {
+      "role": "pdk-revision",
+      "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+      "bytes": 41,
+      "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+    },
+    {
+      "role": "ngspice-init",
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+      "bytes": 957,
+      "sha256": "56ec1880a943fa481c3c321d62857b6240387e39d5aa8ded403835c34edb515d"
+    },
+    {
+      "role": "ngspice-system-init",
+      "path": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+      "bytes": 1509,
+      "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
+    }
+  ],
+  "artifacts": [
+    {
+      "role": "generated-netlist",
+      "path": "work/inverter_tb.spice",
+      "maximum_bytes": 16777216
+    },
+    {
+      "role": "simulation-raw",
+      "path": "work/test_inverter.raw",
+      "maximum_bytes": 104857600
+    },
+    {
+      "role": "simulation-log",
+      "path": "evidence/simulation/inverter_tb.log",
+      "maximum_bytes": 16777216
+    }
+  ],
+  "waveform": {
+    "plotname": "Transient Analysis",
+    "flags": "real",
+    "acceptable_point_counts": [80, 81],
+    "start_seconds": 0.0,
+    "stop_seconds": 0.000002,
+    "required_variables": ["time", "v(vdd)", "v(vin)", "v(vout)"],
+    "vdd_min": 1.19,
+    "vdd_max": 1.21,
+    "settled_windows": [
+      {
+        "start_seconds": 0.0000002,
+        "stop_seconds": 0.00000045,
+        "vin_max": 0.05,
+        "vout_min": 1.1
+      },
+      {
+        "start_seconds": 0.0000007,
+        "stop_seconds": 0.0000013,
+        "vin_min": 1.15,
+        "vout_max": 0.1
+      },
+      {
+        "start_seconds": 0.0000017,
+        "stop_seconds": 0.00000195,
+        "vin_max": 0.05,
+        "vout_min": 1.1
+      }
+    ]
+  },
+  "limits": {
+    "submission_bytes": 1048576,
+    "raw_header_bytes": 1048576,
+    "raw_line_bytes": 65536,
+    "diagnostics": 32,
+    "diagnostic_message_characters": 1000
+  }
+}

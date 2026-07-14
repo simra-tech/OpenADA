@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openada"
+version = "0.1.0"
+description = "Open agent-EDA contracts and deterministic drivers for open-source EDA tools"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+  { name = "Simra Tech" },
+]
+keywords = ["eda", "agents", "xschem", "ngspice", "xyce", "klayout", "netgen", "yosys"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+
+[project.urls]
+Homepage = "https://github.com/simra-tech/OpenADA"
+Repository = "https://github.com/simra-tech/OpenADA"
+Issues = "https://github.com/simra-tech/OpenADA/issues"
+
+[project.scripts]
+openada = "openada.cli:main"
+
+[project.optional-dependencies]
+conformance = [
+  "cryptography>=38",
+  "jsonschema>=4.18",
+]
+dev = [
+  "build>=1.2",
+  "cryptography>=38",
+  "jsonschema>=4.18",
+  "pytest>=8",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.data-files]
+"share/openada/schemas" = [
+  "schemas/driver-manifest-v0alpha1.schema.json",
+  "schemas/operation-profile-v0alpha1.schema.json",
+  "schemas/request-v0alpha1.schema.json",
+  "schemas/result-v0alpha1.schema.json",
+]
+"share/openada/profiles" = [
+  "profiles/circuit.simulate-v1alpha1.json",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+markers = [
+  "conformance: opt-in tests that require the pinned external EDA runtime and design",
+]

@@ -1,0 +1,1016 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha1",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/circuit.simulate/v1alpha1",
+    "title": "Circuit simulation",
+    "summary": "Run one declared operating-point, DC, AC, or transient analysis and return bounded evidence sufficient to determine whether that analysis produced valid native simulation results.",
+    "side_effect_mode": "evidence-only",
+    "target_kinds": [
+      "testbench"
+    ],
+    "locator_types": [
+      "filesystem",
+      "artifact",
+      "workspace"
+    ],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/simulation.evidence.valid/v1alpha1",
+    "statement": "The requested analysis of the declared testbench produced fresh, structurally valid, interpretable native simulation evidence bound to the exact request and recorded configuration.",
+    "non_goals": [
+      "This assertion does not state that any circuit performance specification was satisfied.",
+      "This assertion does not state that measurements, corners, sweeps beyond the requested analysis, or statistical runs were evaluated.",
+      "This assertion does not establish signoff suitability, model accuracy, PDK correctness, silicon correlation, or complete transitive provenance.",
+      "This operation does not mutate the authoritative testbench, schematic, layout, models, or PDK collateral."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "The native process completed successfully; the requested analysis completed without a terminal convergence condition; every required artifact is fresh, stable, within bounds, structurally valid, and bound to the request; and the result contains at least one finite dependent value at one analysis point.",
+        "allowed_execution_statuses": [
+          "completed"
+        ],
+        "required_evidence": [
+          "data.analysis.completion is completed and data.analysis.convergence is converged.",
+          "data.evidence.request_binding is exact, data.evidence.freshness is fresh, and data.evidence.structure is valid.",
+          "A fresh simulation.result artifact and a fresh bounded simulation.log artifact are retained with stable SHA-256 identities.",
+          "The native result proves at least one requested analysis point, at least one dependent variable, and at least one finite dependent value."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Fresh, request-bound native evidence conclusively proves that the requested analysis terminated because the native solver could not converge. A generic native error, malformed input, unsupported analysis, tool failure, timeout, or nonzero exit alone is not an engineering fail.",
+        "allowed_execution_statuses": [
+          "completed",
+          "failed"
+        ],
+        "required_evidence": [
+          "data.analysis.completion is terminal-failure and data.analysis.convergence is non-converged.",
+          "data.evidence.request_binding is exact and data.evidence.freshness is fresh.",
+          "A fresh, stable, untruncated simulation.log artifact contains a recognized terminal solver non-convergence record bound to the requested analysis.",
+          "No missing, conflicting, malformed, stale, or over-limit evidence undermines the terminal classification."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The available evidence cannot justify pass or the narrowly defined terminal non-convergence failure. This includes invalid or unsupported requests, unavailable tools, timeouts without conclusive retained evidence, generic native failures, missing or stale artifacts, malformed or truncated results, conflicting classifications, and results that cannot be bound to the request.",
+        "allowed_execution_statuses": [
+          "completed",
+          "timed_out",
+          "not_available",
+          "invalid_request",
+          "failed"
+        ],
+        "required_evidence": [
+          "The result records which validation, binding, freshness, structural, convergence, or availability condition was not established.",
+          "Every artifact that can be safely and stably retained is hashed and referenced even when it is insufficient for a conclusion.",
+          "At least one stable diagnostic code identifies the uncertainty and a bounded next action."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {
+        "role": "model-library",
+        "required": false,
+        "locator_types": [
+          "filesystem",
+          "artifact",
+          "workspace"
+        ],
+        "identity_requirement": "content-digest",
+        "description": "An explicitly selected model library or model include that materially affects the requested analysis. It is required when it is not already an immutable part of the target artifact.",
+        "extensions": {}
+      },
+      {
+        "role": "pdk",
+        "required": false,
+        "locator_types": [
+          "filesystem",
+          "artifact",
+          "workspace"
+        ],
+        "identity_requirement": "best-available",
+        "description": "The PDK identity or snapshot governing devices and models. It is required when the testbench depends on PDK collateral not completely identified by other configuration records.",
+        "extensions": {}
+      },
+      {
+        "role": "corner",
+        "required": false,
+        "locator_types": [
+          "filesystem",
+          "artifact",
+          "workspace"
+        ],
+        "identity_requirement": "content-digest",
+        "description": "An explicitly selected process, voltage, temperature, or model-corner definition when the analysis depends on one.",
+        "extensions": {}
+      },
+      {
+        "role": "simulator-configuration",
+        "required": false,
+        "locator_types": [
+          "filesystem",
+          "artifact",
+          "workspace"
+        ],
+        "identity_requirement": "content-digest",
+        "description": "A reviewed simulator startup or configuration file whose commands or options materially affect native execution.",
+        "extensions": {}
+      }
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "circuit.simulate v1alpha1 request parameters",
+      "description": "Closed parameters for exactly one OP, DC, AC, or transient analysis. Values use SI units rather than simulator suffix notation.",
+      "type": "object",
+      "required": [
+        "analysis",
+        "extensions"
+      ],
+      "properties": {
+        "analysis": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "extensions"
+              ],
+              "properties": {
+                "type": {
+                  "const": "op"
+                },
+                "extensions": {
+                  "$ref": "#/$defs/extensions"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "source_name",
+                "source_unit",
+                "start",
+                "stop",
+                "step",
+                "extensions"
+              ],
+              "properties": {
+                "type": {
+                  "const": "dc"
+                },
+                "source_name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:+-]*$"
+                },
+                "source_unit": {
+                  "enum": [
+                    "V",
+                    "A"
+                  ]
+                },
+                "start": {
+                  "type": "number"
+                },
+                "stop": {
+                  "type": "number"
+                },
+                "step": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "extensions": {
+                  "$ref": "#/$defs/extensions"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "sweep",
+                "points",
+                "start_hz",
+                "stop_hz",
+                "extensions"
+              ],
+              "properties": {
+                "type": {
+                  "const": "ac"
+                },
+                "sweep": {
+                  "enum": [
+                    "lin",
+                    "dec",
+                    "oct"
+                  ]
+                },
+                "points": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10000000
+                },
+                "start_hz": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "stop_hz": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "extensions": {
+                  "$ref": "#/$defs/extensions"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "step_s",
+                "stop_s",
+                "extensions"
+              ],
+              "properties": {
+                "type": {
+                  "const": "tran"
+                },
+                "step_s": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "stop_s": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "start_s": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 0
+                },
+                "max_step_s": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "extensions": {
+                  "$ref": "#/$defs/extensions"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "$defs": {
+        "extensions": {
+          "type": "object",
+          "maxProperties": 64,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+          },
+          "additionalProperties": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "All JSON numbers must be finite; NaN and infinities are invalid even if a permissive parser accepts them.",
+      "For a DC analysis, stop must be greater than start; v1alpha1 supports only an ascending single independent voltage or current source sweep.",
+      "For an AC analysis, stop_hz must be greater than start_hz. For lin, points is the total point count; for dec and oct, points is the count per decade or octave.",
+      "For a transient analysis, start_s defaults to zero and must be less than stop_s. If max_step_s is present, it must not exceed stop_s minus start_s.",
+      "The driver must deterministically reject a target whose native analysis directives conflict with request.parameters.analysis unless it can suppress or replace them without mutating the authoritative target and records the exact generated input as simulation.resolved-netlist.",
+      "The selected driver capability must advertise the feature corresponding exactly to analysis.type; a driver must not substitute another analysis."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "circuit.simulate v1alpha1 normalized result data",
+      "description": "Bounded decision facts for the alpha result bridge. Native waveforms, tabular results, and logs remain retained artifacts.",
+      "type": "object",
+      "required": [
+        "protocol",
+        "analysis",
+        "evidence",
+        "extensions"
+      ],
+      "properties": {
+        "protocol": {
+          "type": "object",
+          "required": [
+            "request_id",
+            "operation_profile",
+            "assertion_profile",
+            "driver_id",
+            "driver_version"
+          ],
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "operation_profile": {
+              "const": "openada.operation/circuit.simulate/v1alpha1"
+            },
+            "assertion_profile": {
+              "const": "openada.assertion/simulation.evidence.valid/v1alpha1"
+            },
+            "driver_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$"
+            },
+            "driver_version": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "additionalProperties": false
+        },
+        "analysis": {
+          "type": "object",
+          "required": [
+            "type",
+            "completion",
+            "convergence",
+            "point_count",
+            "dependent_variable_count",
+            "finite_value_count",
+            "extensions"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "op",
+                "dc",
+                "ac",
+                "tran",
+                null
+              ]
+            },
+            "completion": {
+              "enum": [
+                "completed",
+                "terminal-failure",
+                "unproven"
+              ]
+            },
+            "convergence": {
+              "enum": [
+                "converged",
+                "non-converged",
+                "not-established"
+              ]
+            },
+            "point_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "dependent_variable_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "finite_value_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "evidence": {
+          "type": "object",
+          "required": [
+            "request_binding",
+            "freshness",
+            "structure",
+            "artifact_roles_present",
+            "provenance",
+            "provenance_limitations",
+            "extensions"
+          ],
+          "properties": {
+            "request_binding": {
+              "enum": [
+                "exact",
+                "not-established"
+              ]
+            },
+            "freshness": {
+              "enum": [
+                "fresh",
+                "stale",
+                "not-established"
+              ]
+            },
+            "structure": {
+              "enum": [
+                "valid",
+                "invalid",
+                "not-established"
+              ]
+            },
+            "artifact_roles_present": {
+              "type": "array",
+              "maxItems": 32,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "simulation.result",
+                  "simulation.log",
+                  "simulation.launcher",
+                  "simulation.resolved-netlist"
+                ]
+              }
+            },
+            "provenance": {
+              "enum": [
+                "complete",
+                "bounded",
+                "incomplete"
+              ]
+            },
+            "provenance_limitations": {
+              "type": "array",
+              "maxItems": 64,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "$defs": {
+        "extensions": {
+          "type": "object",
+          "maxProperties": 64,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+          },
+          "additionalProperties": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {
+        "path": "data.protocol.request_id",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Exact request correlation identity copied without carrying engineering meaning.",
+        "extensions": {}
+      },
+      {
+        "path": "data.protocol.operation_profile",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Exact immutable operation profile used for dispatch and interpretation.",
+        "extensions": {}
+      },
+      {
+        "path": "data.protocol.assertion_profile",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Exact immutable assertion profile evaluated by this result.",
+        "extensions": {}
+      },
+      {
+        "path": "data.protocol.driver_id",
+        "type": [
+          "string",
+          "null"
+        ],
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Selected deterministic driver identity, or null when request rejection occurred before driver selection.",
+        "extensions": {}
+      },
+      {
+        "path": "data.protocol.driver_version",
+        "type": [
+          "string",
+          "null"
+        ],
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Selected driver implementation version, or null when request rejection occurred before driver selection.",
+        "extensions": {}
+      },
+      {
+        "path": "data.analysis.type",
+        "type": [
+          "string",
+          "null"
+        ],
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "The requested and dispatched analysis kind: op, dc, ac, or tran; null only when a rejected request did not establish a supported analysis type.",
+        "extensions": {}
+      },
+      {
+        "path": "data.analysis.completion",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Whether analysis completion, a terminal solver failure, or neither was proven from native evidence.",
+        "extensions": {}
+      },
+      {
+        "path": "data.analysis.convergence",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Normalized convergence classification; not-established must be used instead of guessing from process exit.",
+        "extensions": {}
+      },
+      {
+        "path": "data.analysis.point_count",
+        "type": [
+          "integer",
+          "null"
+        ],
+        "required_for": [
+          "pass"
+        ],
+        "description": "Number of structurally validated native points for the requested analysis.",
+        "bounds": "At least 1 for pass; null when unavailable for fail or unknown.",
+        "extensions": {}
+      },
+      {
+        "path": "data.analysis.dependent_variable_count",
+        "type": [
+          "integer",
+          "null"
+        ],
+        "required_for": [
+          "pass"
+        ],
+        "description": "Count of dependent result variables, excluding the independent sweep, frequency, or time axis.",
+        "bounds": "At least 1 for pass; null when unavailable for fail or unknown.",
+        "extensions": {}
+      },
+      {
+        "path": "data.analysis.finite_value_count",
+        "type": [
+          "integer",
+          "null"
+        ],
+        "required_for": [
+          "pass"
+        ],
+        "description": "Count of finite scalar values among validated dependent variables.",
+        "bounds": "At least 1 for pass; non-finite values do not contribute and a result containing only non-finite dependent values cannot pass.",
+        "extensions": {}
+      },
+      {
+        "path": "data.evidence.request_binding",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Whether native inputs, analysis, and outputs were bound to the exact request.",
+        "extensions": {}
+      },
+      {
+        "path": "data.evidence.freshness",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Freshness classification for required evidence artifacts.",
+        "extensions": {}
+      },
+      {
+        "path": "data.evidence.structure",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Structural validation of the native result evidence; logs alone do not establish valid result structure.",
+        "extensions": {}
+      },
+      {
+        "path": "data.evidence.artifact_roles_present",
+        "type": "array",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Bounded canonical roles of retained artifacts; native filenames and formats remain in top-level artifact records.",
+        "bounds": "At most 32 unique role values from this profile's artifact-role catalog.",
+        "extensions": {}
+      },
+      {
+        "path": "data.evidence.provenance",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Honest completeness classification for the observed input, configuration, runtime, and transitive dependency identity.",
+        "extensions": {}
+      },
+      {
+        "path": "data.evidence.provenance_limitations",
+        "type": "array",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Bounded explanations of any ambient, transitive, or native-format provenance not captured by the result.",
+        "bounds": "At most 64 unique strings of at most 1000 characters each.",
+        "extensions": {}
+      }
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {
+        "role": "simulation.result",
+        "kind": "native-simulation-result",
+        "required_for": [
+          "pass"
+        ],
+        "freshness": "fresh-per-invocation",
+        "integrity": [
+          "Use a driver-owned unique output path or prove the declared path was absent before execution; directory scanning cannot select evidence.",
+          "Capture a stable regular-file snapshot within the declared byte ceiling and record its byte count and SHA-256 digest.",
+          "Apply a format-aware structural validator and prove at least one nonconstant requested-analysis point with a finite dependent value."
+        ],
+        "native_authority": "The retained native ngspice raw result or Xyce ASCII raw result is authoritative; normalized counts are only a bounded decision index.",
+        "extensions": {}
+      },
+      {
+        "role": "simulation.log",
+        "kind": "native-simulation-log",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "freshness": "fresh-per-invocation",
+        "integrity": [
+          "Capture stdout and stderr through the driver rather than accepting an ambient prior log.",
+          "Retain a stable bounded transcript with byte count and SHA-256 digest.",
+          "A truncated or over-limit transcript cannot prove pass or terminal non-convergence fail."
+        ],
+        "native_authority": "The retained native simulator transcript is authoritative for completion and solver diagnostics; normalized diagnostic codes do not replace it.",
+        "extensions": {}
+      },
+      {
+        "role": "simulation.launcher",
+        "kind": "driver-generated-control",
+        "required_for": [],
+        "freshness": "fresh-per-invocation",
+        "integrity": [
+          "Retain and hash any generated control, command, or overlay file that changes how the immutable target is executed."
+        ],
+        "native_authority": "The generated launcher records driver translation but does not replace the authoritative target or simulator result.",
+        "extensions": {}
+      },
+      {
+        "role": "simulation.resolved-netlist",
+        "kind": "resolved-spice-netlist",
+        "required_for": [],
+        "freshness": "fresh-per-invocation",
+        "integrity": [
+          "Retain and hash the exact generated netlist when the driver suppresses, replaces, or adds native analysis directives.",
+          "Do not represent a partial export as a complete resolved netlist."
+        ],
+        "native_authority": "This artifact records the exact simulator input generated from the request; the declared target remains the authoritative caller input.",
+        "extensions": {}
+      }
+    ],
+    "integrity_rules": [
+      "Validate the base request and the closed parameters schema before resolving or invoking a driver.",
+      "Snapshot and hash filesystem targets and configuration before execution, then verify that material inputs did not change before classifying the result.",
+      "Execute literal argv without a shell and keep native stdout or stderr out of the JSON protocol stream.",
+      "Select only declared or driver-owned output paths; never accept the newest matching file found by directory scanning.",
+      "A zero native exit code is insufficient for pass, and a nonzero exit code is insufficient for engineering fail.",
+      "Reject or classify unknown any required artifact that is stale, linked unexpectedly, unstable during capture, malformed, conflicting, truncated, or over the profile ceiling.",
+      "Preserve native evidence and report the selected executable path, observed simulator version, command vector, current working directory, and material environment policy."
+    ],
+    "provenance_limitations": [
+      "Transitive model and include reads are incomplete unless the driver enumerates and hashes them or executes from an attested immutable snapshot.",
+      "System startup files, environment variables, dynamically loaded device modules, and simulator defaults are ambient unless the driver explicitly captures them.",
+      "A valid native result establishes only this analysis-evidence assertion; it does not validate model fidelity, PDK suitability, or design specifications."
+    ],
+    "limits": {
+      "max_log_bytes": 16777216,
+      "max_artifact_bytes": 268435456,
+      "max_artifact_count": 32,
+      "extensions": {}
+    },
+    "extensions": {}
+  },
+  "features": [
+    {
+      "id": "openada.feature/simulation.analysis.op/v1alpha1",
+      "parameter_path": "analysis.type",
+      "parameter_values": [
+        "op"
+      ],
+      "request_effect": "The driver must execute one DC operating-point solution and return its finite dependent values as native evidence.",
+      "conformance_case": "A public resistor-divider fixture produces one valid operating point; a terminal singular or non-convergent fixture exercises fail; missing or malformed output exercises unknown.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/simulation.analysis.dc/v1alpha1",
+      "parameter_path": "analysis.type",
+      "parameter_values": [
+        "dc"
+      ],
+      "request_effect": "The driver must translate the declared ascending source sweep exactly and validate a native DC result against that sweep.",
+      "conformance_case": "A public voltage-source sweep fixture proves matching first and last sweep points and finite dependent values on both backends.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/simulation.analysis.ac/v1alpha1",
+      "parameter_path": "analysis.type",
+      "parameter_values": [
+        "ac"
+      ],
+      "request_effect": "The driver must translate the declared LIN, DEC, or OCT frequency sweep exactly and validate complex or equivalent native AC evidence.",
+      "conformance_case": "A public RC fixture proves requested frequency bounds, finite real and imaginary dependent values, and structurally valid retained evidence.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/simulation.analysis.tran/v1alpha1",
+      "parameter_path": "analysis.type",
+      "parameter_values": [
+        "tran"
+      ],
+      "request_effect": "The driver must bind the declared time-step controls exactly and validate a complete native transient result with finite dependent values. Time-axis bound equivalence is a separate feature until a validator proves it explicitly.",
+      "conformance_case": "A public RC transient fixture proves exact deck-bound transient parameters plus fresh, structurally complete finite waveform evidence on both backends.",
+      "extensions": {}
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "simulation.request.invalid",
+      "severity": "error",
+      "condition": "The base request, closed parameters, semantic numeric constraints, target identity, or configuration is invalid.",
+      "next_action": "Correct the typed request; do not invoke a simulator or reinterpret the request.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.analysis.unsupported",
+      "severity": "error",
+      "condition": "The selected capability does not advertise the exact analysis feature required by analysis.type.",
+      "next_action": "Select a capable driver or change the explicit analysis request; do not substitute another analysis.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.tool.unavailable",
+      "severity": "error",
+      "condition": "The selected native simulator executable cannot be resolved or invoked under the selected transport.",
+      "next_action": "Install or explicitly select a discovered compatible driver and rerun preflight.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.analysis.non_convergent",
+      "severity": "error",
+      "condition": "Fresh request-bound native evidence conclusively identifies terminal solver non-convergence for the requested analysis.",
+      "next_action": "Inspect the bounded native diagnostic and revise analysis controls, initial conditions, models, or circuit topology before rerunning.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.analysis.unproven",
+      "severity": "error",
+      "condition": "Native execution did not produce evidence sufficient to prove completion or the narrowly defined terminal non-convergence outcome.",
+      "next_action": "Inspect the retained bounded log and exact request binding, then correct the input or evidence declaration.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.result.missing",
+      "severity": "error",
+      "condition": "A required declared native result artifact was not produced.",
+      "next_action": "Check the translated native analysis and output command, then rerun to a fresh declared path.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.result.stale",
+      "severity": "error",
+      "condition": "A required output existed before execution or cannot be proven fresh for this invocation.",
+      "next_action": "Use a new driver-owned output location and rerun; do not delete provenance to reuse the artifact.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.result.malformed",
+      "severity": "error",
+      "condition": "The retained native result fails its backend-specific structural validator or cannot be bound to the requested analysis.",
+      "next_action": "Inspect the retained artifact and simulator transcript; correct the native output generation or validator mapping.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.evidence.over_limit",
+      "severity": "error",
+      "condition": "A required log or artifact exceeds the request or profile evidence ceiling and cannot be completely validated.",
+      "next_action": "Reduce the requested evidence or split the analysis; do not classify truncated evidence as pass or fail.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.provenance.incomplete",
+      "severity": "warning",
+      "condition": "One or more transitive includes, startup inputs, modules, environment values, or simulator defaults are not completely identified.",
+      "next_action": "Declare or snapshot the missing material configuration when reproducibility requires it; retain the limitation in the result.",
+      "extensions": {}
+    }
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.driver.ngspice",
+      "native_product_id": "org.ngspice.simulator",
+      "backend_name": "ngspice",
+      "supported_analyses": [
+        "tran"
+      ],
+      "analysis_commands": {
+        "tran": ".tran <step_s> <stop_s> [<start_s> [<max_step_s>]]"
+      },
+      "native_actions": [
+        "Validate and snapshot the declared SPICE testbench and configuration, then create a fresh driver-owned evidence location.",
+        "Translate or verify the requested analysis in a retained launcher or resolved netlist without mutating the authoritative target.",
+        "Invoke ngspice through literal argv, capture a bounded native transcript, and request a fresh native raw result.",
+        "Structurally validate the raw header, payload, requested nonconstant analysis plot, point and variable counts, finite dependent values, and analysis completion record.",
+        "Classify only recognized terminal solver non-convergence as engineering fail; normalize all other insufficient native outcomes to unknown."
+      ],
+      "artifact_bindings": [
+        {
+          "native_kind": "Spice3/ngspice binary or ASCII raw result",
+          "canonical_role": "simulation.result",
+          "extensions": {}
+        },
+        {
+          "native_kind": "captured ngspice stdout and stderr transcript",
+          "canonical_role": "simulation.log",
+          "extensions": {}
+        },
+        {
+          "native_kind": "driver-generated ngspice control launcher",
+          "canonical_role": "simulation.launcher",
+          "extensions": {}
+        },
+        {
+          "native_kind": "driver-generated SPICE deck with exact analysis directives",
+          "canonical_role": "simulation.resolved-netlist",
+          "extensions": {}
+        }
+      ],
+      "limitations": [
+        "ngspice control and batch modes differ in startup, measurement, memory, and output behavior; the driver must record the selected native policy below the semantic boundary.",
+        "Native vector names, raw encodings, warning text, and simulator options are retained as backend evidence and are not standardized by this profile."
+      ],
+      "extensions": {}
+    },
+    {
+      "driver_id": "org.openada.driver.xyce",
+      "native_product_id": "gov.sandia.xyce",
+      "backend_name": "Xyce",
+      "supported_analyses": [
+        "tran"
+      ],
+      "analysis_commands": {
+        "tran": ".TRAN <step_s> <stop_s> [<start_s> [<max_step_s>]]"
+      },
+      "native_actions": [
+        "Validate and snapshot the declared SPICE testbench and configuration, then create a fresh driver-owned evidence location.",
+        "Translate or verify the requested analysis directives in a retained resolved netlist without mutating the authoritative target.",
+        "For the initial transient mapping, invoke Xyce as literal argv equivalent to Xyce -l LOG -r RAW -a NETLIST with XYCE_NO_TRACKING=1, capture the bounded native log, and retain the exact ASCII raw result.",
+        "Apply a format-aware validator to prove requested analysis bounds, point and dependent-variable counts, finite values, and completion from the native result and transcript.",
+        "Classify only recognized terminal solver non-convergence as engineering fail; normalize syntax, unsupported-device, launch, timeout, and insufficient-output conditions to unknown."
+      ],
+      "artifact_bindings": [
+        {
+          "native_kind": "Xyce complete ASCII raw analysis result selected with -r and -a",
+          "canonical_role": "simulation.result",
+          "extensions": {}
+        },
+        {
+          "native_kind": "captured Xyce stdout and stderr transcript",
+          "canonical_role": "simulation.log",
+          "extensions": {}
+        },
+        {
+          "native_kind": "driver-generated Xyce invocation or control record",
+          "canonical_role": "simulation.launcher",
+          "extensions": {}
+        },
+        {
+          "native_kind": "driver-generated Xyce-compatible SPICE deck with exact analysis and output directives",
+          "canonical_role": "simulation.resolved-netlist",
+          "extensions": {}
+        }
+      ],
+      "limitations": [
+        "This mapping does not advertise OP because the selected complete -r -a raw evidence path covers AC, DC, and TRAN but not OP.",
+        "The built-in v1alpha1 capability is one small transient deck with no measurements, control section, or transitive includes; AC and DC are not advertised until their own fixtures and translators pass.",
+        "Xyce output naming, supported device syntax, and native result format details differ from ngspice and remain driver-owned behavior.",
+        "The driver must validate the exact Xyce result format it selected; a text file with numeric-looking rows is not sufficient without request binding and structural checks."
+      ],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": [
+      "operation.id and operation target, locator, and side-effect semantics",
+      "assertion.id, assertion statement, non-goals, and pass/fail/unknown truth table",
+      "request configuration roles, closed parameters schema, units, and semantic constraints",
+      "normalized result data schema, fact meanings, bounds, and required statuses",
+      "evidence artifact roles, integrity rules, provenance limitations, and ceilings",
+      "feature identifiers and their exact request effects",
+      "diagnostic codes and routing meanings"
+    ],
+    "change_policy": "This alpha profile may be superseded, but its published operation and assertion identifiers and normative contents must not be silently redefined. Any change to the closed request shape, units, supported analysis meaning, assertion threshold, status rule, required fact, artifact role, or evidence authority requires a new profile identifier and file. Driver fixes, additional conformance evidence, and newly tested native versions require driver or conformance revisions rather than mutation of this profile.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

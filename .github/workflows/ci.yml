@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install development dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e '.[dev]'
+      - name: Compile Python sources
+        run: python -m compileall -q src tests conformance evaluation
+      - name: Run tests
+        run: python -m pytest -q
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      - name: Build distributions
+        run: python -m pip install --upgrade pip build && python -m build
+      - name: Check wheel contents
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import tarfile
+          import zipfile
+
+          wheels = list(Path("dist").glob("openada-*.whl"))
+          assert len(wheels) == 1, wheels
+          with zipfile.ZipFile(wheels[0]) as archive:
+              names = set(archive.namelist())
+          assert any(
+              name.endswith("/share/openada/schemas/result-v0alpha1.schema.json")
+              for name in names
+          ), sorted(names)
+
+          sdists = list(Path("dist").glob("openada-*.tar.gz"))
+          assert len(sdists) == 1, sdists
+          with tarfile.open(sdists[0]) as archive:
+              source_names = set(archive.getnames())
+          required_source_paths = {
+              "bin/openada",
+              "conformance/ihp-inverter/README.md",
+              "conformance/ihp-inverter/manifest.json",
+              "conformance/ihp-inverter/run.schema.json",
+              "conformance/ihp-inverter/common.py",
+              "conformance/ihp-inverter/setup.py",
+              "conformance/ihp-inverter/run.py",
+              "conformance/ihp-inverter/verify.py",
+              "conformance/ihp-inverter-ngspice/README.md",
+              "conformance/ihp-inverter-ngspice/manifest.json",
+              "conformance/ihp-inverter-ngspice/run.schema.json",
+              "conformance/ihp-inverter-ngspice/common.py",
+              "conformance/ihp-inverter-ngspice/setup.py",
+              "conformance/ihp-inverter-ngspice/run.py",
+              "conformance/ihp-inverter-ngspice/inside.py",
+              "conformance/ihp-inverter-ngspice/verify.py",
+              "conformance/driver-kit/README.md",
+              "conformance/driver-kit/check_result.py",
+              "evaluation/paired-agent/README.md",
+              "evaluation/paired-agent/common.py",
+              "evaluation/paired-agent/keygen.py",
+              "evaluation/paired-agent/plan.py",
+              "evaluation/paired-agent/assemble.py",
+              "evaluation/paired-agent/summarize.py",
+              "evaluation/paired-agent/verify_summary.py",
+              "evaluation/paired-agent/adapters/README.md",
+              "evaluation/paired-agent/adapters/codex_jsonl.py",
+              "evaluation/paired-agent/schemas/campaign-v0alpha1.schema.json",
+              "evaluation/paired-agent/schemas/supervisor-v0alpha1.schema.json",
+              "evaluation/paired-agent/schemas/trace-v0alpha1.schema.json",
+              "evaluation/paired-agent/schemas/trial-v0alpha1.schema.json",
+              "evaluation/paired-agent/schemas/summary-v0alpha1.schema.json",
+              "evaluation/paired-agent/schemas/summary-verification-v0alpha1.schema.json",
+              "evaluation/paired-agent/schemas/treatment-manifest-v0alpha1.schema.json",
+              "evaluation/paired-agent/tasks/ihp-inverter-sim/manifest.json",
+              "evaluation/paired-agent/tasks/ihp-inverter-sim/task.md",
+              "evaluation/paired-agent/tasks/ihp-inverter-sim/submission.schema.json",
+              "evaluation/paired-agent/tasks/ihp-inverter-sim/native_score.py",
+              "docs/COMPATIBILITY.md",
+              "docs/CONTRACT.md",
+              "docs/ROADMAP.md",
+              "fixtures/smoke/smoke_ngspice.cir",
+              "skills/openada/SKILL.md",
+          }
+          for required in required_source_paths:
+              assert any(name.endswith("/" + required) for name in source_names), required
+          assert not any("/fixtures/evidence/" in name for name in source_names)
+          PY
+      - name: Test the installed wheel contract
+        run: |
+          python -m venv /tmp/openada-wheel-test
+          /tmp/openada-wheel-test/bin/python -m pip install dist/openada-*.whl
+          /tmp/openada-wheel-test/bin/openada --version
+          /tmp/openada-wheel-test/bin/python - <<'PY'
+          import json
+          import subprocess
+
+          from openada.conformance import result_schema_path
+
+          assert result_schema_path().is_file()
+
+          completed = subprocess.run(
+              ["/tmp/openada-wheel-test/bin/openada", "simulate"],
+              check=False,
+              text=True,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+          )
+          payload = json.loads(completed.stdout)
+          assert completed.returncode == 2
+          assert completed.stderr == ""
+          assert payload["execution"]["status"] == "invalid_request"
+          assert payload["engineering"]["status"] == "unknown"
+          PY

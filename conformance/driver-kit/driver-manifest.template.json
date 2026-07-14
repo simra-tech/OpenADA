@@ -1,0 +1,117 @@
+{
+  "schema": "openada.driver-manifest/v0alpha1",
+  "driver": {
+    "id": "org.example.openada.driver.example-spice",
+    "name": "Example SPICE OpenADA driver",
+    "version": "0.1.0",
+    "homepage": "https://example.org/openada-driver-example-spice",
+    "source": "https://example.org/source/openada-driver-example-spice",
+    "license": "MIT",
+    "extensions": {}
+  },
+  "native_products": [
+    {
+      "product_id": "org.example.eda.example-spice",
+      "name": "ExampleSpice",
+      "vendor": "Example EDA",
+      "roles": [
+        "circuit-simulator"
+      ],
+      "version_policy": {
+        "mode": "probe-and-record",
+        "tested_versions": [
+          "ExampleSpice 1.0"
+        ],
+        "extensions": {}
+      },
+      "executable_names": [
+        "example-spice"
+      ],
+      "extensions": {}
+    }
+  ],
+  "transports": [
+    {
+      "id": "local-json-stdio",
+      "type": "local-cli",
+      "argv": [
+        "openada-driver-example-spice"
+      ],
+      "request_encoding": "json-stdin",
+      "result_encoding": "json-stdout",
+      "completion_modes": [
+        "wait"
+      ],
+      "extensions": {}
+    }
+  ],
+  "capabilities": [
+    {
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha1",
+      "assertion_profiles": [
+        "openada.assertion/simulation.evidence.valid/v1alpha1"
+      ],
+      "result_schema_ids": [
+        "openada.result/v0alpha1"
+      ],
+      "features": [
+        "openada.feature/simulation.analysis.tran/v1alpha1"
+      ],
+      "locator_types": [
+        "filesystem",
+        "artifact",
+        "workspace"
+      ],
+      "completion_modes": [
+        "wait"
+      ],
+      "side_effect_modes": [
+        "evidence-only"
+      ],
+      "transport_ids": [
+        "local-json-stdio"
+      ],
+      "native_product_ids": [
+        "org.example.eda.example-spice"
+      ],
+      "maturity": "structured",
+      "conformance_record_ids": [
+        "org.example.openada.conformance/example-spice-smoke/v1"
+      ],
+      "extensions": {}
+    }
+  ],
+  "conformance_records": [
+    {
+      "record_id": "org.example.openada.conformance/example-spice-smoke/v1",
+      "level": "structured",
+      "case": "success",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha1",
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "status": "pass",
+      "result_schema_id": "openada.result/v0alpha1",
+      "driver_version": "0.1.0",
+      "verified_at": "2026-07-14T00:00:00Z",
+      "evidence": {
+        "uri": "https://example.org/openada/conformance/example-spice-smoke-v1.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "extensions": {}
+      },
+      "native_product_versions": [
+        {
+          "product_id": "org.example.eda.example-spice",
+          "version": "ExampleSpice 1.0",
+          "extensions": {}
+        }
+      ],
+      "environment": {
+        "operating_system": "Linux",
+        "architecture": "x86_64",
+        "runtime": "example-runtime@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "extensions": {}
+      },
+      "extensions": {}
+    }
+  ],
+  "extensions": {}
+}

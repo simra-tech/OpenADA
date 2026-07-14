@@ -1,0 +1,640 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/evaluation/paired-agent/schemas/trial-v0alpha1.schema.json",
+  "title": "OpenADA paired-agent assembled trial v0alpha1",
+  "type": "object",
+  "required": [
+    "schema",
+    "campaign_id",
+    "campaign_sha256",
+    "plan_sha256",
+    "assignment",
+    "termination",
+    "timing",
+    "inputs",
+    "policy_observation",
+    "execution_observation",
+    "trace_observation",
+    "protocol",
+    "score",
+    "metrics",
+    "seal"
+  ],
+  "properties": {
+    "schema": {"const": "openada.eval.trial/v0alpha1"},
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "campaign_sha256": {"$ref": "#/$defs/sha256"},
+    "plan_sha256": {"$ref": "#/$defs/sha256"},
+    "assignment": {"$ref": "#/$defs/assignment"},
+    "termination": {
+      "enum": [
+        "completed",
+        "timed_out",
+        "budget_exhausted",
+        "agent_failed",
+        "adapter_failed",
+        "supervisor_aborted"
+      ]
+    },
+    "timing": {
+      "type": "object",
+      "required": ["wall_time_ms"],
+      "properties": {
+        "wall_time_ms": {"type": "integer", "minimum": 0, "maximum": 4503599627370495}
+      },
+      "additionalProperties": false
+    },
+    "inputs": {
+      "type": "object",
+      "required": [
+        "supervisor_bound",
+        "trace_bound",
+        "submission_bound",
+        "workspace_attested"
+      ],
+      "properties": {
+        "supervisor_bound": {"const": true},
+        "trace_bound": {"const": true},
+        "submission_bound": {"const": true},
+        "workspace_attested": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "policy_observation": {"$ref": "#/$defs/policyObservation"},
+    "execution_observation": {"$ref": "#/$defs/executionObservation"},
+    "trace_observation": {"$ref": "#/$defs/traceObservation"},
+    "protocol": {
+      "type": "object",
+      "required": [
+        "eligible",
+        "reason_codes",
+        "engineering_eligible",
+        "engineering_reason_codes"
+      ],
+      "properties": {
+        "eligible": {"type": "boolean"},
+        "reason_codes": {"$ref": "#/$defs/reasonCodes"},
+        "engineering_eligible": {"type": "boolean"},
+        "engineering_reason_codes": {"$ref": "#/$defs/reasonCodes"}
+      },
+      "additionalProperties": false
+    },
+    "score": {"$ref": "#/$defs/nativeScore"},
+    "metrics": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 32,
+      "patternProperties": {
+        "^[a-z][a-z0-9_]{0,63}$": {"$ref": "#/$defs/metric"}
+      },
+      "additionalProperties": false
+    },
+    "seal": {
+      "type": "object",
+      "required": ["algorithm", "key_id", "signature_hex"],
+      "properties": {
+        "algorithm": {"const": "ed25519"},
+        "key_id": {"$ref": "#/$defs/sha256"},
+        "signature_hex": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{128}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+    },
+    "assignment": {
+      "type": "object",
+      "required": ["sequence", "pair_id", "trial_id", "condition", "pair_position"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "pair_id": {"type": "string", "pattern": "^pair-[0-9a-f]{24}$"},
+        "trial_id": {"type": "string", "pattern": "^trial-[0-9a-f]{24}$"},
+        "condition": {"enum": ["raw", "openada"]},
+        "pair_position": {"enum": [1, 2]}
+      },
+      "additionalProperties": false
+    },
+    "reasonCodes": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_.-]{0,127}$"
+      }
+    },
+    "metric": {
+      "type": "object",
+      "required": ["eligible", "value", "source", "reason_codes"],
+      "properties": {
+        "eligible": {"type": "boolean"},
+        "value": {"type": ["boolean", "number", "null"]},
+        "source": {"enum": ["native_score", "supervisor", "trace", "unavailable"]},
+        "reason_codes": {"$ref": "#/$defs/reasonCodes"}
+      },
+      "additionalProperties": false
+    },
+    "policyObservation": {
+      "type": "object",
+      "required": ["attempt", "attestations", "condition_observation", "authority"],
+      "properties": {
+        "attempt": {
+          "type": "object",
+          "required": ["attempt_count", "assignment_launched_once", "prior_attempt_absent"],
+          "properties": {
+            "attempt_count": {"type": "integer", "minimum": 1},
+            "assignment_launched_once": {"type": "boolean"},
+            "prior_attempt_absent": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "attestations": {
+          "type": "object",
+          "required": [
+            "prompt_exact",
+            "agent_configuration_exact",
+            "runtime_identity_exact",
+            "approval_policy_exact",
+            "budgets_exact",
+            "fresh_agent_context",
+            "prior_session_absent",
+            "memory_absent",
+            "web_disabled",
+            "subagents_disabled",
+            "credentials_absent_from_executor",
+            "participant_host_shell_absent",
+            "participant_container_socket_absent",
+            "workspace_fresh",
+            "required_outputs_absent_before",
+            "source_read_only",
+            "design_read_only",
+            "pdk_read_only",
+            "startup_files_read_only",
+            "source_unchanged_after",
+            "task_network_none",
+            "task_network_enforced",
+            "extra_condition_difference_absent",
+            "user_intervention_count"
+          ],
+          "properties": {
+            "prompt_exact": {"type": "boolean"},
+            "agent_configuration_exact": {"type": "boolean"},
+            "runtime_identity_exact": {"type": "boolean"},
+            "approval_policy_exact": {"type": "boolean"},
+            "budgets_exact": {"type": "boolean"},
+            "fresh_agent_context": {"type": "boolean"},
+            "prior_session_absent": {"type": "boolean"},
+            "memory_absent": {"type": "boolean"},
+            "web_disabled": {"type": "boolean"},
+            "subagents_disabled": {"type": "boolean"},
+            "credentials_absent_from_executor": {"type": "boolean"},
+            "participant_host_shell_absent": {"type": "boolean"},
+            "participant_container_socket_absent": {"type": "boolean"},
+            "workspace_fresh": {"type": "boolean"},
+            "required_outputs_absent_before": {"type": "boolean"},
+            "source_read_only": {"type": "boolean"},
+            "design_read_only": {"type": "boolean"},
+            "pdk_read_only": {"type": "boolean"},
+            "startup_files_read_only": {"type": "boolean"},
+            "source_unchanged_after": {"type": "boolean"},
+            "task_network_none": {"type": "boolean"},
+            "task_network_enforced": {"type": "boolean"},
+            "extra_condition_difference_absent": {"type": "boolean"},
+            "user_intervention_count": {"type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        },
+        "condition_observation": {
+          "type": "object",
+          "required": [
+            "openada_distribution_present",
+            "openada_cli_present",
+            "openada_skill_present",
+            "openada_package_present",
+            "openada_treatment_schema_present",
+            "openada_repository_present",
+            "openada_prior_output_present",
+            "openada_system_context_present",
+            "treatment_bundle_manifest_sha256",
+            "openada_identity_exact",
+            "openada_used"
+          ],
+          "properties": {
+            "openada_distribution_present": {"type": "boolean"},
+            "openada_cli_present": {"type": "boolean"},
+            "openada_skill_present": {"type": "boolean"},
+            "openada_package_present": {"type": "boolean"},
+            "openada_treatment_schema_present": {"type": "boolean"},
+            "openada_repository_present": {"type": "boolean"},
+            "openada_prior_output_present": {"type": "boolean"},
+            "openada_system_context_present": {"type": "boolean"},
+            "treatment_bundle_manifest_sha256": {
+              "oneOf": [
+                {"$ref": "#/$defs/sha256"},
+                {"type": "null"}
+              ]
+            },
+            "openada_identity_exact": {"type": "boolean"},
+            "openada_used": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "authority": {
+          "type": "object",
+          "required": [
+            "native_session_observed",
+            "native_turn_observed",
+            "provider_request_ids_observed",
+            "identifiers_synthesized"
+          ],
+          "properties": {
+            "native_session_observed": {"type": "boolean"},
+            "native_turn_observed": {"type": "boolean"},
+            "provider_request_ids_observed": {"type": "boolean"},
+            "identifiers_synthesized": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "executionObservation": {
+      "type": "object",
+      "required": [
+        "dispatch_sequence_observed",
+        "clock_domain_id",
+        "monotonic_started_ms",
+        "monotonic_finished_ms",
+        "pair"
+      ],
+      "properties": {
+        "dispatch_sequence_observed": {"type": "integer", "minimum": 1},
+        "clock_domain_id": {"$ref": "#/$defs/sha256"},
+        "monotonic_started_ms": {"$ref": "#/$defs/nonnegativeInteger"},
+        "monotonic_finished_ms": {"$ref": "#/$defs/nonnegativeInteger"},
+        "pair": {
+          "type": "object",
+          "required": ["first", "second"],
+          "properties": {
+            "first": {"$ref": "#/$defs/publicPairTiming"},
+            "second": {"$ref": "#/$defs/publicPairTiming"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "publicPairTiming": {
+      "type": "object",
+      "required": ["trial_id", "monotonic_started_ms", "monotonic_finished_ms"],
+      "properties": {
+        "trial_id": {"type": "string", "pattern": "^trial-[0-9a-f]{24}$"},
+        "monotonic_started_ms": {"$ref": "#/$defs/nonnegativeInteger"},
+        "monotonic_finished_ms": {"$ref": "#/$defs/nonnegativeInteger"}
+      },
+      "additionalProperties": false
+    },
+    "nonnegativeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4503599627370495
+    },
+    "traceObservation": {
+      "type": "object",
+      "required": [
+        "schema",
+        "source",
+        "stream",
+        "identity",
+        "actions",
+        "aggregates",
+        "usage",
+        "usage_observed_valid",
+        "adapter_duration_ms",
+        "eligibility"
+      ],
+      "properties": {
+        "schema": {"const": "openada.eval.trace/v0alpha1"},
+        "source": {
+          "type": "object",
+          "required": ["kind", "codex_cli_version", "parser_version"],
+          "properties": {
+            "kind": {"const": "codex_exec_jsonl"},
+            "codex_cli_version": {"type": ["string", "null"]},
+            "parser_version": {"const": 1}
+          },
+          "additionalProperties": false
+        },
+        "stream": {
+          "type": "object",
+          "required": [
+            "complete",
+            "event_count",
+            "action_count",
+            "action_record_count",
+            "terminal",
+            "process_exit_bucket",
+            "issues"
+          ],
+          "properties": {
+            "complete": {"type": "boolean"},
+            "event_count": {"type": "integer", "minimum": 0, "maximum": 10000},
+            "action_count": {"type": "integer", "minimum": 0, "maximum": 10000},
+            "action_record_count": {"type": "integer", "minimum": 0, "maximum": 10000},
+            "terminal": {"enum": ["completed", "failed", "missing", "conflict"]},
+            "process_exit_bucket": {"enum": ["zero", "nonzero", "unknown"]},
+            "issues": {
+              "type": "array",
+              "maxItems": 12,
+              "uniqueItems": true,
+              "items": {"$ref": "#/$defs/traceReason"}
+            }
+          },
+          "additionalProperties": false
+        },
+        "identity": {
+          "type": "object",
+          "required": [
+            "native_thread_observed",
+            "native_turn_observed",
+            "api_request_observed",
+            "execution_context_observed",
+            "identifiers_synthesized",
+            "fresh_single_turn_declared"
+          ],
+          "properties": {
+            "native_thread_observed": {"type": "boolean"},
+            "native_turn_observed": {"const": false},
+            "api_request_observed": {"const": false},
+            "execution_context_observed": {"const": false},
+            "identifiers_synthesized": {"const": false},
+            "fresh_single_turn_declared": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "actions": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {"$ref": "#/$defs/traceAction"}
+        },
+        "aggregates": {
+          "type": "object",
+          "required": ["action_counts", "command_result_observed_characters"],
+          "properties": {
+            "action_counts": {"$ref": "#/$defs/actionCounts"},
+            "command_result_observed_characters": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 16777216
+            }
+          },
+          "additionalProperties": false
+        },
+        "usage": {
+          "oneOf": [
+            {"$ref": "#/$defs/usage"},
+            {"type": "null"}
+          ]
+        },
+        "usage_observed_valid": {"type": "boolean"},
+        "adapter_duration_ms": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 4503599627370495
+        },
+        "eligibility": {
+          "type": "object",
+          "required": [
+            "action_metrics",
+            "usage_metrics",
+            "duration_metrics",
+            "session_metrics",
+            "provider_request_metrics",
+            "engineering_outcome_metrics",
+            "model_context_bytes_metrics"
+          ],
+          "properties": {
+            "action_metrics": {"$ref": "#/$defs/traceEligibility"},
+            "usage_metrics": {"$ref": "#/$defs/traceEligibility"},
+            "duration_metrics": {"$ref": "#/$defs/traceEligibility"},
+            "session_metrics": {"$ref": "#/$defs/traceEligibility"},
+            "provider_request_metrics": {"$ref": "#/$defs/traceEligibility"},
+            "engineering_outcome_metrics": {"$ref": "#/$defs/traceEligibility"},
+            "model_context_bytes_metrics": {"$ref": "#/$defs/traceEligibility"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "traceEligibility": {
+      "type": "object",
+      "required": ["eligible", "reasons"],
+      "properties": {
+        "eligible": {"type": "boolean"},
+        "reasons": {
+          "type": "array",
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/traceReason"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "traceAction": {
+      "type": "object",
+      "required": ["sequence", "kind", "status", "exit_bucket"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "kind": {
+          "enum": [
+            "agent_message",
+            "reasoning",
+            "command_execution",
+            "file_change",
+            "mcp_tool_call",
+            "collab_tool_call",
+            "web_search",
+            "todo_list",
+            "error"
+          ]
+        },
+        "status": {"enum": ["in_progress", "completed", "failed", "declined"]},
+        "exit_bucket": {
+          "enum": ["zero", "nonzero", "missing", "declined", "not_applicable"]
+        },
+        "elapsed_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4503599627370495
+        }
+      },
+      "additionalProperties": false
+    },
+    "traceReason": {
+      "enum": [
+        "unknown_event_variant",
+        "lifecycle_conflict",
+        "event_after_terminal",
+        "incomplete_terminal",
+        "public_action_cap_exceeded",
+        "process_exit_unknown",
+        "process_terminal_inconsistent",
+        "usage_missing_or_invalid",
+        "collab_coverage_gap",
+        "stream_incomplete",
+        "terminal_not_completed",
+        "fresh_single_turn_not_declared",
+        "adapter_duration_unavailable",
+        "native_turn_id_unavailable",
+        "execution_context_unavailable",
+        "api_request_id_unavailable",
+        "provider_request_events_unavailable",
+        "independent_evidence_required",
+        "model_context_bytes_unavailable",
+        "adapter_input_rejected",
+        "source_identity_mismatch"
+      ]
+    },
+    "actionCounts": {
+      "type": "object",
+      "required": [
+        "agent_message",
+        "reasoning",
+        "command_execution",
+        "file_change",
+        "mcp_tool_call",
+        "collab_tool_call",
+        "web_search",
+        "todo_list",
+        "error"
+      ],
+      "properties": {
+        "agent_message": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "reasoning": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "command_execution": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "file_change": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "mcp_tool_call": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "collab_tool_call": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "web_search": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "todo_list": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "error": {"type": "integer", "minimum": 0, "maximum": 10000}
+      },
+      "additionalProperties": false
+    },
+    "usage": {
+      "type": "object",
+      "required": [
+        "input_tokens",
+        "cached_input_tokens",
+        "output_tokens",
+        "reasoning_output_tokens"
+      ],
+      "properties": {
+        "input_tokens": {"$ref": "#/$defs/nonnegativeInteger"},
+        "cached_input_tokens": {"$ref": "#/$defs/nonnegativeInteger"},
+        "output_tokens": {"$ref": "#/$defs/nonnegativeInteger"},
+        "reasoning_output_tokens": {"$ref": "#/$defs/nonnegativeInteger"}
+      },
+      "additionalProperties": false
+    },
+    "nativeScore": {
+      "type": "object",
+      "required": [
+        "schema",
+        "task_id",
+        "engineering_verdict",
+        "verified_artifact_complete",
+        "reported_status_correct",
+        "artifacts",
+        "provenance",
+        "diagnostics"
+      ],
+      "properties": {
+        "schema": {"const": "openada.eval.score/v0alpha1"},
+        "task_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "engineering_verdict": {"enum": ["pass", "fail", "unknown"]},
+        "verified_artifact_complete": {"type": "boolean"},
+        "reported_status_correct": {"type": ["boolean", "null"]},
+        "artifacts": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": [
+              "role",
+              "path",
+              "status",
+              "bytes",
+              "sha256",
+              "reported_hash_correct"
+            ],
+            "properties": {
+              "role": {"type": "string", "minLength": 1, "maxLength": 128},
+              "path": {"type": "string", "minLength": 1, "maxLength": 4000},
+              "status": {"type": "string", "minLength": 1, "maxLength": 128},
+              "bytes": {"type": ["integer", "null"], "minimum": 0},
+              "sha256": {
+                "oneOf": [
+                  {"$ref": "#/$defs/sha256"},
+                  {"type": "null"}
+                ]
+              },
+              "reported_hash_correct": {"type": ["boolean", "null"]}
+            },
+            "additionalProperties": false
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "required": [
+            "submission_valid",
+            "process_completed_reported_correctly",
+            "tools_exact",
+            "inputs_exact",
+            "artifact_set_exact",
+            "artifact_hashes_exact",
+            "limitations_reported"
+          ],
+          "properties": {
+            "submission_valid": {"type": "boolean"},
+            "process_completed_reported_correctly": {"type": "boolean"},
+            "tools_exact": {"type": "boolean"},
+            "inputs_exact": {"type": "boolean"},
+            "artifact_set_exact": {"type": "boolean"},
+            "artifact_hashes_exact": {"type": "boolean"},
+            "limitations_reported": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "required": ["code", "severity", "message"],
+            "properties": {
+              "code": {"type": "string", "minLength": 1, "maxLength": 128},
+              "severity": {"enum": ["info", "warning", "error"]},
+              "message": {"type": "string", "maxLength": 2000}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

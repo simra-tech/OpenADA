@@ -1,0 +1,20 @@
+{
+  "name": "openada",
+  "interface": {
+    "displayName": "OpenADA"
+  },
+  "plugins": [
+    {
+      "name": "openada",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
