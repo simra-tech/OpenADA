@@ -23,30 +23,55 @@ openada simulate fixtures/smoke/smoke_ngspice.cir \
 ```
 
 The first cross-driver profile is
-`openada.operation/circuit.simulate/v1alpha1`. Its shared ngspice/Xyce alpha
-subset is one self-contained transient analysis with no includes,
-measurements, or control-language blocks. Exercise either mapping with the same
-CLI shape:
+`openada.operation/circuit.simulate/v1alpha2`. Its shared ngspice/Xyce alpha
+subset is one self-contained OP, DC, AC, or transient analysis with no
+includes, measurements, print directives, control-language blocks, FFT, noise,
+Monte Carlo, or multiple analyses. ngspice implements OP/DC/AC/TRAN; Xyce
+implements DC/AC/TRAN and rejects OP explicitly. Exercise either backend with
+the same operation and analysis-specific typed flags:
 
 ```bash
-openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend ngspice --output-dir /tmp/ngspice-run
-openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend xyce --output-dir /tmp/xyce-run
+openada simulate conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-dc.cir \
+  --backend ngspice --analysis dc \
+  --source-name VSWEEP --source-unit V --start 0 --stop 1 --step 0.25 \
+  --output-dir /tmp/ngspice-dc-run
 ```
 
 Omitting `--backend` preserves the legacy ngspice interface and default. The
-pinned native portability replay exercises both mappings and independently
-checks their native waveforms:
+pinned native portability replay exercises the advertised analysis matrix and
+independently checks native evidence:
 
 ```bash
-python3 conformance/circuit-simulate/run.py \
+python3 conformance/circuit-simulate-v0alpha2/run.py \
   --evidence-dir /tmp/openada-circuit-simulate-evidence
 ```
 
-Keep the shared profile labeled alpha: native workflow validation establishes
-the implemented mapping for this bounded fixture, not every circuit-analysis
-feature or runtime.
+Keep each advertised analysis capability labeled alpha. The expanded pinned
+success replay supports structured OP/DC/AC rows; only the previously complete
+transient workflow retains workflow-validated maturity. Neither label covers
+every circuit-analysis feature or runtime.
+
+The deterministic evidence operations are intentionally separate from native
+simulation:
+
+```bash
+openada measure --series normalized-series.json \
+  --measurement measurement-request.json
+openada evaluate --measurement measurement-result.json \
+  --specification specification.json
+```
+
+`measure` accepts only a bounded normalized real inline series whose canonical
+content digest matches its declared `measurement.source` identity. It does not
+parse native waveform files. An optional link to an upstream native artifact
+is explicitly `unverified`. `evaluate` performs no implicit unit conversion:
+measurement units, bound units, and declared conditions must match exactly.
+Contributors must keep the supported scalar algorithm vocabulary and limit
+shape closed rather than adding a backend expression escape hatch.
 
 When testing ngspice control decks, use a fresh writable work directory and
 declare native outputs rather than searching for whatever changed:
@@ -115,8 +140,16 @@ For the target external-driver protocol, also read the
 [driver-manifest template](conformance/driver-kit/driver-manifest.template.json),
 and
 [operation-profile RFC template](conformance/driver-kit/operation-profile.template.md).
-The schemas are reviewable protocol scaffolding in `0.2.0`; the current runtime
-does not yet discover a manifest or invoke a JSON-stdio driver.
+The request and manifest schemas are reviewable protocol scaffolding; the
+current runtime does not discover a manifest or invoke a JSON-stdio driver.
+MCP and remote jobs may become transports for the same semantic request/result,
+not a second operation ontology. The current
+`openada.driver-manifest/v0alpha1` schema defines no normative MCP binding and
+cannot express per-feature capability identity or maturity; do not overload its
+generic transport strings to imply those contracts. A future additive manifest
+revision and marketplace may catalog conforming capability providers rather
+than raw binaries; see
+[Providers, marketplaces, and MCP](docs/PROVIDERS_AND_MCP.md).
 
 An operation-profile proposal must define more than a command name. Include:
 
@@ -128,12 +161,22 @@ An operation-profile proposal must define more than a command name. Include:
 6. success, engineering-failure, invalid, unavailable, timeout, and malformed
    evidence fixtures;
 7. at least two plausible native mappings before proposing the profile as a
-   shared core operation.
+   shared core operation, or a clear reason the operation is a deterministic
+   backend-independent semantic kernel.
+
+Use
+[`openada.operation-profile/v0alpha1`](schemas/operation-profile-v0alpha1.schema.json)
+for the immutable circuit-simulation profile shape. New deterministic semantic
+profiles may use the additive
+[`openada.operation-profile/v0alpha2`](schemas/operation-profile-v0alpha2.schema.json),
+which permits feature-to-algorithm bindings without pretending they are SPICE
+analysis commands. Never revise v0alpha1 in place.
 
 The driver must:
 
 - execute an argv vector without `shell=True`;
 - validate paths and fragile identifiers before launch;
+- bound every input before scanning or hashing it;
 - use a finite timeout;
 - distinguish invocation failure from an engineering fail;
 - bound stdout, stderr, samples, and violation lists;
@@ -159,6 +202,14 @@ review, diagnosis, planning, or decision workflows that can consume OpenADA
 operations without teaching the agent a native EDA command surface. Read
 [Engineering skills above OpenADA](docs/ENGINEERING_SKILLS.md) before proposing
 one.
+
+The current experimental examples include general analog characterization,
+feedback stability, spectral linearity, and PVT/yield assessment. They are
+capability-gated: a skill may use application and topology judgment to choose a
+workflow, but it must inspect exact operation/feature support and mark missing
+metrics not evaluated. Fresh-agent forward tests exercise routing discipline;
+they do not establish native conformance, engineering signoff, or stable skill
+maturity.
 
 Put each skill in:
 
@@ -254,10 +305,17 @@ real tool/PDK behavior. Tests should assert relationships such as:
 - solver warnings that ngspice demonstrably recovers from do not become a false
   engineering failure;
 - ngspice and Xyce fixtures apply the same profile assertion and normalized
-  fact names to the common transient subset, while retaining different native
-  commands and artifacts;
-- includes, measurements, control-language blocks, and non-transient analyses
-  are rejected rather than silently widened into the common simulation alpha;
+  fact names to every mutually supported analysis, while retaining different
+  native commands and artifacts;
+- ngspice OP/DC/AC and Xyce DC/AC structured capability claims have matching
+  pinned native success cases, transient retains its complete
+  workflow-validated replay, and Xyce OP is rejected as unsupported;
+- includes, measurements, print directives, control-language blocks, FFT,
+  noise, Monte Carlo, and mixed analyses are rejected rather than silently
+  widened into the common simulation alpha;
+- normalized-series digest mismatches, undeclared measurement kinds, unit
+  mismatches, absent events, and condition mismatches preserve the documented
+  `pass`/`fail`/`unknown` boundaries for typed evidence operations;
 - scoped preflight probes exactly one assertion-mapped binary, never enumerates
   project or PDK catalog entries, and never reports that the design assertion
   itself was evaluated;

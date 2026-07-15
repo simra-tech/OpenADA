@@ -6,11 +6,11 @@ agent select a capable driver without turning the public ontology into a copy
 of ngspice, Xyce, Xschem, KLayout, Netgen, Yosys, OpenROAD, or another tool's
 command surface.
 
-This document specifies protocol scaffolding for review. The current `0.2.0`
-CLI still accepts operation-specific flags and has in-tree drivers; it does not
-yet discover external manifests or accept `openada.request/v0alpha1` on stdin.
-The shipped CLI and [result contract](CONTRACT.md) remain authoritative until
-that wiring lands.
+This document specifies protocol scaffolding for review. The current CLI
+accepts operation-specific flags and has in-tree drivers; it does not discover
+external manifests or accept `openada.request/v0alpha1` as a generic dispatch
+input. The implemented operation-specific CLI bridges and
+[result contract](CONTRACT.md) remain authoritative until that wiring lands.
 
 The published protocol documents are:
 
@@ -20,9 +20,18 @@ The published protocol documents are:
   a driver's identity, transports, capabilities, and conformance evidence;
 - [`openada.operation-profile/v0alpha1`](../schemas/operation-profile-v0alpha1.schema.json),
   the closed shape for operation meaning, truth tables, facts, evidence, and
-  backend mappings; and
+  SPICE-oriented backend mappings;
+- [`openada.operation-profile/v0alpha2`](../schemas/operation-profile-v0alpha2.schema.json),
+  an additive immutable shape that also supports deterministic semantic
+  feature-to-algorithm bindings;
 - [`circuit.simulate/v1alpha1`](../profiles/circuit.simulate-v1alpha1.json), the
-  first concrete typed operation profile.
+  immutable historical 0.2.x simulation profile;
+- [`circuit.simulate/v1alpha2`](../profiles/circuit.simulate-v1alpha2.json), the
+  active typed shared simulation profile;
+- [`result.measure/v1alpha1`](../profiles/result.measure-v1alpha1.json), the
+  canonical-digest-bound normalized-series measurement profile; and
+- [`specification.evaluate/v1alpha1`](../profiles/specification.evaluate-v1alpha1.json),
+  the exact-unit specification profile.
 
 Complete valid examples that are safe to copy and replace live in the
 [request template](../conformance/driver-kit/request.template.json) and
@@ -32,24 +41,27 @@ New shared semantics start from the
 The `example.org` identities and zero digests in those files are placeholders,
 not OpenADA capability claims.
 
-The first built-in alpha bridge maps
-`openada.operation/circuit.simulate/v1alpha1` to ngspice or Xyce through the
+The active built-in alpha bridge maps
+`openada.operation/circuit.simulate/v1alpha2` to ngspice or Xyce through the
 same CLI shape:
 
 ```bash
-openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend ngspice --output-dir /tmp/ngspice-run
-openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend xyce --output-dir /tmp/xyce-run
 ```
 
 When `--backend` is omitted, the legacy ngspice interface remains the default.
-The shared subset is one self-contained transient analysis, with no includes,
-measurements, or control-language blocks. Both mappings pass the pinned native
-[circuit-simulation portability replay](../conformance/circuit-simulate/README.md),
-which independently parses their different raw formats and checks the same RC
-engineering facts. The generic request and external-manifest transport remain
-review scaffolding rather than a runtime interface.
+The shared subset is one self-contained OP, DC, AC, or transient analysis, with
+no includes, measurements, print directives, control-language blocks, FFT,
+noise, Monte Carlo, or multiple analyses. The ngspice mapping is structured
+for OP/DC/AC and workflow-validated for TRAN; Xyce is structured for DC/AC,
+workflow-validated for TRAN, and rejects OP as unsupported. The pinned
+[circuit-simulation portability replay](../conformance/circuit-simulate-v0alpha2/README.md)
+independently parses native success evidence by analysis. The generic request and
+external-manifest transport remain review scaffolding rather than a runtime
+interface.
 
 ## Invariants
 
@@ -86,7 +98,7 @@ questions:
 | Identity | Example | Meaning |
 |---|---|---|
 | Request schema | `openada.request/v0alpha1` | Shape and base semantics of the request envelope |
-| Operation profile | `openada.operation/circuit.simulate/v1alpha1` | Tool-independent action and parameter meaning |
+| Operation profile | `openada.operation/circuit.simulate/v1alpha2` | Tool-independent action and parameter meaning |
 | Assertion profile | `openada.assertion/simulation.evidence.valid/v1alpha1` | Exact claim and `pass`/`fail`/`unknown` evidence rules |
 | Driver | `org.example.openada.driver.example-spice` at `0.1.0` | One implementation release |
 | Native product | `org.example.eda.example-spice` with an observed native version | Product actually used below the driver |
@@ -97,10 +109,14 @@ field, status meaning, assertion threshold, normalized fact, or closed shape
 requires a new identifier and a new file. An implementation fix or new native
 version may instead require a new driver version and new conformance evidence.
 
-The `circuit.simulate/v1alpha1` profile is the first published typed operation
-profile. Its built-in CLI bridge records the profile and selected simulation
-driver in the existing operation-owned result data; the base request envelope
-still is not a general runtime dispatch interface.
+`circuit.simulate/v1alpha1` remains an immutable historical profile. Its
+additive `circuit.simulate/v1alpha2` successor continues to use the immutable
+v0alpha1 profile schema. The deterministic `result.measure/v1alpha1` and
+`specification.evaluate/v1alpha1` profiles use additive v0alpha2; they require
+one semantic implementation mapping rather than pretending to have two native
+EDA backends. Their CLI bridges record profile and implementation identities in
+the existing operation-owned result data. The base request envelope still is
+not a general runtime dispatch interface.
 
 OpenADA-owned profile and feature IDs use `openada.operation/...`,
 `openada.assertion/...`, and `openada.feature/...`. Third parties use a
@@ -242,9 +258,10 @@ The three maturity values retain their existing narrow meanings:
 - `workflow-validated`: a pinned public workflow independently validates the
   native artifacts and engineering assertion.
 
-Maturity belongs to a capability, not to a tool family or an entire EDA suite. A
-driver can be workflow-validated for transient simulation and only structured
-for noise analysis.
+Maturity belongs to a capability, not to a tool family or an entire EDA suite.
+A driver can be workflow-validated for transient simulation and unsupported
+for noise. It must not advertise an absent operation merely because the native
+tool has an unrelated command with that name.
 
 ### Trust and installation
 
@@ -292,8 +309,27 @@ version list is not a guarantee that an installation has that version.
 
 ## Transport bindings
 
-The semantic request is transport-neutral. The manifest advertises how a host
-can deliver it:
+The semantic request is transport-neutral. The v0alpha1 manifest advertises
+the three bindings defined below. It does **not** define a normative MCP
+binding, MCP tool names, artifact-transfer behavior, or authentication
+semantics. Writing `mcp` into a generic `protocol` string may document an
+experimental adapter, but it does not create a portable OpenADA/MCP contract.
+
+A future MCP adapter should carry the same versioned request and result as a
+local or remote invocation. A thin driver may instead call low-level native MCP
+tools, but it still owns parameter validation, exact semantic mapping, evidence
+bounds, and conformance. Endpoint discovery, credentials, sessions, and
+artifact transfer remain transport concerns. See
+[Providers, marketplaces, and MCP](PROVIDERS_AND_MCP.md).
+
+A future marketplace likewise catalogs installed-or-approvable providers of
+exact capabilities with immutable conformance records. The v0alpha1 manifest
+groups multiple feature IDs under one operation-level maturity and supplies no
+independent `capability_id`, so it cannot honestly encode per-feature maturity
+rows. That needs an additive manifest revision. A marketplace is not runtime
+approval, a raw executable list, or evidence that a provider is available. The
+host must still validate, install/approve, resolve, invoke, and record the
+selected provider deterministically.
 
 ### Local CLI
 
@@ -334,7 +370,7 @@ selection facts inside the operation-owned `data` object:
 {
   "protocol": {
     "request_id": "018f4f8c-6d3a-7b2e-8c41-9d2f7a6b5c10",
-    "operation_profile": "openada.operation/circuit.simulate/v1alpha1",
+    "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
     "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
     "driver_id": "org.example.openada.driver.example-spice",
     "driver_version": "0.1.0"

@@ -18,10 +18,11 @@ profile IDs define the operation meaning and evidence threshold. The driver and
 native-product identities say which implementation executed it. The conformance
 identity tells a reviewer what exact engineering case ran.
 
-The alpha [request and driver protocol](DRIVER_PROTOCOL.md) is currently
-review-only scaffolding: the `0.2.0` CLI neither accepts request envelopes nor
-discovers manifests. Publishing those schemas establishes their identity and
-review surface without implying runtime support.
+The alpha [request and driver protocol](DRIVER_PROTOCOL.md) remains partly
+review-only scaffolding: the CLI neither accepts the base request envelope as a
+generic dispatch input nor discovers external manifests. Operation-specific
+CLI bridges do execute the three published typed profiles. Publishing a schema
+or transport binding still does not imply external-provider runtime support.
 
 ## Immutable protocol identifiers
 
@@ -35,6 +36,21 @@ Vendor extensions are namespaced and cannot change the core operation,
 assertion, status, artifact role, or authority meaning. If interoperability
 depends on an extension, that behavior needs a versioned profile or advertised
 feature ID.
+
+`openada.operation-profile/v0alpha2` is an additive schema identifier, not an
+edit to `openada.operation-profile/v0alpha1`. V0alpha2 permits a deterministic
+semantic implementation to bind supported feature IDs to versioned algorithms
+and normalized facts without inventing multiple native SPICE mappings. The
+v0alpha1 schema and the existing `circuit.simulate/v1alpha1` profile remain
+unchanged and continue to validate under their original identifier. A consumer
+must select the profile's declared schema and must not treat v0alpha1 and
+v0alpha2 as interchangeable shapes.
+
+The active `circuit.simulate/v1alpha2` profile is likewise an additive sibling,
+not an edit to v1alpha1. Both circuit profiles use the v0alpha1 profile schema;
+v1alpha2 exists because adding native OP/DC/AC mappings changes the immutable
+profile document even though the earlier profile already named those feature
+IDs. Historical evidence keeps its v1alpha1 identity.
 
 ## Immutable result identifiers
 
@@ -115,6 +131,32 @@ project/PDK init and `-n` is documented narrowly as disabling local/user
 `.spiceinit`. Batch decks with unenumerated `.include`/`.inc`/`.lib` directives
 are rejected in this preview because included control blocks execute under
 `-b`; callers migrate those decks to control mode or a reviewed flattened deck.
+
+The typed shared-profile simulation flags and analysis implementations are
+additive at the CLI level. `--analysis op|dc|ac|tran` plus analysis-specific
+closed parameters requires `--backend`; omitting typed flags preserves deck
+inspection, and omitting `--backend` preserves the legacy ngspice path. Package
+0.3.0 selects `circuit.simulate/v1alpha2`, whose immutable native mappings cover
+ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN. V1alpha1 remains packaged for
+historical validation and is not rewritten. Capability support remains exact:
+Xyce rejects OP, and includes, control blocks, `.measure`, `.print`, FFT,
+noise, Monte Carlo, and multiple analyses remain outside the shared subset.
+The new profile also fixes a 16 MiB top-level deck ceiling: larger inputs are
+rejected before native execution or hashing beyond the bound. Legacy ngspice
+explicit init inputs use the same ceiling. Conflicting generic native errors
+keep a terminal non-convergence observation `unknown` rather than allowing an
+engineering `fail` classification.
+
+The `measure` and `evaluate` commands are new operation names inside the open
+operation namespace of `openada.result/v0alpha1`. Their operation-owned data is
+defined by new immutable profiles rather than a change to the result envelope.
+`result.measure/v1alpha1` is bound to the canonical SHA-256 digest of a bounded
+normalized real inline series and a closed scalar-algorithm vocabulary;
+`specification.evaluate/v1alpha1` uses exact units and explicit condition and
+limit records. Changing the digest algorithm, supported kind semantics, unit
+policy, condition matching, or truth table requires a new operation/assertion
+profile ID. Optional native-artifact lineage is `unverified` and cannot be
+upgraded silently into built-in waveform extraction.
 
 The explicit KLayout report policy is another preview correction within the
 same closed `openada.result/v0alpha1` envelope. Earlier implementations could

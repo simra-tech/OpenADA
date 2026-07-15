@@ -7,36 +7,39 @@ OpenADA uses explicit maturity levels:
 - **Workflow-validated**: The operation passes a pinned, publicly reproducible
   fixture or design, required PDK (if any), and runtime conformance case.
 
-## v0.2 preview
+## Current preview
 
 | Tool | Discovery | Structured operation | Workflow validation |
 |---|---:|---:|---:|
 | Xschem | yes | `netlist` | pinned public IHP Xschem-to-ngspice recipe |
-| ngspice | yes | `simulate` | pinned public IHP deck-output recipe |
+| ngspice | yes | `simulate` including shared OP/DC/AC/TRAN | shared TRAN workflow-validated; OP/DC/AC have pinned structured success evidence |
 | KLayout | yes | `drc` | pinned public IHP inverter recipe |
 | Netgen | yes | `lvs` | pinned public IHP inverter recipe |
 | Yosys | yes | `rtl-check` | pinned IHP run; public recipe pending |
 | Magic | yes | no | no |
-| Xyce | yes | `simulate` shared alpha | pinned native Xyce 7.10-opensource RC replay |
+| Xyce | yes | `simulate` shared DC/AC/TRAN alpha; OP unsupported | shared TRAN workflow-validated; DC/AC have pinned structured success evidence |
 | OpenROAD / LibreLane | yes | no | no |
 | Icarus / Verilator / slang / Surelog | yes | no | no |
 | OpenVAF / Qucs-S / GTKWave | yes | no | no |
 
 ## Protocol program
 
-The v0.2 implementation proves a common evidence envelope and hardened native
+The v0.3 implementation proves a common evidence envelope and hardened native
 drivers. The next program turns that foundation into a portable intent and
 driver protocol. Each milestone has a concrete acceptance gate; adding more
 one-off wrappers does not substitute for passing the gate.
 
 Current status: milestone A is published in this repository. Milestone B now
-includes review-only request, driver-manifest, and operation-profile schemas,
-valid contributor templates, and the first concrete `circuit.simulate`
-profile. Milestone C's bounded portability gate now passes through a pinned
-native ngspice/Xyce replay; runtime manifest discovery and external invocation
-remain unimplemented. Milestone D now has its first experimental tool-independent
-engineering skill; it has not yet passed the cross-backend or external-review
-gate.
+includes review-only request and driver-manifest schemas, immutable operation
+profile schemas v0alpha1 and v0alpha2, valid contributor templates, and three
+implemented typed profiles. Milestone C's bounded portability gate now covers
+ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN success paths through pinned native
+replay; the new OP/DC/AC rows remain structured until broader outcome cases are
+published. Runtime manifest discovery, generic request dispatch, and external
+invocation remain unimplemented. Milestone D has five experimental
+tool-independent engineering skills above the execution adapter. Fresh-agent
+forward tests exercise their
+capability gating, but the external engineering-review gate has not passed.
 
 ### A. Publish the semantic boundary
 
@@ -55,8 +58,8 @@ what remains driver-specific, and what evidence supports `pass`, `fail`, or
 ### B. Encode the protocol
 
 - Publish immutable alpha request and driver-manifest schemas.
-- Publish the remaining versioned operation and assertion profiles after the
-  initial `circuit.simulate` profile.
+- Publish typed measurement and specification profiles through the additive
+  immutable operation-profile v0alpha2 schema while preserving v0alpha1.
 - Add operation-profile identifiers, assertion identifiers, driver identity,
   and lineage to the next result envelope without changing the immutable
   `openada.result/v0alpha1` schema.
@@ -75,17 +78,20 @@ evidence without changing an agent harness.
   Xyce.
 - Use identical request semantics and assertion truth tables while retaining
   each simulator's native deck, command, logs, and result artifacts.
-- Keep the shared alpha subset to a self-contained transient analysis with no
-  includes, measurements, or control-language blocks.
+- Keep the shared alpha subset to one self-contained OP, DC, AC, or transient
+  analysis with no includes, measurements, print directives, control-language
+  blocks, FFT, noise, Monte Carlo, or multiple analyses.
 - Demonstrate that execution success, valid simulation evidence, measurement
   extraction, and specification satisfaction remain separate claims even
   though the latter two are outside the shared alpha subset.
 
-**Gate (passed for the shared alpha fixture):** ngspice 46 and Xyce
-7.10-opensource both pass the same operation conformance replay in the pinned
-IIC-OSIC-TOOLS `2026.06` image. The independent verifier parses both native raw
-formats, checks the RC waveform and branch relation, and compares semantic
-results without requiring identical sampling.
+**Success-path gate (passed for the advertised analysis rows):** ngspice 46 passes
+OP/DC/AC/TRAN and Xyce 7.10-opensource passes DC/AC/TRAN in the pinned
+IIC-OSIC-TOOLS `2026.06` image. Xyce OP is explicitly unsupported. The
+independent verifier parses native raw evidence and compares analysis-specific
+semantic results without requiring identical sampling. These expanded
+success-only cases support structured maturity; they do not establish every
+workflow outcome required for workflow-validated maturity.
 
 ### D. Grow the engineering-skill layer
 
@@ -95,8 +101,12 @@ results without requiring identical sampling.
   evidence rather than native commands or backend log grammars.
 - Forward-test success, failure, unknown, invalid, and unavailable paths on
   realistic public tasks.
-- Forward-test the simulation-review skill unchanged across the now
-  workflow-validated ngspice and Xyce mappings.
+- Forward-test the simulation-review skill unchanged across the shared
+  ngspice and Xyce mappings without conflating feature-level maturity.
+- Keep analog characterization, feedback stability, spectral linearity, and
+  PVT/yield skills capability-gated: unsupported measurements or campaign
+  primitives remain not evaluated rather than becoming native-command
+  fallbacks.
 - Track skill maturity separately from driver maturity and contract versioning.
 
 **Gate:** one contributed engineering skill composes a versioned operation on
@@ -115,6 +125,15 @@ engineer other than its author.
 
 **Gate:** an external driver reaches structured maturity without adding a new
 model-facing API or modifying OpenADA's central dispatch.
+
+A provider marketplace and MCP integration belong to this milestone's future
+connection layer. An MCP adapter should transport unchanged semantic
+requests/results; a marketplace should catalog conforming capability providers
+and immutable conformance records. The v0alpha1 manifest has neither a
+normative MCP binding nor per-feature capability identity/maturity, so an
+additive manifest revision is required. Neither concept substitutes for host
+trust, deterministic resolution, or runtime capability checks. See
+[Providers, marketplaces, and MCP](PROVIDERS_AND_MCP.md).
 
 ### F. Add mutation and design history
 
@@ -183,17 +202,20 @@ file. In that environment:
 - the Xschem-to-ngspice path captures an explicitly declared deck-owned raw
   artifact and independently verifies finite transient inverter behavior;
 - the shared model-free RC profile runs natively through ngspice 46 and Xyce
-  7.10-opensource, with independent binary/ASCII raw parsing and matching
-  engineering behavior despite different adaptive point counts.
+  7.10-opensource across their advertised OP/DC/AC/TRAN matrix, with independent
+  native raw parsing and matching engineering behavior where both advertise an
+  analysis.
 
 These results are not an endorsement by JKU or IHP. KLayout DRC and Netgen LVS
 are workflow-validated through the public
 [IHP inverter replay](../conformance/ihp-inverter/README.md). Xschem and ngspice
 are workflow-validated through the public
 [Xschem-to-ngspice replay](../conformance/ihp-inverter-ngspice/README.md). The
-Xyce shared-profile mapping is workflow-validated through the
-[native portability replay](../conformance/circuit-simulate/README.md). Yosys
-remains below that label until its own clean public recipe exists.
+shared transient ngspice/Xyce mappings retain workflow-validated maturity.
+Expanded OP/DC/AC success cases are independently checked through the
+[native portability replay](../conformance/circuit-simulate-v0alpha2/README.md)
+at structured maturity. Yosys remains below workflow-validated until its own
+clean public recipe exists.
 
 ## First public conformance case
 
@@ -234,8 +256,11 @@ verified workflow validation.
    comparative performance claim.
 5. Add broader digital and mixed-signal operations only after they have bounded
    semantics and public fixtures.
+6. Define install/approval, capability resolution, and immutable conformance
+   records for provider catalogs before calling any provider list a marketplace;
+   retain MCP as transport rather than adding MCP tool names to the ontology.
 
-## Deliberately outside v0.2
+## Deliberately outside v0.3
 
 - Write-capable mutation or workspace-wide rollback machinery. The lifecycle is
   specified now, but runtime support begins only after the read/evidence driver
@@ -245,3 +270,6 @@ verified workflow validation.
 - Claims of foundry signoff or universal EDA support.
 - A container as the only installation path.
 - Harness-specific reasoning logic in the core Python package.
+- Built-in extraction of normalized real series from native simulator
+  waveforms, generic request dispatch, external-manifest discovery, MCP
+  invocation, and a live provider marketplace.

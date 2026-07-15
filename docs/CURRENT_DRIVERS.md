@@ -1,8 +1,9 @@
 # Current preview drivers
 
-This document records the native-tool policies implemented by the OpenADA
-`0.2.0` preview. It is an operational reference for the drivers that exist
-today, not a claim of universal EDA support or foundry signoff.
+This document records the native-tool and deterministic evidence policies in
+the OpenADA `0.3.0` development release. Unreleased status is identified in the
+changelog. This is an operational reference, not a claim of universal EDA
+support or foundry signoff.
 
 All engineering commands return one `openada.result/v0alpha1` JSON object.
 Read `execution.status` separately from `engineering.status`: a native process
@@ -57,34 +58,111 @@ the caller's behalf.
 ## Shared circuit-simulation alpha
 
 `simulate` now exposes ngspice and Xyce under the same
-`openada.operation/circuit.simulate/v1alpha1` intent. An explicit `--backend`
-selects the typed shared-profile path; omitting it preserves the legacy
-ngspice interface and default:
+`openada.operation/circuit.simulate/v1alpha2` intent. The immutable v1alpha1
+profile remains available for historical 0.2.x records. An explicit
+`--backend` selects the typed shared-profile path; omitting it preserves the
+legacy ngspice interface and default:
 
 ```bash
-./bin/openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+./bin/openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend ngspice \
   --output-dir /tmp/ngspice-evidence
-./bin/openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+./bin/openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend xyce \
   --output-dir /tmp/xyce-evidence
 ```
 
 The common profile is intentionally smaller than either simulator: one
-self-contained `.TRAN` analysis, with no includes, measurements, or
-control-language blocks. “Same intent” means the same operation, assertion,
+self-contained OP, DC, AC, or transient analysis, with no includes,
+measurements, print directives, control-language blocks, FFT, noise, Monte
+Carlo, or multiple analyses. “Same intent” means the same operation, assertion,
 status rules, normalized fact names, and artifact roles; it does not promise
 that both simulators accept byte-identical native decks. The caller remains
 responsible for the native deck and models.
 
-Both mappings are workflow-validated for this bounded shared profile through
-the pinned, network-disabled
-[ngspice/Xyce portability replay](../conformance/circuit-simulate/README.md).
-That verifier independently parses ngspice binary raw and Xyce ASCII raw,
-checks the model-free RC response and source-branch relation, and tolerates
-backend-native point-count differences. Scoped preflight continues to select
-ngspice for `spice-analysis-evidence-valid`; choosing Xyce is explicit in this
-alpha.
+| Backend | OP | DC | AC | TRAN |
+|---|---:|---:|---:|---:|
+| ngspice | structured | structured | structured | workflow-validated |
+| Xyce | unsupported | structured | structured | workflow-validated |
+
+Xyce OP is rejected rather than emulated. OpenADA can inspect the deck's one
+top-level analysis, or the caller can supply matching typed flags. For example:
+
+```bash
+./bin/openada simulate conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-dc.cir \
+  --backend xyce --analysis dc \
+  --source-name VSWEEP --source-unit V --start 0 --stop 1 --step 0.25 \
+  --output-dir /tmp/xyce-dc-evidence
+./bin/openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-ac.cir \
+  --backend ngspice --analysis ac \
+  --sweep dec --points 5 --start-hz 10 --stop-hz 10000 \
+  --output-dir /tmp/ngspice-ac-evidence
+```
+
+Transient flags are `--step-s`, `--stop-s`, and optional `--start-s` and
+`--max-step-s`; OP takes no analysis parameters. Typed flags require an
+explicit backend and must agree with the deck.
+
+The declared top-level deck is capped at 16 MiB and is rejected before native
+launch or hashing beyond that bound. This ceiling is part of the active
+operation profile rather than a backend-specific implementation detail.
+
+The OP/DC/AC rows are structured and have pinned, network-disabled native
+success evidence in the
+[ngspice/Xyce portability replay](../conformance/circuit-simulate-v0alpha2/README.md).
+The transient rows retain workflow-validated maturity from the historical
+complete workflow. The expanded verifier independently parses native raw
+evidence and checks analysis-specific structure and values while tolerating
+backend-native point-count differences; its success-only additions do not by
+themselves justify workflow-validated maturity. Scoped preflight continues to
+select ngspice for `spice-analysis-evidence-valid`; choosing Xyce is explicit
+in this alpha.
+
+## Deterministic typed evidence
+
+The `measure` and `evaluate` operations are backend-independent OpenADA kernel
+operations, not EDA drivers. Their structured maturity is backed by the
+[network-free typed-evidence conformance bundle](../conformance/typed-evidence-v0alpha1/README.md):
+
+```bash
+./bin/openada measure --series normalized-series.json \
+  --measurement measurement-request.json
+./bin/openada evaluate --measurement measurement-result.json \
+  --specification specification.json
+```
+
+`measure` accepts a bounded normalized real inline series whose declared digest
+matches the canonical axis/signal/condition content. Its closed kinds are
+sample-at, min/max, mean, RMS, crossing, rise/fall time, and settling time.
+Every coordinate or threshold uses an exact declared unit. The operation does
+not parse native raw files; optional native-artifact lineage is explicitly
+unverified.
+
+Python callers can compute the exact declared digest without reproducing
+private serialization details:
+
+```python
+from openada.operations import normalized_series_sha256
+
+digest = normalized_series_sha256(
+    axis=axis,
+    signals=signals,
+    conditions=conditions,
+)
+```
+
+A successful or conclusive not-found measurement retains `request_sha256` for
+the complete normalized measurement definition. Specification evaluation
+retains the measurement evidence plus the complete normalized specification
+and its `specification_sha256`. These digests bind content and expose accidental
+or adversarial tampering; they are not signatures, publisher identity, or an
+authentication mechanism.
+
+`evaluate` compares one typed finite measurement with explicit lower and/or
+upper bounds, inclusive flags, and exact condition bindings. It performs no
+unit conversion. Missing/unknown measurements or incompatible units and
+conditions remain `unknown`; only valid matched evidence outside a bound is
+specification `fail`.
 
 ## ngspice simulation
 
@@ -120,7 +198,8 @@ the otherwise native, runtime-dependent system initialization. Deck-owned
 outputs must not already exist. OpenADA captures only declared paths and
 structurally validates raw/`wrdata` evidence; it does not scan the project
 directory or sandbox arbitrary `.control` side effects. Preview validation is
-bounded to 16 MiB logs and 256 MiB per raw/`wrdata` artifact.
+bounded to 16 MiB per deck or explicit init input, 16 MiB logs, and 256 MiB per
+raw/`wrdata` artifact.
 
 Transitive model and include inputs are not yet completely enumerated in
 control mode and are rejected in batch mode. Use a reviewed flattened deck for
@@ -214,8 +293,10 @@ but its own clean public workflow recipe is still pending.
 | `doctor` | runtime | preview | Discover capabilities, or preflight one project assertion without catalog inventory |
 | `netlist` | Xschem | workflow-validated | Produce a SPICE netlist and fail on recognized unresolved symbols |
 | `simulate` (legacy default) | ngspice | workflow-validated | Stream wrapper raw files in batch mode, or validate declared deck-owned raw/`wrdata` outputs in control mode |
-| `simulate --backend ngspice` | ngspice | workflow-validated shared alpha | Run the shared self-contained transient subset and emit typed normalized facts |
-| `simulate --backend xyce` | Xyce | workflow-validated shared alpha | Run the shared self-contained transient subset and validate a fresh native raw artifact; pinned Xyce 7.10-opensource replay |
+| `simulate --backend ngspice` | ngspice | structured OP/DC/AC; workflow-validated TRAN | Run one self-contained OP, DC, AC, or transient analysis and emit typed normalized facts |
+| `simulate --backend xyce` | Xyce | structured DC/AC; workflow-validated TRAN | Run one self-contained DC, AC, or transient analysis; OP is unsupported |
+| `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar from a canonical-digest-bound normalized real inline series |
+| `evaluate` | deterministic OpenADA kernel | structured alpha | Evaluate exact-unit bounds and explicit conditions over one typed measurement |
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |

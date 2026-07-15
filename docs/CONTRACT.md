@@ -4,10 +4,12 @@ OpenADA defines a narrow control and evidence boundary between an agent harness
 and native EDA tools. It does not replace native formats or require every EDA to
 share one internal data model.
 
-This document is the source of truth for the shipped `0.2.0` CLI and
-`openada.result/v0alpha1` behavior. The broader [semantic model](SEMANTIC_MODEL.md)
-and [request/driver protocol](DRIVER_PROTOCOL.md) distinguish implemented
-behavior from review-only protocol scaffolding.
+This document is the source of truth for the current CLI and
+`openada.result/v0alpha1` behavior in the OpenADA `0.3.0` development release.
+Its unreleased status is recorded in the changelog. The broader
+[semantic model](SEMANTIC_MODEL.md) and
+[request/driver protocol](DRIVER_PROTOCOL.md) distinguish implemented behavior
+from review-only protocol scaffolding.
 
 ## Contract responsibilities
 
@@ -64,7 +66,7 @@ are bounded to 4,000 characters while retaining head and tail context.
   "diagnostics": [],
   "data": {},
   "provenance": {
-    "openada_version": "0.2.0",
+    "openada_version": "0.3.0",
     "created_at": "2026-07-13T00:00:00Z",
     "host": {
       "system": "Linux",
@@ -192,12 +194,47 @@ hashed as failure evidence.
 
 Without `--backend`, `simulate` retains the legacy ngspice interface described
 below. With `--backend ngspice|xyce`, it evaluates the typed
-`openada.operation/circuit.simulate/v1alpha1` profile. That common alpha path
-accepts exactly one parseable, self-contained top-level `.tran`, rejects
-includes, measurements, print cards, control blocks, and multiple analyses,
-and emits the profile's closed `data.protocol`, `data.analysis`, and
-`data.evidence` facts. Both mappings use the same assertion truth table and
-canonical artifact roles while retaining different native commands and files.
+`openada.operation/circuit.simulate/v1alpha2` profile. The immutable v1alpha1
+profile remains historical. The active common alpha path
+accepts exactly one parseable, self-contained top-level OP, DC, AC, or transient
+analysis; rejects includes, `.measure`, `.print`, control blocks, FFT, noise,
+Monte Carlo, and multiple analyses; and emits the profile's closed
+`data.protocol`, `data.analysis`, and `data.evidence` facts. Both mappings use
+the same assertion truth table and canonical artifact roles while retaining
+different native commands and files.
+
+The supported feature matrix is closed:
+
+| Backend | OP | DC | AC | TRAN |
+|---|---:|---:|---:|---:|
+| ngspice | structured | structured | structured | workflow-validated |
+| Xyce | unsupported | structured | structured | workflow-validated |
+
+Xyce OP is rejected as unsupported; it is not emulated with a zero-span DC
+sweep or inferred from log text. A caller may omit `--analysis` and let OpenADA
+inspect the deck's one supported top-level analysis, or provide an explicit
+typed request. Typed parameters require `--backend` and must match the deck:
+
+- OP: `--analysis op` with no analysis parameters;
+- DC: `--analysis dc --source-name NAME --source-unit V|A --start VALUE
+  --stop VALUE --step VALUE`;
+- AC: `--analysis ac --sweep lin|dec|oct --points COUNT --start-hz HZ
+  --stop-hz HZ`;
+- transient: `--analysis tran --step-s SECONDS --stop-s SECONDS`, with
+  optional `--start-s` and `--max-step-s`.
+
+The shared path does not accept legacy ngspice `--raw-file`,
+`--execution-mode`, `--expect-output`, `--init-file`, or
+`--system-init-file` options. Those continue to belong only to the legacy path
+below.
+
+Every top-level SPICE deck is limited to 16 MiB. OpenADA rejects a larger deck
+before native launch and never hashes or scans beyond that ceiling. The shared
+profile records the same limit as a semantic constraint, so a connector cannot
+silently widen it while claiming `circuit.simulate/v1alpha2` conformance. Input
+capture opens a nonblocking regular-file descriptor and verifies its file and
+path identity after reading; FIFOs, non-regular paths, and changed inputs fail
+closed rather than blocking inspection.
 
 The legacy ngspice path has one of two explicit execution policies:
 
@@ -242,7 +279,9 @@ Use a fresh task-local writable project copy for untrusted decks and for decks
 that write via `$inputdir`.
 
 `--init-file` is available in control mode for a project or PDK initialization
-script. OpenADA hashes it as a configuration input and explicitly sources it
+script. Explicit init and system-init files use the same 16 MiB per-input
+ceiling. OpenADA hashes each accepted file as a configuration input and
+explicitly sources it
 before the deck. The `-n` flag disables only local and user `.spiceinit`; it
 does not disable ngspice's system `spinit`. Callers that need complete startup
 identity can also pass a readable file named `spinit` with
@@ -256,8 +295,10 @@ Engineering pass requires a completed zero-exit process, a fresh nonempty log,
 all required outputs to be fresh and structurally valid, evidence that a real
 analysis completed, no terminal convergence/native fatal diagnostic, and one
 unambiguous finite value inside ngspice's native measurement section for every
-uniquely declared top-level `.measure`. Terminal convergence evidence has
-`fail` precedence. Intermediate singular-matrix or stepping warnings do not
+uniquely declared top-level `.measure`. Reviewed terminal convergence evidence
+has `fail` precedence only when no generic native error or other conflicting
+evidence undermines that classification. Intermediate singular-matrix or
+stepping warnings do not
 become engineering failure when ngspice recovers and produces valid analysis
 evidence. Missing, corrupt, constants-only,
 unstable, or otherwise insufficient output has status `unknown`; regular
@@ -280,15 +321,95 @@ The Xyce alpha invokes serial Xyce as literal argv `Xyce -l LOG -r RAW -a
 NETLIST`, with every option before the netlist and `XYCE_NO_TRACKING=1`. The
 log and ASCII Spice raw file are created in a fresh temporary location, then
 captured, bounded, hashed, and structurally validated before publication.
-Engineering `pass` requires zero native exit, a complete single real transient
-plot with finite dependent values, a fresh log, stable input identity, and
-complete bounded process capture. Only reviewed terminal transient
-non-convergence text with native exit 1 can produce engineering `fail`; parse
-errors, missing or malformed raw data, timeouts, and generic nonzero exits are
-`unknown`. The mapping is workflow-validated for the bounded shared alpha
-fixture through the pinned
-[native ngspice/Xyce replay](../conformance/circuit-simulate/README.md); that
-does not widen the alpha profile or imply support for arbitrary Xyce decks.
+Engineering `pass` requires zero native exit, one complete real plot of the
+declared supported analysis with finite dependent values, a fresh log, stable
+input identity, and complete bounded process capture. Only reviewed terminal
+non-convergence text in the matching analysis, without a conflicting generic
+native error, can produce engineering `fail`;
+parse errors, missing or malformed raw data, timeouts, generic nonzero exits,
+and OP requests are `unknown` or invalid/unsupported as defined by the profile.
+The DC and AC mappings have structured native success evidence in the expanded
+[ngspice/Xyce replay](../conformance/circuit-simulate-v0alpha2/README.md), while
+the transient mapping retains workflow-validated maturity. The expanded
+success-only cases do not widen the alpha profile, cover every maturity
+outcome, or imply support for arbitrary Xyce decks.
+
+### `measure`
+
+`measure` implements `openada.operation/result.measure/v1alpha1` and
+`openada.assertion/measurement.valid/v1alpha1` without invoking an EDA:
+
+```text
+openada measure --series SERIES.json --measurement REQUEST.json
+```
+
+The series is a closed, bounded, real-valued inline representation: one
+strictly increasing axis, one or more equal-length finite signals, explicit
+units and conditions, and a producer operation/request identity. The declared
+`series.source.artifact_sha256` must equal OpenADA's canonical SHA-256 over the
+normalized axis, signals, and condition bindings. That digest binds the inline
+content; it is not a native waveform hash. An optional upstream native artifact
+may appear only as lineage with `binding: unverified`. The operation neither
+opens nor decodes ngspice/Xyce raw files and makes no built-in native waveform
+extraction claim.
+
+Python callers should use
+`openada.operations.normalized_series_sha256(axis=..., signals=...,
+conditions=...)` to compute this value with the operation's exact validation
+and normalization rules. Successful and conclusive not-found records also
+retain `data.measurement.request_sha256`, the canonical digest of the complete
+normalized measurement request.
+
+V1alpha1 has a closed scalar vocabulary: `sample_at`, `minimum`, `maximum`,
+`mean`, `rms`, `crossing`, `rise_time`, `fall_time`, and `settling_time`.
+Coordinates must use the exact axis unit; thresholds, targets, and tolerances
+must use the exact selected-signal unit. There is no implicit conversion,
+complex-series support, simulator expression, FFT, or arbitrary plugin
+algorithm. Inputs are bounded to 100,000 axis points, with matching signal
+lengths and finite values.
+
+Engineering `pass` means the declared versioned algorithm produced one finite
+typed scalar. Engineering `fail` means a valid bounded domain conclusively did
+not contain the requested sample or event, with measurement status
+`not_found`. Invalid shape, digest, units, domain, signal, algorithm, or numeric
+evidence is `unknown`, normally with execution `invalid_request`. Neither pass
+nor fail evaluates a design specification.
+
+### `evaluate`
+
+`evaluate` implements `openada.operation/specification.evaluate/v1alpha1` and
+`openada.assertion/specification.satisfied/v1alpha1`:
+
+```text
+openada evaluate --measurement RESULT-MEASURE-ENVELOPE.json \
+  --specification SPECIFICATION.json
+```
+
+The CLI measurement input must be a complete `openada.result/v0alpha1` envelope
+whose operation is `result.measure` and whose `data.measurement` is present.
+The Python operation API can accept that extracted typed measurement record
+directly. The specification names the exact measurement ID, at least one
+explicit lower and/or upper finite bound, each bound's inclusive flag, and
+required operating conditions. Measurement and bound units must be identical
+strings. Every required condition must occur exactly once in the measurement
+source with the same JSON scalar type, value, and unit. V1alpha1 performs no
+conversion, dimensional inference, tolerance matching, or missing condition
+inference.
+
+When both inputs normalize successfully, `data.evaluation.source` retains the
+canonical measurement digest and measurement source, plus the complete
+normalized specification and `specification_sha256`. These measurement,
+request, condition, and specification digests detect stale bindings or changed
+content; none is a digital signature, proof of authorship, or authentication
+mechanism.
+
+Engineering `pass` requires a measured finite value inside every declared
+bound at exactly matched conditions. Engineering `fail` requires the same valid
+evidence and a conclusive bound violation. A `not_found` or `unknown`
+measurement, unit mismatch, condition mismatch, invalid interval, or broken
+source binding yields specification `unknown`, never a false specification
+failure. The retained source object described above keeps the full measurement
+and specification binding available for audit.
 
 ### `drc`
 

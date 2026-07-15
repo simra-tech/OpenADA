@@ -41,7 +41,10 @@ compose operations, preserve a review discipline, and choose the next action;
 it does not become an operation profile merely because it ships in the same
 plugin. Skills do not define result fields, assertion truth tables, driver
 capabilities, or conformance maturity. This separation lets community workflows
-evolve without turning every engineering procedure into protocol surface. See
+evolve without turning every engineering procedure into protocol surface. The
+shipped analog characterization, stability, spectral-linearity, and PVT/yield
+skills inspect capabilities and leave missing primitives not evaluated; they
+remain experimental even after fresh-agent forward tests. See
 [Engineering skills above OpenADA](ENGINEERING_SKILLS.md).
 
 This document describes the intended semantic model. It includes both the
@@ -83,11 +86,20 @@ A versioned operation profile should define:
 - capability requirements and permitted extensions;
 - explicit limitations and conclusions the operation cannot support.
 
-The first published typed profile is
-`openada.operation/circuit.simulate/v1alpha1`. The existing result envelope
-still emits short top-level operation names such as `simulate`, `drc`, and
-`lvs`; the built-in simulation bridge records the full profile identity inside
+The active published typed profiles are
+`openada.operation/circuit.simulate/v1alpha2`,
+`openada.operation/result.measure/v1alpha1`, and
+`openada.operation/specification.evaluate/v1alpha1`. The existing result
+envelope still emits short top-level operation names such as `simulate`, `drc`,
+and `lvs`; typed bridges record full profile and implementation identity inside
 operation-owned data.
+
+`openada.operation-profile/v0alpha2` is additive and immutable beside
+v0alpha1. The historical `circuit.simulate/v1alpha1` profile remains unchanged;
+its additive v1alpha2 successor still uses the v0alpha1 profile schema. The
+measurement and specification profiles use v0alpha2 so one deterministic
+semantic kernel can bind feature IDs to versioned algorithms without inventing
+multiple native EDA mappings.
 
 One invocation should evaluate one primary assertion. Workflows may compose
 several operations, but combining unrelated conclusions into one status makes
@@ -136,11 +148,12 @@ model, deck, setup, top cell, or prior report to manufacture a result.
 OpenADA publishes a review-only
 [`openada.request/v0alpha1`](../schemas/request-v0alpha1.schema.json) base
 envelope and [driver protocol](DRIVER_PROTOCOL.md). The current CLI does not
-yet consume that envelope; operation-specific arguments still perform this
-role separately for each built-in operation. The first typed profile,
-`openada.operation/circuit.simulate/v1alpha1`, publishes the common ngspice/Xyce
-alpha subset for review, while general runtime request dispatch remains future
-work.
+consume that envelope as a generic dispatch input; operation-specific arguments
+perform this role for each built-in operation. Operation-specific CLI bridges
+implement the three published typed profiles. The common simulation subset
+covers one self-contained advertised OP, DC, AC, or transient analysis; the
+evidence profiles consume closed JSON inputs. General runtime request dispatch
+remains future work.
 
 ### Driver and capabilities
 
@@ -173,7 +186,16 @@ The preview has built-in tool discovery and built-in Python drivers. A
 review-only
 [`openada.driver-manifest/v0alpha1`](../schemas/driver-manifest-v0alpha1.schema.json)
 schema now defines the intended capability surface, but the runtime does not
-yet discover or invoke external manifests.
+yet discover or invoke external manifests. V0alpha1 also has no independent
+capability ID, per-feature maturity rows, or normative MCP transport binding;
+those require an additive manifest revision.
+
+MCP may belong below capability resolution as a future transport adapter,
+alongside local CLI, session API, and remote jobs. Such an adapter must carry
+unchanged operation/assertion meaning and evidence thresholds. A future
+marketplace catalogs conforming providers of exact capabilities; it does not
+convert low-level MCP tools or raw executables into semantic operations. See
+[Providers, marketplaces, and MCP](PROVIDERS_AND_MCP.md).
 
 ### Result and evidence
 
@@ -194,10 +216,10 @@ the result should contain only the bounded facts required to select the next
 engineering action.
 
 The preview envelope is closed at the top level, but its `operation` value and
-operation-owned `data` object are not yet validated against individual
-versioned operation schemas. Adding typed operation/assertion profiles will
-require new immutable schema artifacts rather than silently changing the
-meaning of `v0alpha1`.
+operation-owned `data` object are not validated by the common result schema
+against individual profiles. Typed operations therefore publish separate
+immutable profile artifacts and validate their own closed data without
+silently changing the meaning of `v0alpha1`.
 
 ### Artifacts and lineage
 
@@ -272,6 +294,19 @@ specification.evaluate -> pass/fail against explicit limits
 This separation lets an agent rerun only the stage whose evidence changed and
 prevents "the simulator exited successfully" from becoming "the design works."
 
+The implemented `result.measure/v1alpha1` is deliberately narrower than a
+native waveform reader. It consumes a bounded normalized real inline series
+whose canonical digest binds axis, signals, and condition records. Its scalar
+kinds are closed and unit checks are exact. Optional lineage to a native
+artifact is explicitly unverified; OpenADA does not yet extract this series
+from ngspice or Xyce raw evidence.
+
+The implemented `specification.evaluate/v1alpha1` compares one typed finite
+measurement with explicit lower/upper limits, inclusive flags, and exact
+condition bindings. It performs no implicit conversion. Missing measurements,
+unit mismatch, or unproven conditions are `unknown`; only valid matched
+evidence outside a limit is specification `fail`.
+
 ### DRC and LVS have bounded conclusions
 
 `layout.drc` evaluates cleanliness under one exact layout, top cell, deck,
@@ -299,8 +334,8 @@ not a list of accepted profile identifiers or a claim of current CLI support.
 | Inspection | `schematic.inspect` | What bounded hierarchy, instances, nets, pins, and parameters are observable? | Not yet implemented as a shared operation. |
 | Generation | `schematic.netlist` | Was a resolved native netlist generated from the declared schematic? | `netlist` through Xschem. |
 | Analysis | `circuit.simulate` | Was valid evidence produced for the requested circuit analysis? | `simulate` through the workflow-validated ngspice/Xyce shared alpha. |
-| Evidence | `result.measure` | Were the requested values extracted with units and source provenance? | Some ngspice measurements are normalized inside `simulate`; no separate profile yet. |
-| Evidence | `specification.evaluate` | Do declared measurements satisfy explicit limits? | Not yet implemented as a shared operation. |
+| Evidence | `result.measure` | Were the requested values extracted with units and source provenance? | `measure` implements a closed scalar vocabulary over canonical-digest-bound normalized real inline series; native waveform extraction is not built in. |
+| Evidence | `specification.evaluate` | Do declared measurements satisfy explicit limits? | `evaluate` implements exact-unit lower/upper bounds and explicit condition binding over one typed measurement. |
 | Inspection | `layout.inspect` | What bounded cells, hierarchy, layers, geometry summaries, and connectivity are observable? | Not yet implemented as a shared operation. |
 | Verification | `layout.drc` | Is the declared layout clean under the declared DRC setup? | `drc` through KLayout. |
 | Verification | `layout.lvs` | Do the declared layout and schematic representations match under the declared LVS setup? | `lvs` through Netgen. |
@@ -335,11 +370,15 @@ support the same assertion, they should advertise different capabilities rather
 than returning superficially similar JSON.
 
 The first portability proof is `circuit.simulate`, mapped to ngspice and Xyce
-against the same semantic fixture. Its common alpha subset is deliberately
-narrow: one self-contained transient analysis, with no includes, measurements,
-or control-language blocks. Both mappings pass a pinned native replay whose
-independent verifier parses the two native raw formats, checks the same RC
-waveform facts, and permits backend-native sampling differences.
+against the same analysis semantics. Its common alpha subset is deliberately
+narrow: one self-contained OP, DC, AC, or transient analysis, with no includes,
+measurements, print directives, control-language blocks, FFT, noise, Monte
+Carlo, or multiple analyses. ngspice is structured for OP/DC/AC and
+workflow-validated for TRAN; Xyce is structured for DC/AC,
+workflow-validated for TRAN, and rejects OP. The expanded independent verifier
+parses native success evidence and permits backend-native sampling differences
+where both mappings advertise an analysis; success-only cases do not establish
+workflow-validated maturity.
 
 ## Tool-specific control surfaces belong below the waist
 
@@ -409,10 +448,10 @@ The distinction between shipped behavior and intended protocol is material.
 | Area | Implemented preview | Target protocol |
 |---|---|---|
 | Result envelope | Closed `openada.result/v0alpha1` with execution/engineering separation, bounded diagnostics, artifact records, and provenance. | New immutable result version linked to typed operation and assertion profiles, with multi-step driver identity where needed. |
-| Requests | Per-operation CLI arguments plus a review-only `openada.request/v0alpha1` base schema not yet consumed by the CLI. | Typed operation parameter profiles and runtime request dispatch. |
-| Operations | Short operation names and an open operation-owned `data` object; the simulation alpha records the first full operation/assertion profile pair there. | Independently versioned profiles for the remaining operations and machine-readable profile discovery. |
+| Requests | Per-operation CLI arguments plus a review-only `openada.request/v0alpha1` base schema not consumed as a generic CLI request. | Runtime generic request dispatch over installed typed profiles. |
+| Operations | Short operation names and an open operation-owned `data` object; simulation, measurement, and specification bridges record full profile identities there. | Independently versioned profiles for remaining operations and machine-readable profile discovery. |
 | Drivers | Built-in discovery and statically integrated open-tool drivers plus a review-only manifest schema. | Runtime manifest discovery, deterministic selection, driver conformance, and independent installation. |
-| Portability proof | `circuit.simulate` maps one alpha profile to ngspice and Xyce; both pass the pinned native RC conformance replay. | More operation variants, open-source backends, and runtime environments pass equivalent independently checked conformance. |
+| Portability proof | `circuit.simulate` maps one alpha profile to ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN, with pinned analysis-specific replay. | More operations, open-source backends, and runtime environments pass equivalent independently checked conformance. |
 | Artifacts | Declared files have roles, paths, sizes, and hashes; several drivers enforce fresh evidence. | Cross-run invocation and derivation lineage, including explicit incomplete-provenance records. |
 | Mutation | No general design-mutation or workspace-transaction contract. | Reviewable change sets, exact base/post identities, transaction semantics, conflicts, rollback, and linked validation evidence. |
 

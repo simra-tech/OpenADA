@@ -134,7 +134,7 @@ closed typed flags explicitly:
   --output-dir /tmp/xyce-evidence
 ./bin/openada simulate conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-dc.cir \
   --backend ngspice --analysis dc \
-  --source-name V1 --source-unit V --start 0 --stop 5 --step 0.1 \
+  --source-name VSWEEP --source-unit V --start 0 --stop 1 --step 0.25 \
   --output-dir /tmp/ngspice-dc-evidence
 ```
 
