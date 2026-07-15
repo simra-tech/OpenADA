@@ -2,12 +2,12 @@
 
 <p align="center">
   <a href="https://raw.githubusercontent.com/simra-tech/OpenADA/main/.github/assets/openada-intro.mp4">
-    <img src=".github/assets/openada-intro-poster.png" alt="Watch the 44-second OpenADA introduction: different tools connected through one open engineering contract" width="100%">
+    <img src=".github/assets/openada-intro-poster.png" alt="Watch the 30-second OpenADA introduction: different tools connected through one open engineering contract" width="100%">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/simra-tech/OpenADA/main/.github/assets/openada-intro.mp4"><strong>▶ Watch the 44-second introduction</strong></a><br>
+  <a href="https://raw.githubusercontent.com/simra-tech/OpenADA/main/.github/assets/openada-intro.mp4"><strong>▶ Watch the 30-second introduction</strong></a><br>
   <sub>Different tools. One engineering contract.</sub>
 </p>
 
