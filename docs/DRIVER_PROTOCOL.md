@@ -6,7 +6,7 @@ agent select a capable driver without turning the public ontology into a copy
 of ngspice, Xyce, Xschem, KLayout, Netgen, Yosys, OpenROAD, or another tool's
 command surface.
 
-This document specifies protocol scaffolding for review. The current `0.1.0`
+This document specifies protocol scaffolding for review. The current `0.2.0`
 CLI still accepts operation-specific flags and has in-tree drivers; it does not
 yet discover external manifests or accept `openada.request/v0alpha1` on stdin.
 The shipped CLI and [result contract](CONTRACT.md) remain authoritative until

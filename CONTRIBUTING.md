@@ -115,7 +115,7 @@ For the target external-driver protocol, also read the
 [driver-manifest template](conformance/driver-kit/driver-manifest.template.json),
 and
 [operation-profile RFC template](conformance/driver-kit/operation-profile.template.md).
-The schemas are reviewable protocol scaffolding in `0.1.0`; the current runtime
+The schemas are reviewable protocol scaffolding in `0.2.0`; the current runtime
 does not yet discover a manifest or invoke a JSON-stdio driver.
 
 An operation-profile proposal must define more than a command name. Include:

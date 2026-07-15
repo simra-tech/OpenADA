@@ -7,7 +7,7 @@ OpenADA uses explicit maturity levels:
 - **Workflow-validated**: The operation passes a pinned, publicly reproducible
   fixture or design, required PDK (if any), and runtime conformance case.
 
-## v0.1 preview
+## v0.2 preview
 
 | Tool | Discovery | Structured operation | Workflow validation |
 |---|---:|---:|---:|
@@ -24,7 +24,7 @@ OpenADA uses explicit maturity levels:
 
 ## Protocol program
 
-The v0.1 implementation proves a common evidence envelope and hardened native
+The v0.2 implementation proves a common evidence envelope and hardened native
 drivers. The next program turns that foundation into a portable intent and
 driver protocol. Each milestone has a concrete acceptance gate; adding more
 one-off wrappers does not substitute for passing the gate.
@@ -235,7 +235,7 @@ verified workflow validation.
 5. Add broader digital and mixed-signal operations only after they have bounded
    semantics and public fixtures.
 
-## Deliberately outside v0.1
+## Deliberately outside v0.2
 
 - Write-capable mutation or workspace-wide rollback machinery. The lifecycle is
   specified now, but runtime support begins only after the read/evidence driver

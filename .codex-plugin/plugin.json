@@ -1,12 +1,12 @@
 {
   "name": "openada",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Open agent-EDA contracts, deterministic drivers, and tool-independent engineering skills.",
   "author": {
     "name": "Simra Tech",
     "url": "https://github.com/simra-tech"
   },
-  "homepage": "https://github.com/simra-tech/OpenADA",
+  "homepage": "https://www.simratech.com/openada/",
   "repository": "https://github.com/simra-tech/OpenADA",
   "license": "MIT",
   "keywords": [
@@ -29,7 +29,7 @@
     "capabilities": [
       "Execute"
     ],
-    "websiteURL": "https://github.com/simra-tech/OpenADA",
+    "websiteURL": "https://www.simratech.com/openada/",
     "defaultPrompt": [
       "Inspect this EDA workspace and report available tools and PDKs.",
       "Review this circuit simulation and recommend the next engineering step.",

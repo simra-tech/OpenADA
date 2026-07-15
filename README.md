@@ -27,7 +27,7 @@ replacement for them. The same simulation intent can run through ngspice or
 Xyce; the agent should not have to relearn every command surface and log
 grammar to understand whether valid evidence was produced.
 
-The `0.1.0` preview already provides six semantic CLI operations, six
+The `0.2.0` preview provides six semantic CLI operations, six
 open-source EDA drivers including the Xyce simulation alpha, and the versioned
 `openada.result/v0alpha1` evidence envelope. A transport-neutral alpha request
 envelope, driver-manifest schema, and typed circuit-simulation operation profile
@@ -184,7 +184,7 @@ contribution gate.
 
 ## What exists and what comes next
 
-| Contract layer | `0.1.0` preview | Protocol target |
+| Contract layer | `0.2.0` preview | Protocol target |
 |---|---|---|
 | Agent intent | CLI commands and flags; five fixed scoped-preflight assertions; the typed `circuit.simulate/v1alpha1` profile; a review-only `openada.request/v0alpha1` scaffold | Remaining immutable operation/assertion profiles accepted by general runtime dispatch |
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
@@ -192,7 +192,7 @@ contribution gate.
 | Portability proof | One `circuit.simulate` request shape passes pinned native ngspice/Xyce replay with independently parsed artifacts | More analysis profiles, open-source backends, and runtime environments |
 | Engineering skills | One execution skill plus an experimental backend-independent simulation-review skill | Small contributed workflows that compose stable operations across backends |
 | Workflow composition | Small atomic netlist, simulation, verification, and RTL checks | Corners, Monte Carlo, measurement, specification, and lineage composed above those atoms |
-| Design mutation | Deliberately outside `0.1` | Preconditioned, transactional change sets with declared writes, native diffs, rollback evidence, and source-revision identity |
+| Design mutation | Deliberately outside the current preview | Preconditioned, transactional change sets with declared writes, native diffs, rollback evidence, and source-revision identity |
 
 Mutation is part of the long-term design because chip projects need safer
 change history and collaboration. It must be a stronger contract than “the
@@ -202,7 +202,7 @@ or rollback separately from engineering validation.
 
 The [mutation and versioning proposal](docs/MUTATION_AND_VERSIONING.md) defines
 a semantic, append-only design-change history with `preview`, `apply`, and
-`revert`; the write-capable runtime is planned and is not shipped in `0.1.0`.
+`revert`; the write-capable runtime is planned and is not shipped in `0.2.0`.
 
 ## Quickstart
 
@@ -276,7 +276,7 @@ is:
 To install the Python entry point from the repository:
 
 ```bash
-python -m pip install 'git+https://github.com/simra-tech/OpenADA.git@main'
+python -m pip install 'git+https://github.com/simra-tech/OpenADA.git@v0.2.0'
 openada doctor
 ```
 
@@ -291,7 +291,7 @@ harnesses.
 Inside Claude Code:
 
 ```text
-/plugin marketplace add simra-tech/OpenADA
+/plugin marketplace add https://github.com/simra-tech/OpenADA.git#v0.2.0
 /plugin install openada@openada
 /reload-plugins
 ```
@@ -309,7 +309,7 @@ claude --plugin-dir .
 Add the Git marketplace:
 
 ```bash
-codex plugin marketplace add simra-tech/OpenADA
+codex plugin marketplace add simra-tech/OpenADA --ref v0.2.0
 codex plugin add openada@openada
 ```
 
@@ -358,6 +358,7 @@ See [the current result contract](docs/CONTRACT.md),
 [engineering skills](docs/ENGINEERING_SKILLS.md),
 [request and driver protocol](docs/DRIVER_PROTOCOL.md),
 [compatibility policy](docs/COMPATIBILITY.md),
+[release history](CHANGELOG.md),
 [driver status and roadmap](docs/ROADMAP.md), and
 [contribution guide](CONTRIBUTING.md). Driver contributors can check captured
 results with the [small conformance kit](conformance/driver-kit/README.md).

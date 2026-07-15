@@ -38,7 +38,7 @@
   "backends": {
     "ngspice": {
       "driver_id": "org.openada.driver.ngspice",
-      "driver_version": "0.1.0",
+      "driver_version": "0.2.0",
       "tool": {
         "path": "/foss/tools/ngspice/bin/ngspice",
         "version": "** ngspice-46 : Circuit level simulation program"
@@ -64,7 +64,7 @@
     },
     "xyce": {
       "driver_id": "org.openada.driver.xyce",
-      "driver_version": "0.1.0",
+      "driver_version": "0.2.0",
       "tool": {
         "path": "/foss/tools/xyce/bin/Xyce",
         "version": "Xyce Release 7.10-opensource"

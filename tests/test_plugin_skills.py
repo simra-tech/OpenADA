@@ -4,6 +4,8 @@ import json
 import re
 from pathlib import Path
 
+from openada import __version__
+
 
 ROOT = Path(__file__).parents[1]
 SKILLS_ROOT = ROOT / "skills"
@@ -63,6 +65,28 @@ def test_codex_manifest_discovers_the_shared_skills_directory():
 
     assert manifest["skills"] == "./skills/"
     assert "engineering skills" in manifest["description"]
+
+
+def test_package_runtime_and_plugin_release_versions_match():
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    project_section = pyproject.split("[project]", 1)[1].split("\n[", 1)[0]
+    package_match = re.search(r'^version = "([^"]+)"$', project_section, re.MULTILINE)
+    assert package_match is not None
+
+    codex_manifest = json.loads(
+        (ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
+    )
+    claude_manifest = json.loads(
+        (ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
+    )
+
+    versions = {
+        package_match.group(1),
+        __version__,
+        codex_manifest["version"],
+        claude_manifest["version"],
+    }
+    assert versions == {__version__}
 
 
 def test_engineering_skill_catalog_names_every_shipped_skill():

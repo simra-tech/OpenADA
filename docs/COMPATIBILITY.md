@@ -19,7 +19,7 @@ native-product identities say which implementation executed it. The conformance
 identity tells a reviewer what exact engineering case ran.
 
 The alpha [request and driver protocol](DRIVER_PROTOCOL.md) is currently
-review-only scaffolding: the `0.1.0` CLI neither accepts request envelopes nor
+review-only scaffolding: the `0.2.0` CLI neither accepts request envelopes nor
 discovers manifests. Publishing those schemas establishes their identity and
 review surface without implying runtime support.
 

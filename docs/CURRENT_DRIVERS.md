@@ -1,7 +1,7 @@
 # Current preview drivers
 
 This document records the native-tool policies implemented by the OpenADA
-`0.1.0` preview. It is an operational reference for the drivers that exist
+`0.2.0` preview. It is an operational reference for the drivers that exist
 today, not a claim of universal EDA support or foundry signoff.
 
 All engineering commands return one `openada.result/v0alpha1` JSON object.

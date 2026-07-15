@@ -4,7 +4,7 @@ OpenADA defines a narrow control and evidence boundary between an agent harness
 and native EDA tools. It does not replace native formats or require every EDA to
 share one internal data model.
 
-This document is the source of truth for the shipped `0.1.0` CLI and
+This document is the source of truth for the shipped `0.2.0` CLI and
 `openada.result/v0alpha1` behavior. The broader [semantic model](SEMANTIC_MODEL.md)
 and [request/driver protocol](DRIVER_PROTOCOL.md) distinguish implemented
 behavior from review-only protocol scaffolding.
@@ -64,7 +64,7 @@ are bounded to 4,000 characters while retaining head and tail context.
   "diagnostics": [],
   "data": {},
   "provenance": {
-    "openada_version": "0.1.0",
+    "openada_version": "0.2.0",
     "created_at": "2026-07-13T00:00:00Z",
     "host": {
       "system": "Linux",
