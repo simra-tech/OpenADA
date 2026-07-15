@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Circuit Simulation"
+  short_description: "Review simulation evidence and next actions"
+  default_prompt: "Use $review-circuit-simulation to assess this circuit simulation and recommend the next engineering step."

@@ -7,6 +7,13 @@ description: Discover, invoke, and interpret open-source EDA tools through OpenA
 
 Use the deterministic OpenADA CLI between agent reasoning and native EDA tools. Keep native design files, PDKs, and rule decks as the source of truth.
 
+This is the plugin's execution and evidence skill. It maps a bounded intent to
+OpenADA operations and interprets their versioned results. Higher-level
+engineering skills may compose these operations into review or diagnosis
+workflows, but they must not duplicate backend commands or redefine contract
+status. Keep tool-native safety policy here or in the deterministic driver;
+keep reusable engineering judgment in a separate sibling skill.
+
 ## Establish the workspace
 
 1. Identify the intended project root before running or modifying a design.

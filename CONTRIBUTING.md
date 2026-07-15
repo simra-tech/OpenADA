@@ -145,6 +145,54 @@ The driver must:
 Do not promote a driver based only on `--help`, a zero exit code, or a mocked unit
 test.
 
+## Contributing engineering skills
+
+Engineering skills live above the semantic contract. Use them for reusable
+review, diagnosis, planning, or decision workflows that can consume OpenADA
+operations without teaching the agent a native EDA command surface. Read
+[Engineering skills above OpenADA](docs/ENGINEERING_SKILLS.md) before proposing
+one.
+
+Put each skill in:
+
+```text
+skills/<lowercase-hyphen-name>/
+├── SKILL.md
+└── agents/openai.yaml
+```
+
+Add `references/` only for material loaded on demand and `scripts/` only for a
+deterministic reusable helper. Do not add a README or copy driver behavior into
+the skill.
+
+A contribution should:
+
+1. name a concrete engineering decision and its trigger cases;
+2. use OpenADA operation/assertion semantics rather than raw tool commands;
+3. make execution, evidence validity, measurement, specification, and signoff
+   boundaries explicit where relevant;
+4. route `pass`, `fail`, `unknown`, invalid requests, and unavailable backends;
+5. preserve explicit PDK, model, corner, deck, setup, and top-cell choices;
+6. include UI metadata whose default prompt explicitly names the skill;
+7. forward-test at least one realistic success and one failure or uncertainty
+   case.
+
+When two conforming drivers implement the operation, the skill instructions
+must remain unchanged across them. Backend selection may be an explicit
+parameter; backend-specific flags, parsing rules, and safety policy belong in
+the driver or the `openada` execution skill.
+
+Run the repository checks before opening a pull request:
+
+```bash
+pytest -q tests/test_plugin_skills.py
+pytest -q
+```
+
+Skill maturity is separate from **Discovered**, **Structured**, and
+**Workflow-validated** driver maturity. A skill cannot change contract meaning
+or substitute for native conformance evidence.
+
 ## Mutation contributions
 
 Write-capable operations use the separately gated

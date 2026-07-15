@@ -34,7 +34,9 @@ includes review-only request, driver-manifest, and operation-profile schemas,
 valid contributor templates, and the first concrete `circuit.simulate`
 profile. Milestone C has a built-in ngspice/Xyce alpha mapping; native Xyce
 workflow validation, runtime manifest discovery, and external invocation remain
-unimplemented.
+unimplemented. Milestone D now has its first experimental tool-independent
+engineering skill; it has not yet passed the cross-backend or external-review
+gate.
 
 ### A. Publish the semantic boundary
 
@@ -83,7 +85,24 @@ evidence without changing an agent harness.
 independently inspected native artifacts. Synthetic Xyce tests do not satisfy
 this gate.
 
-### D. Earn community extensibility
+### D. Grow the engineering-skill layer
+
+- Keep the OpenADA execution skill thin and put engineering review or diagnosis
+  workflows in separate sibling skills.
+- Require engineering skills to compose versioned operations and normalized
+  evidence rather than native commands or backend log grammars.
+- Forward-test success, failure, unknown, invalid, and unavailable paths on
+  realistic public tasks.
+- Prove backend independence with identical skill instructions across ngspice
+  and Xyce once both mappings are natively workflow-validated.
+- Track skill maturity separately from driver maturity and contract versioning.
+
+**Gate:** one contributed engineering skill composes a versioned operation on
+two conforming backends without backend-specific prompt instructions, passes
+realistic positive and uncertainty/failure cases, and is reviewed by an
+engineer other than its author.
+
+### E. Earn community extensibility
 
 - Have an external maintainer or researcher author or review a driver and its
   operation mapping.
@@ -95,7 +114,7 @@ this gate.
 **Gate:** an external driver reaches structured maturity without adding a new
 model-facing API or modifying OpenADA's central dispatch.
 
-### E. Add mutation and design history
+### F. Add mutation and design history
 
 - Implement the preview/apply/revert lifecycle in
   [Mutation and design versioning](MUTATION_AND_VERSIONING.md).

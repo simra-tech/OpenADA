@@ -58,6 +58,8 @@ an agent asks for an operation and how a driver reports what actually happened.
 ```text
        Codex · Claude Code · research agents · design automation
                               │
+                tool-independent engineering skills
+                              │
                   versioned engineering intent
                               ▼
           ┌─────────────────────────────────────┐
@@ -150,6 +152,33 @@ That shared boundary creates leverage for the whole ecosystem:
 - Design teams receive reviewable native artifacts and provenance instead of an
   agent's unbounded log summary.
 
+## Engineering skills above the contract
+
+Standardizing EDA semantics removes much of the value from teaching an agent a
+separate skill for every supported tool. It creates a better place for skills:
+reusable engineering workflows that sit above the contract and work across
+backends.
+
+The plugin now has two deliberately separate layers:
+
+- `skills/openada` is the thin execution and evidence adapter. It selects a
+  semantic operation, invokes OpenADA, and interprets the versioned result.
+- `skills/review-circuit-simulation` is the first engineering skill. It reviews
+  simulation evidence, keeps execution/evidence/measurement/specification
+  claims separate, and recommends the next action without embedding an
+  ngspice- or Xyce-specific workflow.
+
+Skills are plugin content, not protocol objects. They may compose several
+OpenADA operations and evolve faster than the semantic ABI, but they cannot
+redefine an assertion, promote driver maturity, or turn a native log heuristic
+into a portable contract. Installing the plugin discovers all shipped skills;
+the CLI and JSON contracts remain usable by harnesses that do not support
+skills.
+
+See [Engineering skills above OpenADA](docs/ENGINEERING_SKILLS.md) for the
+layering rule, plugin structure, initial catalog, maturity model, and
+contribution gate.
+
 ## What exists and what comes next
 
 | Contract layer | `0.1.0` preview | Protocol target |
@@ -158,6 +187,7 @@ That shared boundary creates leverage for the whole ecosystem:
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
 | Drivers | Five workflow/structured connectors plus the Xyce simulation alpha | Capability manifests and independently installable drivers |
 | Portability proof | One `circuit.simulate` request shape mapped to ngspice and Xyce; Xyce is synthetic-test-only | Native workflow conformance on both backends |
+| Engineering skills | One execution skill plus an experimental backend-independent simulation-review skill | Small contributed workflows that compose stable operations across backends |
 | Workflow composition | Small atomic netlist, simulation, verification, and RTL checks | Corners, Monte Carlo, measurement, specification, and lineage composed above those atoms |
 | Design mutation | Deliberately outside `0.1` | Preconditioned, transactional change sets with declared writes, native diffs, rollback evidence, and source-revision identity |
 
@@ -228,7 +258,8 @@ commands, see the [current driver reference](docs/CURRENT_DRIVERS.md). The
 driver-specific safety rules are part of the preview contract; do not infer
 them from a raw tool's exit code.
 
-After adding the skill to an agent, a useful first-run prompt is:
+After adding the plugin to an agent, a useful execution-layer first-run prompt
+is:
 
 > Use the OpenADA skill in this project. Treat source files and PDKs as
 > read-only. Choose one intended engineering assertion and run scoped OpenADA
@@ -246,9 +277,11 @@ python -m pip install 'git+https://github.com/simra-tech/OpenADA.git@main'
 openada doctor
 ```
 
-## Add the agent skill
+## Add the agent skills
 
-The same `skills/openada` package is shared across harnesses.
+The plugin ships every directory under `skills/`: the OpenADA execution skill
+and focused engineering skills above it. The same packages are shared across
+harnesses.
 
 ### Claude Code
 
@@ -278,18 +311,22 @@ codex plugin add openada@openada
 ```
 
 For a skill-only Codex CLI setup, first install the `openada` Python entry point
-as shown above. Then copy the shared skill into the user skill directory:
+as shown above. Then copy the shared skills into the user skill directory:
 
 ```bash
 mkdir -p ~/.codex/skills
 cp -R skills/openada ~/.codex/skills/openada
+cp -R skills/review-circuit-simulation \
+  ~/.codex/skills/review-circuit-simulation
 ```
 
 ### Other harnesses
 
-Make `bin/openada` available to the agent's terminal and register
-`skills/openada/SKILL.md` using the harness's Agent Skills mechanism. The CLI is
-the portable contract; the harness adapter should stay thin.
+Make `bin/openada` available to the agent's terminal and register the desired
+`skills/*/SKILL.md` packages using the harness's Agent Skills mechanism. Start
+with `skills/openada`, then add the engineering workflows relevant to the
+project. The CLI is the portable contract; the harness adapter should stay
+thin.
 
 ## Preview operations
 
@@ -315,6 +352,7 @@ roadmap preserves that distinction.
 
 See [the current result contract](docs/CONTRACT.md),
 [semantic model](docs/SEMANTIC_MODEL.md),
+[engineering skills](docs/ENGINEERING_SKILLS.md),
 [request and driver protocol](docs/DRIVER_PROTOCOL.md),
 [compatibility policy](docs/COMPATIBILITY.md),
 [driver status and roadmap](docs/ROADMAP.md), and

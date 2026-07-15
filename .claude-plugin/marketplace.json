@@ -4,13 +4,13 @@
     "name": "Simra Tech"
   },
   "metadata": {
-    "description": "OpenADA plugins and skills for agent-driven open-source EDA workflows."
+    "description": "OpenADA contracts, drivers, and engineering skills for agent-driven open-source EDA workflows."
   },
   "plugins": [
     {
       "name": "openada",
       "source": "./",
-      "description": "Open agent-EDA contracts and deterministic drivers for open-source EDA tools."
+      "description": "Open agent-EDA contracts, deterministic drivers, and tool-independent engineering skills."
     }
   ]
 }

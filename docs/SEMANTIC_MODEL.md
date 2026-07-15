@@ -36,6 +36,14 @@ PDKs, model libraries, rule decks, runsets, and native reports stay below the
 waist. Agent-facing intent, status, evidence, artifact roles, and provenance sit
 at the waist.
 
+Tool-independent engineering skills may sit above the waist. A skill can
+compose operations, preserve a review discipline, and choose the next action;
+it does not become an operation profile merely because it ships in the same
+plugin. Skills do not define result fields, assertion truth tables, driver
+capabilities, or conformance maturity. This separation lets community workflows
+evolve without turning every engineering procedure into protocol surface. See
+[Engineering skills above OpenADA](ENGINEERING_SKILLS.md).
+
 This document describes the intended semantic model. It includes both the
 implemented preview foundation and proposed contract layers that do not exist
 yet. The [contract](CONTRACT.md), published schemas, and current CLI remain the
