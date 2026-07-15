@@ -1,13 +1,13 @@
 # OpenADA
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/simra-tech/OpenADA/main/.github/assets/openada-intro.mp4">
+  <a href="https://youtu.be/0odnKFsgbt0">
     <img src=".github/assets/openada-intro-poster.png" alt="Watch the 48-second OpenADA introduction: OpenADA is the open interface contract between agent harnesses and EDA tools" width="100%">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/simra-tech/OpenADA/main/.github/assets/openada-intro.mp4"><strong>▶ Watch the 48-second introduction</strong></a><br>
+  <a href="https://youtu.be/0odnKFsgbt0"><strong>▶ Watch the 48-second introduction on YouTube</strong></a><br>
   <sub>The open interface between agents and EDA.</sub>
 </p>
 
