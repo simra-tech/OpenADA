@@ -7,7 +7,7 @@
     "kind": "testbench",
     "locator": {
       "type": "filesystem",
-      "path": "conformance/circuit-simulate/fixtures/rc-transient.cir",
+        "path": "/absolute/path/to/rc-transient.cir",
       "extensions": {}
     },
     "extensions": {}

@@ -1,0 +1,381 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/result.spectral.measure/v1alpha1",
+    "title": "Closed coherent single-tone spectral measurement",
+    "summary": "Derive one SNR, SINAD, THD, or SFDR scalar from a provenance-bound uniformly sampled real record using one explicit hashed spectral partition.",
+    "side_effect_mode": "read-only",
+    "target_kinds": ["normalized-series"],
+    "locator_types": ["artifact", "uri", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/spectral.measurement.valid/v1alpha1",
+    "statement": "The requested finite spectral ratio was derived, was conclusively not observable, or remained unknown from the exact source record using the declared coherent single-tone partition method.",
+    "non_goals": [
+      "This assertion does not state that a design specification is satisfied.",
+      "This assertion does not establish IEEE conformance; public IEEE scope metadata is recorded only as candidate standards context.",
+      "This assertion does not infer noncoherent tones, choose a window, fit a sine wave, estimate clipping, or invent a noise bandwidth.",
+      "This assertion does not define ENOB, jitter, phase noise, arbitrary-waveform SNR, PSD, or averaged spectra."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "The source and complete method declaration were valid, the component partition was established, and the requested ratio is one finite dB scalar.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.measurement.status is measured and its value is finite with unit dB.",
+          "data.spectral.partition.sha256 binds every band, DC, fundamental, harmonic, noise, residual, and spur-candidate bin assignment.",
+          "The source digest, exact method, sampling facts, component powers, and standards context are retained."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "A valid bounded record conclusively contains zero power at the exact declared coherent fundamental bin.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.measurement.status is not_found and value is null.",
+          "The complete valid partition records zero fundamental power and a spectral.fundamental.not_found diagnostic."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The source, method, sampling, units, coherence, partition, standard context, or finite ratio could not be established without guessing.",
+        "allowed_execution_statuses": ["completed", "invalid_request", "failed"],
+        "required_evidence": [
+          "data.measurement.status is unknown and value is null.",
+          "A stable diagnostic identifies the invalid, unsupported, nonuniform, colliding, or mathematically unbounded condition."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.spectral.measure v1alpha1 request parameters",
+      "description": "One bounded normalized real series and one fully declared coherent single-tone spectral ratio.",
+      "type": "object",
+      "required": ["series", "spectral", "extensions"],
+      "properties": {
+        "series": {"$ref": "#/$defs/series"},
+        "spectral": {"$ref": "#/$defs/spectral"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 64},
+        "name": {"type": "string", "minLength": 1, "maxLength": 256},
+        "role": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+        "quantityHz": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {"value": {"type": "number"}, "unit": {"const": "Hz"}},
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object",
+          "required": ["name", "value", "unit"],
+          "properties": {
+            "name": {"$ref": "#/$defs/name"},
+            "value": {"type": ["number", "string", "boolean"], "maxLength": 256},
+            "unit": {"$ref": "#/$defs/unit"}
+          },
+          "additionalProperties": false
+        },
+        "lineage": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "binding"],
+          "properties": {
+            "operation": {"$ref": "#/$defs/name"},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"$ref": "#/$defs/role"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "binding": {"const": "unverified"}
+          },
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256"],
+          "properties": {
+            "operation": {"$ref": "#/$defs/name"},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"const": "measurement.source"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "lineage": {"$ref": "#/$defs/lineage"}
+          },
+          "additionalProperties": false
+        },
+        "vector": {
+          "type": "object",
+          "required": ["name", "unit", "values"],
+          "properties": {
+            "name": {"$ref": "#/$defs/name"},
+            "unit": {"$ref": "#/$defs/unit"},
+            "values": {"type": "array", "minItems": 1, "maxItems": 100000, "items": {"type": "number"}}
+          },
+          "additionalProperties": false
+        },
+        "series": {
+          "type": "object",
+          "required": ["source", "axis", "signals", "conditions", "extensions"],
+          "properties": {
+            "source": {"$ref": "#/$defs/source"},
+            "axis": {"$ref": "#/$defs/vector"},
+            "signals": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/vector"}},
+            "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "method": {
+          "type": "object",
+          "required": ["id", "dft_length", "uniformity_relative_tolerance", "coherent_bin_tolerance", "coherent_sampling", "window", "detrend", "sidedness", "scaling", "averaging", "missing_samples", "clipping"],
+          "properties": {
+            "id": {"const": "openada.method/coherent-single-tone-fft/v1alpha1"},
+            "dft_length": {"type": "integer", "minimum": 8, "maximum": 65536},
+            "uniformity_relative_tolerance": {"type": "number", "minimum": 0, "maximum": 0.001},
+            "coherent_bin_tolerance": {"type": "number", "minimum": 0, "maximum": 0.000001},
+            "coherent_sampling": {"const": "required"},
+            "window": {"const": "rectangular"},
+            "detrend": {"const": "mean"},
+            "sidedness": {"const": "one-sided"},
+            "scaling": {"const": "mean-square-per-bin"},
+            "averaging": {"const": "none"},
+            "missing_samples": {"const": "reject"},
+            "clipping": {"const": "not-assessed"}
+          },
+          "additionalProperties": false
+        },
+        "band": {
+          "type": "object",
+          "required": ["lower", "upper"],
+          "properties": {"lower": {"$ref": "#/$defs/quantityHz"}, "upper": {"$ref": "#/$defs/quantityHz"}},
+          "additionalProperties": false
+        },
+        "fundamental": {
+          "type": "object",
+          "required": ["method", "frequency", "integration_half_width_bins"],
+          "properties": {
+            "method": {"const": "declared-coherent-bin"},
+            "frequency": {"$ref": "#/$defs/quantityHz"},
+            "integration_half_width_bins": {"const": 0}
+          },
+          "additionalProperties": false
+        },
+        "harmonics": {
+          "type": "object",
+          "required": ["orders", "aliasing", "collision", "out_of_band", "integration_half_width_bins"],
+          "properties": {
+            "orders": {"type": "array", "maxItems": 63, "uniqueItems": true, "items": {"type": "integer", "minimum": 2, "maximum": 64}},
+            "aliasing": {"const": "fold-first-nyquist"},
+            "collision": {"const": "reject"},
+            "out_of_band": {"const": "exclude"},
+            "integration_half_width_bins": {"const": 0}
+          },
+          "additionalProperties": false
+        },
+        "metric": {
+          "type": "object",
+          "required": ["kind", "unit"],
+          "properties": {"kind": {"enum": ["snr", "sinad", "thd", "sfdr"]}, "unit": {"const": "dB"}},
+          "additionalProperties": false
+        },
+        "standardsContext": {
+          "oneOf": [
+            {"type": "object", "required": ["domain", "reference", "alignment"], "properties": {"domain": {"const": "generic-sampled-waveform"}, "reference": {"const": "none"}, "alignment": {"const": "openada-definition"}}, "additionalProperties": false},
+            {"type": "object", "required": ["domain", "reference", "alignment"], "properties": {"domain": {"const": "adc"}, "reference": {"const": "ieee-1241-2023"}, "alignment": {"const": "candidate"}}, "additionalProperties": false},
+            {"type": "object", "required": ["domain", "reference", "alignment"], "properties": {"domain": {"const": "dac"}, "reference": {"const": "ieee-1658-2023"}, "alignment": {"const": "candidate"}}, "additionalProperties": false},
+            {"type": "object", "required": ["domain", "reference", "alignment"], "properties": {"domain": {"const": "waveform-recorder"}, "reference": {"const": "ieee-1057-2017"}, "alignment": {"const": "candidate"}}, "additionalProperties": false}
+          ]
+        },
+        "spectral": {
+          "type": "object",
+          "required": ["measurement_id", "signal", "method", "band", "fundamental", "harmonics", "metric", "standards_context", "extensions"],
+          "properties": {
+            "measurement_id": {"$ref": "#/$defs/role"},
+            "signal": {"$ref": "#/$defs/name"},
+            "method": {"$ref": "#/$defs/method"},
+            "band": {"$ref": "#/$defs/band"},
+            "fundamental": {"$ref": "#/$defs/fundamental"},
+            "harmonics": {"$ref": "#/$defs/harmonics"},
+            "metric": {"$ref": "#/$defs/metric"},
+            "standards_context": {"$ref": "#/$defs/standardsContext"},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "The normalized source digest, finite-number rules, unique names, exact vector lengths, and strictly increasing axis follow result.measure/v1alpha1; the axis unit must be exactly s.",
+      "The record length must equal the declared power-of-two DFT length from 8 through 65536 and every adjacent interval must satisfy the declared relative uniformity tolerance.",
+      "The fundamental and every folded requested harmonic must land on an exact DFT bin within the declared coherent-bin tolerance; v1alpha1 rejects rather than estimates leakage.",
+      "The analysis band is closed, nonnegative, no greater than the first Nyquist frequency, and must contain the fundamental.",
+      "DC is excluded. SNR excludes declared in-band harmonics from noise; SINAD includes all residual in-band power; THD uses declared in-band harmonics; SFDR retains harmonics as spur candidates.",
+      "Harmonics fold into the first Nyquist zone. A harmonic colliding with DC, the fundamental, or another declared harmonic invalidates the request; out-of-band harmonics are recorded and excluded.",
+      "The method assesses neither clipping nor analog bandwidth. Its result is an OpenADA definition; candidate IEEE context never asserts clause-level conformance."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.spectral.measure v1alpha1 normalized result data",
+      "type": "object",
+      "required": ["protocol", "measurement", "spectral", "extensions"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/protocol"},
+        "measurement": {"$ref": "#/$defs/measurement"},
+        "spectral": {"$ref": "#/$defs/spectral"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "protocol": {
+          "type": "object",
+          "required": ["request_id", "operation_profile", "assertion_profile", "implementation_id", "implementation_version"],
+          "properties": {
+            "request_id": {"type": "string", "format": "uuid"},
+            "operation_profile": {"const": "openada.operation/result.spectral.measure/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/spectral.measurement.valid/v1alpha1"},
+            "implementation_id": {"const": "org.openada.kernel.spectral-evidence"},
+            "implementation_version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object",
+          "required": ["name", "value", "unit"],
+          "properties": {"name": {"type": "string"}, "value": {"type": ["number", "string", "boolean"], "maxLength": 256}, "unit": {"type": "string"}},
+          "additionalProperties": false
+        },
+        "lineage": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "binding"],
+          "properties": {
+            "operation": {"type": "string"}, "request_id": {"type": "string", "format": "uuid"}, "artifact_role": {"type": "string"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "binding": {"const": "unverified"}
+          },
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "series_sha256", "conditions_sha256", "conditions", "lineage"],
+          "properties": {
+            "operation": {"type": "string"}, "request_id": {"type": "string", "format": "uuid"}, "artifact_role": {"const": "measurement.source"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "series_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "conditions_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}},
+            "lineage": {"oneOf": [{"$ref": "#/$defs/lineage"}, {"type": "null"}]}
+          },
+          "additionalProperties": false
+        },
+        "measurement": {
+          "type": "object",
+          "required": ["measurement_id", "kind", "status", "request_sha256", "value", "unit", "signal", "location", "algorithm", "sample_count", "source", "extensions"],
+          "properties": {
+            "measurement_id": {"type": ["string", "null"], "maxLength": 120}, "kind": {"type": ["string", "null"], "maxLength": 40},
+            "status": {"enum": ["measured", "not_found", "unknown"]}, "request_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+            "value": {"type": ["number", "null"]}, "unit": {"type": ["string", "null"]}, "signal": {"type": ["string", "null"]},
+            "location": {"oneOf": [{"type": "object", "required": ["value", "unit"], "properties": {"value": {"type": "number"}, "unit": {"const": "Hz"}}, "additionalProperties": false}, {"type": "null"}]},
+            "algorithm": {"type": "object", "required": ["id", "version"], "properties": {"id": {"type": "string"}, "version": {"type": "string"}}, "additionalProperties": false},
+            "sample_count": {"type": "integer", "minimum": 0, "maximum": 100000}, "source": {"oneOf": [{"$ref": "#/$defs/source"}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "spectral": {
+          "type": "object",
+          "required": ["status", "request_sha256", "method", "acquisition", "band", "fundamental", "harmonics", "partition", "standards_context", "extensions"],
+          "properties": {
+            "status": {"enum": ["analyzed", "fundamental_not_found", "metric_unbounded", "unknown"]}, "request_sha256": {"type": ["string", "null"]},
+            "method": {"type": ["object", "null"]}, "acquisition": {"type": ["object", "null"]}, "band": {"type": ["object", "null"]},
+            "fundamental": {"type": ["object", "null"]}, "harmonics": {"type": "array"}, "partition": {"type": ["object", "null"]},
+            "standards_context": {"type": ["object", "null"]}, "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.measurement.value", "type": ["number", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Finite requested dB ratio for pass and null for absent or unknown results.", "extensions": {}},
+      {"path": "data.spectral.acquisition", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "Record length, sample rate, Nyquist frequency, bin width, and established uniformity.", "extensions": {}},
+      {"path": "data.spectral.partition.sha256", "type": "string", "required_for": ["pass", "fail"], "description": "Canonical identity of every semantic bin assignment used by the ratio.", "extensions": {}},
+      {"path": "data.spectral.partition.winning_spur", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "Deterministically selected lowest-frequency winning spur on tied power.", "extensions": {}},
+      {"path": "data.spectral.standards_context", "type": ["object", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Application scope and candidate standard reference without an IEEE conformance claim.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [{
+      "role": "measurement.source",
+      "kind": "normalized-inline-series",
+      "required_for": ["pass", "fail"],
+      "freshness": "immutable-input",
+      "integrity": ["Verify the canonical normalized-series digest before transforming.", "Retain exact operating conditions and optional upstream lineage."],
+      "native_authority": "The normalized series is authoritative only for this deterministic calculation; native extraction remains the upstream operation's assertion.",
+      "extensions": {}
+    }],
+    "integrity_rules": [
+      "Hash the complete closed request separately from the normalized source and semantic bin partition.",
+      "Use deterministic radix-2 transform ordering and mean-square one-sided per-bin power.",
+      "Never serialize NaN or infinity; mathematically unbounded ratios remain unknown with null value."
+    ],
+    "provenance_limitations": [
+      "The operation does not independently validate native waveform decoding.",
+      "The public IEEE pages establish scope and lifecycle only; candidate alignment is not a normative clause crosswalk.",
+      "A rectangular coherent-bin method is not interchangeable with windowed, fitted, PSD, averaged, or noncoherent methods."
+    ],
+    "limits": {"max_log_bytes": 4000, "max_artifact_bytes": 67108864, "max_artifact_count": 1, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {"id": "openada.feature/spectral.snr/v1alpha1", "parameter_path": "spectral.metric.kind", "parameter_values": ["snr"], "request_effect": "Fundamental power divided by in-band power excluding DC, the fundamental, and declared in-band harmonics.", "conformance_case": "Coherent tone fixtures freeze noise membership, exact ratio, zero-denominator handling, and partition identity.", "extensions": {}},
+    {"id": "openada.feature/spectral.sinad/v1alpha1", "parameter_path": "spectral.metric.kind", "parameter_values": ["sinad"], "request_effect": "Fundamental power divided by all other non-DC in-band residual power; no implicit SNDR alias is exposed.", "conformance_case": "Coherent tone, harmonic, spur, and noise fixtures freeze residual membership and exact ratio.", "extensions": {}},
+    {"id": "openada.feature/spectral.thd/v1alpha1", "parameter_path": "spectral.metric.kind", "parameter_values": ["thd"], "request_effect": "Declared in-band harmonic power divided by fundamental power and reported as a signed dB ratio.", "conformance_case": "Fixtures cover requested orders, alias folding, excluded out-of-band orders, collisions, and absent harmonic power.", "extensions": {}},
+    {"id": "openada.feature/spectral.sfdr/v1alpha1", "parameter_path": "spectral.metric.kind", "parameter_values": ["sfdr"], "request_effect": "Fundamental power divided by the largest non-DC, non-fundamental in-band bin; harmonics remain candidates and ties choose the lowest bin.", "conformance_case": "Fixtures cover harmonic winners, nonharmonic winners, ties, empty candidates, and winning-spur evidence.", "extensions": {}}
+  ],
+  "diagnostics": [
+    {"code": "spectral.request.invalid", "severity": "error", "condition": "The closed request shape, number, identifier, order, or parameter is invalid.", "next_action": "Correct the explicit method declaration without substituting a different spectral method.", "extensions": {}},
+    {"code": "spectral.source.invalid", "severity": "error", "condition": "The normalized source identity, digest, shape, values, axis, or conditions are invalid.", "next_action": "Regenerate the canonical series through a verified extraction operation.", "extensions": {}},
+    {"code": "spectral.method.unsupported", "severity": "error", "condition": "The request asks for a transform choice outside the fixed coherent rectangular v1alpha1 method.", "next_action": "Use the advertised method or add a separately versioned algorithm profile.", "extensions": {}},
+    {"code": "spectral.sampling.non_uniform", "severity": "error", "condition": "The sampled time axis exceeds the declared interval tolerance.", "next_action": "Produce a uniform record or use a future explicit resampling operation; do not FFT an irregular axis silently.", "extensions": {}},
+    {"code": "spectral.coherence.not_established", "severity": "error", "condition": "The fundamental or folded harmonic does not land on a declared DFT bin.", "next_action": "Use coherent acquisition or a future explicitly windowed or sine-fit method.", "extensions": {}},
+    {"code": "spectral.harmonic.collision", "severity": "error", "condition": "A folded harmonic collides with DC, the fundamental, or another requested order.", "next_action": "Change the record/stimulus or use a future collision-aware partition profile.", "extensions": {}},
+    {"code": "spectral.fundamental.not_found", "severity": "error", "condition": "The exact declared fundamental bin has zero measured power.", "next_action": "Check signal, stimulus, record, and coherent-bin declaration.", "extensions": {}},
+    {"code": "spectral.metric.unbounded", "severity": "warning", "condition": "A mathematically required numerator or denominator has zero power.", "next_action": "Retain null rather than infinity; introduce an explicit numeric-floor or bound method only through a new profile.", "extensions": {}},
+    {"code": "spectral.standard_context.invalid", "severity": "error", "condition": "The application domain, edition reference, or alignment claim is inconsistent.", "next_action": "Use the exact candidate mapping or complete a licensed clause-level review before proposing a conformant profile.", "extensions": {}}
+  ],
+  "native_mappings": [{
+    "driver_id": "org.openada.kernel.spectral-evidence",
+    "native_product_id": "org.openada.core.runtime",
+    "backend_name": "OpenADA deterministic spectral evidence kernel",
+    "supported_features": ["openada.feature/spectral.snr/v1alpha1", "openada.feature/spectral.sinad/v1alpha1", "openada.feature/spectral.thd/v1alpha1", "openada.feature/spectral.sfdr/v1alpha1"],
+    "semantic_bindings": [
+      {"feature_id": "openada.feature/spectral.snr/v1alpha1", "implementation": "Closed one-sided coherent-bin power partition, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.spectral.partition.sha256"], "extensions": {}},
+      {"feature_id": "openada.feature/spectral.sinad/v1alpha1", "implementation": "Closed one-sided coherent-bin residual partition, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.spectral.partition.sha256"], "extensions": {}},
+      {"feature_id": "openada.feature/spectral.thd/v1alpha1", "implementation": "Declared folded in-band harmonic power ratio, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.spectral.harmonics"], "extensions": {}},
+      {"feature_id": "openada.feature/spectral.sfdr/v1alpha1", "implementation": "Largest retained residual-bin comparison with lowest-bin tie break, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.spectral.partition.winning_spur"], "extensions": {}}
+    ],
+    "native_actions": ["Validate the provenance-bound real series and exact fixed method.", "Establish sample rate, coherence, folded harmonic membership, and closed band.", "Compute a deterministic radix-2 DFT, one-sided mean-square bin powers, and semantic partition digest.", "Return one finite ratio or a bounded not-found/unknown result without native simulator expressions."],
+    "artifact_bindings": [{"native_kind": "provenance-bound normalized real inline series", "canonical_role": "measurement.source", "extensions": {}}],
+    "limitations": ["Only uniformly sampled power-of-two real records from 8 through 65536 points are accepted.", "Only a mean-detrended rectangular coherent-bin one-sided per-bin-power method is implemented.", "No ENOB, SNDR alias, jitter, phase noise, noncoherent fitting, window correction, PSD, segmentation, overlap, or averaging is inferred.", "IEEE references are candidate application context, not conformity claims."],
+    "extensions": {}
+  }],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["operation and assertion identities and truth table", "closed source and spectral request shape", "sampling, transform, band, folding, collision, and component-partition rules", "SNR, SINAD, THD, and SFDR definitions and tie breaking", "standards-context vocabulary and non-conformance limitation", "normalized measurement and spectral evidence facts"],
+    "change_policy": "Any change to a component set, ratio, power scaling, bin boundary, alias rule, collision rule, standard-alignment meaning, status, or normalized fact requires a new profile or feature identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

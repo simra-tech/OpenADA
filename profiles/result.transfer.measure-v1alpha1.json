@@ -1,0 +1,338 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/result.transfer.measure/v1alpha1",
+    "title": "Closed AC complex-ratio transfer measurement",
+    "summary": "Derive one low-frequency gain, minus-3-dB bandwidth, unity-gain frequency, or negative-feedback phase-margin scalar together with the exact finite output-over-input trace.",
+    "side_effect_mode": "read-only",
+    "target_kinds": ["normalized-series"],
+    "locator_types": ["artifact", "uri", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/transfer.measurement.valid/v1alpha1",
+    "statement": "The requested finite AC transfer scalar was derived, was conclusively not observed, or remained unknown from one provenance-bound Cartesian series using the declared ratio, phase, and crossing conventions.",
+    "non_goals": [
+      "This assertion does not state that a design specification is satisfied or that a feedback loop is stable.",
+      "This assertion does not infer an input, output, feedback sign, loop break, loading condition, or transfer expression from simulator-native names.",
+      "This assertion does not call the first simulated frequency DC; AC analysis requires positive frequency and the reference is named accordingly.",
+      "This assertion does not define gain margin, multi-crossing selection, phase wrapping alternatives, dimensional dB ratios, smoothing, fitting, extrapolation, or de-embedding."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "The source, same-unit complex ratio, unwrapped phase, and any required single falling crossing were established and the requested scalar is finite.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.measurement.status is measured and data.measurement.value is finite.",
+          "data.transfer.trace retains every positive source frequency, magnitude in dB, and deterministically unwrapped phase in degrees.",
+          "The first-frequency reference and both closed crossing assessments are retained."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "A valid finite transfer trace conclusively contains no falling crossing required by the selected bandwidth, unity-gain, or phase-margin metric.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.measurement.status is not_found and value is null.",
+          "The relevant data.transfer.crossings record has status not_found and count zero."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The source, request, units, finite ratio, phase interpretation, or unique crossing could not be established without guessing.",
+        "allowed_execution_statuses": ["completed", "invalid_request", "failed"],
+        "required_evidence": [
+          "data.measurement.status is unknown and value is null.",
+          "A stable diagnostic identifies the invalid, undefined, unsupported, non-finite, or ambiguous condition."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.transfer.measure v1alpha1 request parameters",
+      "type": "object",
+      "required": ["series", "transfer", "extensions"],
+      "properties": {
+        "series": {"$ref": "#/$defs/series"},
+        "transfer": {"$ref": "#/$defs/transfer"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "name": {"type": "string", "minLength": 1, "maxLength": 256},
+        "role": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+        "condition": {
+          "type": "object",
+          "required": ["name", "value", "unit"],
+          "properties": {"name": {"$ref": "#/$defs/name"}, "value": {"type": ["number", "string", "boolean"], "maxLength": 256}, "unit": {"type": "string", "minLength": 1, "maxLength": 64}},
+          "additionalProperties": false
+        },
+        "lineage": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "binding"],
+          "properties": {
+            "operation": {"$ref": "#/$defs/name"},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"$ref": "#/$defs/role"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "binding": {"const": "unverified"}
+          },
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256"],
+          "properties": {
+            "operation": {"$ref": "#/$defs/name"},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"const": "measurement.source"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "lineage": {"$ref": "#/$defs/lineage"}
+          },
+          "additionalProperties": false
+        },
+        "vector": {
+          "type": "object",
+          "required": ["name", "unit", "values"],
+          "properties": {"name": {"$ref": "#/$defs/name"}, "unit": {"type": "string", "minLength": 1, "maxLength": 64}, "values": {"type": "array", "minItems": 1, "maxItems": 100000, "items": {"type": "number"}}},
+          "additionalProperties": false
+        },
+        "series": {
+          "type": "object",
+          "required": ["source", "axis", "signals", "conditions", "extensions"],
+          "properties": {
+            "source": {"$ref": "#/$defs/source"},
+            "axis": {"$ref": "#/$defs/vector"},
+            "signals": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/vector"}},
+            "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "signalPair": {
+          "type": "object",
+          "required": ["real", "imaginary"],
+          "properties": {"real": {"$ref": "#/$defs/name"}, "imaginary": {"$ref": "#/$defs/name"}},
+          "additionalProperties": false
+        },
+        "method": {
+          "type": "object",
+          "required": ["id", "ratio", "phase_unwrap", "first_phase_range", "interpolation", "crossing_policy", "bandwidth_reference", "bandwidth_drop_db", "phase_margin_definition"],
+          "properties": {
+            "id": {"const": "openada.method/ac-complex-ratio-log-interpolation/v1alpha1"},
+            "ratio": {"const": "output-over-input"},
+            "phase_unwrap": {"const": "first-principal-then-nearest-delta"},
+            "first_phase_range": {"const": "[-180,180)"},
+            "interpolation": {"const": "linear-value-over-log10-frequency"},
+            "crossing_policy": {"const": "require-single-falling"},
+            "bandwidth_reference": {"const": "first-simulated-frequency-magnitude"},
+            "bandwidth_drop_db": {"const": 3.0},
+            "phase_margin_definition": {"const": "180deg-plus-unwrapped-loop-phase-at-unity"}
+          },
+          "additionalProperties": false
+        },
+        "metric": {
+          "oneOf": [
+            {"type": "object", "required": ["kind", "unit"], "properties": {"kind": {"const": "low_frequency_gain_db"}, "unit": {"const": "dB"}}, "additionalProperties": false},
+            {"type": "object", "required": ["kind", "unit"], "properties": {"kind": {"const": "bandwidth_3db"}, "unit": {"const": "Hz"}}, "additionalProperties": false},
+            {"type": "object", "required": ["kind", "unit"], "properties": {"kind": {"const": "unity_gain_frequency"}, "unit": {"const": "Hz"}}, "additionalProperties": false},
+            {"type": "object", "required": ["kind", "unit"], "properties": {"kind": {"const": "phase_margin"}, "unit": {"const": "deg"}}, "additionalProperties": false}
+          ]
+        },
+        "transfer": {
+          "type": "object",
+          "required": ["measurement_id", "input", "output", "interpretation", "method", "metric", "extensions"],
+          "properties": {
+            "measurement_id": {"$ref": "#/$defs/role"},
+            "input": {"$ref": "#/$defs/signalPair"},
+            "output": {"$ref": "#/$defs/signalPair"},
+            "interpretation": {"enum": ["forward", "loop-gain-negative-feedback"]},
+            "method": {"$ref": "#/$defs/method"},
+            "metric": {"$ref": "#/$defs/metric"},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "allOf": [{"if": {"properties": {"metric": {"properties": {"kind": {"const": "phase_margin"}}}}}, "then": {"properties": {"interpretation": {"const": "loop-gain-negative-feedback"}}}}],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "The normalized source digest, finite-number rules, unique names, exact vector lengths, and strictly increasing axis follow result.measure/v1alpha1; the axis unit is exactly Hz and every frequency is positive.",
+      "The four declared Cartesian component series are distinct, have identical point counts through the common axis, and use one identical unit so output divided by input is dimensionless.",
+      "At every point H(f) is exactly the complex output phasor divided by the complex input phasor; zero input or output magnitude and every non-finite result are unknown rather than numerically floored.",
+      "Magnitude is 20 log10 absolute H. Phase starts in the half-open range [-180,180) and each later value differs from the prior unwrapped value by the unique representative in [-180,180).",
+      "The low-frequency reference is the first positive simulated frequency and is explicitly not called DC. The bandwidth threshold is exactly first-point magnitude minus 3.0 dB.",
+      "Bandwidth and unity use falling crossings only, defined for adjacent points by y[i] greater than the threshold and y[i+1] less than or equal to the threshold. A crossing is interpolated linearly in magnitude and unwrapped phase over log10 frequency; zero candidates fail and more than one candidate is unknown.",
+      "Phase margin is defined only for interpretation loop-gain-negative-feedback as 180 degrees plus the unwrapped output-over-input phase at the unique falling 0 dB crossing."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.transfer.measure v1alpha1 normalized result data",
+      "type": "object",
+      "required": ["protocol", "measurement", "transfer", "extensions"],
+      "properties": {"protocol": {"$ref": "#/$defs/protocol"}, "measurement": {"$ref": "#/$defs/measurement"}, "transfer": {"$ref": "#/$defs/transfer"}, "extensions": {"$ref": "#/$defs/extensions"}},
+      "$defs": {
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "protocol": {
+          "type": "object",
+          "required": ["request_id", "operation_profile", "assertion_profile", "implementation_id", "implementation_version"],
+          "properties": {
+            "request_id": {"type": "string", "format": "uuid"},
+            "operation_profile": {"const": "openada.operation/result.transfer.measure/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/transfer.measurement.valid/v1alpha1"},
+            "implementation_id": {"const": "org.openada.kernel.transfer-evidence"},
+            "implementation_version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "condition": {"type": "object", "required": ["name", "value", "unit"], "properties": {"name": {"type": "string"}, "value": {"type": ["number", "string", "boolean"], "maxLength": 256}, "unit": {"type": "string"}}, "additionalProperties": false},
+        "lineage": {"type": "object", "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "binding"], "properties": {"operation": {"type": "string"}, "request_id": {"type": "string", "format": "uuid"}, "artifact_role": {"type": "string"}, "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "binding": {"const": "unverified"}}, "additionalProperties": false},
+        "source": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "series_sha256", "conditions_sha256", "conditions", "lineage"],
+          "properties": {"operation": {"type": "string"}, "request_id": {"type": "string", "format": "uuid"}, "artifact_role": {"const": "measurement.source"}, "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "series_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "conditions_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}}, "lineage": {"oneOf": [{"$ref": "#/$defs/lineage"}, {"type": "null"}]}},
+          "additionalProperties": false
+        },
+        "location": {"oneOf": [{"type": "object", "required": ["value", "unit"], "properties": {"value": {"type": "number"}, "unit": {"const": "Hz"}}, "additionalProperties": false}, {"type": "null"}]},
+        "measurement": {
+          "type": "object",
+          "required": ["measurement_id", "kind", "status", "request_sha256", "value", "unit", "signal", "location", "algorithm", "sample_count", "source", "extensions"],
+          "properties": {
+            "measurement_id": {"type": ["string", "null"], "maxLength": 120},
+            "kind": {"type": ["string", "null"], "maxLength": 48},
+            "status": {"enum": ["measured", "not_found", "unknown"]},
+            "request_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+            "value": {"type": ["number", "null"]},
+            "unit": {"enum": ["dB", "Hz", "deg", null]},
+            "signal": {"type": ["string", "null"]},
+            "location": {"$ref": "#/$defs/location"},
+            "algorithm": {"type": "object", "required": ["id", "version"], "properties": {"id": {"type": "string"}, "version": {"type": "string"}}, "additionalProperties": false},
+            "sample_count": {"type": "integer", "minimum": 0, "maximum": 100000},
+            "source": {"oneOf": [{"$ref": "#/$defs/source"}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "method": {
+          "type": "object",
+          "required": ["id", "ratio", "phase_unwrap", "first_phase_range", "interpolation", "crossing_policy", "bandwidth_reference", "bandwidth_drop_db", "phase_margin_definition"],
+          "properties": {"id": {"const": "openada.method/ac-complex-ratio-log-interpolation/v1alpha1"}, "ratio": {"const": "output-over-input"}, "phase_unwrap": {"const": "first-principal-then-nearest-delta"}, "first_phase_range": {"const": "[-180,180)"}, "interpolation": {"const": "linear-value-over-log10-frequency"}, "crossing_policy": {"const": "require-single-falling"}, "bandwidth_reference": {"const": "first-simulated-frequency-magnitude"}, "bandwidth_drop_db": {"const": 3.0}, "phase_margin_definition": {"const": "180deg-plus-unwrapped-loop-phase-at-unity"}},
+          "additionalProperties": false
+        },
+        "signals": {
+          "type": "object",
+          "required": ["input", "output", "ratio"],
+          "properties": {
+            "input": {"type": "object", "required": ["real", "imaginary", "unit"], "properties": {"real": {"type": "string"}, "imaginary": {"type": "string"}, "unit": {"type": "string"}}, "additionalProperties": false},
+            "output": {"type": "object", "required": ["real", "imaginary", "unit"], "properties": {"real": {"type": "string"}, "imaginary": {"type": "string"}, "unit": {"type": "string"}}, "additionalProperties": false},
+            "ratio": {"const": "output-over-input"}
+          },
+          "additionalProperties": false
+        },
+        "reference": {"type": "object", "required": ["kind", "frequency_hz", "magnitude_db"], "properties": {"kind": {"const": "first-simulated-frequency-not-dc"}, "frequency_hz": {"type": "number", "exclusiveMinimum": 0}, "magnitude_db": {"type": "number"}}, "additionalProperties": false},
+        "trace": {"type": "object", "required": ["frequency_hz", "magnitude_db", "phase_deg", "phase_representation"], "properties": {"frequency_hz": {"type": "array", "minItems": 2, "maxItems": 100000, "items": {"type": "number", "exclusiveMinimum": 0}}, "magnitude_db": {"type": "array", "minItems": 2, "maxItems": 100000, "items": {"type": "number"}}, "phase_deg": {"type": "array", "minItems": 2, "maxItems": 100000, "items": {"type": "number"}}, "phase_representation": {"const": "unwrapped-degrees"}}, "additionalProperties": false},
+        "candidate": {"type": "object", "required": ["frequency_hz", "magnitude_db", "phase_deg"], "properties": {"frequency_hz": {"type": "number", "exclusiveMinimum": 0}, "magnitude_db": {"type": "number"}, "phase_deg": {"type": "number"}}, "additionalProperties": false},
+        "crossing": {"type": "object", "required": ["status", "threshold_db", "count", "candidates"], "properties": {"status": {"enum": ["measured", "not_found", "ambiguous"]}, "threshold_db": {"type": "number"}, "count": {"type": "integer", "minimum": 0, "maximum": 99999}, "candidates": {"type": "array", "maxItems": 99999, "items": {"$ref": "#/$defs/candidate"}}}, "additionalProperties": false},
+        "crossings": {"type": "object", "required": ["bandwidth_3db", "unity_gain"], "properties": {"bandwidth_3db": {"$ref": "#/$defs/crossing"}, "unity_gain": {"$ref": "#/$defs/crossing"}}, "additionalProperties": false},
+        "exclusion": {"type": "object", "required": ["metric", "reason"], "properties": {"metric": {"const": "gain_margin"}, "reason": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+        "transfer": {
+          "type": "object",
+          "required": ["status", "request_sha256", "method", "interpretation", "signals", "reference", "trace", "crossings", "excluded_metrics", "extensions"],
+          "properties": {
+            "status": {"enum": ["analyzed", "crossing_not_found", "crossing_ambiguous", "unknown"]},
+            "request_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+            "method": {"oneOf": [{"$ref": "#/$defs/method"}, {"type": "null"}]},
+            "interpretation": {"enum": ["forward", "loop-gain-negative-feedback", null]},
+            "signals": {"oneOf": [{"$ref": "#/$defs/signals"}, {"type": "null"}]},
+            "reference": {"oneOf": [{"$ref": "#/$defs/reference"}, {"type": "null"}]},
+            "trace": {"oneOf": [{"$ref": "#/$defs/trace"}, {"type": "null"}]},
+            "crossings": {"oneOf": [{"$ref": "#/$defs/crossings"}, {"type": "null"}]},
+            "excluded_metrics": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"$ref": "#/$defs/exclusion"}},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.measurement.value", "type": ["number", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Finite requested transfer scalar for pass and null for an absent, ambiguous, invalid, or undefined result.", "extensions": {}},
+      {"path": "data.transfer.reference", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "The positive first simulated frequency and magnitude explicitly distinguished from DC.", "extensions": {}},
+      {"path": "data.transfer.trace", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "The complete finite positive-frequency magnitude and deterministically unwrapped phase trace.", "extensions": {}},
+      {"path": "data.transfer.crossings", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "All falling candidates for the first-reference minus-3-dB and 0-dB thresholds.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [{"role": "measurement.source", "kind": "normalized-inline-series", "required_for": ["pass", "fail"], "freshness": "immutable-input", "integrity": ["Verify the canonical normalized-series digest before deriving Cartesian phasors.", "Retain exact operating conditions and optional upstream lineage."], "native_authority": "The normalized series is authoritative only for this deterministic ratio calculation; native AC decoding remains the upstream extraction assertion.", "extensions": {}}],
+    "integrity_rules": [
+      "Hash the complete closed transfer request independently from the normalized series source.",
+      "Retain every finite source frequency, magnitude, unwrapped phase, threshold, and crossing candidate used by the selected scalar.",
+      "Never serialize NaN or infinity and never choose among multiple falling crossings implicitly."
+    ],
+    "provenance_limitations": [
+      "The operation does not independently validate native waveform decoding, AC stimulus amplitude, loop breaking, loading, or feedback sign.",
+      "The first simulated frequency is not DC and no extrapolation to zero frequency is performed.",
+      "The phase-margin scalar is a mathematical result under the declared negative-feedback loop-gain convention, not a stability guarantee."
+    ],
+    "limits": {"max_log_bytes": 4000, "max_artifact_bytes": 67108864, "max_artifact_count": 1, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {"id": "openada.feature/transfer.low-frequency-gain/v1alpha1", "parameter_path": "transfer.metric.kind", "parameter_values": ["low_frequency_gain_db"], "request_effect": "Report the output-over-input magnitude at the first positive simulated frequency in dB and explicitly do not call it DC gain.", "conformance_case": "Finite Cartesian fixtures freeze ratio direction, dB scaling, first-point location, and no-DC wording.", "extensions": {}},
+    {"id": "openada.feature/transfer.bandwidth-3db/v1alpha1", "parameter_path": "transfer.metric.kind", "parameter_values": ["bandwidth_3db"], "request_effect": "Report the unique falling crossing of first-point magnitude minus exactly 3.0 dB using log-frequency interpolation.", "conformance_case": "Fixtures freeze exact interpolation, absent crossing, multiple crossing, and first-point reference behavior.", "extensions": {}},
+    {"id": "openada.feature/transfer.unity-gain-frequency/v1alpha1", "parameter_path": "transfer.metric.kind", "parameter_values": ["unity_gain_frequency"], "request_effect": "Report the unique falling output-over-input 0 dB crossing using log-frequency interpolation.", "conformance_case": "Fixtures freeze exact frequency, absent crossing, multiple crossing, and falling-only selection.", "extensions": {}},
+    {"id": "openada.feature/transfer.phase-margin/v1alpha1", "parameter_path": "transfer.metric.kind", "parameter_values": ["phase_margin"], "request_effect": "For an explicitly declared negative-feedback loop gain, report 180 degrees plus unwrapped phase at the unique falling 0 dB crossing.", "conformance_case": "Loop-gain fixtures freeze phase unwrapping, phase interpolation, reference sign, invalid forward context, and crossing ambiguity.", "extensions": {}}
+  ],
+  "diagnostics": [
+    {"code": "transfer.request.invalid", "severity": "error", "condition": "The closed request shape, identity, component selection, or value is invalid.", "next_action": "Correct the explicit transfer declaration without introducing a simulator-native expression.", "extensions": {}},
+    {"code": "transfer.source.invalid", "severity": "error", "condition": "The normalized source identity, digest, shape, values, axis, or conditions are invalid.", "next_action": "Regenerate the canonical AC Cartesian series through a verified extraction operation.", "extensions": {}},
+    {"code": "transfer.method.unsupported", "severity": "error", "condition": "The request changes a fixed ratio, phase, reference, interpolation, or crossing method field.", "next_action": "Use the advertised v1alpha1 method or define a separately versioned method profile.", "extensions": {}},
+    {"code": "transfer.metric.unsupported", "severity": "error", "condition": "The requested scalar lies outside the four closed transfer metric kinds.", "next_action": "Select an advertised metric or add a separately specified feature.", "extensions": {}},
+    {"code": "transfer.unit.mismatch", "severity": "error", "condition": "The frequency, Cartesian component, or requested scalar units violate the fixed semantics.", "next_action": "Use a Hz axis, one identical component unit, and the exact scalar unit.", "extensions": {}},
+    {"code": "transfer.domain.invalid", "severity": "error", "condition": "The AC axis contains a nonpositive frequency or too few points for log interpolation.", "next_action": "Extract at least two strictly increasing positive AC points.", "extensions": {}},
+    {"code": "transfer.signal.missing", "severity": "error", "condition": "One or more declared Cartesian component series is absent.", "next_action": "Extract and name all four requested real and imaginary component series.", "extensions": {}},
+    {"code": "transfer.ratio.undefined", "severity": "error", "condition": "Input or output magnitude is zero at a point and a finite dB/phase trace cannot be represented without a floor.", "next_action": "Inspect the AC excitation and selected phasors; do not invent a numeric floor.", "extensions": {}},
+    {"code": "transfer.crossing.not_found", "severity": "error", "condition": "The valid trace contains no falling crossing for the selected threshold.", "next_action": "Report the limit as not observed or extend the simulated frequency domain deliberately.", "extensions": {}},
+    {"code": "transfer.crossing.ambiguous", "severity": "error", "condition": "The valid trace contains multiple falling crossing candidates.", "next_action": "Review the response or use a future explicitly versioned crossing-selection policy.", "extensions": {}},
+    {"code": "transfer.phase_margin.invalid_context", "severity": "error", "condition": "Phase margin was requested without the exact negative-feedback loop-gain interpretation.", "next_action": "Declare reviewed loop-gain semantics or request a non-margin transfer metric.", "extensions": {}},
+    {"code": "transfer.value.non_finite", "severity": "error", "condition": "The ratio, logarithm, phase, interpolation, or requested scalar is non-finite.", "next_action": "Inspect the source dynamic range and retain unknown rather than NaN or infinity.", "extensions": {}}
+  ],
+  "native_mappings": [{
+    "driver_id": "org.openada.kernel.transfer-evidence",
+    "native_product_id": "org.openada.core.runtime",
+    "backend_name": "OpenADA deterministic AC transfer evidence kernel",
+    "supported_features": ["openada.feature/transfer.low-frequency-gain/v1alpha1", "openada.feature/transfer.bandwidth-3db/v1alpha1", "openada.feature/transfer.unity-gain-frequency/v1alpha1", "openada.feature/transfer.phase-margin/v1alpha1"],
+    "semantic_bindings": [
+      {"feature_id": "openada.feature/transfer.low-frequency-gain/v1alpha1", "implementation": "Finite same-unit output-over-input complex division and first positive frequency magnitude, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.transfer.reference", "data.transfer.trace"], "extensions": {}},
+      {"feature_id": "openada.feature/transfer.bandwidth-3db/v1alpha1", "implementation": "Unique falling first-reference-minus-3.0-dB crossing with linear response interpolation over log10 frequency, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.transfer.crossings", "data.transfer.trace"], "extensions": {}},
+      {"feature_id": "openada.feature/transfer.unity-gain-frequency/v1alpha1", "implementation": "Unique falling 0 dB crossing with linear response interpolation over log10 frequency, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.transfer.crossings", "data.transfer.trace"], "extensions": {}},
+      {"feature_id": "openada.feature/transfer.phase-margin/v1alpha1", "implementation": "Negative-feedback loop-gain 180-degree reference applied to unwrapped phase at the unique falling unity crossing, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.transfer.crossings", "data.transfer.trace"], "extensions": {}}
+    ],
+    "native_actions": ["Validate the provenance-bound real AC series and exact closed method.", "Construct reviewed Cartesian input and output phasors and divide output by input pointwise.", "Derive finite magnitude and deterministically unwrapped phase, enumerate both falling-crossing sets, and return one scalar without EDA expressions."],
+    "artifact_bindings": [{"native_kind": "provenance-bound normalized real inline AC series", "canonical_role": "measurement.source", "extensions": {}}],
+    "limitations": ["Only one common positive Hz axis and four distinct same-unit Cartesian component signals are accepted.", "Only the first-frequency reference, exactly 3.0 dB bandwidth drop, falling crossings, and linear response interpolation over log10 frequency are implemented.", "No gain margin, phase-crossing search, multiple-crossing selection, extrapolation, smoothing, fitting, de-embedding, or stability claim is inferred."],
+    "extensions": {}
+  }],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["operation and assertion identities and truth table", "closed Cartesian source and transfer request shape", "output-over-input ratio, dB magnitude, phase range, and unwrapping convention", "first-simulated-frequency reference and exactly 3.0 dB bandwidth threshold", "falling-only crossing predicate, ambiguity handling, and log-frequency interpolation", "negative-feedback phase-margin sign and reference convention", "normalized measurement, trace, crossing, and exclusion facts"],
+    "change_policy": "Any change to ratio direction, unit policy, dB scale, phase branch or unwrap rule, first-point meaning, threshold, crossing direction or selection, interpolation, margin sign, status, or normalized fact requires a new profile or feature identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

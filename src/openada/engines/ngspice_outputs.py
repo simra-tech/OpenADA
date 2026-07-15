@@ -9,7 +9,9 @@ must be finite.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+import hashlib
 import math
 import os
 from pathlib import Path
@@ -73,6 +75,29 @@ class OutputValidation:
             "reason": self.reason,
             "metadata": self.metadata,
         }
+
+
+@dataclass(frozen=True, slots=True)
+class RawSignalSeries:
+    """One exact native vector retained from a validated analysis plot."""
+
+    name: str
+    native_type: str
+    real_values: tuple[float, ...]
+    imaginary_values: tuple[float, ...] | None
+
+
+@dataclass(frozen=True, slots=True)
+class RawSeriesExtraction:
+    """Bounded selected values from one request-bound native analysis plot."""
+
+    valid: bool
+    reason: str
+    metadata: dict[str, object]
+    axis_name: str | None = None
+    axis_native_type: str | None = None
+    axis_values: tuple[float, ...] = ()
+    signals: tuple[RawSignalSeries, ...] = ()
 
 
 class _InvalidOutput(Exception):
@@ -915,6 +940,522 @@ def analysis_raw_counts(
     return points, dependent_variables, points * dependent_variables * scalar_width
 
 
+@dataclass(frozen=True, slots=True)
+class _ExtractionPlotHeader:
+    plotname: str
+    encoding: str
+    numeric_type: str
+    points: int
+    variable_names: tuple[str, ...]
+    variable_types: tuple[str, ...]
+    variable_lengths: tuple[int, ...]
+    unpadded: bool
+    value_count: int
+    scalar_count: int
+
+
+def _read_extraction_plot_header(
+    reader: _BoundedLineReader,
+    first_line: bytes,
+    *,
+    limits: ValidationLimits,
+    continuation: bool,
+) -> _ExtractionPlotHeader:
+    """Read the same closed raw header grammar used by the validator."""
+
+    header_bytes = len(first_line)
+    if header_bytes > limits.max_raw_header_bytes:
+        raise _InvalidOutput("raw.header_too_large")
+    first_key = _header_key(first_line.partition(b":")[0])
+    if b":" not in first_line or (
+        first_key != b"title" and not (continuation and first_key == b"plotname")
+    ):
+        raise _InvalidOutput("raw.plot_start_invalid")
+
+    required: dict[bytes, bytes] = {}
+    if first_key == b"plotname":
+        required[b"plotname"] = first_line.partition(b":")[2].strip()
+    while True:
+        line = reader.readline()
+        if not line:
+            raise _InvalidOutput("raw.truncated_header")
+        header_bytes += len(line)
+        if header_bytes > limits.max_raw_header_bytes:
+            raise _InvalidOutput("raw.header_too_large")
+        stripped = line.strip()
+        if _header_key(stripped.partition(b":")[0]) == b"variables" and b":" in stripped:
+            break
+        if b":" not in stripped:
+            raise _InvalidOutput("raw.header_invalid")
+        key, _, value = stripped.partition(b":")
+        normalized_key = _header_key(key)
+        if normalized_key in {
+            b"plotname",
+            b"flags",
+            b"no. variables",
+            b"no. points",
+        }:
+            if normalized_key in required:
+                raise _InvalidOutput("raw.header_duplicate_field")
+            required[normalized_key] = value.strip()
+
+    if set(required) != {b"plotname", b"flags", b"no. variables", b"no. points"}:
+        raise _InvalidOutput("raw.header_missing_field")
+    plot_name_bytes = required[b"plotname"].strip()
+    if not plot_name_bytes or len(plot_name_bytes) > limits.max_raw_plotname_bytes:
+        raise _InvalidOutput("raw.plotname_invalid")
+    plotname = plot_name_bytes.decode("utf-8", errors="replace")
+    variable_count = _parse_count(
+        required[b"no. variables"],
+        reason="raw.variable_count_invalid",
+        maximum=limits.max_raw_variables,
+    )
+    points = _parse_count(
+        required[b"no. points"],
+        reason="raw.point_count_invalid",
+        maximum=limits.max_raw_points,
+    )
+
+    flags = set(required[b"flags"].lower().split())
+    complex_values = b"complex" in flags
+    if complex_values == (b"real" in flags):
+        raise _InvalidOutput("raw.numeric_type_invalid")
+    if b"padded" in flags and b"unpadded" in flags:
+        raise _InvalidOutput("raw.padding_flags_invalid")
+    unpadded = b"unpadded" in flags
+
+    variable_names: list[str] = []
+    variable_types: list[str] = []
+    variable_lengths: list[int] = []
+    for index in range(variable_count):
+        line = reader.readline()
+        if not line:
+            raise _InvalidOutput("raw.truncated_variable_table")
+        header_bytes += len(line)
+        if header_bytes > limits.max_raw_header_bytes:
+            raise _InvalidOutput("raw.header_too_large")
+        fields = line.strip().split()
+        length, name = _parse_variable_line(line, index=index, points=points)
+        variable_names.append(name)
+        variable_types.append(fields[2].decode("utf-8", errors="replace"))
+        variable_lengths.append(length)
+
+    marker = reader.readline()
+    if not marker:
+        raise _InvalidOutput("raw.truncated_header")
+    header_bytes += len(marker)
+    if header_bytes > limits.max_raw_header_bytes:
+        raise _InvalidOutput("raw.header_too_large")
+    marker_name = _header_key(marker.strip().partition(b":")[0])
+    if b":" not in marker or marker_name not in {b"binary", b"values"}:
+        raise _InvalidOutput("raw.data_marker_invalid")
+
+    value_count = (
+        sum(variable_lengths) if unpadded else variable_count * points
+    )
+    if value_count <= 0 or value_count > limits.max_numeric_values:
+        raise _InvalidOutput("raw.value_count_too_large")
+    scalar_count = value_count * (2 if complex_values else 1)
+    if scalar_count > limits.max_numeric_values:
+        raise _InvalidOutput("raw.value_count_too_large")
+    return _ExtractionPlotHeader(
+        plotname=plotname,
+        encoding="binary" if marker_name == b"binary" else "ascii",
+        numeric_type="complex" if complex_values else "real",
+        points=points,
+        variable_names=tuple(variable_names),
+        variable_types=tuple(variable_types),
+        variable_lengths=tuple(variable_lengths),
+        unpadded=unpadded,
+        value_count=value_count,
+        scalar_count=scalar_count,
+    )
+
+
+def _read_exact(handle: BinaryIO, count: int, reason: str) -> bytes:
+    chunks: list[bytes] = []
+    remaining = count
+    while remaining:
+        chunk = handle.read(remaining)
+        if not chunk:
+            raise _InvalidOutput(reason)
+        chunks.append(chunk)
+        remaining -= len(chunk)
+    return b"".join(chunks)
+
+
+def _selected_variable_indices(
+    header: _ExtractionPlotHeader,
+    *,
+    analysis_type: str,
+    selected_names: Sequence[str],
+) -> list[int]:
+    if len(set(header.variable_names)) != len(header.variable_names):
+        raise _InvalidOutput("raw.variable_names_ambiguous")
+    dependent_start = 0 if analysis_type == "op" else 1
+    dependent_names = header.variable_names[dependent_start:]
+    indices: list[int] = []
+    for selected_name in selected_names:
+        matches = [
+            dependent_start + index
+            for index, native_name in enumerate(dependent_names)
+            if native_name == selected_name
+        ]
+        if len(matches) != 1:
+            raise _InvalidOutput("raw.selected_variable_missing")
+        indices.append(matches[0])
+    return indices
+
+
+def _extract_binary_values(
+    handle: BinaryIO,
+    header: _ExtractionPlotHeader,
+    *,
+    analysis_type: str,
+    selected_names: Sequence[str],
+    selected_indices: Sequence[int],
+) -> tuple[tuple[float, ...], tuple[RawSignalSeries, ...]]:
+    complex_values = header.numeric_type == "complex"
+    scalar_width = 2 if complex_values else 1
+    scalars_per_point = len(header.variable_names) * scalar_width
+    row_bytes = scalars_per_point * 8
+    axis_values: list[float] = []
+    real_values = {name: [] for name in selected_names}
+    imaginary_values = {name: [] for name in selected_names} if complex_values else None
+
+    for _ in range(header.points):
+        row = _read_exact(handle, row_bytes, "raw.truncated_binary_payload")
+        scalars = struct.unpack(f"={scalars_per_point}d", row)
+        if not all(math.isfinite(value) for value in scalars):
+            raise _InvalidOutput("raw.non_finite_value")
+        if analysis_type != "op":
+            axis_values.append(scalars[0])
+        for name, variable_index in zip(selected_names, selected_indices):
+            offset = variable_index * scalar_width
+            real_values[name].append(scalars[offset])
+            if complex_values:
+                assert imaginary_values is not None
+                imaginary_values[name].append(scalars[offset + 1])
+
+    signals = tuple(
+        RawSignalSeries(
+            name=name,
+            native_type=header.variable_types[variable_index],
+            real_values=tuple(real_values[name]),
+            imaginary_values=(
+                tuple(imaginary_values[name])
+                if imaginary_values is not None
+                else None
+            ),
+        )
+        for name, variable_index in zip(selected_names, selected_indices)
+    )
+    return tuple(axis_values), signals
+
+
+def _extract_ascii_values(
+    reader: _BoundedLineReader,
+    header: _ExtractionPlotHeader,
+    *,
+    analysis_type: str,
+    selected_names: Sequence[str],
+    selected_indices: Sequence[int],
+) -> tuple[tuple[float, ...], tuple[RawSignalSeries, ...]]:
+    complex_values = header.numeric_type == "complex"
+    value_parser = _parse_complex if complex_values else _parse_real
+    selected_by_index = dict(zip(selected_indices, selected_names))
+    axis_values: list[float] = []
+    real_values = {name: [] for name in selected_names}
+    imaginary_values = {name: [] for name in selected_names} if complex_values else None
+
+    for point_index in range(header.points):
+        first_line = _read_nonempty_line(reader).strip()
+        first_match = re.fullmatch(rb"(\d+)\s+(.+)", first_line)
+        if not first_match or first_match.group(1) != str(point_index).encode("ascii"):
+            raise _InvalidOutput("raw.ascii_point_index_invalid")
+        values: list[float | tuple[float, float]] = [
+            value_parser(first_match.group(2))
+        ]
+        values.extend(
+            value_parser(_read_nonempty_line(reader))
+            for _ in range(len(header.variable_names) - 1)
+        )
+        if analysis_type != "op":
+            axis = values[0]
+            if isinstance(axis, tuple):
+                axis_values.append(axis[0])
+            else:
+                axis_values.append(axis)
+        for variable_index, output_name in selected_by_index.items():
+            selected = values[variable_index]
+            if isinstance(selected, tuple):
+                real_values[output_name].append(selected[0])
+                assert imaginary_values is not None
+                imaginary_values[output_name].append(selected[1])
+            else:
+                real_values[output_name].append(selected)
+
+    signals = tuple(
+        RawSignalSeries(
+            name=name,
+            native_type=header.variable_types[variable_index],
+            real_values=tuple(real_values[name]),
+            imaginary_values=(
+                tuple(imaginary_values[name])
+                if imaginary_values is not None
+                else None
+            ),
+        )
+        for name, variable_index in zip(selected_names, selected_indices)
+    )
+    return tuple(axis_values), signals
+
+
+def _consume_unselected_plot(
+    reader: _BoundedLineReader,
+    header: _ExtractionPlotHeader,
+) -> None:
+    if header.encoding == "binary":
+        _validate_binary_payload(
+            reader.handle,
+            scalar_count=header.scalar_count,
+            scalars_per_point=(
+                len(header.variable_names)
+                * (2 if header.numeric_type == "complex" else 1)
+                if not header.unpadded
+                else None
+            ),
+        )
+        return
+    _validate_ascii_payload(
+        reader,
+        points=header.points,
+        variable_lengths=list(header.variable_lengths),
+        complex_values=header.numeric_type == "complex",
+        unpadded=header.unpadded,
+    )
+
+
+def _extraction_invalid(
+    reason: str,
+    *,
+    format_name: str,
+    metadata: dict[str, object] | None = None,
+) -> RawSeriesExtraction:
+    details: dict[str, object] = {"format": format_name}
+    if metadata:
+        details.update(metadata)
+    return RawSeriesExtraction(False, reason, details)
+
+
+def extract_analysis_raw(
+    path: str | Path,
+    *,
+    backend: str,
+    analysis: Mapping[str, object],
+    selected_variables: Sequence[str],
+    expected_bytes: int,
+    expected_sha256: str,
+    limits: ValidationLimits = DEFAULT_LIMITS,
+    max_points: int = 100_000,
+    max_selected_scalars: int = 1_000_000,
+) -> RawSeriesExtraction:
+    """Extract exact vectors from one validated, request-bound raw plot.
+
+    The native artifact is parsed as untrusted input and is accepted only when
+    its byte count and SHA-256 digest match the enclosing simulation result.
+    ngspice binary or ASCII raw and Xyce ASCII raw are supported.  Values stay
+    in their native Cartesian representation; semantic projection and units
+    belong to the operation layer.
+    """
+
+    format_name = {
+        "ngspice": "ngspice-raw",
+        "xyce": "xyce-raw",
+    }.get(backend)
+    if format_name is None:
+        return _extraction_invalid("backend.unsupported", format_name="unknown")
+    if (
+        isinstance(expected_bytes, bool)
+        or not isinstance(expected_bytes, int)
+        or expected_bytes <= 0
+        or not isinstance(expected_sha256, str)
+        or re.fullmatch(r"[0-9a-f]{64}", expected_sha256) is None
+        or isinstance(max_points, bool)
+        or not isinstance(max_points, int)
+        or max_points <= 0
+        or isinstance(max_selected_scalars, bool)
+        or not isinstance(max_selected_scalars, int)
+        or max_selected_scalars <= 0
+    ):
+        return _extraction_invalid("request.invalid", format_name=format_name)
+    names = list(selected_variables)
+    if (
+        not 1 <= len(names) <= 32
+        or any(not isinstance(name, str) or not name or len(name) > 256 for name in names)
+        or len(names) != len(set(names))
+    ):
+        return _extraction_invalid("selector.invalid", format_name=format_name)
+    analysis_type = analysis.get("type")
+    if analysis_type not in {"op", "dc", "ac", "tran"}:
+        return _extraction_invalid("request.invalid", format_name=format_name)
+
+    validator = validate_ngspice_raw if backend == "ngspice" else validate_xyce_raw
+    validation = validator(path, limits=limits)
+    if not validation.valid:
+        return _extraction_invalid(
+            validation.reason,
+            format_name=format_name,
+            metadata={"validation": validation.to_dict()},
+        )
+    if validation.metadata.get("bytes") != expected_bytes:
+        return _extraction_invalid("file.size_mismatch", format_name=format_name)
+    counts = analysis_raw_counts(
+        {"validation": validation.to_dict()},
+        dict(analysis),
+    )
+    if counts is None:
+        return _extraction_invalid(
+            "raw.analysis_request_mismatch",
+            format_name=format_name,
+            metadata={"validation": validation.to_dict()},
+        )
+    points = counts[0]
+    if points > max_points:
+        return _extraction_invalid(
+            "raw.extraction_over_limit",
+            format_name=format_name,
+            metadata={"points": points, "max_points": max_points},
+        )
+
+    plots = validation.metadata.get("plots")
+    assert isinstance(plots, list)
+    matching_indices = [
+        index
+        for index, plot in enumerate(plots)
+        if isinstance(plot, dict)
+        and _analysis_plot_matches(plot.get("plotname"), str(analysis_type))
+    ]
+    if len(matching_indices) != 1:
+        return _extraction_invalid("raw.analysis_plot_ambiguous", format_name=format_name)
+    target_index = matching_indices[0]
+    target_metadata = plots[target_index]
+    assert isinstance(target_metadata, dict)
+    if backend == "xyce" and target_metadata.get("encoding") != "ascii":
+        return _extraction_invalid("raw.encoding_unsupported", format_name=format_name)
+    scalar_width = 2 if target_metadata.get("numeric_type") == "complex" else 1
+    selected_scalar_count = points * (1 + len(names) * scalar_width)
+    if selected_scalar_count > max_selected_scalars:
+        return _extraction_invalid(
+            "raw.extraction_over_limit",
+            format_name=format_name,
+            metadata={
+                "selected_scalar_count": selected_scalar_count,
+                "max_selected_scalars": max_selected_scalars,
+            },
+        )
+
+    opened = _open_regular_file(path, limits=limits, format_name=format_name)
+    if isinstance(opened, OutputValidation):
+        return _extraction_invalid(opened.reason, format_name=format_name)
+    handle, initial_stat = opened
+    if initial_stat.st_size != expected_bytes:
+        handle.close()
+        return _extraction_invalid("file.size_mismatch", format_name=format_name)
+
+    selected_axis: tuple[float, ...] = ()
+    selected_signals: tuple[RawSignalSeries, ...] = ()
+    selected_header: _ExtractionPlotHeader | None = None
+    try:
+        with handle:
+            reader = _BoundedLineReader(handle, limits.max_line_bytes, "raw")
+            first_line = _next_plot_start(reader)
+            plot_index = 0
+            while first_line:
+                if plot_index >= limits.max_raw_plots:
+                    raise _InvalidOutput("raw.too_many_plots")
+                header = _read_extraction_plot_header(
+                    reader,
+                    first_line,
+                    limits=limits,
+                    continuation=plot_index > 0,
+                )
+                if backend == "xyce" and header.encoding != "ascii":
+                    raise _InvalidOutput("raw.encoding_unsupported")
+                if plot_index == target_index:
+                    if header.unpadded:
+                        raise _InvalidOutput("raw.unpadded_unsupported")
+                    selected_indices = _selected_variable_indices(
+                        header,
+                        analysis_type=str(analysis_type),
+                        selected_names=names,
+                    )
+                    if header.encoding == "binary":
+                        selected_axis, selected_signals = _extract_binary_values(
+                            handle,
+                            header,
+                            analysis_type=str(analysis_type),
+                            selected_names=names,
+                            selected_indices=selected_indices,
+                        )
+                    else:
+                        selected_axis, selected_signals = _extract_ascii_values(
+                            reader,
+                            header,
+                            analysis_type=str(analysis_type),
+                            selected_names=names,
+                            selected_indices=selected_indices,
+                        )
+                    selected_header = header
+                else:
+                    _consume_unselected_plot(reader, header)
+                plot_index += 1
+                first_line = _next_plot_start(reader)
+
+            parsed_stat = os.fstat(handle.fileno())
+            if _file_changed(initial_stat, parsed_stat):
+                raise _InvalidOutput("file.changed_during_extraction")
+            handle.seek(0)
+            digest = hashlib.sha256()
+            while chunk := handle.read(1024 * 1024):
+                digest.update(chunk)
+            final_stat = os.fstat(handle.fileno())
+            if _file_changed(initial_stat, final_stat):
+                raise _InvalidOutput("file.changed_during_extraction")
+            observed_sha256 = digest.hexdigest()
+            if observed_sha256 != expected_sha256:
+                raise _InvalidOutput("file.digest_mismatch")
+    except _InvalidOutput as error:
+        return _extraction_invalid(error.reason, format_name=format_name)
+    except (OSError, ValueError, struct.error):
+        return _extraction_invalid("file.read_error", format_name=format_name)
+
+    if selected_header is None or len(selected_axis) != (0 if analysis_type == "op" else points):
+        return _extraction_invalid("raw.analysis_request_mismatch", format_name=format_name)
+    if any(len(signal.real_values) != points for signal in selected_signals):
+        return _extraction_invalid("raw.truncated_payload", format_name=format_name)
+    return RawSeriesExtraction(
+        True,
+        "valid",
+        {
+            "format": format_name,
+            "bytes": expected_bytes,
+            "sha256": expected_sha256,
+            "plotname": selected_header.plotname,
+            "encoding": selected_header.encoding,
+            "numeric_type": selected_header.numeric_type,
+            "points": selected_header.points,
+            "variables": len(selected_header.variable_names),
+        },
+        axis_name=(selected_header.variable_names[0] if analysis_type != "op" else None),
+        axis_native_type=(
+            selected_header.variable_types[0] if analysis_type != "op" else None
+        ),
+        axis_values=selected_axis,
+        signals=selected_signals,
+    )
+
+
 def _wrdata_number(token: bytes) -> float | None:
     if token.lower() in {
         b"+inf",
@@ -1058,8 +1599,11 @@ def validate_ngspice_wrdata(
 __all__ = [
     "DEFAULT_LIMITS",
     "OutputValidation",
+    "RawSeriesExtraction",
+    "RawSignalSeries",
     "ValidationLimits",
     "analysis_raw_counts",
+    "extract_analysis_raw",
     "validate_ngspice_raw",
     "validate_ngspice_wrdata",
     "validate_xyce_raw",

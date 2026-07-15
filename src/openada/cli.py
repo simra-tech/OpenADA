@@ -13,6 +13,7 @@ import uuid
 
 from . import __version__
 from .contract import diagnostic, result, static_execution
+from .conformance import ResultConformanceError, assert_result_conforms
 from .discovery import DiscoveryManager, TOOL_SPECS
 from .driver_registry import BUILTIN_DRIVERS, TRANSIENT_FEATURE
 from .engines import (
@@ -26,12 +27,25 @@ from .engines import (
 from .operations import (
     MAX_SHARED_ANALYSIS_POINTS,
     MEASUREMENT_KINDS,
+    SPECTRAL_METRIC_KINDS,
+    TRANSFER_METRIC_KINDS,
     evaluate_specification,
+    extract_result_series,
     invalid_circuit_simulation_request,
     measure_result,
+    measure_spectrum,
+    measure_transfer,
     simulate_circuit_profile,
 )
 from .preflight import PREFLIGHT_SPECS
+from .provider_runtime import (
+    ProviderRuntimeError,
+    invoke_local_provider,
+    list_operation_profiles,
+    load_provider_manifest,
+    load_operation_profile,
+    load_provider_request,
+)
 
 
 class _RequestParseError(Exception):
@@ -57,8 +71,13 @@ _COMMAND_OPERATIONS = {
     "capabilities": "doctor",
     "netlist": "netlist",
     "simulate": "simulate",
+    "extract": "result.series.extract",
     "measure": "result.measure",
+    "spectral": "result.spectral.measure",
+    "transfer": "result.transfer.measure",
+    "profile": "profile",
     "evaluate": "specification.evaluate",
+    "provider": "provider",
     "drc": "drc",
     "lvs": "lvs",
     "rtl-check": "rtl-check",
@@ -69,6 +88,18 @@ MAX_PREFLIGHT_PDK_ROOTS = 64
 MAX_PREFLIGHT_TOOL_OVERRIDES = 64
 MAX_PREFLIGHT_VERSION_TIMEOUT_SECONDS = 30.0
 MAX_OPERATION_JSON_BYTES = 64 * 1024 * 1024
+SERIES_EXTRACTION_PROFILE = "openada.operation/result.series.extract/v1alpha1"
+
+
+def _jsonschema_types():
+    try:
+        from jsonschema import Draft202012Validator, FormatChecker
+    except ImportError as exc:  # pragma: no cover - isolated-plugin behavior
+        raise ValueError(
+            "schema-backed envelope validation requires OpenADA's jsonschema "
+            "dependency; install it with: python -m pip install 'jsonschema>=4.18'"
+        ) from exc
+    return Draft202012Validator, FormatChecker
 
 
 def _positive_float(value: str) -> float:
@@ -179,6 +210,31 @@ def _common_tool_argument(parser: argparse.ArgumentParser, tool: str) -> None:
     parser.add_argument("--tool", choices=[tool], default=tool, help=argparse.SUPPRESS)
 
 
+def _doctor_arguments(parser: argparse.ArgumentParser) -> None:
+    """Install the shared doctor/capabilities options on one named parser."""
+
+    parser.add_argument("--tool", action="append", choices=sorted(TOOL_SPECS))
+    parser.add_argument(
+        "--require",
+        action="append",
+        choices=sorted(TOOL_SPECS),
+        default=[],
+        help="Fail the engineering check when this tool is missing. Repeatable.",
+    )
+    parser.add_argument("--version-timeout", type=_positive_float, default=3.0)
+    parser.add_argument(
+        "--project-root",
+        action=_StoreOnce,
+        help="Canonical project directory for a scoped first-run preflight.",
+    )
+    parser.add_argument(
+        "--assertion",
+        action=_StoreOnce,
+        choices=sorted(PREFLIGHT_SPECS),
+        help="Fixed engineering intent for a scoped first-run preflight.",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = _JSONArgumentParser(
         prog="openada",
@@ -211,29 +267,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     doctor = commands.add_parser(
         "doctor",
-        aliases=["capabilities"],
         help="Inspect available EDA binaries, versions, runtime profile, and PDK roots.",
     )
-    doctor.add_argument("--tool", action="append", choices=sorted(TOOL_SPECS))
-    doctor.add_argument(
-        "--require",
-        action="append",
-        choices=sorted(TOOL_SPECS),
-        default=[],
-        help="Fail the engineering check when this tool is missing. Repeatable.",
+    _doctor_arguments(doctor)
+    capabilities = commands.add_parser(
+        "capabilities",
+        help="Inspect semantic intents plus available tools and runtime context.",
     )
-    doctor.add_argument("--version-timeout", type=_positive_float, default=3.0)
-    doctor.add_argument(
-        "--project-root",
-        action=_StoreOnce,
-        help="Canonical project directory for a scoped first-run preflight.",
-    )
-    doctor.add_argument(
-        "--assertion",
-        action=_StoreOnce,
-        choices=sorted(PREFLIGHT_SPECS),
-        help="Fixed engineering intent for a scoped first-run preflight.",
-    )
+    _doctor_arguments(capabilities)
 
     netlist = commands.add_parser("netlist", help="Generate a SPICE netlist from an Xschem schematic.")
     netlist.add_argument("schematic")
@@ -357,7 +398,10 @@ def build_parser() -> argparse.ArgumentParser:
     measure.add_argument(
         "--series",
         required=True,
-        help="JSON file containing the bounded normalized source series.",
+        help=(
+            "JSON file containing a normalized real series or a passing "
+            "result.series.extract envelope."
+        ),
     )
     measure.add_argument(
         "--measurement",
@@ -376,7 +420,7 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument(
         "--measurement",
         required=True,
-        help="JSON file containing a complete result.measure result envelope.",
+        help="JSON file containing a complete supported measurement result envelope.",
     )
     evaluate.add_argument(
         "--specification",
@@ -387,6 +431,121 @@ def build_parser() -> argparse.ArgumentParser:
         "--request-id",
         help="Optional canonical UUID for request correlation.",
     )
+
+    extract = commands.add_parser(
+        "extract",
+        help="Bind one verified circuit.simulate result artifact to a normalized real series.",
+    )
+    extract.add_argument(
+        "--simulation",
+        required=True,
+        help="Complete circuit.simulate/v1alpha2 result envelope JSON.",
+    )
+    extract.add_argument(
+        "--artifact",
+        required=True,
+        help="Exact native raw artifact path retained by the simulation result.",
+    )
+    extract.add_argument(
+        "--selection",
+        required=True,
+        help="JSON object containing selectors, conditions, and empty extensions.",
+    )
+    extract.add_argument(
+        "--request-id",
+        help="Optional canonical UUID for extraction correlation.",
+    )
+
+    spectral = commands.add_parser(
+        "spectral",
+        help="Derive one closed coherent single-tone SNR, SINAD, THD, or SFDR measurement.",
+    )
+    spectral.add_argument(
+        "--series",
+        required=True,
+        help=(
+            "JSON file containing a normalized real series or a passing "
+            "result.series.extract envelope."
+        ),
+    )
+    spectral.add_argument(
+        "--measurement",
+        required=True,
+        help="JSON file containing the complete closed spectral measurement definition.",
+    )
+    spectral.add_argument(
+        "--request-id",
+        help="Optional canonical UUID for spectral correlation.",
+    )
+
+    transfer = commands.add_parser(
+        "transfer",
+        help="Derive one closed AC gain, bandwidth, unity-frequency, or phase-margin measurement.",
+    )
+    transfer.add_argument(
+        "--series",
+        required=True,
+        help=(
+            "JSON file containing a normalized real AC series or a passing "
+            "result.series.extract envelope."
+        ),
+    )
+    transfer.add_argument(
+        "--measurement",
+        required=True,
+        help="JSON file containing the complete closed AC transfer definition.",
+    )
+    transfer.add_argument(
+        "--request-id",
+        help="Optional canonical UUID for transfer correlation.",
+    )
+
+    provider = commands.add_parser(
+        "provider",
+        help="Validate, inspect, or invoke one explicitly supplied external provider.",
+    )
+    provider_commands = provider.add_subparsers(
+        dest="provider_command",
+        required=True,
+    )
+    provider_validate = provider_commands.add_parser(
+        "validate",
+        help="Validate one v0alpha1 driver manifest and its cross-references.",
+    )
+    provider_validate.add_argument("manifest")
+    provider_list = provider_commands.add_parser(
+        "list",
+        help="List capabilities from one validated explicit manifest.",
+    )
+    provider_list.add_argument("--manifest", required=True)
+    provider_invoke = provider_commands.add_parser(
+        "invoke",
+        help="Invoke one exact local JSON-stdio provider selection.",
+    )
+    provider_invoke.add_argument("--manifest", required=True)
+    provider_invoke.add_argument("request")
+    provider_invoke.add_argument(
+        "--cwd",
+        help="Provider working directory (default: manifest directory).",
+    )
+
+    profile = commands.add_parser(
+        "profile",
+        help="List or show packaged versioned operation profiles.",
+    )
+    profile_commands = profile.add_subparsers(
+        dest="profile_command",
+        required=True,
+    )
+    profile_commands.add_parser(
+        "list",
+        help="List packaged operation and assertion profile identities.",
+    )
+    profile_show = profile_commands.add_parser(
+        "show",
+        help="Emit one complete packaged operation profile.",
+    )
+    profile_show.add_argument("operation_profile")
 
     drc = commands.add_parser(
         "drc",
@@ -509,6 +668,20 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
     records.extend(
         [
             {
+                "provider_id": "org.openada.kernel.spice3-series",
+                "provider_version": "1.0.0",
+                "provider_kind": "evidence-kernel",
+                "availability": "available",
+                "native_product": None,
+                "operation_profile": "openada.operation/result.series.extract/v1alpha1",
+                "operation_profile_schema": "openada.operation-profile/v0alpha2",
+                "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
+                "result_schema": "openada.result/v0alpha1",
+                "transports": ["local-cli", "in-process"],
+                "locator_types": ["filesystem", "artifact"],
+                "features": [],
+            },
+            {
                 "provider_id": "org.openada.kernel.typed-evidence",
                 "provider_version": "1.0.0",
                 "provider_kind": "evidence-kernel",
@@ -530,6 +703,61 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                         "conformance_ids": [typed_conformance_id],
                     }
                     for kind in MEASUREMENT_KINDS
+                ],
+            },
+            {
+                "provider_id": "org.openada.kernel.spectral-evidence",
+                "provider_version": "1.0.0",
+                "provider_kind": "evidence-kernel",
+                "availability": "available",
+                "native_product": None,
+                "operation_profile": (
+                    "openada.operation/result.spectral.measure/v1alpha1"
+                ),
+                "operation_profile_schema": "openada.operation-profile/v0alpha2",
+                "assertion_profile": (
+                    "openada.assertion/spectral.measurement.valid/v1alpha1"
+                ),
+                "result_schema": "openada.result/v0alpha1",
+                "transports": ["local-cli", "in-process"],
+                "locator_types": ["artifact"],
+                "features": [
+                    {
+                        "id": f"openada.feature/spectral.{kind}/v1alpha1",
+                        "maturity": "structured",
+                        "conformance_ids": [],
+                    }
+                    for kind in SPECTRAL_METRIC_KINDS
+                ],
+            },
+            {
+                "provider_id": "org.openada.kernel.transfer-evidence",
+                "provider_version": "1.0.0",
+                "provider_kind": "evidence-kernel",
+                "availability": "available",
+                "native_product": None,
+                "operation_profile": (
+                    "openada.operation/result.transfer.measure/v1alpha1"
+                ),
+                "operation_profile_schema": "openada.operation-profile/v0alpha2",
+                "assertion_profile": (
+                    "openada.assertion/transfer.measurement.valid/v1alpha1"
+                ),
+                "result_schema": "openada.result/v0alpha1",
+                "transports": ["local-cli", "in-process"],
+                "locator_types": ["artifact"],
+                "features": [
+                    {
+                        "id": {
+                            "low_frequency_gain_db": "openada.feature/transfer.low-frequency-gain/v1alpha1",
+                            "bandwidth_3db": "openada.feature/transfer.bandwidth-3db/v1alpha1",
+                            "unity_gain_frequency": "openada.feature/transfer.unity-gain-frequency/v1alpha1",
+                            "phase_margin": "openada.feature/transfer.phase-margin/v1alpha1",
+                        }[kind],
+                        "maturity": "structured",
+                        "conformance_ids": [],
+                    }
+                    for kind in TRANSFER_METRIC_KINDS
                 ],
             },
             {
@@ -902,14 +1130,20 @@ def _measurement_record(document: dict) -> dict:
         raise ValueError(
             "the measurement input must be a complete openada.result/v0alpha1 envelope"
         )
-    if document.get("operation") != "result.measure":
+    envelope_operation = document.get("operation")
+    if envelope_operation not in {
+        "result.measure",
+        "result.spectral.measure",
+        "result.transfer.measure",
+    }:
         raise ValueError(
-            "the measurement result envelope must have operation 'result.measure'"
+            "the measurement result envelope must have operation 'result.measure', "
+            "'result.spectral.measure', or 'result.transfer.measure'"
         )
     if document.get("tool") is not None:
-        raise ValueError("a result.measure envelope must have a null tool record")
+        raise ValueError("a deterministic measurement envelope must have a null tool record")
     if document.get("inputs") != [] or document.get("artifacts") != []:
-        raise ValueError("a result.measure envelope must have empty inputs and artifacts")
+        raise ValueError("a deterministic measurement envelope must have empty inputs and artifacts")
     diagnostics = document.get("diagnostics")
     if not isinstance(diagnostics, list):
         raise ValueError("the measurement result envelope diagnostics must be an array")
@@ -977,14 +1211,49 @@ def _measurement_record(document: dict) -> dict:
         raise ValueError("the measurement result envelope provenance record is incomplete")
 
     data = document.get("data")
-    if not isinstance(data, dict) or set(data) != {
-        "protocol",
-        "measurement",
-        "extensions",
-    }:
-        raise ValueError("the result.measure envelope data record is incomplete")
+    expected_data_fields = {"protocol", "measurement", "extensions"}
+    if envelope_operation == "result.spectral.measure":
+        expected_data_fields.add("spectral")
+    if envelope_operation == "result.transfer.measure":
+        expected_data_fields.add("transfer")
+    if not isinstance(data, dict) or set(data) != expected_data_fields:
+        raise ValueError("the measurement envelope data record is incomplete")
     if data.get("extensions") != {}:
-        raise ValueError("the result.measure envelope data.extensions must be empty")
+        raise ValueError("the measurement envelope data.extensions must be empty")
+    if envelope_operation == "result.spectral.measure" and not isinstance(
+        data.get("spectral"), dict
+    ):
+        raise ValueError("the spectral measurement evidence record is incomplete")
+    if envelope_operation == "result.transfer.measure" and not isinstance(
+        data.get("transfer"), dict
+    ):
+        raise ValueError("the transfer measurement evidence record is incomplete")
+    profile_id = {
+        "result.measure": "openada.operation/result.measure/v1alpha1",
+        "result.spectral.measure": (
+            "openada.operation/result.spectral.measure/v1alpha1"
+        ),
+        "result.transfer.measure": (
+            "openada.operation/result.transfer.measure/v1alpha1"
+        ),
+    }[envelope_operation]
+    profile = load_operation_profile(profile_id)
+    if profile is None:
+        raise ValueError(f"the packaged {profile_id} profile is unavailable")
+    Draft202012Validator, FormatChecker = _jsonschema_types()
+    data_validator = Draft202012Validator(
+        profile["normalized_result"]["data_schema"],
+        format_checker=FormatChecker(),
+    )
+    data_issues = sorted(
+        data_validator.iter_errors(data),
+        key=lambda error: tuple(str(part) for part in error.absolute_path),
+    )
+    if data_issues:
+        raise ValueError(
+            "the measurement envelope data does not satisfy its packaged profile: "
+            + data_issues[0].message
+        )
     protocol = data.get("protocol")
     expected_protocol_fields = {
         "request_id",
@@ -995,11 +1264,24 @@ def _measurement_record(document: dict) -> dict:
     }
     if not isinstance(protocol, dict) or set(protocol) != expected_protocol_fields:
         raise ValueError("the result.measure envelope protocol record is incomplete")
-    if protocol.get("operation_profile") != "openada.operation/result.measure/v1alpha1":
-        raise ValueError("the measurement envelope operation profile is not result.measure/v1alpha1")
-    if protocol.get("assertion_profile") != "openada.assertion/measurement.valid/v1alpha1":
-        raise ValueError("the measurement envelope assertion profile is not measurement.valid/v1alpha1")
-    if protocol.get("implementation_id") != "org.openada.kernel.typed-evidence":
+    expected_protocol = {
+        "result.measure": {
+            "operation_profile": "openada.operation/result.measure/v1alpha1",
+            "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
+            "implementation_id": "org.openada.kernel.typed-evidence",
+        },
+        "result.spectral.measure": {
+            "operation_profile": "openada.operation/result.spectral.measure/v1alpha1",
+            "assertion_profile": "openada.assertion/spectral.measurement.valid/v1alpha1",
+            "implementation_id": "org.openada.kernel.spectral-evidence",
+        },
+        "result.transfer.measure": {
+            "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+            "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
+            "implementation_id": "org.openada.kernel.transfer-evidence",
+        },
+    }[envelope_operation]
+    if any(protocol.get(name) != value for name, value in expected_protocol.items()):
         raise ValueError("the measurement envelope implementation identity is unsupported")
     try:
         protocol_request_id = uuid.UUID(str(protocol.get("request_id")))
@@ -1032,6 +1314,248 @@ def _measurement_record(document: dict) -> dict:
             "a measured or not_found result.measure envelope must have completed execution"
         )
     return measurement
+
+
+def _series_record(document: dict) -> dict:
+    """Accept a normalized series or unwrap one complete passing extraction result."""
+
+    if "schema" not in document:
+        return document
+    if (
+        document.get("schema") != "openada.result/v0alpha1"
+        or document.get("operation") != "result.series.extract"
+    ):
+        raise ValueError(
+            "the series input must be a normalized series or a complete "
+            "result.series.extract openada.result/v0alpha1 envelope"
+        )
+    try:
+        assert_result_conforms(
+            document,
+            expected_operation="result.series.extract",
+            expected_execution_status="completed",
+            expected_engineering_status="pass",
+        )
+    except ResultConformanceError as exc:
+        raise ValueError(
+            "the result.series.extract envelope is not a complete passing result: "
+            + "; ".join(exc.issues)
+        ) from None
+    except RuntimeError as exc:
+        raise ValueError(str(exc)) from None
+
+    profile = load_operation_profile(SERIES_EXTRACTION_PROFILE)
+    if profile is None:
+        raise ValueError(
+            f"the packaged {SERIES_EXTRACTION_PROFILE} profile is unavailable"
+        )
+    Draft202012Validator, FormatChecker = _jsonschema_types()
+    validator = Draft202012Validator(
+        profile["normalized_result"]["data_schema"],
+        format_checker=FormatChecker(),
+    )
+    issues = sorted(
+        validator.iter_errors(document["data"]),
+        key=lambda error: tuple(str(part) for part in error.absolute_path),
+    )
+    if issues:
+        raise ValueError(
+            "the result.series.extract data does not satisfy its packaged profile: "
+            + issues[0].message
+        )
+    extraction = document["data"]["extraction"]
+    source = extraction.get("source")
+    if (
+        extraction.get("status") != "extracted"
+        or not isinstance(source, dict)
+        or source.get("binding") != "verified"
+        or not isinstance(extraction.get("series"), dict)
+    ):
+        raise ValueError(
+            "the result.series.extract envelope does not contain verified extracted series evidence"
+        )
+    return extraction["series"]
+
+
+def _provider_failure(action: str, error: ProviderRuntimeError) -> dict:
+    details = "; ".join(error.issues)
+    message = error.message if not details else f"{error.message}: {details}"
+    if error.code == "provider.transport.timed_out":
+        execution_status = "timed_out"
+    elif error.code in {
+        "provider.transport.unavailable",
+        "provider.resolution.none",
+    }:
+        execution_status = "not_available"
+    elif error.code.startswith(
+        (
+            "provider.manifest.",
+            "provider.request.",
+            "provider.selection.",
+            "provider.profile.unsupported",
+            "provider.evidence.",
+            "provider.transport.unsupported",
+            "provider.transport.invalid",
+            "provider.resolution.ambiguous",
+        )
+    ):
+        execution_status = "invalid_request"
+    else:
+        execution_status = "failed"
+    return result(
+        f"provider.{action}",
+        tool=None,
+        execution=static_execution(execution_status),
+        engineering_status="unknown",
+        summary="The explicit external-provider boundary rejected the request.",
+        diagnostics=[diagnostic("error", error.code, message)],
+        data={
+            "provider_action": action,
+            "issues": list(error.issues),
+            "extensions": {},
+        },
+    )
+
+
+def _provider_dispatch(args: argparse.Namespace) -> dict:
+    action = args.provider_command
+    manifest_path = args.manifest
+    try:
+        manifest = load_provider_manifest(manifest_path)
+        if action == "invoke":
+            request = load_provider_request(args.request)
+            working_directory = (
+                args.cwd
+                if args.cwd is not None
+                else str(Path(manifest_path).expanduser().resolve().parent)
+            )
+            return invoke_local_provider(
+                manifest,
+                request,
+                cwd=working_directory,
+            )
+    except ProviderRuntimeError as exc:
+        return _provider_failure(action, exc)
+
+    driver = manifest["driver"]
+    capabilities = [
+        {
+            "index": index,
+            "operation_profile": capability["operation_profile"],
+            "assertion_profiles": capability["assertion_profiles"],
+            "features": capability["features"],
+            "locator_types": capability["locator_types"],
+            "completion_modes": capability["completion_modes"],
+            "side_effect_modes": capability["side_effect_modes"],
+            "transport_ids": capability["transport_ids"],
+            "native_product_ids": capability["native_product_ids"],
+            "maturity": capability["maturity"],
+            "conformance_record_ids": capability["conformance_record_ids"],
+        }
+        for index, capability in enumerate(manifest["capabilities"])
+    ]
+    data = {
+        "manifest_schema": manifest["schema"],
+        "driver": driver,
+        "transports": [
+            {"id": transport["id"], "type": transport["type"]}
+            for transport in manifest["transports"]
+        ],
+        "capabilities": capabilities,
+        "runtime_scope": {
+            "discovery": "explicit-manifest-only",
+            "dispatch": "local-cli-json-stdio-wait-only",
+            "registered_operation_profiles": [
+                "openada.operation/circuit.simulate/v1alpha2"
+            ],
+            "marketplace": False,
+            "mcp": False,
+        },
+        "extensions": {},
+    }
+    return result(
+        f"provider.{action}",
+        tool=None,
+        execution=static_execution(),
+        engineering_status="pass",
+        summary=(
+            f"External provider {driver['id']}@{driver['version']} is valid."
+            if action == "validate"
+            else f"Listed {len(capabilities)} validated explicit provider capabilities."
+        ),
+        data=data,
+    )
+
+
+def _profile_dispatch(args: argparse.Namespace) -> dict:
+    action = args.profile_command
+    try:
+        if action == "show":
+            profile = load_operation_profile(args.operation_profile)
+            if profile is None:
+                return result(
+                    "profile.show",
+                    tool=None,
+                    execution=static_execution(),
+                    engineering_status="fail",
+                    summary="The requested operation profile is not installed.",
+                    diagnostics=[
+                        diagnostic(
+                            "error",
+                            "profile.not_found",
+                            f"No packaged profile has identity {args.operation_profile!r}.",
+                        )
+                    ],
+                    data={
+                        "operation_profile": args.operation_profile,
+                        "profile": None,
+                        "extensions": {},
+                    },
+                )
+            return result(
+                "profile.show",
+                tool=None,
+                execution=static_execution(),
+                engineering_status="pass",
+                summary=f"Loaded operation profile {args.operation_profile}.",
+                data={
+                    "operation_profile": args.operation_profile,
+                    "profile": profile,
+                    "extensions": {},
+                },
+            )
+
+        profiles = list_operation_profiles()
+    except ProviderRuntimeError as exc:
+        details = "; ".join(exc.issues)
+        message = exc.message if not details else f"{exc.message}: {details}"
+        return result(
+            f"profile.{action}",
+            tool=None,
+            execution=static_execution("failed"),
+            engineering_status="unknown",
+            summary="The installed operation-profile catalog could not be read safely.",
+            diagnostics=[diagnostic("error", exc.code, message)],
+            data={"profiles": [], "extensions": {}},
+        )
+
+    records = [
+        {
+            "schema": profile["schema"],
+            "operation_profile": profile["operation"]["id"],
+            "assertion_profile": profile["assertion"]["id"],
+            "feature_ids": [feature["id"] for feature in profile["features"]],
+        }
+        for profile in profiles
+    ]
+    return result(
+        "profile.list",
+        tool=None,
+        execution=static_execution(),
+        engineering_status="pass",
+        summary=f"Listed {len(records)} packaged operation profiles.",
+        data={"profiles": records, "extensions": {}},
+    )
 
 
 def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
@@ -1103,13 +1627,56 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             system_init_file=args.system_init_file,
             timeout=args.timeout,
         )
+    if args.command == "extract":
+        try:
+            simulation = _load_json_object(args.simulation, role="simulation result")
+            selection = _load_json_object(args.selection, role="series selection")
+        except ValueError as exc:
+            return _invalid_request("result.series.extract", str(exc))
+        if set(selection) != {"selectors", "conditions", "extensions"}:
+            return _invalid_request(
+                "result.series.extract",
+                "series selection must contain exactly selectors, conditions, and extensions",
+            )
+        if selection.get("extensions") != {}:
+            return _invalid_request(
+                "result.series.extract",
+                "series selection extensions must be empty in v1alpha1",
+            )
+        return extract_result_series(
+            simulation,
+            args.artifact,
+            selection.get("selectors"),
+            conditions=selection.get("conditions"),
+            request_id=args.request_id,
+        )
     if args.command == "measure":
         try:
-            series = _load_json_object(args.series, role="series")
+            series = _series_record(_load_json_object(args.series, role="series"))
             measurement = _load_json_object(args.measurement, role="measurement")
         except ValueError as exc:
             return _invalid_request("result.measure", str(exc))
         return measure_result(series, measurement, request_id=args.request_id)
+    if args.command == "spectral":
+        try:
+            series = _series_record(_load_json_object(args.series, role="series"))
+            measurement = _load_json_object(
+                args.measurement,
+                role="spectral measurement",
+            )
+        except ValueError as exc:
+            return _invalid_request("result.spectral.measure", str(exc))
+        return measure_spectrum(series, measurement, request_id=args.request_id)
+    if args.command == "transfer":
+        try:
+            series = _series_record(_load_json_object(args.series, role="series"))
+            measurement = _load_json_object(
+                args.measurement,
+                role="transfer measurement",
+            )
+        except ValueError as exc:
+            return _invalid_request("result.transfer.measure", str(exc))
+        return measure_transfer(series, measurement, request_id=args.request_id)
     if args.command == "evaluate":
         try:
             measurement_document = _load_json_object(
@@ -1128,6 +1695,10 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             specification,
             request_id=args.request_id,
         )
+    if args.command == "provider":
+        return _provider_dispatch(args)
+    if args.command == "profile":
+        return _profile_dispatch(args)
     if args.command == "drc":
         gds = Path(args.gds_file).expanduser().resolve()
         report = args.report
@@ -1278,11 +1849,38 @@ def _requested_shared_simulation(
 
 
 def _invalid_request(operation: str, message: str) -> dict:
+    if operation == "result.series.extract":
+        payload = extract_result_series({}, "", [])
+        payload["engineering"]["summary"] = (
+            "OpenADA could not parse the typed series extraction request."
+        )
+        payload["diagnostics"] = [
+            diagnostic("error", "series.request.invalid", message)
+        ]
+        return payload
     if operation == "result.measure":
         payload = measure_result({}, {})
         payload["engineering"]["summary"] = "OpenADA could not parse the typed measurement request."
         payload["diagnostics"] = [
             diagnostic("error", "measurement.request.invalid", message)
+        ]
+        return payload
+    if operation == "result.spectral.measure":
+        payload = measure_spectrum({}, {})
+        payload["engineering"]["summary"] = (
+            "OpenADA could not parse the typed spectral measurement request."
+        )
+        payload["diagnostics"] = [
+            diagnostic("error", "spectral.request.invalid", message)
+        ]
+        return payload
+    if operation == "result.transfer.measure":
+        payload = measure_transfer({}, {})
+        payload["engineering"]["summary"] = (
+            "OpenADA could not parse the typed transfer measurement request."
+        )
+        payload["diagnostics"] = [
+            diagnostic("error", "transfer.request.invalid", message)
         ]
         return payload
     if operation == "specification.evaluate":

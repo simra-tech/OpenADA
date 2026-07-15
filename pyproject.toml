@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openada"
-version = "0.3.0"
+version = "0.4.0"
 description = "Open agent-EDA contracts and deterministic drivers for open-source EDA tools"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,6 +23,9 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+dependencies = [
+  "jsonschema>=4.18",
 ]
 
 [project.urls]
@@ -60,6 +63,9 @@ where = ["src"]
   "profiles/circuit.simulate-v1alpha1.json",
   "profiles/circuit.simulate-v1alpha2.json",
   "profiles/result.measure-v1alpha1.json",
+  "profiles/result.series.extract-v1alpha1.json",
+  "profiles/result.spectral.measure-v1alpha1.json",
+  "profiles/result.transfer.measure-v1alpha1.json",
   "profiles/specification.evaluate-v1alpha1.json",
 ]
 

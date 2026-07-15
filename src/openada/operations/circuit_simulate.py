@@ -464,6 +464,21 @@ def _validate_requested_parameters(
     return {"analysis": normalized, "extensions": {}}, None
 
 
+def circuit_simulation_parameter_issue(
+    parameters: Mapping[str, object],
+) -> str | None:
+    """Return the active shared-profile semantic issue, if any.
+
+    JSON Schema closes the parameter shape; this companion check enforces the
+    relational sweep, interval, source-unit, extension, and point-count rules
+    that the schema cannot express. External dispatch uses the same validator
+    as the built-in ngspice/Xyce bridge.
+    """
+
+    _, issue = _validate_requested_parameters(parameters)
+    return issue
+
+
 def _same_number(left: object, right: object) -> bool:
     return _finite_number(left) and _finite_number(right) and math.isclose(
         float(left),
@@ -1017,6 +1032,7 @@ def simulate_circuit_profile(
 __all__ = [
     "MAX_SHARED_ANALYSIS_POINTS",
     "MAX_SOURCE_BYTES",
+    "circuit_simulation_parameter_issue",
     "invalid_circuit_simulation_request",
     "inspect_simulation_deck",
     "inspect_transient_deck",

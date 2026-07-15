@@ -2,13 +2,20 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
+from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
 import openada.cli as cli
 from openada.cli import main
 from openada.contract import MAX_CONTRACT_TEXT_CHARS, result, static_execution
+
+
+ROOT = Path(__file__).parents[1]
 
 
 def _canonical_digest(value: object) -> str:
@@ -39,6 +46,77 @@ def _typed_series() -> dict:
         **content,
         "extensions": {},
     }
+
+
+def _extraction_envelope() -> dict:
+    base = _typed_series()
+    series = {
+        **base,
+        "source": {
+            "operation": "openada.operation/result.series.extract/v1alpha1",
+            "request_id": "00000000-0000-4000-8000-000000000011",
+            "artifact_role": "measurement.source",
+            "artifact_sha256": base["source"]["artifact_sha256"],
+            "lineage": {
+                "operation": "circuit.simulate",
+                "request_id": "00000000-0000-4000-8000-000000000010",
+                "artifact_role": "simulation.result",
+                "artifact_sha256": "a" * 64,
+                "binding": "unverified",
+            },
+        },
+    }
+    artifact = {
+        "kind": "ngspice-raw",
+        "role": "simulation.result",
+        "path": "/tmp/openada-cli-test.raw",
+        "exists": True,
+        "bytes": 100,
+        "sha256": "a" * 64,
+    }
+    return result(
+        "result.series.extract",
+        tool=None,
+        execution=static_execution(),
+        engineering_status="pass",
+        summary="Extracted test series.",
+        inputs=[artifact],
+        data={
+            "protocol": {
+                "request_id": "00000000-0000-4000-8000-000000000011",
+                "operation_profile": "openada.operation/result.series.extract/v1alpha1",
+                "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
+                "implementation_id": "org.openada.kernel.spice3-series",
+                "implementation_version": "1.0.0",
+            },
+            "extraction": {
+                "status": "extracted",
+                "request_sha256": "b" * 64,
+                "source": {
+                    "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+                    "request_id": "00000000-0000-4000-8000-000000000010",
+                    "driver_id": "org.openada.driver.ngspice",
+                    "driver_version": "0.4.0",
+                    "backend": "ngspice",
+                    "analysis_type": "tran",
+                    "artifact": artifact,
+                    "binding": "verified",
+                },
+                "plot": {
+                    "plotname": "Transient Analysis",
+                    "encoding": "binary",
+                    "numeric_type": "real",
+                    "point_count": 3,
+                    "native_axis_name": "time",
+                    "native_axis_type": "time",
+                    "extensions": {},
+                },
+                "series": series,
+                "extensions": {},
+            },
+            "extensions": {},
+        },
+    )
 
 
 def test_doctor_emits_one_contract_object(capsys):
@@ -108,6 +186,46 @@ def test_capabilities_exposes_semantic_provider_records(capsys):
         == ["typed-evidence-measurement-specification-v0alpha1"]
         for feature in specification["features"]
     )
+    extraction = next(
+        record
+        for record in records
+        if record["operation_profile"]
+        == "openada.operation/result.series.extract/v1alpha1"
+    )
+    assert extraction["provider_id"] == "org.openada.kernel.spice3-series"
+    assert extraction["features"] == []
+    spectral = next(
+        record
+        for record in records
+        if record["operation_profile"]
+        == "openada.operation/result.spectral.measure/v1alpha1"
+    )
+    assert {feature["id"] for feature in spectral["features"]} == {
+        "openada.feature/spectral.snr/v1alpha1",
+        "openada.feature/spectral.sinad/v1alpha1",
+        "openada.feature/spectral.thd/v1alpha1",
+        "openada.feature/spectral.sfdr/v1alpha1",
+    }
+    transfer = next(
+        record
+        for record in records
+        if record["operation_profile"]
+        == "openada.operation/result.transfer.measure/v1alpha1"
+    )
+    assert {feature["id"] for feature in transfer["features"]} == {
+        "openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "openada.feature/transfer.phase-margin/v1alpha1",
+    }
+
+
+def test_capabilities_help_uses_the_invoked_command_name(capsys):
+    with pytest.raises(SystemExit) as caught:
+        cli.build_parser().parse_args(["capabilities", "--help"])
+
+    assert caught.value.code == 0
+    assert capsys.readouterr().out.startswith("usage: openada capabilities ")
 
 
 def test_missing_input_is_unknown_not_engineering_fail(tmp_path, capsys):
@@ -135,7 +253,12 @@ def test_missing_input_is_unknown_not_engineering_fail(tmp_path, capsys):
         (["not-a-command"], "openada.invalid_request"),
         (["--tool-path", "not-an-override", "doctor"], "doctor"),
         (["measure"], "result.measure"),
+        (["extract"], "result.series.extract"),
+        (["spectral"], "result.spectral.measure"),
+        (["transfer"], "result.transfer.measure"),
         (["evaluate"], "specification.evaluate"),
+        (["provider"], "provider"),
+        (["profile"], "profile"),
     ],
 )
 def test_malformed_invocation_emits_one_invalid_request(argv, operation, capsys):
@@ -152,10 +275,19 @@ def test_malformed_invocation_emits_one_invalid_request(argv, operation, capsys)
     assert len(payload["diagnostics"]) == 1
     expected_code = {
         "result.measure": "measurement.request.invalid",
+        "result.series.extract": "series.request.invalid",
+        "result.spectral.measure": "spectral.request.invalid",
+        "result.transfer.measure": "transfer.request.invalid",
         "specification.evaluate": "specification.request.invalid",
     }.get(operation, "request.invalid")
     assert payload["diagnostics"][0]["code"] == expected_code
     if operation == "result.measure":
+        assert payload["data"]["measurement"]["status"] == "unknown"
+    if operation == "result.series.extract":
+        assert payload["data"]["extraction"]["status"] == "unknown"
+    if operation == "result.spectral.measure":
+        assert payload["data"]["measurement"]["status"] == "unknown"
+    if operation == "result.transfer.measure":
         assert payload["data"]["measurement"]["status"] == "unknown"
     if operation == "specification.evaluate":
         assert payload["data"]["evaluation"]["status"] == "unknown"
@@ -444,6 +576,131 @@ def test_measure_and_evaluate_cli_form_a_typed_evidence_chain(tmp_path, capsys):
     }
 
 
+def test_measure_cli_accepts_a_complete_passing_extraction_envelope(
+    tmp_path, capsys
+) -> None:
+    extraction_path = tmp_path / "series-extraction.json"
+    request_path = tmp_path / "measurement.json"
+    extraction_path.write_text(
+        json.dumps(_extraction_envelope()), encoding="utf-8"
+    )
+    request_path.write_text(
+        json.dumps(
+            {
+                "measurement_id": "vout.maximum",
+                "kind": "maximum",
+                "signal": "vout",
+                "parameters": {},
+                "extensions": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "--compact",
+            "measure",
+            "--series",
+            str(extraction_path),
+            "--measurement",
+            str(request_path),
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert payload["data"]["measurement"]["value"] == 1.0
+    assert payload["data"]["measurement"]["source"]["lineage"]["operation"] == (
+        "circuit.simulate"
+    )
+
+
+def test_series_handoff_rejects_a_nonpassing_extraction_envelope(
+    tmp_path, capsys
+) -> None:
+    envelope = _extraction_envelope()
+    envelope["engineering"]["status"] = "unknown"
+    extraction_path = tmp_path / "series-extraction.json"
+    request_path = tmp_path / "measurement.json"
+    extraction_path.write_text(json.dumps(envelope), encoding="utf-8")
+    request_path.write_text("{}", encoding="utf-8")
+
+    exit_code = main(
+        [
+            "measure",
+            "--series",
+            str(extraction_path),
+            "--measurement",
+            str(request_path),
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 2
+    assert payload["execution"]["status"] == "invalid_request"
+    assert "complete passing result" in payload["diagnostics"][0]["message"]
+
+
+def test_profile_cli_lists_and_shows_packaged_contracts(capsys) -> None:
+    list_exit = main(["--compact", "profile", "list"])
+    listed = json.loads(capsys.readouterr().out)
+    profile_ids = {
+        item["operation_profile"] for item in listed["data"]["profiles"]
+    }
+
+    assert list_exit == 0
+    assert "openada.operation/result.transfer.measure/v1alpha1" in profile_ids
+    assert "openada.operation/result.spectral.measure/v1alpha1" in profile_ids
+
+    show_exit = main(
+        [
+            "--compact",
+            "profile",
+            "show",
+            "openada.operation/result.transfer.measure/v1alpha1",
+        ]
+    )
+    shown = json.loads(capsys.readouterr().out)
+
+    assert show_exit == 0
+    assert shown["data"]["profile"]["operation"]["id"] == (
+        "openada.operation/result.transfer.measure/v1alpha1"
+    )
+
+
+def test_source_launcher_without_site_packages_has_stable_dependency_boundary() -> None:
+    doctor = subprocess.run(
+        [sys.executable, "-S", str(ROOT / "bin" / "openada"), "--compact", "doctor"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert doctor.returncode == 0
+    assert json.loads(doctor.stdout)["execution"]["status"] == "completed"
+
+    profiles = subprocess.run(
+        [
+            sys.executable,
+            "-S",
+            str(ROOT / "bin" / "openada"),
+            "--compact",
+            "profile",
+            "list",
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(profiles.stdout)
+    assert profiles.returncode == 2
+    assert payload["execution"]["status"] == "failed"
+    assert payload["diagnostics"][0]["code"] == "provider.validation.unavailable"
+    assert "jsonschema" in payload["diagnostics"][0]["message"]
+
+
 def test_evaluate_cli_requires_the_complete_measurement_envelope(tmp_path, capsys):
     measurement_path = tmp_path / "measurement.json"
     specification_path = tmp_path / "specification.json"
@@ -493,6 +750,54 @@ def test_measurement_envelope_validation_is_closed(tamper) -> None:
     tamper(envelope)
 
     with pytest.raises(ValueError):
+        cli._measurement_record(envelope)
+
+
+@pytest.mark.parametrize(
+    ("operation", "operation_profile", "assertion_profile", "implementation_id", "evidence_field"),
+    [
+        (
+            "result.spectral.measure",
+            "openada.operation/result.spectral.measure/v1alpha1",
+            "openada.assertion/spectral.measurement.valid/v1alpha1",
+            "org.openada.kernel.spectral-evidence",
+            "spectral",
+        ),
+        (
+            "result.transfer.measure",
+            "openada.operation/result.transfer.measure/v1alpha1",
+            "openada.assertion/transfer.measurement.valid/v1alpha1",
+            "org.openada.kernel.transfer-evidence",
+            "transfer",
+        ),
+    ],
+)
+def test_measurement_envelope_rejects_malformed_typed_supporting_evidence(
+    operation: str,
+    operation_profile: str,
+    assertion_profile: str,
+    implementation_id: str,
+    evidence_field: str,
+) -> None:
+    envelope = cli.measure_result(
+        _typed_series(),
+        {
+            "measurement_id": "output.maximum",
+            "kind": "maximum",
+            "signal": "vout",
+            "parameters": {},
+            "extensions": {},
+        },
+    )
+    envelope["operation"] = operation
+    envelope["data"]["protocol"].update(
+        operation_profile=operation_profile,
+        assertion_profile=assertion_profile,
+        implementation_id=implementation_id,
+    )
+    envelope["data"][evidence_field] = {}
+
+    with pytest.raises(ValueError, match="packaged profile"):
         cli._measurement_record(envelope)
 
 
@@ -580,3 +885,87 @@ def test_evaluate_rejects_a_three_field_pseudo_envelope(tmp_path, capsys):
     assert payload["operation"] == "specification.evaluate"
     assert payload["data"]["evaluation"]["status"] == "unknown"
     assert payload["diagnostics"][0]["code"] == "specification.request.invalid"
+
+
+def test_spectral_cli_result_feeds_specification_evaluation(tmp_path, capsys):
+    count = 8
+    sample_rate = 8.0
+    axis = {"name": "time", "unit": "s", "values": [i / sample_rate for i in range(count)]}
+    signals = [{
+        "name": "vout",
+        "unit": "V",
+        "values": [
+            math.sin(2 * math.pi * i / count)
+            + 0.1 * math.sin(2 * math.pi * 2 * i / count)
+            + 0.01 * math.sin(2 * math.pi * 3 * i / count)
+            for i in range(count)
+        ],
+    }]
+    conditions = [{"name": "temperature", "value": 27.0, "unit": "degC"}]
+    series = {
+        "source": {
+            "operation": "result.series.extract",
+            "request_id": "00000000-0000-4000-8000-000000000010",
+            "artifact_role": "measurement.source",
+            "artifact_sha256": _canonical_digest(
+                {"axis": axis, "signals": signals, "conditions": conditions}
+            ),
+        },
+        "axis": axis,
+        "signals": signals,
+        "conditions": conditions,
+        "extensions": {},
+    }
+    request = {
+        "measurement_id": "vout.sfdr",
+        "signal": "vout",
+        "method": {
+            "id": "openada.method/coherent-single-tone-fft/v1alpha1",
+            "dft_length": count,
+            "uniformity_relative_tolerance": 1e-12,
+            "coherent_bin_tolerance": 1e-12,
+            "coherent_sampling": "required",
+            "window": "rectangular",
+            "detrend": "mean",
+            "sidedness": "one-sided",
+            "scaling": "mean-square-per-bin",
+            "averaging": "none",
+            "missing_samples": "reject",
+            "clipping": "not-assessed",
+        },
+        "band": {"lower": {"value": 0, "unit": "Hz"}, "upper": {"value": 4, "unit": "Hz"}},
+        "fundamental": {"method": "declared-coherent-bin", "frequency": {"value": 1, "unit": "Hz"}, "integration_half_width_bins": 0},
+        "harmonics": {"orders": [2], "aliasing": "fold-first-nyquist", "collision": "reject", "out_of_band": "exclude", "integration_half_width_bins": 0},
+        "metric": {"kind": "sfdr", "unit": "dB"},
+        "standards_context": {"domain": "generic-sampled-waveform", "reference": "none", "alignment": "openada-definition"},
+        "extensions": {},
+    }
+    series_path = tmp_path / "series.json"
+    request_path = tmp_path / "spectral.json"
+    result_path = tmp_path / "spectral-result.json"
+    specification_path = tmp_path / "specification.json"
+    series_path.write_text(json.dumps(series), encoding="utf-8")
+    request_path.write_text(json.dumps(request), encoding="utf-8")
+
+    exit_code = main(["--compact", "spectral", "--series", str(series_path), "--measurement", str(request_path)])
+    measured = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert measured["data"]["measurement"]["value"] == pytest.approx(20.0)
+    result_path.write_text(json.dumps(measured), encoding="utf-8")
+    specification_path.write_text(
+        json.dumps({
+            "specification_id": "vout.sfdr.limit",
+            "measurement_id": "vout.sfdr",
+            "limits": {"lower": {"value": 18.0, "unit": "dB", "inclusive": True}},
+            "conditions": conditions,
+            "extensions": {},
+        }),
+        encoding="utf-8",
+    )
+
+    evaluation_exit = main(["evaluate", "--measurement", str(result_path), "--specification", str(specification_path)])
+    evaluated = json.loads(capsys.readouterr().out)
+
+    assert evaluation_exit == 0
+    assert evaluated["engineering"]["status"] == "pass"

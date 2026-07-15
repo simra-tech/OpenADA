@@ -81,8 +81,8 @@ def _schema_issues(payload: Mapping[str, Any]) -> list[str]:
         from jsonschema import Draft202012Validator, FormatChecker
     except ImportError as exc:  # pragma: no cover - exercised in an isolated install
         raise RuntimeError(
-            "result validation requires the 'conformance' extra: "
-            "python -m pip install 'openada[conformance]'"
+            "result validation requires OpenADA's jsonschema dependency; "
+            "install it with: python -m pip install 'jsonschema>=4.18'"
         ) from exc
 
     try:

@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/result.series.extract/v1alpha1",
+    "title": "Verified native result series extraction",
+    "summary": "Bind one exact passing circuit.simulate/v1alpha2 native raw artifact to a bounded normalized real series through explicit vector, Cartesian-component, name, unit, and condition selectors.",
+    "side_effect_mode": "read-only",
+    "target_kinds": ["simulation-result-artifact"],
+    "locator_types": ["filesystem", "artifact", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/series.extraction.valid/v1alpha1",
+    "statement": "The exact retained native simulation artifact was safely decoded and the selected vectors were bound without inference to one canonical finite normalized real series.",
+    "non_goals": [
+      "This assertion does not state that simulation evidence or a circuit specification passed; it requires an already passing circuit.simulate/v1alpha2 result.",
+      "This assertion does not derive magnitude, phase, dB, transfer ratios, interpolation, resampling, FFT, or arbitrary expressions.",
+      "This assertion does not convert units or guess dimensions from vector names.",
+      "This assertion does not widen result.measure/v1alpha1 lineage semantics; downstream measurement retains native lineage as unverified by that separate operation."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "The simulation result proved a fresh exact artifact, the same stable bytes and digest were parsed, one request-bound plot was selected, and every emitted value has an explicit proven unit and selector.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.extraction.status is extracted and data.extraction.source.binding is verified.",
+          "The native path, bytes, SHA-256, driver, backend, simulation request, analysis, plot, axis, and selector request digest are retained.",
+          "data.extraction.series carries a canonical measurement.source digest accepted by result.measure/v1alpha1."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "No valid condition maps to engineering fail in v1alpha1 because malformed, stale, ambiguous, unsupported, or unproven extraction evidence cannot prove a negative engineering assertion.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": ["Implementations do not emit fail for v1alpha1; conformance rejects any such classification."],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The simulation result, artifact binding, format, plot, axis, selector, component, unit, condition, bound, or file stability was not sufficient to justify extraction.",
+        "allowed_execution_statuses": ["completed", "invalid_request", "failed"],
+        "required_evidence": [
+          "data.extraction.status is unknown and data.extraction.series is null.",
+          "A stable diagnostic identifies the invalid request, unproven simulation, binding mismatch, malformed artifact, unsupported format, missing vector, component mismatch, unit mismatch, or bound."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [{
+      "role": "simulation-result-envelope",
+      "required": true,
+      "locator_types": ["filesystem", "artifact", "workspace"],
+      "identity_requirement": "content-digest",
+      "description": "The complete passing circuit.simulate/v1alpha2 result envelope that retains the target artifact path, bytes, digest, driver, request, and typed analysis binding.",
+      "extensions": {}
+    }],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.series.extract v1alpha1 request parameters",
+      "type": "object",
+      "required": ["selectors", "conditions", "extensions"],
+      "properties": {
+        "selectors": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/selector"}},
+        "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "selector": {
+          "type": "object",
+          "required": ["native_name", "output_name", "unit", "component"],
+          "properties": {
+            "native_name": {"type": "string", "minLength": 1, "maxLength": 256},
+            "output_name": {"type": "string", "minLength": 1, "maxLength": 256},
+            "unit": {"type": "string", "minLength": 1, "maxLength": 64},
+            "component": {"enum": ["real", "imaginary"]}
+          },
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object",
+          "required": ["name", "value", "unit"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1, "maxLength": 256},
+            "value": {"type": ["number", "string", "boolean"], "maxLength": 256},
+            "unit": {"type": "string", "minLength": 1, "maxLength": 64}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "The input must be a complete pass result for openada.operation/circuit.simulate/v1alpha2 using a built-in ngspice or Xyce driver and exactly one retained simulation.result artifact.",
+      "The supplied artifact path must equal the result's canonical absolute path; one stable regular file must match its exact byte count and lowercase SHA-256 before and after extraction.",
+      "Exactly one padded request-bound analysis plot is selected. ngspice binary or ASCII Spice3 and Xyce ASCII Spice3 are accepted; Xyce binary, unpadded, ambiguous, malformed, and over-limit plots are rejected.",
+      "OP maps to sample/1 at coordinate zero; DC maps to the declared source and source unit; AC maps to frequency/Hz; transient maps to time/s. The native independent variable type must prove that mapping.",
+      "Every selected dependent vector names an exact native variable, a unique output name, an exact explicit unit, and real or imaginary Cartesian component. Voltage proves V and current proves A; no other type or unit is guessed.",
+      "Real plots accept only the real component. Complex plots expose explicit real or imaginary values without deriving magnitude or phase.",
+      "At most 100000 points, 32 selectors, 64 conditions, and 1000000 selected numeric scalars are emitted. Every value is finite, vector lengths match, axes increase strictly, and names are unique."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.series.extract v1alpha1 normalized result data",
+      "type": "object",
+      "required": ["protocol", "extraction", "extensions"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/protocol"},
+        "extraction": {"$ref": "#/$defs/extraction"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "protocol": {
+          "type": "object",
+          "required": ["request_id", "operation_profile", "assertion_profile", "implementation_id", "implementation_version"],
+          "properties": {
+            "request_id": {"type": "string", "format": "uuid"},
+            "operation_profile": {"const": "openada.operation/result.series.extract/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/series.extraction.valid/v1alpha1"},
+            "implementation_id": {"const": "org.openada.kernel.spice3-series"},
+            "implementation_version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "fileRecord": {
+          "type": "object",
+          "required": ["kind", "role", "path", "exists", "bytes", "sha256"],
+          "properties": {
+            "kind": {"enum": ["ngspice-raw", "xyce-raw"]}, "role": {"const": "simulation.result"}, "path": {"type": "string", "minLength": 1},
+            "exists": {"const": true}, "bytes": {"type": "integer", "minimum": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          },
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "required": ["operation_profile", "request_id", "driver_id", "driver_version", "backend", "analysis_type", "artifact", "binding"],
+          "properties": {
+            "operation_profile": {"const": "openada.operation/circuit.simulate/v1alpha2"}, "request_id": {"type": "string", "format": "uuid"},
+            "driver_id": {"enum": ["org.openada.driver.ngspice", "org.openada.driver.xyce"]}, "driver_version": {"type": "string", "minLength": 1},
+            "backend": {"enum": ["ngspice", "xyce"]}, "analysis_type": {"enum": ["op", "dc", "ac", "tran"]},
+            "artifact": {"$ref": "#/$defs/fileRecord"}, "binding": {"enum": ["verified", "not-established"]}
+          },
+          "additionalProperties": false
+        },
+        "plot": {
+          "type": "object",
+          "required": ["plotname", "encoding", "numeric_type", "point_count", "native_axis_name", "native_axis_type", "extensions"],
+          "properties": {
+            "plotname": {"type": "string", "minLength": 1}, "encoding": {"enum": ["binary", "ascii"]}, "numeric_type": {"enum": ["real", "complex"]},
+            "point_count": {"type": "integer", "minimum": 1, "maximum": 100000}, "native_axis_name": {"type": "string", "minLength": 1},
+            "native_axis_type": {"type": "string", "minLength": 1}, "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object", "required": ["name", "value", "unit"],
+          "properties": {"name": {"type": "string"}, "value": {"type": ["number", "string", "boolean"], "maxLength": 256}, "unit": {"type": "string"}},
+          "additionalProperties": false
+        },
+        "vector": {
+          "type": "object", "required": ["name", "unit", "values"],
+          "properties": {"name": {"type": "string"}, "unit": {"type": "string"}, "values": {"type": "array", "minItems": 1, "maxItems": 100000, "items": {"type": "number"}}},
+          "additionalProperties": false
+        },
+        "seriesLineage": {
+          "type": "object", "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "binding"],
+          "properties": {"operation": {"const": "circuit.simulate"}, "request_id": {"type": "string", "format": "uuid"}, "artifact_role": {"const": "simulation.result"}, "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "binding": {"const": "unverified"}},
+          "additionalProperties": false
+        },
+        "series": {
+          "type": "object", "required": ["source", "axis", "signals", "conditions", "extensions"],
+          "properties": {
+            "source": {"type": "object", "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "lineage"], "properties": {"operation": {"const": "openada.operation/result.series.extract/v1alpha1"}, "request_id": {"type": "string", "format": "uuid"}, "artifact_role": {"const": "measurement.source"}, "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "lineage": {"$ref": "#/$defs/seriesLineage"}}, "additionalProperties": false},
+            "axis": {"$ref": "#/$defs/vector"}, "signals": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/vector"}},
+            "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}}, "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "extraction": {
+          "type": "object",
+          "required": ["status", "request_sha256", "source", "plot", "series", "extensions"],
+          "properties": {
+            "status": {"enum": ["extracted", "unknown"]}, "request_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+            "source": {"oneOf": [{"$ref": "#/$defs/source"}, {"type": "null"}]}, "plot": {"oneOf": [{"$ref": "#/$defs/plot"}, {"type": "null"}]},
+            "series": {"oneOf": [{"$ref": "#/$defs/series"}, {"type": "null"}]}, "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.extraction.status", "type": "string", "required_for": ["pass", "unknown"], "description": "Extracted or unknown without treating malformed evidence as an engineering failure.", "extensions": {}},
+      {"path": "data.extraction.source.binding", "type": "string", "required_for": ["pass"], "description": "Verified only after exact simulation request, driver, artifact path, bytes, digest, stability, and plot binding.", "extensions": {}},
+      {"path": "data.extraction.plot", "type": ["object", "null"], "required_for": ["pass", "unknown"], "description": "Exact native plot encoding, numeric type, point count, and independent variable identity.", "extensions": {}},
+      {"path": "data.extraction.series.source.artifact_sha256", "type": "string", "required_for": ["pass"], "description": "Canonical digest over normalized axis, selected signals, and operating conditions.", "extensions": {}},
+      {"path": "data.extraction.series.source.lineage", "type": "object", "required_for": ["pass"], "description": "Native simulation artifact identity retained with downstream unverified binding required by immutable result.measure/v1alpha1.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [{
+      "role": "simulation.result",
+      "kind": "native-spice3-raw",
+      "required_for": ["pass", "unknown"],
+      "freshness": "immutable-input",
+      "integrity": ["Require one passing circuit.simulate/v1alpha2 result with exact request and fresh structural evidence.", "Reopen one stable regular file and require exact retained canonical path, bytes, and SHA-256 throughout bounded extraction."],
+      "native_authority": "The retained ngspice or Xyce raw artifact remains authoritative; the normalized series is a bounded selected projection with exact lineage.",
+      "extensions": {}
+    }],
+    "integrity_rules": ["Reject duplicate or absent native selectors and output names.", "Bind axis and dependent units only through typed analysis parameters and closed native variable types.", "Hash the normalized series independently of the native artifact and retain both identities."],
+    "provenance_limitations": ["The extraction verifies only the top-level simulation result and exact retained artifact, not complete transitive model/PDK provenance beyond that result.", "result.measure/v1alpha1 independently treats optional native lineage as unverified even when this extraction result established it."],
+    "limits": {"max_log_bytes": 4000, "max_artifact_bytes": 268435456, "max_artifact_count": 1, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [],
+  "diagnostics": [
+    {"code": "series.request.invalid", "severity": "error", "condition": "The request identity, selectors, conditions, path, or closed shape is invalid.", "next_action": "Correct the explicit extraction request without inferring a selector or condition.", "extensions": {}},
+    {"code": "series.simulation.invalid", "severity": "error", "condition": "The source is not a complete supported circuit.simulate/v1alpha2 result envelope.", "next_action": "Supply the complete unmodified simulation result returned with the retained native artifact.", "extensions": {}},
+    {"code": "series.simulation.unproven", "severity": "error", "condition": "The source result does not prove a completed converged fresh exact structurally valid simulation.", "next_action": "Resolve simulation uncertainty before extracting measurements.", "extensions": {}},
+    {"code": "series.artifact.binding_mismatch", "severity": "error", "condition": "The artifact path, bytes, digest, or identity conflicts with the simulation result or changed during extraction.", "next_action": "Reject the artifact and rerun or restore the exact retained evidence.", "extensions": {}},
+    {"code": "series.artifact.malformed", "severity": "error", "condition": "The bounded native artifact parser cannot prove a complete valid selected plot.", "next_action": "Inspect the native raw artifact and simulator output; do not measure partially decoded values.", "extensions": {}},
+    {"code": "series.format.unsupported", "severity": "error", "condition": "The native raw encoding or padding mode is outside the backend's advertised extraction mapping.", "next_action": "Produce an advertised raw encoding or add a separately conformed mapping.", "extensions": {}},
+    {"code": "series.selector.missing", "severity": "error", "condition": "An exact native vector is absent or ambiguous.", "next_action": "Use a vector name present exactly once in the selected native plot.", "extensions": {}},
+    {"code": "series.selector.component_invalid", "severity": "error", "condition": "The request selects an imaginary component from real native evidence.", "next_action": "Select real or produce complex evidence; do not synthesize an imaginary component.", "extensions": {}},
+    {"code": "series.unit.mismatch", "severity": "error", "condition": "The typed analysis or native vector type does not prove the requested exact unit.", "next_action": "Correct the explicit unit or add a reviewed native type mapping.", "extensions": {}},
+    {"code": "series.source.over_limit", "severity": "error", "condition": "The selected series exceeds a point, vector, condition, scalar, header, plot, or file ceiling.", "next_action": "Use an explicit bounded upstream selection or a newly versioned decimation operation; never truncate silently.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.kernel.ngspice-series",
+      "native_product_id": "org.openada.format.ngspice-raw",
+      "backend_name": "Bounded ngspice Spice3 raw extractor",
+      "supported_analyses": ["op", "dc", "ac", "tran"],
+      "analysis_commands": {"op": "Select one request-bound OP plot and project explicit real vectors.", "dc": "Select one request-bound DC plot and typed sweep axis.", "ac": "Select one request-bound complex AC plot and explicit Cartesian vector components.", "tran": "Select one request-bound transient plot and time axis."},
+      "native_actions": ["Verify exact artifact identity and parse one padded binary or ASCII Spice3 plot.", "Bind axis through typed analysis and project exact dependent vector components."],
+      "artifact_bindings": [{"native_kind": "ngspice padded binary or ASCII Spice3 raw", "canonical_role": "simulation.result", "extensions": {}}],
+      "limitations": ["Native-endian binary doubles and ASCII Values are supported; unpadded plots are rejected.", "Only voltage and current dependent variable units are mapped."],
+      "extensions": {}
+    },
+    {
+      "driver_id": "org.openada.kernel.xyce-series",
+      "native_product_id": "org.openada.format.xyce-raw",
+      "backend_name": "Bounded Xyce ASCII Spice3 raw extractor",
+      "supported_analyses": ["dc", "ac", "tran"],
+      "analysis_commands": {"dc": "Select one request-bound DC plot and typed sweep axis.", "ac": "Select one request-bound complex AC plot and explicit Cartesian vector components.", "tran": "Select one request-bound transient plot and time axis."},
+      "native_actions": ["Verify exact artifact identity and parse one padded ASCII Spice3 Values plot.", "Bind axis through typed analysis and project exact dependent vector components."],
+      "artifact_bindings": [{"native_kind": "Xyce padded ASCII Spice3 raw", "canonical_role": "simulation.result", "extensions": {}}],
+      "limitations": ["Xyce binary raw and OP are not advertised by circuit.simulate/v1alpha2 and are rejected.", "Only voltage and current dependent variable units are mapped."],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["operation and assertion identities and truth table", "required circuit.simulate/v1alpha2 source and exact artifact binding", "closed selector, Cartesian component, unit, condition, and limit rules", "backend raw encodings, analysis plot selection, and axis mappings", "canonical normalized-series content and native lineage facts"],
+    "change_policy": "Any change to accepted formats, plot selection, component meaning, unit mapping, source proof, bound, digest, lineage, status, or normalized fact requires a new profile identifier or additive mapping with conformance evidence.",
+    "extensions": {}
+  },
+  "extensions": {}
+}
