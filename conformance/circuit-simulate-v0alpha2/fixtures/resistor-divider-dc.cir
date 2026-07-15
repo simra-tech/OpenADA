@@ -1,0 +1,6 @@
+OpenADA model-free resistor-divider DC sweep fixture
+VSWEEP in 0 DC 0
+RUP in out 1k
+RDOWN out 0 1k
+.dc VSWEEP 0 1 0.25
+.end

@@ -1,6 +1,6 @@
 ---
 name: review-circuit-simulation
-description: Review circuit-simulation evidence and recommend the next engineering action through OpenADA's backend-independent circuit.simulate contract. Use when assessing a SPICE transient run, deciding whether simulation evidence is trustworthy, comparing normalized evidence across supported open-source simulators, separating simulator completion from circuit-specification satisfaction, or routing an inconclusive simulation without relying on ngspice- or Xyce-specific commands.
+description: Review circuit-simulation evidence and recommend the next engineering action through OpenADA's backend-independent circuit.simulate contract. Use when assessing a SPICE operating-point, DC, AC, or transient run; deciding whether simulation evidence is trustworthy; comparing normalized evidence across supported open-source simulators; separating simulator completion from circuit-specification satisfaction; or routing an inconclusive simulation without relying on ngspice- or Xyce-specific commands.
 ---
 
 # Review Circuit Simulation
@@ -15,22 +15,24 @@ State the exact question before running anything. Keep these claims separate:
 
 1. **Execution:** Did the selected simulator run to completion?
 2. **Evidence validity:** Did the run produce fresh, structurally valid,
-   finite transient evidence under the shared operation profile?
+   finite evidence for the requested analysis under the shared operation profile?
 3. **Measurement:** What values can be extracted from that evidence?
 4. **Specification:** Do those measurements meet explicit limits?
 
-The current shared profile can establish the first two claims. It does not
-define measurements or circuit specifications. Require explicit measurement
-definitions, limits, units, corners, and model context before judging a design
-specification. Never upgrade valid simulation evidence into “the circuit
-works.”
+The simulation profile can establish the first two claims. Compose the separate
+typed measurement and specification operations only when their exact features
+are available. Require explicit measurement definitions, limits, units,
+corners, and model context before judging a design specification. Never upgrade
+valid simulation evidence into “the circuit works.”
 
 ## Check applicability
 
 Use this skill directly only when the request fits
-`openada.operation/circuit.simulate/v1alpha1`: one self-contained top-level
-transient analysis with no includes, measurements, print directives, control
-blocks, or additional analyses.
+`openada.operation/circuit.simulate/v1alpha2`: one self-contained top-level OP,
+DC, AC, or transient analysis with parseable closed parameters and no includes,
+measurements, print directives, control blocks, or additional analyses. Require
+`openada.feature/simulation.analysis.<type>/v1alpha1` from the selected driver;
+Xyce does not advertise OP.
 
 If the design falls outside that subset, report which construct is unsupported
 and route the task to a suitable OpenADA operation when one exists. Do not
@@ -76,7 +78,7 @@ Route the result as follows:
 
 | Result | Engineering interpretation | Next action |
 |---|---|---|
-| execution completed, engineering pass | Fresh finite transient evidence is valid | Extract only explicitly requested measurements, or define the next assertion |
+| execution completed, engineering pass | Fresh finite requested-analysis evidence is valid | Extract only explicitly requested measurements, or define the next assertion |
 | execution completed, engineering fail | Valid evidence supports the profile's engineering failure | Diagnose the reported convergence or waveform condition; do not switch tools automatically |
 | engineering unknown | Evidence is absent, stale, malformed, incomplete, or uninterpretable | Resolve the cited evidence or provenance gap and rerun into a fresh directory |
 | invalid request | The target is outside the shared profile or malformed | Correct the request without weakening the intended assertion |

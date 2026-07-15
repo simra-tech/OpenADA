@@ -1,4 +1,4 @@
 interface:
   display_name: "OpenADA"
   short_description: "Run EDA tools through agent-safe contracts"
-  default_prompt: "Use $openada to inspect this EDA workspace and return structured engineering evidence."
+  default_prompt: "Use $openada:openada to inspect this EDA workspace and return structured engineering evidence."

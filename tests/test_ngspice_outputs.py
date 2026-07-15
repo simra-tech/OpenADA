@@ -7,10 +7,12 @@ import struct
 from openada.engines.ngspice_outputs import (
     _BoundedLineReader,
     _validate_ascii_payload,
+    analysis_raw_counts,
     OutputValidation,
     ValidationLimits,
     validate_ngspice_raw,
     validate_ngspice_wrdata,
+    validate_xyce_raw,
 )
 
 
@@ -133,6 +135,87 @@ def test_raw_validator_accepts_complex_binary_and_ascii_values(tmp_path):
     assert result.metadata["value_count"] == 4
     assert result.metadata["numeric_scalar_count"] == 8
     assert all(plot["numeric_type"] == "complex" for plot in result.metadata["plots"])
+
+
+def test_request_binding_accepts_reviewed_backend_specific_nonaligned_ac_grids(
+    tmp_path,
+):
+    cases = (
+        (
+            "ngspice",
+            validate_ngspice_raw,
+            [10.0, 41.212853, 169.849925, 700.0],
+        ),
+        (
+            "xyce",
+            validate_xyce_raw,
+            [10.0, 31.6227766, 100.0, 316.227766],
+        ),
+    )
+    analysis = {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 2,
+        "start_hz": 10.0,
+        "stop_hz": 700.0,
+        "extensions": {},
+    }
+
+    for backend, validator, axis in cases:
+        raw = tmp_path / f"{backend}.raw"
+        raw.write_bytes(
+            _ascii_plot(
+                plotname="AC Analysis",
+                points=len(axis),
+                variables=[
+                    "frequency frequency",
+                    "v(in) voltage",
+                    "v(out) voltage",
+                ],
+                rows=[
+                    [f"({frequency:.10g},0)", "(1,0)", "(0.5,-0.5)"]
+                    for frequency in axis
+                ],
+                flags="complex",
+            )
+        )
+        validation = validator(raw)
+
+        assert validation.valid is True
+        assert analysis_raw_counts(
+            {"validation": validation.to_dict()}, analysis
+        ) == (4, 2, 16)
+
+
+def test_request_binding_treats_dc_stop_as_an_upper_limit(tmp_path):
+    axis = [0.1 + index * 0.5 for index in range(30)]
+    raw = tmp_path / "dc.raw"
+    raw.write_bytes(
+        _ascii_plot(
+            plotname="DC transfer characteristic",
+            points=len(axis),
+            variables=["v(v-sweep) voltage", "v(in) voltage", "v(out) voltage"],
+            rows=[
+                [f"{value:.17g}", f"{value:.17g}", f"{value / 2:.17g}"]
+                for value in axis
+            ],
+        )
+    )
+    validation = validate_ngspice_raw(raw)
+    analysis = {
+        "type": "dc",
+        "source_name": "VSWEEP",
+        "source_unit": "V",
+        "start": 0.1,
+        "stop": 15.0,
+        "step": 0.5,
+        "extensions": {},
+    }
+
+    assert validation.valid is True
+    assert analysis_raw_counts(
+        {"validation": validation.to_dict()}, analysis
+    ) == (30, 2, 60)
 
 
 def test_raw_validator_handles_unpadded_variable_dimensions(tmp_path):

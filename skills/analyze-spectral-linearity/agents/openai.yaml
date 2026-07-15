@@ -1,0 +1,4 @@
+interface:
+  display_name: "Analyze Spectral Linearity"
+  short_description: "Assess FFT, SFDR, and harmonic evidence"
+  default_prompt: "Use $openada:analyze-spectral-linearity to assess this waveform spectrum and its linearity metrics."

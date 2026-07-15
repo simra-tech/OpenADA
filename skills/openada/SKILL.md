@@ -98,9 +98,9 @@ openada simulate testbench.spice --workdir path/to/project \
   --output-dir evidence/simulation
 
 # typed same-intent transient profile through either reviewed built-in mapping
-openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend ngspice --output-dir evidence/shared-ngspice
-openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend xyce --output-dir evidence/shared-xyce
 
 # native control deck; declare every write/wrdata file relative to --workdir
@@ -134,10 +134,13 @@ openada rtl-check rtl/top.sv rtl/block.sv --top top --output-dir evidence/rtl
 Never substitute a generic DRC deck, LVS setup, PDK, model library, or top cell merely to obtain a passing result. Ask for the missing project-specific input.
 
 An explicit `--backend ngspice|xyce` selects the typed
-`openada.operation/circuit.simulate/v1alpha1` bridge. Its initial common subset
-is exactly one self-contained top-level `.tran` with parseable time arguments;
-it rejects includes, measurements, print directives, control blocks, and
-multiple analyses. Do not combine this path with legacy ngspice-only options.
+`openada.operation/circuit.simulate/v1alpha2` bridge. Its initial common subset
+is exactly one self-contained top-level `.op`, `.dc`, `.ac`, or `.tran` with
+parseable closed arguments. Require the selected driver's matching advertised
+feature: ngspice supports OP/DC/AC/TRAN; Xyce supports DC/AC/TRAN and rejects
+OP. The bridge rejects includes, measurements, print directives, control
+blocks, and multiple analyses. Do not combine this path with legacy
+ngspice-only options.
 Omitting `--backend` preserves the broader legacy ngspice batch/control
 interface. Scoped preflight also remains mapped to ngspice in this alpha; Xyce
 selection is explicit.

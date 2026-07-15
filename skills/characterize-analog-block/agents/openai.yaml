@@ -1,0 +1,4 @@
+interface:
+  display_name: "Characterize Analog Block"
+  short_description: "Plan evidence-driven analog characterization"
+  default_prompt: "Use $openada:characterize-analog-block to plan and review characterization of this analog block."

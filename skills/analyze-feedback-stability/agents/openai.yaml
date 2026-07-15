@@ -1,0 +1,4 @@
+interface:
+  display_name: "Analyze Feedback Stability"
+  short_description: "Assess loop stability with auditable evidence"
+  default_prompt: "Use $openada:analyze-feedback-stability to assess this feedback loop and route the next experiment."

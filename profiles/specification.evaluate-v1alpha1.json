@@ -1,0 +1,480 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/specification.evaluate/v1alpha1",
+    "title": "Typed specification evaluation",
+    "summary": "Evaluate one typed finite measurement against explicit unit-bearing lower and/or upper limits at exact declared operating conditions.",
+    "side_effect_mode": "read-only",
+    "target_kinds": ["typed-measurement"],
+    "locator_types": ["artifact", "uri", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/specification.satisfied/v1alpha1",
+    "statement": "The identified finite measurement satisfies every explicit inclusive or exclusive bound at operating conditions exactly matching the specification.",
+    "non_goals": [
+      "This assertion does not derive measurements, convert units, interpolate conditions, or infer omitted limits.",
+      "This assertion does not state that unlisted operating conditions, corners, samples, or specifications pass.",
+      "This assertion does not aggregate yield, optimize a design, or waive unavailable or unknown evidence.",
+      "This assertion does not upgrade a not-found or unknown measurement to engineering fail."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "The finite measured value and every limit use the same exact unit, every required condition exactly matches source evidence, and the value is inside every declared bound.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.evaluation.status is pass and data.evaluation.measured contains one finite value and explicit unit.",
+          "data.evaluation.conditions.status is matched with equal required_count and matched_count.",
+          "Every lower or upper comparison honors its explicit inclusive flag.",
+          "data.evaluation.source retains a canonical measurement digest and its normalized-series source identity."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Valid, unit-compatible, condition-matched evidence conclusively places the finite measured value outside at least one declared specification bound.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.evaluation.status is fail and conditions are matched.",
+          "A specification.limit.violated diagnostic identifies the violated lower or upper bound.",
+          "The signed limiting margin is zero or negative for an exclusive boundary or below zero for an inclusive boundary violation."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The measurement is not measured, a unit or condition is incompatible or unproven, source binding is invalid, or the specification request cannot justify pass or fail.",
+        "allowed_execution_statuses": ["completed", "invalid_request", "failed"],
+        "required_evidence": [
+          "data.evaluation.status is unknown.",
+          "At least one stable diagnostic identifies missing measurement evidence, invalid request, unit mismatch, condition mismatch, or source mismatch.",
+          "Unknown or not-found measurement input propagates to unknown and never becomes specification fail."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "specification.evaluate v1alpha1 request parameters",
+      "description": "One typed measurement record and one closed explicit-bound specification.",
+      "type": "object",
+      "required": ["measurement", "specification", "extensions"],
+      "properties": {
+        "measurement": {"$ref": "#/$defs/measurement"},
+        "specification": {"$ref": "#/$defs/specification"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "identifier": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+        "name": {"type": "string", "minLength": 1, "maxLength": 256},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 64},
+        "condition": {
+          "type": "object",
+          "required": ["name", "value", "unit"],
+          "properties": {
+            "name": {"$ref": "#/$defs/name"},
+            "value": {"type": ["number", "string", "boolean"], "minLength": 1, "maxLength": 256},
+            "unit": {"$ref": "#/$defs/unit"}
+          },
+          "additionalProperties": false
+        },
+        "lineage": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "binding"],
+          "properties": {
+            "operation": {"$ref": "#/$defs/name"},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"$ref": "#/$defs/identifier"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "binding": {"const": "unverified"}
+          },
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "series_sha256", "conditions_sha256", "conditions", "lineage"],
+          "properties": {
+            "operation": {"$ref": "#/$defs/name"},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"const": "measurement.source"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "series_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "conditions_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}},
+            "lineage": {"oneOf": [{"$ref": "#/$defs/lineage"}, {"type": "null"}]}
+          },
+          "additionalProperties": false
+        },
+        "location": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {"value": {"type": "number"}, "unit": {"$ref": "#/$defs/unit"}},
+          "additionalProperties": false
+        },
+        "algorithm": {
+          "type": "object",
+          "required": ["id", "version"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1, "maxLength": 256},
+            "version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "measurement": {
+          "type": "object",
+          "required": ["measurement_id", "kind", "status", "request_sha256", "value", "unit", "signal", "location", "algorithm", "sample_count", "source", "extensions"],
+          "properties": {
+            "measurement_id": {"$ref": "#/$defs/identifier"},
+            "kind": {"type": "string", "minLength": 1, "maxLength": 40},
+            "status": {"enum": ["measured", "not_found", "unknown"]},
+            "request_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+            "value": {"type": ["number", "null"]},
+            "unit": {"type": ["string", "null"], "maxLength": 64},
+            "signal": {"$ref": "#/$defs/name"},
+            "location": {"oneOf": [{"$ref": "#/$defs/location"}, {"type": "null"}]},
+            "algorithm": {"$ref": "#/$defs/algorithm"},
+            "sample_count": {"type": "integer", "minimum": 0, "maximum": 100000},
+            "source": {"$ref": "#/$defs/source"},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "allOf": [
+            {"if": {"properties": {"status": {"enum": ["measured", "not_found"]}}, "required": ["status"]}, "then": {"properties": {"request_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}},
+            {"if": {"properties": {"status": {"const": "measured"}}, "required": ["status"]}, "then": {"properties": {"value": {"type": "number"}, "unit": {"type": "string", "minLength": 1}}}},
+            {"if": {"properties": {"status": {"enum": ["not_found", "unknown"]}}, "required": ["status"]}, "then": {"properties": {"value": {"type": "null"}}}}
+          ],
+          "additionalProperties": false
+        },
+        "bound": {
+          "type": "object",
+          "required": ["value", "unit", "inclusive"],
+          "properties": {
+            "value": {"type": "number"},
+            "unit": {"$ref": "#/$defs/unit"},
+            "inclusive": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "limits": {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "lower": {"$ref": "#/$defs/bound"},
+            "upper": {"$ref": "#/$defs/bound"}
+          },
+          "additionalProperties": false
+        },
+        "specification": {
+          "type": "object",
+          "required": ["specification_id", "measurement_id", "limits", "conditions", "extensions"],
+          "properties": {
+            "specification_id": {"$ref": "#/$defs/identifier"},
+            "measurement_id": {"$ref": "#/$defs/identifier"},
+            "limits": {"$ref": "#/$defs/limits"},
+            "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "Every JSON number must be finite; NaN and infinity are invalid even if a permissive parser accepts them.",
+      "The specification and measurement identifiers must match exactly.",
+      "At least one lower or upper bound is required. If both exist, they must use the same exact unit and define a nonempty interval after inclusive flags are considered.",
+      "The measurement and every bound must use the same exact unit; v1alpha1 performs no conversion or dimensional inference.",
+      "Every required condition name must occur exactly once in measurement source evidence with the same JSON scalar type, value, and exact unit.",
+      "A measurement whose status is not_found or unknown propagates to specification unknown, never fail.",
+      "All extension objects are closed empty in v1alpha1."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "specification.evaluate v1alpha1 normalized result data",
+      "type": "object",
+      "required": ["protocol", "evaluation", "extensions"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/protocol"},
+        "evaluation": {"$ref": "#/$defs/evaluation"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "protocol": {
+          "type": "object",
+          "required": ["request_id", "operation_profile", "assertion_profile", "implementation_id", "implementation_version"],
+          "properties": {
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "operation_profile": {"const": "openada.operation/specification.evaluate/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/specification.satisfied/v1alpha1"},
+            "implementation_id": {"const": "org.openada.kernel.typed-evidence"},
+            "implementation_version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "conditionSummary": {
+          "type": "object",
+          "required": ["status", "required_count", "matched_count"],
+          "properties": {
+            "status": {"enum": ["matched", "not-established"]},
+            "required_count": {"type": "integer", "minimum": 0, "maximum": 64},
+            "matched_count": {"type": "integer", "minimum": 0, "maximum": 64}
+          },
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object",
+          "required": ["name", "value", "unit"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1, "maxLength": 256},
+            "value": {"type": ["number", "string", "boolean"], "minLength": 1, "maxLength": 256},
+            "unit": {"type": "string", "minLength": 1, "maxLength": 64}
+          },
+          "additionalProperties": false
+        },
+        "lineage": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "binding"],
+          "properties": {
+            "operation": {"type": "string", "minLength": 1, "maxLength": 256},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "binding": {"const": "unverified"}
+          },
+          "additionalProperties": false
+        },
+        "measurementSource": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "series_sha256", "conditions_sha256", "conditions", "lineage"],
+          "properties": {
+            "operation": {"type": "string", "minLength": 1, "maxLength": 256},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"const": "measurement.source"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "series_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "conditions_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}},
+            "lineage": {"oneOf": [{"$ref": "#/$defs/lineage"}, {"type": "null"}]}
+          },
+          "additionalProperties": false
+        },
+        "quantity": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {"value": {"type": "number"}, "unit": {"type": "string", "minLength": 1, "maxLength": 64}},
+          "additionalProperties": false
+        },
+        "limit": {
+          "type": "object",
+          "required": ["kind", "value", "unit", "inclusive"],
+          "properties": {
+            "kind": {"enum": ["lower", "upper"]},
+            "value": {"type": "number"},
+            "unit": {"type": "string", "minLength": 1, "maxLength": 64},
+            "inclusive": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "margin": {
+          "type": "object",
+          "required": ["value", "unit", "relative_to"],
+          "properties": {
+            "value": {"type": "number"},
+            "unit": {"type": "string", "minLength": 1, "maxLength": 64},
+            "relative_to": {"enum": ["lower", "upper"]}
+          },
+          "additionalProperties": false
+        },
+        "algorithm": {
+          "type": "object",
+          "required": ["id", "version"],
+          "properties": {
+            "id": {"const": "openada.algorithm/specification.closed-interval/v1"},
+            "version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "specificationBound": {
+          "type": "object",
+          "required": ["value", "unit", "inclusive"],
+          "properties": {
+            "value": {"type": "number"},
+            "unit": {"type": "string", "minLength": 1, "maxLength": 64},
+            "inclusive": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "specificationDefinition": {
+          "type": "object",
+          "required": ["specification_id", "measurement_id", "limits", "conditions", "extensions"],
+          "properties": {
+            "specification_id": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+            "measurement_id": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+            "limits": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 2,
+              "properties": {
+                "lower": {"$ref": "#/$defs/specificationBound"},
+                "upper": {"$ref": "#/$defs/specificationBound"}
+              },
+              "additionalProperties": false
+            },
+            "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "required": ["measurement_sha256", "measurement_source", "specification_sha256", "specification"],
+          "properties": {
+            "measurement_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "measurement_source": {"$ref": "#/$defs/measurementSource"},
+            "specification_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "specification": {"$ref": "#/$defs/specificationDefinition"}
+          },
+          "additionalProperties": false
+        },
+        "evaluation": {
+          "type": "object",
+          "required": ["specification_id", "measurement_id", "status", "measured", "limits", "conditions", "margin", "algorithm", "source", "extensions"],
+          "properties": {
+            "specification_id": {"type": ["string", "null"], "maxLength": 120},
+            "measurement_id": {"type": ["string", "null"], "maxLength": 120},
+            "status": {"enum": ["pass", "fail", "unknown"]},
+            "measured": {"oneOf": [{"$ref": "#/$defs/quantity"}, {"type": "null"}]},
+            "limits": {"type": "array", "maxItems": 2, "items": {"$ref": "#/$defs/limit"}},
+            "conditions": {"$ref": "#/$defs/conditionSummary"},
+            "margin": {"oneOf": [{"$ref": "#/$defs/margin"}, {"type": "null"}]},
+            "algorithm": {"$ref": "#/$defs/algorithm"},
+            "source": {"oneOf": [{"$ref": "#/$defs/source"}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.protocol.request_id", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Exact request correlation identity.", "extensions": {}},
+      {"path": "data.evaluation.status", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Specification pass, fail, or unknown without collapsing missing evidence into a violation.", "extensions": {}},
+      {"path": "data.evaluation.measured", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "Explicit finite measured value and unit used for a pass or fail comparison.", "extensions": {}},
+      {"path": "data.evaluation.limits", "type": "array", "required_for": ["pass", "fail", "unknown"], "description": "Explicit lower and/or upper values, units, and inclusive flags.", "extensions": {}},
+      {"path": "data.evaluation.conditions", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Exact required and matched operating-condition counts.", "extensions": {}},
+      {"path": "data.evaluation.margin", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "Signed distance to the limiting bound in the exact measurement unit.", "extensions": {}},
+      {"path": "data.evaluation.source", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "Canonical digests and complete normalized identities for both the typed measurement and specification definition.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {
+        "role": "specification.measurement",
+        "kind": "typed-measurement",
+        "required_for": ["pass", "fail"],
+        "freshness": "immutable-input",
+        "integrity": [
+          "Require a structurally complete typed measurement with finite value for pass or fail.",
+          "Retain a canonical SHA-256 digest over the complete measurement record and its normalized-series source digest chain.",
+          "Propagate not_found and unknown measurement status to specification unknown."
+        ],
+        "native_authority": "The supplied typed measurement is authoritative only for the explicitly identified quantity and normalized-series source; this operation does not reinterpret native EDA evidence.",
+        "extensions": {}
+      },
+      {
+        "role": "specification.definition",
+        "kind": "typed-specification",
+        "required_for": ["pass", "fail"],
+        "freshness": "immutable-input",
+        "integrity": [
+          "Require at least one explicit finite unit-bearing bound and exact measurement identifier.",
+          "Require unique bounded condition names with explicit scalar values and units.",
+          "Reject empty intervals and mixed bound units."
+        ],
+        "native_authority": "The caller-supplied closed specification definition is authoritative for this comparison only.",
+        "extensions": {}
+      }
+    ],
+    "integrity_rules": [
+      "Pass and fail both require a finite measured value, exact unit equality, exact condition binding, and valid nonempty limits.",
+      "An unavailable, not-found, malformed, unit-incompatible, or condition-incompatible measurement is unknown, not fail.",
+      "Every output retains the exact measurement digest, normalized-series source identity, complete specification definition, and specification digest used in the decision."
+    ],
+    "provenance_limitations": [
+      "The operation does not independently validate the upstream measurement algorithm or optional native-artifact lineage.",
+      "Exact string equality is used for units and conditions; v1alpha1 has no unit ontology or conversion service."
+    ],
+    "limits": {"max_log_bytes": 4000, "max_artifact_bytes": 1048576, "max_artifact_count": 2, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {"id": "openada.feature/specification.bound-evaluation/v1alpha1", "parameter_path": "specification.limits", "parameter_values": ["lower", "upper"], "request_effect": "Evaluate one or both explicit inclusive or exclusive bounds using exact measurement units.", "conformance_case": "Fixtures cover inclusive equality, exclusive equality, inside, below, above, empty intervals, and unit mismatch.", "extensions": {}},
+    {"id": "openada.feature/specification.condition-binding/v1alpha1", "parameter_path": "specification.conditions", "parameter_values": ["exact"], "request_effect": "Require every named operating condition to match the typed measurement source by exact JSON scalar type, value, and unit.", "conformance_case": "Fixtures cover exact match, missing condition, value mismatch, scalar-type mismatch, unit mismatch, and duplicate names.", "extensions": {}}
+  ],
+  "diagnostics": [
+    {"code": "specification.request.invalid", "severity": "error", "condition": "The closed request, identifier, bound, interval, condition, number, or extension shape is invalid.", "next_action": "Correct the explicit typed request; do not infer missing bounds or conditions.", "extensions": {}},
+    {"code": "specification.source.invalid", "severity": "error", "condition": "The typed measurement source identity, digest chain, condition list, or lineage shape is invalid.", "next_action": "Regenerate the typed measurement from valid normalized-series evidence.", "extensions": {}},
+    {"code": "specification.measurement.invalid", "severity": "error", "condition": "The supplied typed measurement record is structurally inconsistent or non-finite.", "next_action": "Produce a contract-valid measurement record before specification evaluation.", "extensions": {}},
+    {"code": "specification.measurement.mismatch", "severity": "error", "condition": "The specification measurement identifier does not match the supplied measurement.", "next_action": "Bind the exact intended measurement; do not compare a different quantity.", "extensions": {}},
+    {"code": "specification.measurement.unknown", "severity": "error", "condition": "The supplied measurement status is not_found or unknown and carries no finite value.", "next_action": "Produce a successful typed measurement; preserve specification status as unknown meanwhile.", "extensions": {}},
+    {"code": "specification.unit.mismatch", "severity": "error", "condition": "A bound or required condition unit differs from its measurement unit.", "next_action": "Supply exact matching units; v1alpha1 performs no implicit conversion.", "extensions": {}},
+    {"code": "specification.condition.unproven", "severity": "error", "condition": "A required operating condition is missing or does not exactly match measurement evidence.", "next_action": "Measure at the exact required condition or revise the explicit specification binding.", "extensions": {}},
+    {"code": "specification.limit.violated", "severity": "error", "condition": "Valid unit-compatible condition-matched evidence places the measurement outside a declared bound.", "next_action": "Treat this point as engineering fail and inspect the signed margin and design behavior.", "extensions": {}},
+    {"code": "specification.value.non_finite", "severity": "error", "condition": "Finite measurement and bound inputs produce a margin outside the finite JSON-number range.", "next_action": "Rescale through an explicitly declared unit conversion before evaluation; do not publish an infinite margin.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.kernel.typed-evidence",
+      "native_product_id": "org.openada.core.runtime",
+      "backend_name": "OpenADA deterministic typed-evidence kernel",
+      "supported_features": [
+        "openada.feature/specification.bound-evaluation/v1alpha1",
+        "openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/specification.bound-evaluation/v1alpha1", "implementation": "Exact-unit inclusive or exclusive lower and upper comparison with signed limiting margin, algorithm version 1.0.0.", "output_fact_paths": ["data.evaluation.status", "data.evaluation.limits", "data.evaluation.margin"], "extensions": {}},
+        {"feature_id": "openada.feature/specification.condition-binding/v1alpha1", "implementation": "Exact condition-name, JSON scalar-type, value, and unit subset binding, algorithm version 1.0.0.", "output_fact_paths": ["data.evaluation.status", "data.evaluation.conditions"], "extensions": {}}
+      ],
+      "native_actions": [
+        "Validate one closed typed measurement and one closed explicit-bound specification without executing native EDA software.",
+        "Require exact measurement identifier, unit, and operating-condition bindings before comparison.",
+        "Evaluate every explicit inclusive or exclusive lower and upper bound and compute the signed limiting margin.",
+        "Preserve pass, fail, and unknown boundaries and retain the complete measurement source digest chain."
+      ],
+      "artifact_bindings": [
+        {"native_kind": "typed measurement record", "canonical_role": "specification.measurement", "extensions": {}},
+        {"native_kind": "closed explicit-bound specification", "canonical_role": "specification.definition", "extensions": {}}
+      ],
+      "limitations": [
+        "v1alpha1 supports only scalar lower and upper bounds; nominal tolerances, formulas, probabilistic limits, and cross-measurement relationships require separate versioned features.",
+        "No unit conversion, condition interpolation, waiver logic, or implicit unknown-to-fail policy is provided."
+      ],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": [
+      "operation and assertion identifiers and pass/fail/unknown truth table",
+      "typed measurement, explicit-bound specification, and exact-condition request shapes",
+      "unit equality, interval, inclusive-boundary, condition-binding, and unknown-propagation semantics",
+      "normalized evaluation status, signed margin, measurement and specification digest chain, and diagnostic meanings",
+      "algorithm and feature identifiers and implementation version"
+    ],
+    "change_policy": "Any change to bound semantics, unit or condition matching, unknown propagation, margin definition, request shape, normalized fact, or status classification requires a new operation or feature identifier. Compatible implementation corrections require a new implementation version and conformance record.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

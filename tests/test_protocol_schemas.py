@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import hashlib
 import json
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
+
+from openada import __version__
 
 
 ROOT = Path(__file__).parents[1]
@@ -14,7 +17,14 @@ TEMPLATE_DIR = ROOT / "conformance" / "driver-kit"
 REQUEST_SCHEMA_PATH = SCHEMA_DIR / "request-v0alpha1.schema.json"
 DRIVER_MANIFEST_SCHEMA_PATH = SCHEMA_DIR / "driver-manifest-v0alpha1.schema.json"
 OPERATION_PROFILE_SCHEMA_PATH = SCHEMA_DIR / "operation-profile-v0alpha1.schema.json"
-SIMULATION_PROFILE_PATH = ROOT / "profiles" / "circuit.simulate-v1alpha1.json"
+LEGACY_SIMULATION_PROFILE_PATH = (
+    ROOT / "profiles" / "circuit.simulate-v1alpha1.json"
+)
+LEGACY_SIMULATION_CONFORMANCE_PATH = ROOT / "conformance" / "circuit-simulate"
+SIMULATION_CONFORMANCE_PATH = (
+    ROOT / "conformance" / "circuit-simulate-v0alpha2" / "manifest.json"
+)
+SIMULATION_PROFILE_PATH = ROOT / "profiles" / "circuit.simulate-v1alpha2.json"
 REQUEST_TEMPLATE_PATH = TEMPLATE_DIR / "request.template.json"
 DRIVER_MANIFEST_TEMPLATE_PATH = TEMPLATE_DIR / "driver-manifest.template.json"
 
@@ -75,13 +85,50 @@ def test_circuit_simulate_profile_and_embedded_closed_schemas_validate() -> None
         "org.openada.driver.ngspice",
         "org.openada.driver.xyce",
     }
-    assert all(
-        item["supported_analyses"] == ["tran"] for item in mappings.values()
-    )
+    assert mappings["org.openada.driver.ngspice"]["supported_analyses"] == [
+        "op",
+        "dc",
+        "ac",
+        "tran",
+    ]
+    assert mappings["org.openada.driver.xyce"]["supported_analyses"] == [
+        "dc",
+        "ac",
+        "tran",
+    ]
     assert all(
         set(item["analysis_commands"]) == set(item["supported_analyses"])
         for item in mappings.values()
     )
+
+
+def test_transient_only_profile_remains_byte_identical() -> None:
+    assert hashlib.sha256(LEGACY_SIMULATION_PROFILE_PATH.read_bytes()).hexdigest() == (
+        "d2ccec8fada281b3ff2abc95443d9ef40d0cf6f259b329ec92fb283c1d79825f"
+    )
+
+
+def test_transient_only_conformance_bundle_remains_byte_identical() -> None:
+    expected = {
+        "manifest.json": "bb63b66ed525c7553aacc8ad7ca09ef2e1f00acdfc10b29635fb87c874dfc208",
+        "run.py": "11804d41fd033d846b9fddd9b3ab0b8ac432e562408dbcdffdc2abf82199a9ed",
+        "verify.py": "4fe283dc67e4e0e2eb1746a588e6a3c1b39077fadfb272724ab8f16f910ea940",
+    }
+
+    assert {
+        name: hashlib.sha256(
+            (LEGACY_SIMULATION_CONFORMANCE_PATH / name).read_bytes()
+        ).hexdigest()
+        for name in expected
+    } == expected
+
+
+def test_current_simulation_conformance_binds_the_release_driver_version() -> None:
+    manifest = _load(SIMULATION_CONFORMANCE_PATH)
+
+    assert {
+        backend["driver_version"] for backend in manifest["backends"].values()
+    } == {__version__}
 
 
 def test_protocol_templates_validate_with_format_checking() -> None:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openada"
-version = "0.2.0"
+version = "0.3.0"
 description = "Open agent-EDA contracts and deterministic drivers for open-source EDA tools"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -52,11 +52,15 @@ where = ["src"]
 "share/openada/schemas" = [
   "schemas/driver-manifest-v0alpha1.schema.json",
   "schemas/operation-profile-v0alpha1.schema.json",
+  "schemas/operation-profile-v0alpha2.schema.json",
   "schemas/request-v0alpha1.schema.json",
   "schemas/result-v0alpha1.schema.json",
 ]
 "share/openada/profiles" = [
   "profiles/circuit.simulate-v1alpha1.json",
+  "profiles/circuit.simulate-v1alpha2.json",
+  "profiles/result.measure-v1alpha1.json",
+  "profiles/specification.evaluate-v1alpha1.json",
 ]
 
 [tool.pytest.ini_options]

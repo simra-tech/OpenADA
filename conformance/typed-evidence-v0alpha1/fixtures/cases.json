@@ -1,0 +1,528 @@
+{
+  "schema": "openada.typed-evidence-conformance-cases/v0alpha1",
+  "series": {
+    "pulse": {
+      "source": {
+        "operation": "simulation.result.normalize",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "artifact_role": "measurement.source",
+        "lineage": {
+          "operation": "circuit.simulate",
+          "request_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+          "artifact_role": "simulation.result",
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "binding": "unverified"
+        }
+      },
+      "axis": {
+        "name": "time",
+        "unit": "s",
+        "values": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+      },
+      "signals": [
+        {
+          "name": "v(out)",
+          "unit": "V",
+          "values": [0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0]
+        }
+      ],
+      "conditions": [
+        {"name": "temperature", "value": 27.0, "unit": "degC"},
+        {"name": "corner", "value": "tt", "unit": "1"}
+      ],
+      "extensions": {}
+    },
+    "settling": {
+      "source": {
+        "operation": "simulation.result.normalize",
+        "request_id": "22222222-2222-4222-8222-222222222222",
+        "artifact_role": "measurement.source",
+        "lineage": {
+          "operation": "circuit.simulate",
+          "request_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+          "artifact_role": "simulation.result",
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "binding": "unverified"
+        }
+      },
+      "axis": {
+        "name": "time",
+        "unit": "s",
+        "values": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+      },
+      "signals": [
+        {
+          "name": "v(out)",
+          "unit": "V",
+          "values": [0.0, 0.7, 0.96, 1.01, 1.0, 1.0]
+        }
+      ],
+      "conditions": [
+        {"name": "temperature", "value": 27.0, "unit": "degC"},
+        {"name": "corner", "value": "tt", "unit": "1"}
+      ],
+      "extensions": {}
+    }
+  },
+  "measurement_cases": [
+    {
+      "id": "sample-at-linear",
+      "feature_id": "openada.feature/measurement.sample-at/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000001",
+      "series": "pulse",
+      "measurement": {
+        "measurement_id": "output.sample-at",
+        "kind": "sample_at",
+        "signal": "v(out)",
+        "parameters": {
+          "at": {"value": 0.5, "unit": "s"},
+          "interpolation": "linear"
+        },
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "pass",
+        "measurement_status": "measured",
+        "value": 0.25,
+        "unit": "V",
+        "location": {"value": 0.5, "unit": "s"},
+        "sample_count": 1,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "minimum-first-location",
+      "feature_id": "openada.feature/measurement.minimum/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000002",
+      "series": "pulse",
+      "measurement": {
+        "measurement_id": "output.minimum",
+        "kind": "minimum",
+        "signal": "v(out)",
+        "parameters": {},
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "pass",
+        "measurement_status": "measured",
+        "value": 0.0,
+        "unit": "V",
+        "location": {"value": 0.0, "unit": "s"},
+        "sample_count": 7,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "maximum-first-location",
+      "feature_id": "openada.feature/measurement.maximum/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000003",
+      "series": "pulse",
+      "measurement": {
+        "measurement_id": "output.maximum",
+        "kind": "maximum",
+        "signal": "v(out)",
+        "parameters": {},
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "pass",
+        "measurement_status": "measured",
+        "value": 1.0,
+        "unit": "V",
+        "location": {"value": 2.0, "unit": "s"},
+        "sample_count": 7,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "mean-stable-summation",
+      "feature_id": "openada.feature/measurement.mean/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000004",
+      "series": "pulse",
+      "measurement": {
+        "measurement_id": "output.mean",
+        "kind": "mean",
+        "signal": "v(out)",
+        "parameters": {},
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "pass",
+        "measurement_status": "measured",
+        "value": 0.5,
+        "unit": "V",
+        "location": null,
+        "sample_count": 7,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "rms-finite-series",
+      "feature_id": "openada.feature/measurement.rms/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000005",
+      "series": "pulse",
+      "measurement": {
+        "measurement_id": "output.rms",
+        "kind": "rms",
+        "signal": "v(out)",
+        "parameters": {},
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "pass",
+        "measurement_status": "measured",
+        "value": 0.6267831705280087,
+        "unit": "V",
+        "location": null,
+        "sample_count": 7,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "crossing-rising",
+      "feature_id": "openada.feature/measurement.crossing/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000006",
+      "series": "pulse",
+      "measurement": {
+        "measurement_id": "output.crossing",
+        "kind": "crossing",
+        "signal": "v(out)",
+        "parameters": {
+          "threshold": {"value": 0.75, "unit": "V"},
+          "direction": "rising",
+          "occurrence": 1
+        },
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "pass",
+        "measurement_status": "measured",
+        "value": 1.5,
+        "unit": "s",
+        "location": {"value": 1.5, "unit": "s"},
+        "sample_count": 7,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "rise-time-first-pulse",
+      "feature_id": "openada.feature/measurement.rise-time/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000007",
+      "series": "pulse",
+      "measurement": {
+        "measurement_id": "output.rise-time",
+        "kind": "rise_time",
+        "signal": "v(out)",
+        "parameters": {
+          "lower_threshold": {"value": 0.2, "unit": "V"},
+          "upper_threshold": {"value": 0.8, "unit": "V"},
+          "occurrence": 1
+        },
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "pass",
+        "measurement_status": "measured",
+        "value": 1.2,
+        "unit": "s",
+        "location": {"value": 1.6, "unit": "s"},
+        "sample_count": 7,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "fall-time-first-pulse",
+      "feature_id": "openada.feature/measurement.fall-time/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000008",
+      "series": "pulse",
+      "measurement": {
+        "measurement_id": "output.fall-time",
+        "kind": "fall_time",
+        "signal": "v(out)",
+        "parameters": {
+          "lower_threshold": {"value": 0.2, "unit": "V"},
+          "upper_threshold": {"value": 0.8, "unit": "V"},
+          "occurrence": 1
+        },
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "pass",
+        "measurement_status": "measured",
+        "value": 1.2,
+        "unit": "s",
+        "location": {"value": 3.6, "unit": "s"},
+        "sample_count": 7,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "settling-time-held",
+      "feature_id": "openada.feature/measurement.settling-time/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000009",
+      "series": "settling",
+      "measurement": {
+        "measurement_id": "output.settling-time",
+        "kind": "settling_time",
+        "signal": "v(out)",
+        "parameters": {
+          "target": {"value": 1.0, "unit": "V"},
+          "tolerance": {"value": 0.05, "unit": "V"},
+          "reference": {"value": 0.0, "unit": "s"},
+          "hold_for": {"value": 2.0, "unit": "s"}
+        },
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "pass",
+        "measurement_status": "measured",
+        "value": 2.0,
+        "unit": "s",
+        "location": {"value": 2.0, "unit": "s"},
+        "sample_count": 6,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "crossing-not-found",
+      "feature_id": "openada.feature/measurement.crossing/v1alpha1",
+      "request_id": "10000000-0000-4000-8000-000000000010",
+      "series": "pulse",
+      "measurement": {
+        "measurement_id": "output.crossing-absent",
+        "kind": "crossing",
+        "signal": "v(out)",
+        "parameters": {
+          "threshold": {"value": 2.0, "unit": "V"},
+          "direction": "rising",
+          "occurrence": 1
+        },
+        "extensions": {}
+      },
+      "expected": {
+        "engineering_status": "fail",
+        "measurement_status": "not_found",
+        "value": null,
+        "unit": "s",
+        "location": null,
+        "sample_count": 7,
+        "diagnostic_code": "measurement.value.not_found"
+      }
+    }
+  ],
+  "specification_cases": [
+    {
+      "id": "inside-inclusive-bounds",
+      "feature_ids": [
+        "openada.feature/specification.bound-evaluation/v1alpha1",
+        "openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "request_id": "20000000-0000-4000-8000-000000000001",
+      "measurement_case": "maximum-first-location",
+      "measurement_mutation": null,
+      "specification": {
+        "specification_id": "output.maximum.limit",
+        "measurement_id": "output.maximum",
+        "limits": {
+          "lower": {"value": 0.9, "unit": "V", "inclusive": true},
+          "upper": {"value": 1.1, "unit": "V", "inclusive": true}
+        },
+        "conditions": [
+          {"name": "temperature", "value": 27.0, "unit": "degC"},
+          {"name": "corner", "value": "tt", "unit": "1"}
+        ],
+        "extensions": {}
+      },
+      "expected": {
+        "execution_status": "completed",
+        "engineering_status": "pass",
+        "evaluation_status": "pass",
+        "diagnostic_code": null,
+        "conditions": {"status": "matched", "required_count": 2, "matched_count": 2},
+        "margin": {"value": 0.09999999999999998, "unit": "V", "relative_to": "lower"}
+      }
+    },
+    {
+      "id": "upper-bound-violated",
+      "feature_ids": [
+        "openada.feature/specification.bound-evaluation/v1alpha1",
+        "openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "request_id": "20000000-0000-4000-8000-000000000002",
+      "measurement_case": "maximum-first-location",
+      "measurement_mutation": null,
+      "specification": {
+        "specification_id": "output.maximum.limit",
+        "measurement_id": "output.maximum",
+        "limits": {
+          "lower": {"value": 0.9, "unit": "V", "inclusive": true},
+          "upper": {"value": 0.95, "unit": "V", "inclusive": true}
+        },
+        "conditions": [
+          {"name": "temperature", "value": 27.0, "unit": "degC"},
+          {"name": "corner", "value": "tt", "unit": "1"}
+        ],
+        "extensions": {}
+      },
+      "expected": {
+        "execution_status": "completed",
+        "engineering_status": "fail",
+        "evaluation_status": "fail",
+        "diagnostic_code": "specification.limit.violated",
+        "conditions": {"status": "matched", "required_count": 2, "matched_count": 2},
+        "margin": {"value": -0.050000000000000044, "unit": "V", "relative_to": "upper"}
+      }
+    },
+    {
+      "id": "exclusive-boundary-violated",
+      "feature_ids": [
+        "openada.feature/specification.bound-evaluation/v1alpha1",
+        "openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "request_id": "20000000-0000-4000-8000-000000000003",
+      "measurement_case": "maximum-first-location",
+      "measurement_mutation": null,
+      "specification": {
+        "specification_id": "output.maximum.limit",
+        "measurement_id": "output.maximum",
+        "limits": {
+          "lower": {"value": 0.9, "unit": "V", "inclusive": true},
+          "upper": {"value": 1.0, "unit": "V", "inclusive": false}
+        },
+        "conditions": [
+          {"name": "temperature", "value": 27.0, "unit": "degC"},
+          {"name": "corner", "value": "tt", "unit": "1"}
+        ],
+        "extensions": {}
+      },
+      "expected": {
+        "execution_status": "completed",
+        "engineering_status": "fail",
+        "evaluation_status": "fail",
+        "diagnostic_code": "specification.limit.violated",
+        "conditions": {"status": "matched", "required_count": 2, "matched_count": 2},
+        "margin": {"value": 0.0, "unit": "V", "relative_to": "upper"}
+      }
+    },
+    {
+      "id": "not-found-measurement-is-unknown",
+      "feature_ids": [
+        "openada.feature/specification.bound-evaluation/v1alpha1",
+        "openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "request_id": "20000000-0000-4000-8000-000000000004",
+      "measurement_case": "crossing-not-found",
+      "measurement_mutation": null,
+      "specification": {
+        "specification_id": "output.crossing-absent.limit",
+        "measurement_id": "output.crossing-absent",
+        "limits": {
+          "upper": {"value": 3.0, "unit": "s", "inclusive": true}
+        },
+        "conditions": [
+          {"name": "temperature", "value": 27.0, "unit": "degC"},
+          {"name": "corner", "value": "tt", "unit": "1"}
+        ],
+        "extensions": {}
+      },
+      "expected": {
+        "execution_status": "completed",
+        "engineering_status": "unknown",
+        "evaluation_status": "unknown",
+        "diagnostic_code": "specification.measurement.unknown",
+        "conditions": {"status": "not-established", "required_count": 2, "matched_count": 0},
+        "margin": null
+      }
+    },
+    {
+      "id": "bound-unit-mismatch-is-unknown",
+      "feature_ids": [
+        "openada.feature/specification.bound-evaluation/v1alpha1",
+        "openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "request_id": "20000000-0000-4000-8000-000000000005",
+      "measurement_case": "maximum-first-location",
+      "measurement_mutation": null,
+      "specification": {
+        "specification_id": "output.maximum.limit",
+        "measurement_id": "output.maximum",
+        "limits": {
+          "upper": {"value": 1100.0, "unit": "mV", "inclusive": true}
+        },
+        "conditions": [
+          {"name": "temperature", "value": 27.0, "unit": "degC"},
+          {"name": "corner", "value": "tt", "unit": "1"}
+        ],
+        "extensions": {}
+      },
+      "expected": {
+        "execution_status": "completed",
+        "engineering_status": "unknown",
+        "evaluation_status": "unknown",
+        "diagnostic_code": "specification.unit.mismatch",
+        "conditions": {"status": "not-established", "required_count": 2, "matched_count": 0},
+        "margin": null
+      }
+    },
+    {
+      "id": "condition-value-mismatch-is-unknown",
+      "feature_ids": [
+        "openada.feature/specification.bound-evaluation/v1alpha1",
+        "openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "request_id": "20000000-0000-4000-8000-000000000006",
+      "measurement_case": "maximum-first-location",
+      "measurement_mutation": null,
+      "specification": {
+        "specification_id": "output.maximum.limit",
+        "measurement_id": "output.maximum",
+        "limits": {
+          "upper": {"value": 1.1, "unit": "V", "inclusive": true}
+        },
+        "conditions": [
+          {"name": "temperature", "value": 125.0, "unit": "degC"},
+          {"name": "corner", "value": "tt", "unit": "1"}
+        ],
+        "extensions": {}
+      },
+      "expected": {
+        "execution_status": "completed",
+        "engineering_status": "unknown",
+        "evaluation_status": "unknown",
+        "diagnostic_code": "specification.condition.unproven",
+        "conditions": {"status": "not-established", "required_count": 2, "matched_count": 0},
+        "margin": null
+      }
+    },
+    {
+      "id": "tampered-condition-digest-is-invalid",
+      "feature_ids": [
+        "openada.feature/specification.bound-evaluation/v1alpha1",
+        "openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "request_id": "20000000-0000-4000-8000-000000000007",
+      "measurement_case": "maximum-first-location",
+      "measurement_mutation": "replace-first-condition-with-125",
+      "specification": {
+        "specification_id": "output.maximum.limit",
+        "measurement_id": "output.maximum",
+        "limits": {
+          "upper": {"value": 1.1, "unit": "V", "inclusive": true}
+        },
+        "conditions": [
+          {"name": "temperature", "value": 125.0, "unit": "degC"},
+          {"name": "corner", "value": "tt", "unit": "1"}
+        ],
+        "extensions": {}
+      },
+      "expected": {
+        "execution_status": "invalid_request",
+        "engineering_status": "unknown",
+        "evaluation_status": "unknown",
+        "diagnostic_code": "specification.source.invalid",
+        "conditions": {"status": "not-established", "required_count": 0, "matched_count": 0},
+        "margin": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Assess PVT and Yield"
+  short_description: "Assess PVT campaigns and raw yield honestly"
+  default_prompt: "Use $openada:assess-pvt-and-yield to evaluate this PVT or statistical campaign without hiding unknown points."

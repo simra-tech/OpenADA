@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 
+import pytest
 from jsonschema import Draft202012Validator, FormatChecker
 
 from openada.cli import main
@@ -11,14 +15,14 @@ from openada.cli import main
 
 ROOT = Path(__file__).parents[1]
 PROFILE = json.loads(
-    (ROOT / "profiles" / "circuit.simulate-v1alpha1.json").read_text(
+    (ROOT / "profiles" / "circuit.simulate-v1alpha2.json").read_text(
         encoding="utf-8"
     )
 )
 FIXTURE = (
     ROOT
     / "conformance"
-    / "circuit-simulate"
+    / "circuit-simulate-v0alpha2"
     / "fixtures"
     / "rc-transient.cir"
 )
@@ -40,6 +44,13 @@ VALID_RAW = (
     "\t0.8646647168\n"
     "\n"
 ).encode("ascii")
+
+
+def _assert_profile_data(payload: dict) -> None:
+    Draft202012Validator(
+        PROFILE["normalized_result"]["data_schema"],
+        format_checker=FormatChecker(),
+    ).validate(payload["data"])
 
 
 def _fake_simulator(path: Path, *, backend: str) -> None:
@@ -108,12 +119,8 @@ def test_same_request_semantics_produce_the_same_normalized_decision_facts(
         for backend in ("ngspice", "xyce")
     }
 
-    validator = Draft202012Validator(
-        PROFILE["normalized_result"]["data_schema"],
-        format_checker=FormatChecker(),
-    )
     for backend, payload in results.items():
-        validator.validate(payload["data"])
+        _assert_profile_data(payload)
         assert payload["engineering"]["status"] == "pass"
         assert payload["data"]["protocol"]["driver_id"].endswith(backend)
         assert payload["data"]["extensions"]["org.openada"]["backend"] == backend
@@ -145,7 +152,10 @@ def test_explicit_profile_never_silently_ignores_legacy_ngspice_options(
     assert exit_code == 2
     assert payload["execution"]["status"] == "invalid_request"
     assert payload["engineering"]["status"] == "unknown"
-    assert payload["diagnostics"][0]["code"] == "request.invalid"
+    assert payload["diagnostics"][0]["code"] == "simulation.request.invalid"
+    assert payload["data"]["protocol"]["driver_id"] == "org.openada.driver.xyce"
+    assert payload["data"]["evidence"]["request_binding"] == "not-established"
+    _assert_profile_data(payload)
 
 
 def test_legacy_hidden_tool_selector_cannot_conflict_with_explicit_backend(
@@ -165,4 +175,95 @@ def test_legacy_hidden_tool_selector_cannot_conflict_with_explicit_backend(
 
     assert exit_code == 2
     assert payload["execution"]["status"] == "invalid_request"
-    assert payload["diagnostics"][0]["code"] == "request.invalid"
+    assert payload["diagnostics"][0]["code"] == "simulation.request.invalid"
+    assert payload["data"]["protocol"]["driver_id"] == "org.openada.driver.xyce"
+    _assert_profile_data(payload)
+
+
+def test_shared_profile_argparse_failure_keeps_the_v1alpha2_data_shape(
+    capsys,
+) -> None:
+    exit_code = main(
+        [
+            "simulate",
+            str(FIXTURE),
+            "--backend=ngspice",
+            "--analysis",
+            "ac",
+            "--points",
+            "not-an-integer",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 2
+    assert payload["operation"] == "simulate"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "simulation.request.invalid"
+    assert payload["data"]["protocol"] == {
+        "request_id": payload["data"]["protocol"]["request_id"],
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+        "driver_id": "org.openada.driver.ngspice",
+        "driver_version": payload["provenance"]["openada_version"],
+    }
+    assert payload["data"]["analysis"]["type"] == "ac"
+    assert payload["data"]["analysis"]["completion"] == "unproven"
+    assert payload["data"]["extensions"]["org.openada"]["native_data"] == {}
+    _assert_profile_data(payload)
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected_driver"),
+    [
+        (["simulate", "--backend", "ngspice"], "org.openada.driver.ngspice"),
+        (
+            ["simulate", str(FIXTURE), "--backend", "not-a-backend"],
+            None,
+        ),
+    ],
+)
+def test_shared_profile_selection_survives_other_argparse_failures(
+    argv,
+    expected_driver,
+    capsys,
+) -> None:
+    exit_code = main(argv)
+    payload = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 2
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "simulation.request.invalid"
+    assert payload["data"]["protocol"]["driver_id"] == expected_driver
+    _assert_profile_data(payload)
+
+
+def test_shared_profile_rejects_a_fifo_without_blocking(tmp_path: Path) -> None:
+    source = tmp_path / "deck.cir"
+    os.mkfifo(source)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "openada.cli",
+            "--compact",
+            "simulate",
+            str(source),
+            "--backend",
+            "ngspice",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=3,
+    )
+    payload = json.loads(completed.stdout)
+
+    assert completed.returncode == 2
+    assert completed.stderr == ""
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["data"]["evidence"]["request_binding"] == "not-established"
+    _assert_profile_data(payload)

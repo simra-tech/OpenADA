@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import hashlib
+import os
 from pathlib import Path
 import platform
-from typing import Any, Iterable
+import stat
+from typing import Any, BinaryIO, Iterable, Iterator
 
 from . import __version__
 from .process import ProcessResult
@@ -14,6 +17,87 @@ from .process import ProcessResult
 
 SCHEMA_VERSION = "openada.result/v0alpha1"
 MAX_CONTRACT_TEXT_CHARS = 4_000
+
+
+class FileRecordError(ValueError):
+    """Base class for unsafe or unstable file-record capture."""
+
+
+class FileRecordLimitError(FileRecordError):
+    """Raised before a file record can hash beyond its declared byte ceiling."""
+
+    def __init__(self, path: Path, maximum_bytes: int, observed_bytes: int) -> None:
+        self.path = path
+        self.maximum_bytes = maximum_bytes
+        self.observed_bytes = observed_bytes
+        super().__init__(
+            f"{path} is {observed_bytes} bytes; the limit is {maximum_bytes} bytes"
+        )
+
+
+class FileRecordUnavailableError(FileRecordError):
+    """Raised when a path cannot be opened as a nonblocking regular file."""
+
+
+class FileRecordChangedError(FileRecordError):
+    """Raised when an opened file or its path identity changes during capture."""
+
+
+def _file_identity(value: os.stat_result) -> tuple[int, int, int, int, int, int]:
+    return (
+        value.st_dev,
+        value.st_ino,
+        value.st_mode,
+        value.st_size,
+        value.st_mtime_ns,
+        value.st_ctime_ns,
+    )
+
+
+@contextmanager
+def stable_regular_file(
+    path: str | Path,
+) -> Iterator[tuple[BinaryIO, os.stat_result]]:
+    """Open one regular file without blocking on a replaced FIFO and verify identity."""
+
+    file_path = Path(path).resolve()
+    flags = (
+        os.O_RDONLY
+        | getattr(os, "O_CLOEXEC", 0)
+        | getattr(os, "O_NONBLOCK", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+    )
+    try:
+        descriptor = os.open(file_path, flags)
+    except OSError as exc:
+        raise FileRecordUnavailableError(
+            f"{file_path} cannot be opened as a regular file"
+        ) from exc
+    try:
+        opened = os.fstat(descriptor)
+        if not stat.S_ISREG(opened.st_mode):
+            raise FileRecordUnavailableError(f"{file_path} is not a regular file")
+        handle = os.fdopen(descriptor, "rb", closefd=False)
+        try:
+            yield handle, opened
+        finally:
+            handle.close()
+        try:
+            finished = os.fstat(descriptor)
+            current = os.stat(file_path, follow_symlinks=False)
+        except OSError as exc:
+            raise FileRecordChangedError(
+                f"{file_path} changed during bounded capture"
+            ) from exc
+        if (
+            _file_identity(finished) != _file_identity(opened)
+            or _file_identity(current) != _file_identity(opened)
+        ):
+            raise FileRecordChangedError(
+                f"{file_path} changed during bounded capture"
+            )
+    finally:
+        os.close(descriptor)
 
 
 def _timestamp() -> str:
@@ -49,22 +133,47 @@ def diagnostic(
     return item
 
 
-def file_record(path: str | Path, *, kind: str, role: str) -> dict[str, Any]:
+def file_record(
+    path: str | Path,
+    *,
+    kind: str,
+    role: str,
+    maximum_bytes: int | None = None,
+) -> dict[str, Any]:
     file_path = Path(path).resolve()
+    if maximum_bytes is not None and maximum_bytes < 0:
+        raise ValueError("maximum_bytes must be non-negative")
     record: dict[str, Any] = {
         "kind": kind,
         "role": role,
         "path": str(file_path),
-        "exists": file_path.is_file(),
+        "exists": False,
     }
-    if not file_path.is_file():
-        return record
-
     digest = hashlib.sha256()
-    with file_path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    record["bytes"] = file_path.stat().st_size
+    observed_bytes = 0
+    try:
+        with stable_regular_file(file_path) as (handle, opened):
+            record["exists"] = True
+            if maximum_bytes is not None and opened.st_size > maximum_bytes:
+                raise FileRecordLimitError(file_path, maximum_bytes, opened.st_size)
+            while True:
+                read_size = 1024 * 1024
+                if maximum_bytes is not None:
+                    read_size = min(read_size, maximum_bytes - observed_bytes + 1)
+                chunk = handle.read(read_size)
+                if not chunk:
+                    break
+                observed_bytes += len(chunk)
+                if maximum_bytes is not None and observed_bytes > maximum_bytes:
+                    raise FileRecordLimitError(file_path, maximum_bytes, observed_bytes)
+                digest.update(chunk)
+            if observed_bytes != opened.st_size:
+                raise FileRecordChangedError(
+                    f"{file_path} changed during bounded capture"
+                )
+    except FileRecordUnavailableError:
+        return record
+    record["bytes"] = observed_bytes
     record["sha256"] = digest.hexdigest()
     return record
 

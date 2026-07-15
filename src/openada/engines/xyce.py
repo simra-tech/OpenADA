@@ -1,4 +1,4 @@
-"""Deterministic Xyce driver for the initial shared transient profile."""
+"""Deterministic Xyce driver for shared DC, AC, and transient analyses."""
 
 from __future__ import annotations
 
@@ -6,13 +6,24 @@ import os
 from pathlib import Path
 import re
 import tempfile
+from typing import Mapping
 
-from ..contract import diagnostic, file_record, result, static_execution, tool_record
+from ..contract import (
+    FileRecordError,
+    FileRecordLimitError,
+    diagnostic,
+    file_record,
+    result,
+    static_execution,
+    stable_regular_file,
+    tool_record,
+)
 from ..discovery import DiscoveryManager
 from ..process import run_process
-from .ngspice_outputs import validate_xyce_raw
+from .ngspice_outputs import analysis_raw_counts, validate_xyce_raw
 from .spice import (
     MAX_LOG_BYTES,
+    MAX_SOURCE_BYTES,
     MAX_SOURCE_LINE_BYTES,
     _capture_file,
     _move_regular_output,
@@ -74,18 +85,31 @@ def _inspect_deck(path: Path) -> dict[str, object]:
     unsupported: list[str] = []
     include_detected = False
     line_too_long = False
+    source_too_large = False
+    source_unstable = False
     try:
-        with path.open("rb") as handle:
+        with stable_regular_file(path) as (handle, _):
             line_number = 0
+            source_bytes = 0
             while True:
                 raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
                 if not raw_line:
+                    break
+                source_bytes += len(raw_line)
+                if source_bytes > MAX_SOURCE_BYTES:
+                    source_too_large = True
                     break
                 line_number += 1
                 if len(raw_line) > MAX_SOURCE_LINE_BYTES and not raw_line.endswith(b"\n"):
                     line_too_long = True
                     while raw_line and not raw_line.endswith(b"\n"):
                         raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
+                        source_bytes += len(raw_line)
+                        if source_bytes > MAX_SOURCE_BYTES:
+                            source_too_large = True
+                            break
+                    if source_too_large:
+                        break
                     continue
                 # SPICE-family parsers reserve the physical first line for the
                 # circuit title even when it resembles a dot directive.
@@ -103,46 +127,20 @@ def _inspect_deck(path: Path) -> dict[str, object]:
                 unsupported_match = _UNSUPPORTED_DIRECTIVE_RE.match(line)
                 if unsupported_match:
                     unsupported.append(unsupported_match.group(1).lower())
-    except OSError:
-        pass
+    except FileRecordError:
+        source_unstable = True
     return {
         "analyses": analyses,
         "include_detected": include_detected,
         "unsupported_directives": sorted(set(unsupported)),
         "line_too_long": line_too_long,
+        "source_too_large": source_too_large,
+        "source_unstable": source_unstable,
     }
 
 
-def _raw_transient_counts(capture: dict) -> tuple[int, int, int] | None:
-    validation = capture.get("validation")
-    metadata = validation.get("metadata") if isinstance(validation, dict) else None
-    plots = metadata.get("plots") if isinstance(metadata, dict) else None
-    if not isinstance(plots, list) or len(plots) != 1:
-        return None
-    plot = plots[0]
-    if not isinstance(plot, dict):
-        return None
-    if str(plot.get("plotname", "")).strip().casefold() != "transient analysis":
-        return None
-    if plot.get("numeric_type") != "real" or plot.get("unpadded") is not False:
-        return None
-    points = plot.get("points")
-    variables = plot.get("variables")
-    if (
-        isinstance(points, bool)
-        or not isinstance(points, int)
-        or points <= 0
-        or isinstance(variables, bool)
-        or not isinstance(variables, int)
-        or variables < 2
-    ):
-        return None
-    dependent_variables = variables - 1
-    return points, dependent_variables, points * dependent_variables
-
-
 class XyceDriver:
-    """Run one model-free, top-level transient analysis through serial Xyce."""
+    """Run one model-free, top-level DC, AC, or transient analysis."""
 
     def __init__(
         self,
@@ -162,15 +160,16 @@ class XyceDriver:
         *,
         workdir: str | Path | None = None,
         timeout: float = 120.0,
+        analysis: Mapping[str, object] | None = None,
     ) -> dict:
         source = Path(spice_file).expanduser().resolve()
         out_dir = Path(output_dir).expanduser().resolve()
         run_dir = Path(workdir).expanduser().resolve() if workdir else source.parent
         info = self.discovery.inspect_tool("xyce")
         tool = tool_record("xyce", path=self.binary, version=info["version"])
-        inputs = [file_record(source, kind="spice-netlist", role="input")]
+        requested_analysis = dict(analysis) if isinstance(analysis, Mapping) else None
         base_data: dict[str, object] = {
-            "analysis": {"type": "tran"},
+            "analysis": requested_analysis,
             "converged": None,
             "inputs_stable": False,
             "working_directory": str(run_dir),
@@ -178,14 +177,41 @@ class XyceDriver:
             "transitive_inputs_enumerated": False,
             "environment_overrides": {"XYCE_NO_TRACKING": "1"},
         }
+        try:
+            inputs = [
+                file_record(
+                    source,
+                    kind="spice-netlist",
+                    role="input",
+                    maximum_bytes=MAX_SOURCE_BYTES,
+                )
+            ]
+        except FileRecordLimitError:
+            return _invalid(
+                tool,
+                [],
+                summary="The SPICE input exceeds the bounded source limit.",
+                code="input.too_large",
+                message=f"The top-level SPICE input must not exceed {MAX_SOURCE_BYTES} bytes.",
+                data=base_data,
+            )
+        except FileRecordError:
+            return _invalid(
+                tool,
+                [],
+                summary="The SPICE input changed during bounded capture.",
+                code="input.changed",
+                message=f"The top-level SPICE input was not stable: {source}",
+                data=base_data,
+            )
 
-        if not source.is_file():
+        if not inputs[0]["exists"]:
             return _invalid(
                 tool,
                 inputs,
-                summary="The SPICE input does not exist.",
+                summary="The SPICE input is not a readable regular file.",
                 code="input.missing",
-                message=f"File not found: {source}",
+                message=f"Regular file not found: {source}",
                 data=base_data,
             )
         if not run_dir.is_dir():
@@ -209,6 +235,24 @@ class XyceDriver:
 
         deck = _inspect_deck(source)
         base_data["deck_inspection"] = deck
+        if deck["source_unstable"]:
+            return _invalid(
+                tool,
+                inputs,
+                summary="The SPICE input changed or became non-regular during inspection.",
+                code="input.changed",
+                message="The top-level SPICE input could not be inspected as one stable regular file.",
+                data=base_data,
+            )
+        if deck["source_too_large"]:
+            return _invalid(
+                tool,
+                inputs,
+                summary="The SPICE input exceeds the bounded source limit.",
+                code="input.too_large",
+                message=f"The top-level SPICE input must not exceed {MAX_SOURCE_BYTES} bytes.",
+                data=base_data,
+            )
         if deck["line_too_long"]:
             return _invalid(
                 tool,
@@ -246,15 +290,31 @@ class XyceDriver:
                 data=base_data,
             )
         analyses = deck["analyses"]
-        if analyses != ["tran"]:
+        if len(analyses) != 1 or analyses[0] not in {"dc", "ac", "tran"}:
             return _invalid(
                 tool,
                 inputs,
-                summary="The initial Xyce mapping requires exactly one transient analysis.",
+                summary="The Xyce raw-evidence mapping requires one DC, AC, or transient analysis.",
                 code="simulation.analysis.unsupported",
                 message=(
-                    "Expected exactly one top-level .tran directive and no other analysis; "
+                    "Expected exactly one top-level .dc, .ac, or .tran directive; "
                     f"observed {analyses!r}."
+                ),
+                data=base_data,
+            )
+        analysis_type = analyses[0]
+        if requested_analysis is None:
+            requested_analysis = {"type": analysis_type}
+            base_data["analysis"] = requested_analysis
+        elif requested_analysis.get("type") != analysis_type:
+            return _invalid(
+                tool,
+                inputs,
+                summary="The Xyce analysis request conflicts with the deck.",
+                code="simulation.request.invalid",
+                message=(
+                    f"Requested {requested_analysis.get('type')!r} but observed one "
+                    f"top-level .{analysis_type} directive."
                 ),
                 data=base_data,
             )
@@ -350,9 +410,13 @@ class XyceDriver:
 
         transcript = "\n".join((process.stdout, process.stderr, log_text))
         try:
-            with source.open("r", encoding="utf-8", errors="replace") as source_handle:
-                source_title = source_handle.readline(MAX_SOURCE_LINE_BYTES + 1).strip()
-        except OSError:
+            with stable_regular_file(source) as (source_handle, _):
+                source_title = (
+                    source_handle.readline(MAX_SOURCE_LINE_BYTES + 1)
+                    .decode("utf-8", errors="replace")
+                    .strip()
+                )
+        except FileRecordError:
             source_title = ""
         terminal_nonconvergence = None
         native_error = None
@@ -369,14 +433,27 @@ class XyceDriver:
             if native_error is None and _NATIVE_ERROR_RE.search(line):
                 native_error = line.strip()[:1_000]
 
-        current_input = file_record(source, kind="spice-netlist", role="input")
-        inputs_stable = all(
-            current_input.get(field) == inputs[0].get(field)
-            for field in ("exists", "bytes", "sha256")
-        )
+        try:
+            current_input = file_record(
+                source,
+                kind="spice-netlist",
+                role="input",
+                maximum_bytes=MAX_SOURCE_BYTES,
+            )
+        except FileRecordError:
+            inputs_stable = False
+        else:
+            inputs_stable = all(
+                current_input.get(field) == inputs[0].get(field)
+                for field in ("exists", "bytes", "sha256")
+            )
         base_data["inputs_stable"] = inputs_stable
 
-        counts = _raw_transient_counts(raw_capture) if raw_capture["status"] == "valid" else None
+        counts = (
+            analysis_raw_counts(raw_capture, requested_analysis)
+            if raw_capture["status"] == "valid"
+            else None
+        )
         valid_log = log_capture["status"] == "valid"
         valid_raw = raw_capture["status"] == "valid" and counts is not None
         captures_complete = not process.stdout_truncated and not process.stderr_truncated
@@ -394,6 +471,7 @@ class XyceDriver:
             process.status == "completed"
             and process.exit_code == 1
             and terminal_nonconvergence is not None
+            and native_error is None
             and valid_log
             and inputs_stable
             and captures_complete
@@ -447,7 +525,7 @@ class XyceDriver:
                     "simulation.result.missing"
                     if raw_capture["status"] == "missing"
                     else "simulation.result.malformed",
-                    "The Xyce ASCII raw file is not complete transient evidence "
+                    f"The Xyce ASCII raw file is not complete {analysis_type} evidence "
                     f"({raw_capture['status']}).",
                 )
             )
@@ -470,10 +548,15 @@ class XyceDriver:
 
         if conclusive_nonconvergence:
             engineering_status = "fail"
-            summary = "Xyce produced fresh native evidence of terminal transient non-convergence."
+            summary = (
+                f"Xyce produced fresh native evidence of terminal {analysis_type} "
+                "non-convergence."
+            )
         elif passed:
             engineering_status = "pass"
-            summary = "Xyce produced fresh, structurally valid transient simulation evidence."
+            summary = (
+                f"Xyce produced fresh, structurally valid {analysis_type} simulation evidence."
+            )
         else:
             engineering_status = "unknown"
             summary = (

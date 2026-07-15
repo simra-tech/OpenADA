@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
 import pytest
 
 from openada.contract import (
+    FileRecordLimitError,
     MAX_CONTRACT_TEXT_CHARS,
     SCHEMA_VERSION,
     bounded_text,
@@ -112,6 +114,42 @@ def test_file_record_hashes_native_artifact(tmp_path):
     assert record["exists"] is True
     assert record["bytes"] == len(b"openada\n")
     assert record["sha256"] == hashlib.sha256(b"openada\n").hexdigest()
+
+
+def test_file_record_rejects_an_oversized_file_before_hashing(tmp_path):
+    artifact = tmp_path / "oversized.bin"
+    artifact.write_bytes(b"openada")
+
+    with pytest.raises(FileRecordLimitError) as exc_info:
+        file_record(
+            artifact,
+            kind="test",
+            role="input",
+            maximum_bytes=6,
+        )
+
+    assert exc_info.value.path == artifact.resolve()
+    assert exc_info.value.maximum_bytes == 6
+    assert exc_info.value.observed_bytes == 7
+
+
+def test_file_record_rejects_a_fifo_without_blocking(tmp_path):
+    artifact = tmp_path / "source.fifo"
+    os.mkfifo(artifact)
+
+    record = file_record(
+        artifact,
+        kind="test",
+        role="input",
+        maximum_bytes=1024,
+    )
+
+    assert record == {
+        "kind": "test",
+        "role": "input",
+        "path": str(artifact.resolve()),
+        "exists": False,
+    }
 
 
 def test_contract_explanatory_text_is_bounded():

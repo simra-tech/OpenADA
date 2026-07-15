@@ -81,6 +81,68 @@ class _InvalidOutput(Exception):
         self.reason = reason
 
 
+@dataclass(slots=True)
+class _AxisSummary:
+    """Streaming sweep-axis facts used for exact request binding."""
+
+    first: float | None = None
+    last: float | None = None
+    previous: float | None = None
+    linear_step: float | None = None
+    log_ratio: float | None = None
+    strictly_increasing: bool = True
+    linear_uniform: bool = True
+    log_uniform: bool = True
+
+    def add(self, value: float) -> None:
+        if self.first is None:
+            self.first = value
+            self.last = value
+            self.previous = value
+            return
+        assert self.previous is not None
+        if value <= self.previous:
+            self.strictly_increasing = False
+        delta = value - self.previous
+        if self.linear_step is None:
+            self.linear_step = delta
+        elif not math.isclose(
+            delta,
+            self.linear_step,
+            rel_tol=1e-8,
+            abs_tol=max(1e-15, abs(self.linear_step) * 1e-12),
+        ):
+            self.linear_uniform = False
+        if self.previous > 0 and value > 0:
+            ratio = value / self.previous
+            if self.log_ratio is None:
+                self.log_ratio = ratio
+            elif not math.isclose(
+                ratio,
+                self.log_ratio,
+                rel_tol=1e-8,
+                abs_tol=1e-12,
+            ):
+                self.log_uniform = False
+        else:
+            self.log_uniform = False
+        self.previous = value
+        self.last = value
+
+    def metadata(self) -> dict[str, object] | None:
+        if self.first is None or self.last is None:
+            return None
+        return {
+            "axis_first": self.first,
+            "axis_last": self.last,
+            "axis_strictly_increasing": self.strictly_increasing,
+            "axis_linear_step": (
+                self.linear_step if self.linear_uniform else None
+            ),
+            "axis_log_ratio": self.log_ratio if self.log_uniform else None,
+        }
+
+
 class _BoundedLineReader:
     def __init__(self, handle: BinaryIO, max_line_bytes: int, reason_prefix: str) -> None:
         self.handle = handle
@@ -241,7 +303,7 @@ def _parse_dimensions(token: bytes, *, points: int) -> int:
     return length
 
 
-def _parse_variable_line(line: bytes, *, index: int, points: int) -> int:
+def _parse_variable_line(line: bytes, *, index: int, points: int) -> tuple[int, str]:
     fields = line.strip().split()
     if len(fields) < 3 or fields[0] != str(index).encode("ascii"):
         raise _InvalidOutput("raw.variable_table_invalid")
@@ -252,7 +314,8 @@ def _parse_variable_line(line: bytes, *, index: int, points: int) -> int:
         raise _InvalidOutput("raw.variable_dimensions_invalid")
     if dimension_tokens:
         length = _parse_dimensions(dimension_tokens[0], points=points)
-    return length
+    name = fields[1].decode("utf-8", errors="replace")
+    return length, name
 
 
 def _parse_real(value: bytes) -> float:
@@ -292,13 +355,14 @@ def _validate_ascii_payload(
     variable_lengths: list[int],
     complex_values: bool,
     unpadded: bool,
-) -> None:
+) -> dict[str, object] | None:
     active_values = len(variable_lengths)
     expirations: dict[int, int] = {}
     if unpadded:
         for length in variable_lengths:
             expirations[length] = expirations.get(length, 0) + 1
 
+    axis = _AxisSummary()
     for point_index in range(points):
         if unpadded:
             active_values -= expirations.get(point_index, 0)
@@ -310,18 +374,29 @@ def _validate_ascii_payload(
         if not first_match or first_match.group(1) != str(point_index).encode("ascii"):
             raise _InvalidOutput("raw.ascii_point_index_invalid")
         value_parser = _parse_complex if complex_values else _parse_real
-        value_parser(first_match.group(2))
+        axis_value = value_parser(first_match.group(2))
+        if complex_values:
+            assert isinstance(axis_value, tuple)
+            axis_real, _axis_imaginary = axis_value
+        else:
+            assert isinstance(axis_value, float)
+            axis_real = axis_value
+        axis.add(axis_real)
 
         for _ in range(active_values - 1):
             value_parser(_read_nonempty_line(reader))
+    return axis.metadata()
 
 
 def _validate_binary_payload(
     handle: BinaryIO,
     *,
     scalar_count: int,
-) -> None:
+    scalars_per_point: int | None,
+) -> dict[str, object] | None:
     remaining = scalar_count * 8
+    scalar_index = 0
+    axis = _AxisSummary()
     while remaining:
         chunk_size = min(remaining, 65_536)
         chunk = handle.read(chunk_size)
@@ -330,7 +405,13 @@ def _validate_binary_payload(
         for (value,) in struct.iter_unpack("=d", chunk):
             if not math.isfinite(value):
                 raise _InvalidOutput("raw.non_finite_value")
+            if scalars_per_point is not None:
+                offset = scalar_index % scalars_per_point
+                if offset == 0:
+                    axis.add(value)
+            scalar_index += 1
         remaining -= chunk_size
+    return axis.metadata()
 
 
 def _next_plot_start(reader: _BoundedLineReader) -> bytes:
@@ -345,14 +426,20 @@ def _parse_raw_plot(
     first_line: bytes,
     *,
     limits: ValidationLimits,
+    continuation: bool,
 ) -> tuple[dict[str, object], int, int]:
     header_bytes = len(first_line)
     if header_bytes > limits.max_raw_header_bytes:
         raise _InvalidOutput("raw.header_too_large")
-    if _header_key(first_line.partition(b":")[0]) != b"title" or b":" not in first_line:
+    first_key = _header_key(first_line.partition(b":")[0])
+    if b":" not in first_line or (
+        first_key != b"title" and not (continuation and first_key == b"plotname")
+    ):
         raise _InvalidOutput("raw.plot_start_invalid")
 
     required: dict[bytes, bytes] = {}
+    if first_key == b"plotname":
+        required[b"plotname"] = first_line.partition(b":")[2].strip()
     while True:
         line = reader.readline()
         if not line:
@@ -403,6 +490,7 @@ def _parse_raw_plot(
     unpadded = b"unpadded" in flags
 
     variable_lengths: list[int] = []
+    variable_names: list[str] = []
     for index in range(variables):
         line = reader.readline()
         if not line:
@@ -410,7 +498,9 @@ def _parse_raw_plot(
         header_bytes += len(line)
         if header_bytes > limits.max_raw_header_bytes:
             raise _InvalidOutput("raw.header_too_large")
-        variable_lengths.append(_parse_variable_line(line, index=index, points=points))
+        length, name = _parse_variable_line(line, index=index, points=points)
+        variable_lengths.append(length)
+        variable_names.append(name)
 
     marker = reader.readline()
     if not marker:
@@ -430,10 +520,19 @@ def _parse_raw_plot(
         raise _InvalidOutput("raw.value_count_too_large")
 
     encoding = "binary" if marker_name == b"binary" else "ascii"
+    axis_metadata: dict[str, object] | None
     if encoding == "binary":
-        _validate_binary_payload(reader.handle, scalar_count=scalar_count)
+        axis_metadata = _validate_binary_payload(
+            reader.handle,
+            scalar_count=scalar_count,
+            scalars_per_point=(
+                variables * (2 if complex_values else 1)
+                if not unpadded
+                else None
+            ),
+        )
     else:
-        _validate_ascii_payload(
+        axis_metadata = _validate_ascii_payload(
             reader,
             points=points,
             variable_lengths=variable_lengths,
@@ -449,7 +548,10 @@ def _parse_raw_plot(
         "points": points,
         "values": value_count,
         "unpadded": unpadded,
+        "independent_variable": variable_names[0],
     }
+    if axis_metadata is not None:
+        plot.update(axis_metadata)
     return plot, value_count, scalar_count
 
 
@@ -492,6 +594,7 @@ def _validate_spice3_raw(
                     reader,
                     first_line,
                     limits=limits,
+                    continuation=bool(plots),
                 )
                 if value_count > limits.max_numeric_values - plot_values:
                     raise _InvalidOutput("raw.value_count_too_large")
@@ -600,6 +703,216 @@ def validate_xyce_raw(
         limits=limits,
         dir_fd=dir_fd,
     )
+
+
+def _analysis_plot_matches(plotname: object, analysis_type: str) -> bool:
+    normalized = " ".join(str(plotname).strip().casefold().split())
+    if analysis_type == "op":
+        return normalized in {"operating point", "dc operating point"}
+    if analysis_type == "dc":
+        return normalized == "dc transfer characteristic" or (
+            normalized.startswith("dc sweep:")
+            and normalized.endswith("dc transfer characteristic")
+        )
+    if analysis_type == "ac":
+        return normalized == "ac analysis"
+    if analysis_type == "tran":
+        return normalized == "transient analysis"
+    return False
+
+
+def _axis_matches(observed: object, expected: object) -> bool:
+    if isinstance(observed, bool) or not isinstance(observed, (int, float)):
+        return False
+    if isinstance(expected, bool) or not isinstance(expected, (int, float)):
+        return False
+    observed_value = float(observed)
+    expected_value = float(expected)
+    return math.isfinite(observed_value) and math.isfinite(expected_value) and math.isclose(
+        observed_value,
+        expected_value,
+        rel_tol=1e-8,
+        abs_tol=max(1e-15, abs(expected_value) * 1e-12),
+    )
+
+
+def _finite_float(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        parsed = float(value)
+    except (OverflowError, ValueError):
+        return None
+    return parsed if math.isfinite(parsed) else None
+
+
+def _grid_intervals(span_in_steps: float) -> int | None:
+    if not math.isfinite(span_in_steps) or span_in_steps < 0:
+        return None
+    nearest = round(span_in_steps)
+    if math.isclose(span_in_steps, nearest, rel_tol=1e-11, abs_tol=1e-11):
+        return int(nearest)
+    return math.floor(span_in_steps)
+
+
+def _expected_dc_axis(
+    analysis: dict[str, object],
+) -> tuple[int, float, float] | None:
+    start = _finite_float(analysis.get("start"))
+    stop = _finite_float(analysis.get("stop"))
+    step = _finite_float(analysis.get("step"))
+    if start is None or stop is None or step is None or stop <= start or step <= 0:
+        return None
+    intervals = _grid_intervals((stop - start) / step)
+    if intervals is None:
+        return None
+    return intervals + 1, start + intervals * step, step
+
+
+def _expected_ac_axis(
+    analysis: dict[str, object],
+    *,
+    format_name: object,
+) -> tuple[int, float, float | None, float | None] | None:
+    start = _finite_float(analysis.get("start_hz"))
+    stop = _finite_float(analysis.get("stop_hz"))
+    points = analysis.get("points")
+    sweep = analysis.get("sweep")
+    if (
+        start is None
+        or stop is None
+        or start <= 0
+        or stop <= start
+        or isinstance(points, bool)
+        or not isinstance(points, int)
+        or points <= 0
+        or sweep not in {"lin", "dec", "oct"}
+    ):
+        return None
+    if sweep == "lin":
+        if points == 1:
+            return 1, start, None, None
+        return points, stop, (stop - start) / (points - 1), None
+    base = 10.0 if sweep == "dec" else 2.0
+    intervals = _grid_intervals(points * math.log(stop / start, base))
+    if intervals is None:
+        return None
+    if intervals == 0:
+        return 1, start, None, None
+    if sweep == "dec" and format_name == "ngspice-raw":
+        # ngspice chooses the floor-derived point count but redistributes DEC
+        # points uniformly in log space so the final point lands on stop.
+        ratio = (stop / start) ** (1.0 / intervals)
+        return intervals + 1, stop, None, ratio
+    ratio = base ** (1.0 / points)
+    return intervals + 1, start * (ratio**intervals), None, ratio
+
+
+def _normalized_axis_name(value: object) -> str:
+    return "".join(character for character in str(value).casefold() if character.isalnum())
+
+
+def analysis_raw_counts(
+    capture: dict[str, object],
+    analysis: dict[str, object],
+) -> tuple[int, int, int] | None:
+    """Bind one validated raw plot to a closed circuit.simulate analysis.
+
+    Structural validation proves that every retained numeric scalar is finite.
+    This second, deliberately narrow check selects the requested native plot,
+    rejects a mismatched numeric representation, and binds DC/AC sweep bounds
+    to the typed request.
+    """
+
+    validation = capture.get("validation")
+    metadata = validation.get("metadata") if isinstance(validation, dict) else None
+    plots = metadata.get("plots") if isinstance(metadata, dict) else None
+    analysis_type = analysis.get("type")
+    if not isinstance(plots, list) or analysis_type not in {"op", "dc", "ac", "tran"}:
+        return None
+    matching = [
+        plot
+        for plot in plots
+        if isinstance(plot, dict)
+        and _analysis_plot_matches(plot.get("plotname"), str(analysis_type))
+    ]
+    if len(matching) != 1:
+        return None
+    plot = matching[0]
+    points = plot.get("points")
+    variables = plot.get("variables")
+    numeric_type = plot.get("numeric_type")
+    if (
+        isinstance(points, bool)
+        or not isinstance(points, int)
+        or points <= 0
+        or isinstance(variables, bool)
+        or not isinstance(variables, int)
+        or plot.get("unpadded") is not False
+        or numeric_type not in {"real", "complex"}
+    ):
+        return None
+    if analysis_type == "ac":
+        if numeric_type != "complex" or variables < 2:
+            return None
+        expected = _expected_ac_axis(
+            analysis,
+            format_name=metadata.get("format"),
+        )
+        if expected is None:
+            return None
+        expected_points, expected_last, expected_step, expected_ratio = expected
+        if points != expected_points or plot.get("axis_strictly_increasing") is not True:
+            return None
+        if _normalized_axis_name(plot.get("independent_variable")) != "frequency":
+            return None
+        if not _axis_matches(plot.get("axis_first"), analysis.get("start_hz")):
+            return None
+        if not _axis_matches(plot.get("axis_last"), expected_last):
+            return None
+        if expected_step is not None and not _axis_matches(
+            plot.get("axis_linear_step"), expected_step
+        ):
+            return None
+        if expected_ratio is not None and not _axis_matches(
+            plot.get("axis_log_ratio"), expected_ratio
+        ):
+            return None
+    elif analysis_type == "dc":
+        if numeric_type != "real" or variables < 2:
+            return None
+        expected = _expected_dc_axis(analysis)
+        if expected is None:
+            return None
+        expected_points, expected_last, expected_step = expected
+        if points != expected_points or plot.get("axis_strictly_increasing") is not True:
+            return None
+        source_name = _normalized_axis_name(analysis.get("source_name"))
+        axis_name = _normalized_axis_name(plot.get("independent_variable"))
+        if not source_name or (axis_name != "sweep" and not axis_name.endswith(source_name)):
+            return None
+        if not _axis_matches(plot.get("axis_first"), analysis.get("start")):
+            return None
+        if not _axis_matches(plot.get("axis_last"), expected_last):
+            return None
+        if expected_points > 1 and not _axis_matches(
+            plot.get("axis_linear_step"), expected_step
+        ):
+            return None
+    elif analysis_type == "tran":
+        if numeric_type != "real" or variables < 2:
+            return None
+        if _normalized_axis_name(plot.get("independent_variable")) != "time":
+            return None
+        if points > 1 and plot.get("axis_strictly_increasing") is not True:
+            return None
+    else:
+        if numeric_type != "real" or points != 1 or variables < 1:
+            return None
+
+    dependent_variables = variables if analysis_type == "op" else variables - 1
+    scalar_width = 2 if numeric_type == "complex" else 1
+    return points, dependent_variables, points * dependent_variables * scalar_width
 
 
 def _wrdata_number(token: bytes) -> float | None:
@@ -746,6 +1059,7 @@ __all__ = [
     "DEFAULT_LIMITS",
     "OutputValidation",
     "ValidationLimits",
+    "analysis_raw_counts",
     "validate_ngspice_raw",
     "validate_ngspice_wrdata",
     "validate_xyce_raw",

@@ -9,16 +9,17 @@ from uuid import UUID
 import pytest
 
 from openada.cli import main
+from openada.engines.spice import MAX_SOURCE_BYTES
 from openada.engines.xyce import XyceDriver
 
 
-OPERATION_PROFILE = "openada.operation/circuit.simulate/v1alpha1"
+OPERATION_PROFILE = "openada.operation/circuit.simulate/v1alpha2"
 ASSERTION_PROFILE = "openada.assertion/simulation.evidence.valid/v1alpha1"
 XYCE_DRIVER_ID = "org.openada.driver.xyce"
 PUBLIC_TRANSIENT_FIXTURE = (
     Path(__file__).resolve().parents[1]
     / "conformance"
-    / "circuit-simulate"
+    / "circuit-simulate-v0alpha2"
     / "fixtures"
     / "rc-transient.cir"
 )
@@ -181,6 +182,32 @@ def test_xyce_terminal_nonconvergence_is_engineering_fail(tmp_path: Path) -> Non
     assert "simulation.analysis.non_convergent" in _diagnostic_codes(payload)
 
 
+def test_xyce_conflicting_native_error_prevents_nonconvergence_classification(
+    tmp_path: Path,
+) -> None:
+    binary = tmp_path / "Xyce"
+    _write_fake_xyce(
+        binary,
+        write_raw=False,
+        log=(
+            "Time step too small near step number: 12 Exiting transient loop.\n"
+            "Error: conflicting native failure\n"
+        ),
+        exit_code=1,
+    )
+    source = _transient_source(tmp_path)
+
+    payload = XyceDriver(str(binary)).simulate(source, tmp_path / "evidence")
+
+    assert payload["execution"]["status"] == "completed"
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["data"]["converged"] is None
+    assert {
+        "simulation.analysis.non_convergent",
+        "simulation.native_error",
+    }.issubset(_diagnostic_codes(payload))
+
+
 def test_xyce_nonzero_parse_error_is_unknown_not_engineering_fail(tmp_path: Path) -> None:
     binary = tmp_path / "Xyce"
     _write_fake_xyce(
@@ -199,6 +226,22 @@ def test_xyce_nonzero_parse_error_is_unknown_not_engineering_fail(tmp_path: Path
     assert payload["data"]["converged"] is None
     assert "simulation.analysis.unproven" in _diagnostic_codes(payload)
     assert "simulation.analysis.non_convergent" not in _diagnostic_codes(payload)
+
+
+def test_xyce_rejects_oversized_source_before_launch(tmp_path: Path) -> None:
+    source = _transient_source(tmp_path)
+    with source.open("ab") as handle:
+        handle.truncate(MAX_SOURCE_BYTES + 1)
+
+    payload = XyceDriver("/does/not/matter").simulate(
+        source,
+        tmp_path / "evidence",
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["execution"]["command"] == []
+    assert payload["inputs"] == []
+    assert _diagnostic_codes(payload) == {"input.too_large"}
 
 
 @pytest.mark.parametrize(
@@ -240,13 +283,11 @@ def test_xyce_end_marker_cannot_upgrade_missing_or_malformed_raw_to_pass(
     [
         "",
         ".op\n",
-        ".dc VSTEP 0 1 0.1\n",
-        ".ac dec 10 1 1e6\n",
         ".tran 100n 2u\n.ac dec 10 1 1e6\n",
     ],
-    ids=["missing", "op", "dc", "ac", "multiple"],
+    ids=["missing", "op", "multiple"],
 )
-def test_xyce_rejects_analysis_outside_initial_transient_capability(
+def test_xyce_rejects_analysis_without_complete_raw_evidence_mapping(
     tmp_path: Path,
     analysis: str,
 ) -> None:

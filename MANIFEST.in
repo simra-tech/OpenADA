@@ -1,7 +1,7 @@
 include CONTRIBUTING.md
 include SECURITY.md
 recursive-include bin *
-recursive-include conformance *.md *.json *.py
+recursive-include conformance *.cir *.md *.json *.py
 recursive-include docs *.md
 recursive-include evaluation *.md *.json *.py
 include fixtures/smoke/smoke_hdl.sv

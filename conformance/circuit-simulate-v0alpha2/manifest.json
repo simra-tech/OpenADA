@@ -1,0 +1,290 @@
+{
+  "schema": "openada.circuit-simulate-conformance/v0alpha2",
+  "id": "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2",
+  "contracts": {
+    "operation_profile": {
+      "id": "openada.operation/circuit.simulate/v1alpha2",
+      "repository_path": "profiles/circuit.simulate-v1alpha2.json",
+      "sha256": "35fd0b69d8e3e99eeceb9d4f13bcfddd045ba425305cc28ef6c92849d65a292d"
+    }
+  },
+  "fixture": {
+    "repository_path": "conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir",
+    "container_path": "/openada/conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir",
+    "sha256": "18ccf26e2240ef93498edb832541d99985de1e454305fcad92a82612747dd911",
+    "license": "MIT"
+  },
+  "runtime": {
+    "image": {
+      "name": "hpretl/iic-osic-tools",
+      "tag": "2026.06",
+      "manifest_digest": "sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+      "config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+      "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+      "platform": "linux/amd64"
+    }
+  },
+  "policy": {
+    "eda_network": "none",
+    "openada_mount": "read-only",
+    "container_root": "read-only",
+    "evidence_directory": "new and writable",
+    "source_design": "read-only"
+  },
+  "operation": {
+    "profile": "openada.operation/circuit.simulate/v1alpha2",
+    "assertion": "openada.assertion/simulation.evidence.valid/v1alpha1",
+    "analysis": {
+      "type": "tran",
+      "step_seconds": 1e-7,
+      "stop_seconds": 2e-6
+    },
+    "timeout_seconds": 120,
+    "container_timeout_seconds": 240
+  },
+  "backends": {
+    "ngspice": {
+      "driver_id": "org.openada.driver.ngspice",
+      "driver_version": "0.3.0",
+      "tool": {
+        "path": "/foss/tools/ngspice/bin/ngspice",
+        "version": "** ngspice-46 : Circuit level simulation program"
+      },
+      "result_filename": "ngspice.result.json",
+      "output_directory": "/evidence/ngspice",
+      "artifacts": [
+        {
+          "path": "/evidence/ngspice/rc-transient.log",
+          "filename": "ngspice/rc-transient.log",
+          "kind": "simulation-log",
+          "role": "simulation.log"
+        },
+        {
+          "path": "/evidence/ngspice/rc-transient.raw",
+          "filename": "ngspice/rc-transient.raw",
+          "kind": "ngspice-raw",
+          "role": "simulation.result"
+        }
+      ],
+      "raw_encoding": "binary",
+      "point_count": 68
+    },
+    "xyce": {
+      "driver_id": "org.openada.driver.xyce",
+      "driver_version": "0.3.0",
+      "tool": {
+        "path": "/foss/tools/xyce/bin/Xyce",
+        "version": "Xyce Release 7.10-opensource"
+      },
+      "result_filename": "xyce.result.json",
+      "output_directory": "/evidence/xyce",
+      "artifacts": [
+        {
+          "path": "/evidence/xyce/rc-transient.xyce.log",
+          "filename": "xyce/rc-transient.xyce.log",
+          "kind": "xyce-log",
+          "role": "simulation.log"
+        },
+        {
+          "path": "/evidence/xyce/rc-transient.xyce.raw",
+          "filename": "xyce/rc-transient.xyce.raw",
+          "kind": "xyce-raw",
+          "role": "simulation.result"
+        }
+      ],
+      "raw_encoding": "ascii",
+      "point_count": 43
+    }
+  },
+  "capability_cases": {
+    "op": {
+      "fixture": {
+        "repository_path": "conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-op.cir",
+        "container_path": "/openada/conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-op.cir",
+        "sha256": "af784c3b1fb1e808f8301610ae988593476a532175b5adfed9b6f472bc1cbaf7",
+        "license": "MIT"
+      },
+      "parameters": {
+        "analysis": {
+          "type": "op",
+          "extensions": {}
+        },
+        "extensions": {}
+      },
+      "backends": {
+        "ngspice": {
+          "result_filename": "op/ngspice.result.json",
+          "output_directory": "/evidence/op/ngspice",
+          "artifacts": [
+            {
+              "path": "/evidence/op/ngspice/resistor-divider-op.log",
+              "filename": "op/ngspice/resistor-divider-op.log",
+              "kind": "simulation-log",
+              "role": "simulation.log"
+            },
+            {
+              "path": "/evidence/op/ngspice/resistor-divider-op.raw",
+              "filename": "op/ngspice/resistor-divider-op.raw",
+              "kind": "ngspice-raw",
+              "role": "simulation.result"
+            }
+          ],
+          "raw_encoding": "binary",
+          "point_count": 1,
+          "dependent_variable_count": 3,
+          "finite_value_count": 3
+        }
+      }
+    },
+    "dc": {
+      "fixture": {
+        "repository_path": "conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-dc.cir",
+        "container_path": "/openada/conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-dc.cir",
+        "sha256": "aea95daba6c4e389aa2010c7307c5f2d17a24caeed960247658b25372b357495",
+        "license": "MIT"
+      },
+      "parameters": {
+        "analysis": {
+          "type": "dc",
+          "source_name": "VSWEEP",
+          "source_unit": "V",
+          "start": 0.0,
+          "stop": 1.0,
+          "step": 0.25,
+          "extensions": {}
+        },
+        "extensions": {}
+      },
+      "backends": {
+        "ngspice": {
+          "result_filename": "dc/ngspice.result.json",
+          "output_directory": "/evidence/dc/ngspice",
+          "artifacts": [
+            {
+              "path": "/evidence/dc/ngspice/resistor-divider-dc.log",
+              "filename": "dc/ngspice/resistor-divider-dc.log",
+              "kind": "simulation-log",
+              "role": "simulation.log"
+            },
+            {
+              "path": "/evidence/dc/ngspice/resistor-divider-dc.raw",
+              "filename": "dc/ngspice/resistor-divider-dc.raw",
+              "kind": "ngspice-raw",
+              "role": "simulation.result"
+            }
+          ],
+          "raw_encoding": "binary",
+          "point_count": 5,
+          "dependent_variable_count": 3,
+          "finite_value_count": 15
+        },
+        "xyce": {
+          "result_filename": "dc/xyce.result.json",
+          "output_directory": "/evidence/dc/xyce",
+          "artifacts": [
+            {
+              "path": "/evidence/dc/xyce/resistor-divider-dc.xyce.log",
+              "filename": "dc/xyce/resistor-divider-dc.xyce.log",
+              "kind": "xyce-log",
+              "role": "simulation.log"
+            },
+            {
+              "path": "/evidence/dc/xyce/resistor-divider-dc.xyce.raw",
+              "filename": "dc/xyce/resistor-divider-dc.xyce.raw",
+              "kind": "xyce-raw",
+              "role": "simulation.result"
+            }
+          ],
+          "raw_encoding": "ascii",
+          "point_count": 5,
+          "dependent_variable_count": 3,
+          "finite_value_count": 15
+        }
+      }
+    },
+    "ac": {
+      "fixture": {
+        "repository_path": "conformance/circuit-simulate-v0alpha2/fixtures/rc-ac.cir",
+        "container_path": "/openada/conformance/circuit-simulate-v0alpha2/fixtures/rc-ac.cir",
+        "sha256": "18953e5dd748f0038c22115db01c40587bae01392b6239ee79f6aea13d3d676e",
+        "license": "MIT"
+      },
+      "parameters": {
+        "analysis": {
+          "type": "ac",
+          "sweep": "dec",
+          "points": 5,
+          "start_hz": 10.0,
+          "stop_hz": 10000.0,
+          "extensions": {}
+        },
+        "extensions": {}
+      },
+      "backends": {
+        "ngspice": {
+          "result_filename": "ac/ngspice.result.json",
+          "output_directory": "/evidence/ac/ngspice",
+          "artifacts": [
+            {
+              "path": "/evidence/ac/ngspice/rc-ac.log",
+              "filename": "ac/ngspice/rc-ac.log",
+              "kind": "simulation-log",
+              "role": "simulation.log"
+            },
+            {
+              "path": "/evidence/ac/ngspice/rc-ac.raw",
+              "filename": "ac/ngspice/rc-ac.raw",
+              "kind": "ngspice-raw",
+              "role": "simulation.result"
+            }
+          ],
+          "raw_encoding": "binary",
+          "point_count": 16,
+          "dependent_variable_count": 3,
+          "finite_value_count": 96
+        },
+        "xyce": {
+          "result_filename": "ac/xyce.result.json",
+          "output_directory": "/evidence/ac/xyce",
+          "artifacts": [
+            {
+              "path": "/evidence/ac/xyce/rc-ac.xyce.log",
+              "filename": "ac/xyce/rc-ac.xyce.log",
+              "kind": "xyce-log",
+              "role": "simulation.log"
+            },
+            {
+              "path": "/evidence/ac/xyce/rc-ac.xyce.raw",
+              "filename": "ac/xyce/rc-ac.xyce.raw",
+              "kind": "xyce-raw",
+              "role": "simulation.result"
+            }
+          ],
+          "raw_encoding": "ascii",
+          "point_count": 16,
+          "dependent_variable_count": 3,
+          "finite_value_count": 96
+        }
+      }
+    }
+  },
+  "waveform": {
+    "required_signals": [
+      "time",
+      "in",
+      "out",
+      "source_current"
+    ],
+    "start_seconds": 0.0,
+    "stop_seconds": 2e-6,
+    "midpoint_seconds": 1e-6,
+    "input_final_min": 0.999,
+    "input_final_max": 1.001,
+    "output_midpoint_min": 0.59,
+    "output_midpoint_max": 0.67,
+    "output_final_min": 0.84,
+    "output_final_max": 0.88,
+    "backend_final_tolerance": 0.0005,
+    "backend_midpoint_tolerance": 0.01
+  }
+}

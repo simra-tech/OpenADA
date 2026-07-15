@@ -64,10 +64,15 @@ skills/
 │   ├── SKILL.md
 │   ├── agents/openai.yaml
 │   └── references/
-└── review-circuit-simulation/     # engineering decision workflow
-    ├── SKILL.md
-    └── agents/openai.yaml
+├── review-circuit-simulation/     # one-run evidence review
+├── characterize-analog-block/     # application-aware coordinator
+├── analyze-feedback-stability/    # loop-evidence workflow
+├── analyze-spectral-linearity/    # waveform-derived spectrum review
+└── assess-pvt-and-yield/           # campaign accounting workflow
 ```
+
+Every workflow directory contains `SKILL.md` and `agents/openai.yaml`;
+`characterize-analog-block` also carries one application-recipe reference.
 
 Use `skills/<lowercase-hyphen-name>/SKILL.md` for the workflow. Add
 `agents/openai.yaml` for discoverability. Add `references/` only when detailed
@@ -79,12 +84,27 @@ Installing the OpenADA plugin installs all shipped skills. Other
 Agent-Skills-compatible harnesses can register the same directories. The CLI
 and JSON contracts remain portable even when a harness does not support skills.
 
+Plugin skill names are namespace-qualified by the plugin:
+
+- Codex uses `$openada:openada`, `$openada:characterize-analog-block`, and the
+  corresponding `$openada:<skill-name>` IDs.
+- Claude Code uses `/openada:openada`, `/openada:characterize-analog-block`, and
+  the corresponding `/openada:<skill-name>` commands.
+
+For a standalone skill-only installation, copy the desired skill directories
+under `~/.agents/skills/`. Standalone discovery is harness-managed and does not
+create the plugin namespace.
+
 ## Initial catalog and maturity
 
 | Skill | Kind | Status | Contract dependency |
 |---|---|---|---|
 | `openada` | Execution and evidence adapter | preview | Current CLI and result contract |
-| `review-circuit-simulation` | Tool-independent engineering workflow | experimental | `circuit.simulate/v1alpha1` |
+| `review-circuit-simulation` | Tool-independent engineering workflow | experimental | `circuit.simulate/v1alpha2` |
+| `characterize-analog-block` | Application-aware workflow coordinator | experimental | Capability-gated composition of `circuit.simulate/v1alpha2`, `result.measure/v1alpha1`, and `specification.evaluate/v1alpha1` |
+| `analyze-feedback-stability` | Feedback-loop evidence workflow | experimental | Capability-gated OP/AC/transient simulation, measurement, and specification intents |
+| `analyze-spectral-linearity` | Waveform-derived spectral review | experimental | Capability-gated transient simulation, measurement, and specification intents |
+| `assess-pvt-and-yield` | PVT/statistical campaign workflow | experimental | Repeated capability-gated simulation, measurement, and specification intents |
 
 Track skill maturity separately from driver maturity. **Experimental** means
 the workflow boundary and prompts are open for refinement. **Reviewed** should
@@ -93,7 +113,12 @@ engineer. **Validated** should additionally require repeatable public task
 fixtures demonstrating that the skill stays inside its declared contract
 boundary. None of these labels imply foundry signoff.
 
-Good next candidates, after the required semantic profiles exist, are:
+The analog workflows deliberately treat measurement and specification
+operations as capability-gated. Their plans remain useful when those profiles
+or a requested metric are unavailable, but the affected row stays `not
+evaluated`; skill prose cannot manufacture a semantic capability.
+
+Good next candidates, after their required semantic profiles exist, are:
 
 - diagnose a DRC result without confusing rule-deck output with signoff;
 - review and route an LVS mismatch;

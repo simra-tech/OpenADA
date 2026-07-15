@@ -5,13 +5,16 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 from pathlib import Path
 import stat
 import sys
+import uuid
 
 from . import __version__
 from .contract import diagnostic, result, static_execution
 from .discovery import DiscoveryManager, TOOL_SPECS
+from .driver_registry import BUILTIN_DRIVERS, TRANSIENT_FEATURE
 from .engines import (
     KLayoutDriver,
     NetgenDriver,
@@ -20,7 +23,14 @@ from .engines import (
     XschemDriver,
     YosysDriver,
 )
-from .operations import simulate_circuit_profile
+from .operations import (
+    MAX_SHARED_ANALYSIS_POINTS,
+    MEASUREMENT_KINDS,
+    evaluate_specification,
+    invalid_circuit_simulation_request,
+    measure_result,
+    simulate_circuit_profile,
+)
 from .preflight import PREFLIGHT_SPECS
 
 
@@ -47,6 +57,8 @@ _COMMAND_OPERATIONS = {
     "capabilities": "doctor",
     "netlist": "netlist",
     "simulate": "simulate",
+    "measure": "result.measure",
+    "evaluate": "specification.evaluate",
     "drc": "drc",
     "lvs": "lvs",
     "rtl-check": "rtl-check",
@@ -56,12 +68,27 @@ MAX_PREFLIGHT_PATH_CHARS = 4_095
 MAX_PREFLIGHT_PDK_ROOTS = 64
 MAX_PREFLIGHT_TOOL_OVERRIDES = 64
 MAX_PREFLIGHT_VERSION_TIMEOUT_SECONDS = 30.0
+MAX_OPERATION_JSON_BYTES = 64 * 1024 * 1024
 
 
 def _positive_float(value: str) -> float:
     parsed = float(value)
     if not math.isfinite(parsed) or parsed <= 0:
         raise argparse.ArgumentTypeError("must be a finite number greater than zero")
+    return parsed
+
+
+def _finite_float(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        raise argparse.ArgumentTypeError("must be a finite number")
+    return parsed
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be an integer greater than zero")
     return parsed
 
 
@@ -84,6 +111,68 @@ def _deck_variable(value: str) -> tuple[str, str]:
     if not separator or not name:
         raise argparse.ArgumentTypeError("expected NAME=VALUE")
     return name, variable_value
+
+
+def _object_without_duplicate_keys(pairs: list[tuple[str, object]]) -> dict:
+    parsed: dict[str, object] = {}
+    for key, value in pairs:
+        if key in parsed:
+            raise ValueError("duplicate JSON object key")
+        parsed[key] = value
+    return parsed
+
+
+def _reject_json_constant(value: str) -> None:
+    raise ValueError(f"non-finite JSON number {value!r} is not allowed")
+
+
+def _load_json_object(value: str, *, role: str) -> dict:
+    path = Path(value).expanduser()
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NONBLOCK", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as exc:
+        raise ValueError(f"{role} JSON could not be read: {exc}") from exc
+    try:
+        initial = os.fstat(descriptor)
+        if not stat.S_ISREG(initial.st_mode):
+            raise ValueError(f"{role} JSON must be a regular file")
+        if initial.st_size > MAX_OPERATION_JSON_BYTES:
+            raise ValueError(
+                f"{role} JSON exceeds the {MAX_OPERATION_JSON_BYTES}-byte input limit"
+            )
+        chunks: list[bytes] = []
+        remaining = MAX_OPERATION_JSON_BYTES + 1
+        while remaining:
+            chunk = os.read(descriptor, min(65_536, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        body = b"".join(chunks)
+        final = os.fstat(descriptor)
+        if len(body) > MAX_OPERATION_JSON_BYTES:
+            raise ValueError(
+                f"{role} JSON exceeds the {MAX_OPERATION_JSON_BYTES}-byte input limit"
+            )
+        identity_fields = ("st_dev", "st_ino", "st_mode", "st_size", "st_mtime_ns")
+        if any(getattr(initial, name) != getattr(final, name) for name in identity_fields):
+            raise ValueError(f"{role} JSON changed while it was being read")
+        if len(body) != initial.st_size:
+            raise ValueError(f"{role} JSON changed while it was being read")
+        parsed = json.loads(
+            body.decode("utf-8"),
+            object_pairs_hook=_object_without_duplicate_keys,
+            parse_constant=_reject_json_constant,
+        )
+    except (OSError, UnicodeDecodeError, ValueError, RecursionError) as exc:
+        raise ValueError(f"{role} JSON is invalid: {exc}") from exc
+    finally:
+        os.close(descriptor)
+    if not isinstance(parsed, dict):
+        raise ValueError(f"{role} JSON must contain one object")
+    return parsed
 
 
 def _common_tool_argument(parser: argparse.ArgumentParser, tool: str) -> None:
@@ -162,9 +251,62 @@ def build_parser() -> argparse.ArgumentParser:
         "--backend",
         choices=["ngspice", "xyce"],
         help=(
-            "Select the shared transient-profile backend. Without this option, "
+            "Select the shared circuit.simulate-profile backend. Without this option, "
             "the legacy ngspice interface remains active."
         ),
+    )
+    simulate.add_argument(
+        "--analysis",
+        choices=["op", "dc", "ac", "tran"],
+        help=(
+            "Explicit typed analysis for the shared profile. When omitted, "
+            "OpenADA infers the one supported top-level analysis from the deck."
+        ),
+    )
+    simulate.add_argument("--source-name", help="DC sweep voltage/current source name.")
+    simulate.add_argument(
+        "--source-unit",
+        choices=["V", "A"],
+        help="DC sweep source unit.",
+    )
+    simulate.add_argument("--start", type=_finite_float, help="DC sweep start value.")
+    simulate.add_argument("--stop", type=_finite_float, help="DC sweep stop value.")
+    simulate.add_argument("--step", type=_positive_float, help="DC sweep step value.")
+    simulate.add_argument(
+        "--sweep",
+        choices=["lin", "dec", "oct"],
+        help="AC frequency sweep kind.",
+    )
+    simulate.add_argument("--points", type=_positive_int, help="AC points per sweep.")
+    simulate.add_argument(
+        "--start-hz",
+        type=_positive_float,
+        help="AC sweep start frequency in hertz.",
+    )
+    simulate.add_argument(
+        "--stop-hz",
+        type=_positive_float,
+        help="AC sweep stop frequency in hertz.",
+    )
+    simulate.add_argument(
+        "--step-s",
+        type=_positive_float,
+        help="Transient suggested step in seconds.",
+    )
+    simulate.add_argument(
+        "--stop-s",
+        type=_positive_float,
+        help="Transient stop time in seconds.",
+    )
+    simulate.add_argument(
+        "--start-s",
+        type=_finite_float,
+        help="Transient output start time in seconds.",
+    )
+    simulate.add_argument(
+        "--max-step-s",
+        type=_positive_float,
+        help="Transient maximum internal step in seconds.",
     )
     simulate.add_argument(
         "--output-dir",
@@ -206,6 +348,44 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["ngspice"],
         default=None,
         help=argparse.SUPPRESS,
+    )
+
+    measure = commands.add_parser(
+        "measure",
+        help="Derive one typed scalar from a provenance-bound normalized real series.",
+    )
+    measure.add_argument(
+        "--series",
+        required=True,
+        help="JSON file containing the bounded normalized source series.",
+    )
+    measure.add_argument(
+        "--measurement",
+        required=True,
+        help="JSON file containing one closed typed measurement request.",
+    )
+    measure.add_argument(
+        "--request-id",
+        help="Optional canonical UUID for request correlation.",
+    )
+
+    evaluate = commands.add_parser(
+        "evaluate",
+        help="Evaluate one typed measurement against explicit unit-bearing limits.",
+    )
+    evaluate.add_argument(
+        "--measurement",
+        required=True,
+        help="JSON file containing a complete result.measure result envelope.",
+    )
+    evaluate.add_argument(
+        "--specification",
+        required=True,
+        help="JSON file containing one closed specification request.",
+    )
+    evaluate.add_argument(
+        "--request-id",
+        help="Optional canonical UUID for request correlation.",
     )
 
     drc = commands.add_parser(
@@ -290,6 +470,104 @@ def _overrides(values: list[str]) -> dict[str, str]:
             raise ValueError(f"invalid --tool-path '{value}'; expected a known NAME=PATH")
         parsed[name] = path.strip()
     return parsed
+
+
+def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
+    conformance_id = "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+    typed_conformance_id = "typed-evidence-measurement-specification-v0alpha1"
+    records: list[dict] = []
+    for alias, driver in sorted(BUILTIN_DRIVERS.items()):
+        tool = tools.get(driver.native_tool)
+        records.append(
+            {
+                "provider_id": driver.driver_id,
+                "provider_version": driver.version,
+                "provider_kind": "eda-driver",
+                "availability": tool["status"] if tool is not None else "not-inspected",
+                "native_product": driver.native_tool,
+                "operation_profile": driver.operation_profile,
+                "operation_profile_schema": "openada.operation-profile/v0alpha1",
+                "assertion_profile": driver.assertion_profile,
+                "result_schema": "openada.result/v0alpha1",
+                "transports": ["local-cli"],
+                "locator_types": ["filesystem"],
+                "features": [
+                    {
+                        "id": feature,
+                        "maturity": (
+                            "workflow-validated"
+                            if feature == TRANSIENT_FEATURE
+                            else "structured"
+                        ),
+                        "conformance_ids": [conformance_id],
+                    }
+                    for feature in driver.features
+                ],
+            }
+        )
+
+    records.extend(
+        [
+            {
+                "provider_id": "org.openada.kernel.typed-evidence",
+                "provider_version": "1.0.0",
+                "provider_kind": "evidence-kernel",
+                "availability": "available",
+                "native_product": None,
+                "operation_profile": "openada.operation/result.measure/v1alpha1",
+                "operation_profile_schema": "openada.operation-profile/v0alpha2",
+                "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
+                "result_schema": "openada.result/v0alpha1",
+                "transports": ["local-cli", "in-process"],
+                "locator_types": ["artifact"],
+                "features": [
+                    {
+                        "id": (
+                            "openada.feature/measurement."
+                            f"{kind.replace('_', '-')}/v1alpha1"
+                        ),
+                        "maturity": "structured",
+                        "conformance_ids": [typed_conformance_id],
+                    }
+                    for kind in MEASUREMENT_KINDS
+                ],
+            },
+            {
+                "provider_id": "org.openada.kernel.typed-evidence",
+                "provider_version": "1.0.0",
+                "provider_kind": "evidence-kernel",
+                "availability": "available",
+                "native_product": None,
+                "operation_profile": (
+                    "openada.operation/specification.evaluate/v1alpha1"
+                ),
+                "operation_profile_schema": "openada.operation-profile/v0alpha2",
+                "assertion_profile": (
+                    "openada.assertion/specification.satisfied/v1alpha1"
+                ),
+                "result_schema": "openada.result/v0alpha1",
+                "transports": ["local-cli", "in-process"],
+                "locator_types": ["artifact"],
+                "features": [
+                    {
+                        "id": (
+                            "openada.feature/specification.bound-evaluation/v1alpha1"
+                        ),
+                        "maturity": "structured",
+                        "conformance_ids": [typed_conformance_id],
+                    },
+                    {
+                        "id": (
+                            "openada.feature/specification.condition-binding/v1alpha1"
+                        ),
+                        "maturity": "structured",
+                        "conformance_ids": [typed_conformance_id],
+                    },
+                ],
+            },
+        ]
+    )
+    return records
 
 
 def _doctor_invalid(message: str) -> dict:
@@ -477,6 +755,9 @@ def _doctor(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
         if required not in names:
             names.append(required)
     capabilities = discovery.get_capabilities(names, version_timeout=args.version_timeout)
+    capabilities["semantic_capabilities"] = _semantic_capability_records(
+        capabilities["tools"]
+    )
     missing = [name for name in args.require if capabilities["tools"][name]["status"] != "available"]
     diagnostics = [
         diagnostic(
@@ -508,6 +789,251 @@ def _doctor(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
     )
 
 
+_SIMULATION_PARAMETER_OPTIONS = {
+    "source_name": "--source-name",
+    "source_unit": "--source-unit",
+    "start": "--start",
+    "stop": "--stop",
+    "step": "--step",
+    "sweep": "--sweep",
+    "points": "--points",
+    "start_hz": "--start-hz",
+    "stop_hz": "--stop-hz",
+    "step_s": "--step-s",
+    "stop_s": "--stop-s",
+    "start_s": "--start-s",
+    "max_step_s": "--max-step-s",
+}
+
+
+def _simulation_profile_parameters(args: argparse.Namespace) -> dict | None:
+    supplied = {
+        name for name in _SIMULATION_PARAMETER_OPTIONS if getattr(args, name) is not None
+    }
+    if args.analysis is None:
+        if supplied:
+            options = ", ".join(_SIMULATION_PARAMETER_OPTIONS[name] for name in sorted(supplied))
+            raise ValueError(f"--analysis is required when supplying {options}")
+        return None
+
+    fields = {
+        "op": ((), ()),
+        "dc": (
+            ("source_name", "source_unit", "start", "stop", "step"),
+            ("source_name", "source_unit", "start", "stop", "step"),
+        ),
+        "ac": (
+            ("sweep", "points", "start_hz", "stop_hz"),
+            ("sweep", "points", "start_hz", "stop_hz"),
+        ),
+        "tran": (
+            ("step_s", "stop_s"),
+            ("step_s", "stop_s", "start_s", "max_step_s"),
+        ),
+    }
+    required, allowed = fields[args.analysis]
+    unexpected = supplied - set(allowed)
+    if unexpected:
+        options = ", ".join(
+            _SIMULATION_PARAMETER_OPTIONS[name] for name in sorted(unexpected)
+        )
+        raise ValueError(f"--analysis {args.analysis} does not accept {options}")
+    missing = set(required) - supplied
+    if missing:
+        options = ", ".join(_SIMULATION_PARAMETER_OPTIONS[name] for name in sorted(missing))
+        raise ValueError(f"--analysis {args.analysis} requires {options}")
+
+    if args.analysis == "dc" and args.stop <= args.start:
+        raise ValueError("--stop must be greater than --start for a DC analysis")
+    if args.analysis == "ac":
+        if args.points > MAX_SHARED_ANALYSIS_POINTS:
+            raise ValueError(
+                f"--points must be no greater than {MAX_SHARED_ANALYSIS_POINTS}"
+            )
+        if args.stop_hz <= args.start_hz:
+            raise ValueError("--stop-hz must be greater than --start-hz for an AC analysis")
+    if args.analysis == "tran":
+        start_s = args.start_s if args.start_s is not None else 0.0
+        if start_s < 0:
+            raise ValueError("--start-s must be greater than or equal to zero")
+        if start_s >= args.stop_s:
+            raise ValueError("--start-s must be less than --stop-s for a transient analysis")
+        if args.max_step_s is not None and args.max_step_s > args.stop_s - start_s:
+            raise ValueError(
+                "--max-step-s must not exceed --stop-s minus --start-s"
+            )
+
+    analysis = {"type": args.analysis, "extensions": {}}
+    for name in allowed:
+        value = getattr(args, name)
+        if value is not None:
+            analysis[name] = value
+    return {"analysis": analysis, "extensions": {}}
+
+
+def _simulation_cli_invalid(args: argparse.Namespace, message: str) -> dict:
+    if args.backend is not None:
+        return invalid_circuit_simulation_request(
+            message,
+            backend=args.backend,
+            analysis_type=args.analysis,
+        )
+    return _invalid_request("simulate", message)
+
+
+def _measurement_record(document: dict) -> dict:
+    required_envelope_fields = {
+        "schema",
+        "operation",
+        "tool",
+        "execution",
+        "engineering",
+        "inputs",
+        "artifacts",
+        "diagnostics",
+        "data",
+        "provenance",
+    }
+    if set(document) != required_envelope_fields:
+        raise ValueError(
+            "the measurement input must contain the complete openada.result/v0alpha1 envelope with no undeclared fields"
+        )
+    if document.get("schema") != "openada.result/v0alpha1":
+        raise ValueError(
+            "the measurement input must be a complete openada.result/v0alpha1 envelope"
+        )
+    if document.get("operation") != "result.measure":
+        raise ValueError(
+            "the measurement result envelope must have operation 'result.measure'"
+        )
+    if document.get("tool") is not None:
+        raise ValueError("a result.measure envelope must have a null tool record")
+    if document.get("inputs") != [] or document.get("artifacts") != []:
+        raise ValueError("a result.measure envelope must have empty inputs and artifacts")
+    diagnostics = document.get("diagnostics")
+    if not isinstance(diagnostics, list):
+        raise ValueError("the measurement result envelope diagnostics must be an array")
+    for item in diagnostics:
+        if (
+            not isinstance(item, dict)
+            or not {"severity", "code", "message"}.issubset(item)
+            or set(item) - {"severity", "code", "message", "hint"}
+            or item.get("severity") not in {"info", "warning", "error"}
+            or not all(
+                isinstance(item.get(name), str)
+                for name in ({"code", "message"} | ({"hint"} if "hint" in item else set()))
+            )
+        ):
+            raise ValueError(
+                "the measurement result envelope contains an invalid diagnostic record"
+            )
+
+    execution = document.get("execution")
+    execution_required = {"status", "exit_code", "duration_ms", "command"}
+    execution_allowed = execution_required | {"cwd", "error"}
+    if (
+        not isinstance(execution, dict)
+        or not execution_required.issubset(execution)
+        or set(execution) - execution_allowed
+        or execution.get("status")
+        not in {"completed", "timed_out", "not_available", "invalid_request", "failed"}
+        or (
+            execution.get("exit_code") is not None
+            and (
+                isinstance(execution.get("exit_code"), bool)
+                or not isinstance(execution.get("exit_code"), int)
+            )
+        )
+        or isinstance(execution.get("duration_ms"), bool)
+        or not isinstance(execution.get("duration_ms"), int)
+        or execution.get("duration_ms", -1) < 0
+        or not isinstance(execution.get("command"), list)
+        or not all(isinstance(item, str) for item in execution.get("command", []))
+        or any(
+            name in execution and not isinstance(execution[name], str)
+            for name in ("cwd", "error")
+        )
+    ):
+        raise ValueError("the measurement result envelope execution record is incomplete")
+    engineering = document.get("engineering")
+    if (
+        not isinstance(engineering, dict)
+        or set(engineering) != {"status", "summary"}
+        or engineering.get("status") not in {"pass", "fail", "unknown", "not_applicable"}
+        or not isinstance(engineering.get("summary"), str)
+    ):
+        raise ValueError("the measurement result envelope engineering record is incomplete")
+    provenance = document.get("provenance")
+    host = provenance.get("host") if isinstance(provenance, dict) else None
+    if (
+        not isinstance(provenance, dict)
+        or set(provenance) != {"openada_version", "created_at", "host"}
+        or not isinstance(provenance.get("openada_version"), str)
+        or not isinstance(provenance.get("created_at"), str)
+        or not isinstance(host, dict)
+        or set(host) != {"system", "machine", "python"}
+        or not all(isinstance(host.get(name), str) for name in host)
+    ):
+        raise ValueError("the measurement result envelope provenance record is incomplete")
+
+    data = document.get("data")
+    if not isinstance(data, dict) or set(data) != {
+        "protocol",
+        "measurement",
+        "extensions",
+    }:
+        raise ValueError("the result.measure envelope data record is incomplete")
+    if data.get("extensions") != {}:
+        raise ValueError("the result.measure envelope data.extensions must be empty")
+    protocol = data.get("protocol")
+    expected_protocol_fields = {
+        "request_id",
+        "operation_profile",
+        "assertion_profile",
+        "implementation_id",
+        "implementation_version",
+    }
+    if not isinstance(protocol, dict) or set(protocol) != expected_protocol_fields:
+        raise ValueError("the result.measure envelope protocol record is incomplete")
+    if protocol.get("operation_profile") != "openada.operation/result.measure/v1alpha1":
+        raise ValueError("the measurement envelope operation profile is not result.measure/v1alpha1")
+    if protocol.get("assertion_profile") != "openada.assertion/measurement.valid/v1alpha1":
+        raise ValueError("the measurement envelope assertion profile is not measurement.valid/v1alpha1")
+    if protocol.get("implementation_id") != "org.openada.kernel.typed-evidence":
+        raise ValueError("the measurement envelope implementation identity is unsupported")
+    try:
+        protocol_request_id = uuid.UUID(str(protocol.get("request_id")))
+    except (AttributeError, ValueError):
+        raise ValueError("the measurement envelope request identity is invalid") from None
+    if str(protocol_request_id) != protocol.get("request_id"):
+        raise ValueError("the measurement envelope request identity is invalid")
+    if not isinstance(protocol.get("implementation_version"), str) or not protocol.get(
+        "implementation_version"
+    ):
+        raise ValueError("the measurement envelope implementation version is invalid")
+
+    measurement = data.get("measurement") if isinstance(data, dict) else None
+    if not isinstance(measurement, dict):
+        raise ValueError(
+            "the result.measure envelope does not contain data.measurement"
+        )
+    measurement_status = measurement.get("status")
+    expected_engineering = {
+        "measured": "pass",
+        "not_found": "fail",
+        "unknown": "unknown",
+    }.get(measurement_status)
+    if expected_engineering is None or engineering.get("status") != expected_engineering:
+        raise ValueError(
+            "the measurement status conflicts with the envelope engineering status"
+        )
+    if measurement_status in {"measured", "not_found"} and execution.get("status") != "completed":
+        raise ValueError(
+            "a measured or not_found result.measure envelope must have completed execution"
+        )
+    return measurement
+
+
 def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
     if args.command in {"doctor", "capabilities"}:
         return _doctor(args, discovery)
@@ -526,9 +1052,18 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             else source.parent / "openada-out" / source.stem
         )
         if args.backend is not None and args.tool is not None and args.backend != args.tool:
+            return _simulation_cli_invalid(
+                args,
+                "--backend and the legacy --tool selector disagree",
+            )
+        try:
+            parameters = _simulation_profile_parameters(args)
+        except ValueError as exc:
+            return _simulation_cli_invalid(args, str(exc))
+        if args.backend is None and (args.analysis is not None or parameters is not None):
             return _invalid_request(
                 "simulate",
-                "--backend and the legacy --tool selector disagree",
+                "--analysis and its typed parameters require --backend",
             )
         if args.backend is not None:
             profile_only_options = []
@@ -543,9 +1078,9 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             if args.system_init_file is not None:
                 profile_only_options.append("--system-init-file")
             if profile_only_options:
-                return _invalid_request(
-                    "simulate",
-                    "The shared transient profile does not accept legacy ngspice option(s): "
+                return _simulation_cli_invalid(
+                    args,
+                    "The shared circuit simulation profile does not accept legacy ngspice option(s): "
                     + ", ".join(profile_only_options),
                 )
             return simulate_circuit_profile(
@@ -555,6 +1090,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 discovery=discovery,
                 workdir=args.workdir,
                 timeout=args.timeout,
+                parameters=parameters,
             )
         return NgspiceDriver(discovery=discovery).simulate(
             source,
@@ -566,6 +1102,31 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             init_file=args.init_file,
             system_init_file=args.system_init_file,
             timeout=args.timeout,
+        )
+    if args.command == "measure":
+        try:
+            series = _load_json_object(args.series, role="series")
+            measurement = _load_json_object(args.measurement, role="measurement")
+        except ValueError as exc:
+            return _invalid_request("result.measure", str(exc))
+        return measure_result(series, measurement, request_id=args.request_id)
+    if args.command == "evaluate":
+        try:
+            measurement_document = _load_json_object(
+                args.measurement,
+                role="measurement",
+            )
+            measurement = _measurement_record(measurement_document)
+            specification = _load_json_object(
+                args.specification,
+                role="specification",
+            )
+        except ValueError as exc:
+            return _invalid_request("specification.evaluate", str(exc))
+        return evaluate_specification(
+            measurement,
+            specification,
+            request_id=args.request_id,
         )
     if args.command == "drc":
         gds = Path(args.gds_file).expanduser().resolve()
@@ -652,7 +1213,85 @@ def _requested_operation(argv: list[str]) -> str:
     return "openada.invalid_request"
 
 
+def _requested_shared_simulation(
+    argv: list[str],
+) -> tuple[bool, str | None, str | None]:
+    """Recover a bounded shared-profile selection from an argparse failure."""
+
+    if _requested_operation(argv) != "simulate":
+        return False, None, None
+
+    value_options = {"--profile", "--pdk-root", "--tool-path"}
+    index = 0
+    while index < len(argv):
+        token = argv[index]
+        if token == "--compact":
+            index += 1
+            continue
+        if token == "--":
+            index += 1
+            break
+        if token in value_options:
+            index += 2
+            continue
+        if any(token.startswith(f"{option}=") for option in value_options):
+            index += 1
+            continue
+        if token == "simulate":
+            index += 1
+            break
+        return False, None, None
+
+    selected = False
+    backend: str | None = None
+    analysis_type: str | None = None
+    while index < len(argv):
+        token = argv[index]
+        if token == "--":
+            break
+        if token == "--backend":
+            selected = True
+            if index + 1 < len(argv) and not argv[index + 1].startswith("-"):
+                candidate = argv[index + 1]
+                backend = candidate if candidate in BUILTIN_DRIVERS else None
+                index += 2
+                continue
+        elif token.startswith("--backend="):
+            selected = True
+            candidate = token.partition("=")[2]
+            backend = candidate if candidate in BUILTIN_DRIVERS else None
+        elif token == "--analysis":
+            if index + 1 < len(argv) and not argv[index + 1].startswith("-"):
+                candidate = argv[index + 1]
+                analysis_type = (
+                    candidate if candidate in {"op", "dc", "ac", "tran"} else None
+                )
+                index += 2
+                continue
+        elif token.startswith("--analysis="):
+            candidate = token.partition("=")[2]
+            analysis_type = (
+                candidate if candidate in {"op", "dc", "ac", "tran"} else None
+            )
+        index += 1
+    return selected, backend, analysis_type
+
+
 def _invalid_request(operation: str, message: str) -> dict:
+    if operation == "result.measure":
+        payload = measure_result({}, {})
+        payload["engineering"]["summary"] = "OpenADA could not parse the typed measurement request."
+        payload["diagnostics"] = [
+            diagnostic("error", "measurement.request.invalid", message)
+        ]
+        return payload
+    if operation == "specification.evaluate":
+        payload = evaluate_specification({}, {})
+        payload["engineering"]["summary"] = "OpenADA could not parse the typed specification request."
+        payload["diagnostics"] = [
+            diagnostic("error", "specification.request.invalid", message)
+        ]
+        return payload
     return result(
         operation,
         tool=None,
@@ -680,7 +1319,18 @@ def main(argv: list[str] | None = None) -> int:
     try:
         args = parser.parse_args(raw_argv)
     except _RequestParseError as exc:
-        payload = _invalid_request(_requested_operation(raw_argv), str(exc))
+        operation = _requested_operation(raw_argv)
+        shared_profile, backend, analysis_type = _requested_shared_simulation(
+            raw_argv
+        )
+        if shared_profile:
+            payload = invalid_circuit_simulation_request(
+                str(exc),
+                backend=backend,
+                analysis_type=analysis_type,
+            )
+        else:
+            payload = _invalid_request(operation, str(exc))
         _print_payload(payload, compact="--compact" in raw_argv)
         return 2
     try:

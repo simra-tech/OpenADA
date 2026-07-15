@@ -1,0 +1,480 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/result.measure/v1alpha1",
+    "title": "Typed result measurement",
+    "summary": "Derive one finite scalar measurement from a bounded provenance-bound normalized real series using a closed deterministic algorithm.",
+    "side_effect_mode": "read-only",
+    "target_kinds": ["normalized-series"],
+    "locator_types": ["artifact", "uri", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/measurement.valid/v1alpha1",
+    "statement": "The declared measurement was derived, or was conclusively not observable, from the exact finite normalized source series using the declared unit-safe versioned algorithm.",
+    "non_goals": [
+      "This assertion does not state that a design specification is satisfied.",
+      "This assertion does not validate the native EDA artifact parser that produced the normalized series.",
+      "This assertion does not interpolate complex values, convert units, infer operating conditions, or execute simulator expressions.",
+      "This assertion does not establish that the sampled domain or resolution is sufficient for signoff."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "A supported algorithm produced one finite scalar value with an explicit unit from a valid source series, and the result retains source, algorithm, and condition identity.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.measurement.status is measured and data.measurement.value is finite.",
+          "data.measurement.unit is explicit and every coordinate or threshold unit exactly matched its declared axis or signal unit.",
+          "data.measurement.source retains producer request, artifact digest, normalized-series digest, and operating-condition bindings.",
+          "data.measurement.algorithm identifies the exact closed algorithm and version."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "The valid declared source domain conclusively contains no sample or event satisfying the requested closed measurement definition.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.measurement.status is not_found and data.measurement.value is null.",
+          "The source series, units, algorithm parameters, and search domain were structurally valid.",
+          "A stable measurement.value.not_found diagnostic states which requested observation was absent."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The source or request is invalid, unsupported, unbounded, non-finite, unit-incompatible, or otherwise insufficient to justify a measured or not-found conclusion.",
+        "allowed_execution_statuses": ["completed", "invalid_request", "failed"],
+        "required_evidence": [
+          "data.measurement.status is unknown and value is null.",
+          "At least one stable diagnostic identifies the invalid request, source, unit, domain, or algorithm condition."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.measure v1alpha1 request parameters",
+      "description": "A bounded normalized real series and exactly one closed measurement request.",
+      "type": "object",
+      "required": ["series", "measurement", "extensions"],
+      "properties": {
+        "series": {"$ref": "#/$defs/series"},
+        "measurement": {"$ref": "#/$defs/measurement"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "finiteNumber": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 64},
+        "name": {"type": "string", "minLength": 1, "maxLength": 256},
+        "role": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+        "quantity": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {"$ref": "#/$defs/finiteNumber"},
+            "unit": {"$ref": "#/$defs/unit"}
+          },
+          "additionalProperties": false
+        },
+        "window": {
+          "type": "object",
+          "required": ["start", "stop"],
+          "properties": {
+            "start": {"$ref": "#/$defs/quantity"},
+            "stop": {"$ref": "#/$defs/quantity"}
+          },
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object",
+          "required": ["name", "value", "unit"],
+          "properties": {
+            "name": {"$ref": "#/$defs/name"},
+            "value": {"type": ["number", "string", "boolean"], "minLength": 1, "maxLength": 256},
+            "unit": {"$ref": "#/$defs/unit"}
+          },
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256"],
+          "properties": {
+            "operation": {"$ref": "#/$defs/name"},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"const": "measurement.source"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "lineage": {
+              "type": "object",
+              "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "binding"],
+              "properties": {
+                "operation": {"$ref": "#/$defs/name"},
+                "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+                "artifact_role": {"$ref": "#/$defs/role"},
+                "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                "binding": {"const": "unverified"}
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "vector": {
+          "type": "object",
+          "required": ["name", "unit", "values"],
+          "properties": {
+            "name": {"$ref": "#/$defs/name"},
+            "unit": {"$ref": "#/$defs/unit"},
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100000,
+              "items": {"$ref": "#/$defs/finiteNumber"}
+            }
+          },
+          "additionalProperties": false
+        },
+        "series": {
+          "type": "object",
+          "required": ["source", "axis", "signals", "conditions", "extensions"],
+          "properties": {
+            "source": {"$ref": "#/$defs/source"},
+            "axis": {"$ref": "#/$defs/vector"},
+            "signals": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {"$ref": "#/$defs/vector"}
+            },
+            "conditions": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {"$ref": "#/$defs/condition"}
+            },
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "sampleAt": {
+          "type": "object",
+          "required": ["at", "interpolation"],
+          "properties": {
+            "at": {"$ref": "#/$defs/quantity"},
+            "interpolation": {"enum": ["exact", "linear"]}
+          },
+          "additionalProperties": false
+        },
+        "reducer": {
+          "type": "object",
+          "properties": {"window": {"$ref": "#/$defs/window"}},
+          "additionalProperties": false
+        },
+        "crossing": {
+          "type": "object",
+          "required": ["threshold", "direction", "occurrence"],
+          "properties": {
+            "threshold": {"$ref": "#/$defs/quantity"},
+            "direction": {"enum": ["rising", "falling", "either"]},
+            "occurrence": {"type": "integer", "minimum": 1, "maximum": 100000},
+            "window": {"$ref": "#/$defs/window"}
+          },
+          "additionalProperties": false
+        },
+        "transition": {
+          "type": "object",
+          "required": ["lower_threshold", "upper_threshold", "occurrence"],
+          "properties": {
+            "lower_threshold": {"$ref": "#/$defs/quantity"},
+            "upper_threshold": {"$ref": "#/$defs/quantity"},
+            "occurrence": {"type": "integer", "minimum": 1, "maximum": 100000},
+            "window": {"$ref": "#/$defs/window"}
+          },
+          "additionalProperties": false
+        },
+        "settling": {
+          "type": "object",
+          "required": ["target", "tolerance", "reference", "hold_for"],
+          "properties": {
+            "target": {"$ref": "#/$defs/quantity"},
+            "tolerance": {"$ref": "#/$defs/quantity"},
+            "reference": {"$ref": "#/$defs/quantity"},
+            "hold_for": {"$ref": "#/$defs/quantity"},
+            "window": {"$ref": "#/$defs/window"}
+          },
+          "additionalProperties": false
+        },
+        "measurement": {
+          "type": "object",
+          "required": ["measurement_id", "kind", "signal", "parameters", "extensions"],
+          "properties": {
+            "measurement_id": {"$ref": "#/$defs/role"},
+            "kind": {"enum": ["sample_at", "minimum", "maximum", "mean", "rms", "crossing", "rise_time", "fall_time", "settling_time"]},
+            "signal": {"$ref": "#/$defs/name"},
+            "parameters": {"type": "object"},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "allOf": [
+            {"if": {"properties": {"kind": {"const": "sample_at"}}, "required": ["kind"]}, "then": {"properties": {"parameters": {"$ref": "#/$defs/sampleAt"}}}},
+            {"if": {"properties": {"kind": {"enum": ["minimum", "maximum", "mean", "rms"]}}, "required": ["kind"]}, "then": {"properties": {"parameters": {"$ref": "#/$defs/reducer"}}}},
+            {"if": {"properties": {"kind": {"const": "crossing"}}, "required": ["kind"]}, "then": {"properties": {"parameters": {"$ref": "#/$defs/crossing"}}}},
+            {"if": {"properties": {"kind": {"enum": ["rise_time", "fall_time"]}}, "required": ["kind"]}, "then": {"properties": {"parameters": {"$ref": "#/$defs/transition"}}}},
+            {"if": {"properties": {"kind": {"const": "settling_time"}}, "required": ["kind"]}, "then": {"properties": {"parameters": {"$ref": "#/$defs/settling"}}}}
+          ],
+          "additionalProperties": false
+        },
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "Every JSON number must be finite; NaN and infinity are invalid even if a permissive parser accepts them.",
+      "The axis must contain 1 to 100000 strictly increasing values, every signal must have exactly the same length, and signal and condition names must be unique.",
+      "Every coordinate quantity must use the exact axis unit and every threshold or target quantity must use the exact selected-signal unit; v1alpha1 performs no unit conversion.",
+      "Windows are closed and must have stop greater than start. Reducers operate only on retained samples within the window.",
+      "Crossing and transition algorithms use deterministic linear interpolation only between adjacent samples and do not infer behavior between nonadjacent samples.",
+      "A settling-time request requires positive tolerance and hold_for; the signal must remain inside the closed tolerance band for at least hold_for in the observed domain.",
+      "series.source.artifact_sha256 must equal the implementation's canonical SHA-256 digest over the normalized axis, signals, and condition bindings; mismatches are invalid requests.",
+      "Any upstream native artifact may be retained only as optional lineage whose binding is explicitly unverified by this operation."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.measure v1alpha1 normalized result data",
+      "type": "object",
+      "required": ["protocol", "measurement", "extensions"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/protocol"},
+        "measurement": {"$ref": "#/$defs/measurement"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "protocol": {
+          "type": "object",
+          "required": ["request_id", "operation_profile", "assertion_profile", "implementation_id", "implementation_version"],
+          "properties": {
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "operation_profile": {"const": "openada.operation/result.measure/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/measurement.valid/v1alpha1"},
+            "implementation_id": {"const": "org.openada.kernel.typed-evidence"},
+            "implementation_version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object",
+          "required": ["name", "value", "unit"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1, "maxLength": 256},
+            "value": {"type": ["number", "string", "boolean"], "minLength": 1, "maxLength": 256},
+            "unit": {"type": "string", "minLength": 1, "maxLength": 64}
+          },
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "series_sha256", "conditions_sha256", "conditions", "lineage"],
+          "properties": {
+            "operation": {"type": "string", "minLength": 1, "maxLength": 256},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"const": "measurement.source"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "series_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "conditions_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "conditions": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/condition"}},
+            "lineage": {"oneOf": [{"$ref": "#/$defs/lineage"}, {"type": "null"}]}
+          },
+          "additionalProperties": false
+        },
+        "lineage": {
+          "type": "object",
+          "required": ["operation", "request_id", "artifact_role", "artifact_sha256", "binding"],
+          "properties": {
+            "operation": {"type": "string", "minLength": 1, "maxLength": 256},
+            "request_id": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+            "artifact_role": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+            "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "binding": {"const": "unverified"}
+          },
+          "additionalProperties": false
+        },
+        "location": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {"type": "number"},
+            "unit": {"type": "string", "minLength": 1, "maxLength": 64}
+          },
+          "additionalProperties": false
+        },
+        "algorithm": {
+          "type": "object",
+          "required": ["id", "version"],
+          "properties": {
+            "id": {"type": ["string", "null"], "maxLength": 256},
+            "version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "measurement": {
+          "type": "object",
+          "required": ["measurement_id", "kind", "status", "request_sha256", "value", "unit", "signal", "location", "algorithm", "sample_count", "source", "extensions"],
+          "properties": {
+            "measurement_id": {"type": ["string", "null"], "maxLength": 120},
+            "kind": {"type": ["string", "null"], "maxLength": 40},
+            "status": {"enum": ["measured", "not_found", "unknown"]},
+            "request_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+            "value": {"type": ["number", "null"]},
+            "unit": {"type": ["string", "null"], "maxLength": 64},
+            "signal": {"type": ["string", "null"], "maxLength": 256},
+            "location": {"oneOf": [{"$ref": "#/$defs/location"}, {"type": "null"}]},
+            "algorithm": {"$ref": "#/$defs/algorithm"},
+            "sample_count": {"type": "integer", "minimum": 0, "maximum": 100000},
+            "source": {"oneOf": [{"$ref": "#/$defs/source"}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "allOf": [
+            {"if": {"properties": {"status": {"const": "measured"}}, "required": ["status"]}, "then": {"properties": {"request_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "value": {"type": "number"}, "unit": {"type": "string", "minLength": 1}, "source": {"$ref": "#/$defs/source"}}}},
+            {"if": {"properties": {"status": {"const": "not_found"}}, "required": ["status"]}, "then": {"properties": {"request_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "value": {"type": "null"}}}},
+            {"if": {"properties": {"status": {"const": "unknown"}}, "required": ["status"]}, "then": {"properties": {"value": {"type": "null"}}}}
+          ],
+          "additionalProperties": false
+        },
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.protocol.request_id", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Exact request correlation identity.", "extensions": {}},
+      {"path": "data.measurement.status", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Measured, not_found, or unknown classification without conflating absence with invalid evidence.", "extensions": {}},
+      {"path": "data.measurement.request_sha256", "type": ["string", "null"], "required_for": ["pass", "fail"], "description": "Canonical digest of the complete closed measurement definition used for the result.", "extensions": {}},
+      {"path": "data.measurement.value", "type": ["number", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Finite measured scalar for pass and null for fail or unknown.", "extensions": {}},
+      {"path": "data.measurement.unit", "type": ["string", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Exact result unit inherited from the selected signal or axis.", "extensions": {}},
+      {"path": "data.measurement.algorithm", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Closed algorithm identity and semantic version.", "extensions": {}},
+      {"path": "data.measurement.location", "type": ["object", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Axis location associated with an extrema or event result when the algorithm defines one.", "extensions": {}},
+      {"path": "data.measurement.source", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "Producer request, artifact digest, normalized-series digest, and explicit conditions.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {
+        "role": "measurement.source",
+        "kind": "normalized-inline-series",
+        "required_for": ["pass", "fail"],
+        "freshness": "immutable-input",
+        "integrity": [
+          "Bind the normalized series to one producer request ID and require its supplied artifact SHA-256 to equal the computed canonical content digest.",
+          "Retain any upstream native artifact only as optional unverified lineage; this operation does not claim to validate native waveform extraction.",
+          "Reject non-finite values, mismatched vector lengths, non-monotonic axes, duplicate names, and over-limit series before measuring."
+        ],
+        "native_authority": "The canonical normalized-series content is authoritative only for this measurement calculation. Optional native-artifact lineage is unverified and remains outside this assertion.",
+        "extensions": {}
+      }
+    ],
+    "integrity_rules": [
+      "Every output retains the exact normalized-series producer request and verified canonical content digest rather than treating copied numbers as anonymous evidence.",
+      "Measured and not-found outputs retain a canonical SHA-256 digest of the complete validated measurement request.",
+      "Unit equality is exact; v1alpha1 never guesses dimensions or silently rescales values.",
+      "A not-found event is fail only after the entire declared bounded domain is validly searched; malformed or insufficient evidence is unknown."
+    ],
+    "provenance_limitations": [
+      "The operation does not validate that optional upstream native-artifact lineage was faithfully decoded into the normalized series.",
+      "Linear interpolation asserts only the versioned calculation between adjacent retained samples, not unobserved analog behavior."
+    ],
+    "limits": {
+      "max_log_bytes": 4000,
+      "max_artifact_bytes": 16777216,
+      "max_artifact_count": 1,
+      "extensions": {}
+    },
+    "extensions": {}
+  },
+  "features": [
+    {"id": "openada.feature/measurement.sample-at/v1alpha1", "parameter_path": "measurement.kind", "parameter_values": ["sample_at"], "request_effect": "Return the selected signal at an in-domain axis coordinate by exact lookup or adjacent-sample linear interpolation.", "conformance_case": "Exact, interpolated, out-of-domain, and exact-sample-absent fixtures preserve pass/fail/unknown boundaries.", "extensions": {}},
+    {"id": "openada.feature/measurement.minimum/v1alpha1", "parameter_path": "measurement.kind", "parameter_values": ["minimum"], "request_effect": "Return the minimum retained signal sample and first matching axis location in an optional closed window.", "conformance_case": "Bounded fixtures cover ties, negative values, optional windows, and empty windows.", "extensions": {}},
+    {"id": "openada.feature/measurement.maximum/v1alpha1", "parameter_path": "measurement.kind", "parameter_values": ["maximum"], "request_effect": "Return the maximum retained signal sample and first matching axis location in an optional closed window.", "conformance_case": "Bounded fixtures cover ties, negative values, optional windows, and empty windows.", "extensions": {}},
+    {"id": "openada.feature/measurement.mean/v1alpha1", "parameter_path": "measurement.kind", "parameter_values": ["mean"], "request_effect": "Return the arithmetic mean of finite retained samples in an optional closed window using a stable summation primitive.", "conformance_case": "Fixtures cover positive and negative cancellation, windows, and empty windows.", "extensions": {}},
+    {"id": "openada.feature/measurement.rms/v1alpha1", "parameter_path": "measurement.kind", "parameter_values": ["rms"], "request_effect": "Return the root mean square of finite retained samples in an optional closed window.", "conformance_case": "Fixtures cover signed samples, windows, and empty windows.", "extensions": {}},
+    {"id": "openada.feature/measurement.crossing/v1alpha1", "parameter_path": "measurement.kind", "parameter_values": ["crossing"], "request_effect": "Return the selected rising, falling, or either-direction threshold crossing using adjacent-sample linear interpolation.", "conformance_case": "Fixtures cover direction, occurrence, plateaus, exact endpoints, windows, and absent crossings.", "extensions": {}},
+    {"id": "openada.feature/measurement.rise-time/v1alpha1", "parameter_path": "measurement.kind", "parameter_values": ["rise_time"], "request_effect": "Return elapsed axis distance from a rising lower-threshold crossing to its matching upper-threshold crossing.", "conformance_case": "Fixtures cover multiple pulses, incomplete transitions, ordering, and unit mismatch.", "extensions": {}},
+    {"id": "openada.feature/measurement.fall-time/v1alpha1", "parameter_path": "measurement.kind", "parameter_values": ["fall_time"], "request_effect": "Return elapsed axis distance from a falling upper-threshold crossing to its matching lower-threshold crossing.", "conformance_case": "Fixtures cover multiple pulses, incomplete transitions, ordering, and unit mismatch.", "extensions": {}},
+    {"id": "openada.feature/measurement.settling-time/v1alpha1", "parameter_path": "measurement.kind", "parameter_values": ["settling_time"], "request_effect": "Return elapsed axis distance from an explicit reference until all retained samples remain inside a closed target tolerance band for the declared hold duration.", "conformance_case": "Fixtures cover excursions, insufficient hold duration, boundary equality, windows, and absent settling.", "extensions": {}}
+  ],
+  "diagnostics": [
+    {"code": "measurement.request.invalid", "severity": "error", "condition": "The closed request shape, identifier, number, parameter, or semantic constraint is invalid.", "next_action": "Correct the explicit typed request; do not invoke or infer a different algorithm.", "extensions": {}},
+    {"code": "measurement.source.invalid", "severity": "error", "condition": "The normalized series source identity, shape, axis, signal, condition, or value is invalid.", "next_action": "Regenerate the bounded normalized series from validated upstream evidence.", "extensions": {}},
+    {"code": "measurement.source.digest_mismatch", "severity": "error", "condition": "The supplied normalized-series artifact digest does not equal the canonical digest of the axis, signals, and conditions.", "next_action": "Reject the source as tampered or misbound and regenerate its canonical digest; do not relabel an unrelated native artifact hash.", "extensions": {}},
+    {"code": "measurement.source.over_limit", "severity": "error", "condition": "The inline series exceeds a profile point, signal, or condition ceiling.", "next_action": "Select or decimate evidence through an explicitly versioned upstream operation; do not truncate silently.", "extensions": {}},
+    {"code": "measurement.kind.unsupported", "severity": "error", "condition": "The request names an algorithm outside the closed v1alpha1 vocabulary.", "next_action": "Choose an advertised feature or introduce a separately versioned algorithm profile.", "extensions": {}},
+    {"code": "measurement.signal.missing", "severity": "error", "condition": "The named signal is absent from the normalized source series.", "next_action": "Correct the exact signal binding or regenerate the source with that signal.", "extensions": {}},
+    {"code": "measurement.unit.mismatch", "severity": "error", "condition": "A coordinate or threshold unit does not exactly match the declared axis or signal unit.", "next_action": "Supply exact matching units; v1alpha1 performs no implicit conversion.", "extensions": {}},
+    {"code": "measurement.domain.invalid", "severity": "error", "condition": "A coordinate or reference lies outside the source domain.", "next_action": "Correct the requested domain or produce evidence spanning the required coordinate.", "extensions": {}},
+    {"code": "measurement.value.not_found", "severity": "error", "condition": "A valid bounded source contains no sample or event satisfying the requested measurement.", "next_action": "Review the domain, resolution, direction, thresholds, and observation duration before rerunning.", "extensions": {}},
+    {"code": "measurement.value.non_finite", "severity": "error", "condition": "The algorithm did not produce one finite scalar despite structurally valid inputs.", "next_action": "Inspect numeric scale and algorithm inputs; retain unknown rather than emitting NaN or infinity.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.kernel.typed-evidence",
+      "native_product_id": "org.openada.core.runtime",
+      "backend_name": "OpenADA deterministic typed-evidence kernel",
+      "supported_features": [
+        "openada.feature/measurement.sample-at/v1alpha1",
+        "openada.feature/measurement.minimum/v1alpha1",
+        "openada.feature/measurement.maximum/v1alpha1",
+        "openada.feature/measurement.mean/v1alpha1",
+        "openada.feature/measurement.rms/v1alpha1",
+        "openada.feature/measurement.crossing/v1alpha1",
+        "openada.feature/measurement.rise-time/v1alpha1",
+        "openada.feature/measurement.fall-time/v1alpha1",
+        "openada.feature/measurement.settling-time/v1alpha1"
+      ],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/measurement.sample-at/v1alpha1", "implementation": "Exact lookup or adjacent-point linear interpolation, algorithm version 1.0.0.", "output_fact_paths": ["data.measurement.status", "data.measurement.value", "data.measurement.unit"], "extensions": {}},
+        {"feature_id": "openada.feature/measurement.minimum/v1alpha1", "implementation": "First minimum retained sample in the closed selected domain, algorithm version 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.measurement.location"], "extensions": {}},
+        {"feature_id": "openada.feature/measurement.maximum/v1alpha1", "implementation": "First maximum retained sample in the closed selected domain, algorithm version 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.measurement.location"], "extensions": {}},
+        {"feature_id": "openada.feature/measurement.mean/v1alpha1", "implementation": "Arithmetic mean using finite stable summation over retained samples, algorithm version 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.measurement.unit"], "extensions": {}},
+        {"feature_id": "openada.feature/measurement.rms/v1alpha1", "implementation": "Square root of the arithmetic mean of squared finite retained samples, algorithm version 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.measurement.unit"], "extensions": {}},
+        {"feature_id": "openada.feature/measurement.crossing/v1alpha1", "implementation": "Directed adjacent-point threshold crossing with linear axis interpolation, algorithm version 1.0.0.", "output_fact_paths": ["data.measurement.status", "data.measurement.value"], "extensions": {}},
+        {"feature_id": "openada.feature/measurement.rise-time/v1alpha1", "implementation": "Matched rising lower-to-upper crossing duration, algorithm version 1.0.0.", "output_fact_paths": ["data.measurement.status", "data.measurement.value"], "extensions": {}},
+        {"feature_id": "openada.feature/measurement.fall-time/v1alpha1", "implementation": "Matched falling upper-to-lower crossing duration, algorithm version 1.0.0.", "output_fact_paths": ["data.measurement.status", "data.measurement.value"], "extensions": {}},
+        {"feature_id": "openada.feature/measurement.settling-time/v1alpha1", "implementation": "First retained sample whose suffix remains within tolerance for the explicit hold duration, algorithm version 1.0.0.", "output_fact_paths": ["data.measurement.status", "data.measurement.value"], "extensions": {}}
+      ],
+      "native_actions": [
+        "Validate and normalize the closed inline series without executing an EDA or user-provided expression.",
+        "Bind all coordinates and thresholds by exact unit equality and select exactly one named signal.",
+        "Execute one versioned deterministic scalar algorithm and reject non-finite results.",
+        "Retain source artifact, producer request, normalized content digest, operating conditions, and algorithm identity in the result."
+      ],
+      "artifact_bindings": [
+        {"native_kind": "provenance-bound normalized real inline series", "canonical_role": "measurement.source", "extensions": {}}
+      ],
+      "limitations": [
+        "The v1alpha1 kernel accepts only real finite series; upstream operations must explicitly derive magnitude, phase, or other real views from complex native evidence.",
+        "No arbitrary expressions, unit conversion, spline interpolation, resampling, FFT, statistical inference, or native simulator measurement language is accepted."
+      ],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": [
+      "operation and assertion identifiers and pass/fail/unknown truth table",
+      "closed normalized-series and measurement request shapes",
+      "exact unit, domain, source-identity, and finite-number constraints",
+      "algorithm feature identifiers, parameter meanings, interpolation rules, and implementation version",
+      "normalized measurement record, request digest, source digest chain, and diagnostic meanings"
+    ],
+    "change_policy": "Any change to an algorithm, parameter, unit rule, event boundary, source requirement, status classification, or normalized fact requires a new operation or feature identifier. Implementation corrections that preserve the published semantics require a new implementation version and conformance record.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

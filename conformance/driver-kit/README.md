@@ -51,9 +51,10 @@ protocol:
 - [`operation-profile.template.md`](operation-profile.template.md) is the RFC
   checklist for one operation, primary assertion, evidence truth table, and
   cross-backend mappings.
-- [`circuit.simulate-v1alpha1.json`](../../profiles/circuit.simulate-v1alpha1.json)
-  is the first concrete profile and validates against
+- [`circuit.simulate-v1alpha2.json`](../../profiles/circuit.simulate-v1alpha2.json)
+  is the active concrete simulation profile and validates against
   [`openada.operation-profile/v0alpha1`](../../schemas/operation-profile-v0alpha1.schema.json).
+  Its v1alpha1 predecessor remains packaged unchanged for historical records.
 
 The current CLI records the built-in circuit-simulation profile and selected
 ngspice/Xyce driver, but it does not accept the generic request envelope or
@@ -68,16 +69,17 @@ rules that JSON Schema alone cannot enforce.
 Use the same operation shape for both built-in mappings:
 
 ```bash
-openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend ngspice --output-dir /tmp/ngspice-run
-openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend xyce --output-dir /tmp/xyce-run
 ```
 
 Omitting `--backend` keeps the legacy ngspice interface as the default.
-Cross-backend fixtures are limited to one self-contained transient analysis with no includes,
-measurements, or control-language blocks. They must assert the same primary
-truth table and normalized fact names while retaining and checking each
+Cross-backend fixtures are limited to one self-contained advertised OP, DC, AC,
+or transient analysis with no includes, measurements, print directives,
+control-language blocks, or multiple analyses. They must assert the same
+primary truth table and normalized fact names while retaining and checking each
 driver's native command, log, and waveform evidence.
 
 The pinned native portability replay now exercises both mappings with ngspice
@@ -85,12 +87,15 @@ The pinned native portability replay now exercises both mappings with ngspice
 checks the same model-free RC behavior:
 
 ```bash
-python3 conformance/circuit-simulate/run.py \
+python3 conformance/circuit-simulate-v0alpha2/run.py \
   --evidence-dir /tmp/openada-circuit-simulate-evidence
 ```
 
-This workflow-validates the bounded shared alpha mapping. It does not widen the
-profile to includes, measurements, control language, or other analysis types.
+The expanded success replay supports structured OP/DC/AC capability rows. The
+shared transient rows retain their earlier workflow-validated evidence. The
+new success-only cases do not independently establish every outcome required
+for workflow-validated maturity, and they do not widen the profile to includes,
+measurements, control language, or unadvertised analysis types.
 
 The same checks are available to tests:
 

@@ -27,13 +27,13 @@ replacement for them. The same simulation intent can run through ngspice or
 Xyce; the agent should not have to relearn every command surface and log
 grammar to understand whether valid evidence was produced.
 
-The `0.2.0` preview provides six semantic CLI operations, six
-open-source EDA drivers including the Xyce simulation alpha, and the versioned
-`openada.result/v0alpha1` evidence envelope. A transport-neutral alpha request
-envelope, driver-manifest schema, and typed circuit-simulation operation profile
-are published for review. The first ngspice/Xyce portability case is natively
-workflow-validated; runtime external-driver discovery is the next protocol
-milestone.
+The `0.3.0` preview provides eight CLI operations, six open-source EDA drivers,
+the versioned `openada.result/v0alpha1` evidence envelope, and six agent skills.
+It adds two deterministic evidence operations and broadens the shared
+circuit-simulation profile to OP, DC, AC, and transient analysis where the
+selected backend advertises support. Runtime external-driver discovery remains
+a protocol milestone; these additions do not turn the review-only manifest
+into a runtime registry.
 
 > **Early preview**
 >
@@ -87,6 +87,13 @@ primitives to implement one stable engineering operation. Agent harnesses
 provide connectivity; OpenADA defines the domain meaning and the evidence
 threshold.
 
+Local CLI is the implemented connection today; MCP, live sessions, and remote
+jobs are future adapter choices below that meaning. The review-only v0alpha1
+driver manifest does not define a normative MCP binding or per-feature
+capability maturity. A future EDA marketplace should catalog providers of
+exact, conformance-backed capabilities—not raw binaries or prompt bundles. See
+[Providers, marketplaces, and MCP](docs/PROVIDERS_AND_MCP.md).
+
 The [semantic model](docs/SEMANTIC_MODEL.md) specifies this proposed ABI in
 more detail: operation and assertion profiles, requests, driver capabilities,
 normalized evidence, artifact lineage, and transactional mutation.
@@ -102,7 +109,7 @@ The target contract lets a driver compile one operation profile to different
 native mechanisms:
 
 ```text
-openada.operation/circuit.simulate/v1alpha1
+openada.operation/circuit.simulate/v1alpha2
                  │
         ┌────────┴─────────┐
         ▼                  ▼
@@ -114,26 +121,33 @@ openada.operation/circuit.simulate/v1alpha1
 
 The alpha proof exposes both drivers through the same command and operation
 profile. An explicit `--backend` selects that typed shared-profile path;
-omitting it keeps the compatible legacy ngspice interface:
+omitting it keeps the compatible legacy ngspice interface. A caller may either
+let OpenADA inspect the deck's one supported top-level analysis or supply the
+closed typed flags explicitly:
 
 ```bash
-./bin/openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+./bin/openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend ngspice \
   --output-dir /tmp/ngspice-evidence
-./bin/openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
+./bin/openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
   --backend xyce \
   --output-dir /tmp/xyce-evidence
+./bin/openada simulate conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-dc.cir \
+  --backend ngspice --analysis dc \
+  --source-name V1 --source-unit V --start 0 --stop 5 --step 0.1 \
+  --output-dir /tmp/ngspice-dc-evidence
 ```
 
-The shared alpha subset is intentionally small: one self-contained transient
-analysis, with no includes, measurements, or control-language blocks. Both
-mappings now pass a pinned, network-disabled native replay using ngspice 46 and
-Xyce 7.10-opensource. The independent verifier parses ngspice's binary raw and
-Xyce's ASCII raw, checks the RC waveform and branch relation, and compares the
-normalized engineering meaning without requiring identical point counts or
-native files. Each result still identifies the selected backend and version,
-native inputs and artifacts, working directory, diagnostics, hashes, and
-provenance.
+The shared subset remains intentionally small: one self-contained OP, DC, AC,
+or transient analysis, with no includes, control-language blocks, `.measure`,
+`.print`, FFT, noise, Monte Carlo, or mixed-analysis deck. The ngspice mapping
+is structured for OP/DC/AC and workflow-validated for TRAN; Xyce is structured
+for DC/AC, workflow-validated for TRAN, and explicitly rejects OP as
+unsupported. The independent verifier
+parses each backend's native raw evidence and checks analysis-specific facts
+without requiring identical point counts or native files. Each result still
+identifies the selected backend and version, native inputs and artifacts,
+working directory, diagnostics, hashes, and provenance.
 
 The contract also keeps distinct questions distinct:
 
@@ -162,14 +176,17 @@ separate skill for every supported tool. It creates a better place for skills:
 reusable engineering workflows that sit above the contract and work across
 backends.
 
-The plugin now has two deliberately separate layers:
+The plugin has two deliberately separate layers:
 
 - `skills/openada` is the thin execution and evidence adapter. It selects a
   semantic operation, invokes OpenADA, and interprets the versioned result.
-- `skills/review-circuit-simulation` is the first engineering skill. It reviews
-  simulation evidence, keeps execution/evidence/measurement/specification
-  claims separate, and recommends the next action without embedding an
-  ngspice- or Xyce-specific workflow.
+- Five experimental engineering skills sit above it:
+  `review-circuit-simulation`, `characterize-analog-block`,
+  `analyze-feedback-stability`, `analyze-spectral-linearity`, and
+  `assess-pvt-and-yield`. They preserve the
+  execution/evidence/measurement/specification boundary and inspect advertised
+  operations and feature IDs before planning work. An unavailable primitive is
+  reported as not evaluated; a skill does not fall through to native syntax.
 
 Skills are plugin content, not protocol objects. They may compose several
 OpenADA operations and evolve faster than the semantic ABI, but they cannot
@@ -184,14 +201,14 @@ contribution gate.
 
 ## What exists and what comes next
 
-| Contract layer | `0.2.0` preview | Protocol target |
+| Contract layer | Current checkout | Protocol target |
 |---|---|---|
-| Agent intent | CLI commands and flags; five fixed scoped-preflight assertions; the typed `circuit.simulate/v1alpha1` profile; a review-only `openada.request/v0alpha1` scaffold | Remaining immutable operation/assertion profiles accepted by general runtime dispatch |
+| Agent intent | Eight CLI operations and flags; five fixed scoped-preflight assertions; three typed operation profiles; a review-only `openada.request/v0alpha1` scaffold | Remaining immutable operation/assertion profiles accepted by general runtime dispatch |
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
-| Drivers | Six open-source EDA drivers; the Xyce mapping of the simulation alpha is workflow-validated | Capability manifests and independently installable drivers |
-| Portability proof | One `circuit.simulate` request shape passes pinned native ngspice/Xyce replay with independently parsed artifacts | More analysis profiles, open-source backends, and runtime environments |
-| Engineering skills | One execution skill plus an experimental backend-independent simulation-review skill | Small contributed workflows that compose stable operations across backends |
-| Workflow composition | Small atomic netlist, simulation, verification, and RTL checks | Corners, Monte Carlo, measurement, specification, and lineage composed above those atoms |
+| Drivers | Six open-source EDA drivers; ngspice OP/DC/AC and Xyce DC/AC are structured, while shared transient mappings are workflow-validated | Capability manifests and independently installable drivers |
+| Portability proof | Analysis-specific `circuit.simulate` requests have pinned native ngspice/Xyce success replay with independently parsed artifacts; the expanded replay does not yet cover every maturity outcome | More operations, open-source backends, runtime environments, and complete outcome corpora |
+| Engineering skills | One execution skill plus five experimental capability-gated engineering skills | Contributed workflows that compose stable operations across backends |
+| Workflow composition | Atomic netlist, simulation, typed scalar measurement, explicit specification evaluation, verification, and RTL checks | Native waveform normalization, corners, statistical execution, richer measurements, and lineage composed above those atoms |
 | Design mutation | Deliberately outside the current preview | Preconditioned, transactional change sets with declared writes, native diffs, rollback evidence, and source-revision identity |
 
 Mutation is part of the long-term design because chip projects need safer
@@ -202,7 +219,7 @@ or rollback separately from engineering validation.
 
 The [mutation and versioning proposal](docs/MUTATION_AND_VERSIONING.md) defines
 a semantic, append-only design-change history with `preview`, `apply`, and
-`revert`; the write-capable runtime is planned and is not shipped in `0.2.0`.
+`revert`; the write-capable runtime is planned and is not shipped in `0.3.0`.
 
 ## Quickstart
 
@@ -276,7 +293,7 @@ is:
 To install the Python entry point from the repository:
 
 ```bash
-python -m pip install 'git+https://github.com/simra-tech/OpenADA.git@v0.2.0'
+python -m pip install 'git+https://github.com/simra-tech/OpenADA.git@v0.3.0'
 openada doctor
 ```
 
@@ -291,12 +308,16 @@ harnesses.
 Inside Claude Code:
 
 ```text
-/plugin marketplace add https://github.com/simra-tech/OpenADA.git#v0.2.0
+/plugin marketplace add https://github.com/simra-tech/OpenADA.git#v0.3.0
 /plugin install openada@openada
 /reload-plugins
 ```
 
 Restart Claude Code instead if the plugin is not visible after reloading.
+
+Invoke the plugin skills as `/openada:openada`,
+`/openada:characterize-analog-block`, or another shipped
+`/openada:<skill-name>` command.
 
 For local development without installation:
 
@@ -309,18 +330,23 @@ claude --plugin-dir .
 Add the Git marketplace:
 
 ```bash
-codex plugin marketplace add simra-tech/OpenADA --ref v0.2.0
+codex plugin marketplace add simra-tech/OpenADA --ref v0.3.0
 codex plugin add openada@openada
 ```
 
+Invoke the plugin skills as `$openada:openada`,
+`$openada:characterize-analog-block`, or another shipped
+`$openada:<skill-name>` skill.
+
 For a skill-only Codex CLI setup, first install the `openada` Python entry point
-as shown above. Then copy the shared skills into the user skill directory:
+as shown above. Then install every shipped skill directory into the user skill
+directory:
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R skills/openada ~/.codex/skills/openada
-cp -R skills/review-circuit-simulation \
-  ~/.codex/skills/review-circuit-simulation
+mkdir -p ~/.agents/skills
+for skill in skills/*; do
+  cp -R "$skill" ~/.agents/skills/
+done
 ```
 
 ### Other harnesses
@@ -338,8 +364,10 @@ thin.
 | `doctor` | runtime | preview | Discover capabilities, or preflight one project assertion without catalog inventory |
 | `netlist` | Xschem | workflow-validated | Produce a SPICE netlist and fail on recognized unresolved symbols |
 | `simulate` (legacy default) | ngspice | workflow-validated | Stream wrapper raw files in batch mode, or validate declared deck-owned raw/`wrdata` outputs in control mode |
-| `simulate --backend ngspice` | ngspice | workflow-validated shared alpha | Run the common self-contained transient subset and emit the typed `circuit.simulate` facts |
-| `simulate --backend xyce` | Xyce | workflow-validated shared alpha | Run the common self-contained transient subset and validate a fresh native raw artifact; pinned Xyce 7.10-opensource replay |
+| `simulate --backend ngspice` | ngspice | structured OP/DC/AC; workflow-validated TRAN | Run one self-contained OP, DC, AC, or transient analysis and emit typed `circuit.simulate` facts |
+| `simulate --backend xyce` | Xyce | structured DC/AC; workflow-validated TRAN | Run one self-contained DC, AC, or transient analysis; OP is explicitly unsupported |
+| `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar from a canonical-digest-bound normalized real inline series using a closed algorithm kind |
+| `evaluate` | deterministic OpenADA kernel | structured alpha | Read a complete `result.measure` result envelope, then compare its typed measurement with exact-unit bounds and explicit condition bindings |
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |
@@ -357,6 +385,7 @@ See [the current result contract](docs/CONTRACT.md),
 [semantic model](docs/SEMANTIC_MODEL.md),
 [engineering skills](docs/ENGINEERING_SKILLS.md),
 [request and driver protocol](docs/DRIVER_PROTOCOL.md),
+[providers, marketplaces, and MCP](docs/PROVIDERS_AND_MCP.md),
 [compatibility policy](docs/COMPATIBILITY.md),
 [release history](CHANGELOG.md),
 [driver status and roadmap](docs/ROADMAP.md), and
@@ -371,15 +400,15 @@ runs are network-disabled with a read-only repository mount and fresh evidence
 directory:
 
 ```bash
-python3 conformance/circuit-simulate/run.py \
+python3 conformance/circuit-simulate-v0alpha2/run.py \
   --evidence-dir /tmp/openada-circuit-simulate-evidence
-python3 conformance/circuit-simulate/verify.py \
+python3 conformance/circuit-simulate-v0alpha2/verify.py \
   /tmp/openada-circuit-simulate-evidence
 ```
 
 The replay requires the exact pinned image to exist locally and never pulls it
 during EDA execution. See the
-[circuit-simulation conformance guide](conformance/circuit-simulate/README.md)
+[circuit-simulation conformance guide](conformance/circuit-simulate-v0alpha2/README.md)
 for the image identity, assertion boundary, and independent checks.
 
 ## Reproduce the pinned DRC + LVS case

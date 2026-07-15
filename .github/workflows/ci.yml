@@ -54,6 +54,17 @@ jobs:
               name.endswith("/share/openada/schemas/result-v0alpha1.schema.json")
               for name in names
           ), sorted(names)
+          for packaged_contract in {
+              "share/openada/schemas/operation-profile-v0alpha2.schema.json",
+              "share/openada/profiles/circuit.simulate-v1alpha1.json",
+              "share/openada/profiles/circuit.simulate-v1alpha2.json",
+              "share/openada/profiles/result.measure-v1alpha1.json",
+              "share/openada/profiles/specification.evaluate-v1alpha1.json",
+          }:
+              assert any(name.endswith("/" + packaged_contract) for name in names), (
+                  packaged_contract,
+                  sorted(names),
+              )
 
           sdists = list(Path("dist").glob("openada-*.tar.gz"))
           assert len(sdists) == 1, sdists
@@ -78,6 +89,24 @@ jobs:
               "conformance/ihp-inverter-ngspice/verify.py",
               "conformance/driver-kit/README.md",
               "conformance/driver-kit/check_result.py",
+              "conformance/circuit-simulate/README.md",
+              "conformance/circuit-simulate/manifest.json",
+              "conformance/circuit-simulate/run.py",
+              "conformance/circuit-simulate/verify.py",
+              "conformance/circuit-simulate/fixtures/rc-transient.cir",
+              "conformance/circuit-simulate-v0alpha2/README.md",
+              "conformance/circuit-simulate-v0alpha2/manifest.json",
+              "conformance/circuit-simulate-v0alpha2/run.py",
+              "conformance/circuit-simulate-v0alpha2/verify.py",
+              "conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir",
+              "conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-op.cir",
+              "conformance/circuit-simulate-v0alpha2/fixtures/resistor-divider-dc.cir",
+              "conformance/circuit-simulate-v0alpha2/fixtures/rc-ac.cir",
+              "conformance/typed-evidence-v0alpha1/README.md",
+              "conformance/typed-evidence-v0alpha1/manifest.json",
+              "conformance/typed-evidence-v0alpha1/run.py",
+              "conformance/typed-evidence-v0alpha1/verify.py",
+              "conformance/typed-evidence-v0alpha1/fixtures/cases.json",
               "evaluation/paired-agent/README.md",
               "evaluation/paired-agent/common.py",
               "evaluation/paired-agent/keygen.py",
@@ -100,9 +129,20 @@ jobs:
               "evaluation/paired-agent/tasks/ihp-inverter-sim/native_score.py",
               "docs/COMPATIBILITY.md",
               "docs/CONTRACT.md",
+              "docs/PROVIDERS_AND_MCP.md",
               "docs/ROADMAP.md",
               "fixtures/smoke/smoke_ngspice.cir",
+              "profiles/circuit.simulate-v1alpha1.json",
+              "profiles/circuit.simulate-v1alpha2.json",
+              "profiles/result.measure-v1alpha1.json",
+              "profiles/specification.evaluate-v1alpha1.json",
+              "schemas/operation-profile-v0alpha2.schema.json",
               "skills/openada/SKILL.md",
+              "skills/characterize-analog-block/SKILL.md",
+              "skills/characterize-analog-block/references/application-recipes.md",
+              "skills/analyze-feedback-stability/SKILL.md",
+              "skills/analyze-spectral-linearity/SKILL.md",
+              "skills/assess-pvt-and-yield/SKILL.md",
           }
           for required in required_source_paths:
               assert any(name.endswith("/" + required) for name in source_names), required

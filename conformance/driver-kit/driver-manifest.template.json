@@ -47,7 +47,7 @@
   ],
   "capabilities": [
     {
-      "operation_profile": "openada.operation/circuit.simulate/v1alpha1",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
       "assertion_profiles": [
         "openada.assertion/simulation.evidence.valid/v1alpha1"
       ],
@@ -86,7 +86,7 @@
       "record_id": "org.example.openada.conformance/example-spice-smoke/v1",
       "level": "structured",
       "case": "success",
-      "operation_profile": "openada.operation/circuit.simulate/v1alpha1",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
       "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
       "status": "pass",
       "result_schema_id": "openada.result/v0alpha1",

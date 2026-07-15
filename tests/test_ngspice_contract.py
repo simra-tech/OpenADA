@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from openada.cli import main
-from openada.engines.spice import NgspiceDriver, NgspiceOutput
+from openada.engines.spice import MAX_SOURCE_BYTES, NgspiceDriver, NgspiceOutput
 
 
 def _ascii_raw(plotname: str = "Transient Analysis") -> bytes:
@@ -430,7 +430,7 @@ def test_control_deck_outputs_reject_wrapper_raw_file(tmp_path):
     assert _diagnostic_codes(payload) == {"deck_output.invalid"}
 
 
-def test_convergence_failure_takes_precedence_over_missing_deck_evidence(tmp_path):
+def test_convergence_marker_without_required_raw_evidence_remains_unknown(tmp_path):
     binary = tmp_path / "ngspice"
     _write_fake_ngspice(binary, log="timestep too small; simulation stopped\n")
     source = _source(tmp_path, ".control\nrun\nwrite missing.raw\n.endc\n.end\n")
@@ -444,10 +444,34 @@ def test_convergence_failure_takes_precedence_over_missing_deck_evidence(tmp_pat
 
     assert payload["execution"]["status"] == "completed"
     assert payload["execution"]["exit_code"] == 0
-    assert payload["engineering"]["status"] == "fail"
-    assert payload["data"]["converged"] is False
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["data"]["converged"] is None
     assert "simulation.nonconvergent" in _diagnostic_codes(payload)
     assert "artifact.missing" in _diagnostic_codes(payload)
+
+
+def test_conflicting_native_error_prevents_terminal_nonconvergence_classification(
+    tmp_path,
+):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(
+        binary,
+        log=(
+            "No. of Data Rows : 2\n"
+            "timestep too small; simulation stopped\n"
+            "fatal error: conflicting native failure\n"
+        ),
+    )
+    source = _source(tmp_path)
+
+    payload = NgspiceDriver(str(binary)).simulate(source, tmp_path / "out")
+
+    assert payload["execution"]["status"] == "completed"
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["data"]["converged"] is None
+    assert {"simulation.nonconvergent", "simulation.native_error"}.issubset(
+        _diagnostic_codes(payload)
+    )
 
 
 def test_malformed_expect_output_cli_emits_one_json_object(tmp_path, capsys):
@@ -567,6 +591,22 @@ def test_batch_rejects_explicit_init_and_uninspectable_long_line(tmp_path):
     assert _diagnostic_codes(explicit_init) == {"execution_mode.invalid"}
     assert long_line["execution"]["status"] == "invalid_request"
     assert _diagnostic_codes(long_line) == {"input.line_too_long"}
+
+
+def test_ngspice_rejects_oversized_source_before_launch(tmp_path):
+    source = _source(tmp_path)
+    with source.open("ab") as handle:
+        handle.truncate(MAX_SOURCE_BYTES + 1)
+
+    payload = NgspiceDriver("/does/not/matter").simulate(
+        source,
+        tmp_path / "out",
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["execution"]["command"] == []
+    assert payload["inputs"] == []
+    assert _diagnostic_codes(payload) == {"input.too_large"}
 
 
 def test_control_rejects_source_name_ngspice_cannot_represent(tmp_path):

@@ -1,0 +1,6 @@
+OpenADA model-free resistor-divider operating-point fixture
+VBIAS in 0 DC 1
+RUP in out 1k
+RDOWN out 0 1k
+.op
+.end

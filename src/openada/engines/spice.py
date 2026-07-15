@@ -14,11 +14,14 @@ import tempfile
 from typing import Callable, Sequence
 
 from ..contract import (
+    FileRecordError,
+    FileRecordLimitError,
     bounded_text,
     diagnostic,
     file_record,
     result,
     static_execution,
+    stable_regular_file,
     tool_record,
 )
 from ..discovery import DiscoveryManager
@@ -39,6 +42,7 @@ MAX_EXPECTED_OUTPUTS = 32
 MAX_OUTPUT_PATH_CHARS = 4_096
 MAX_OUTPUT_COMPONENT_CHARS = 255
 MAX_SOURCE_LINE_BYTES = 65_536
+MAX_SOURCE_BYTES = 16 * 1024 * 1024
 MAX_LOG_BYTES = 16 * 1024 * 1024
 MAX_CAPTURE_BYTES = 256 * 1024 * 1024
 MAX_MEASUREMENTS = 200
@@ -339,7 +343,9 @@ def _capture_file(
     return artifact, capture
 
 
-def _scan_source(path: Path) -> tuple[set[str], bool, bool, bool, bool, bool, bool, bool]:
+def _scan_source(
+    path: Path,
+) -> tuple[set[str], bool, bool, bool, bool, bool, bool, bool, bool, bool]:
     measurements: set[str] = set()
     has_control = False
     has_pure_control = False
@@ -348,36 +354,55 @@ def _scan_source(path: Path) -> tuple[set[str], bool, bool, bool, bool, bool, bo
     duplicate_measurement_declaration = False
     invalid_measurement_name = False
     long_line = False
-    with path.open("rb") as handle:
-        line_number = 0
-        while True:
-            raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
-            if not raw_line:
-                break
-            line_number += 1
-            if len(raw_line) > MAX_SOURCE_LINE_BYTES and not raw_line.endswith(b"\n"):
-                long_line = True
-                while raw_line and not raw_line.endswith(b"\n"):
-                    raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
-                continue
-            line = raw_line.decode("utf-8", errors="replace")
-            if line_number == 1 and PURE_CONTROL_SCRIPT_RE.match(line):
-                has_pure_control = True
-            declaration = MEASUREMENT_DECLARATION_RE.match(line)
-            if declaration:
-                name = declaration.group(1)
-                if len(name) > MAX_MEASUREMENT_NAME_CHARS:
-                    invalid_measurement_name = True
-                elif name.lower() in measurements:
-                    duplicate_measurement_declaration = True
-                elif name.lower() not in measurements and len(measurements) >= MAX_MEASUREMENTS:
-                    too_many_measurements = True
-                else:
-                    measurements.add(name.lower())
-            if CONTROL_DECLARATION_RE.match(line):
-                has_control = True
-            if TRANSITIVE_INCLUDE_RE.match(line):
-                has_transitive_include = True
+    source_too_large = False
+    source_unstable = False
+    try:
+        with stable_regular_file(path) as (handle, _):
+            line_number = 0
+            source_bytes = 0
+            while True:
+                raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
+                if not raw_line:
+                    break
+                source_bytes += len(raw_line)
+                if source_bytes > MAX_SOURCE_BYTES:
+                    source_too_large = True
+                    break
+                line_number += 1
+                if len(raw_line) > MAX_SOURCE_LINE_BYTES and not raw_line.endswith(b"\n"):
+                    long_line = True
+                    while raw_line and not raw_line.endswith(b"\n"):
+                        raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
+                        source_bytes += len(raw_line)
+                        if source_bytes > MAX_SOURCE_BYTES:
+                            source_too_large = True
+                            break
+                    if source_too_large:
+                        break
+                    continue
+                line = raw_line.decode("utf-8", errors="replace")
+                if line_number == 1 and PURE_CONTROL_SCRIPT_RE.match(line):
+                    has_pure_control = True
+                declaration = MEASUREMENT_DECLARATION_RE.match(line)
+                if declaration:
+                    name = declaration.group(1)
+                    if len(name) > MAX_MEASUREMENT_NAME_CHARS:
+                        invalid_measurement_name = True
+                    elif name.lower() in measurements:
+                        duplicate_measurement_declaration = True
+                    elif (
+                        name.lower() not in measurements
+                        and len(measurements) >= MAX_MEASUREMENTS
+                    ):
+                        too_many_measurements = True
+                    else:
+                        measurements.add(name.lower())
+                if CONTROL_DECLARATION_RE.match(line):
+                    has_control = True
+                if TRANSITIVE_INCLUDE_RE.match(line):
+                    has_transitive_include = True
+    except FileRecordError:
+        source_unstable = True
     return (
         measurements,
         has_control,
@@ -387,6 +412,8 @@ def _scan_source(path: Path) -> tuple[set[str], bool, bool, bool, bool, bool, bo
         duplicate_measurement_declaration,
         invalid_measurement_name,
         long_line,
+        source_too_large,
+        source_unstable,
     )
 
 
@@ -877,8 +904,6 @@ class NgspiceDriver:
         run_dir = Path(workdir).expanduser().resolve() if workdir else source.parent
         info = self.discovery.inspect_tool("ngspice")
         tool = tool_record("ngspice", path=self.binary, version=info["version"])
-        input_records = [file_record(source, kind="spice-netlist", role="input")]
-
         base_data = {
             "execution_mode": bounded_text(execution_mode, limit=128),
             "expected_outputs": [],
@@ -886,13 +911,40 @@ class NgspiceDriver:
             "working_directory_is_sandbox": False,
             "transitive_inputs_enumerated": False,
         }
-        if not source.is_file():
+        try:
+            input_records = [
+                file_record(
+                    source,
+                    kind="spice-netlist",
+                    role="input",
+                    maximum_bytes=MAX_SOURCE_BYTES,
+                )
+            ]
+        except FileRecordLimitError:
+            return _static_invalid(
+                tool,
+                [],
+                summary="The SPICE input exceeds the bounded source limit.",
+                code="input.too_large",
+                message=f"The top-level SPICE input must not exceed {MAX_SOURCE_BYTES} bytes.",
+                data=base_data,
+            )
+        except FileRecordError:
+            return _static_invalid(
+                tool,
+                [],
+                summary="The SPICE input changed during bounded capture.",
+                code="input.changed",
+                message=f"The top-level SPICE input was not stable: {source}",
+                data=base_data,
+            )
+        if not input_records[0]["exists"]:
             return _static_invalid(
                 tool,
                 input_records,
-                summary="The SPICE input does not exist.",
+                summary="The SPICE input is not a readable regular file.",
                 code="input.missing",
-                message=f"File not found: {source}",
+                message=f"Regular file not found: {source}",
                 data=base_data,
             )
         if not isinstance(execution_mode, str) or execution_mode not in EXECUTION_MODES:
@@ -924,7 +976,33 @@ class NgspiceDriver:
             else None
         )
         if init_path is not None:
-            input_records.append(file_record(init_path, kind="ngspice-init", role="configuration"))
+            try:
+                input_records.append(
+                    file_record(
+                        init_path,
+                        kind="ngspice-init",
+                        role="configuration",
+                        maximum_bytes=MAX_SOURCE_BYTES,
+                    )
+                )
+            except FileRecordLimitError:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The ngspice init file exceeds the bounded input limit.",
+                    code="input.too_large",
+                    message=f"Simulation configuration inputs must not exceed {MAX_SOURCE_BYTES} bytes.",
+                    data=base_data,
+                )
+            except FileRecordError:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The ngspice init file changed during bounded capture.",
+                    code="input.changed",
+                    message=f"The init file was not stable: {init_path}",
+                    data=base_data,
+                )
             if execution_mode != "control":
                 return _static_invalid(
                     tool,
@@ -934,7 +1012,7 @@ class NgspiceDriver:
                     message="Use --execution-mode control with --init-file.",
                     data=base_data,
                 )
-            if not init_path.is_file():
+            if not input_records[-1]["exists"]:
                 return _static_invalid(
                     tool,
                     input_records,
@@ -945,9 +1023,33 @@ class NgspiceDriver:
                 )
 
         if system_init_path is not None:
-            input_records.append(
-                file_record(system_init_path, kind="ngspice-system-init", role="configuration")
-            )
+            try:
+                input_records.append(
+                    file_record(
+                        system_init_path,
+                        kind="ngspice-system-init",
+                        role="configuration",
+                        maximum_bytes=MAX_SOURCE_BYTES,
+                    )
+                )
+            except FileRecordLimitError:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The ngspice system init file exceeds the bounded input limit.",
+                    code="input.too_large",
+                    message=f"Simulation configuration inputs must not exceed {MAX_SOURCE_BYTES} bytes.",
+                    data=base_data,
+                )
+            except FileRecordError:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The ngspice system init file changed during bounded capture.",
+                    code="input.changed",
+                    message=f"The system init file was not stable: {system_init_path}",
+                    data=base_data,
+                )
             if execution_mode != "control":
                 return _static_invalid(
                     tool,
@@ -957,7 +1059,7 @@ class NgspiceDriver:
                     message="Use --execution-mode control with --system-init-file.",
                     data=base_data,
                 )
-            if not system_init_path.is_file() or system_init_path.name != "spinit":
+            if not input_records[-1]["exists"] or system_init_path.name != "spinit":
                 return _static_invalid(
                     tool,
                     input_records,
@@ -1076,8 +1178,28 @@ class NgspiceDriver:
             duplicate_measurement_declaration,
             invalid_measurement_name,
             long_source_line,
+            source_too_large,
+            source_unstable,
         ) = _scan_source(source)
         base_data["transitive_include_detected"] = has_transitive_include
+        if source_unstable:
+            return _static_invalid(
+                tool,
+                input_records,
+                summary="The SPICE input changed or became non-regular during inspection.",
+                code="input.changed",
+                message="The top-level SPICE input could not be inspected as one stable regular file.",
+                data=base_data,
+            )
+        if source_too_large:
+            return _static_invalid(
+                tool,
+                input_records,
+                summary="The SPICE input exceeds the bounded source limit.",
+                code="input.too_large",
+                message=f"The top-level SPICE input must not exceed {MAX_SOURCE_BYTES} bytes.",
+                data=base_data,
+            )
         if invalid_measurement_name:
             return _static_invalid(
                 tool,
@@ -1417,11 +1539,16 @@ class NgspiceDriver:
 
         changed_inputs: list[str] = []
         for input_record in input_records:
-            current_record = file_record(
-                input_record["path"],
-                kind=input_record["kind"],
-                role=input_record["role"],
-            )
+            try:
+                current_record = file_record(
+                    input_record["path"],
+                    kind=input_record["kind"],
+                    role=input_record["role"],
+                    maximum_bytes=MAX_SOURCE_BYTES,
+                )
+            except FileRecordError:
+                changed_inputs.append(input_record["path"])
+                continue
             if any(
                 current_record.get(field) != input_record.get(field)
                 for field in ("exists", "bytes", "sha256")
@@ -1470,6 +1597,11 @@ class NgspiceDriver:
                 batch_measurement_warning = batch_measurement_warning or line_warning
                 completed_analysis_in_log = completed_analysis_in_log or line_analysis
 
+        log_convergence_error = None
+        for line in log_text.splitlines():
+            line_convergence, *_ = _scan_line(line)
+            log_convergence_error = log_convergence_error or line_convergence
+
         (
             measurements,
             invalid_measurements,
@@ -1503,6 +1635,17 @@ class NgspiceDriver:
             and not invalid_measurements
             and not duplicate_measurements
             and inputs_stable
+            and (script_capture is None or script_capture["status"] == "valid")
+        )
+        conclusive_nonconvergence = bool(
+            log_convergence_error
+            and native_error is None
+            and completed
+            and valid_log
+            and inputs_stable
+            and not process.stdout_truncated
+            and not process.stderr_truncated
+            and (valid_wrapper if wrapper_raw_required else valid_deck_outputs)
             and (script_capture is None or script_capture["status"] == "valid")
         )
 
@@ -1650,7 +1793,7 @@ class NgspiceDriver:
             artifacts.append(wrapper_artifact)
         artifacts.extend(deck_artifacts)
 
-        if convergence_error and inputs_stable:
+        if conclusive_nonconvergence:
             engineering_status = "fail"
             summary = "ngspice reported a convergence failure."
         elif passed:
@@ -1668,7 +1811,7 @@ class NgspiceDriver:
             **base_data,
             "converged": (
                 False
-                if convergence_error and inputs_stable
+                if conclusive_nonconvergence
                 else (True if passed else None)
             ),
             "measurements": measurements[:MAX_MEASUREMENTS],

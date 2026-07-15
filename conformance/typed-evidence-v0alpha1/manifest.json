@@ -1,0 +1,81 @@
+{
+  "schema": "openada.typed-evidence-conformance/v0alpha1",
+  "id": "typed-evidence-measurement-specification-v0alpha1",
+  "implementation": {
+    "id": "org.openada.kernel.typed-evidence",
+    "version": "1.0.0",
+    "runtime": "python"
+  },
+  "contracts": {
+    "result_schema": {
+      "id": "openada.result/v0alpha1",
+      "repository_path": "schemas/result-v0alpha1.schema.json",
+      "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15"
+    },
+    "measurement": {
+      "operation_profile": "openada.operation/result.measure/v1alpha1",
+      "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
+      "repository_path": "profiles/result.measure-v1alpha1.json",
+      "sha256": "0612a935cb7aa07736676b6bd63e5713473b5686f83280eb51ced0727c49b197"
+    },
+    "specification": {
+      "operation_profile": "openada.operation/specification.evaluate/v1alpha1",
+      "assertion_profile": "openada.assertion/specification.satisfied/v1alpha1",
+      "repository_path": "profiles/specification.evaluate-v1alpha1.json",
+      "sha256": "7adc0319e1b15efc7da04010a4390e759597402bf876e7e7b89391e2fa9b9592"
+    }
+  },
+  "fixture": {
+    "schema": "openada.typed-evidence-conformance-cases/v0alpha1",
+    "repository_path": "conformance/typed-evidence-v0alpha1/fixtures/cases.json",
+    "sha256": "b7526ad644414586af9327a43cc784b5afe1eb0830d037a72c9b370d1f4f46e9",
+    "license": "MIT"
+  },
+  "features": {
+    "measurement": [
+      "openada.feature/measurement.sample-at/v1alpha1",
+      "openada.feature/measurement.minimum/v1alpha1",
+      "openada.feature/measurement.maximum/v1alpha1",
+      "openada.feature/measurement.mean/v1alpha1",
+      "openada.feature/measurement.rms/v1alpha1",
+      "openada.feature/measurement.crossing/v1alpha1",
+      "openada.feature/measurement.rise-time/v1alpha1",
+      "openada.feature/measurement.fall-time/v1alpha1",
+      "openada.feature/measurement.settling-time/v1alpha1"
+    ],
+    "specification": [
+      "openada.feature/specification.bound-evaluation/v1alpha1",
+      "openada.feature/specification.condition-binding/v1alpha1"
+    ]
+  },
+  "cases": {
+    "measurement": [
+      "sample-at-linear",
+      "minimum-first-location",
+      "maximum-first-location",
+      "mean-stable-summation",
+      "rms-finite-series",
+      "crossing-rising",
+      "rise-time-first-pulse",
+      "fall-time-first-pulse",
+      "settling-time-held",
+      "crossing-not-found"
+    ],
+    "specification": [
+      "inside-inclusive-bounds",
+      "upper-bound-violated",
+      "exclusive-boundary-violated",
+      "not-found-measurement-is-unknown",
+      "bound-unit-mismatch-is-unknown",
+      "condition-value-mismatch-is-unknown",
+      "tampered-condition-digest-is-invalid"
+    ]
+  },
+  "policy": {
+    "native_eda": "none",
+    "network": "none",
+    "input_mode": "read-only-fixture",
+    "evidence_mode": "new-file-only",
+    "maximum_evidence_bytes": 5242880
+  }
+}
