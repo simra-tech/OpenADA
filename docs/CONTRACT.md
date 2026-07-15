@@ -5,11 +5,11 @@ and native EDA tools. It does not replace native formats or require every EDA to
 share one internal data model.
 
 This document is the source of truth for the current CLI and
-`openada.result/v0alpha1` behavior in the OpenADA `0.3.0` development release.
+`openada.result/v0alpha1` behavior in the OpenADA `0.4.0` development release.
 Its unreleased status is recorded in the changelog. The broader
 [semantic model](SEMANTIC_MODEL.md) and
 [request/driver protocol](DRIVER_PROTOCOL.md) distinguish implemented behavior
-from review-only protocol scaffolding.
+from explicit-provider runtime behavior and future protocol proposals.
 
 ## Contract responsibilities
 
@@ -66,7 +66,7 @@ are bounded to 4,000 characters while retaining head and tail context.
   "diagnostics": [],
   "data": {},
   "provenance": {
-    "openada_version": "0.3.0",
+    "openada_version": "0.4.0",
     "created_at": "2026-07-13T00:00:00Z",
     "host": {
       "system": "Linux",
@@ -334,6 +334,43 @@ the transient mapping retains workflow-validated maturity. The expanded
 success-only cases do not widen the alpha profile, cover every maturity
 outcome, or imply support for arbitrary Xyce decks.
 
+### `extract`
+
+`extract` implements `openada.operation/result.series.extract/v1alpha1` and
+`openada.assertion/series.extraction.valid/v1alpha1`:
+
+```text
+openada extract --simulation SIMULATION-RESULT.json \
+  --artifact /exact/path/to/simulation.raw \
+  --selection SERIES-SELECTION.json
+```
+
+The simulation input must be the complete passing
+`circuit.simulate/v1alpha2` envelope for one reviewed built-in ngspice or Xyce
+mapping. The artifact path must equal its one retained `simulation.result`
+canonical path. Extraction reopens one regular file, verifies exact bytes and
+SHA-256, parses one unambiguous request-bound padded analysis plot under fixed
+limits, and rechecks identity. ngspice binary/ASCII and Xyce ASCII Spice3 raw
+are implemented; Xyce binary and unpadded plots are rejected.
+
+The selection document contains exactly `selectors`, `conditions`, and empty
+`extensions`. Every selector declares one exact native vector, unique output
+name, exact unit, and `real` or `imaginary` Cartesian component. Only reviewed
+native voltage→V and current→A dependent-variable mappings are accepted. OP
+maps to `sample/1`, DC to the typed source/unit, AC to `frequency/Hz`, and
+transient to `time/s`. The operation does not infer units, expressions,
+magnitude, phase, dB, interpolation, or resampling.
+
+Engineering `pass` records `data.extraction.source.binding: verified`, native
+plot facts, and a canonical normalized series. The `measure`, `spectral`, and
+`transfer` CLI commands accept that complete passing extraction envelope
+directly and unwrap only its verified embedded series. Each downstream
+operation's source digest covers the axis, signals, and caller-declared
+condition bindings. Embedded native lineage remains `unverified` inside the
+separate downstream assertion; the retained extraction envelope is what
+preserves the verified native binding. Invalid, stale, tampered, ambiguous,
+unsupported, or over-limit evidence is `unknown`, never an engineering fail.
+
 ### `measure`
 
 `measure` implements `openada.operation/result.measure/v1alpha1` and
@@ -343,9 +380,11 @@ outcome, or imply support for arbitrary Xyce decks.
 openada measure --series SERIES.json --measurement REQUEST.json
 ```
 
-The series is a closed, bounded, real-valued inline representation: one
-strictly increasing axis, one or more equal-length finite signals, explicit
-units and conditions, and a producer operation/request identity. The declared
+The series argument may be either a closed normalized-series document or one
+complete passing `result.series.extract/v1alpha1` envelope. The normalized
+representation has one strictly increasing axis, one or more equal-length
+finite real signals, explicit units and conditions, and a producer
+operation/request identity. The declared
 `series.source.artifact_sha256` must equal OpenADA's canonical SHA-256 over the
 normalized axis, signals, and condition bindings. That digest binds the inline
 content; it is not a native waveform hash. An optional upstream native artifact
@@ -375,6 +414,79 @@ not contain the requested sample or event, with measurement status
 evidence is `unknown`, normally with execution `invalid_request`. Neither pass
 nor fail evaluates a design specification.
 
+### `spectral`
+
+`spectral` implements
+`openada.operation/result.spectral.measure/v1alpha1` and
+`openada.assertion/spectral.measurement.valid/v1alpha1`:
+
+```text
+openada spectral --series SERIES.json --measurement SPECTRAL-REQUEST.json
+```
+
+It accepts the same canonical normalized real-series representation or complete
+passing extraction envelope as `measure`, with an axis unit of exactly seconds.
+V1alpha1 requires 8 through
+65,536 power-of-two uniformly spaced points, a declared interval tolerance,
+an exact coherent fundamental bin, rectangular window, arithmetic-mean
+removal, one-sided mean-square per-bin power, no segments or averaging, a
+closed first-Nyquist band, explicit harmonic orders, fold-to-first-Nyquist
+aliasing, zero-bin integration width, and collision rejection.
+
+The closed scalar kinds are `snr`, `sinad`, `thd`, and `sfdr`. SNR removes DC,
+fundamental, and declared in-band harmonics before summing noise. SINAD includes
+all non-DC/non-fundamental residual power. THD divides declared in-band harmonic
+power by fundamental power and is a signed dB ratio. SFDR compares the
+fundamental with the largest residual bin, keeps harmonics as competitors, and
+chooses the lowest frequency on a power tie. Results retain component powers,
+harmonic membership, compressed bin ranges, winning spur, and a SHA-256 of the
+complete semantic partition.
+
+Engineering `pass` requires one finite dB scalar. A valid record with zero
+power at the declared fundamental is `not_found`/engineering `fail`. A zero
+ratio numerator or denominator that would require infinity is `unknown` with a
+null value; OpenADA does not invent a numeric floor. Nonuniform, noncoherent,
+windowed, fitted, PSD, averaged, SNDR, ENOB, jitter, and phase-noise methods are
+not silently substituted.
+
+The request may identify generic OpenADA definition context or candidate ADC,
+DAC-device, or waveform-recorder IEEE scope. `candidate` is not IEEE
+conformance. See [Measurement methods and standards](MEASUREMENT_METHODS.md).
+
+### `transfer`
+
+`transfer` implements
+`openada.operation/result.transfer.measure/v1alpha1` and
+`openada.assertion/transfer.measurement.valid/v1alpha1`:
+
+```text
+openada transfer --series SERIES.json --measurement TRANSFER-REQUEST.json
+```
+
+The series argument may be a canonical normalized real series or a complete
+passing extraction envelope. V1alpha1 requires at least two strictly
+increasing positive frequencies with axis unit exactly `Hz`, and four distinct
+same-unit real series naming the input and output phasors' real and imaginary
+Cartesian components. At every point the kernel computes exactly complex
+output divided by complex input. A zero input or output magnitude, a non-finite
+ratio, or a dimensional mismatch is `unknown`; no numerical floor is invented.
+
+The closed metrics are `low_frequency_gain_db`, `bandwidth_3db`,
+`unity_gain_frequency`, and `phase_margin`. “Low frequency” means the first
+positive simulated frequency and is explicitly not DC. The -3 dB reference is
+that first-point magnitude minus exactly 3.0 dB. Bandwidth and unity use only
+falling adjacent-point crossings, require exactly one candidate, and interpolate
+magnitude and unwrapped phase linearly over log10 frequency. Phase margin is
+available only when the request explicitly declares
+`loop-gain-negative-feedback`, and is 180 degrees plus the unwrapped
+output-over-input phase at the unique falling 0 dB crossing.
+
+One finite scalar is `measured`/engineering `pass`; no required falling
+crossing is conclusively `not_found`/engineering `fail`; multiple crossings or
+an invalid source or interpretation are `unknown`. The profile does not define
+gain margin, a phase-crossing search, multi-crossing selection, true DC gain,
+smoothing, fitting, extrapolation, de-embedding, or a general stability claim.
+
 ### `evaluate`
 
 `evaluate` implements `openada.operation/specification.evaluate/v1alpha1` and
@@ -386,8 +498,9 @@ openada evaluate --measurement RESULT-MEASURE-ENVELOPE.json \
 ```
 
 The CLI measurement input must be a complete `openada.result/v0alpha1` envelope
-whose operation is `result.measure` and whose `data.measurement` is present.
-The Python operation API can accept that extracted typed measurement record
+whose operation is `result.measure`, `result.spectral.measure`, or
+`result.transfer.measure` and whose typed `data.measurement` is present. The
+Python operation API can accept that extracted typed measurement record
 directly. The specification names the exact measurement ID, at least one
 explicit lower and/or upper finite bound, each bound's inclusive flag, and
 required operating conditions. Measurement and bound units must be identical
@@ -410,6 +523,79 @@ measurement, unit mismatch, condition mismatch, invalid interval, or broken
 source binding yields specification `unknown`, never a false specification
 failure. The retained source object described above keeps the full measurement
 and specification binding available for audit.
+
+### `profile`
+
+`profile list` and `profile show OPERATION-PROFILE-ID` inspect the packaged
+operation-profile catalog. `list` returns schema, operation, assertion, and
+feature identities for all six active typed profiles plus the immutable
+historical `circuit.simulate/v1alpha1` profile. `show` returns one complete
+packaged profile or a typed `profile.not_found` failure. These commands validate
+the installed profile documents before returning them; they are control-plane
+inspection results, not engineering assertions and not provider discovery.
+
+### `provider`
+
+`provider validate`, `provider list`, and `provider invoke` implement an
+explicit control-plane boundary for one
+`openada.driver-manifest/v0alpha1`. They are not engineering operation profiles
+and do not change `simulate --backend` or built-in driver selection.
+
+`invoke` requires one complete `openada.request/v0alpha1` with an exact driver
+selector. The implemented external dispatch registry currently contains only
+`openada.operation/circuit.simulate/v1alpha2`; the other packaged profiles use
+their operation-specific built-in CLI bridges. The runtime validates the
+manifest and its internal cross-references, request, installed operation
+profile, closed and relational parameters, target, configuration, feature set,
+the profile side-effect mode against caller authority and capability
+declarations, maturity records and their native-product coverage, assertion
+truth table, evidence roles and limits, and one unambiguous local CLI
+JSON-stdio `wait` transport. The current simulation binding requires the target
+and every configuration locator to name a canonical absolute regular
+non-symlink file. The target is limited to 16 MiB, each configuration file to
+256 MiB, and all request input files together to 512 MiB. Before launch the host
+snapshots their filesystem identity, byte count, and SHA-256 and rejects any
+declared digest that does not match. Its evidence destination must also be a
+canonical absolute filesystem path whose
+canonical non-linked parent already exists; only `fail-if-present` is accepted,
+and the destination itself must be absent before launch.
+
+The host invokes an executable argv vector without a shell. It resolves the
+executable and any standalone existing regular-file path arguments, substitutes
+their canonical paths, and compares their filesystem identities before and
+after execution. It bounds stdin/stdout/stderr and the declared timeout,
+requires a zero transport-process exit with no stderr, and terminates the fresh
+process group on timeout, overflow, and after the parent exits. That kills only
+descendants which remain in the group; a process that deliberately detaches can
+escape this containment, and the provider runtime is not a sandbox. It then
+validates the base and operation-specific result,
+correlation/profile/provider echoes, truth-table and evidence consistency, and
+every recorded local input and artifact against its declared regular-file size
+and SHA-256 under aggregate bounds. Every returned artifact path must be
+canonical, absolute, and inside the authorized evidence destination; an
+existing artifact must resolve there without symbolic-link traversal.
+
+`request_id` is a correlation identifier, not a digest of the complete request.
+For conclusive results, the current simulation validator additionally binds
+the canonical absolute filesystem target and every configuration locator to
+exactly one result input record and checks caller-supplied digests. The returned
+analysis type must equal the requested type, `tool` must identify the native
+tool, `execution.command` must be nonempty, and `execution.exit_code` must carry
+the native exit; engineering `pass` requires that native exit to be zero. These
+checks do not provide a general request content digest in v0alpha1. After the
+provider completes, the host reopens every request input and requires its
+identity, size, and digest—and the provider's corresponding retained input
+record—to match the pre-launch snapshot. Mutation, replacement, disappearance,
+or a conflicting provider input record invalidates the returned evidence even
+if the provider otherwise reports a conclusive result.
+Provider-manifest conformance records are schema- and cross-reference-checked
+self-declarations; the runtime does not fetch their URI or independently verify
+their declared evidence digest.
+
+This boundary does not discover, install, rank, authenticate, or trust a
+provider. It implements no MCP/session/remote transport, marketplace, network
+catalog, credential model, or artifact transfer. See
+[Providers, marketplaces, and MCP](PROVIDERS_AND_MCP.md).
 
 ### `drc`
 

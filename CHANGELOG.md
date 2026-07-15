@@ -4,7 +4,87 @@ OpenADA follows semantic versioning for the Python package and agent plugins.
 Contract, operation-profile, and conformance identifiers have independent
 versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
-## 0.3.0 — Unreleased
+## 0.4.0 — Unreleased
+
+### Added
+
+- `result.series.extract/v1alpha1` and the `extract` CLI bridge. It consumes a
+  complete passing `circuit.simulate/v1alpha2` envelope plus that result's exact
+  retained raw artifact, rechecks canonical path/bytes/SHA-256 and file
+  stability, selects one request-bound padded plot within fixed bounds, and emits
+  a canonical `result.measure/v1alpha1`-compatible real series. ngspice
+  binary/ASCII and
+  Xyce ASCII Spice3 evidence support explicit real/imaginary Cartesian voltage
+  or current projections across each backend's advertised OP/DC/AC/TRAN rows.
+- `result.spectral.measure/v1alpha1` and the `spectral` CLI operation for one
+  closed coherent single-tone SNR, SINAD, signed-dB THD, or SFDR measurement.
+  The method freezes uniform power-of-two sampling, rectangular window, mean
+  removal, one-sided mean-square bin power, harmonic folding/collision rules,
+  band membership, tie breaking, and a hashed component partition.
+- `result.transfer.measure/v1alpha1` and the `transfer` CLI operation for an
+  explicit same-unit Cartesian AC output-over-input trace plus one
+  first-positive-frequency gain, unique falling −3 dB bandwidth,
+  unity-gain-frequency, or negative-feedback phase-margin scalar. The profile
+  freezes phase unwrapping and log-frequency crossing interpolation, rejects
+  ambiguous crossings, and explicitly excludes gain margin.
+- A standards-scope map for IEEE 1241-2023 (ADC), IEEE 1658-2023 (DAC), IEEE
+  1057-2017 (waveform recorders), IEEE 2414-2020 (jitter/phase-noise
+  terminology), and IEEE 181-2025 (transitions/pulses). Implemented spectral
+  methods remain OpenADA definitions; converter/recorder references are
+  explicitly `candidate`, not IEEE conformance claims.
+- An explicit external-provider runtime over immutable
+  `openada.driver-manifest/v0alpha1` and `openada.request/v0alpha1`, exposed as
+  `provider validate`, `provider list`, and `provider invoke`. It validates
+  manifests and cross-references, resolves one active circuit-simulation local
+  JSON-stdio wait capability, invokes without a shell under bounded I/O and
+  timeout policy, and validates typed result data, provider/request correlation,
+  truth-table execution status, requested artifact roles and limits, local file
+  hashes, zero transport exit, and wait-process cleanup. Before launch it
+  snapshots canonical regular target and configuration files, verifies declared
+  SHA-256 identities, and enforces 16 MiB target, 256 MiB-per-configuration,
+  and 512 MiB aggregate bounds; post-run mutation or replacement invalidates
+  the evidence. It does not discover, install, rank, or trust providers;
+  v0alpha1 does not digest-bind the complete request.
+- `profile list` and `profile show` for cwd-independent inspection of all
+  packaged operation, assertion, feature, parameter, and normalized-result
+  schemas.
+- Intent-ledger and implemented-routing references for the analog
+  characterization coordinator, plus standards-aware spectral workflow
+  guidance and concrete extraction/measurement/evaluation/provider commands in
+  the execution skill.
+
+### Changed
+
+- Promoted `jsonschema>=4.18` to a base dependency because operation-specific
+  validation is part of the external-provider execution boundary.
+- Extended `evaluate` to accept complete ordinary or spectral measurement
+  envelopes, plus the new transfer measurement envelope, while preserving the unchanged
+  `specification.evaluate/v1alpha1` typed measurement input.
+- Let `measure`, `spectral`, and `transfer` consume a complete passing
+  `result.series.extract` envelope directly, removing an undocumented manual
+  JSON handoff.
+- Advanced the Python package, Codex plugin, Claude plugin, and built-in driver
+  identity to 0.4.0; packaged wheels now include the three new operation
+  profiles.
+- Made the source/plugin launcher import optional schema validation lazily, so
+  dependency-free discovery commands still run and schema-backed commands emit
+  a structured missing-dependency diagnostic. Plugin setup now states clearly
+  that agent marketplaces install skills but not the Python runtime dependency.
+
+### Limitations
+
+- Spectral v1alpha1 intentionally rejects nonuniform or noncoherent records,
+  non-rectangular windows, main-lobe integration, PSD/averaging, SNDR aliases,
+  ENOB derivation, jitter, and phase noise. True zero-frequency DC gain,
+  gain margin, phase-crossing search, poles/zeros, integrated noise, corners,
+  and statistical campaigns remain future semantic operations.
+- External provider execution is explicit-manifest, local CLI, JSON
+  stdin/stdout, wait-only, and currently registered only for active
+  `circuit.simulate/v1alpha2`. v0alpha1 still has no complete request digest,
+  independent capability ID, per-feature maturity rows, normative MCP binding,
+  catalog trust model, sessions, remote jobs, or artifact-transfer protocol.
+
+## 0.3.0 — 2026-07-15
 
 ### Added
 

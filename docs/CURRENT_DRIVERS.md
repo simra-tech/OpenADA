@@ -1,7 +1,7 @@
 # Current preview drivers
 
 This document records the native-tool and deterministic evidence policies in
-the OpenADA `0.3.0` development release. Unreleased status is identified in the
+the OpenADA `0.4.0` development release. Unreleased status is identified in the
 changelog. This is an operational reference, not a claim of universal EDA
 support or foundry signoff.
 
@@ -118,25 +118,50 @@ themselves justify workflow-validated maturity. Scoped preflight continues to
 select ngspice for `spice-analysis-evidence-valid`; choosing Xyce is explicit
 in this alpha.
 
-## Deterministic typed evidence
+## Typed evidence and transfer kernels
 
-The `measure` and `evaluate` operations are backend-independent OpenADA kernel
-operations, not EDA drivers. Their structured maturity is backed by the
-[network-free typed-evidence conformance bundle](../conformance/typed-evidence-v0alpha1/README.md):
+`extract` is the reviewed native-evidence bridge. It reopens and verifies the
+one `simulation.result` artifact recorded by a complete passing typed ngspice or
+Xyce simulation, parses one request-bound ngspice binary/ASCII or Xyce ASCII
+Spice3 plot, and projects explicitly selected real or imaginary Cartesian
+components into a canonical normalized series:
 
 ```bash
-./bin/openada measure --series normalized-series.json \
+./bin/openada extract --simulation simulation-result.json \
+  --artifact /exact/path/to/simulation.raw \
+  --selection series-selection.json
+```
+
+The `measure`, `spectral`, `transfer`, and `evaluate` operations are
+backend-independent OpenADA kernels rather than EDA drivers:
+
+```bash
+./bin/openada measure --series series-or-extraction-result.json \
   --measurement measurement-request.json
+./bin/openada spectral --series series-or-extraction-result.json \
+  --measurement spectral-request.json
+./bin/openada transfer --series series-or-extraction-result.json \
+  --measurement transfer-request.json
 ./bin/openada evaluate --measurement measurement-result.json \
   --specification specification.json
 ```
 
-`measure` accepts a bounded normalized real inline series whose declared digest
-matches the canonical axis/signal/condition content. Its closed kinds are
-sample-at, min/max, mean, RMS, crossing, rise/fall time, and settling time.
-Every coordinate or threshold uses an exact declared unit. The operation does
-not parse native raw files; optional native-artifact lineage is explicitly
-unverified.
+`measure`, `spectral`, and `transfer` accept either a bounded normalized real
+inline series or one complete passing extraction envelope. The CLI validates
+the latter against the packaged extraction profile and unwraps only a verified
+embedded series. Each downstream kernel then validates the canonical
+axis/signal/condition digest. Optional native-artifact lineage inside that
+downstream assertion remains explicitly unverified; retaining the extraction
+envelope preserves the upstream native binding.
+
+`measure` has the closed kinds sample-at, min/max, mean, RMS, crossing,
+rise/fall time, and settling time. Every coordinate or threshold uses an exact
+declared unit. Its structured maturity, together with `evaluate`, is backed by
+the
+[network-free typed-evidence conformance bundle](../conformance/typed-evidence-v0alpha1/README.md).
+The newer extraction, spectral, and transfer kernels have focused profile and
+algorithm tests but are not added retroactively to that immutable conformance
+record.
 
 Python callers can compute the exact declared digest without reproducing
 private serialization details:
@@ -163,6 +188,64 @@ upper bounds, inclusive flags, and exact condition bindings. It performs no
 unit conversion. Missing/unknown measurements or incompatible units and
 conditions remain `unknown`; only valid matched evidence outside a bound is
 specification `fail`.
+
+`spectral` implements one fixed coherent rectangular-window partition for SNR,
+SINAD, signed-dB THD, and SFDR. It requires a uniformly spaced power-of-two time
+record and exact coherent fundamental bin; it does not silently substitute
+SNDR, ENOB, fitting, averaging, PSD, jitter, or phase-noise methods. Its
+standards contexts are candidate mappings rather than IEEE conformity claims.
+
+`transfer` constructs output/input from four distinct same-unit Cartesian AC
+series on a positive-Hz axis. It reports the first simulated-frequency gain,
+the unique falling first-point-minus-3 dB crossing, the unique falling 0 dB
+crossing, or—only for explicitly declared negative-feedback loop gain—phase
+margin. It does not call the first point DC, infer gain margin, choose among
+multiple crossings, or make a general stability claim.
+
+Inspect the complete packaged ontology without guessing IDs:
+
+```bash
+./bin/openada profile list
+./bin/openada profile show openada.operation/result.transfer.measure/v1alpha1
+```
+
+The catalog contains six active profiles plus the immutable historical
+`circuit.simulate/v1alpha1` profile. Catalog presence is not an
+external-provider capability.
+
+## Explicit external-provider runtime
+
+`provider validate` and `provider list` inspect one explicitly supplied
+manifest. `provider invoke` resolves one unambiguous local JSON-stdio `wait`
+capability, currently only for `circuit.simulate/v1alpha2`. It requires an exact
+driver selector; it does not discover, install, rank, approve, or connect to
+MCP/session/remote providers.
+
+That binding accepts only canonical absolute regular non-symlink filesystem
+files for the target and each configuration. The target is limited to 16 MiB,
+each configuration to 256 MiB, and their aggregate to 512 MiB. Before launch
+the host snapshots identity, size, and SHA-256 and verifies every digest the
+request declares. The evidence destination must be canonical and absolute, have
+an existing canonical non-linked parent, be absent before launch, and use
+`fail-if-present`; every returned artifact path must remain inside it without
+symbolic-link escape.
+
+Invocation requires a zero transport-process exit and empty stderr, bounds the
+request, result, diagnostics, and timeout, and cleans up the fresh process group
+even after the parent returns. Only descendants that remain in that group are
+killed; a deliberately detached process is outside this containment, which is
+not a sandbox. The executable and standalone argv values that already name
+regular files are canonicalized and identity-checked before and after launch.
+Returned local input/artifact files are reopened and verified against their
+declared size and SHA-256. A conclusive circuit result must match the requested
+analysis and retain native tool identity, a nonempty command, and a native exit
+code; pass requires native exit zero. The echoed `request_id` is correlation,
+not a whole-request digest. Manifest conformance evidence is self-declared
+metadata: its schema and internal references are validated, but its URI is not
+fetched and its declared digest is not independently rehashed. Before accepting
+the result, the host reopens every request input and requires identity, size,
+SHA-256, and the provider-retained input record to match the pre-launch
+snapshot. Mutation, replacement, or disappearance invalidates the evidence.
 
 ## ngspice simulation
 
@@ -295,7 +378,10 @@ but its own clean public workflow recipe is still pending.
 | `simulate` (legacy default) | ngspice | workflow-validated | Stream wrapper raw files in batch mode, or validate declared deck-owned raw/`wrdata` outputs in control mode |
 | `simulate --backend ngspice` | ngspice | structured OP/DC/AC; workflow-validated TRAN | Run one self-contained OP, DC, AC, or transient analysis and emit typed normalized facts |
 | `simulate --backend xyce` | Xyce | structured DC/AC; workflow-validated TRAN | Run one self-contained DC, AC, or transient analysis; OP is unsupported |
-| `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar from a canonical-digest-bound normalized real inline series |
+| `extract` | deterministic Spice3 evidence kernel | structured alpha | Verify one typed simulation/raw-artifact pair and project selected native Cartesian vectors into a canonical real series |
+| `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar from a canonical normalized real series or passing extraction envelope |
+| `spectral` | deterministic OpenADA kernel | structured alpha | Derive coherent single-tone SNR, SINAD, signed-dB THD, or SFDR under one fixed partition |
+| `transfer` | deterministic OpenADA kernel | structured alpha | Derive one closed AC output/input gain, crossing, or explicitly declared negative-feedback phase-margin scalar |
 | `evaluate` | deterministic OpenADA kernel | structured alpha | Evaluate exact-unit bounds and explicit conditions over one typed measurement |
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |

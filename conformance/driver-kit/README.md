@@ -38,10 +38,9 @@ At most 100 conformance issues are returned and each issue is bounded to 2,000
 characters, so malformed documents cannot expand the checker output without
 limit.
 
-## Request and manifest scaffolding
+## Request, manifest, and explicit-provider fixtures
 
-The kit also contains valid starting points for the review-only external-driver
-protocol:
+The kit also contains valid starting points for the external-driver protocol:
 
 - [`request.template.json`](request.template.json) validates against
   [`openada.request/v0alpha1`](../../schemas/request-v0alpha1.schema.json);
@@ -57,12 +56,65 @@ protocol:
   Its v1alpha1 predecessor remains packaged unchanged for historical records.
 
 The current CLI records the built-in circuit-simulation profile and selected
-ngspice/Xyce driver, but it does not accept the generic request envelope or
-discover external manifests. These files make request, capability, transport,
-maturity, and conformance assumptions reviewable before runtime driver
-discovery is implemented. See the
+ngspice/Xyce driver. It can also validate one explicit manifest, list that
+manifest's declared capabilities, and invoke one exact local JSON-stdio `wait`
+capability with a complete generic request. External invocation is currently
+registered only for `openada.operation/circuit.simulate/v1alpha2`:
+
+```bash
+openada provider validate conformance/driver-kit/driver-manifest.template.json
+openada provider list --manifest conformance/driver-kit/driver-manifest.template.json
+openada provider invoke --manifest path/to/installed-manifest.json \
+  path/to/openada-request.json
+```
+
+The template identities, digests, executable name, and paths are placeholders;
+replace them before invocation. The runtime does not discover external
+manifests. `request_id` is correlation, not a digest of the complete request.
+The current external simulation binding requires canonical absolute regular
+non-symlink filesystem files for the target and every configuration. The target
+ceiling is 16 MiB, each configuration ceiling is 256 MiB, and the aggregate is
+512 MiB. The host snapshots identity, size, and SHA-256 before launch and
+verifies any digest the request declares. The evidence destination must be
+canonical and absolute with an existing canonical non-linked parent. Only
+`fail-if-present` is supported, the destination must be absent before launch,
+and every returned artifact path must remain inside it. The absolute target and
+destination values in [`request.template.json`](request.template.json) are
+placeholders: replace them with real canonical paths, ensure the input files and
+destination parent exist, and do not pre-create the destination. For conclusive
+results, every target/configuration locator is additionally checked against
+exactly one retained input record.
+
+The local transport requires zero transport-process exit and empty stderr,
+then cleans up its fresh process group even after the provider parent exits.
+Only descendants that remain in that group are killed; deliberately detached
+processes are outside this containment, and it is not a sandbox. The runtime
+identity-checks the executable and standalone existing regular-file argv paths
+and verifies every recorded local input/artifact file against declared size and
+SHA-256. A
+conclusive circuit result must match the requested analysis and retain native
+tool identity, a nonempty native command, and a native exit code; pass requires
+native exit zero. Before result acceptance, the host reopens every request input
+and requires its identity, size, and digest and the provider-retained input
+record to match the pre-launch snapshot. Mutation, replacement, or
+disappearance invalidates the evidence. Manifest conformance records remain
+self-declared metadata: validation checks their shape and internal
+cross-references, but does not fetch their URI or independently rehash the
+referenced evidence. These files make
+request, capability, transport, maturity, and conformance assumptions
+reviewable before marketplace discovery is implemented. See the
 [driver protocol](../../docs/DRIVER_PROTOCOL.md) for validation and reference
 rules that JSON Schema alone cannot enforce.
+
+The installed profile catalog can be inspected independently:
+
+```bash
+openada profile list
+openada profile show openada.operation/circuit.simulate/v1alpha2
+```
+
+It contains six active typed profiles plus the immutable historical simulation
+profile; catalog presence alone does not make a profile externally dispatchable.
 
 ## Same-intent simulation proof
 

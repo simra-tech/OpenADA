@@ -16,9 +16,17 @@ For every planned point, use:
 1. `openada.operation/circuit.simulate/v1alpha2` with
    `openada.assertion/simulation.evidence.valid/v1alpha1` for each requested
    analysis;
-2. `openada.operation/result.measure/v1alpha1` with
-   `openada.assertion/measurement.valid/v1alpha1` for each required metric;
-3. `openada.operation/specification.evaluate/v1alpha1` with
+2. `openada.operation/result.series.extract/v1alpha1` with
+   `openada.assertion/series.extraction.valid/v1alpha1` whenever a required
+   scalar starts in a native waveform artifact;
+3. the smallest installed measurement profile: ordinary
+   `openada.operation/result.measure/v1alpha1` with
+   `openada.assertion/measurement.valid/v1alpha1`, coherent spectral
+   `openada.operation/result.spectral.measure/v1alpha1` with
+   `openada.assertion/spectral.measurement.valid/v1alpha1`, or AC transfer
+   `openada.operation/result.transfer.measure/v1alpha1` with
+   `openada.assertion/transfer.measurement.valid/v1alpha1`; and
+4. `openada.operation/specification.evaluate/v1alpha1` with
    `openada.assertion/specification.satisfied/v1alpha1` for each explicit
    metric limit.
 

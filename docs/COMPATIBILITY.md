@@ -18,11 +18,17 @@ profile IDs define the operation meaning and evidence threshold. The driver and
 native-product identities say which implementation executed it. The conformance
 identity tells a reviewer what exact engineering case ran.
 
-The alpha [request and driver protocol](DRIVER_PROTOCOL.md) remains partly
-review-only scaffolding: the CLI neither accepts the base request envelope as a
-generic dispatch input nor discovers external manifests. Operation-specific
-CLI bridges do execute the three published typed profiles. Publishing a schema
-or transport binding still does not imply external-provider runtime support.
+The alpha [request and driver protocol](DRIVER_PROTOCOL.md) now has one narrow
+runtime boundary: `provider invoke` accepts one base request envelope together
+with one explicitly supplied manifest and resolves one unambiguous local
+JSON-stdio `wait` transport. It does not discover, install, rank, or approve
+providers, and it does not implement session, remote-job, marketplace, or MCP
+transport semantics. External dispatch is currently registered only for
+`circuit.simulate/v1alpha2`; operation-specific CLI bridges execute all six
+active typed profiles directly, and one historical simulation profile remains
+packaged. Publishing any other schema or transport binding still does not imply
+runtime support. `request_id` equality is correlation, not a complete request
+digest.
 
 ## Immutable protocol identifiers
 
@@ -136,7 +142,7 @@ The typed shared-profile simulation flags and analysis implementations are
 additive at the CLI level. `--analysis op|dc|ac|tran` plus analysis-specific
 closed parameters requires `--backend`; omitting typed flags preserves deck
 inspection, and omitting `--backend` preserves the legacy ngspice path. Package
-0.3.0 selects `circuit.simulate/v1alpha2`, whose immutable native mappings cover
+0.4.0 selects `circuit.simulate/v1alpha2`, whose immutable native mappings cover
 ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN. V1alpha1 remains packaged for
 historical validation and is not rewritten. Capability support remains exact:
 Xyce rejects OP, and includes, control blocks, `.measure`, `.print`, FFT,
@@ -147,16 +153,62 @@ explicit init inputs use the same ceiling. Conflicting generic native errors
 keep a terminal non-convergence observation `unknown` rather than allowing an
 engineering `fail` classification.
 
-The `measure` and `evaluate` commands are new operation names inside the open
-operation namespace of `openada.result/v0alpha1`. Their operation-owned data is
-defined by new immutable profiles rather than a change to the result envelope.
+The `extract`, `measure`, `spectral`, `transfer`, and `evaluate` commands are
+operation names inside the open operation namespace of
+`openada.result/v0alpha1`. Their
+operation-owned data is defined by immutable profiles rather than a change to
+the result envelope. `result.series.extract/v1alpha1` binds selected normalized
+real series to one exact passing simulation result and one exact ngspice or
+Xyce waveform artifact. `result.spectral.measure/v1alpha1` binds a coherent
+single-tone FFT partition and the closed SNR, SINAD, THD, and SFDR vocabulary to
+one normalized time series. `result.transfer.measure/v1alpha1` binds a
+same-unit Cartesian output-over-input AC ratio, deterministic phase unwrap,
+first-simulated-frequency reference, and closed falling-crossing metrics. The
+`measure`, `spectral`, and `transfer` commands may receive either a normalized
+series document or a complete passing extraction envelope; accepting that
+envelope is a CLI handoff, not a change to either profile's normalized source
+schema. Changing raw-format interpretation, projection, FFT partition, window,
+harmonic folding, ratio direction, crossing semantics, phase convention, or
+metric formulas requires a new implementation or profile identity as
+documented by the relevant profile.
 `result.measure/v1alpha1` is bound to the canonical SHA-256 digest of a bounded
 normalized real inline series and a closed scalar-algorithm vocabulary;
 `specification.evaluate/v1alpha1` uses exact units and explicit condition and
 limit records. Changing the digest algorithm, supported kind semantics, unit
 policy, condition matching, or truth table requires a new operation/assertion
 profile ID. Optional native-artifact lineage is `unverified` and cannot be
-upgraded silently into built-in waveform extraction.
+upgraded silently inside a downstream measurement profile; callers that need
+verified waveform lineage use the separate extraction operation and retain both
+result envelopes.
+
+`profile list` and `profile show` are additive control-plane commands over the
+packaged catalog. Their result operations do not establish an engineering
+assertion. Consumers should compare the complete returned schema, operation,
+assertion, and feature IDs; catalog presence does not imply that an external
+provider can be dispatched for that profile.
+
+The 0.4 explicit-provider implementation narrows the executable alpha boundary
+without changing the request or manifest schema IDs. It requires zero
+transport-process exit and empty stderr, kills descendants that remain in the
+fresh process group even after the parent returns, identity-checks the
+executable and standalone existing regular-file argv paths, and verifies
+recorded local input/artifact bytes and hashes. Deliberately detached processes
+are not contained; this is not a sandbox. The current external simulation
+binding additionally requires canonical absolute filesystem
+target/configuration locators naming regular non-symlink files, with ceilings
+of 16 MiB for the target, 256 MiB per configuration, and 512 MiB in aggregate.
+The host snapshots identity, size, and SHA-256 before launch, verifies any
+declared digest, and rejects evidence when an input is mutated, replaced, or
+lost before post-run revalidation. The binding also requires a fresh canonical
+absolute `fail-if-present` evidence destination with an existing canonical
+parent and every returned artifact beneath it. A conclusive
+result must match the requested analysis and retain native tool, nonempty
+command, and native exit evidence; pass requires native exit zero. Provider
+`request_id` remains correlation rather than whole-request binding.
+Manifest conformance evidence remains self-declared metadata: validation checks
+its structure and internal references but does not fetch or rehash the remote
+record. Relaxing any of those runtime acceptance rules would be a security and
+evidence compatibility change requiring explicit review and migration notes.
 
 The explicit KLayout report policy is another preview correction within the
 same closed `openada.result/v0alpha1` envelope. Earlier implementations could

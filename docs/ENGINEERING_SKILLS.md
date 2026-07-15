@@ -72,7 +72,9 @@ skills/
 ```
 
 Every workflow directory contains `SKILL.md` and `agents/openai.yaml`;
-`characterize-analog-block` also carries one application-recipe reference.
+`characterize-analog-block` carries application-recipe and implemented-intent
+routing references; `analyze-spectral-linearity` carries a standards/method
+scope reference.
 
 Use `skills/<lowercase-hyphen-name>/SKILL.md` for the workflow. Add
 `agents/openai.yaml` for discoverability. Add `references/` only when detailed
@@ -101,10 +103,10 @@ create the plugin namespace.
 |---|---|---|---|
 | `openada` | Execution and evidence adapter | preview | Current CLI and result contract |
 | `review-circuit-simulation` | Tool-independent engineering workflow | experimental | `circuit.simulate/v1alpha2` |
-| `characterize-analog-block` | Application-aware workflow coordinator | experimental | Capability-gated composition of `circuit.simulate/v1alpha2`, `result.measure/v1alpha1`, and `specification.evaluate/v1alpha1` |
-| `analyze-feedback-stability` | Feedback-loop evidence workflow | experimental | Capability-gated OP/AC/transient simulation, measurement, and specification intents |
-| `analyze-spectral-linearity` | Waveform-derived spectral review | experimental | Capability-gated transient simulation, measurement, and specification intents |
-| `assess-pvt-and-yield` | PVT/statistical campaign workflow | experimental | Repeated capability-gated simulation, measurement, and specification intents |
+| `characterize-analog-block` | Application-aware workflow coordinator | experimental | Immutable intent-ledger composition from simulation through verified series, ordinary/spectral/AC-transfer measurement, and specification |
+| `analyze-feedback-stability` | Feedback-loop evidence workflow | experimental | AC Cartesian extraction → `result.transfer.measure/v1alpha1` for first-frequency gain, -3 dB bandwidth, unity frequency, and explicitly declared negative-feedback phase margin |
+| `analyze-spectral-linearity` | Waveform-derived spectral review | experimental | `circuit.simulate/v1alpha2` → `result.series.extract/v1alpha1` → coherent `result.spectral.measure/v1alpha1` → specification |
+| `assess-pvt-and-yield` | PVT/statistical campaign workflow | experimental | Repeated capability-gated simulation → verified series extraction → ordinary/spectral/AC-transfer measurement → specification intents |
 
 Track skill maturity separately from driver maturity. **Experimental** means
 the workflow boundary and prompts are open for refinement. **Reviewed** should
@@ -116,7 +118,18 @@ boundary. None of these labels imply foundry signoff.
 The analog workflows deliberately treat measurement and specification
 operations as capability-gated. Their plans remain useful when those profiles
 or a requested metric are unavailable, but the affected row stays `not
-evaluated`; skill prose cannot manufacture a semantic capability.
+evaluated`; skill prose cannot manufacture a semantic capability. For the
+implemented evidence path, `measure`, `spectral`, and `transfer` accept a
+complete passing extraction envelope directly, so a skill need not invent a
+second normalized-series serialization step. `openada profile list/show`
+provides the packaged identities; profile presence still does not imply an
+external-provider mapping.
+
+The feedback-stability skill must preserve the transfer profile's narrow
+semantics: “low-frequency gain” is the first positive simulated frequency,
+phase margin requires an explicitly reviewed negative-feedback loop-gain
+interpretation, and gain margin or multi-crossing selection remains not
+evaluated rather than inferred from the trace.
 
 Good next candidates, after their required semantic profiles exist, are:
 

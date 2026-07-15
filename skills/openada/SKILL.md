@@ -24,7 +24,17 @@ keep reusable engineering judgment in a separate sibling skill.
 
 Prefer `openada` when it is on `PATH`.
 
-When this skill is loaded from a plugin checkout or cache, resolve the plugin root from this `SKILL.md` path and use `<plugin-root>/bin/openada` if the command is not on `PATH`. Do not guess a different installation path.
+Agent plugin managers install this skill bundle, not the OpenADA Python package
+or its `jsonschema>=4.18` dependency. The recommended setup therefore installs
+the matching OpenADA Python release so `openada` is on `PATH`.
+
+When this skill is loaded from a plugin checkout or cache, resolve the plugin
+root from this `SKILL.md` path and use `<plugin-root>/bin/openada` only if the
+command is not on `PATH` and that launcher's Python dependencies are available.
+Do not guess a different installation path. If a command returns
+`provider.validation.unavailable`, stop and tell the user to install the
+matching OpenADA Python release; do not present the failed profile/provider
+validation as an EDA result.
 
 If neither entry point exists, stop the EDA operation and tell the user that the OpenADA executable is missing. Do not silently fall back to an unstructured raw-tool workflow while claiming OpenADA evidence.
 
@@ -60,6 +70,15 @@ project, choose a PDK, or run the engineering assertion. An empty `data.pdks`
 means `data.preflight.pdk.catalog_enumerated` is false, not that no PDK exists.
 Do not search recursively to compensate.
 
+Inspect portable operation parameters from the installed catalog, independent
+of the current working directory:
+
+```bash
+openada profile list
+openada profile show openada.operation/result.series.extract/v1alpha1
+openada profile show openada.operation/result.transfer.measure/v1alpha1
+```
+
 Preflight intentionally leaves `pdk.selected` and startup `selected_files`
 unresolved. Identify exact project-specific source, PDK, model, rcfile, init,
 rule deck, setup, top cell, and output paths from explicit user/project context.
@@ -90,6 +109,8 @@ Use the detected runtime and PDK roots; do not assume `/foss` exists. The IIC-OS
 Use the smallest operation that proves the requested engineering assertion:
 
 ```bash
+mkdir -p evidence
+
 # Xschem schematic -> SPICE; pass the project/PDK rcfile when library resolution depends on it
 openada netlist design.sch --rcfile path/to/xschemrc --output evidence/design.spice
 
@@ -99,9 +120,11 @@ openada simulate testbench.spice --workdir path/to/project \
 
 # typed same-intent transient profile through either reviewed built-in mapping
 openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
-  --backend ngspice --output-dir evidence/shared-ngspice
+  --backend ngspice --output-dir evidence/shared-ngspice \
+  > evidence/shared-ngspice-result.json
 openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
-  --backend xyce --output-dir evidence/shared-xyce
+  --backend xyce --output-dir evidence/shared-xyce \
+  > evidence/shared-xyce-result.json
 
 # native control deck; declare every write/wrdata file relative to --workdir
 openada simulate testbench.spice --execution-mode control \
@@ -144,6 +167,149 @@ ngspice-only options.
 Omitting `--backend` preserves the broader legacy ngspice batch/control
 interface. Scoped preflight also remains mapped to ngspice in this alpha; Xyce
 selection is explicit.
+
+## Continue from native evidence to a specification
+
+A shared-profile simulation pass can feed the implemented typed evidence
+chain. Keep every result envelope as JSON; do not copy values from a log.
+
+First create a closed selection document:
+
+```json
+{
+  "selectors": [
+    {
+      "native_name": "v(out)",
+      "output_name": "v(out)",
+      "unit": "V",
+      "component": "real"
+    }
+  ],
+  "conditions": [
+    {"name": "temperature", "value": 27, "unit": "degC"},
+    {"name": "corner", "value": "tt", "unit": "1"}
+  ],
+  "extensions": {}
+}
+```
+
+Then bind the exact retained `simulation.result` artifact named by the complete
+simulation envelope:
+
+```bash
+openada extract \
+  --simulation evidence/simulation-result.json \
+  --artifact /absolute/evidence/simulation.raw \
+  --selection evidence/series-selection.json \
+  > evidence/series-extraction.json
+```
+
+The later `measure`, `spectral`, and `transfer` commands accept this complete
+passing extraction envelope directly; `data.extraction.series` remains the
+embedded canonical series for programmatic use. Extraction requires the exact
+passing `circuit.simulate/v1alpha2` envelope and matching
+canonical path, byte count, and digest. It supports ngspice binary/ASCII and
+Xyce ASCII padded Spice3 raw evidence. Select exact real or imaginary Cartesian
+components; it never derives magnitude, phase, differential expressions, or
+unit conversions. Conditions are caller-declared and digest-bound, not inferred
+from simulator state. Retain the extraction envelope beside downstream results:
+it carries the verified native binding that immutable measurement lineage still
+labels `unverified`.
+
+For an ordinary scalar, write one closed measurement object and run:
+
+```bash
+openada measure \
+  --series evidence/series-extraction.json \
+  --measurement evidence/measurement-request.json \
+  > evidence/measurement-result.json
+```
+
+Advertised kinds are `sample_at`, `minimum`, `maximum`, `mean`, `rms`,
+`crossing`, `rise_time`, `fall_time`, and `settling_time`. Inspect
+the installed profile with `openada profile show
+openada.operation/result.measure/v1alpha1` for the exact unit-bearing parameter
+shape. Do not use native `.measure` or an arbitrary expression as a substitute.
+
+For a uniformly sampled coherent single-tone record, inspect the packaged
+spectral profile, write its complete method, and run:
+
+```bash
+openada spectral \
+  --series evidence/series-extraction.json \
+  --measurement evidence/spectral-request.json \
+  > evidence/spectral-result.json
+```
+
+The alpha supports only SNR, SINAD, signed-dB THD, and SFDR under its fixed
+power-of-two rectangular coherent-bin method. A candidate IEEE context records
+application scope; it is not a conformity claim.
+
+For an AC analysis with explicit same-unit input/output real and imaginary
+series, inspect `openada.operation/result.transfer.measure/v1alpha1` and run:
+
+```bash
+openada transfer \
+  --series evidence/ac-series-extraction.json \
+  --measurement evidence/transfer-request.json \
+  > evidence/transfer-result.json
+```
+
+The closed profile supports first-positive-frequency gain, unique falling
+−3 dB bandwidth, unity-gain frequency, and explicitly declared
+negative-feedback phase margin. It rejects ambiguous multiple crossings and
+does not implement gain margin.
+
+Finally evaluate a scalar result only against an already supplied explicit
+limit and exact conditions:
+
+```bash
+openada evaluate \
+  --measurement evidence/measurement-result.json \
+  --specification evidence/specification.json \
+  > evidence/specification-result.json
+```
+
+`evaluate` accepts ordinary, spectral, or transfer measurement envelopes. A
+measurement pass is not a specification pass, and a missing limit is not
+permission to invent one.
+
+## Use one explicit external provider
+
+The first provider boundary is opt-in and deliberately smaller than a
+marketplace:
+
+```bash
+openada provider validate path/to/driver-manifest.json
+openada provider list --manifest path/to/driver-manifest.json
+openada provider invoke \
+  --manifest path/to/driver-manifest.json \
+  path/to/openada-request.json
+```
+
+Invocation requires a complete `openada.request/v0alpha1` with an exact
+`driver_selector`. OpenADA validates the manifest and cross-references,
+resolves one structured or workflow-validated local CLI capability, writes one
+bounded JSON request to stdin without a shell, and validates the returned base
+and operation-specific result plus request correlation and provider identity.
+External dispatch is currently registered only for
+`openada.operation/circuit.simulate/v1alpha2`. Its target and configuration
+locators must be canonical absolute filesystem paths; its fresh evidence
+destination must also be canonical and uses `fail-if-present`, with returned
+artifacts confined beneath it.
+The immutable v0alpha1 bridge does not carry a digest of the complete request;
+do not describe correlation as cryptographic or complete request binding. The
+default working directory is the manifest directory; pass `--cwd` only when
+the provider contract requires another reviewed directory.
+
+Manifest conformance records are self-declared metadata. The runtime checks
+their schema and cross-references but does not fetch their URI or independently
+rehash the referenced evidence, so do not present manifest validation as an
+independent conformance result.
+
+There is no implicit provider discovery, installation, ranking, marketplace,
+MCP binding, credential model, session transport, or remote job transport in
+this command. Never describe an explicit manifest list as an EDA marketplace.
 
 `simulate` runs from the netlist directory by default. An explicit `--workdir`
 changes native relative-path resolution; it is not a sandbox, and ngspice may
@@ -236,8 +402,9 @@ Use `diagnostics`, `inputs`, `artifacts`, and `provenance` before reading native
 For an explicit shared simulation backend, also read `data.protocol`,
 `data.analysis`, and `data.evidence`. Those fields have the same closed meaning
 for ngspice and Xyce; backend-native details remain under the namespaced
-extension and native artifacts. A simulation-evidence `pass` proves a fresh,
-finite transient result, not that any circuit specification was met.
+extension and native artifacts. A simulation-evidence `pass` proves fresh,
+finite evidence for the selected OP, DC, AC, or transient analysis, not that
+any circuit specification was met.
 
 ## Report evidence
 

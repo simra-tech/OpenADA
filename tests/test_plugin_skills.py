@@ -102,7 +102,7 @@ def test_package_runtime_and_plugin_release_versions_match():
         claude_manifest["version"],
     }
     assert versions == {__version__}
-    assert __version__ == "0.3.0"
+    assert __version__ == "0.4.0"
 
 
 def test_engineering_skill_catalog_names_every_shipped_skill():
@@ -146,3 +146,26 @@ def test_analog_characterization_composes_the_focused_skills():
         / "application-recipes.md"
     )
     assert recipes.is_file()
+    intent_routing = (
+        SKILLS_ROOT
+        / "characterize-analog-block"
+        / "references"
+        / "intent-routing.md"
+    )
+    assert intent_routing.is_file()
+    assert "openada.operation/result.series.extract/v1alpha1" in text
+    assert "openada.operation/result.spectral.measure/v1alpha1" in text
+
+
+def test_spectral_skill_uses_the_closed_method_and_standards_reference():
+    directory = SKILLS_ROOT / "analyze-spectral-linearity"
+    text = (directory / "SKILL.md").read_text(encoding="utf-8")
+    reference = directory / "references" / "standards-and-methods.md"
+
+    assert reference.is_file()
+    assert "openada.operation/result.series.extract/v1alpha1" in text
+    assert "openada.operation/result.spectral.measure/v1alpha1" in text
+    reference_text = reference.read_text(encoding="utf-8")
+    assert "IEEE 1241-2023" in reference_text
+    assert "candidate" in reference_text
+    assert "IEEE compliant" in reference_text

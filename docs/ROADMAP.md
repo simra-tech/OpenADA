@@ -21,25 +21,31 @@ OpenADA uses explicit maturity levels:
 | OpenROAD / LibreLane | yes | no | no |
 | Icarus / Verilator / slang / Surelog | yes | no | no |
 | OpenVAF / Qucs-S / GTKWave | yes | no | no |
+| OpenADA evidence kernels | n/a | verified series extraction; scalar/specification; coherent SNR/SINAD/THD/SFDR; closed AC transfer/gain/bandwidth/unity-frequency/phase-margin | structured unit/profile conformance; public native-chain bundle pending |
+| Explicit external provider | explicit manifest | local JSON-stdio wait dispatch for active `circuit.simulate/v1alpha2` | hardened out-of-tree fake-provider suite; independent real provider pending |
 
 ## Protocol program
 
-The v0.3 implementation proves a common evidence envelope and hardened native
+The v0.4 implementation proves a common evidence envelope and hardened native
 drivers. The next program turns that foundation into a portable intent and
 driver protocol. Each milestone has a concrete acceptance gate; adding more
 one-off wrappers does not substitute for passing the gate.
 
 Current status: milestone A is published in this repository. Milestone B now
-includes review-only request and driver-manifest schemas, immutable operation
-profile schemas v0alpha1 and v0alpha2, valid contributor templates, and three
-implemented typed profiles. Milestone C's bounded portability gate now covers
+includes executable request and driver-manifest v0alpha1 validation, immutable
+operation-profile schemas v0alpha1 and v0alpha2, valid contributor templates,
+six active implemented typed profiles, one historical simulation profile,
+cwd-independent profile inspection, and an explicit-manifest local JSON-stdio
+wait resolver registered for active circuit simulation. Automatic discovery,
+session/remote transports, and
+MCP remain unimplemented. Milestone C's bounded portability gate now covers
 ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN success paths through pinned native
 replay; the new OP/DC/AC rows remain structured until broader outcome cases are
-published. Runtime manifest discovery, generic request dispatch, and external
-invocation remain unimplemented. Milestone D has five experimental
-tool-independent engineering skills above the execution adapter. Fresh-agent
-forward tests exercise their
-capability gating, but the external engineering-review gate has not passed.
+published. The same native formats now feed verified normalized series and a
+closed spectral and AC transfer kernels. Milestone D has five experimental tool-independent
+engineering skills above the execution adapter; the analog coordinator now
+uses an immutable intent ledger and implemented-primitive routing. Fresh-agent
+forward tests and external engineering review still gate promotion.
 
 ### A. Publish the semantic boundary
 
@@ -63,8 +69,9 @@ what remains driver-specific, and what evidence supports `pass`, `fail`, or
 - Add operation-profile identifiers, assertion identifiers, driver identity,
   and lineage to the next result envelope without changing the immutable
   `openada.result/v0alpha1` schema.
-- Introduce capability discovery and an external driver invocation protocol
-  that can represent a local CLI, a persistent EDA session, or a remote job.
+- Extend the implemented explicit local-CLI invocation boundary to separately
+  versioned discovery, persistent-session, and remote-job transports only after
+  their trust and artifact semantics are frozen.
 - Extend conformance checks from the generic envelope to operation-specific
   request/result truth tables and fixtures.
 
@@ -82,8 +89,8 @@ evidence without changing an agent harness.
   analysis with no includes, measurements, print directives, control-language
   blocks, FFT, noise, Monte Carlo, or multiple analyses.
 - Demonstrate that execution success, valid simulation evidence, measurement
-  extraction, and specification satisfaction remain separate claims even
-  though the latter two are outside the shared alpha subset.
+  extraction, spectral/scalar measurement, and specification satisfaction
+  remain separate claims outside the shared simulation assertion.
 
 **Success-path gate (passed for the advertised analysis rows):** ngspice 46 passes
 OP/DC/AC/TRAN and Xyce 7.10-opensource passes DC/AC/TRAN in the pinned
@@ -260,7 +267,7 @@ verified workflow validation.
    records for provider catalogs before calling any provider list a marketplace;
    retain MCP as transport rather than adding MCP tool names to the ontology.
 
-## Deliberately outside v0.3
+## Deliberately outside v0.4
 
 - Write-capable mutation or workspace-wide rollback machinery. The lifecycle is
   specified now, but runtime support begins only after the read/evidence driver
@@ -270,6 +277,12 @@ verified workflow validation.
 - Claims of foundry signoff or universal EDA support.
 - A container as the only installation path.
 - Harness-specific reasoning logic in the core Python package.
-- Built-in extraction of normalized real series from native simulator
-  waveforms, generic request dispatch, external-manifest discovery, MCP
-  invocation, and a live provider marketplace.
+- True zero-frequency DC gain, gain margin, phase-crossing search, poles/zeros,
+  integrated noise, corners, nested sweeps, Monte Carlo, and campaign/yield
+  execution. The implemented transfer alpha covers a same-unit Cartesian ratio,
+  full magnitude/phase trace, unique falling bandwidth/unity crossings, and
+  explicitly declared negative-feedback phase margin only.
+- Noncoherent/windowed spectral methods, PSD/averaging, ENOB, jitter, and phase
+  noise without complete versioned observation models.
+- External-manifest auto-discovery, installation, ranking, MCP invocation,
+  sessions, remote jobs, artifact transfer, and a live provider marketplace.

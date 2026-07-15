@@ -16,14 +16,17 @@ State the exact question before running anything. Keep these claims separate:
 1. **Execution:** Did the selected simulator run to completion?
 2. **Evidence validity:** Did the run produce fresh, structurally valid,
    finite evidence for the requested analysis under the shared operation profile?
-3. **Measurement:** What values can be extracted from that evidence?
-4. **Specification:** Do those measurements meet explicit limits?
+3. **Series extraction:** Were exact native vectors bound to a canonical real
+   series through `openada.operation/result.series.extract/v1alpha1`?
+4. **Measurement:** What supported scalar can be derived from that series?
+5. **Specification:** Does that measurement meet an explicit limit?
 
 The simulation profile can establish the first two claims. Compose the separate
-typed measurement and specification operations only when their exact features
-are available. Require explicit measurement definitions, limits, units,
-corners, and model context before judging a design specification. Never upgrade
-valid simulation evidence into “the circuit works.”
+typed extraction, measurement, and specification operations only when their
+exact profiles are available. Require explicit selectors, measurement
+definitions, limits, units, corners, and model context before judging a design
+specification. Never upgrade valid simulation evidence into “the circuit
+works.”
 
 ## Check applicability
 
@@ -78,7 +81,7 @@ Route the result as follows:
 
 | Result | Engineering interpretation | Next action |
 |---|---|---|
-| execution completed, engineering pass | Fresh finite requested-analysis evidence is valid | Extract only explicitly requested measurements, or define the next assertion |
+| execution completed, engineering pass | Fresh finite requested-analysis evidence is valid | Bind exact requested native vectors through `result.series.extract`, then invoke only a supported measurement profile |
 | execution completed, engineering fail | Valid evidence supports the profile's engineering failure | Diagnose the reported convergence or waveform condition; do not switch tools automatically |
 | engineering unknown | Evidence is absent, stale, malformed, incomplete, or uninterpretable | Resolve the cited evidence or provenance gap and rerun into a fresh directory |
 | invalid request | The target is outside the shared profile or malformed | Correct the request without weakening the intended assertion |

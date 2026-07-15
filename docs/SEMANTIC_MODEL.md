@@ -86,13 +86,19 @@ A versioned operation profile should define:
 - capability requirements and permitted extensions;
 - explicit limitations and conclusions the operation cannot support.
 
-The active published typed profiles are
+Six published typed profiles are active:
 `openada.operation/circuit.simulate/v1alpha2`,
-`openada.operation/result.measure/v1alpha1`, and
-`openada.operation/specification.evaluate/v1alpha1`. The existing result
-envelope still emits short top-level operation names such as `simulate`, `drc`,
-and `lvs`; typed bridges record full profile and implementation identity inside
-operation-owned data.
+`openada.operation/result.series.extract/v1alpha1`,
+`openada.operation/result.measure/v1alpha1`,
+`openada.operation/result.spectral.measure/v1alpha1`,
+`openada.operation/result.transfer.measure/v1alpha1`, and
+`openada.operation/specification.evaluate/v1alpha1`. The historical
+`circuit.simulate/v1alpha1` profile remains packaged unchanged. The existing
+result envelope still emits short top-level operation names such as `simulate`,
+`drc`, and `lvs`; typed bridges record full profile and implementation identity
+inside operation-owned data. `openada profile list` and `openada profile show`
+expose the packaged profile catalog without making those control-plane commands
+engineering operations.
 
 `openada.operation-profile/v0alpha2` is additive and immutable beside
 v0alpha1. The historical `circuit.simulate/v1alpha1` profile remains unchanged;
@@ -128,7 +134,7 @@ evaluated.
 
 ### Request
 
-A request binds an operation to a real project context. The review-only base
+A request binds an operation to a real project context. The versioned base
 request schema represents, where relevant:
 
 - the logical target and native locator, such as project/library/cell/view,
@@ -145,15 +151,18 @@ Requests must not hide project assumptions. A driver may validate or resolve an
 explicit logical locator, but it must not silently substitute a convenient PDK,
 model, deck, setup, top cell, or prior report to manufacture a result.
 
-OpenADA publishes a review-only
+OpenADA publishes an executable
 [`openada.request/v0alpha1`](../schemas/request-v0alpha1.schema.json) base
-envelope and [driver protocol](DRIVER_PROTOCOL.md). The current CLI does not
-consume that envelope as a generic dispatch input; operation-specific arguments
-perform this role for each built-in operation. Operation-specific CLI bridges
-implement the three published typed profiles. The common simulation subset
-covers one self-contained advertised OP, DC, AC, or transient analysis; the
-evidence profiles consume closed JSON inputs. General runtime request dispatch
-remains future work.
+envelope and [driver protocol](DRIVER_PROTOCOL.md). `provider invoke` consumes
+it with one explicitly supplied external manifest and local JSON-stdio wait
+transport. That runtime currently dispatches only
+`circuit.simulate/v1alpha2`, for which the host has a registered semantic and
+result validator. Operation-specific arguments remain the interface for all
+built-in operations. Six active typed profiles implement simulation, native
+series extraction, ordinary, spectral, and AC-transfer measurement, and
+specification evaluation. Automatic manifest discovery and transport-general
+dispatch remain future work. The request UUID is a correlation value, not a
+digest of the complete request.
 
 ### Driver and capabilities
 
@@ -161,7 +170,7 @@ A driver is a deterministic implementation of one or more operation-profile
 versions. It translates semantic requests into native actions and translates
 native observations back into the shared evidence contract.
 
-The review-only machine-readable capability manifest states at least:
+The machine-readable capability manifest states at least:
 
 - driver identity and version;
 - supported operation and assertion profile versions;
@@ -182,13 +191,27 @@ name one. Selection must be deterministic and the result must disclose the
 actual driver, tools, and versions. A driver may decline an unsupported request;
 it must not weaken the assertion to make the request appear supported.
 
-The preview has built-in tool discovery and built-in Python drivers. A
-review-only
+The preview has built-in tool discovery and built-in Python drivers. An
 [`openada.driver-manifest/v0alpha1`](../schemas/driver-manifest-v0alpha1.schema.json)
-schema now defines the intended capability surface, but the runtime does not
-yet discover or invoke external manifests. V0alpha1 also has no independent
-capability ID, per-feature maturity rows, or normative MCP transport binding;
-those require an additive manifest revision.
+schema defines the capability surface and the explicit-provider runtime can
+validate one manifest and invoke one unambiguous local CLI capability for the
+registered `circuit.simulate/v1alpha2` profile. It validates correlation and
+provider echoes, profile truth-table and evidence rules, and recorded local
+files. The current binding accepts canonical absolute regular non-symlink files
+for the target and every configuration: 16 MiB for the target, 256 MiB per
+configuration, and 512 MiB in aggregate. The host hashes those files, verifies
+any declared SHA-256 before launch, and rejects evidence if identity or content
+changes before result acceptance. It also requires a fresh fail-if-present
+filesystem evidence destination with an existing canonical parent; every
+returned artifact must remain inside that destination. A conclusive circuit
+result must match the requested analysis and retain native tool, command, and
+exit evidence.
+`request_id` alone is not complete request-content binding. Fresh-process-group
+cleanup kills only descendants that remain in that group; a deliberately
+detached process is outside this containment, which is not a sandbox. The
+runtime does not discover, install, rank, or trust manifests. V0alpha1 also has
+no independent capability ID, per-feature maturity rows, or normative MCP
+transport binding; those require an additive manifest revision.
 
 MCP may belong below capability resolution as a future transport adapter,
 alongside local CLI, session API, and remote jobs. Such an adapter must carry
@@ -286,20 +309,39 @@ specification was met. Measurement extraction and specification evaluation are
 separate operations:
 
 ```text
-circuit.simulate       -> valid analysis evidence
-result.measure         -> values with units and extraction provenance
-specification.evaluate -> pass/fail against explicit limits
+circuit.simulate        -> valid native analysis evidence
+result.series.extract   -> verified native vectors and canonical real series
+result.measure          -> closed time/domain scalar
+result.spectral.measure -> closed coherent single-tone scalar
+result.transfer.measure -> closed AC complex-ratio scalar
+specification.evaluate  -> pass/fail against explicit limits
 ```
 
 This separation lets an agent rerun only the stage whose evidence changed and
 prevents "the simulator exited successfully" from becoming "the design works."
 
-The implemented `result.measure/v1alpha1` is deliberately narrower than a
-native waveform reader. It consumes a bounded normalized real inline series
-whose canonical digest binds axis, signals, and condition records. Its scalar
-kinds are closed and unit checks are exact. Optional lineage to a native
-artifact is explicitly unverified; OpenADA does not yet extract this series
-from ngspice or Xyce raw evidence.
+The implemented `result.series.extract/v1alpha1` verifies one exact passing
+shared-simulation artifact and projects explicitly selected voltage/current
+Cartesian components from ngspice or Xyce raw evidence. The implemented
+`result.measure/v1alpha1` then consumes its bounded normalized real inline
+series, whose canonical digest binds axis, signals, and condition records.
+`measure`, `spectral`, and `transfer` accept either that normalized series
+document or a complete passing extraction envelope and unwrap only its verified
+embedded series. Ordinary scalar kinds are closed and unit checks are exact.
+Immutable result.measure still treats optional native lineage as unverified by
+that separate assertion; the extraction envelope retains the verified native
+binding.
+
+The implemented `result.spectral.measure/v1alpha1` adds a fixed coherent
+single-tone partition for SNR, SINAD, signed-dB THD, and SFDR. It is not a
+generic FFT expression surface or an IEEE conformance claim.
+
+The implemented `result.transfer.measure/v1alpha1` forms an AC complex ratio
+from four distinct Cartesian real series on one positive-Hz axis. It supports
+first-simulated-frequency gain, one falling -3 dB crossing, one falling unity
+crossing, and phase margin for an explicitly declared negative-feedback loop.
+It does not claim true DC gain, gain margin, arbitrary crossing selection, or a
+general complex-expression language.
 
 The implemented `specification.evaluate/v1alpha1` compares one typed finite
 measurement with explicit lower/upper limits, inclusive flags, and exact
@@ -334,7 +376,10 @@ not a list of accepted profile identifiers or a claim of current CLI support.
 | Inspection | `schematic.inspect` | What bounded hierarchy, instances, nets, pins, and parameters are observable? | Not yet implemented as a shared operation. |
 | Generation | `schematic.netlist` | Was a resolved native netlist generated from the declared schematic? | `netlist` through Xschem. |
 | Analysis | `circuit.simulate` | Was valid evidence produced for the requested circuit analysis? | `simulate` through the workflow-validated ngspice/Xyce shared alpha. |
-| Evidence | `result.measure` | Were the requested values extracted with units and source provenance? | `measure` implements a closed scalar vocabulary over canonical-digest-bound normalized real inline series; native waveform extraction is not built in. |
+| Evidence | `result.series.extract` | Were exact native vectors projected into a verified canonical series? | `extract` verifies one passing ngspice/Xyce simulation artifact and explicitly selected Cartesian components. |
+| Evidence | `result.measure` | Was one requested time/domain scalar derived with exact units and source provenance? | `measure` implements a closed scalar vocabulary over canonical-digest-bound normalized real inline series or a passing extraction envelope. |
+| Evidence | `result.spectral.measure` | Was one coherent single-tone spectral scalar derived under the declared partition? | `spectral` implements fixed SNR, SINAD, signed-dB THD, and SFDR semantics. |
+| Evidence | `result.transfer.measure` | Was one AC complex-ratio scalar derived under the declared interpretation? | `transfer` implements first-frequency gain and bounded crossing-based bandwidth, unity-frequency, and phase-margin semantics. |
 | Evidence | `specification.evaluate` | Do declared measurements satisfy explicit limits? | `evaluate` implements exact-unit lower/upper bounds and explicit condition binding over one typed measurement. |
 | Inspection | `layout.inspect` | What bounded cells, hierarchy, layers, geometry summaries, and connectivity are observable? | Not yet implemented as a shared operation. |
 | Verification | `layout.drc` | Is the declared layout clean under the declared DRC setup? | `drc` through KLayout. |
@@ -448,9 +493,9 @@ The distinction between shipped behavior and intended protocol is material.
 | Area | Implemented preview | Target protocol |
 |---|---|---|
 | Result envelope | Closed `openada.result/v0alpha1` with execution/engineering separation, bounded diagnostics, artifact records, and provenance. | New immutable result version linked to typed operation and assertion profiles, with multi-step driver identity where needed. |
-| Requests | Per-operation CLI arguments plus a review-only `openada.request/v0alpha1` base schema not consumed as a generic CLI request. | Runtime generic request dispatch over installed typed profiles. |
-| Operations | Short operation names and an open operation-owned `data` object; simulation, measurement, and specification bridges record full profile identities there. | Independently versioned profiles for remaining operations and machine-readable profile discovery. |
-| Drivers | Built-in discovery and statically integrated open-tool drivers plus a review-only manifest schema. | Runtime manifest discovery, deterministic selection, driver conformance, and independent installation. |
+| Requests | Per-operation built-in CLI arguments plus explicit external invocation of one complete `openada.request/v0alpha1`. | Catalog/session/remote request dispatch over installed typed profiles. |
+| Operations | Six active typed profiles cover simulation, verified series extraction, scalar/spectral/AC-transfer measurement, and specification evaluation; one historical simulation profile remains packaged. `profile list/show` provides local machine-readable inspection. | Independently versioned profiles for noise/campaign and remaining operations plus ecosystem discovery. |
+| Drivers | Built-in discovery/static drivers plus explicit-manifest local JSON-stdio invocation for `circuit.simulate/v1alpha2`. | Trusted manifest discovery, deterministic catalog selection, more registered profiles, independent installation, sessions, and remote jobs. |
 | Portability proof | `circuit.simulate` maps one alpha profile to ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN, with pinned analysis-specific replay. | More operations, open-source backends, and runtime environments pass equivalent independently checked conformance. |
 | Artifacts | Declared files have roles, paths, sizes, and hashes; several drivers enforce fresh evidence. | Cross-run invocation and derivation lineage, including explicit incomplete-provenance records. |
 | Mutation | No general design-mutation or workspace-transaction contract. | Reviewable change sets, exact base/post identities, transaction semantics, conflicts, rollback, and linked validation evidence. |

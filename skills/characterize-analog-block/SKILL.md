@@ -18,9 +18,12 @@ Keep these conclusions separate at every step:
 | Layer | Exact semantic boundary | Strongest allowed conclusion |
 |---|---|---|
 | Analysis evidence | `openada.operation/circuit.simulate/v1alpha2` with `openada.assertion/simulation.evidence.valid/v1alpha1` | The requested OP, DC, AC, or transient analysis produced valid evidence, or conclusively did not converge |
+| Series extraction | `openada.operation/result.series.extract/v1alpha1` with `openada.assertion/series.extraction.valid/v1alpha1` | Exact native vectors were bound to a canonical real series with verified artifact lineage |
 | Measurement | `openada.operation/result.measure/v1alpha1` with `openada.assertion/measurement.valid/v1alpha1` | The declared metric was validly extracted from identified source evidence |
+| Spectral measurement | `openada.operation/result.spectral.measure/v1alpha1` with `openada.assertion/spectral.measurement.valid/v1alpha1` | One declared coherent SNR, SINAD, THD, or SFDR ratio was validly derived |
+| AC transfer measurement | `openada.operation/result.transfer.measure/v1alpha1` with `openada.assertion/transfer.measurement.valid/v1alpha1` | One declared gain, bandwidth, unity-frequency, or negative-feedback phase-margin scalar was validly derived |
 | Specification | `openada.operation/specification.evaluate/v1alpha1` with `openada.assertion/specification.satisfied/v1alpha1` | The declared measurement satisfies or violates the explicit limit under its recorded conditions |
-| Signoff | Outside these three assertions | Only a separately qualified flow and accountable reviewer may make a signoff claim |
+| Signoff | Outside these assertions | Only a separately qualified flow and accountable reviewer may make a signoff claim |
 
 Never promote a lower layer into a higher one. In particular, simulation
 `engineering.status: pass` is not a performance pass, and simulation
@@ -57,8 +60,9 @@ For circuit simulation, require the exact advertised analysis feature:
 - `openada.feature/simulation.analysis.ac/v1alpha1`
 - `openada.feature/simulation.analysis.tran/v1alpha1`
 
-Inspect the installed parameter schema before constructing either measurement
-or specification requests. Use semantic metric names in the characterization
+Run `openada capabilities`, then use `openada profile show OPERATION_PROFILE_ID`
+to inspect the installed parameter schema before constructing measurement or
+specification requests. Use semantic metric names in the characterization
 plan, but do not invent measurement-kind names, backend expressions, or feature
 IDs that the installed profile does not define.
 
@@ -72,6 +76,8 @@ being installed does not itself make a semantic capability available.
 Read [references/application-recipes.md](references/application-recipes.md)
 after identifying the application class. Adapt a recipe to the actual circuit;
 do not force an unfamiliar block into the nearest label.
+Then read [references/intent-routing.md](references/intent-routing.md) and map
+only rows whose required primitives are actually implemented.
 
 For every proposed metric, record:
 
@@ -86,6 +92,20 @@ For every proposed metric, record:
 | Dependencies | Earlier gate or specialist skill that must complete first |
 | State | planned, pass, fail, unknown, unavailable, or not evaluated at the appropriate layer |
 
+Compile each row into an immutable intent ledger before execution:
+
+| Ledger field | Required content |
+|---|---|
+| Row identity | Stable characterization-row ID and immediate engineering question |
+| Semantic request | Exact operation, assertion, required feature, target, configuration, parameters, and evidence destination |
+| Prerequisites | Authoritative choices and prior row/result identities required before dispatch |
+| Evidence binding | Request ID, result ID, native artifact path/hash, canonical series hash, and operating conditions as each becomes available |
+| Layer status | Separate analysis, extraction, measurement, and specification state; never one blended pass |
+| Blocker | One missing authority or capability and the smallest action that resolves it |
+
+Do not rewrite an executed row in place. If a target, model, condition, method,
+or limit changes, append a new row revision and preserve comparability.
+
 Order the matrix by dependency, not by convenience:
 
 1. Prove target, configuration, and baseline identity.
@@ -99,6 +119,27 @@ Order the matrix by dependency, not by convenience:
 
 Invoke one primary assertion per operation. Use fresh evidence destinations and
 preserve lineage from analysis artifacts to measurements and specifications.
+Retain the passing extraction envelope beside downstream results: the extraction
+assertion verifies the native binding, while the immutable measurement profiles
+continue to label embedded native lineage as `unverified`.
+
+## Execute one ready intent
+
+Select the first dependency-ready ledger row, not the easiest metric. Execute
+only its next unproven layer:
+
+```text
+circuit.simulate
+  -> result.series.extract when a native vector is needed
+  -> result.measure, result.spectral.measure, or result.transfer.measure
+  -> specification.evaluate only when an authoritative limit exists
+```
+
+Record the result before scheduling another intent. A simulation pass advances
+only to extraction; an extraction pass advances only to its declared
+measurement; a measurement pass advances to specification evaluation only if
+the row already carries a bound. Stop at the first unknown, unavailable
+capability, or missing authoritative choice and ask one narrow question.
 
 ## Compose focused skills
 
@@ -118,6 +159,8 @@ skip the metric.
 | Observed state | Next action |
 |---|---|
 | Analysis evidence pass | Request only supported measurements bound to that exact evidence |
+| Series extraction pass | Use only the emitted canonical series and exact selector/condition ledger |
+| Series extraction unknown | Repair native artifact, plot, selector, component, unit, or digest binding |
 | Analysis evidence fail | Retain the conclusive solver evidence and diagnose that failure before interpreting performance |
 | Analysis evidence unknown | Resolve the cited request, provenance, freshness, or structural gap and rerun the same intent |
 | Measurement pass | Evaluate an explicit specification if one exists |

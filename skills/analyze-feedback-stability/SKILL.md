@@ -16,14 +16,21 @@ Use these exact layers:
 - Establish analysis evidence with
   `openada.operation/circuit.simulate/v1alpha2` and
   `openada.assertion/simulation.evidence.valid/v1alpha1`.
-- Extract loop metrics only through
+- Bind the exact native AC Cartesian vectors through
+  `openada.operation/result.series.extract/v1alpha1` and
+  `openada.assertion/series.extraction.valid/v1alpha1`.
+- Derive the implemented loop metrics only through
+  `openada.operation/result.transfer.measure/v1alpha1` and
+  `openada.assertion/transfer.measurement.valid/v1alpha1`.
+- Derive ordinary time-domain or real-series scalars only through
   `openada.operation/result.measure/v1alpha1` and
   `openada.assertion/measurement.valid/v1alpha1`.
 - Judge an explicit stability limit only through
   `openada.operation/specification.evaluate/v1alpha1` and
   `openada.assertion/specification.satisfied/v1alpha1`.
 
-Inspect the installed schemas and capability records before constructing a
+Inspect capability records, then run `openada profile show
+openada.operation/result.transfer.measure/v1alpha1` before constructing a
 request. Do not invent a metric kind or fall back to a backend expression when
 the requested measurement is not supported. Mark that metric **not evaluated**.
 None of these layers alone establishes silicon, reliability, or signoff.
@@ -79,25 +86,39 @@ After analysis evidence passes, request supported measurements that preserve:
 
 - loop-response signal definition, orientation, and sign convention;
 - full magnitude and unwrapped phase over the declared frequency range;
-- every 0 dB unity-gain crossover, including interpolation method;
-- phase at every unity-gain crossover and phase margin under the stated
-  convention;
-- every relevant phase crossover and corresponding gain margin;
+- every falling 0 dB crossing candidate used to decide whether the result is
+  unique or ambiguous, including interpolation method;
+- phase and phase margin at the unique falling unity-gain crossing under the
+  stated convention;
 - ambiguous, missing, or multiple crossings rather than selecting the most
   favorable scalar.
 
-Inspect the installed measurement schema first. If it cannot express the
-required crossing, phase-unwrapping, interpolation, or complex-signal
-semantics, preserve the valid AC artifact but mark the margin measurement not
-evaluated. A plot inspection may motivate a hypothesis, but it is not a
-contract measurement or specification result.
+The implemented transfer profile constructs `H = output / input` from four
+explicit same-unit real series on one positive-Hz axis. It retains magnitude
+and deterministically unwrapped phase, calls the first point
+`first-simulated-frequency-not-dc`, and supports:
+
+- `low_frequency_gain_db` at that first positive frequency;
+- `bandwidth_3db` at the unique falling first-gain-minus-3.0-dB crossing;
+- `unity_gain_frequency` at the unique falling 0 dB crossing; and
+- `phase_margin` as 180 degrees plus unwrapped phase at that crossing, only
+  when the request explicitly declares `loop-gain-negative-feedback`.
+
+Crossings use linear response interpolation over log10 frequency. An absent
+crossing is typed `not_found`; multiple falling crossings are `unknown`. Gain
+margin, phase-crossing search, favorable-crossing selection, smoothing,
+fitting, and a stability claim remain unavailable. Preserve the valid AC
+artifact and mark those metrics not evaluated. A plot may motivate a
+hypothesis, but it is not a contract measurement.
 
 ## Correlate the closed loop
 
 Use a separate AC or transient request, with the matching advertised feature,
-for the exact closed-loop input/output and common-mode probes. Measure only
-supported quantities such as settling, overshoot, ringing, or closed-loop gain
-from evidence bound to the same baseline.
+for the exact closed-loop input/output and common-mode probes. Current profiles
+can measure declared settling behavior or the first-simulated-frequency AC
+transfer gain from evidence bound to the same baseline. Overshoot and ringing
+metrics remain unavailable; do not infer them from a plot or rename an
+extremum measurement.
 
 Do not answer a closed-loop question from an open-loop signal. Do not declare a
 physical instability until the evidence distinguishes it from:
@@ -110,8 +131,9 @@ physical instability until the evidence distinguishes it from:
 
 ## Evaluate specifications and one hypothesis
 
-Evaluate phase margin, gain margin, crossover range, settling, or other limits
+Evaluate phase margin, crossover range, settling, or other implemented limits
 only when the user/project supplied explicit bounds, units, and conditions.
+Keep gain margin not evaluated in v1alpha1.
 Keep one result per loop and condition; one passing crossover does not cover a
 multi-loop system.
 
@@ -127,7 +149,7 @@ compensation, or authoritative design data without authorization.
 | Analysis evidence pass | The requested native analysis is trustworthy enough for supported measurements |
 | Analysis evidence fail | The solver's defined terminal failure is proven; no margin conclusion follows |
 | Analysis evidence unknown | Resolve evidence, binding, configuration, or execution uncertainty |
-| Measurement pass | The stated metric is valid for its exact signals and method |
+| Transfer measurement pass | The stated metric is valid for its exact input/output phasors, interpretation, and method |
 | Measurement fail/unknown/unavailable | Margin or response is not evaluated; repair or add the semantic primitive |
 | Specification pass/fail | Only the explicit limit at the frozen condition was evaluated |
 

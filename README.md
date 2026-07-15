@@ -27,13 +27,16 @@ replacement for them. The same simulation intent can run through ngspice or
 Xyce; the agent should not have to relearn every command surface and log
 grammar to understand whether valid evidence was produced.
 
-The `0.3.0` preview provides eight CLI operations, six open-source EDA drivers,
-the versioned `openada.result/v0alpha1` evidence envelope, and six agent skills.
-It adds two deterministic evidence operations and broadens the shared
-circuit-simulation profile to OP, DC, AC, and transient analysis where the
-selected backend advertises support. Runtime external-driver discovery remains
-a protocol milestone; these additions do not turn the review-only manifest
-into a runtime registry.
+The `0.4.0` preview provides thirteen CLI command families, six open-source EDA
+drivers, the versioned `openada.result/v0alpha1` evidence envelope, and six
+agent skills. It closes the first native-artifact-to-specification chain with
+verified ngspice/Xyce series extraction and deterministic coherent single-tone
+SNR, SINAD, THD, and SFDR measurements, plus closed AC gain, bandwidth,
+unity-frequency, and phase-margin evidence. Packaged profiles are inspectable
+through the CLI. It also adds a hardened explicit-manifest, local JSON-stdio
+external-provider runtime for the active circuit-simulation profile. That
+runtime is intentionally not automatic discovery, a marketplace, or an MCP
+binding.
 
 > **Early preview**
 >
@@ -88,10 +91,11 @@ provide connectivity; OpenADA defines the domain meaning and the evidence
 threshold.
 
 Local CLI is the implemented connection today; MCP, live sessions, and remote
-jobs are future adapter choices below that meaning. The review-only v0alpha1
-driver manifest does not define a normative MCP binding or per-feature
-capability maturity. A future EDA marketplace should catalog providers of
-exact, conformance-backed capabilities—not raw binaries or prompt bundles. See
+jobs are future adapter choices below that meaning. The v0alpha1 driver
+manifest now supports explicit validated local invocation, but it does not
+define automatic discovery, a normative MCP binding, or per-feature capability
+maturity. A future EDA marketplace should catalog providers of exact,
+conformance-backed capabilities—not raw binaries or prompt bundles. See
 [Providers, marketplaces, and MCP](docs/PROVIDERS_AND_MCP.md).
 
 The [semantic model](docs/SEMANTIC_MODEL.md) specifies this proposed ABI in
@@ -149,6 +153,28 @@ without requiring identical point counts or native files. Each result still
 identifies the selected backend and version, native inputs and artifacts,
 working directory, diagnostics, hashes, and provenance.
 
+A passing shared-profile result can now continue without copying waveform
+numbers out of a log:
+
+```text
+circuit.simulate/v1alpha2
+  -> result.series.extract/v1alpha1
+  -> result.measure/v1alpha1
+     or result.spectral.measure/v1alpha1
+     or result.transfer.measure/v1alpha1
+  -> specification.evaluate/v1alpha1
+```
+
+`openada extract` requires the complete simulation result plus the exact raw
+artifact path and explicit native-name/output-name/unit/Cartesian-component
+selectors. The three measurement commands accept the complete passing
+extraction envelope directly. `openada spectral` implements one deliberately
+narrow coherent single-tone method; `openada transfer` implements an explicit
+same-unit Cartesian output-over-input trace with closed crossing semantics.
+See [Measurement methods and standards
+context](docs/MEASUREMENT_METHODS.md) for their methods, IEEE scope map, and
+non-conformance boundary.
+
 The contract also keeps distinct questions distinct:
 
 - `execution.status: completed` means the native process ran.
@@ -203,12 +229,12 @@ contribution gate.
 
 | Contract layer | Current checkout | Protocol target |
 |---|---|---|
-| Agent intent | Eight CLI operations and flags; five fixed scoped-preflight assertions; three typed operation profiles; a review-only `openada.request/v0alpha1` scaffold | Remaining immutable operation/assertion profiles accepted by general runtime dispatch |
+| Agent intent | Thirteen CLI command families; five fixed scoped-preflight assertions; six active typed operation profiles plus one historical simulation profile; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
 | Drivers | Six open-source EDA drivers; ngspice OP/DC/AC and Xyce DC/AC are structured, while shared transient mappings are workflow-validated | Capability manifests and independently installable drivers |
 | Portability proof | Analysis-specific `circuit.simulate` requests have pinned native ngspice/Xyce success replay with independently parsed artifacts; the expanded replay does not yet cover every maturity outcome | More operations, open-source backends, runtime environments, and complete outcome corpora |
 | Engineering skills | One execution skill plus five experimental capability-gated engineering skills | Contributed workflows that compose stable operations across backends |
-| Workflow composition | Atomic netlist, simulation, typed scalar measurement, explicit specification evaluation, verification, and RTL checks | Native waveform normalization, corners, statistical execution, richer measurements, and lineage composed above those atoms |
+| Workflow composition | Simulation → verified native series extraction → scalar, coherent spectral, or closed AC transfer measurement → explicit specification evaluation, with digest lineage and the verified extraction envelope retained separately | Integrated noise, corners, statistical campaigns, and richer standard-reviewed methods |
 | Design mutation | Deliberately outside the current preview | Preconditioned, transactional change sets with declared writes, native diffs, rollback evidence, and source-revision identity |
 
 Mutation is part of the long-term design because chip projects need safer
@@ -219,7 +245,7 @@ or rollback separately from engineering validation.
 
 The [mutation and versioning proposal](docs/MUTATION_AND_VERSIONING.md) defines
 a semantic, append-only design-change history with `preview`, `apply`, and
-`revert`; the write-capable runtime is planned and is not shipped in `0.3.0`.
+`revert`; the write-capable runtime is planned and is not shipped in `0.4.0`.
 
 ## Quickstart
 
@@ -293,7 +319,7 @@ is:
 To install the Python entry point from the repository:
 
 ```bash
-python -m pip install 'git+https://github.com/simra-tech/OpenADA.git@v0.3.0'
+python -m pip install 'git+https://github.com/simra-tech/OpenADA.git@v0.4.0'
 openada doctor
 ```
 
@@ -301,14 +327,21 @@ openada doctor
 
 The plugin ships every directory under `skills/`: the OpenADA execution skill
 and focused engineering skills above it. The same packages are shared across
-harnesses.
+harnesses. Agent marketplaces install those skill files, but do not install the
+Python package or its `jsonschema>=4.18` runtime dependency. Install the Python
+entry point from the same OpenADA release using the command above before asking
+the plugin to execute or inspect semantic profiles. The bundled `bin/openada`
+launcher remains useful from a source/plugin checkout whose Python dependencies
+are already available; schema-backed commands otherwise return a structured
+missing-dependency diagnostic instead of a traceback (profile/provider
+validation uses `provider.validation.unavailable`).
 
 ### Claude Code
 
 Inside Claude Code:
 
 ```text
-/plugin marketplace add https://github.com/simra-tech/OpenADA.git#v0.3.0
+/plugin marketplace add https://github.com/simra-tech/OpenADA.git#v0.4.0
 /plugin install openada@openada
 /reload-plugins
 ```
@@ -330,7 +363,7 @@ claude --plugin-dir .
 Add the Git marketplace:
 
 ```bash
-codex plugin marketplace add simra-tech/OpenADA --ref v0.3.0
+codex plugin marketplace add simra-tech/OpenADA --ref v0.4.0
 codex plugin add openada@openada
 ```
 
@@ -366,8 +399,13 @@ thin.
 | `simulate` (legacy default) | ngspice | workflow-validated | Stream wrapper raw files in batch mode, or validate declared deck-owned raw/`wrdata` outputs in control mode |
 | `simulate --backend ngspice` | ngspice | structured OP/DC/AC; workflow-validated TRAN | Run one self-contained OP, DC, AC, or transient analysis and emit typed `circuit.simulate` facts |
 | `simulate --backend xyce` | Xyce | structured DC/AC; workflow-validated TRAN | Run one self-contained DC, AC, or transient analysis; OP is explicitly unsupported |
+| `extract` | deterministic Spice3 kernel | structured alpha | Verify one exact passing shared-simulation artifact and project explicit real/imaginary native vector components into a canonical real series |
 | `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar from a canonical-digest-bound normalized real inline series using a closed algorithm kind |
-| `evaluate` | deterministic OpenADA kernel | structured alpha | Read a complete `result.measure` result envelope, then compare its typed measurement with exact-unit bounds and explicit condition bindings |
+| `spectral` | deterministic OpenADA kernel | structured alpha | Derive coherent single-tone SNR, SINAD, signed-dB THD, or SFDR from one fully declared hashed bin partition |
+| `transfer` | deterministic OpenADA kernel | structured alpha | Derive first-positive-frequency gain, unique falling −3 dB bandwidth, unity-gain frequency, or explicitly declared negative-feedback phase margin; retain the complete magnitude/phase trace |
+| `evaluate` | deterministic OpenADA kernel | structured alpha | Read a complete ordinary, spectral, or transfer measurement envelope, then compare its typed scalar with exact-unit bounds and explicit condition bindings |
+| `profile list/show` | installed contracts | preview | List packaged operation/assertion/feature IDs or emit one complete schema-bearing operation profile from any working directory |
+| `provider validate/list/invoke` | external local CLI | structured runtime boundary | Validate one explicit v0alpha1 manifest/request and invoke one active `circuit.simulate/v1alpha2` JSON-stdio wait capability; snapshot canonical request inputs within fixed target/configuration/aggregate bounds, and enforce status/evidence truth, artifact identity, zero transport exit, and descendant cleanup |
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |
@@ -386,6 +424,7 @@ See [the current result contract](docs/CONTRACT.md),
 [engineering skills](docs/ENGINEERING_SKILLS.md),
 [request and driver protocol](docs/DRIVER_PROTOCOL.md),
 [providers, marketplaces, and MCP](docs/PROVIDERS_AND_MCP.md),
+[measurement methods and standards](docs/MEASUREMENT_METHODS.md),
 [compatibility policy](docs/COMPATIBILITY.md),
 [release history](CHANGELOG.md),
 [driver status and roadmap](docs/ROADMAP.md), and

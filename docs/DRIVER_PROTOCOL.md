@@ -6,11 +6,15 @@ agent select a capable driver without turning the public ontology into a copy
 of ngspice, Xyce, Xschem, KLayout, Netgen, Yosys, OpenROAD, or another tool's
 command surface.
 
-This document specifies protocol scaffolding for review. The current CLI
-accepts operation-specific flags and has in-tree drivers; it does not discover
-external manifests or accept `openada.request/v0alpha1` as a generic dispatch
-input. The implemented operation-specific CLI bridges and
-[result contract](CONTRACT.md) remain authoritative until that wiring lands.
+This document specifies the reviewed protocol and its deliberately small first
+runtime binding. The current CLI accepts operation-specific flags and has
+in-tree drivers. `provider invoke` also accepts one complete
+`openada.request/v0alpha1` together with one explicitly supplied manifest and
+resolves one local JSON-stdio `wait` transport. External dispatch is currently
+registered only for `circuit.simulate/v1alpha2`; the other packaged profiles
+use their built-in CLI bridges. It does not discover, install, rank, or approve
+external manifests, and it does not implement the session, remote-job,
+marketplace, or MCP bindings described as future work below.
 
 The published protocol documents are:
 
@@ -29,9 +33,28 @@ The published protocol documents are:
 - [`circuit.simulate/v1alpha2`](../profiles/circuit.simulate-v1alpha2.json), the
   active typed shared simulation profile;
 - [`result.measure/v1alpha1`](../profiles/result.measure-v1alpha1.json), the
-  canonical-digest-bound normalized-series measurement profile; and
+  canonical-digest-bound normalized-series measurement profile;
+- [`result.series.extract/v1alpha1`](../profiles/result.series.extract-v1alpha1.json),
+  the exact native-artifact-to-normalized-series profile;
+- [`result.spectral.measure/v1alpha1`](../profiles/result.spectral.measure-v1alpha1.json),
+  the coherent single-tone SNR, SINAD, THD, and SFDR profile;
+- [`result.transfer.measure/v1alpha1`](../profiles/result.transfer.measure-v1alpha1.json),
+  the same-unit AC complex-ratio and closed crossing-measurement profile; and
 - [`specification.evaluate/v1alpha1`](../profiles/specification.evaluate-v1alpha1.json),
   the exact-unit specification profile.
+
+Those are six active profiles plus the immutable historical circuit profile.
+`openada profile list` returns their installed identities and
+`openada profile show OPERATION-PROFILE-ID` returns one complete validated
+document. Profile inspection is not external-provider discovery.
+
+The built-in `measure`, `spectral`, and `transfer` bridges accept either their
+canonical normalized-series document or one complete passing
+`result.series.extract/v1alpha1` envelope. In the latter form the host validates
+the envelope and extraction-profile data and unwraps only a verified embedded
+series; the downstream operation still validates its own canonical series
+digest, while the workflow retains the extraction result as the upstream
+native-binding record.
 
 Complete valid examples that are safe to copy and replace live in the
 [request template](../conformance/driver-kit/request.template.json) and
@@ -59,9 +82,12 @@ noise, Monte Carlo, or multiple analyses. The ngspice mapping is structured
 for OP/DC/AC and workflow-validated for TRAN; Xyce is structured for DC/AC,
 workflow-validated for TRAN, and rejects OP as unsupported. The pinned
 [circuit-simulation portability replay](../conformance/circuit-simulate-v0alpha2/README.md)
-independently parses native success evidence by analysis. The generic request and
-external-manifest transport remain review scaffolding rather than a runtime
-interface.
+independently parses native success evidence by analysis. The generic request
+and external-manifest protocol is executable only through the explicit local
+provider boundary documented in
+[Providers, marketplaces, and MCP](PROVIDERS_AND_MCP.md); automatic discovery
+and every non-local transport remain outside the runtime. In this release that
+boundary invokes only the active `circuit.simulate/v1alpha2` profile.
 
 ## Invariants
 
@@ -111,12 +137,16 @@ version may instead require a new driver version and new conformance evidence.
 
 `circuit.simulate/v1alpha1` remains an immutable historical profile. Its
 additive `circuit.simulate/v1alpha2` successor continues to use the immutable
-v0alpha1 profile schema. The deterministic `result.measure/v1alpha1` and
-`specification.evaluate/v1alpha1` profiles use additive v0alpha2; they require
-one semantic implementation mapping rather than pretending to have two native
-EDA backends. Their CLI bridges record profile and implementation identities in
-the existing operation-owned result data. The base request envelope still is
-not a general runtime dispatch interface.
+v0alpha1 profile schema. The deterministic `result.measure/v1alpha1`,
+`result.series.extract/v1alpha1`, `result.spectral.measure/v1alpha1`,
+`result.transfer.measure/v1alpha1`, and `specification.evaluate/v1alpha1`
+profiles use additive v0alpha2; they require semantic implementation mappings
+rather than pretending every evidence kernel is a native EDA backend. Their CLI
+bridges record profile and implementation identities in the existing
+operation-owned result data. The base request envelope is dispatchable only
+through `provider invoke` with one explicit manifest, exact selector, supported
+local `wait` transport, and a host-registered semantic/result validator; only
+`circuit.simulate/v1alpha2` currently meets that last condition.
 
 OpenADA-owned profile and feature IDs use `openada.operation/...`,
 `openada.assertion/...`, and `openada.feature/...`. Third parties use a
@@ -130,6 +160,10 @@ guess compatibility from a prefix.
 A request contains no natural-language fallback. It identifies the exact
 profile pair, target, configuration, operation parameters, evidence policy,
 evidence destination, execution constraints, and optional driver selection.
+`request_id` correlates request and result; it is not a digest or signature of
+the other request fields. Consumers that need content binding must verify the
+declared target/configuration identities and retained input records rather than
+treating UUID equality as proof that the whole request is unchanged.
 
 Before schema validation, a host must bound transport input. The alpha
 reference limits are 1 MiB for one request and 4 MiB for one installed manifest;
@@ -153,6 +187,17 @@ apply their own tighter structural limits.
 A driver must support the locator type for the selected capability. It must not
 turn an unresolved session object into a filesystem search, fetch an undeclared
 URI, or treat a mutable artifact ID as content-addressed evidence.
+
+The implemented external `circuit.simulate/v1alpha2` binding is narrower than
+the base schema: the target and every configuration locator must name a
+canonical absolute regular non-symlink file. The target ceiling is 16 MiB,
+every configuration-file ceiling is 256 MiB, and their aggregate ceiling is
+512 MiB. The host snapshots file identity, size, and SHA-256 before launch and
+checks any locator digest against those bytes. The
+[`request.template.json`](../conformance/driver-kit/request.template.json)
+therefore uses absolute path placeholders; replace them with real canonical
+regular-file paths rather than making them relative to the manifest or working
+directory.
 
 `configuration` is an explicit list of role-bearing references such as a PDK,
 model library, corner, rule deck, LVS setup, runset, waiver file, or startup
@@ -199,6 +244,16 @@ collision policy is explicit: `fail-if-present` requires a new destination,
 while `replace-driver-owned` permits replacement only of the exact artifact
 paths declared by the operation. Drivers must leave unrelated files untouched
 and must never hide this required location in a non-semantic extension.
+
+The current external simulation runtime implements only the filesystem and
+`fail-if-present` branch. The destination path must be canonical and absolute,
+must not exist before launch, and must have an existing canonical non-linked
+parent directory whose identity remains stable during execution. Every artifact
+path in the returned envelope must be canonical, absolute, and beneath that
+destination; an existing artifact must resolve there without symbolic-link
+traversal. The request template's `/tmp/openada-circuit-simulate-example` value
+is an absolute placeholder: its parent must already exist and the final path
+must still be absent when invoked.
 
 ### Execution and side effects
 
@@ -269,9 +324,12 @@ A manifest is not an installation instruction or a trust certificate. A host
 must invoke only drivers installed or explicitly approved through its own trust
 policy. Discovery must not download code, follow a manifest-provided package
 URL, or execute an unreviewed binary automatically. For local CLI transports,
-the host resolves the literal argv executable without a shell, applies its
-normal executable ownership/path policy, and records the selected path and
-observed identity in the result.
+the host resolves the literal argv executable without a shell and applies its
+normal executable ownership/path policy. The current runtime also resolves and
+canonicalizes standalone argv elements that already name existing regular
+files; it compares the executable and those bound-file identities before and
+after invocation. This is not a package trust decision and does not recognize
+paths embedded inside option strings such as `--config=/path`.
 
 Manifests and requests must not contain credentials, license secrets, session
 tokens, or mutation authorization secrets. Those remain in the host's
@@ -293,11 +351,17 @@ arrays. A manifest consumer must additionally verify that:
 5. every `structured` or `workflow-validated` claim references at least one
    matching, passing record at the claimed level, and workflow-level evidence
    is immutable;
-6. an advertised result schema is installed and understood by the consumer.
+6. those matching passing records collectively cover every native product the
+   capability advertises; and
+7. an advertised result schema is installed and understood by the consumer.
 
 A failed conformance case is useful regression evidence but cannot support a
 maturity claim. A successful structural fixture does not justify
-`workflow-validated`.
+`workflow-validated`. In the current explicit runtime, conformance records are
+self-declared manifest metadata: their schema, internal references, claimed
+level, URI shape, and digest shape are checked, but the URI is not fetched and
+the declared evidence bytes are not independently rehashed. Installation and
+review policy must establish that trust separately.
 
 ### Native versions
 
@@ -337,7 +401,27 @@ A `local-cli` transport declares a literal argv prefix. The host executes that
 vector without a shell, writes exactly one UTF-8 JSON request to stdin, and
 reads exactly one UTF-8 JSON result from stdout for `wait` mode. Native output
 must be captured into the result or retained artifacts rather than mixed with
-the protocol stream.
+the protocol stream. The implemented runtime requires a zero transport-process
+exit and empty stderr even when stdout contains valid JSON. It bounds all three
+streams and time, uses a fresh process group, and terminates that group on
+timeout, overflow, and after the provider parent exits. Only descendants that
+remain in the fresh group are killed; a process that deliberately detaches from
+it can escape this containment. This lifecycle hygiene is not a sandbox.
+
+After parsing, the runtime validates the generic result, installed profile data
+schema, assertion truth table, evidence roles and byte ceilings, and
+operation/profile/provider correlation fields. It verifies every recorded local
+input and artifact as a regular file against the declared size and SHA-256 under
+aggregate limits. For conclusive circuit-simulation results, canonical absolute
+filesystem target and configuration locators must also bind exactly one result
+input record, including any digest supplied by the request. The normalized
+analysis type must equal the request, and the result must retain a native tool
+identity, nonempty native command, and native exit code; engineering `pass`
+requires that native exit code to be zero. Transport-process exit zero is a
+separate protocol requirement. After provider completion the host reopens every
+request input and requires filesystem identity, size, and SHA-256 to match the
+pre-launch snapshot. Each provider-retained input record must also match that
+snapshot. Mutation, replacement, or disappearance invalidates the evidence.
 
 ### Session API
 
@@ -379,10 +463,13 @@ selection facts inside the operation-owned `data` object:
 ```
 
 That fragment is permitted by the existing open `data` object, but the base
-result schema does not require or type it. A future immutable result revision
-should promote these fields and represent material backend steps directly.
-Consumers must not infer them from prose, an executable path, or an exhaustive
-native log.
+result schema does not require or type it. The registered simulation profile
+does require and type the fragment at its operation-data layer. Even there,
+`request_id` is correlation rather than a canonical digest of the request
+document. A future immutable result revision should promote these fields,
+define complete request-content binding, and represent material backend steps
+directly. Consumers must not infer them from prose, an executable path, or an
+exhaustive native log.
 
 ## Extensions
 
@@ -418,8 +505,7 @@ Before publishing a driver manifest:
 7. claim workflow validation only for a pinned, independently checked public
    workflow.
 
-With the optional conformance dependency installed, schema and example
-validation can be reproduced with:
+With OpenADA installed, schema and example validation can be reproduced with:
 
 ```bash
 python3 - <<'PY'
