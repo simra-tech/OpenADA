@@ -45,9 +45,10 @@ openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
 
 When `--backend` is omitted, the legacy ngspice interface remains the default.
 The shared subset is one self-contained transient analysis, with no includes,
-measurements, or control-language blocks. ngspice has native workflow evidence; Xyce currently
-has synthetic contract tests only because the development server has no native
-Xyce installation. The generic request and external-manifest transport remain
+measurements, or control-language blocks. Both mappings pass the pinned native
+[circuit-simulation portability replay](../conformance/circuit-simulate/README.md),
+which independently parses their different raw formats and checks the same RC
+engineering facts. The generic request and external-manifest transport remain
 review scaffolding rather than a runtime interface.
 
 ## Invariants

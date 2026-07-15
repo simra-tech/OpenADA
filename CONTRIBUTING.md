@@ -35,11 +35,18 @@ openada simulate conformance/circuit-simulate/fixtures/rc-transient.cir \
   --backend xyce --output-dir /tmp/xyce-run
 ```
 
-Omitting `--backend` preserves the legacy ngspice interface and default. Xyce
-has synthetic contract coverage but no native replay on the current
-development server; do not label
-it workflow-validated until a pinned public run and independent artifact check
-exist.
+Omitting `--backend` preserves the legacy ngspice interface and default. The
+pinned native portability replay exercises both mappings and independently
+checks their native waveforms:
+
+```bash
+python3 conformance/circuit-simulate/run.py \
+  --evidence-dir /tmp/openada-circuit-simulate-evidence
+```
+
+Keep the shared profile labeled alpha: native workflow validation establishes
+the implemented mapping for this bounded fixture, not every circuit-analysis
+feature or runtime.
 
 When testing ngspice control decks, use a fresh writable work directory and
 declare native outputs rather than searching for whatever changed:

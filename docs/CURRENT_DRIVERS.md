@@ -77,10 +77,12 @@ status rules, normalized fact names, and artifact roles; it does not promise
 that both simulators accept byte-identical native decks. The caller remains
 responsible for the native deck and models.
 
-ngspice is workflow-validated. The Xyce driver has deterministic synthetic
-contract tests, but this development server has no native Xyce binary, so its
-native command and artifact mapping still require a pinned public replay before
-it can be called workflow-validated. Scoped preflight continues to select
+Both mappings are workflow-validated for this bounded shared profile through
+the pinned, network-disabled
+[ngspice/Xyce portability replay](../conformance/circuit-simulate/README.md).
+That verifier independently parses ngspice binary raw and Xyce ASCII raw,
+checks the model-free RC response and source-branch relation, and tolerates
+backend-native point-count differences. Scoped preflight continues to select
 ngspice for `spice-analysis-evidence-valid`; choosing Xyce is explicit in this
 alpha.
 
@@ -212,8 +214,8 @@ but its own clean public workflow recipe is still pending.
 | `doctor` | runtime | preview | Discover capabilities, or preflight one project assertion without catalog inventory |
 | `netlist` | Xschem | workflow-validated | Produce a SPICE netlist and fail on recognized unresolved symbols |
 | `simulate` (legacy default) | ngspice | workflow-validated | Stream wrapper raw files in batch mode, or validate declared deck-owned raw/`wrdata` outputs in control mode |
-| `simulate --backend ngspice` | ngspice | structured shared profile | Run the shared self-contained transient subset and emit typed normalized facts |
-| `simulate --backend xyce` | Xyce | structured alpha | Run the shared self-contained transient subset and validate a fresh native raw artifact; synthetic-contract-tested only |
+| `simulate --backend ngspice` | ngspice | workflow-validated shared alpha | Run the shared self-contained transient subset and emit typed normalized facts |
+| `simulate --backend xyce` | Xyce | workflow-validated shared alpha | Run the shared self-contained transient subset and validate a fresh native raw artifact; pinned Xyce 7.10-opensource replay |
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |

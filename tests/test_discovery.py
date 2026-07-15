@@ -116,7 +116,7 @@ def test_public_conformance_maturity_is_machine_readable():
     assert TOOL_SPECS["ngspice"].maturity == "workflow-validated"
     assert TOOL_SPECS["klayout"].maturity == "workflow-validated"
     assert TOOL_SPECS["netgen"].maturity == "workflow-validated"
-    assert TOOL_SPECS["xyce"].maturity == "structured"
+    assert TOOL_SPECS["xyce"].maturity == "workflow-validated"
     assert TOOL_SPECS["xyce"].operations == ("simulate",)
 
 

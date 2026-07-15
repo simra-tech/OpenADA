@@ -285,8 +285,10 @@ plot with finite dependent values, a fresh log, stable input identity, and
 complete bounded process capture. Only reviewed terminal transient
 non-convergence text with native exit 1 can produce engineering `fail`; parse
 errors, missing or malformed raw data, timeouts, and generic nonzero exits are
-`unknown`. Xyce is structured alpha and synthetic-contract-tested; a pinned
-native public replay is still required for workflow validation.
+`unknown`. The mapping is workflow-validated for the bounded shared alpha
+fixture through the pinned
+[native ngspice/Xyce replay](../conformance/circuit-simulate/README.md); that
+does not widen the alpha profile or imply support for arbitrary Xyce decks.
 
 ### `drc`
 

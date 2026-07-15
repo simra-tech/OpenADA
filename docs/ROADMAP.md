@@ -5,7 +5,7 @@ OpenADA uses explicit maturity levels:
 - **Discovered**: OpenADA can resolve the executable and inspect a bounded version string.
 - **Structured**: A versioned semantic operation and normalized result exist.
 - **Workflow-validated**: The operation passes a pinned, publicly reproducible
-  design/PDK/runtime conformance case.
+  fixture or design, required PDK (if any), and runtime conformance case.
 
 ## v0.1 preview
 
@@ -17,7 +17,7 @@ OpenADA uses explicit maturity levels:
 | Netgen | yes | `lvs` | pinned public IHP inverter recipe |
 | Yosys | yes | `rtl-check` | pinned IHP run; public recipe pending |
 | Magic | yes | no | no |
-| Xyce | yes | `simulate` structured alpha | synthetic contract tests only; native workflow pending |
+| Xyce | yes | `simulate` shared alpha | pinned native Xyce 7.10-opensource RC replay |
 | OpenROAD / LibreLane | yes | no | no |
 | Icarus / Verilator / slang / Surelog | yes | no | no |
 | OpenVAF / Qucs-S / GTKWave | yes | no | no |
@@ -32,9 +32,9 @@ one-off wrappers does not substitute for passing the gate.
 Current status: milestone A is published in this repository. Milestone B now
 includes review-only request, driver-manifest, and operation-profile schemas,
 valid contributor templates, and the first concrete `circuit.simulate`
-profile. Milestone C has a built-in ngspice/Xyce alpha mapping; native Xyce
-workflow validation, runtime manifest discovery, and external invocation remain
-unimplemented. Milestone D now has its first experimental tool-independent
+profile. Milestone C's bounded portability gate now passes through a pinned
+native ngspice/Xyce replay; runtime manifest discovery and external invocation
+remain unimplemented. Milestone D now has its first experimental tool-independent
 engineering skill; it has not yet passed the cross-backend or external-review
 gate.
 
@@ -81,9 +81,11 @@ evidence without changing an agent harness.
   extraction, and specification satisfaction remain separate claims even
   though the latter two are outside the shared alpha subset.
 
-**Gate:** ngspice and Xyce both pass the same operation conformance suite with
-independently inspected native artifacts. Synthetic Xyce tests do not satisfy
-this gate.
+**Gate (passed for the shared alpha fixture):** ngspice 46 and Xyce
+7.10-opensource both pass the same operation conformance replay in the pinned
+IIC-OSIC-TOOLS `2026.06` image. The independent verifier parses both native raw
+formats, checks the RC waveform and branch relation, and compares semantic
+results without requiring identical sampling.
 
 ### D. Grow the engineering-skill layer
 
@@ -93,8 +95,8 @@ this gate.
   evidence rather than native commands or backend log grammars.
 - Forward-test success, failure, unknown, invalid, and unavailable paths on
   realistic public tasks.
-- Prove backend independence with identical skill instructions across ngspice
-  and Xyce once both mappings are natively workflow-validated.
+- Forward-test the simulation-review skill unchanged across the now
+  workflow-validated ngspice and Xyce mappings.
 - Track skill maturity separately from driver maturity and contract versioning.
 
 **Gate:** one contributed engineering skill composes a versioned operation on
@@ -168,7 +170,8 @@ the bundled `ihp-sg13g2` PDK revision
 `144f811cdffda49b71d28f64e8a92b697b61cf06` through its hashed `COMMIT`
 file. In that environment:
 
-- all five structured tool binaries pass bounded discovery;
+- all six structured or workflow-validated tool binaries pass bounded
+  discovery;
 - a real IHP Xschem inverter netlists without unresolved symbols;
 - the real inverter GDS reports zero multiplicity-weighted KLayout DRC
   violations from a fresh exact LYRDB whose generator and top cell match the
@@ -178,13 +181,18 @@ file. In that environment:
   setup/completion transcript;
 - the SAR logic RTL elaborates and passes Yosys structural checks;
 - the Xschem-to-ngspice path captures an explicitly declared deck-owned raw
-  artifact and independently verifies finite transient inverter behavior.
+  artifact and independently verifies finite transient inverter behavior;
+- the shared model-free RC profile runs natively through ngspice 46 and Xyce
+  7.10-opensource, with independent binary/ASCII raw parsing and matching
+  engineering behavior despite different adaptive point counts.
 
 These results are not an endorsement by JKU or IHP. KLayout DRC and Netgen LVS
 are workflow-validated through the public
 [IHP inverter replay](../conformance/ihp-inverter/README.md). Xschem and ngspice
 are workflow-validated through the public
-[Xschem-to-ngspice replay](../conformance/ihp-inverter-ngspice/README.md). Yosys
+[Xschem-to-ngspice replay](../conformance/ihp-inverter-ngspice/README.md). The
+Xyce shared-profile mapping is workflow-validated through the
+[native portability replay](../conformance/circuit-simulate/README.md). Yosys
 remains below that label until its own clean public recipe exists.
 
 ## First public conformance case

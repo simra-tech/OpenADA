@@ -298,7 +298,7 @@ not a list of accepted profile identifiers or a claim of current CLI support.
 | Control | `capabilities.inspect` | Which exact operations can run in this environment? | `doctor` provides built-in discovery and scoped preflight. |
 | Inspection | `schematic.inspect` | What bounded hierarchy, instances, nets, pins, and parameters are observable? | Not yet implemented as a shared operation. |
 | Generation | `schematic.netlist` | Was a resolved native netlist generated from the declared schematic? | `netlist` through Xschem. |
-| Analysis | `circuit.simulate` | Was valid evidence produced for the requested circuit analysis? | `simulate` through ngspice or the Xyce structured alpha. |
+| Analysis | `circuit.simulate` | Was valid evidence produced for the requested circuit analysis? | `simulate` through the workflow-validated ngspice/Xyce shared alpha. |
 | Evidence | `result.measure` | Were the requested values extracted with units and source provenance? | Some ngspice measurements are normalized inside `simulate`; no separate profile yet. |
 | Evidence | `specification.evaluate` | Do declared measurements satisfy explicit limits? | Not yet implemented as a shared operation. |
 | Inspection | `layout.inspect` | What bounded cells, hierarchy, layers, geometry summaries, and connectivity are observable? | Not yet implemented as a shared operation. |
@@ -335,11 +335,11 @@ support the same assertion, they should advertise different capabilities rather
 than returning superficially similar JSON.
 
 The first portability proof is `circuit.simulate`, mapped to ngspice and Xyce
-against the same semantic fixtures. Its common alpha subset is deliberately
+against the same semantic fixture. Its common alpha subset is deliberately
 narrow: one self-contained transient analysis, with no includes, measurements,
-or control-language blocks. ngspice is workflow-validated; Xyce currently has
-synthetic contract tests only because the development server has no native
-Xyce binary.
+or control-language blocks. Both mappings pass a pinned native replay whose
+independent verifier parses the two native raw formats, checks the same RC
+waveform facts, and permits backend-native sampling differences.
 
 ## Tool-specific control surfaces belong below the waist
 
@@ -412,7 +412,7 @@ The distinction between shipped behavior and intended protocol is material.
 | Requests | Per-operation CLI arguments plus a review-only `openada.request/v0alpha1` base schema not yet consumed by the CLI. | Typed operation parameter profiles and runtime request dispatch. |
 | Operations | Short operation names and an open operation-owned `data` object; the simulation alpha records the first full operation/assertion profile pair there. | Independently versioned profiles for the remaining operations and machine-readable profile discovery. |
 | Drivers | Built-in discovery and statically integrated open-tool drivers plus a review-only manifest schema. | Runtime manifest discovery, deterministic selection, driver conformance, and independent installation. |
-| Portability proof | `circuit.simulate` maps one alpha profile to ngspice and Xyce; only the ngspice path is workflow-validated. | The same operation/assertion profile passes native workflow conformance on both backends. |
+| Portability proof | `circuit.simulate` maps one alpha profile to ngspice and Xyce; both pass the pinned native RC conformance replay. | More operation variants, open-source backends, and runtime environments pass equivalent independently checked conformance. |
 | Artifacts | Declared files have roles, paths, sizes, and hashes; several drivers enforce fresh evidence. | Cross-run invocation and derivation lineage, including explicit incomplete-provenance records. |
 | Mutation | No general design-mutation or workspace-transaction contract. | Reviewable change sets, exact base/post identities, transaction semantics, conflicts, rollback, and linked validation evidence. |
 

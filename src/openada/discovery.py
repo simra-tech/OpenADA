@@ -75,7 +75,7 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         "xyce",
         ("Xyce", "xyce"),
         (("-v",),),
-        "structured",
+        "workflow-validated",
         ("simulate",),
         r"(?i)^xyce(?:\(tm\))?[ \t]+(?:release[ \t]+)?"
         r"v?\d+(?:\.\d+)+(?:[-+][a-z0-9._-]+)?\b",

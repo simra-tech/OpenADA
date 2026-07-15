@@ -1,0 +1,111 @@
+{
+  "schema": "openada.circuit-simulate-conformance/v0alpha1",
+  "id": "model-free-rc-transient-ngspice-xyce",
+  "fixture": {
+    "repository_path": "conformance/circuit-simulate/fixtures/rc-transient.cir",
+    "container_path": "/openada/conformance/circuit-simulate/fixtures/rc-transient.cir",
+    "sha256": "18ccf26e2240ef93498edb832541d99985de1e454305fcad92a82612747dd911",
+    "license": "MIT"
+  },
+  "runtime": {
+    "image": {
+      "name": "hpretl/iic-osic-tools",
+      "tag": "2026.06",
+      "manifest_digest": "sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+      "config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+      "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+      "platform": "linux/amd64"
+    }
+  },
+  "policy": {
+    "eda_network": "none",
+    "openada_mount": "read-only",
+    "container_root": "read-only",
+    "evidence_directory": "new and writable",
+    "source_design": "read-only"
+  },
+  "operation": {
+    "profile": "openada.operation/circuit.simulate/v1alpha1",
+    "assertion": "openada.assertion/simulation.evidence.valid/v1alpha1",
+    "analysis": {
+      "type": "tran",
+      "step_seconds": 1e-7,
+      "stop_seconds": 2e-6
+    },
+    "timeout_seconds": 120,
+    "container_timeout_seconds": 240
+  },
+  "backends": {
+    "ngspice": {
+      "driver_id": "org.openada.driver.ngspice",
+      "driver_version": "0.1.0",
+      "tool": {
+        "path": "/foss/tools/ngspice/bin/ngspice",
+        "version": "** ngspice-46 : Circuit level simulation program"
+      },
+      "result_filename": "ngspice.result.json",
+      "output_directory": "/evidence/ngspice",
+      "artifacts": [
+        {
+          "path": "/evidence/ngspice/rc-transient.log",
+          "filename": "ngspice/rc-transient.log",
+          "kind": "simulation-log",
+          "role": "simulation.log"
+        },
+        {
+          "path": "/evidence/ngspice/rc-transient.raw",
+          "filename": "ngspice/rc-transient.raw",
+          "kind": "ngspice-raw",
+          "role": "simulation.result"
+        }
+      ],
+      "raw_encoding": "binary",
+      "point_count": 68
+    },
+    "xyce": {
+      "driver_id": "org.openada.driver.xyce",
+      "driver_version": "0.1.0",
+      "tool": {
+        "path": "/foss/tools/xyce/bin/Xyce",
+        "version": "Xyce Release 7.10-opensource"
+      },
+      "result_filename": "xyce.result.json",
+      "output_directory": "/evidence/xyce",
+      "artifacts": [
+        {
+          "path": "/evidence/xyce/rc-transient.xyce.log",
+          "filename": "xyce/rc-transient.xyce.log",
+          "kind": "xyce-log",
+          "role": "simulation.log"
+        },
+        {
+          "path": "/evidence/xyce/rc-transient.xyce.raw",
+          "filename": "xyce/rc-transient.xyce.raw",
+          "kind": "xyce-raw",
+          "role": "simulation.result"
+        }
+      ],
+      "raw_encoding": "ascii",
+      "point_count": 43
+    }
+  },
+  "waveform": {
+    "required_signals": [
+      "time",
+      "in",
+      "out",
+      "source_current"
+    ],
+    "start_seconds": 0.0,
+    "stop_seconds": 2e-6,
+    "midpoint_seconds": 1e-6,
+    "input_final_min": 0.999,
+    "input_final_max": 1.001,
+    "output_midpoint_min": 0.59,
+    "output_midpoint_max": 0.67,
+    "output_final_min": 0.84,
+    "output_final_max": 0.88,
+    "backend_final_tolerance": 0.0005,
+    "backend_midpoint_tolerance": 0.01
+  }
+}

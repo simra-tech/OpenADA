@@ -27,12 +27,13 @@ replacement for them. The same simulation intent can run through ngspice or
 Xyce; the agent should not have to relearn every command surface and log
 grammar to understand whether valid evidence was produced.
 
-The `0.1.0` preview already provides six semantic CLI operations, five
-established EDA drivers plus the Xyce simulation alpha, and the versioned
+The `0.1.0` preview already provides six semantic CLI operations, six
+open-source EDA drivers including the Xyce simulation alpha, and the versioned
 `openada.result/v0alpha1` evidence envelope. A transport-neutral alpha request
 envelope, driver-manifest schema, and typed circuit-simulation operation profile
-are published for review. Native Xyce workflow validation and runtime
-external-driver discovery are the next protocol milestones.
+are published for review. The first ngspice/Xyce portability case is natively
+workflow-validated; runtime external-driver discovery is the next protocol
+milestone.
 
 > **Early preview**
 >
@@ -125,12 +126,14 @@ omitting it keeps the compatible legacy ngspice interface:
 ```
 
 The shared alpha subset is intentionally small: one self-contained transient
-analysis, with no includes, measurements, or control-language blocks. ngspice
-remains workflow-validated. The Xyce mapping has deterministic synthetic
-contract tests, but the current development server has no native Xyce binary,
-so it is not yet workflow-validated. Each result still identifies the selected
-backend and version, native inputs and artifacts, working directory,
-diagnostics, hashes, and provenance.
+analysis, with no includes, measurements, or control-language blocks. Both
+mappings now pass a pinned, network-disabled native replay using ngspice 46 and
+Xyce 7.10-opensource. The independent verifier parses ngspice's binary raw and
+Xyce's ASCII raw, checks the RC waveform and branch relation, and compares the
+normalized engineering meaning without requiring identical point counts or
+native files. Each result still identifies the selected backend and version,
+native inputs and artifacts, working directory, diagnostics, hashes, and
+provenance.
 
 The contract also keeps distinct questions distinct:
 
@@ -185,8 +188,8 @@ contribution gate.
 |---|---|---|
 | Agent intent | CLI commands and flags; five fixed scoped-preflight assertions; the typed `circuit.simulate/v1alpha1` profile; a review-only `openada.request/v0alpha1` scaffold | Remaining immutable operation/assertion profiles accepted by general runtime dispatch |
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
-| Drivers | Five workflow/structured connectors plus the Xyce simulation alpha | Capability manifests and independently installable drivers |
-| Portability proof | One `circuit.simulate` request shape mapped to ngspice and Xyce; Xyce is synthetic-test-only | Native workflow conformance on both backends |
+| Drivers | Six open-source EDA drivers; the Xyce mapping of the simulation alpha is workflow-validated | Capability manifests and independently installable drivers |
+| Portability proof | One `circuit.simulate` request shape passes pinned native ngspice/Xyce replay with independently parsed artifacts | More analysis profiles, open-source backends, and runtime environments |
 | Engineering skills | One execution skill plus an experimental backend-independent simulation-review skill | Small contributed workflows that compose stable operations across backends |
 | Workflow composition | Small atomic netlist, simulation, verification, and RTL checks | Corners, Monte Carlo, measurement, specification, and lineage composed above those atoms |
 | Design mutation | Deliberately outside `0.1` | Preconditioned, transactional change sets with declared writes, native diffs, rollback evidence, and source-revision identity |
@@ -335,8 +338,8 @@ thin.
 | `doctor` | runtime | preview | Discover capabilities, or preflight one project assertion without catalog inventory |
 | `netlist` | Xschem | workflow-validated | Produce a SPICE netlist and fail on recognized unresolved symbols |
 | `simulate` (legacy default) | ngspice | workflow-validated | Stream wrapper raw files in batch mode, or validate declared deck-owned raw/`wrdata` outputs in control mode |
-| `simulate --backend ngspice` | ngspice | structured shared profile | Run the common self-contained transient subset and emit the typed `circuit.simulate` facts |
-| `simulate --backend xyce` | Xyce | structured alpha | Run the common self-contained transient subset and validate a fresh native raw artifact; currently synthetic-contract-tested only |
+| `simulate --backend ngspice` | ngspice | workflow-validated shared alpha | Run the common self-contained transient subset and emit the typed `circuit.simulate` facts |
+| `simulate --backend xyce` | Xyce | workflow-validated shared alpha | Run the common self-contained transient subset and validate a fresh native raw artifact; pinned Xyce 7.10-opensource replay |
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |
@@ -358,6 +361,25 @@ See [the current result contract](docs/CONTRACT.md),
 [driver status and roadmap](docs/ROADMAP.md), and
 [contribution guide](CONTRIBUTING.md). Driver contributors can check captured
 results with the [small conformance kit](conformance/driver-kit/README.md).
+
+## Reproduce the native ngspice + Xyce proof
+
+The smallest portability replay uses the model-free RC fixture already in this
+repository and the pinned linux/amd64 IIC-OSIC-TOOLS `2026.06` image. Both EDA
+runs are network-disabled with a read-only repository mount and fresh evidence
+directory:
+
+```bash
+python3 conformance/circuit-simulate/run.py \
+  --evidence-dir /tmp/openada-circuit-simulate-evidence
+python3 conformance/circuit-simulate/verify.py \
+  /tmp/openada-circuit-simulate-evidence
+```
+
+The replay requires the exact pinned image to exist locally and never pulls it
+during EDA execution. See the
+[circuit-simulation conformance guide](conformance/circuit-simulate/README.md)
+for the image identity, assertion boundary, and independent checks.
 
 ## Reproduce the pinned DRC + LVS case
 

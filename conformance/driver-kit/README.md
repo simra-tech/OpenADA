@@ -80,9 +80,17 @@ measurements, or control-language blocks. They must assert the same primary
 truth table and normalized fact names while retaining and checking each
 driver's native command, log, and waveform evidence.
 
-The Xyce path currently has synthetic contract coverage only: the development
-server has no native Xyce binary. That is enough for structured alpha review,
-not for workflow validation.
+The pinned native portability replay now exercises both mappings with ngspice
+46 and Xyce 7.10-opensource, then independently parses both raw formats and
+checks the same model-free RC behavior:
+
+```bash
+python3 conformance/circuit-simulate/run.py \
+  --evidence-dir /tmp/openada-circuit-simulate-evidence
+```
+
+This workflow-validates the bounded shared alpha mapping. It does not widen the
+profile to includes, measurements, control language, or other analysis types.
 
 The same checks are available to tests:
 
