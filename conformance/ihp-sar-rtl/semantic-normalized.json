@@ -15,9 +15,9 @@
     }
   },
   "independent_oracle": {
-    "bytes": 4506,
+    "bytes": 4726,
     "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
-    "sha256": "233ed076624b3812b874ce3262c501790974d6935322879086f34d9dd936d5f3"
+    "sha256": "55eef5ac9dbdd331df7d9582ae255fc409d36dd567c03df95604bac923525134"
   },
   "operation": {
     "assertion": "rtl-structural-check-passes",
@@ -132,9 +132,14 @@
     "exit_code": 0,
     "native_artifacts": [
       {
+        "bytes": 749,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/design-provenance.json",
+        "sha256": "6241660be2a76962dfbf728385294ea3390c95f84b0de446fa4beb2bb41280b3"
+      },
+      {
         "bytes": 1902,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
-        "sha256": "3269ee1e04e1123ecdfbc91574b29a5949cce5744bd68427d4dc39a0eb53dc74"
+        "sha256": "c8c6aefe09f7522ecacd56705f96f0570b33a8bcb29918e08682ad70e4a6b7f1"
       },
       {
         "bytes": 190,
@@ -149,12 +154,12 @@
       {
         "bytes": 507,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
-        "sha256": "f932bceca691f19a055211f28d518ef2e3757e987b6fcc13541bcf4e590f154b"
+        "sha256": "7a10ebbcfa4d604d311f17911ab46ccf749e8b7be190fd49b8a3bb5598f16586"
       },
       {
         "bytes": 1985,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
-        "sha256": "eadb9206c02361b706bc6e15c61f3a00fef73ee4a15a85cb204645c9a24226a7"
+        "sha256": "d815b542637351dacb44c12344e37717318e18e56a89cefd7dc8d43887262248"
       },
       {
         "bytes": 198,
@@ -164,21 +169,21 @@
       {
         "bytes": 568,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
-        "sha256": "17bc1d2f212aafe0235c67eb2f0ef12945b0025fdb9b5acf2f7da4c4c37055f6"
+        "sha256": "cc138c7e2325baf373fddbc405a900d5904329a2c4c41af381998263764250b2"
       },
       {
-        "bytes": 3019,
+        "bytes": 3421,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
-        "sha256": "313159ef47dd55194af9dc9cf5e053e0686c966669127d1dfb1e2cc5bad4e100"
+        "sha256": "879b9ea719ae1ea6b3f3489a5ac99fb438b0d8467a52524de76668f0a304132c"
       }
     ],
     "summary": "Yosys elaborated the RTL and completed structural checks.",
     "surface_id": "openada.surface/cli.rtl-check/v1"
   },
   "run": {
-    "checkout_commit_exact": false,
+    "checkout_commit_exact": true,
     "checkout_state_unchanged": true,
-    "created_at": "2026-07-16T00:23:43.860285Z"
+    "created_at": "2026-07-16T08:19:13.303190Z"
   },
   "runtime": {
     "eda_network": "none",

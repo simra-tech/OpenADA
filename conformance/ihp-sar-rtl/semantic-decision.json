@@ -22,14 +22,14 @@
       "sha256": "a36eb81e84bdc5989585a75b96a5d5b932e1fbe4b64818e0fd65a6e5e60982a6"
     },
     "normalized": {
-      "bytes": 5551,
+      "bytes": 5770,
       "repository_path": "conformance/ihp-sar-rtl/semantic-normalized.json",
-      "sha256": "21f65f69e0fd7b40caec5a53fdd515c3652048ffac0e01ff8b7af307c2a79de3"
+      "sha256": "08207e9ab4cecd6026c29ef1f65b668355e6fc9170c5925f1e0796bd4ebabf3b"
     },
     "oracle": {
-      "bytes": 4506,
+      "bytes": 4726,
       "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
-      "sha256": "233ed076624b3812b874ce3262c501790974d6935322879086f34d9dd936d5f3"
+      "sha256": "55eef5ac9dbdd331df7d9582ae255fc409d36dd567c03df95604bac923525134"
     },
     "tamper_replay": {
       "bytes": 724,

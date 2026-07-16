@@ -1,7 +1,6 @@
 {
   "chain_id": "openada.chain/ihp-sar-rtl/v1",
   "native_replay": {
-    "evidence_created_at": "2026-07-16T00:23:43.860285Z",
     "independent_verifier": "pass",
     "real_negative": "pass",
     "tamper_probe": "pass"
@@ -9,9 +8,10 @@
   "schema": "openada.semantic-contract-test/v0alpha1",
   "status": "pass",
   "tests": {
-    "command": "python3 -m pytest -q tests/test_ihp_sar_rtl_conformance.py",
+    "execution": "fresh pytest exit status zero",
     "failed": 0,
-    "note": "focused manifest, native-evidence, oracle, replay, tamper, decision, and standards-boundary contract suite",
-    "passed": 16
+    "passed": 16,
+    "suite": "tests/test_ihp_sar_rtl_conformance.py",
+    "suite_sha256": "aada024a0ecc21aa81d92dbd3db7b74af4f7eba01069c181dc59d63d181f16c6"
   }
 }

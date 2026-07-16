@@ -1,165 +1,181 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "schema": "openada.semantic-chain-run/v0alpha1",
-  "chain_id": "openada.chain/ihp-sar-rtl/v1",
-  "chain_manifest_sha256": "a670cb7a2be83150a65e13f6c6cc35656a256d08e214675fa5edae741a2cfd91",
-  "semantic_subject_sha256": "984fb24414f7a351a88056b909472864915cd27b6dd9a563659bc89f870fa888",
-  "status": "pass",
-  "checks": {
-    "contract_test": true,
-    "pinned_real_design": true,
-    "native_run": true,
-    "independent_artifact_check": true,
-    "normalized_evidence": true,
-    "downstream_decision": true,
-    "negative_replay": true,
-    "tamper_replay": true,
-    "agent_visible_evidence": true
-  },
   "artifacts": [
     {
+      "bytes": 486,
+      "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-contract.json",
-      "bytes": 551,
-      "sha256": "37d83859e27fefe8c3c382fade7b95cfd87fcc7ef8f67c4a72ed192f4c0b86f2",
       "role": "contract-test",
-      "source_step": "contract-tests",
+      "sha256": "ccc0df66d06c1c62b05a4051c959b3a06f30c101bcaa8b428f304526c237e34a",
       "source_output": "contract-test-verdict",
-      "replay_id": null
+      "source_step": "contract-tests"
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
+      "bytes": 749,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/design-provenance.json",
+      "role": "design-provenance",
+      "sha256": "6241660be2a76962dfbf728385294ea3390c95f84b0de446fa4beb2bb41280b3",
+      "source_output": "design-provenance",
+      "source_step": "materialize-pinned-sources"
+    },
+    {
       "bytes": 1902,
-      "sha256": "3269ee1e04e1123ecdfbc91574b29a5949cce5744bd68427d4dc39a0eb53dc74",
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
       "role": "native-artifact",
-      "source_step": "rtl-structural-check",
+      "sha256": "c8c6aefe09f7522ecacd56705f96f0570b33a8bcb29918e08682ad70e4a6b7f1",
       "source_output": "positive-rtl-result",
-      "replay_id": null
+      "source_step": "rtl-structural-check"
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.ys",
       "bytes": 190,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.ys",
+      "role": "native-artifact",
       "sha256": "4c61fff924adbfe0f9022d88309da79ee2c2951f441c912586157a7200e30137",
-      "role": "native-artifact",
-      "source_step": "rtl-structural-check",
       "source_output": "positive-yosys-script",
-      "replay_id": null
+      "source_step": "rtl-structural-check"
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/sar_logic.json",
       "bytes": 25451,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/sar_logic.json",
+      "role": "native-artifact",
       "sha256": "7b1e3f7f8e256db0e29ace683d6c2b5c90fd1e173c436a8fe8726395782d752a",
-      "role": "native-artifact",
-      "source_step": "rtl-structural-check",
       "source_output": "positive-yosys-json",
-      "replay_id": null
+      "source_step": "rtl-structural-check"
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
       "bytes": 507,
-      "sha256": "f932bceca691f19a055211f28d518ef2e3757e987b6fcc13541bcf4e590f154b",
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
       "role": "native-artifact",
-      "source_step": "rtl-structural-check",
+      "sha256": "7a10ebbcfa4d604d311f17911ab46ccf749e8b7be190fd49b8a3bb5598f16586",
       "source_output": "positive-yosys-transcript",
-      "replay_id": null
+      "source_step": "rtl-structural-check"
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
-      "bytes": 3019,
-      "sha256": "313159ef47dd55194af9dc9cf5e053e0686c966669127d1dfb1e2cc5bad4e100",
-      "role": "native-artifact",
-      "source_step": "rtl-structural-check",
-      "source_output": "native-run-receipt",
-      "replay_id": null
-    },
-    {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
       "bytes": 1985,
-      "sha256": "eadb9206c02361b706bc6e15c61f3a00fef73ee4a15a85cb204645c9a24226a7",
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
       "role": "native-artifact",
-      "source_step": "missing-top-native",
+      "sha256": "d815b542637351dacb44c12344e37717318e18e56a89cefd7dc8d43887262248",
       "source_output": "negative-rtl-result",
-      "replay_id": null
+      "source_step": "missing-top-native"
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.ys",
       "bytes": 198,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.ys",
+      "role": "native-artifact",
       "sha256": "4855a5981b1d0b10525004bb90242f4d77bdb749a0ae57ecfc02ee6a1bba3b3b",
-      "role": "native-artifact",
-      "source_step": "missing-top-native",
       "source_output": "negative-yosys-script",
-      "replay_id": null
+      "source_step": "missing-top-native"
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
       "bytes": 568,
-      "sha256": "17bc1d2f212aafe0235c67eb2f0ef12945b0025fdb9b5acf2f7da4c4c37055f6",
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
       "role": "native-artifact",
-      "source_step": "missing-top-native",
+      "sha256": "cc138c7e2325baf373fddbc405a900d5904329a2c4c41af381998263764250b2",
       "source_output": "negative-yosys-transcript",
-      "replay_id": null
+      "source_step": "missing-top-native"
     },
     {
+      "bytes": 3421,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
+      "role": "native-artifact",
+      "sha256": "879b9ea719ae1ea6b3f3489a5ac99fb438b0d8467a52524de76668f0a304132c",
+      "source_output": "native-run-receipt",
+      "source_step": "rtl-structural-check"
+    },
+    {
+      "bytes": 4726,
+      "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
-      "bytes": 4506,
-      "sha256": "233ed076624b3812b874ce3262c501790974d6935322879086f34d9dd936d5f3",
       "role": "independent-oracle",
-      "source_step": "independent-verifier",
+      "sha256": "55eef5ac9dbdd331df7d9582ae255fc409d36dd567c03df95604bac923525134",
       "source_output": "independent-oracle-verdict",
-      "replay_id": null
+      "source_step": "independent-verifier"
     },
     {
+      "bytes": 5770,
+      "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-normalized.json",
-      "bytes": 5551,
-      "sha256": "21f65f69e0fd7b40caec5a53fdd515c3652048ffac0e01ff8b7af307c2a79de3",
       "role": "normalized-evidence",
-      "source_step": "normalize-rtl-evidence",
+      "sha256": "08207e9ab4cecd6026c29ef1f65b668355e6fc9170c5925f1e0796bd4ebabf3b",
       "source_output": "normalized-rtl-evidence",
-      "replay_id": null
+      "source_step": "normalize-rtl-evidence"
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-decision.json",
       "bytes": 3678,
-      "sha256": "38ca8bc2a8bfbb58013d6a24be0eac6f5a67a9799a3023ef6c2c0868b4b7bd6f",
+      "replay_id": null,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-decision.json",
       "role": "downstream-decision",
-      "source_step": "engineering-decision",
+      "sha256": "4b3a6b931ddb76ce6845aced775e3a208a644869530dc6e70e7ccf6249ae0319",
       "source_output": "downstream-rtl-decision",
-      "replay_id": null
+      "source_step": "engineering-decision"
     },
     {
+      "bytes": 11976,
+      "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-evidence.json",
-      "bytes": 11526,
-      "sha256": "1eff3d3a052deea6de17c7131b73a2618b2108c8ee41c3fe1ad75af0649dc2d9",
       "role": "agent-visible-evidence",
-      "source_step": "agent-evidence",
+      "sha256": "9cd1a63a856acb04424b971ec5589b8a09e4a3ee0ec464faa035a0d61af43d79",
       "source_output": "agent-visible-rtl-evidence",
-      "replay_id": null
+      "source_step": "agent-evidence"
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/real-missing-top.json",
       "bytes": 652,
-      "sha256": "a36eb81e84bdc5989585a75b96a5d5b932e1fbe4b64818e0fd65a6e5e60982a6",
+      "replay_id": "real-missing-top",
+      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/real-missing-top.json",
       "role": "negative-replay",
-      "source_step": null,
+      "sha256": "a36eb81e84bdc5989585a75b96a5d5b932e1fbe4b64818e0fd65a6e5e60982a6",
       "source_output": null,
-      "replay_id": "real-missing-top"
+      "source_step": null
     },
     {
-      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/reconciled-json-port-removal.json",
       "bytes": 724,
-      "sha256": "3ba6347a01d6e7e464c0839a552f6f2ffbb3b0383733b632a36e22d8045f4d73",
+      "replay_id": "reconciled-json-port-removal",
+      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/reconciled-json-port-removal.json",
       "role": "tamper-replay",
-      "source_step": null,
+      "sha256": "3ba6347a01d6e7e464c0839a552f6f2ffbb3b0383733b632a36e22d8045f4d73",
       "source_output": null,
-      "replay_id": "reconciled-json-port-removal"
+      "source_step": null
     }
   ],
+  "chain_id": "openada.chain/ihp-sar-rtl/v1",
+  "chain_manifest_sha256": "6bba897c4f178e6aac90d6a3b1bfbe245a467ae065dc4361eab485bdff2248eb",
+  "checks": {
+    "agent_visible_evidence": true,
+    "contract_test": true,
+    "downstream_decision": true,
+    "independent_artifact_check": true,
+    "native_run": true,
+    "negative_replay": true,
+    "normalized_evidence": true,
+    "pinned_real_design": true,
+    "tamper_replay": true
+  },
   "extensions": {
     "org.openada.rtl": {
-      "publication": "provisional fresh replay",
-      "native_replay_created_at": "2026-07-16T00:23:43.860285Z",
-      "checkout_state_unchanged": true,
-      "checkout_commit_exact": false,
-      "source_freeze_replay_required": true
+      "receipt_status": "release",
+      "standards_scope": "IEEE 1800-2023 context only; no language conformance claim"
     }
-  }
+  },
+  "schema": "openada.semantic-chain-run/v0alpha1",
+  "semantic_subject_sha256": "dd5aca9dc85dcabcda0b48f064de4ba16037bb226d4002ca625a1f17f65ff44e",
+  "source_attestation": {
+    "clean_after": true,
+    "clean_before": true,
+    "extensions": {},
+    "receipt_class": "release",
+    "repository_revision": "77405c6ee1ee86e23de38c8cfd7b994187baf8ec",
+    "repository_tree": "7903bc4a08b9b5f65b846571a54cdb3c2e55a9fa",
+    "semantic_subject_sha256": "dd5aca9dc85dcabcda0b48f064de4ba16037bb226d4002ca625a1f17f65ff44e",
+    "state_unchanged": true
+  },
+  "status": "pass"
 }

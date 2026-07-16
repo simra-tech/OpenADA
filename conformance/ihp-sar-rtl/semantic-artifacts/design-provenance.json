@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "checkout_clean": true,
+  "extensions": {},
+  "inputs": [
+    {
+      "bytes": 576,
+      "path": "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v",
+      "sha256": "b33c7b25215ac916b3b07e0dc385ae353294f6872eaa226f4c0126ecfd7063da"
+    }
+  ],
+  "license": {
+    "bytes": 11357,
+    "path": "LICENSE",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  "remote_url_verified": true,
+  "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+  "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+  "schema": "openada.design-provenance/v0alpha1",
+  "tree": "2a710fd503226e9642e4337a324e6c192a9d8a31"
+}
