@@ -6,12 +6,12 @@
       "conformance_record_ids": [],
       "manifest": {
         "repository_path": "conformance/ihp-inverter/semantic-chain.json",
-        "sha256": "5d84ea0a58f77afb80fc67a94977aef921eaad18d64b96496b00d9963023a478",
+        "sha256": "5696871d7da7a758af72d98ae300bd4df20013670d46fc939f6a7321d0663861",
         "extensions": {}
       },
       "run": {
         "repository_path": "conformance/ihp-inverter/semantic-chain-run.json",
-        "sha256": "57ec8f27daf5c2aa3714eac71c32951791d5aeb481125f3fe315bdee5460890d",
+        "sha256": "c92742652ea37bb390a01fe20a526b36f3a9be0bd5239db09e1713161f87b1b9",
         "extensions": {}
       },
       "extensions": {}
@@ -21,12 +21,12 @@
       "conformance_record_ids": [],
       "manifest": {
         "repository_path": "conformance/ihp-analog-measurements/manifest.json",
-        "sha256": "41491b7fcbdc6f712ee244379a2027462a907cf59d285d090822f3ac2ca2817d",
+        "sha256": "6edb6e09c834e2510881de90264e652953023773b47631193c72b6c037423bb8",
         "extensions": {}
       },
       "run": {
         "repository_path": "conformance/ihp-analog-measurements/semantic-chain-run.json",
-        "sha256": "48a14d30cef36912541709e5aa46f356e00e87b1f2f233aba659b8aea5419203",
+        "sha256": "4bbc746553526b1069656809939c9d04a8127f9ed14dd0129c2d78f0600e5c9b",
         "extensions": {}
       },
       "extensions": {}
@@ -36,12 +36,12 @@
       "conformance_record_ids": [],
       "manifest": {
         "repository_path": "conformance/ihp-inverter-agent-chain/manifest.json",
-        "sha256": "6a4b05e97ce93ad19de68a567523532dada52c8f053ec56c78c416806dee7aa1",
+        "sha256": "98a5d434244eb88565e804900d074c9df0bcd4bf5d9d45a7dc7e6c6808933812",
         "extensions": {}
       },
       "run": {
         "repository_path": "conformance/ihp-inverter-agent-chain/evidence/chain-run.json",
-        "sha256": "3ae3c06a612b10396c0013fda32ebd4c40711e32a91684b23f7c00d22fddd646",
+        "sha256": "0c98b9b42433c1418df5768d360bd7605cb46d47dca65ba6a7defd3cdb8119fd",
         "extensions": {}
       },
       "extensions": {}
@@ -58,7 +58,7 @@
       },
       "run": {
         "repository_path": "conformance/ihp-ngspice-provider-analyses/semantic-chain-run.json",
-        "sha256": "bd03f3e7f39df2455c37eeb8d8ff537807bbe5759cab4e26671bc99138283eea",
+        "sha256": "2f7389bab1b18f5b29c2728e5fea98a5f3e7d4eeb3663b90e7e3d6d786b3b84c",
         "extensions": {}
       },
       "extensions": {}
@@ -68,12 +68,12 @@
       "conformance_record_ids": [],
       "manifest": {
         "repository_path": "conformance/ihp-sar-rtl/semantic-chain.json",
-        "sha256": "6bba897c4f178e6aac90d6a3b1bfbe245a467ae065dc4361eab485bdff2248eb",
+        "sha256": "1779176dbcf518055187fc55e262abff31c3e757424d8f94fcbd9eaee4d2df09",
         "extensions": {}
       },
       "run": {
         "repository_path": "conformance/ihp-sar-rtl/semantic-chain-run.json",
-        "sha256": "d7865a1ffe48059d893875d321575e0cce5b8c94e86b3a7267ea66f8a271c736",
+        "sha256": "3fc3995726eff363339ad0066a569269b7acfb935c7818c8a1ab27eeeb128ca6",
         "extensions": {}
       },
       "extensions": {}
@@ -83,12 +83,27 @@
       "conformance_record_ids": [],
       "manifest": {
         "repository_path": "conformance/public-spice-portability/manifest.json",
-        "sha256": "fd082e4de03e6e18e43dfd6a4fed0b7d06f9f204ad12ee1524eeb74667197ccf",
+        "sha256": "3946310a993ebc13bac7683c26e6aac92638693f84cf9ef7d5405e2afb9bc9a1",
         "extensions": {}
       },
       "run": {
         "repository_path": "conformance/public-spice-portability/evidence/chain-run.json",
-        "sha256": "e785944dbfc01bba8494dda732e5fb3c2952accdd6b6e95511928824c096ab6f",
+        "sha256": "ac42342242f063c517c737cd4d09694313943292c9be1e81381f08b6acbab42c",
+        "extensions": {}
+      },
+      "extensions": {}
+    },
+    {
+      "id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+      "conformance_record_ids": [],
+      "manifest": {
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-chain.json",
+        "sha256": "3c63e6f145df8ffb169750db9f6213bf454b5fa0ca79cf22655525c5171187dc",
+        "extensions": {}
+      },
+      "run": {
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-chain-run.json",
+        "sha256": "42bd38a2ed16a83f5660c951fcd6f93b95068c044aa13beb4ca402e018aa6ece",
         "extensions": {}
       },
       "extensions": {}
