@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "checkout_clean": true,
+  "extensions": {},
+  "inputs": [
+    {
+      "bytes": 7338,
+      "path": "modules/module_0_foundations/PEX_Demo/layout/inverter.gds",
+      "sha256": "9ed664d54d8c1b82a86a0d02e59a21c7593c94d1a3ca1bcc6aec614726007cd1"
+    },
+    {
+      "bytes": 3748,
+      "path": "modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+      "sha256": "c536ff737248e62cc209a6aec764a7f21750d0978e2e8351a4f0c2a6f144bc96"
+    },
+    {
+      "bytes": 360,
+      "path": "modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir",
+      "sha256": "ea05ff8402661fdb09978f2210b3d985ad6b679c1b69b0e564d047b135bc14a9"
+    },
+    {
+      "bytes": 336,
+      "path": "modules/module_0_foundations/PEX_Demo/simulations/inverter.spice",
+      "sha256": "d6e54b972bbd3140498081f79b1bfa06f6da29f6528ebda1065d47499dc5f8f9"
+    }
+  ],
+  "license": {
+    "bytes": 11357,
+    "path": "LICENSE",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  "remote_url_verified": true,
+  "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+  "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+  "schema": "openada.design-provenance/v0alpha1",
+  "tree": "2a710fd503226e9642e4337a324e6c192a9d8a31"
+}

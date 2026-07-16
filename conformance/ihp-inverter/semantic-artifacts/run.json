@@ -1,7 +1,7 @@
 {
   "conformance_id": "ihp-inverter-drc-lvs",
   "conformance_manifest_sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
-  "created_at": "2026-07-16T00:22:50.278528Z",
+  "created_at": "2026-07-16T08:15:18.138496Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "image": {
     "architecture": "amd64",
@@ -12,23 +12,33 @@
   "network": "none during EDA execution",
   "openada_checkout": {
     "after": {
-      "commit": "d1c31972e70538511afd6197f47ba3d7072ed45e",
-      "status_entry_count": 102,
-      "status_sha256": "d0f4d061a28536eca65ee848a7e9afc832f7645dfae1a004e82a86992ec072db",
-      "tracked_files_modified": true,
-      "untracked_files_present": true,
-      "working_tree_modified": true
+      "commit": "dc22c98ca07d0b7b4c32f5fd0ce6cc26f6213857",
+      "status_entry_count": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_files_modified": false,
+      "untracked_files_present": false,
+      "working_tree_modified": false
     },
     "before": {
-      "commit": "d1c31972e70538511afd6197f47ba3d7072ed45e",
-      "status_entry_count": 102,
-      "status_sha256": "d0f4d061a28536eca65ee848a7e9afc832f7645dfae1a004e82a86992ec072db",
-      "tracked_files_modified": true,
-      "untracked_files_present": true,
-      "working_tree_modified": true
+      "commit": "dc22c98ca07d0b7b4c32f5fd0ce6cc26f6213857",
+      "status_entry_count": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_files_modified": false,
+      "untracked_files_present": false,
+      "working_tree_modified": false
     },
-    "commit_exact": false,
+    "commit_exact": true,
     "state_unchanged": true
   },
-  "schema": "openada.conformance-run/v0alpha1"
+  "schema": "openada.conformance-run/v0alpha1",
+  "source_attestation": {
+    "clean_after": true,
+    "clean_before": true,
+    "extensions": {},
+    "receipt_class": "release",
+    "repository_revision": "dc22c98ca07d0b7b4c32f5fd0ce6cc26f6213857",
+    "repository_tree": "51cb5b22167bfe69bad4b938a33c0d2f0d01c464",
+    "semantic_subject_sha256": "dd5aca9dc85dcabcda0b48f064de4ba16037bb226d4002ca625a1f17f65ff44e",
+    "state_unchanged": true
+  }
 }
