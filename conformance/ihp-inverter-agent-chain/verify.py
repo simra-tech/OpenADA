@@ -1424,12 +1424,20 @@ def _verify_provider_result(
         # from the retained native log/raw pair rather than the process code.
         _expect(result["execution"]["exit_code"], 0, "provider_fail.execution.exit_code")
     ngspice = next(item for item in manifest["runtime"]["tools"] if item["id"] == "ngspice")
-    _expect(result["tool"], {"name": "ngspice", "path": ngspice["path"], "version": ngspice["version"]}, f"provider_{expected_status}.tool")
+    executable_snapshot = f"{destination}/work/openada-native-ngspice"
+    _expect(
+        result["tool"],
+        {
+            "name": "ngspice",
+            "path": executable_snapshot,
+            "version": ngspice["version"],
+        },
+        f"provider_{expected_status}.tool",
+    )
     command = result["execution"]["command"]
     if not isinstance(command, list) or len(command) != 6:
         raise ConformanceError("provider native ngspice command has an unexpected shape")
     expected_script = f"{destination}/simulation/{stem}.openada-control.sp"
-    executable_snapshot = f"{destination}/work/openada-native-ngspice"
     if command[:4] != [executable_snapshot, "-i", "-n", "-o"] or NGSPICE_TEMP_LOG_RE.fullmatch(command[4]) is None:
         raise ConformanceError("provider native ngspice command differs from the reviewed launcher")
     _expect(command[5], expected_script, f"provider_{expected_status}.command.script")
