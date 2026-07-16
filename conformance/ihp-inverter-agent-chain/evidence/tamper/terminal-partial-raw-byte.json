@@ -1,0 +1,15 @@
+{
+  "diagnostic": "conformance.evidence.tampered",
+  "independent_rejection": {
+    "exception": "ConformanceError",
+    "message": "file[/tampered-evidence/provider-fail/work/test_inverter_fail.raw].sha256: expected '628e443f0fb8cfd0e26e3a3cfed0d5d77e57a63c066c1d73644aad7d6d0b263b', got '407e6f36b4c4ca9a7a4c32b11438f295beaf2d2e91b658953641abed0f27bc4e'"
+  },
+  "mutation": {
+    "baseline_sha256": "407e6f36b4c4ca9a7a4c32b11438f295beaf2d2e91b658953641abed0f27bc4e",
+    "mutated_sha256": "628e443f0fb8cfd0e26e3a3cfed0d5d77e57a63c066c1d73644aad7d6d0b263b",
+    "target": "provider-fail/work/test_inverter_fail.raw"
+  },
+  "replay_id": "terminal-partial-raw-byte",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown"
+}

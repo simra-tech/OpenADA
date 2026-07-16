@@ -1,0 +1,87 @@
+{
+  "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+  "configuration": [
+    {
+      "extensions": {},
+      "locator": {
+        "extensions": {},
+        "path": "/evidence/provider-config.json",
+        "sha256": "b171dc2ad16f88a69f64fa1e4e51d6560cbe6d80ae45d12c4906b46f6e9f34fd",
+        "type": "filesystem"
+      },
+      "required": true,
+      "role": "simulator-configuration"
+    },
+    {
+      "extensions": {},
+      "locator": {
+        "extensions": {},
+        "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+        "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5",
+        "type": "filesystem"
+      },
+      "required": true,
+      "role": "pdk"
+    }
+  ],
+  "driver_selector": {
+    "driver_id": "org.openada.driver.ngspice-pdk-control",
+    "driver_version": "0.5.0",
+    "extensions": {},
+    "required_features": [
+      "openada.feature/simulation.analysis.tran/v1alpha1"
+    ],
+    "transport_id": "local-json-stdio"
+  },
+  "evidence_destination": {
+    "collision_policy": "fail-if-present",
+    "extensions": {},
+    "locator": {
+      "extensions": {},
+      "path": "/evidence/provider-fail",
+      "type": "filesystem"
+    }
+  },
+  "evidence_policy": {
+    "extensions": {},
+    "identity_requirement": "content-digest",
+    "provenance": "bounded",
+    "required_artifact_roles": [
+      "simulation.result",
+      "simulation.log"
+    ],
+    "retain_native_artifacts": true,
+    "retain_native_logs": true
+  },
+  "execution_constraints": {
+    "completion": "wait",
+    "extensions": {},
+    "max_artifact_bytes": 268435456,
+    "max_log_bytes": 16777216,
+    "side_effects": "evidence-only",
+    "timeout_ms": 180000
+  },
+  "extensions": {},
+  "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+  "parameters": {
+    "analysis": {
+      "extensions": {},
+      "step_s": 1e-06,
+      "stop_s": 0.001,
+      "type": "tran"
+    },
+    "extensions": {}
+  },
+  "request_id": "14000000-0000-4000-8000-000000000001",
+  "schema": "openada.request/v0alpha1",
+  "target": {
+    "extensions": {},
+    "kind": "testbench",
+    "locator": {
+      "extensions": {},
+      "path": "/evidence/work/inverter_terminal_nonconvergence.spice",
+      "sha256": "772f0e19d4dc31fa99c621c40db071ef71e73227bc40b4fbc2c639307eebe10b",
+      "type": "filesystem"
+    }
+  }
+}

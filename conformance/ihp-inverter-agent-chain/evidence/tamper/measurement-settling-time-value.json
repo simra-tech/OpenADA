@@ -1,0 +1,15 @@
+{
+  "diagnostic": "conformance.measurement.tampered",
+  "independent_rejection": {
+    "exception": "ConformanceError",
+    "message": "measurement.record: expected {'measurement_id': 'inverter.vout.final-high-settling-time', 'kind': 'settling_time', 'status': 'measured', 'request_sha256': '44f6921aea1799db6c0fbe5b123ec2acac6c38ca1058234f7f80f42f3497bd54', 'value': 1.8030533836663766e-08, 'unit': 's', 'signal': 'v(vout)', 'location': {'value': 1.5180305338366638e-06, 'unit': 's'}, 'algorithm': {'id': 'openada.algorithm/measurement.settling-time/v1', 'version': '1.0.0'}, 'sample_count': 24, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.settling-time/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'settling_time', 'location': {'unit': 's', 'value': 1.5180305338366638e-06}, 'measurement_id': 'inverter.vout.final-high-settling-time', 'request_sha256': '44f6921aea1799db6c0fbe5b123ec2acac6c38ca1058234f7f80f42f3497bd54', 'sample_count': 24, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a1"
+  },
+  "mutation": {
+    "baseline_sha256": "2f00757d9729db6fd9309df669e017bd6c4e760206d4e9eaca3bd4f409e5034a",
+    "mutated_sha256": "1ff87bb109e6a2acded02bb597f5dfd6a9b21c9912a3653cdf3be692d352f0bd",
+    "target": "measurements/settling-time.json"
+  },
+  "replay_id": "measurement-settling-time-value",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown"
+}

@@ -1,0 +1,207 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1089,
+      "exists": true,
+      "kind": "simulation-log",
+      "path": "/evidence/builtin/simulation/inverter_shared.log",
+      "role": "simulation.log",
+      "sha256": "750f1ca7bdaa59003dd115bb797ea113019f79d2a0e8c357e9ffd530eb5c42ee"
+    },
+    {
+      "bytes": 8391,
+      "exists": true,
+      "kind": "ngspice-raw",
+      "path": "/evidence/builtin/simulation/inverter_shared.raw",
+      "role": "simulation.result",
+      "sha256": "d05b1e73cbe8a7fdb2a219b0a85a7712a7a0cc9c94e9991f716ef57c0464eec3"
+    }
+  ],
+  "data": {
+    "analysis": {
+      "completion": "completed",
+      "convergence": "converged",
+      "dependent_variable_count": 11,
+      "extensions": {},
+      "finite_value_count": 891,
+      "point_count": 81,
+      "type": "tran"
+    },
+    "evidence": {
+      "artifact_roles_present": [
+        "simulation.log",
+        "simulation.result"
+      ],
+      "extensions": {},
+      "freshness": "fresh",
+      "provenance": "bounded",
+      "provenance_limitations": [
+        "Only the declared top-level model-free analysis deck and selected native executable were content-bound; host runtime libraries and simulator defaults remain bounded provenance."
+      ],
+      "request_binding": "exact",
+      "structure": "valid"
+    },
+    "extensions": {
+      "org.openada": {
+        "backend": "ngspice",
+        "native_data": {
+          "analysis_evidence": {
+            "completed_log_record": true,
+            "raw": true
+          },
+          "control_script_capture": null,
+          "converged": true,
+          "duplicate_measurements": [],
+          "environment": {
+            "NGSPICE_INPUT_DIR": null,
+            "PDK": null,
+            "PDK_ROOT": "/foss/pdks",
+            "SPICE_ASCIIRAWFILE": null,
+            "SPICE_LIB_DIR": null,
+            "SPICE_SCRIPTS": null
+          },
+          "environment_overrides": {},
+          "environment_policy": {
+            "ambient_inherited": true,
+            "mode": "inherit"
+          },
+          "execution_mode": "batch",
+          "expected_outputs": [],
+          "initialization": {
+            "ambient_startup_files_enumerated": false,
+            "file": null,
+            "local_user_spiceinit": "native-default",
+            "policy": "native-default",
+            "system_spinit": {
+              "file": null,
+              "policy": "native-default-unenumerated"
+            }
+          },
+          "inputs_stable": true,
+          "log_capture": {
+            "bytes": 1089,
+            "path": "/evidence/builtin/simulation/inverter_shared.log",
+            "sha256": "750f1ca7bdaa59003dd115bb797ea113019f79d2a0e8c357e9ffd530eb5c42ee",
+            "status": "valid"
+          },
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-fybsna61/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvin                                          0\nvdd                                        1.2\nvout                                       1.2\nv2#branch                         -3.10217e-10\nv1#branch                          8.18116e-11\n\n\nNo. of Data Rows : 81\n\nTotal analysis time (seconds) = 0.0219952\n\nTotal elapsed time (seconds) = 0.037 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 18055.672 MB.\nMaximum ngspice program size =  531.707 MB.\nCurrent ngspice program size =   14.652 MB.\n\nShared ngspice pages =   11.355 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.191 MB.\n\n",
+          "measurement_section_count": 0,
+          "measurements": [],
+          "measurements_truncated": false,
+          "missing_measurements": [],
+          "output_captures": [
+            {
+              "bytes": 8391,
+              "kind": "raw",
+              "origin": "wrapper",
+              "path": "/evidence/builtin/simulation/inverter_shared.raw",
+              "sha256": "d05b1e73cbe8a7fdb2a219b0a85a7712a7a0cc9c94e9991f716ef57c0464eec3",
+              "status": "valid",
+              "validation": {
+                "metadata": {
+                  "analysis_plot_count": 1,
+                  "bytes": 8391,
+                  "format": "ngspice-raw",
+                  "has_analysis_plot": true,
+                  "numeric_scalar_count": 972,
+                  "plot_count": 1,
+                  "plots": [
+                    {
+                      "axis_first": 0.0,
+                      "axis_last": 2e-06,
+                      "axis_linear_step": null,
+                      "axis_log_ratio": null,
+                      "axis_strictly_increasing": true,
+                      "encoding": "binary",
+                      "independent_variable": "time",
+                      "numeric_type": "real",
+                      "plotname": "Transient Analysis",
+                      "points": 81,
+                      "unpadded": false,
+                      "values": 972,
+                      "variables": 12
+                    }
+                  ],
+                  "value_count": 972
+                },
+                "reason": "valid",
+                "valid": true
+              }
+            }
+          ],
+          "requested_environment_overrides": {},
+          "solver_warning_count": 0,
+          "solver_warning_examples": [],
+          "solver_warning_examples_truncated": false,
+          "transitive_include_detected": false,
+          "transitive_inputs_enumerated": false,
+          "working_directory": "/evidence/builtin/work",
+          "working_directory_is_sandbox": false
+        },
+        "native_diagnostics": [],
+        "parameters": {
+          "analysis": {
+            "extensions": {},
+            "step_s": 5e-08,
+            "stop_s": 2e-06,
+            "type": "tran"
+          },
+          "extensions": {}
+        }
+      }
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "driver_id": "org.openada.driver.ngspice",
+      "driver_version": "0.4.0",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "request_id": "789d3c19-f11c-4b11-953c-2471ca98caca"
+    }
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "ngspice produced all required, structurally valid simulation evidence."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/ngspice/bin/ngspice",
+      "-b",
+      "-r",
+      "/tmp/openada-ngspice-fybsna61/simulation.raw",
+      "-o",
+      "/tmp/openada-ngspice-fybsna61/simulation.log",
+      "/evidence/work/inverter_shared.spice"
+    ],
+    "cwd": "/evidence/builtin/work",
+    "duration_ms": 64,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 390570,
+      "exists": true,
+      "kind": "spice-netlist",
+      "path": "/evidence/work/inverter_shared.spice",
+      "role": "input",
+      "sha256": "95d843aaab2eea02e7c3b805f648f472b6999b7478ba3aaee4c1428961fc8a06"
+    }
+  ],
+  "operation": "simulate",
+  "provenance": {
+    "created_at": "2026-07-16T08:35:06.761531Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "ngspice",
+    "path": "/foss/tools/ngspice/bin/ngspice",
+    "version": "** ngspice-46 : Circuit level simulation program"
+  }
+}

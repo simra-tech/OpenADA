@@ -1,0 +1,18 @@
+{
+  "extensions": {},
+  "kind": "maximum",
+  "measurement_id": "inverter.vout.maximum",
+  "parameters": {
+    "window": {
+      "start": {
+        "unit": "s",
+        "value": 3e-06
+      },
+      "stop": {
+        "unit": "s",
+        "value": 4e-06
+      }
+    }
+  },
+  "signal": "v(vout)"
+}

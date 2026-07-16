@@ -1,0 +1,23 @@
+{
+  "conditions": [
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "v(__openada_missing__)",
+      "output_name": "v(__openada_missing__)",
+      "unit": "V"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "extensions": {},
+  "kind": "crossing",
+  "measurement_id": "inverter.vin.first-rising-crossing",
+  "parameters": {
+    "direction": "rising",
+    "occurrence": 1,
+    "threshold": {
+      "unit": "V",
+      "value": 0.6
+    }
+  },
+  "signal": "v(vin)"
+}

@@ -1,0 +1,126 @@
+{
+  "artifacts": [],
+  "data": {
+    "evaluation": {
+      "algorithm": {
+        "id": "openada.algorithm/specification.closed-interval/v1",
+        "version": "1.0.0"
+      },
+      "conditions": {
+        "matched_count": 1,
+        "required_count": 2,
+        "status": "not-established"
+      },
+      "extensions": {},
+      "limits": [
+        {
+          "inclusive": true,
+          "kind": "lower",
+          "unit": "V",
+          "value": 1.0
+        }
+      ],
+      "margin": null,
+      "measured": {
+        "unit": "V",
+        "value": 1.1999991368992526
+      },
+      "measurement_id": "inverter.vout.sample-at",
+      "source": {
+        "measurement_sha256": "c6c45442fbf5a3a770c86ec1ffb856cb0cd1f7058edae5fc9d8820105fb7635f",
+        "measurement_source": {
+          "artifact_role": "measurement.source",
+          "artifact_sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73",
+          "conditions": [
+            {
+              "name": "corner",
+              "unit": "1",
+              "value": "mos_tt"
+            },
+            {
+              "name": "supply_voltage",
+              "unit": "V",
+              "value": 1.2
+            }
+          ],
+          "conditions_sha256": "11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c",
+          "lineage": {
+            "artifact_role": "simulation.result",
+            "artifact_sha256": "4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e",
+            "binding": "unverified",
+            "operation": "circuit.simulate",
+            "request_id": "10000000-0000-4000-8000-000000000001"
+          },
+          "operation": "openada.operation/result.series.extract/v1alpha1",
+          "request_id": "10000000-0000-4000-8000-000000000002",
+          "series_sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73"
+        },
+        "specification": {
+          "conditions": [
+            {
+              "name": "corner",
+              "unit": "1",
+              "value": "mos_tt"
+            },
+            {
+              "name": "supply_voltage",
+              "unit": "V",
+              "value": 1.1
+            }
+          ],
+          "extensions": {},
+          "limits": {
+            "lower": {
+              "inclusive": true,
+              "unit": "V",
+              "value": 1.0
+            }
+          },
+          "measurement_id": "inverter.vout.sample-at",
+          "specification_id": "inverter.vout.sample-at.condition-mismatch-limit"
+        },
+        "specification_sha256": "fb767abf7621a9cc4d8f99b8d9199e8fac9a7d81a367533765d05863ac134b45"
+      },
+      "specification_id": "inverter.vout.sample-at.condition-mismatch-limit",
+      "status": "unknown"
+    },
+    "extensions": {},
+    "protocol": {
+      "assertion_profile": "openada.assertion/specification.satisfied/v1alpha1",
+      "implementation_id": "org.openada.kernel.typed-evidence",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/specification.evaluate/v1alpha1",
+      "request_id": "17000000-0000-4000-8000-000000000001"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "specification.condition.unproven",
+      "message": "Condition 'supply_voltage' does not exactly match the measurement evidence.",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "unknown",
+    "summary": "The measurement was not produced at a required specification condition."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [],
+  "operation": "specification.evaluate",
+  "provenance": {
+    "created_at": "2026-07-16T08:35:16.400893Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}

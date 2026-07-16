@@ -1,0 +1,15 @@
+{
+  "diagnostic": "conformance.evidence.tampered",
+  "independent_rejection": {
+    "exception": "ConformanceError",
+    "message": "file[/tampered-evidence/work/inverter_tb.spice].bytes: expected 795, got 786"
+  },
+  "mutation": {
+    "baseline_sha256": "acebf6df2cd57cb3298b9a12548329febc17957ed343b470bc93ee6bdc2ec72f",
+    "mutated_sha256": "c7ef390054bef6cb4b333416a3aba7ef95ec448acd56824ce8dcb424627eb039",
+    "target": "work/inverter_tb.spice"
+  },
+  "replay_id": "generated-netlist-byte",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown"
+}

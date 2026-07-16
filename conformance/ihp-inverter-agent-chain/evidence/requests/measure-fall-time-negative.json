@@ -1,0 +1,17 @@
+{
+  "extensions": {},
+  "kind": "fall_time",
+  "measurement_id": "inverter.vout.fall-time",
+  "parameters": {
+    "lower_threshold": {
+      "unit": "V",
+      "value": 2.0
+    },
+    "occurrence": 1,
+    "upper_threshold": {
+      "unit": "V",
+      "value": 3.0
+    }
+  },
+  "signal": "v(vout)"
+}

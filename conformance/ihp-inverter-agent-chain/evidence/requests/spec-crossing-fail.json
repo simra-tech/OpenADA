@@ -1,0 +1,24 @@
+{
+  "conditions": [
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    }
+  ],
+  "extensions": {},
+  "limits": {
+    "upper": {
+      "inclusive": true,
+      "unit": "s",
+      "value": 2.5e-07
+    }
+  },
+  "measurement_id": "inverter.vin.first-rising-crossing",
+  "specification_id": "inverter.vin.first-rising-crossing.fail-limit"
+}

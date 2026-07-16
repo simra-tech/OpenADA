@@ -1,0 +1,24 @@
+{
+  "conditions": [
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    }
+  ],
+  "extensions": {},
+  "limits": {
+    "upper": {
+      "inclusive": true,
+      "unit": "V",
+      "value": 0.5
+    }
+  },
+  "measurement_id": "inverter.vout.maximum",
+  "specification_id": "inverter.vout.maximum.fail-limit"
+}

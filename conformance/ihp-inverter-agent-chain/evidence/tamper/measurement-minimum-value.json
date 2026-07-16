@@ -1,0 +1,15 @@
+{
+  "diagnostic": "conformance.measurement.tampered",
+  "independent_rejection": {
+    "exception": "ConformanceError",
+    "message": "measurement.record: expected {'measurement_id': 'inverter.vout.minimum', 'kind': 'minimum', 'status': 'measured', 'request_sha256': '1bc1fa48e4c9316ffc5fbc9f2f9f14c3d29528395596c8d29ce613e050df8285', 'value': -0.002716670184140451, 'unit': 'V', 'signal': 'v(vout)', 'location': {'value': 5.09586868812166e-07, 'unit': 's'}, 'algorithm': {'id': 'openada.algorithm/measurement.minimum/v1', 'version': '1.0.0'}, 'sample_count': 81, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.minimum/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'minimum', 'location': {'unit': 's', 'value': 5.09586868812166e-07}, 'measurement_id': 'inverter.vout.minimum', 'request_sha256': '1bc1fa48e4c9316ffc5fbc9f2f9f14c3d29528395596c8d29ce613e050df8285', 'sample_count': 81, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role': 'simulation.res"
+  },
+  "mutation": {
+    "baseline_sha256": "b7cfa742548fa42aa5d00399f0c3f03e034f698fd8063ac556c1f8b8cce81eee",
+    "mutated_sha256": "5d250eb7621fa3c9845eae74e5a140a680fbecd4cee6b9bc5089c0e5a920b18b",
+    "target": "measurements/minimum.json"
+  },
+  "replay_id": "measurement-minimum-value",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown"
+}

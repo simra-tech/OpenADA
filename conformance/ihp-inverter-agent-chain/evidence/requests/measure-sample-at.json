@@ -1,0 +1,13 @@
+{
+  "extensions": {},
+  "kind": "sample_at",
+  "measurement_id": "inverter.vout.sample-at",
+  "parameters": {
+    "at": {
+      "unit": "s",
+      "value": 3e-07
+    },
+    "interpolation": "linear"
+  },
+  "signal": "v(vout)"
+}

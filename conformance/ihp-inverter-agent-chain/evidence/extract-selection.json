@@ -1,0 +1,29 @@
+{
+  "conditions": [
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "v(vin)",
+      "output_name": "v(vin)",
+      "unit": "V"
+    },
+    {
+      "component": "real",
+      "native_name": "v(vout)",
+      "output_name": "v(vout)",
+      "unit": "V"
+    }
+  ]
+}

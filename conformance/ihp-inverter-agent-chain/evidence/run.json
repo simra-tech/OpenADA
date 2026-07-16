@@ -1,0 +1,1024 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-agent-chain/v1",
+  "chain_manifest_sha256": "6a4b05e97ce93ad19de68a567523532dada52c8f053ec56c78c416806dee7aa1",
+  "container_command": [
+    "docker",
+    "run",
+    "--rm",
+    "--name",
+    "openada-ihp-agent-3128771-03668018",
+    "--pull=never",
+    "--platform",
+    "linux/amd64",
+    "--network",
+    "none",
+    "--read-only",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--pids-limit",
+    "512",
+    "--user",
+    "1001:1002",
+    "--env",
+    "HOME=/tmp/openada-home",
+    "--env",
+    "TMPDIR=/tmp",
+    "--env",
+    "PATH=/openada/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "--tmpfs",
+    "/tmp:rw,nosuid,nodev,exec,size=512m",
+    "--workdir",
+    "/evidence",
+    "--mount",
+    "type=bind,source=/home/specialpedrito/simra/openada,target=/openada,readonly",
+    "--mount",
+    "type=bind,source=/home/specialpedrito/.cache/openada/conformance/ihp-inverter/IHP-AnalogAcademy,target=/design,readonly",
+    "--mount",
+    "type=bind,source=/tmp/openada-release-agent-20260716T083455Z-3128771,target=/evidence",
+    "--entrypoint",
+    "/usr/bin/python3",
+    "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "/openada/conformance/ihp-inverter-agent-chain/inside.py",
+    "--manifest",
+    "/openada/conformance/ihp-inverter-agent-chain/manifest.json",
+    "--evidence",
+    "/evidence"
+  ],
+  "created_at": "2026-07-16T08:36:10.161882Z",
+  "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+  "image": {
+    "architecture": "amd64",
+    "id": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "os": "linux",
+    "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"
+  },
+  "network": "none during EDA execution",
+  "openada_checkout": {
+    "after": {
+      "commit": "31be908038109ecea4052592df468de585efb5ad",
+      "status_entry_count": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_files_modified": false,
+      "untracked_files_present": false,
+      "working_tree_modified": false
+    },
+    "before": {
+      "commit": "31be908038109ecea4052592df468de585efb5ad",
+      "status_entry_count": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_files_modified": false,
+      "untracked_files_present": false,
+      "working_tree_modified": false
+    },
+    "commit_exact": true,
+    "state_unchanged": true
+  },
+  "runtime_observation": {
+    "completed_operations": [
+      "netlist",
+      "netlist:missing-symbol",
+      "provider.invoke",
+      "provider.invoke:terminal-nonconvergence",
+      "simulate:shared-ngspice",
+      "simulate:shared-ngspice:terminal-nonconvergence",
+      "result.series.extract",
+      "result.series.extract:missing-selector",
+      "result.measure:sample-at",
+      "result.measure:sample-at:negative",
+      "specification.evaluate:sample-at:pass",
+      "specification.evaluate:sample-at:fail",
+      "specification.evaluate:condition-mismatch",
+      "result.measure:minimum",
+      "result.measure:minimum:negative",
+      "specification.evaluate:minimum:pass",
+      "specification.evaluate:minimum:fail",
+      "result.measure:maximum",
+      "result.measure:maximum:negative",
+      "specification.evaluate:maximum:pass",
+      "specification.evaluate:maximum:fail",
+      "result.measure:mean",
+      "result.measure:mean:negative",
+      "specification.evaluate:mean:pass",
+      "specification.evaluate:mean:fail",
+      "result.measure:rms",
+      "result.measure:rms:negative",
+      "specification.evaluate:rms:pass",
+      "specification.evaluate:rms:fail",
+      "result.measure:crossing",
+      "result.measure:crossing:negative",
+      "specification.evaluate:crossing:pass",
+      "specification.evaluate:crossing:fail",
+      "result.measure:rise-time",
+      "result.measure:rise-time:negative",
+      "specification.evaluate:rise-time:pass",
+      "specification.evaluate:rise-time:fail",
+      "result.measure:fall-time",
+      "result.measure:fall-time:negative",
+      "specification.evaluate:fall-time:pass",
+      "specification.evaluate:fall-time:fail",
+      "result.measure:settling-time",
+      "result.measure:settling-time:negative",
+      "specification.evaluate:settling-time:pass",
+      "specification.evaluate:settling-time:fail",
+      "agent.evidence"
+    ],
+    "openada_invocations": [
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "netlist",
+          "/design/modules/module_0_foundations/inverter/inverter_tb.sch",
+          "--output",
+          "/evidence/work/inverter_tb.spice",
+          "--rcfile",
+          "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+          "--timeout",
+          "120"
+        ],
+        "cwd": "/design/modules/module_0_foundations/inverter",
+        "operation": "netlist"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "netlist",
+          "/evidence/work/inverter_missing_symbol.sch",
+          "--output",
+          "/evidence/work/inverter_missing_symbol.spice",
+          "--rcfile",
+          "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+          "--timeout",
+          "120"
+        ],
+        "cwd": "/evidence/work",
+        "operation": "netlist:missing-symbol"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "provider",
+          "invoke",
+          "--manifest",
+          "/openada/providers/ngspice-pdk-control/driver-manifest.json",
+          "--cwd",
+          "/openada",
+          "/evidence/provider-request.json"
+        ],
+        "cwd": "/evidence",
+        "operation": "provider.invoke"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "provider",
+          "invoke",
+          "--manifest",
+          "/openada/providers/ngspice-pdk-control/driver-manifest.json",
+          "--cwd",
+          "/openada",
+          "/evidence/provider-fail-request.json"
+        ],
+        "cwd": "/evidence",
+        "operation": "provider.invoke:terminal-nonconvergence"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "simulate",
+          "/evidence/work/inverter_shared.spice",
+          "--backend",
+          "ngspice",
+          "--analysis",
+          "tran",
+          "--step-s",
+          "4.9999999999999998e-08",
+          "--stop-s",
+          "1.9999999999999999e-06",
+          "--output-dir",
+          "/evidence/builtin/simulation",
+          "--workdir",
+          "/evidence/builtin/work",
+          "--timeout",
+          "180"
+        ],
+        "cwd": "/evidence",
+        "operation": "simulate:shared-ngspice"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "simulate",
+          "/evidence/work/inverter_shared_terminal_nonconvergence.spice",
+          "--backend",
+          "ngspice",
+          "--analysis",
+          "tran",
+          "--step-s",
+          "9.9999999999999995e-07",
+          "--stop-s",
+          "0.001",
+          "--output-dir",
+          "/evidence/builtin-fail/simulation",
+          "--workdir",
+          "/evidence/builtin-fail/work",
+          "--timeout",
+          "180"
+        ],
+        "cwd": "/evidence",
+        "operation": "simulate:shared-ngspice:terminal-nonconvergence"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "extract",
+          "--simulation",
+          "/evidence/provider-result.json",
+          "--artifact",
+          "/evidence/provider/work/test_inverter.raw",
+          "--selection",
+          "/evidence/extract-selection.json",
+          "--request-id",
+          "10000000-0000-4000-8000-000000000002"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.series.extract"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "extract",
+          "--simulation",
+          "/evidence/provider-result.json",
+          "--artifact",
+          "/evidence/provider/work/test_inverter.raw",
+          "--selection",
+          "/evidence/requests/extract-missing-selector.json",
+          "--request-id",
+          "15000000-0000-4000-8000-000000000001"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.series.extract:missing-selector"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-sample-at.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000001"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:sample-at"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-sample-at-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000001"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:sample-at:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/sample-at.json",
+          "--specification",
+          "/evidence/requests/spec-sample-at-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000001"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:sample-at:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/sample-at.json",
+          "--specification",
+          "/evidence/requests/spec-sample-at-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000001"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:sample-at:fail"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/sample-at.json",
+          "--specification",
+          "/evidence/requests/spec-sample-at-condition-mismatch.json",
+          "--request-id",
+          "17000000-0000-4000-8000-000000000001"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:condition-mismatch"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-minimum.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000002"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:minimum"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-minimum-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000002"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:minimum:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/minimum.json",
+          "--specification",
+          "/evidence/requests/spec-minimum-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000002"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:minimum:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/minimum.json",
+          "--specification",
+          "/evidence/requests/spec-minimum-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000002"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:minimum:fail"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-maximum.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000003"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:maximum"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-maximum-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000003"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:maximum:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/maximum.json",
+          "--specification",
+          "/evidence/requests/spec-maximum-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000003"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:maximum:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/maximum.json",
+          "--specification",
+          "/evidence/requests/spec-maximum-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000003"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:maximum:fail"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-mean.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000004"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:mean"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-mean-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000004"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:mean:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/mean.json",
+          "--specification",
+          "/evidence/requests/spec-mean-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000004"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:mean:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/mean.json",
+          "--specification",
+          "/evidence/requests/spec-mean-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000004"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:mean:fail"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-rms.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000005"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:rms"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-rms-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000005"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:rms:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/rms.json",
+          "--specification",
+          "/evidence/requests/spec-rms-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000005"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:rms:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/rms.json",
+          "--specification",
+          "/evidence/requests/spec-rms-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000005"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:rms:fail"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-crossing.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000006"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:crossing"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-crossing-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000006"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:crossing:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/crossing.json",
+          "--specification",
+          "/evidence/requests/spec-crossing-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000006"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:crossing:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/crossing.json",
+          "--specification",
+          "/evidence/requests/spec-crossing-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000006"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:crossing:fail"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-rise-time.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000007"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:rise-time"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-rise-time-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000007"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:rise-time:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/rise-time.json",
+          "--specification",
+          "/evidence/requests/spec-rise-time-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000007"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:rise-time:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/rise-time.json",
+          "--specification",
+          "/evidence/requests/spec-rise-time-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000007"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:rise-time:fail"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-fall-time.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000008"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:fall-time"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-fall-time-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000008"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:fall-time:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/fall-time.json",
+          "--specification",
+          "/evidence/requests/spec-fall-time-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000008"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:fall-time:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/fall-time.json",
+          "--specification",
+          "/evidence/requests/spec-fall-time-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000008"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:fall-time:fail"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-settling-time.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000009"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:settling-time"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-settling-time-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000009"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:settling-time:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/settling-time.json",
+          "--specification",
+          "/evidence/requests/spec-settling-time-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000009"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:settling-time:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/settling-time.json",
+          "--specification",
+          "/evidence/requests/spec-settling-time-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000009"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:settling-time:fail"
+      }
+    ],
+    "runtime_inputs": {
+      "corner_moslv": {
+        "bytes": 21645,
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/cornerMOSlv.lib",
+        "sha256": "03d505847c880d233b341be115a1e5460edf4d8e9b3e8a7df791a52fa4455d67"
+      },
+      "isolated_ngspice_startup": {
+        "bytes": 62,
+        "path": "/tmp/openada-home/.spiceinit",
+        "sha256": "168ff70c9c37e8a2d687e782cb92b9df81e9f35ed1eb1d1ef14c4e02a27c082d"
+      },
+      "moslv_modules": {
+        "bytes": 10452,
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mod.lib",
+        "sha256": "84ec57080b9dd4666417f05db6f7b34c8dd3f12118929f9b308018613bece16e"
+      },
+      "moslv_parameters": {
+        "bytes": 94408,
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_parm.lib",
+        "sha256": "cbf10b8453a18bb70b8ad0d6e40faa0937338e699b5460947a94900db6c92a6e"
+      },
+      "ngspice_executable": {
+        "bytes": 8067696,
+        "path": "/foss/tools/ngspice/bin/ngspice",
+        "sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
+      },
+      "ngspice_init": {
+        "bytes": 957,
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+        "sha256": "56ec1880a943fa481c3c321d62857b6240387e39d5aa8ded403835c34edb515d"
+      },
+      "ngspice_system_init": {
+        "bytes": 1509,
+        "path": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+        "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
+      },
+      "pdk_commit": {
+        "bytes": 41,
+        "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+        "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5",
+        "value": "144f811cdffda49b71d28f64e8a92b697b61cf06"
+      },
+      "provider_manifest": {
+        "bytes": 3480,
+        "path": "/openada/providers/ngspice-pdk-control/driver-manifest.json",
+        "sha256": "07dbfa928fb80edc519ca0dbbcf86be329aec5fc8d84c79fe751242fc7a553a5"
+      },
+      "psp103_osdi": {
+        "bytes": 843184,
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi",
+        "sha256": "6538578a272040e70cf4542884e86d1aecd3c6936eee9e43564db49d2d05d5ab"
+      },
+      "xschem_rcfile": {
+        "bytes": 19794,
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+        "sha256": "d6d8fa5157ad2072e6d1ce63bda5f5d593ef4eb84631f23eed5e9ae3886f18b5"
+      }
+    },
+    "schema": "openada.ihp-agent-chain-container-observation/v0alpha1"
+  },
+  "schema": "openada.ihp-agent-chain-run-metadata/v0alpha1"
+}

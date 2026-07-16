@@ -1,0 +1,24 @@
+{
+  "conditions": [
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    }
+  ],
+  "extensions": {},
+  "limits": {
+    "lower": {
+      "inclusive": true,
+      "unit": "V",
+      "value": 2.0
+    }
+  },
+  "measurement_id": "inverter.vout.rms",
+  "specification_id": "inverter.vout.rms.fail-limit"
+}

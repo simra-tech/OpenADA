@@ -1,0 +1,873 @@
+{
+  "builtin_ngspice": {
+    "pass": {
+      "driver_id": "org.openada.driver.ngspice",
+      "driver_version": "0.4.0",
+      "engineering_status": "pass",
+      "native_artifact": {
+        "bytes": 8391,
+        "exists": true,
+        "kind": "ngspice-raw",
+        "path": "/evidence/builtin/simulation/inverter_shared.raw",
+        "role": "simulation.result",
+        "sha256": "d05b1e73cbe8a7fdb2a219b0a85a7712a7a0cc9c94e9991f716ef57c0464eec3"
+      }
+    },
+    "terminal_nonconvergence": {
+      "diagnostic_codes": [
+        "simulation.analysis.unproven",
+        "simulation.analysis.non_convergent"
+      ],
+      "engineering_status": "fail",
+      "native_artifact": {
+        "bytes": 17493,
+        "exists": true,
+        "kind": "ngspice-raw",
+        "path": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
+        "role": "simulation.result",
+        "sha256": "46ad76636ddabf9713120a1c170acb6ed61f4637555eca1aa472902fe8d8e0f5"
+      }
+    }
+  },
+  "chain_id": "openada.chain/ihp-inverter-agent-chain/v1",
+  "limitations": [
+    "This is preview evidence, not foundry signoff.",
+    "The IHP mos_tt model closure and PSP103 OSDI module are individually content-bound and retained for independent reconstruction.",
+    "The shared CLI result reports native-default startup as unenumerated; the isolated startup and OSDI bytes are independently verified by this chain.",
+    "Mean and RMS are arithmetic statistics over retained adaptive samples, not time-weighted electrical measurements.",
+    "The normalized measurement profile intentionally labels native-artifact lineage unverified downstream; this verifier independently checks that edge."
+  ],
+  "measurements": [
+    {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.sample-at/v1",
+        "version": "1.0.0"
+      },
+      "id": "sample-at",
+      "interpretation": "Linearly interpolated retained v(vout) samples at 0.3 us, inside the first settled-high window.",
+      "kind": "sample_at",
+      "location": {
+        "unit": "s",
+        "value": 3e-07
+      },
+      "measurement_request_sha256": "68863a7595ac3c45410aaa0aa7ea3c61fc410f4fd59d08f5e75cddc1450919bd",
+      "result_sha256": "08e8ff795926f3f961f3f74a35d94be8f74bf84cee673167403e5b3fd579ef3e",
+      "signal": "v(vout)",
+      "status": "measured",
+      "unit": "V",
+      "value": 1.1999991368992526
+    },
+    {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.minimum/v1",
+        "version": "1.0.0"
+      },
+      "id": "minimum",
+      "interpretation": "Minimum retained v(vout) sample over the complete native transient.",
+      "kind": "minimum",
+      "location": {
+        "unit": "s",
+        "value": 5.09586868812166e-07
+      },
+      "measurement_request_sha256": "1bc1fa48e4c9316ffc5fbc9f2f9f14c3d29528395596c8d29ce613e050df8285",
+      "result_sha256": "4df4b7406c38998949364d5d3b1510c09aaf57703d7cb9a817f761b30c40b9be",
+      "signal": "v(vout)",
+      "status": "measured",
+      "unit": "V",
+      "value": -0.002716670184140451
+    },
+    {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.maximum/v1",
+        "version": "1.0.0"
+      },
+      "id": "maximum",
+      "interpretation": "Maximum retained v(vout) sample over the complete native transient.",
+      "kind": "maximum",
+      "location": {
+        "unit": "s",
+        "value": 5.009999999999999e-07
+      },
+      "measurement_request_sha256": "cf96b6feede153e6f6326fce6fa938faee65d3efd5f28e34729b1ff163758373",
+      "result_sha256": "f538fc4780edf674804ff7be6f64bd4e0f0504b63038c543a89e7da883aec1c7",
+      "signal": "v(vout)",
+      "status": "measured",
+      "unit": "V",
+      "value": 1.2025433181809455
+    },
+    {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.mean/v1",
+        "version": "1.0.0"
+      },
+      "id": "mean",
+      "interpretation": "Arithmetic mean of retained adaptive v(vout) samples; this is not a time-weighted electrical average.",
+      "kind": "mean",
+      "location": null,
+      "measurement_request_sha256": "395a369e48408cc2ffacc92a0bcb21032567f922a204eda6563140836b78b2a2",
+      "result_sha256": "86031db7243c50bc4b8fe9d35944e1725532352ce563b3750c620250e526380e",
+      "signal": "v(vout)",
+      "status": "measured",
+      "unit": "V",
+      "value": 0.664714677053433
+    },
+    {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.rms/v1",
+        "version": "1.0.0"
+      },
+      "id": "rms",
+      "interpretation": "RMS of retained adaptive v(vout) samples; this is not a time-weighted electrical RMS.",
+      "kind": "rms",
+      "location": null,
+      "measurement_request_sha256": "0df0be7a5581829aa92a4b1dd3aa5b7579db216e88e70d7855849114cd06fafe",
+      "result_sha256": "13533b579a7215cc31a3e14abf946f63912ebcdf9aa31f7bc9c00b8a2e22327e",
+      "signal": "v(vout)",
+      "status": "measured",
+      "unit": "V",
+      "value": 0.891777448110767
+    },
+    {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.crossing/v1",
+        "version": "1.0.0"
+      },
+      "id": "crossing",
+      "interpretation": "First linearly interpolated rising 0.6 V crossing of the explicit input pulse.",
+      "kind": "crossing",
+      "location": {
+        "unit": "s",
+        "value": 5.049999999999999e-07
+      },
+      "measurement_request_sha256": "696468177cd6340375d9ce882bcd3ca6fcfd6e9feb3831043579b27cfc0376ce",
+      "result_sha256": "4eca2ccc5132e10b41b22c61521104ec31063372097325fb968ae567c309c616",
+      "signal": "v(vin)",
+      "status": "measured",
+      "unit": "s",
+      "value": 5.049999999999999e-07
+    },
+    {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.rise-time/v1",
+        "version": "1.0.0"
+      },
+      "id": "rise-time",
+      "interpretation": "First complete retained v(vout) 10%-to-90% rising transition, caused by the input falling edge.",
+      "kind": "rise_time",
+      "location": {
+        "unit": "s",
+        "value": 1.5164561641794755e-06
+      },
+      "measurement_request_sha256": "6bfd67f653b188f92ffd0862be0e9a7c5deadac3f520127eb123d5a017f511c2",
+      "result_sha256": "823fadd55ad9c75cf9e9ba597da09e243099ab59768566d9e350d191a5219e8f",
+      "signal": "v(vout)",
+      "status": "measured",
+      "unit": "s",
+      "value": 3.105653236795353e-09
+    },
+    {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.fall-time/v1",
+        "version": "1.0.0"
+      },
+      "id": "fall-time",
+      "interpretation": "First complete retained v(vout) 90%-to-10% falling transition, caused by the input rising edge.",
+      "kind": "fall_time",
+      "location": {
+        "unit": "s",
+        "value": 5.061748407684754e-07
+      },
+      "measurement_request_sha256": "6c8762c35a451b111c4fd278dd14e5e1329e254f85c42311dde199f1ddb8dee9",
+      "result_sha256": "10e7f917e85bfeb2789c6a95db12ebe4dce272b8baf378dfa6d1866764432d51",
+      "signal": "v(vout)",
+      "status": "measured",
+      "unit": "s",
+      "value": 2.864810735871247e-09
+    },
+    {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.settling-time/v1",
+        "version": "1.0.0"
+      },
+      "id": "settling-time",
+      "interpretation": "Elapsed time from 1.5 us until every retained tail sample stays within 1.2 V +/- 0.1 V for at least 0.2 us.",
+      "kind": "settling_time",
+      "location": {
+        "unit": "s",
+        "value": 1.5180305338366638e-06
+      },
+      "measurement_request_sha256": "44f6921aea1799db6c0fbe5b123ec2acac6c38ca1058234f7f80f42f3497bd54",
+      "result_sha256": "4941148cc24844d03ad8cf9ccba8a6aee72884f067cffcf0f42448845b4e9b37",
+      "signal": "v(vout)",
+      "status": "measured",
+      "unit": "s",
+      "value": 1.8030533836663766e-08
+    }
+  ],
+  "native_artifact": {
+    "bytes": 8385,
+    "kind": "ngspice-raw",
+    "path": "/evidence/provider/work/test_inverter.raw",
+    "role": "simulation.result",
+    "sha256": "4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e"
+  },
+  "negative_replays": [
+    {
+      "diagnostic": "xschem.missing_symbol",
+      "engineering_status": "fail",
+      "id": "netlist-missing-symbol",
+      "operation": "netlist"
+    },
+    {
+      "diagnostic": "simulation.analysis.non_convergent",
+      "engineering_status": "fail",
+      "id": "isolated-builtin-terminal-nonconvergence",
+      "operation": "simulate"
+    },
+    {
+      "diagnostic": "series.selector.missing",
+      "engineering_status": "unknown",
+      "id": "extract-missing-selector",
+      "operation": "result.series.extract"
+    },
+    {
+      "diagnostic": "simulation.analysis.non_convergent",
+      "engineering_status": "fail",
+      "id": "isolated-terminal-nonconvergence",
+      "operation": "simulate"
+    },
+    {
+      "diagnostic": "measurement.domain.invalid",
+      "engineering_status": "unknown",
+      "id": "measure-sample-at",
+      "operation": "result.measure"
+    },
+    {
+      "diagnostic": "specification.condition.unproven",
+      "engineering_status": "unknown",
+      "id": "specification-condition-mismatch",
+      "operation": "specification.evaluate"
+    },
+    {
+      "diagnostic": "measurement.value.not_found",
+      "engineering_status": "fail",
+      "id": "measure-minimum",
+      "operation": "result.measure"
+    },
+    {
+      "diagnostic": "measurement.value.not_found",
+      "engineering_status": "fail",
+      "id": "measure-maximum",
+      "operation": "result.measure"
+    },
+    {
+      "diagnostic": "measurement.value.not_found",
+      "engineering_status": "fail",
+      "id": "measure-mean",
+      "operation": "result.measure"
+    },
+    {
+      "diagnostic": "measurement.value.not_found",
+      "engineering_status": "fail",
+      "id": "measure-rms",
+      "operation": "result.measure"
+    },
+    {
+      "diagnostic": "measurement.value.not_found",
+      "engineering_status": "fail",
+      "id": "measure-crossing",
+      "operation": "result.measure"
+    },
+    {
+      "diagnostic": "measurement.value.not_found",
+      "engineering_status": "fail",
+      "id": "measure-rise-time",
+      "operation": "result.measure"
+    },
+    {
+      "diagnostic": "measurement.value.not_found",
+      "engineering_status": "fail",
+      "id": "measure-fall-time",
+      "operation": "result.measure"
+    },
+    {
+      "diagnostic": "measurement.value.not_found",
+      "engineering_status": "fail",
+      "id": "measure-settling-time",
+      "operation": "result.measure"
+    },
+    {
+      "diagnostic": "specification.limit.violated",
+      "engineering_status": "fail",
+      "id": "deliberately-violated-limits",
+      "operation": "specification.evaluate"
+    }
+  ],
+  "netlist_negative": {
+    "artifact": {
+      "bytes": 785,
+      "exists": true,
+      "kind": "spice-netlist",
+      "path": "/evidence/work/inverter_missing_symbol.spice",
+      "role": "output",
+      "sha256": "16e4d871f044a5c333bac43c095b286e72c96ca530353ab3e611d7991b086645"
+    },
+    "diagnostic_codes": [
+      "xschem.missing_symbol"
+    ],
+    "engineering_status": "fail",
+    "missing_symbol_count": 1
+  },
+  "provider": {
+    "driver_id": "org.openada.driver.ngspice-pdk-control",
+    "driver_version": "0.5.0",
+    "engineering_status": "pass",
+    "request_id": "10000000-0000-4000-8000-000000000001"
+  },
+  "schema": "openada.agent-evidence/v0alpha1",
+  "series": {
+    "axis": "time",
+    "axis_unit": "s",
+    "conditions": [
+      {
+        "name": "corner",
+        "unit": "1",
+        "value": "mos_tt"
+      },
+      {
+        "name": "supply_voltage",
+        "unit": "V",
+        "value": 1.2
+      }
+    ],
+    "point_count": 81,
+    "request_id": "10000000-0000-4000-8000-000000000002",
+    "sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73",
+    "signals": [
+      "v(vin)",
+      "v(vout)"
+    ]
+  },
+  "specifications": {
+    "decisions": [
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "V",
+            "value": 1.0
+          }
+        ],
+        "margin": {
+          "relative_to": "lower",
+          "unit": "V",
+          "value": 0.19999913689925264
+        },
+        "measured": {
+          "unit": "V",
+          "value": 1.1999991368992526
+        },
+        "measurement_id": "inverter.vout.sample-at",
+        "specification_id": "inverter.vout.sample-at.pass-limit",
+        "status": "pass"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "V",
+            "value": 0.5
+          }
+        ],
+        "margin": {
+          "relative_to": "upper",
+          "unit": "V",
+          "value": -0.6999991368992526
+        },
+        "measured": {
+          "unit": "V",
+          "value": 1.1999991368992526
+        },
+        "measurement_id": "inverter.vout.sample-at",
+        "specification_id": "inverter.vout.sample-at.fail-limit",
+        "status": "fail"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "V",
+            "value": 0.2
+          }
+        ],
+        "margin": {
+          "relative_to": "upper",
+          "unit": "V",
+          "value": 0.20271667018414047
+        },
+        "measured": {
+          "unit": "V",
+          "value": -0.002716670184140451
+        },
+        "measurement_id": "inverter.vout.minimum",
+        "specification_id": "inverter.vout.minimum.pass-limit",
+        "status": "pass"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "V",
+            "value": 0.5
+          }
+        ],
+        "margin": {
+          "relative_to": "lower",
+          "unit": "V",
+          "value": -0.5027166701841405
+        },
+        "measured": {
+          "unit": "V",
+          "value": -0.002716670184140451
+        },
+        "measurement_id": "inverter.vout.minimum",
+        "specification_id": "inverter.vout.minimum.fail-limit",
+        "status": "fail"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "V",
+            "value": 1.0
+          }
+        ],
+        "margin": {
+          "relative_to": "lower",
+          "unit": "V",
+          "value": 0.2025433181809455
+        },
+        "measured": {
+          "unit": "V",
+          "value": 1.2025433181809455
+        },
+        "measurement_id": "inverter.vout.maximum",
+        "specification_id": "inverter.vout.maximum.pass-limit",
+        "status": "pass"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "V",
+            "value": 0.5
+          }
+        ],
+        "margin": {
+          "relative_to": "upper",
+          "unit": "V",
+          "value": -0.7025433181809455
+        },
+        "measured": {
+          "unit": "V",
+          "value": 1.2025433181809455
+        },
+        "measurement_id": "inverter.vout.maximum",
+        "specification_id": "inverter.vout.maximum.fail-limit",
+        "status": "fail"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "V",
+            "value": 0.0
+          },
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "V",
+            "value": 1.3
+          }
+        ],
+        "margin": {
+          "relative_to": "upper",
+          "unit": "V",
+          "value": 0.635285322946567
+        },
+        "measured": {
+          "unit": "V",
+          "value": 0.664714677053433
+        },
+        "measurement_id": "inverter.vout.mean",
+        "specification_id": "inverter.vout.mean.pass-limit",
+        "status": "pass"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "V",
+            "value": 2.0
+          }
+        ],
+        "margin": {
+          "relative_to": "lower",
+          "unit": "V",
+          "value": -1.335285322946567
+        },
+        "measured": {
+          "unit": "V",
+          "value": 0.664714677053433
+        },
+        "measurement_id": "inverter.vout.mean",
+        "specification_id": "inverter.vout.mean.fail-limit",
+        "status": "fail"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "V",
+            "value": 0.0
+          },
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "V",
+            "value": 1.3
+          }
+        ],
+        "margin": {
+          "relative_to": "upper",
+          "unit": "V",
+          "value": 0.40822255188923307
+        },
+        "measured": {
+          "unit": "V",
+          "value": 0.891777448110767
+        },
+        "measurement_id": "inverter.vout.rms",
+        "specification_id": "inverter.vout.rms.pass-limit",
+        "status": "pass"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "V",
+            "value": 2.0
+          }
+        ],
+        "margin": {
+          "relative_to": "lower",
+          "unit": "V",
+          "value": -1.108222551889233
+        },
+        "measured": {
+          "unit": "V",
+          "value": 0.891777448110767
+        },
+        "measurement_id": "inverter.vout.rms",
+        "specification_id": "inverter.vout.rms.fail-limit",
+        "status": "fail"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "s",
+            "value": 4.5e-07
+          },
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "s",
+            "value": 5.6e-07
+          }
+        ],
+        "margin": {
+          "relative_to": "lower",
+          "unit": "s",
+          "value": 5.499999999999995e-08
+        },
+        "measured": {
+          "unit": "s",
+          "value": 5.049999999999999e-07
+        },
+        "measurement_id": "inverter.vin.first-rising-crossing",
+        "specification_id": "inverter.vin.first-rising-crossing.pass-limit",
+        "status": "pass"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "s",
+            "value": 2.5e-07
+          }
+        ],
+        "margin": {
+          "relative_to": "upper",
+          "unit": "s",
+          "value": -2.5499999999999994e-07
+        },
+        "measured": {
+          "unit": "s",
+          "value": 5.049999999999999e-07
+        },
+        "measurement_id": "inverter.vin.first-rising-crossing",
+        "specification_id": "inverter.vin.first-rising-crossing.fail-limit",
+        "status": "fail"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "s",
+            "value": 1e-07
+          }
+        ],
+        "margin": {
+          "relative_to": "upper",
+          "unit": "s",
+          "value": 9.689434676320464e-08
+        },
+        "measured": {
+          "unit": "s",
+          "value": 3.105653236795353e-09
+        },
+        "measurement_id": "inverter.vout.rise-time",
+        "specification_id": "inverter.vout.rise-time.pass-limit",
+        "status": "pass"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "s",
+            "value": 2e-07
+          }
+        ],
+        "margin": {
+          "relative_to": "lower",
+          "unit": "s",
+          "value": -1.9689434676320464e-07
+        },
+        "measured": {
+          "unit": "s",
+          "value": 3.105653236795353e-09
+        },
+        "measurement_id": "inverter.vout.rise-time",
+        "specification_id": "inverter.vout.rise-time.fail-limit",
+        "status": "fail"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "s",
+            "value": 1e-07
+          }
+        ],
+        "margin": {
+          "relative_to": "upper",
+          "unit": "s",
+          "value": 9.713518926412875e-08
+        },
+        "measured": {
+          "unit": "s",
+          "value": 2.864810735871247e-09
+        },
+        "measurement_id": "inverter.vout.fall-time",
+        "specification_id": "inverter.vout.fall-time.pass-limit",
+        "status": "pass"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "s",
+            "value": 2e-07
+          }
+        ],
+        "margin": {
+          "relative_to": "lower",
+          "unit": "s",
+          "value": -1.9713518926412874e-07
+        },
+        "measured": {
+          "unit": "s",
+          "value": 2.864810735871247e-09
+        },
+        "measurement_id": "inverter.vout.fall-time",
+        "specification_id": "inverter.vout.fall-time.fail-limit",
+        "status": "fail"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "upper",
+            "unit": "s",
+            "value": 3e-07
+          }
+        ],
+        "margin": {
+          "relative_to": "upper",
+          "unit": "s",
+          "value": 2.819694661633362e-07
+        },
+        "measured": {
+          "unit": "s",
+          "value": 1.8030533836663766e-08
+        },
+        "measurement_id": "inverter.vout.final-high-settling-time",
+        "specification_id": "inverter.vout.final-high-settling-time.pass-limit",
+        "status": "pass"
+      },
+      {
+        "conditions": {
+          "matched_count": 2,
+          "required_count": 2,
+          "status": "matched"
+        },
+        "limits": [
+          {
+            "inclusive": true,
+            "kind": "lower",
+            "unit": "s",
+            "value": 5e-07
+          }
+        ],
+        "margin": {
+          "relative_to": "lower",
+          "unit": "s",
+          "value": -4.819694661633362e-07
+        },
+        "measured": {
+          "unit": "s",
+          "value": 1.8030533836663766e-08
+        },
+        "measurement_id": "inverter.vout.final-high-settling-time",
+        "specification_id": "inverter.vout.final-high-settling-time.fail-limit",
+        "status": "fail"
+      }
+    ],
+    "fail_count": 9,
+    "pass_count": 9
+  },
+  "terminal_nonconvergence": {
+    "diagnostic_codes": [
+      "simulation.analysis.non_convergent"
+    ],
+    "engineering_status": "fail",
+    "native_artifact": {
+      "bytes": 17498,
+      "path": "/evidence/provider-fail/work/test_inverter_fail.raw",
+      "sha256": "407e6f36b4c4ca9a7a4c32b11438f295beaf2d2e91b658953641abed0f27bc4e"
+    },
+    "purpose": "Deliberate engine-boundary injection isolated from the inverter DUT; it does not assert that the DUT is unstable."
+  }
+}

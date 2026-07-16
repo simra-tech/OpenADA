@@ -1,0 +1,323 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1673,
+      "exists": true,
+      "kind": "simulation-log",
+      "path": "/evidence/provider-fail/simulation/inverter_terminal_nonconvergence.log",
+      "role": "simulation.log",
+      "sha256": "ac605c5a91beb61c279e5cccaad0da787124f764014f17a760d467c759190032"
+    },
+    {
+      "bytes": 161,
+      "exists": true,
+      "kind": "ngspice-control-script",
+      "path": "/evidence/provider-fail/simulation/inverter_terminal_nonconvergence.openada-control.sp",
+      "role": "simulation.launcher",
+      "sha256": "5a6abaa0df9468dfd242284c54c2c89bfd46658f2fbb6565687459c6d5c32160"
+    },
+    {
+      "bytes": 17498,
+      "exists": true,
+      "kind": "ngspice-raw",
+      "path": "/evidence/provider-fail/work/test_inverter_fail.raw",
+      "role": "simulation.result",
+      "sha256": "407e6f36b4c4ca9a7a4c32b11438f295beaf2d2e91b658953641abed0f27bc4e"
+    }
+  ],
+  "data": {
+    "analysis": {
+      "completion": "terminal-failure",
+      "convergence": "non-converged",
+      "dependent_variable_count": 12,
+      "extensions": {},
+      "finite_value_count": 1944,
+      "point_count": 162,
+      "type": "tran"
+    },
+    "evidence": {
+      "artifact_roles_present": [
+        "simulation.log",
+        "simulation.launcher",
+        "simulation.result"
+      ],
+      "extensions": {},
+      "freshness": "fresh",
+      "provenance": "bounded",
+      "provenance_limitations": [
+        "The target deck, provider configuration, explicit ngspice startup files, provider-owned native executable and its private launch snapshot, PDK revision label, and retained native evidence are content-bound.",
+        "Model files reached transitively through the PDK startup search path are not enumerated or proven clean; the recorded COMMIT file is an identity label, not a complete PDK tree attestation.",
+        "Native shared libraries, kernel state, and container runtime remain bounded rather than complete provenance."
+      ],
+      "request_binding": "exact",
+      "structure": "valid"
+    },
+    "extensions": {
+      "org.openada": {
+        "backend": "ngspice",
+        "native_data": {
+          "analysis_evidence": {
+            "completed_log_record": true,
+            "raw": true
+          },
+          "control_script_capture": {
+            "bytes": 161,
+            "path": "/evidence/provider-fail/simulation/inverter_terminal_nonconvergence.openada-control.sp",
+            "sha256": "5a6abaa0df9468dfd242284c54c2c89bfd46658f2fbb6565687459c6d5c32160",
+            "status": "valid"
+          },
+          "converged": false,
+          "duplicate_measurements": [],
+          "environment": {
+            "NGSPICE_INPUT_DIR": null,
+            "PDK": "ihp-sg13g2",
+            "PDK_ROOT": "/foss/pdks",
+            "SPICE_ASCIIRAWFILE": null,
+            "SPICE_LIB_DIR": null,
+            "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts"
+          },
+          "environment_overrides": {
+            "PDK": "ihp-sg13g2",
+            "PDK_ROOT": "/foss/pdks",
+            "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts"
+          },
+          "environment_policy": {
+            "ambient_inherited": false,
+            "child_variable_names": [
+              "HOME",
+              "LANG",
+              "LC_ALL",
+              "PATH",
+              "PDK",
+              "PDK_ROOT",
+              "SPICE_SCRIPTS",
+              "TEMP",
+              "TMP",
+              "TMPDIR",
+              "TZ"
+            ],
+            "effective_variables": {
+              "HOME": "/tmp/openada-provider-environment-u7wfy4r8/tmp/openada-ngspice-jdvd1_ti/home",
+              "LANG": "C",
+              "LC_ALL": "C",
+              "PATH": "/usr/local/bin:/usr/bin:/bin",
+              "PDK": "ihp-sg13g2",
+              "PDK_ROOT": "/foss/pdks",
+              "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts",
+              "TEMP": "/tmp/openada-provider-environment-u7wfy4r8/tmp/openada-ngspice-jdvd1_ti/tmp",
+              "TMP": "/tmp/openada-provider-environment-u7wfy4r8/tmp/openada-ngspice-jdvd1_ti/tmp",
+              "TMPDIR": "/tmp/openada-provider-environment-u7wfy4r8/tmp/openada-ngspice-jdvd1_ti/tmp",
+              "TZ": "UTC"
+            },
+            "mode": "sanitized"
+          },
+          "execution_mode": "control",
+          "expected_outputs": [
+            {
+              "declared_path": "test_inverter_fail.raw",
+              "kind": "raw",
+              "path": "/evidence/provider-fail/work/test_inverter_fail.raw"
+            }
+          ],
+          "initialization": {
+            "ambient_startup_files_enumerated": true,
+            "file": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+            "local_user_spiceinit": "disabled",
+            "policy": "explicit",
+            "system_spinit": {
+              "file": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+              "policy": "explicit"
+            }
+          },
+          "inputs_stable": true,
+          "log_capture": {
+            "bytes": 1673,
+            "path": "/evidence/provider-fail/simulation/inverter_terminal_nonconvergence.log",
+            "sha256": "ac605c5a91beb61c279e5cccaad0da787124f764014f17a760d467c759190032",
+            "status": "valid"
+          },
+          "log_tail": "******\n** ngspice-46 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2025, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Mon Jun 22 10:09:10 UTC 2026\n******\nERROR: (external)  no graphics interface;\n please check if X-server is running,\n or ngspice is compiled properly (see INSTALL)\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** deliberate ngspice engine-boundary injection; the inverter dut remains unchanged.\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNote: Starting dynamic gmin stepping\nWarning: Dynamic gmin stepping failed\nNote: Starting true gmin stepping\nWarning: True gmin stepping failed\nNote: Starting source stepping\nNote: Source stepping completed\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvin                                          0\nvdd                                        1.2\nvout                                       1.2\n__openada_fail                        -10.0002\nv2#branch                         -3.10217e-10\nv1#branch                          8.18116e-11\n\n\nNo. of Data Rows : 162\ndoAnalyses: TRAN:  Timestep too small; time = 0.0001045, timestep = 1.25e-18: trouble with node \"__openada_fail\"\n\n\ntran simulation(s) aborted\nbinary raw file \"test_inverter_fail.raw\"\nngspice-46 done\n",
+          "measurement_section_count": 0,
+          "measurements": [],
+          "measurements_truncated": false,
+          "missing_measurements": [],
+          "output_captures": [
+            {
+              "bytes": 17498,
+              "declared_path": "test_inverter_fail.raw",
+              "kind": "raw",
+              "origin": "deck",
+              "parent_anchored": true,
+              "path": "/evidence/provider-fail/work/test_inverter_fail.raw",
+              "sha256": "407e6f36b4c4ca9a7a4c32b11438f295beaf2d2e91b658953641abed0f27bc4e",
+              "status": "valid",
+              "validation": {
+                "metadata": {
+                  "analysis_plot_count": 1,
+                  "bytes": 17498,
+                  "format": "ngspice-raw",
+                  "has_analysis_plot": true,
+                  "numeric_scalar_count": 2106,
+                  "plot_count": 1,
+                  "plots": [
+                    {
+                      "axis_first": 0.0,
+                      "axis_last": 0.00010449999999999999,
+                      "axis_linear_step": null,
+                      "axis_log_ratio": null,
+                      "axis_strictly_increasing": true,
+                      "encoding": "binary",
+                      "independent_variable": "time",
+                      "numeric_type": "real",
+                      "plotname": "Transient Analysis",
+                      "points": 162,
+                      "unpadded": false,
+                      "values": 2106,
+                      "variables": 13
+                    }
+                  ],
+                  "value_count": 2106
+                },
+                "reason": "valid",
+                "valid": true
+              }
+            }
+          ],
+          "requested_environment_overrides": {
+            "PDK": "ihp-sg13g2",
+            "PDK_ROOT": "/foss/pdks"
+          },
+          "solver_warning_count": 0,
+          "solver_warning_examples": [],
+          "solver_warning_examples_truncated": false,
+          "transitive_include_detected": true,
+          "transitive_inputs_enumerated": false,
+          "working_directory": "/evidence/provider-fail/work",
+          "working_directory_is_sandbox": false
+        },
+        "native_diagnostics": [
+          {
+            "code": "simulation.nonconvergent",
+            "message": "doAnalyses: TRAN:  Timestep too small; time = 0.0001045, timestep = 1.25e-18: trouble with node \"__openada_fail\"",
+            "severity": "error"
+          }
+        ],
+        "parameters": {
+          "analysis": {
+            "extensions": {},
+            "step_s": 1e-06,
+            "stop_s": 0.001,
+            "type": "tran"
+          },
+          "extensions": {}
+        }
+      }
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "driver_id": "org.openada.driver.ngspice-pdk-control",
+      "driver_version": "0.5.0",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "request_id": "14000000-0000-4000-8000-000000000001"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "simulation.analysis.non_convergent",
+      "message": "doAnalyses: TRAN:  Timestep too small; time = 0.0001045, timestep = 1.25e-18: trouble with node \"__openada_fail\"",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "fail",
+    "summary": "ngspice reported a convergence failure."
+  },
+  "execution": {
+    "command": [
+      "/evidence/provider-fail/work/openada-native-ngspice",
+      "-i",
+      "-n",
+      "-o",
+      "/tmp/openada-provider-environment-u7wfy4r8/tmp/openada-ngspice-jdvd1_ti/simulation.log",
+      "/evidence/provider-fail/simulation/inverter_terminal_nonconvergence.openada-control.sp"
+    ],
+    "cwd": "/evidence/provider-fail/work",
+    "duration_ms": 616,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 1153,
+      "exists": true,
+      "kind": "spice-netlist",
+      "path": "/evidence/work/inverter_terminal_nonconvergence.spice",
+      "role": "input",
+      "sha256": "772f0e19d4dc31fa99c621c40db071ef71e73227bc40b4fbc2c639307eebe10b"
+    },
+    {
+      "bytes": 957,
+      "exists": true,
+      "kind": "ngspice-init",
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+      "role": "configuration",
+      "sha256": "56ec1880a943fa481c3c321d62857b6240387e39d5aa8ded403835c34edb515d"
+    },
+    {
+      "bytes": 1509,
+      "exists": true,
+      "kind": "ngspice-system-init",
+      "path": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+      "role": "configuration",
+      "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
+    },
+    {
+      "bytes": 500,
+      "exists": true,
+      "kind": "openada-ngspice-provider-config",
+      "path": "/evidence/provider-config.json",
+      "role": "configuration",
+      "sha256": "b171dc2ad16f88a69f64fa1e4e51d6560cbe6d80ae45d12c4906b46f6e9f34fd"
+    },
+    {
+      "bytes": 8067696,
+      "exists": true,
+      "kind": "eda-executable",
+      "path": "/foss/tools/ngspice/bin/ngspice",
+      "role": "configuration",
+      "sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
+    },
+    {
+      "bytes": 41,
+      "exists": true,
+      "kind": "pdk-revision",
+      "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+      "role": "configuration",
+      "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+    },
+    {
+      "bytes": 8067696,
+      "exists": true,
+      "kind": "eda-executable-snapshot",
+      "path": "/evidence/provider-fail/work/openada-native-ngspice",
+      "role": "configuration",
+      "sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
+    }
+  ],
+  "operation": "simulate",
+  "provenance": {
+    "created_at": "2026-07-16T08:35:06.063230Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "ngspice",
+    "path": "/evidence/provider-fail/work/openada-native-ngspice",
+    "version": "** ngspice-46 : Circuit level simulation program"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "extensions": {},
+  "kind": "minimum",
+  "measurement_id": "inverter.vout.minimum",
+  "parameters": {},
+  "signal": "v(vout)"
+}

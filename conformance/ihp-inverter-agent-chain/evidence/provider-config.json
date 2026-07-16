@@ -1,0 +1,16 @@
+{
+  "environment": {
+    "PDK": "ihp-sg13g2",
+    "PDK_ROOT": "/foss/pdks"
+  },
+  "extensions": {},
+  "init_file": {
+    "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+    "sha256": "56ec1880a943fa481c3c321d62857b6240387e39d5aa8ded403835c34edb515d"
+  },
+  "schema": "openada.ngspice-provider-config/v0alpha1",
+  "system_init_file": {
+    "path": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+    "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
+  }
+}

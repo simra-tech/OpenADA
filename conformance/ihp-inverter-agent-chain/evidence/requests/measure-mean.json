@@ -1,0 +1,7 @@
+{
+  "extensions": {},
+  "kind": "mean",
+  "measurement_id": "inverter.vout.mean",
+  "parameters": {},
+  "signal": "v(vout)"
+}

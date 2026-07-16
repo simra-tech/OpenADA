@@ -1,0 +1,24 @@
+{
+  "extensions": {},
+  "kind": "settling_time",
+  "measurement_id": "inverter.vout.final-high-settling-time",
+  "parameters": {
+    "hold_for": {
+      "unit": "s",
+      "value": 2e-07
+    },
+    "reference": {
+      "unit": "s",
+      "value": 1.5e-06
+    },
+    "target": {
+      "unit": "V",
+      "value": 1.2
+    },
+    "tolerance": {
+      "unit": "V",
+      "value": 0.1
+    }
+  },
+  "signal": "v(vout)"
+}

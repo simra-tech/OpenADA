@@ -1,0 +1,124 @@
+{
+  "artifacts": [],
+  "data": {
+    "evaluation": {
+      "algorithm": {
+        "id": "openada.algorithm/specification.closed-interval/v1",
+        "version": "1.0.0"
+      },
+      "conditions": {
+        "matched_count": 2,
+        "required_count": 2,
+        "status": "matched"
+      },
+      "extensions": {},
+      "limits": [
+        {
+          "inclusive": true,
+          "kind": "upper",
+          "unit": "s",
+          "value": 1e-07
+        }
+      ],
+      "margin": {
+        "relative_to": "upper",
+        "unit": "s",
+        "value": 9.689434676320464e-08
+      },
+      "measured": {
+        "unit": "s",
+        "value": 3.105653236795353e-09
+      },
+      "measurement_id": "inverter.vout.rise-time",
+      "source": {
+        "measurement_sha256": "b8cfac958d87a8c97625e004d0009bdb9b48a92176a0ce6a72b174f6c92ddf1c",
+        "measurement_source": {
+          "artifact_role": "measurement.source",
+          "artifact_sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73",
+          "conditions": [
+            {
+              "name": "corner",
+              "unit": "1",
+              "value": "mos_tt"
+            },
+            {
+              "name": "supply_voltage",
+              "unit": "V",
+              "value": 1.2
+            }
+          ],
+          "conditions_sha256": "11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c",
+          "lineage": {
+            "artifact_role": "simulation.result",
+            "artifact_sha256": "4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e",
+            "binding": "unverified",
+            "operation": "circuit.simulate",
+            "request_id": "10000000-0000-4000-8000-000000000001"
+          },
+          "operation": "openada.operation/result.series.extract/v1alpha1",
+          "request_id": "10000000-0000-4000-8000-000000000002",
+          "series_sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73"
+        },
+        "specification": {
+          "conditions": [
+            {
+              "name": "corner",
+              "unit": "1",
+              "value": "mos_tt"
+            },
+            {
+              "name": "supply_voltage",
+              "unit": "V",
+              "value": 1.2
+            }
+          ],
+          "extensions": {},
+          "limits": {
+            "upper": {
+              "inclusive": true,
+              "unit": "s",
+              "value": 1e-07
+            }
+          },
+          "measurement_id": "inverter.vout.rise-time",
+          "specification_id": "inverter.vout.rise-time.pass-limit"
+        },
+        "specification_sha256": "9c457ec00ea504695f9ad7daf7a27fb44769eb749652ec745eb4f1e823ef3d2a"
+      },
+      "specification_id": "inverter.vout.rise-time.pass-limit",
+      "status": "pass"
+    },
+    "extensions": {},
+    "protocol": {
+      "assertion_profile": "openada.assertion/specification.satisfied/v1alpha1",
+      "implementation_id": "org.openada.kernel.typed-evidence",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/specification.evaluate/v1alpha1",
+      "request_id": "12000000-0000-4000-8000-000000000007"
+    }
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "Specification 'inverter.vout.rise-time.pass-limit' is satisfied."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [],
+  "operation": "specification.evaluate",
+  "provenance": {
+    "created_at": "2026-07-16T08:35:55.008751Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}

@@ -1,0 +1,15 @@
+{
+  "diagnostic": "conformance.evidence.tampered",
+  "independent_rejection": {
+    "exception": "ConformanceError",
+    "message": "file[/tampered-evidence/provider-fail/simulation/inverter_terminal_nonconvergence.log].bytes: expected 1681, got 1673"
+  },
+  "mutation": {
+    "baseline_sha256": "ac605c5a91beb61c279e5cccaad0da787124f764014f17a760d467c759190032",
+    "mutated_sha256": "7583688362c6c655a56fcf138eebb8a51db8d6b2c026fe8fa2d2271ec0da258b",
+    "target": "provider-fail/simulation/inverter_terminal_nonconvergence.log"
+  },
+  "replay_id": "terminal-native-log-byte",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown"
+}

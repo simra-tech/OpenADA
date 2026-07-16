@@ -1,0 +1,325 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-agent-chain/v1",
+  "chain_manifest_sha256": "6a4b05e97ce93ad19de68a567523532dada52c8f053ec56c78c416806dee7aa1",
+  "checks": [
+    "native-artifact-reparsed",
+    "lineage-recomputed",
+    "nine-measurements-recomputed",
+    "eighteen-specification-decisions-recomputed",
+    "negative-replays-verified",
+    "tamper-replays-rejected",
+    "agent-evidence-cross-checked"
+  ],
+  "imports_openada": false,
+  "independent_oracle": "conformance/ihp-inverter-agent-chain/verify.py",
+  "schema": "openada.independent-chain-verification/v0alpha1",
+  "status": "pass",
+  "tamper_probes": [
+    "generated-netlist-byte",
+    "native-raw-byte",
+    "terminal-partial-raw-byte",
+    "terminal-native-log-byte",
+    "builtin-native-raw-byte",
+    "builtin-terminal-partial-raw-byte",
+    "builtin-terminal-native-log-byte",
+    "normalized-series-digest",
+    "measurement-sample-at-value",
+    "measurement-minimum-value",
+    "measurement-maximum-value",
+    "measurement-mean-value",
+    "measurement-rms-value",
+    "measurement-crossing-value",
+    "measurement-rise-time-value",
+    "measurement-fall-time-value",
+    "measurement-settling-time-value",
+    "specification-margin",
+    "specification-condition-binding"
+  ],
+  "tamper_replays": [
+    {
+      "diagnostic": "conformance.evidence.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "file[/tampered-evidence/work/inverter_tb.spice].bytes: expected 795, got 786"
+      },
+      "mutation": {
+        "baseline_sha256": "acebf6df2cd57cb3298b9a12548329febc17957ed343b470bc93ee6bdc2ec72f",
+        "mutated_sha256": "c7ef390054bef6cb4b333416a3aba7ef95ec448acd56824ce8dcb424627eb039",
+        "target": "work/inverter_tb.spice"
+      },
+      "replay_id": "generated-netlist-byte",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.evidence.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "file[/tampered-evidence/provider/work/test_inverter.raw].sha256: expected 'a32060a079e52c3dd0c0fb1ba0927ae3517841b27941cd6cf72f35ee5573aa02', got '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e'"
+      },
+      "mutation": {
+        "baseline_sha256": "4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e",
+        "mutated_sha256": "a32060a079e52c3dd0c0fb1ba0927ae3517841b27941cd6cf72f35ee5573aa02",
+        "target": "provider/work/test_inverter.raw"
+      },
+      "replay_id": "native-raw-byte",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.evidence.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "file[/tampered-evidence/provider-fail/work/test_inverter_fail.raw].sha256: expected '628e443f0fb8cfd0e26e3a3cfed0d5d77e57a63c066c1d73644aad7d6d0b263b', got '407e6f36b4c4ca9a7a4c32b11438f295beaf2d2e91b658953641abed0f27bc4e'"
+      },
+      "mutation": {
+        "baseline_sha256": "407e6f36b4c4ca9a7a4c32b11438f295beaf2d2e91b658953641abed0f27bc4e",
+        "mutated_sha256": "628e443f0fb8cfd0e26e3a3cfed0d5d77e57a63c066c1d73644aad7d6d0b263b",
+        "target": "provider-fail/work/test_inverter_fail.raw"
+      },
+      "replay_id": "terminal-partial-raw-byte",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.evidence.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "file[/tampered-evidence/provider-fail/simulation/inverter_terminal_nonconvergence.log].bytes: expected 1681, got 1673"
+      },
+      "mutation": {
+        "baseline_sha256": "ac605c5a91beb61c279e5cccaad0da787124f764014f17a760d467c759190032",
+        "mutated_sha256": "7583688362c6c655a56fcf138eebb8a51db8d6b2c026fe8fa2d2271ec0da258b",
+        "target": "provider-fail/simulation/inverter_terminal_nonconvergence.log"
+      },
+      "replay_id": "terminal-native-log-byte",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.evidence.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "file[/tampered-evidence/builtin/simulation/inverter_shared.raw].sha256: expected '24c179e0161bbaa78218f69a875c5d1be8c04bd4d1c58dc079f7b50fb33501e0', got 'd05b1e73cbe8a7fdb2a219b0a85a7712a7a0cc9c94e9991f716ef57c0464eec3'"
+      },
+      "mutation": {
+        "baseline_sha256": "d05b1e73cbe8a7fdb2a219b0a85a7712a7a0cc9c94e9991f716ef57c0464eec3",
+        "mutated_sha256": "24c179e0161bbaa78218f69a875c5d1be8c04bd4d1c58dc079f7b50fb33501e0",
+        "target": "builtin/simulation/inverter_shared.raw"
+      },
+      "replay_id": "builtin-native-raw-byte",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.evidence.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "file[/tampered-evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw].sha256: expected '64929e61b60c4b839459c36aba45164cd0d3a83b99c9cacce11d073796a6b259', got '46ad76636ddabf9713120a1c170acb6ed61f4637555eca1aa472902fe8d8e0f5'"
+      },
+      "mutation": {
+        "baseline_sha256": "46ad76636ddabf9713120a1c170acb6ed61f4637555eca1aa472902fe8d8e0f5",
+        "mutated_sha256": "64929e61b60c4b839459c36aba45164cd0d3a83b99c9cacce11d073796a6b259",
+        "target": "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw"
+      },
+      "replay_id": "builtin-terminal-partial-raw-byte",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.evidence.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "file[/tampered-evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log].bytes: expected 1492, got 1484"
+      },
+      "mutation": {
+        "baseline_sha256": "4f16797d6aa9bf9c6bea4e3789eabd0ea030c3cb5aa3f1f8abe6afc5a6f502ae",
+        "mutated_sha256": "a02a67b6454b2ec4462304bc24d76d3736573cf5da8f5a516501337ff4855b12",
+        "target": "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log"
+      },
+      "replay_id": "builtin-terminal-native-log-byte",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.lineage.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "extract.series: expected {'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}}, 'axis': {'name': 'time', 'unit': 's', 'values': [0.0, 2e-10, 4e-10, 8e-10, 1.6e-09, 3.2e-09, 6.4e-09, 1.28e-08, 2.56e-08, 5.12e-08, 9.12e-08, 1.312e-07, 1.712e-07, 2.1119999999999999e-07, 2.5119999999999997e-07, 2.9119999999999996e-07, 3.3119999999999995e-07, 3.7119999999999994e-07, 4.111999999999999e-07, 4.511999999999999e-07, 4.7559999999999994e-07, 5e-07, 5.009999999999999e-07, 5.03e-07, 5.064999999999999e-07, 5.09586868812166e-07, 5.1e-07, 5.103152708927114e-07, 5.109458126781344e-07, 5.122068962489802e-07, 5.147290633906719e-07, 5.197733976740553e-07, 5.298620662408221e-07, 5.500394033743556e-07, 5.900394033743556e-07, 6.300394033743556e-07, 6.700394033743557e-07, 7.100394033743557e-07, 7.500394033743558e-07, 7.900394033743558e-07, 8.300394033743558e-07, 8.700394033743559e-07, 9.100394033743559e-07, 9.50039403374356e-07, 9.900394033743559e-07, 1.030039403374356e-06, 1.070039403374356e-06, 1.110039403374356e-06, 1.150039403374356e-06, 1.190039403374356e-06, 1.2300394033743561e-06, 1.2700394033743562e-06, 1.3100394033743562e-06, 1.3500394033743563e-06, 1.3900394033743563e-06, 1.4300394033743563e-06, 1.4700394033743564e-06, 1.5099999999999997e-06, 1.5109999999999998e-06, 1.5129999999999997e-06, 1.5160610676733276e-06, 1.5180305338366638e-06, 1.5199999999999998e-06, 1.520393893232667e-06, 1.5211816796980016e-06, 1.5227572526286706e-06, 1.5259083984900084e-06, 1.532210690212684e-06, 1.5448152736580354e-06, 1.5700244405487382e-06, 1.61002444054"
+      },
+      "mutation": {
+        "baseline_sha256": "611b00bb7adb5e2d95a45b75d39aea21ce860bbb96256f5ba18152627c09d3ce",
+        "mutated_sha256": "3d87d3914cd974390a548beab78f8caf335fd7d415f6677a3342e414dd853f90",
+        "target": "extract.json"
+      },
+      "replay_id": "normalized-series-digest",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.measurement.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "measurement.record: expected {'measurement_id': 'inverter.vout.sample-at', 'kind': 'sample_at', 'status': 'measured', 'request_sha256': '68863a7595ac3c45410aaa0aa7ea3c61fc410f4fd59d08f5e75cddc1450919bd', 'value': 1.1999991368992526, 'unit': 'V', 'signal': 'v(vout)', 'location': {'value': 3e-07, 'unit': 's'}, 'algorithm': {'id': 'openada.algorithm/measurement.sample-at/v1', 'version': '1.0.0'}, 'sample_count': 1, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.sample-at/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'sample_at', 'location': {'unit': 's', 'value': 3e-07}, 'measurement_id': 'inverter.vout.sample-at', 'request_sha256': '68863a7595ac3c45410aaa0aa7ea3c61fc410f4fd59d08f5e75cddc1450919bd', 'sample_count': 1, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role': 'simulation.result', 'artifact_sha256'"
+      },
+      "mutation": {
+        "baseline_sha256": "ca0ecb46bb27934d22ca13ee48eb965183bb84587ab62a1c2d1b26c014ecff5d",
+        "mutated_sha256": "d1771ee7cf26a38694dbb53bfb4ada0f4d169bbe8c0f95de13931b068fa6123e",
+        "target": "measurements/sample-at.json"
+      },
+      "replay_id": "measurement-sample-at-value",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.measurement.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "measurement.record: expected {'measurement_id': 'inverter.vout.minimum', 'kind': 'minimum', 'status': 'measured', 'request_sha256': '1bc1fa48e4c9316ffc5fbc9f2f9f14c3d29528395596c8d29ce613e050df8285', 'value': -0.002716670184140451, 'unit': 'V', 'signal': 'v(vout)', 'location': {'value': 5.09586868812166e-07, 'unit': 's'}, 'algorithm': {'id': 'openada.algorithm/measurement.minimum/v1', 'version': '1.0.0'}, 'sample_count': 81, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.minimum/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'minimum', 'location': {'unit': 's', 'value': 5.09586868812166e-07}, 'measurement_id': 'inverter.vout.minimum', 'request_sha256': '1bc1fa48e4c9316ffc5fbc9f2f9f14c3d29528395596c8d29ce613e050df8285', 'sample_count': 81, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role': 'simulation.res"
+      },
+      "mutation": {
+        "baseline_sha256": "b7cfa742548fa42aa5d00399f0c3f03e034f698fd8063ac556c1f8b8cce81eee",
+        "mutated_sha256": "5d250eb7621fa3c9845eae74e5a140a680fbecd4cee6b9bc5089c0e5a920b18b",
+        "target": "measurements/minimum.json"
+      },
+      "replay_id": "measurement-minimum-value",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.measurement.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "measurement.record: expected {'measurement_id': 'inverter.vout.maximum', 'kind': 'maximum', 'status': 'measured', 'request_sha256': 'cf96b6feede153e6f6326fce6fa938faee65d3efd5f28e34729b1ff163758373', 'value': 1.2025433181809455, 'unit': 'V', 'signal': 'v(vout)', 'location': {'value': 5.009999999999999e-07, 'unit': 's'}, 'algorithm': {'id': 'openada.algorithm/measurement.maximum/v1', 'version': '1.0.0'}, 'sample_count': 81, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.maximum/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'maximum', 'location': {'unit': 's', 'value': 5.009999999999999e-07}, 'measurement_id': 'inverter.vout.maximum', 'request_sha256': 'cf96b6feede153e6f6326fce6fa938faee65d3efd5f28e34729b1ff163758373', 'sample_count': 81, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role': 'simulation.resu"
+      },
+      "mutation": {
+        "baseline_sha256": "a278e2428dcdd5afab15e23479bd1d3e3f31abbe0ff6dfef139ec6fcb3fbeb5b",
+        "mutated_sha256": "bf0d3e9c2dc2885ea5023fb1c9096276a69f1fe1b6166ea78dd6f10cfaeaf843",
+        "target": "measurements/maximum.json"
+      },
+      "replay_id": "measurement-maximum-value",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.measurement.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "measurement.record: expected {'measurement_id': 'inverter.vout.mean', 'kind': 'mean', 'status': 'measured', 'request_sha256': '395a369e48408cc2ffacc92a0bcb21032567f922a204eda6563140836b78b2a2', 'value': 0.664714677053433, 'unit': 'V', 'signal': 'v(vout)', 'location': None, 'algorithm': {'id': 'openada.algorithm/measurement.mean/v1', 'version': '1.0.0'}, 'sample_count': 81, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.mean/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'mean', 'location': None, 'measurement_id': 'inverter.vout.mean', 'request_sha256': '395a369e48408cc2ffacc92a0bcb21032567f922a204eda6563140836b78b2a2', 'sample_count': 81, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding'"
+      },
+      "mutation": {
+        "baseline_sha256": "ffb403feb23bb64875a06899763a08717dfae0705219c78727f12653bb627d4a",
+        "mutated_sha256": "737d4d355a02879b5aec882a1034095e375bd1bc5b27ddfe9275869447abac02",
+        "target": "measurements/mean.json"
+      },
+      "replay_id": "measurement-mean-value",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.measurement.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "measurement.record: expected {'measurement_id': 'inverter.vout.rms', 'kind': 'rms', 'status': 'measured', 'request_sha256': '0df0be7a5581829aa92a4b1dd3aa5b7579db216e88e70d7855849114cd06fafe', 'value': 0.891777448110767, 'unit': 'V', 'signal': 'v(vout)', 'location': None, 'algorithm': {'id': 'openada.algorithm/measurement.rms/v1', 'version': '1.0.0'}, 'sample_count': 81, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.rms/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'rms', 'location': None, 'measurement_id': 'inverter.vout.rms', 'request_sha256': '0df0be7a5581829aa92a4b1dd3aa5b7579db216e88e70d7855849114cd06fafe', 'sample_count': 81, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unv"
+      },
+      "mutation": {
+        "baseline_sha256": "77bc989b7f1a073d6be8c9426301327561e2174855ffa928afeca9aaf0f46d60",
+        "mutated_sha256": "815cd5a721e500cd6acaa1dba6f5dc3aaadc5e62718b9e3e62301540ba8a3be0",
+        "target": "measurements/rms.json"
+      },
+      "replay_id": "measurement-rms-value",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.measurement.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "measurement.record: expected {'measurement_id': 'inverter.vin.first-rising-crossing', 'kind': 'crossing', 'status': 'measured', 'request_sha256': '696468177cd6340375d9ce882bcd3ca6fcfd6e9feb3831043579b27cfc0376ce', 'value': 5.049999999999999e-07, 'unit': 's', 'signal': 'v(vin)', 'location': {'value': 5.049999999999999e-07, 'unit': 's'}, 'algorithm': {'id': 'openada.algorithm/measurement.crossing/v1', 'version': '1.0.0'}, 'sample_count': 81, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.crossing/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'crossing', 'location': {'unit': 's', 'value': 5.049999999999999e-07}, 'measurement_id': 'inverter.vin.first-rising-crossing', 'request_sha256': '696468177cd6340375d9ce882bcd3ca6fcfd6e9feb3831043579b27cfc0376ce', 'sample_count': 81, 'signal': 'v(vin)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'a"
+      },
+      "mutation": {
+        "baseline_sha256": "704c80a10928feb272e261fa0386fa800e889f52a023c232db32f682abda6d70",
+        "mutated_sha256": "f9e5b7f959ed046894c8164b7a11f081c0e5cc2fa68403a39ba6fc2a09961bce",
+        "target": "measurements/crossing.json"
+      },
+      "replay_id": "measurement-crossing-value",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.measurement.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "measurement.record: expected {'measurement_id': 'inverter.vout.rise-time', 'kind': 'rise_time', 'status': 'measured', 'request_sha256': '6bfd67f653b188f92ffd0862be0e9a7c5deadac3f520127eb123d5a017f511c2', 'value': 3.105653236795353e-09, 'unit': 's', 'signal': 'v(vout)', 'location': {'value': 1.5164561641794755e-06, 'unit': 's'}, 'algorithm': {'id': 'openada.algorithm/measurement.rise-time/v1', 'version': '1.0.0'}, 'sample_count': 81, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.rise-time/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'rise_time', 'location': {'unit': 's', 'value': 1.5164561641794755e-06}, 'measurement_id': 'inverter.vout.rise-time', 'request_sha256': '6bfd67f653b188f92ffd0862be0e9a7c5deadac3f520127eb123d5a017f511c2', 'sample_count': 81, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role':"
+      },
+      "mutation": {
+        "baseline_sha256": "6eac3cc510a97d0dd54fb5431d7001a1a7518740c1a533d7fba88e41618a50b1",
+        "mutated_sha256": "514adae364dcf2074e84131c025c52a19906a22a4e4ba9bd5faa42f4c174b872",
+        "target": "measurements/rise-time.json"
+      },
+      "replay_id": "measurement-rise-time-value",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.measurement.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "measurement.record: expected {'measurement_id': 'inverter.vout.fall-time', 'kind': 'fall_time', 'status': 'measured', 'request_sha256': '6c8762c35a451b111c4fd278dd14e5e1329e254f85c42311dde199f1ddb8dee9', 'value': 2.864810735871247e-09, 'unit': 's', 'signal': 'v(vout)', 'location': {'value': 5.061748407684754e-07, 'unit': 's'}, 'algorithm': {'id': 'openada.algorithm/measurement.fall-time/v1', 'version': '1.0.0'}, 'sample_count': 81, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.fall-time/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'fall_time', 'location': {'unit': 's', 'value': 5.061748407684754e-07}, 'measurement_id': 'inverter.vout.fall-time', 'request_sha256': '6c8762c35a451b111c4fd278dd14e5e1329e254f85c42311dde199f1ddb8dee9', 'sample_count': 81, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role': '"
+      },
+      "mutation": {
+        "baseline_sha256": "f5a2af52f186a23d6bc8f529ab0fafa987348e6617e83b30178eb5691f9330c7",
+        "mutated_sha256": "3dbdf3b64c113acb5ea528aa4c875b73d85e969a20c678dff86e0e7099ffe1a6",
+        "target": "measurements/fall-time.json"
+      },
+      "replay_id": "measurement-fall-time-value",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.measurement.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "measurement.record: expected {'measurement_id': 'inverter.vout.final-high-settling-time', 'kind': 'settling_time', 'status': 'measured', 'request_sha256': '44f6921aea1799db6c0fbe5b123ec2acac6c38ca1058234f7f80f42f3497bd54', 'value': 1.8030533836663766e-08, 'unit': 's', 'signal': 'v(vout)', 'location': {'value': 1.5180305338366638e-06, 'unit': 's'}, 'algorithm': {'id': 'openada.algorithm/measurement.settling-time/v1', 'version': '1.0.0'}, 'sample_count': 24, 'source': {'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'lineage': {'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001', 'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified'}, 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}]}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/measurement.settling-time/v1', 'version': '1.0.0'}, 'extensions': {}, 'kind': 'settling_time', 'location': {'unit': 's', 'value': 1.5180305338366638e-06}, 'measurement_id': 'inverter.vout.final-high-settling-time', 'request_sha256': '44f6921aea1799db6c0fbe5b123ec2acac6c38ca1058234f7f80f42f3497bd54', 'sample_count': 24, 'signal': 'v(vout)', 'source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a1"
+      },
+      "mutation": {
+        "baseline_sha256": "2f00757d9729db6fd9309df669e017bd6c4e760206d4e9eaca3bd4f409e5034a",
+        "mutated_sha256": "1ff87bb109e6a2acded02bb597f5dfd6a9b21c9912a3653cdf3be692d352f0bd",
+        "target": "measurements/settling-time.json"
+      },
+      "replay_id": "measurement-settling-time-value",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.decision.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "specification.evaluation: expected {'specification_id': 'inverter.vout.maximum.pass-limit', 'measurement_id': 'inverter.vout.maximum', 'status': 'pass', 'measured': {'value': 1.2025433181809455, 'unit': 'V'}, 'limits': [{'kind': 'lower', 'value': 1.0, 'unit': 'V', 'inclusive': True}], 'conditions': {'status': 'matched', 'required_count': 2, 'matched_count': 2}, 'margin': {'value': 0.2025433181809455, 'unit': 'V', 'relative_to': 'lower'}, 'algorithm': {'id': 'openada.algorithm/specification.closed-interval/v1', 'version': '1.0.0'}, 'source': {'measurement_sha256': '236bc48390118adec6107c427d034d7d45537041ca8f7cbac7c97da4396a5e95', 'measurement_source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified', 'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001'}, 'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73'}, 'specification_sha256': 'd36d03720546a2987094eceb40bc3bcc9774d1fa47a1de499c70424c72315822', 'specification': {'specification_id': 'inverter.vout.maximum.pass-limit', 'measurement_id': 'inverter.vout.maximum', 'limits': {'lower': {'value': 1.0, 'unit': 'V', 'inclusive': True}}, 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.2, 'unit': 'V'}], 'extensions': {}}}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/specification.closed-interval/v1', 'version': '1.0.0'}, 'condi"
+      },
+      "mutation": {
+        "baseline_sha256": "4239381feb91c0fc38c2a58439882449e62a8a9fdd632d896516d6e39448fe78",
+        "mutated_sha256": "ed0b7089e2f7c8801daa06dd694bdfb03c3bfebd1a706d17e86e1a5ddface95b",
+        "target": "specifications/maximum-pass.json"
+      },
+      "replay_id": "specification-margin",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    },
+    {
+      "diagnostic": "conformance.decision.tampered",
+      "independent_rejection": {
+        "exception": "ConformanceError",
+        "message": "condition_mismatch.evaluation: expected {'specification_id': 'inverter.vout.sample-at.condition-mismatch-limit', 'measurement_id': 'inverter.vout.sample-at', 'status': 'unknown', 'measured': {'value': 1.1999991368992526, 'unit': 'V'}, 'limits': [{'kind': 'lower', 'value': 1.0, 'unit': 'V', 'inclusive': True}], 'conditions': {'status': 'not-established', 'required_count': 2, 'matched_count': 1}, 'margin': None, 'algorithm': {'id': 'openada.algorithm/specification.closed-interval/v1', 'version': '1.0.0'}, 'source': {'measurement_sha256': 'c6c45442fbf5a3a770c86ec1ffb856cb0cd1f7058edae5fc9d8820105fb7635f', 'measurement_source': {'artifact_role': 'measurement.source', 'artifact_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73', 'conditions': [{'name': 'corner', 'unit': '1', 'value': 'mos_tt'}, {'name': 'supply_voltage', 'unit': 'V', 'value': 1.2}], 'conditions_sha256': '11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c', 'lineage': {'artifact_role': 'simulation.result', 'artifact_sha256': '4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e', 'binding': 'unverified', 'operation': 'circuit.simulate', 'request_id': '10000000-0000-4000-8000-000000000001'}, 'operation': 'openada.operation/result.series.extract/v1alpha1', 'request_id': '10000000-0000-4000-8000-000000000002', 'series_sha256': '64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73'}, 'specification_sha256': 'fb767abf7621a9cc4d8f99b8d9199e8fac9a7d81a367533765d05863ac134b45', 'specification': {'specification_id': 'inverter.vout.sample-at.condition-mismatch-limit', 'measurement_id': 'inverter.vout.sample-at', 'limits': {'lower': {'value': 1.0, 'unit': 'V', 'inclusive': True}}, 'conditions': [{'name': 'corner', 'value': 'mos_tt', 'unit': '1'}, {'name': 'supply_voltage', 'value': 1.1, 'unit': 'V'}], 'extensions': {}}}, 'extensions': {}}, got {'algorithm': {'id': 'openada.algorithm/specification.closed-interval/v1', 'version': '1.0.0'}, 'conditions': {'"
+      },
+      "mutation": {
+        "baseline_sha256": "bfe16fb72e67d75cf48c75da4e9d73a7315863967729ae34e1fdc13107ee414d",
+        "mutated_sha256": "8220c15b013a639d3cd5f789e76e9067f1f2326c897459fa72c27e3a799beb1b",
+        "target": "negative/spec-sample-at-condition-mismatch.json"
+      },
+      "replay_id": "specification-condition-binding",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown"
+    }
+  ]
+}

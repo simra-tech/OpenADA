@@ -1,0 +1,13 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-agent-chain/v1",
+  "extensions": {},
+  "schema": "openada.contract-test-report/ihp-inverter-agent-chain/v1",
+  "status": "pass",
+  "suite": {
+    "failed": 0,
+    "passed": 3,
+    "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
+    "sha256": "8e2a5c1f9e8abd39f78126f90f77ee08c9d164b4d558ca4d0522d6ce78e149e5",
+    "skipped": 1
+  }
+}

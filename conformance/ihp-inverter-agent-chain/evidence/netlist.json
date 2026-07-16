@@ -1,0 +1,76 @@
+{
+  "artifacts": [
+    {
+      "bytes": 786,
+      "exists": true,
+      "kind": "spice-netlist",
+      "path": "/evidence/work/inverter_tb.spice",
+      "role": "output",
+      "sha256": "acebf6df2cd57cb3298b9a12548329febc17957ed343b470bc93ee6bdc2ec72f"
+    }
+  ],
+  "data": {
+    "missing_symbol_count": 0,
+    "missing_symbols": [],
+    "missing_symbols_truncated": false,
+    "stderr_tail": "",
+    "stdout_tail": ""
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "Xschem generated a SPICE netlist."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/xschem/bin/xschem",
+      "--rcfile",
+      "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+      "-n",
+      "-s",
+      "-q",
+      "-x",
+      "-o",
+      "/tmp/openada-xschem-sa9r5yhl",
+      "/design/modules/module_0_foundations/inverter/inverter_tb.sch"
+    ],
+    "cwd": "/design/modules/module_0_foundations/inverter",
+    "duration_ms": 65,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 1606,
+      "exists": true,
+      "kind": "xschem-schematic",
+      "path": "/design/modules/module_0_foundations/inverter/inverter_tb.sch",
+      "role": "input",
+      "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
+    },
+    {
+      "bytes": 19794,
+      "exists": true,
+      "kind": "xschem-rcfile",
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+      "role": "configuration",
+      "sha256": "d6d8fa5157ad2072e6d1ce63bda5f5d593ef4eb84631f23eed5e9ae3886f18b5"
+    }
+  ],
+  "operation": "netlist",
+  "provenance": {
+    "created_at": "2026-07-16T08:34:57.685211Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "xschem",
+    "path": "/foss/tools/xschem/bin/xschem",
+    "version": "XSCHEM V3.4.8RC"
+  }
+}

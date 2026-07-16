@@ -1,0 +1,7 @@
+{
+  "extensions": {},
+  "kind": "rms",
+  "measurement_id": "inverter.vout.rms",
+  "parameters": {},
+  "signal": "v(vout)"
+}

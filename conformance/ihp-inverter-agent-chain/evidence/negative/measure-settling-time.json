@@ -1,0 +1,87 @@
+{
+  "artifacts": [],
+  "data": {
+    "extensions": {},
+    "measurement": {
+      "algorithm": {
+        "id": "openada.algorithm/measurement.settling-time/v1",
+        "version": "1.0.0"
+      },
+      "extensions": {},
+      "kind": "settling_time",
+      "location": null,
+      "measurement_id": "inverter.vout.final-high-settling-time",
+      "request_sha256": "56986f158bf606686bb252b84efe921b2f23f00be88f343c9ca01237cf414c1a",
+      "sample_count": 24,
+      "signal": "v(vout)",
+      "source": {
+        "artifact_role": "measurement.source",
+        "artifact_sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73",
+        "conditions": [
+          {
+            "name": "corner",
+            "unit": "1",
+            "value": "mos_tt"
+          },
+          {
+            "name": "supply_voltage",
+            "unit": "V",
+            "value": 1.2
+          }
+        ],
+        "conditions_sha256": "11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c",
+        "lineage": {
+          "artifact_role": "simulation.result",
+          "artifact_sha256": "4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e",
+          "binding": "unverified",
+          "operation": "circuit.simulate",
+          "request_id": "10000000-0000-4000-8000-000000000001"
+        },
+        "operation": "openada.operation/result.series.extract/v1alpha1",
+        "request_id": "10000000-0000-4000-8000-000000000002",
+        "series_sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73"
+      },
+      "status": "not_found",
+      "unit": "s",
+      "value": null
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
+      "implementation_id": "org.openada.kernel.typed-evidence",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/result.measure/v1alpha1",
+      "request_id": "16000000-0000-4000-8000-000000000009"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "measurement.value.not_found",
+      "hint": "Review the declared domain, units, event direction, thresholds, and observation duration.",
+      "message": "The requested measurement was not observed in the declared series domain.",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "fail",
+    "summary": "The requested measurement was not observed in the declared series domain."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [],
+  "operation": "result.measure",
+  "provenance": {
+    "created_at": "2026-07-16T08:36:06.335225Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}

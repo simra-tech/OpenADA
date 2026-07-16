@@ -1,0 +1,17 @@
+{
+  "extensions": {},
+  "kind": "rise_time",
+  "measurement_id": "inverter.vout.rise-time",
+  "parameters": {
+    "lower_threshold": {
+      "unit": "V",
+      "value": 0.12
+    },
+    "occurrence": 1,
+    "upper_threshold": {
+      "unit": "V",
+      "value": 1.08
+    }
+  },
+  "signal": "v(vout)"
+}

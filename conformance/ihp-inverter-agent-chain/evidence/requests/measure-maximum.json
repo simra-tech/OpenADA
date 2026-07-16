@@ -1,0 +1,7 @@
+{
+  "extensions": {},
+  "kind": "maximum",
+  "measurement_id": "inverter.vout.maximum",
+  "parameters": {},
+  "signal": "v(vout)"
+}

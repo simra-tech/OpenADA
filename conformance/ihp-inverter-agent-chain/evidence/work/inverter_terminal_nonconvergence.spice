@@ -1,0 +1,40 @@
+** Deliberate ngspice engine-boundary injection; the inverter DUT remains unchanged.
+** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch
+**.subckt inverter_tb
+V1 Vin GND PULSE(0 1.2 0.5u 10n 10n 1u 2u 1)
+V2 Vdd GND 1.2
+x1 Vdd Vin Vout GND inverter
+**** begin user architecture code
+I_PROBE 0 __openada_fail pulse -250m 250m 100u 10u 10u 90u 200u
+R_PROBE __openada_fail 0 1K
+B_PROBE_1 __openada_fail 0 I=V(__openada_fail,0)*max(1u,min(1,100*(V(__openada_fail,0)-10)))
+B_PROBE_2 0 __openada_fail I=V(0,__openada_fail)*max(1u,min(1,100*(V(0,__openada_fail)-10)))
+
+
+.control
+save all
+tran 1u 1m
+write test_inverter_fail.raw
+.endc
+
+
+
+.lib cornerMOSlv.lib mos_tt
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  inverter.sym # of pins=4
+** sym_path: /design/modules/module_0_foundations/inverter/inverter.sym
+** sch_path: /design/modules/module_0_foundations/inverter/inverter.sch
+.subckt inverter Vdd Vin Vout Gnd
+*.iopin Vout
+*.iopin Vdd
+*.iopin Vin
+*.iopin Gnd
+XM1 Gnd Vin Vout Gnd sg13_lv_nmos w=1.0u l=0.45u ng=1 m=1 mm_ok=1
+XM2 Vout Vin Vdd Vdd sg13_lv_pmos w=2.0u l=0.45u ng=1 m=1 mm_ok=1
+.ends
+
+.GLOBAL GND
+.end
