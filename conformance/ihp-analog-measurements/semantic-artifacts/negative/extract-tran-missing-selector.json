@@ -5,7 +5,7 @@
     "extraction": {
       "extensions": {},
       "plot": null,
-      "request_sha256": "3e7c2b2684ac2477f92ee4f2a3916efd973e08bcc983b108d00bee35e130aeda",
+      "request_sha256": "ef0a7dfc692431a918f40571493745913ad0c689d68cbfbaea9742e697bc1282",
       "series": null,
       "source": {
         "analysis_type": "tran",
@@ -15,7 +15,7 @@
           "kind": "ngspice-raw",
           "path": "/evidence/provider-tran/work/inverter_spectral.raw",
           "role": "simulation.result",
-          "sha256": "4cbc58e7f710ee9906908df04fb0fe866b68c7490ab187443654866ee0641150"
+          "sha256": "3e82b4cc0ae53a69138cf9f68ef7213e2e5a5cd290081ace5328feb644db9a34"
         },
         "backend": "ngspice",
         "binding": "not-established",
@@ -58,12 +58,12 @@
       "kind": "ngspice-raw",
       "path": "/evidence/provider-tran/work/inverter_spectral.raw",
       "role": "simulation.result",
-      "sha256": "4cbc58e7f710ee9906908df04fb0fe866b68c7490ab187443654866ee0641150"
+      "sha256": "3e82b4cc0ae53a69138cf9f68ef7213e2e5a5cd290081ace5328feb644db9a34"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-16T08:25:35.697227Z",
+    "created_at": "2026-07-16T15:17:51.286575Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
