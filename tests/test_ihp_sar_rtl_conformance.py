@@ -188,7 +188,7 @@ def test_publication_is_closed_and_has_distinct_trust_artifacts() -> None:
     agent = json.loads((HERE / "semantic-evidence.json").read_text(encoding="utf-8"))
     assert agent["decision"] == "proceed"
     assert agent["operations"]["missing_top_negative"]["decision"] == "block"
-    assert len(agent["trust_chain"]["native_artifacts"]) == 8
+    assert len(agent["trust_chain"]["native_artifacts"]) == len(semantic.NATIVE_FILES)
     contract = json.loads((HERE / "semantic-contract.json").read_text(encoding="utf-8"))
     assert contract["tests"]["passed"] == 16
     assert contract["tests"]["failed"] == 0
