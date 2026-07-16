@@ -158,7 +158,10 @@ def run_native(design: Path, evidence: Path, engine: str) -> None:
         "--env",
         "PATH=/openada/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
         "--tmpfs",
-        "/tmp:rw,nosuid,nodev,size=512m",
+        # The provider runtime executes a digest-bound, mode-0500 private
+        # snapshot of the pinned launcher. Docker otherwise mounts --tmpfs
+        # with noexec, which defeats that identity-preserving launch boundary.
+        "/tmp:rw,nosuid,nodev,exec,size=512m",
         "--workdir",
         "/evidence",
         "--mount",

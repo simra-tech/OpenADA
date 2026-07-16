@@ -337,7 +337,7 @@ def _container_command(manifest: dict) -> list[str]:
         "--env",
         "PDK=ihp-sg13g2",
         "--tmpfs",
-        "/tmp:rw,nosuid,nodev,size=512m",
+        "/tmp:rw,nosuid,nodev,exec,size=512m",
         "--workdir",
         "/evidence",
         "--mount",
