@@ -5,8 +5,8 @@
     "message": "file[/tampered-evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log].bytes: expected 1492, got 1484"
   },
   "mutation": {
-    "baseline_sha256": "d0820ced67c69e2a3445314cc55949aae1c89baa81ff794f860311d17a7846d5",
-    "mutated_sha256": "fcdd3a5885f56e96a68ba60410be77f1a3277f9f50c39e561b71c662952ed81c",
+    "baseline_sha256": "7d861962902bf4b7b4a6cd5bc424016e4791a443581958a4b420051c3ece3bd7",
+    "mutated_sha256": "c0400b8a8d9bf7d70342211e51a9031afc1c7b2a4d8734d03e9da933833134b8",
     "target": "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log"
   },
   "replay_id": "builtin-terminal-native-log-byte",

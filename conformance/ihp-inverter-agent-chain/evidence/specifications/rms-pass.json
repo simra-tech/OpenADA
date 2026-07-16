@@ -37,7 +37,7 @@
       },
       "measurement_id": "inverter.vout.rms",
       "source": {
-        "measurement_sha256": "162a3c697ae62975f5ce1ab2c1b779fce75130051382f52c3c48466a1d61f698",
+        "measurement_sha256": "a422a5ea7e86ceec4200c65c6550cd912c70bd0e26b8b10275724b581a18416a",
         "measurement_source": {
           "artifact_role": "measurement.source",
           "artifact_sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73",
@@ -56,7 +56,7 @@
           "conditions_sha256": "11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "75013aa48bf4950961c95bda051aa41aa7f804252502047eca85a09d0f6804ea",
+            "artifact_sha256": "af50356c6f7dea9e2a79ad63e1b02846139ac1bdd3bfc7e724076a10cef3acb9",
             "binding": "unverified",
             "operation": "circuit.simulate",
             "request_id": "10000000-0000-4000-8000-000000000001"
@@ -122,7 +122,7 @@
   "inputs": [],
   "operation": "specification.evaluate",
   "provenance": {
-    "created_at": "2026-07-16T08:43:29.798943Z",
+    "created_at": "2026-07-16T15:19:40.804425Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
