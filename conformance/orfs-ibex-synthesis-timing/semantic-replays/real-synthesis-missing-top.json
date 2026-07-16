@@ -1,0 +1,23 @@
+{
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "covers": [
+    "surface|openada.surface/cli.synthesize/v1",
+    "preflight|asic-netlist-synthesized",
+    "profile|openada.operation/logic.synthesize/v1alpha1",
+    "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+    "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+  ],
+  "engineering_status": "fail",
+  "execution_status": "completed",
+  "exit_code": 1,
+  "expected_status": "fail",
+  "fixture": "the pinned Ibex sources with a real Yosys request for missing_ibex_core",
+  "id": "real-synthesis-missing-top",
+  "native_transcript_bound": true,
+  "observed_diagnostic": "missing_ibex_core",
+  "required_diagnostic": "missing_ibex_core",
+  "schema": "openada.semantic-replay-verdict/v0alpha1",
+  "status": "observed"
+}

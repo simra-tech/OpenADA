@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "artifacts": [
+    {
+      "bytes": 607,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-contract.json",
+      "role": "contract-test",
+      "sha256": "71540bdee528c310cfb0a5f75103acfd88727e62e671fde0c6e37be70d7900fa",
+      "source_output": "contract-test-verdict",
+      "source_step": "contract-tests"
+    },
+    {
+      "bytes": 6116,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/design-provenance.json",
+      "role": "design-provenance",
+      "sha256": "6f477f0ee1b16948dcc3d793d1c63f1c2d182bf56089fc6a59ade2ab0438ec5c",
+      "source_output": "design-provenance",
+      "source_step": "materialize-pinned-inputs"
+    },
+    {
+      "bytes": 17869,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/synthesize.result.json",
+      "role": "native-artifact",
+      "sha256": "08ecf8e2cc7e5ced7e4398180be9c536d7be853a58eace2478d3b136624e6a16",
+      "source_output": "synthesis-synthesize-result-json",
+      "source_step": "synthesize-ibex"
+    },
+    {
+      "bytes": 2239,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/synthesize.ys",
+      "role": "native-artifact",
+      "sha256": "78ffaa50415a7b5c86326bc7c2c3e3e63288511cce3aa1dce562ff021e6d5a29",
+      "source_output": "synthesis-synthesize-ys",
+      "source_step": "synthesize-ibex"
+    },
+    {
+      "bytes": 285820,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/synthesize.log",
+      "role": "native-artifact",
+      "sha256": "c3d176c17c59d3c4763fe16ea182abcf1ff5664e6bed67465d2d0c4ca8153501",
+      "source_output": "synthesis-synthesize-log",
+      "source_step": "synthesize-ibex"
+    },
+    {
+      "bytes": 1795,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/inference-stats.json",
+      "role": "native-artifact",
+      "sha256": "e8dab5d71dc10b4ed1f57208703e6aab55f79c82d86e48450685cc8b64f2256b",
+      "source_output": "synthesis-inference-stats-json",
+      "source_step": "synthesize-ibex"
+    },
+    {
+      "bytes": 4382,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/mapped-stats.json",
+      "role": "native-artifact",
+      "sha256": "06531029a866b8cc99833bfe78143314d57e953c1acb4d1d721177e936ebdf6e",
+      "source_output": "synthesis-mapped-stats-json",
+      "source_step": "synthesize-ibex"
+    },
+    {
+      "bytes": 2045217,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/mapped.v",
+      "role": "native-artifact",
+      "sha256": "3ddce3d689c7712b315ed9deb7b3a5031f3221e2f3d3b623c7d0f0a65ea2cfca",
+      "source_output": "synthesis-mapped-v",
+      "source_step": "synthesize-ibex"
+    },
+    {
+      "bytes": 10736900,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/mapped.json",
+      "role": "native-artifact",
+      "sha256": "fd178a08d629cd983332c557d875e130691f37dba39abd5b3b02fd0545578a3e",
+      "source_output": "synthesis-mapped-json",
+      "source_step": "synthesize-ibex"
+    },
+    {
+      "bytes": 9433,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/rtl-inputs.json",
+      "role": "native-artifact",
+      "sha256": "17fa29d012eb003703ba9d9ff3eeccae4213ee462b3788892ed0863a119e81c8",
+      "source_output": "synthesis-rtl-inputs-json",
+      "source_step": "synthesize-ibex"
+    },
+    {
+      "bytes": 5462,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-analyze.result.json",
+      "role": "native-artifact",
+      "sha256": "b74464a3eedc148c7b921f4398a2bdcb5cdc5c65718d7c913817b018b8daed0d",
+      "source_output": "timing-timing-analyze-result-json",
+      "source_step": "analyze-ibex-timing"
+    },
+    {
+      "bytes": 907,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-analyze.tcl",
+      "role": "native-artifact",
+      "sha256": "fb16a770e9a96dc6d0b20372f31787cf7242b302cb4177282156651081486d27",
+      "source_output": "timing-timing-analyze-tcl",
+      "source_step": "analyze-ibex-timing"
+    },
+    {
+      "bytes": 611,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-input.sdc",
+      "role": "native-artifact",
+      "sha256": "d55ba02e513f05c6b9b531633acf835a10942b8202d1e1b06989cf58b41ce389",
+      "source_output": "timing-timing-input-sdc",
+      "source_step": "analyze-ibex-timing"
+    },
+    {
+      "bytes": 934,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-analyze.log",
+      "role": "native-artifact",
+      "sha256": "4eed563169acab129ab3997b1ee64361b04ffa3c2778b95a2777dddf7d555db6",
+      "source_output": "timing-timing-analyze-log",
+      "source_step": "analyze-ibex-timing"
+    },
+    {
+      "bytes": 450210,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/setup-paths.json",
+      "role": "native-artifact",
+      "sha256": "9513f7182a226d4eff9891f33df7997e0aa19664f6da1614c578feca4217ccca",
+      "source_output": "timing-setup-paths-json",
+      "source_step": "analyze-ibex-timing"
+    },
+    {
+      "bytes": 76582,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/hold-paths.json",
+      "role": "native-artifact",
+      "sha256": "93977af57563ca83b82681559a32db65914c56d38d14568ee80773be038ed996",
+      "source_output": "timing-hold-paths-json",
+      "source_step": "analyze-ibex-timing"
+    },
+    {
+      "bytes": 13971,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/synthesize.result.json",
+      "role": "native-artifact",
+      "sha256": "52f78f3e47612033f71b1737b2d28d6fb7187f648fd773c95d77d5173414bbaf",
+      "source_output": "negative-synthesize-result-json",
+      "source_step": "synthesis-missing-top"
+    },
+    {
+      "bytes": 2279,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/synthesize.ys",
+      "role": "native-artifact",
+      "sha256": "c8a456e89a8b85dd55560c49fce685ef0a579b70f7817a90cac05f0889547892",
+      "source_output": "negative-synthesize-ys",
+      "source_step": "synthesis-missing-top"
+    },
+    {
+      "bytes": 568,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/synthesize.log",
+      "role": "native-artifact",
+      "sha256": "1a441c231a929a3eb9111b7dc567b11315ad59386e3a54a20665c3faef1d55d1",
+      "source_output": "negative-synthesize-log",
+      "source_step": "synthesis-missing-top"
+    },
+    {
+      "bytes": 9433,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/rtl-inputs.json",
+      "role": "native-artifact",
+      "sha256": "17fa29d012eb003703ba9d9ff3eeccae4213ee462b3788892ed0863a119e81c8",
+      "source_output": "negative-rtl-inputs-json",
+      "source_step": "synthesis-missing-top"
+    },
+    {
+      "bytes": 5732,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/run.json",
+      "role": "native-artifact",
+      "sha256": "4102dc841a75370fd8fcc797a065c77d3a31d88b605dc3c1a892f4c77099f000",
+      "source_output": "run-json",
+      "source_step": "synthesize-ibex"
+    },
+    {
+      "bytes": 15660,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-oracle.json",
+      "role": "independent-oracle",
+      "sha256": "04fcf3ada8507fbdacaa136ae963f2528bc42e9390bf19928411e02a21204d88",
+      "source_output": "independent-oracle-verdict",
+      "source_step": "independent-verifier"
+    },
+    {
+      "bytes": 11715,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-normalized.json",
+      "role": "normalized-evidence",
+      "sha256": "5c93cb52232e59b24321955b4e5f2606fe25cc1c20e280b015b6118ca1f00648",
+      "source_output": "normalized-digital-evidence",
+      "source_step": "normalize-digital-evidence"
+    },
+    {
+      "bytes": 4469,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-decision.json",
+      "role": "downstream-decision",
+      "sha256": "72aef16c24fa8a6550ebf985dad7da1e10a0014fbcfa8da96452d1608c5e37e9",
+      "source_output": "downstream-digital-decision",
+      "source_step": "engineering-decision"
+    },
+    {
+      "bytes": 23292,
+      "replay_id": null,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-evidence.json",
+      "role": "agent-visible-evidence",
+      "sha256": "38dc59b02d016bf306ad6f4d6ea2e54f88f9b93b1ef49041a5239b68b60ce239",
+      "source_output": "agent-visible-digital-evidence",
+      "source_step": "agent-evidence"
+    },
+    {
+      "bytes": 1190,
+      "replay_id": "real-synthesis-missing-top",
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-replays/real-synthesis-missing-top.json",
+      "role": "negative-replay",
+      "sha256": "316cdd867de016dd615c7853bbd04faaae04ace6495f3256d8f3e8a4955f96ba",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 1231,
+      "replay_id": "real-setup-timing-violation",
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-replays/real-setup-timing-violation.json",
+      "role": "negative-replay",
+      "sha256": "9f26ed19ef9818fd981269623dea2345cd84ab64a555afcc40e5087d7f0dc8c0",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 1282,
+      "replay_id": "reconciled-mapped-stat-count-change",
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-replays/reconciled-mapped-stat-count-change.json",
+      "role": "tamper-replay",
+      "sha256": "6f552ddf7d33ebfce30c0cb4e483020fd4a4c71984a998408eb9b38ac694e7eb",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 1429,
+      "replay_id": "reconciled-setup-path-slack-change",
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-replays/reconciled-setup-path-slack-change.json",
+      "role": "tamper-replay",
+      "sha256": "a5a0e3f71fd79b5149f70447fac15652a55a4857ff5d2ea1318a19540bd913e9",
+      "source_output": null,
+      "source_step": null
+    }
+  ],
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "chain_manifest_sha256": "b4fb533c88965893450bf913f4e63bae65789954d852da2df2222266742ff052",
+  "checks": {
+    "agent_visible_evidence": true,
+    "contract_test": true,
+    "downstream_decision": true,
+    "independent_artifact_check": true,
+    "native_run": true,
+    "negative_replay": true,
+    "normalized_evidence": true,
+    "pinned_real_design": true,
+    "tamper_replay": true
+  },
+  "extensions": {
+    "org.openada.digital": {
+      "analysis_scope": "single-corner ideal-interconnect synthesis-stage timing; not signoff",
+      "receipt_status": "release"
+    }
+  },
+  "schema": "openada.semantic-chain-run/v0alpha1",
+  "semantic_subject_sha256": "1338756109b4ae767eb871c381aed905b41dee542bd622cf07f50f605044e0c1",
+  "source_attestation": {
+    "clean_after": true,
+    "clean_before": true,
+    "extensions": {},
+    "receipt_class": "release",
+    "repository_revision": "b2c62c1cf3ba920fc5e4a130541f6deef39e2674",
+    "repository_tree": "89267a0ee6fa9eeb3587f21e2242ec3f21c048fe",
+    "semantic_subject_sha256": "1338756109b4ae767eb871c381aed905b41dee542bd622cf07f50f605044e0c1",
+    "state_unchanged": true
+  },
+  "status": "pass"
+}

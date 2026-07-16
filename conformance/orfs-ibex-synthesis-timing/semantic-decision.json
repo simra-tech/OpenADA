@@ -1,0 +1,85 @@
+{
+  "basis": [
+    "the pinned public Ibex source closure elaborated through the declared Slang frontend",
+    "Yosys produced a flattened netlist whose complete cell histogram is declared by the pinned Liberty",
+    "mapped and inference statistics, mapped Verilog, mapped JSON, scripts, logs, and configuration are digest-bound",
+    "OpenSTA completed with complete constraints and setup/hold reports under the declared single-corner ideal-interconnect model",
+    "setup WNS and TNS are negative, so the timing assertion fails even though hold is nonnegative",
+    "the real missing-top synthesis request and real timing violation are preserved as fail replays",
+    "reconciled synthesis-stat and timing-path tampering are rejected as unknown evidence"
+  ],
+  "block_conditions": [
+    "setup or hold WNS is negative",
+    "constraints, path reports, metrics, or input-stability evidence are incomplete",
+    "any mapped cell is absent from the exact Liberty or any process/memory remains",
+    "any source, tool, image, script, netlist, constraint, report, or receipt digest differs"
+  ],
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "decision": "block",
+  "evidence": {
+    "negative_replays": [
+      {
+        "bytes": 1190,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-replays/real-synthesis-missing-top.json",
+        "sha256": "316cdd867de016dd615c7853bbd04faaae04ace6495f3256d8f3e8a4955f96ba"
+      },
+      {
+        "bytes": 1231,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-replays/real-setup-timing-violation.json",
+        "sha256": "9f26ed19ef9818fd981269623dea2345cd84ab64a555afcc40e5087d7f0dc8c0"
+      }
+    ],
+    "normalized": {
+      "bytes": 11715,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-normalized.json",
+      "sha256": "5c93cb52232e59b24321955b4e5f2606fe25cc1c20e280b015b6118ca1f00648"
+    },
+    "oracle": {
+      "bytes": 15660,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-oracle.json",
+      "sha256": "04fcf3ada8507fbdacaa136ae963f2528bc42e9390bf19928411e02a21204d88"
+    },
+    "tamper_replays": [
+      {
+        "bytes": 1282,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-replays/reconciled-mapped-stat-count-change.json",
+        "sha256": "6f552ddf7d33ebfce30c0cb4e483020fd4a4c71984a998408eb9b38ac694e7eb"
+      },
+      {
+        "bytes": 1429,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-replays/reconciled-setup-path-slack-change.json",
+        "sha256": "a5a0e3f71fd79b5149f70447fac15652a55a4857ff5d2ea1318a19540bd913e9"
+      }
+    ]
+  },
+  "limitations": [
+    {
+      "id": "single-corner-ideal-interconnect",
+      "impact": "Timing uses one Nangate45 Liberty/SDC corner with ideal interconnect and no SPEF. It is useful synthesis-stage evidence, not routed or MCMM signoff timing."
+    },
+    {
+      "id": "setup-timing-fails",
+      "impact": "The reviewed run has negative setup WNS/TNS. Synthesis evidence may inform architecture and implementation work, but the timing assertion is blocked."
+    },
+    {
+      "id": "no-physical-or-power-closure",
+      "impact": "The chain performs no floorplan, placement, clock-tree synthesis, routing, extraction, IR-drop, power, DRC, LVS, or gate-level functional simulation."
+    },
+    {
+      "id": "implementation-specific-language-and-library-support",
+      "impact": "The evidence certifies the pinned Slang/Yosys, OpenSTA, Liberty, SDC, and Nangate collateral behavior, not complete language or file-format conformance."
+    },
+    {
+      "id": "inactive-include-branches-recorded",
+      "impact": "Five literal includes in inactive conditional branches are unresolved and retained explicitly; the active Slang elaboration and resolved closure pass."
+    }
+  ],
+  "next_checks": [
+    "inspect the setup critical path and revise constraints, microarchitecture, or synthesis strategy",
+    "run placement, clock-tree synthesis, routing, extraction, and multi-corner timing",
+    "perform equivalence or gate-level functional verification of the mapped netlist",
+    "add power, signal-integrity, DRC, and LVS evidence before physical signoff decisions"
+  ],
+  "schema": "openada.digital-engineering-decision/v0alpha1",
+  "scope": "use the mapped synthesis evidence for architecture and implementation iteration, but block timing closure and signoff claims"
+}

@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "checkout_clean": true,
+  "extensions": {},
+  "inputs": [
+    {
+      "bytes": 11475,
+      "path": "flow/designs/src/ibex_sv/ibex_pkg.sv",
+      "sha256": "59c6f37dc285b02d785c38094553283070b50b69f572a81b8ba3bc8b39475170"
+    },
+    {
+      "bytes": 46881,
+      "path": "flow/designs/src/ibex_sv/ibex_alu.sv",
+      "sha256": "919bb850b1cacb672e3b545fd040af9afbf22d684137dbc76ad13dcdfa4bd122"
+    },
+    {
+      "bytes": 10742,
+      "path": "flow/designs/src/ibex_sv/ibex_compressed_decoder.sv",
+      "sha256": "324d65eb47bd973781cdb65b55e3ece3d03d543d04417009fdf983811ea917a2"
+    },
+    {
+      "bytes": 33885,
+      "path": "flow/designs/src/ibex_sv/ibex_controller.sv",
+      "sha256": "582949bdbb8b115319c4796d0eb40b7deb9ed88666ebfd3d870f29d3024626d5"
+    },
+    {
+      "bytes": 59689,
+      "path": "flow/designs/src/ibex_sv/ibex_core.sv",
+      "sha256": "a35ec2de657657b1d02a0a473a44ffa944e53052dc08ac76f7b438cec7382504"
+    },
+    {
+      "bytes": 2148,
+      "path": "flow/designs/src/ibex_sv/ibex_counter.sv",
+      "sha256": "fc9862a2af52ef7a9e83af9c2c47c52ac4767022f7591f241f771368a1613614"
+    },
+    {
+      "bytes": 50215,
+      "path": "flow/designs/src/ibex_sv/ibex_cs_registers.sv",
+      "sha256": "d4c2f7d56f5b4071fa4921832460ddfc456c89bb1e08d3e7d8a7c4d82383fee7"
+    },
+    {
+      "bytes": 1307,
+      "path": "flow/designs/src/ibex_sv/ibex_csr.sv",
+      "sha256": "32a842f1c5cab160be4930f1743f5f8e9e0450187545eef1b48ac80a89afc0d8"
+    },
+    {
+      "bytes": 43909,
+      "path": "flow/designs/src/ibex_sv/ibex_decoder.sv",
+      "sha256": "9f1b68f98d6675d6ad3d8d940967b36afb6ca7bc84f636d83107f184fa504559"
+    },
+    {
+      "bytes": 8214,
+      "path": "flow/designs/src/ibex_sv/ibex_ex_block.sv",
+      "sha256": "78f719958d133eb20436d20ae70ac871251a5220218f840380c2bf5049969043"
+    },
+    {
+      "bytes": 9487,
+      "path": "flow/designs/src/ibex_sv/ibex_fetch_fifo.sv",
+      "sha256": "84c314f0216545339e53b447f4432e7940726029ae63bb2c9c382d44a825f2d5"
+    },
+    {
+      "bytes": 42559,
+      "path": "flow/designs/src/ibex_sv/ibex_id_stage.sv",
+      "sha256": "180fa414832b5d60d73a966df5b1904109b0007b9ff105813eaa3c53c8075bc1"
+    },
+    {
+      "bytes": 26661,
+      "path": "flow/designs/src/ibex_sv/ibex_if_stage.sv",
+      "sha256": "9777ab9f63bb3f2262ee14879e5196058768e8836f95bc4218385a98f08c0adf"
+    },
+    {
+      "bytes": 17384,
+      "path": "flow/designs/src/ibex_sv/ibex_load_store_unit.sv",
+      "sha256": "cc6e0c901a895a7ab2c7aa2371391c48ff956c5d4b2848fc419db7b4f9dd83a8"
+    },
+    {
+      "bytes": 17786,
+      "path": "flow/designs/src/ibex_sv/ibex_multdiv_fast.sv",
+      "sha256": "30f302d258aa96a303d426ebf543262a02a0531626815ca0b651df9a81d3b44f"
+    },
+    {
+      "bytes": 13148,
+      "path": "flow/designs/src/ibex_sv/ibex_multdiv_slow.sv",
+      "sha256": "9e5a86e8b0be442866dd431655244e90319ba4e6a37b11f3ca7e4fedd7a225f3"
+    },
+    {
+      "bytes": 5641,
+      "path": "flow/designs/src/ibex_sv/ibex_pmp.sv",
+      "sha256": "e778718b97e45a9171e856c966523a6add3dda90022002b60ccd11d4c8a508b6"
+    },
+    {
+      "bytes": 12627,
+      "path": "flow/designs/src/ibex_sv/ibex_prefetch_buffer.sv",
+      "sha256": "95b3d99082c6ebf77cc45c08fd620bd8b70f11efaa3a574c5a543e2bae19ac83"
+    },
+    {
+      "bytes": 3092,
+      "path": "flow/designs/src/ibex_sv/ibex_register_file_ff.sv",
+      "sha256": "0b3fcfeb3f92560e9995ece3aacb7ca6cb9cb01368720881b5c4b9efef648138"
+    },
+    {
+      "bytes": 6892,
+      "path": "flow/designs/src/ibex_sv/ibex_wb_stage.sv",
+      "sha256": "8425144d2367756b634a66b6498a32b55071f0a493b8c98d3a6682800bbe1ed6"
+    },
+    {
+      "bytes": 452,
+      "path": "flow/designs/src/ibex_sv/syn/rtl/prim_clock_gating.v",
+      "sha256": "2b03684abf70d0a4b92a5f3026ff8a306db5e367cd038957c0bc96ec5cbbefc2"
+    },
+    {
+      "bytes": 5178,
+      "path": "flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv",
+      "sha256": "ebca923df65c9d03905b63244675a1434ed8cca9018fe7ecca319fe14338f3f7"
+    },
+    {
+      "bytes": 894,
+      "path": "flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert_dummy_macros.svh",
+      "sha256": "310e3d2b87105d1892310fa68c5b284e7a9c26c50dd7aa43d0f11c8044750fb5"
+    },
+    {
+      "bytes": 6692032,
+      "path": "flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib",
+      "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"
+    },
+    {
+      "bytes": 289,
+      "path": "flow/platforms/nangate45/cells_latch.v",
+      "sha256": "7e2330df874405c28f92d37f17be088b371b9f378a913e7ca3dbda25ca4c7802"
+    },
+    {
+      "bytes": 611,
+      "path": "flow/designs/nangate45/ibex/constraint.sdc",
+      "sha256": "d55ba02e513f05c6b9b531633acf835a10942b8202d1e1b06989cf58b41ce389"
+    },
+    {
+      "bytes": 546,
+      "path": "flow/designs/nangate45/ibex/config.mk",
+      "sha256": "27d81bc59f83275eba0f5580ea934e0c3e986bb0690c3f2c977be8558327ff37"
+    },
+    {
+      "bytes": 3628,
+      "path": "flow/platforms/nangate45/config.mk",
+      "sha256": "1d8e639ccc138e72b5fe02dc0130e167455aee1c53b5aa3ee50ff442dc47d6cc"
+    },
+    {
+      "bytes": 453,
+      "path": "flow/designs/src/ibex_sv/README.md",
+      "sha256": "c8ca1237111cc4c0823a807848df1e1264c2635662a75240e3883900686a1cb1"
+    },
+    {
+      "bytes": 10174,
+      "path": "flow/platforms/nangate45/LICENSE",
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    },
+    {
+      "bytes": 2030,
+      "path": "LICENSE_BUILD_RUN_SCRIPTS",
+      "sha256": "fae0db7a4c00c3125f037e5818e8cd0c8aa5c67fff2e8c558312068e9f2d1592"
+    }
+  ],
+  "license": {
+    "bytes": 11358,
+    "path": "flow/designs/src/ibex_sv/LICENSE",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  "remote_url_verified": true,
+  "repository": "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git",
+  "revision": "bea7dcd7be7f26d1328f6058b01cf42bf4352aa2",
+  "schema": "openada.design-provenance/v0alpha1",
+  "tree": "b0979ac02253b74d4e22b426d2e4827b1fbf5fc3"
+}

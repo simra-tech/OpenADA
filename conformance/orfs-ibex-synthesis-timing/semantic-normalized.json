@@ -1,0 +1,343 @@
+{
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "coverage": [
+    "surface|openada.surface/cli.synthesize/v1",
+    "preflight|asic-netlist-synthesized",
+    "profile|openada.operation/logic.synthesize/v1alpha1",
+    "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+    "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "surface|openada.surface/cli.timing-analyze/v1",
+    "preflight|timing-constraints-satisfied",
+    "profile|openada.operation/timing.analyze/v1alpha1",
+    "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1",
+    "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+    "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1",
+    "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+  ],
+  "design": {
+    "repository": "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git",
+    "revision": "bea7dcd7be7f26d1328f6058b01cf42bf4352aa2",
+    "top": "ibex_core",
+    "tree": "b0979ac02253b74d4e22b426d2e4827b1fbf5fc3",
+    "upstream_revision": "77d801001554cce8fe69e742e96539eecbe74425"
+  },
+  "independent_oracle": {
+    "bytes": 15660,
+    "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-oracle.json",
+    "sha256": "04fcf3ada8507fbdacaa136ae963f2528bc42e9390bf19928411e02a21204d88"
+  },
+  "run": {
+    "checkout_commit_exact": true,
+    "checkout_state_unchanged": true,
+    "created_at": "2026-07-16T15:22:58.163658Z"
+  },
+  "runtime": {
+    "eda_network": "none",
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "tools": {
+      "abc": {
+        "bytes": 21104032,
+        "path": "/foss/tools/yosys/bin/yosys-abc",
+        "sha256": "8841cec163543e372becfd08940a4c5d03dc836cd1d3257d53525372d7f2b194",
+        "version": "UC Berkeley, ABC 1.01 (compiled Jun 22 2026 11:38:08)"
+      },
+      "opensta": {
+        "banner": "OpenSTA 3.1.0 244797f162",
+        "path": "/foss/tools/openroad/bin/sta",
+        "version": "3.1.0"
+      },
+      "yosys": {
+        "path": "/foss/tools/bin/yosys",
+        "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+      }
+    }
+  },
+  "schema": "openada.digital-normalized-evidence/v0alpha1",
+  "synthesis": {
+    "assertion": "asic-netlist-synthesized",
+    "assertion_profile": "openada.assertion/synthesized-netlist.valid/v1alpha1",
+    "engineering_status": "pass",
+    "evidence": {
+      "abc_tool": {
+        "bytes": 21104032,
+        "name": "abc",
+        "path": "/foss/tools/yosys/bin/yosys-abc",
+        "sha256": "8841cec163543e372becfd08940a4c5d03dc836cd1d3257d53525372d7f2b194",
+        "version": "UC Berkeley, ABC 1.01 (compiled Jun 22 2026 11:38:08)"
+      },
+      "abc_tool_identity_stable": true,
+      "dependency_closure_stable": true,
+      "environment_policy": {
+        "id": "closed-yosys-abc-v1",
+        "inherit_parent": false,
+        "variables": {
+          "HOME": "/nonexistent",
+          "LANG": "C",
+          "LC_ALL": "C",
+          "PATH": "/foss/tools/bin:/foss/tools/yosys/bin:/usr/bin:/bin",
+          "TMPDIR": "/tmp",
+          "TOOLS": "/foss/tools"
+        }
+      },
+      "inference_stats": {
+        "area": null,
+        "num_cells": 17148,
+        "num_cells_by_type": {
+          "$_AND_": 4106,
+          "$_DFFE_PN0P_": 1619,
+          "$_DFFE_PN1P_": 6,
+          "$_DFFE_PP_": 271,
+          "$_DFF_PN0_": 36,
+          "$_DFF_PN1_": 3,
+          "$_DLATCH_N_": 1,
+          "$_MUX_": 5520,
+          "$_NOT_": 771,
+          "$_OR_": 3677,
+          "$_SDFFCE_PN0P_": 2,
+          "$_XOR_": 1136
+        },
+        "num_memories": 0,
+        "num_memory_bits": 0,
+        "num_processes": 0,
+        "sequential_area": null
+      },
+      "inputs_stable": true,
+      "mapped_structure": {
+        "num_cells": 15494,
+        "num_cells_by_type": {
+          "AND2_X1": 278,
+          "AND2_X2": 1,
+          "AND3_X1": 101,
+          "AND3_X2": 2,
+          "AND4_X1": 22,
+          "AOI211_X2": 9,
+          "AOI211_X4": 1,
+          "AOI21_X1": 1542,
+          "AOI21_X2": 5,
+          "AOI21_X4": 2,
+          "AOI221_X1": 576,
+          "AOI221_X2": 4,
+          "AOI221_X4": 1,
+          "AOI222_X1": 148,
+          "AOI22_X1": 353,
+          "BUF_X1": 865,
+          "BUF_X2": 142,
+          "BUF_X4": 3,
+          "BUF_X8": 4,
+          "CLKBUF_X1": 227,
+          "CLKBUF_X3": 1,
+          "DFFR_X1": 1655,
+          "DFFS_X1": 9,
+          "DFF_X1": 273,
+          "DLL_X1": 1,
+          "INV_X1": 822,
+          "MUX2_X1": 1950,
+          "MUX2_X2": 2,
+          "NAND2_X1": 1182,
+          "NAND3_X1": 264,
+          "NAND4_X1": 59,
+          "NOR2_X1": 1234,
+          "NOR3_X1": 278,
+          "NOR3_X2": 1,
+          "NOR4_X1": 54,
+          "NOR4_X2": 17,
+          "NOR4_X4": 3,
+          "OAI211_X2": 13,
+          "OAI211_X4": 1,
+          "OAI21_X1": 1504,
+          "OAI21_X2": 4,
+          "OAI21_X4": 2,
+          "OAI221_X1": 220,
+          "OAI222_X1": 16,
+          "OAI22_X1": 273,
+          "OAI33_X1": 82,
+          "OR2_X1": 241,
+          "OR2_X2": 2,
+          "OR3_X1": 108,
+          "OR4_X1": 28,
+          "OR4_X2": 3,
+          "XNOR2_X1": 551,
+          "XNOR2_X2": 1,
+          "XOR2_X1": 353,
+          "XOR2_X2": 1
+        },
+        "top": "ibex_core"
+      },
+      "mapping_complete": true,
+      "mapping_policy": {
+        "abc_constraint_supplied": true,
+        "abc_delay_target_ns": 2.2,
+        "dont_use": [
+          "TAPCELL_X1",
+          "FILLCELL_X1",
+          "AOI211_X1",
+          "OAI211_X1"
+        ],
+        "flatten": true,
+        "set_undefined_to_zero": true
+      },
+      "stats": {
+        "area": 26239.836,
+        "num_cells": 15494,
+        "num_cells_by_type": {
+          "AND2_X1": 278,
+          "AND2_X2": 1,
+          "AND3_X1": 101,
+          "AND3_X2": 2,
+          "AND4_X1": 22,
+          "AOI211_X2": 9,
+          "AOI211_X4": 1,
+          "AOI21_X1": 1542,
+          "AOI21_X2": 5,
+          "AOI21_X4": 2,
+          "AOI221_X1": 576,
+          "AOI221_X2": 4,
+          "AOI221_X4": 1,
+          "AOI222_X1": 148,
+          "AOI22_X1": 353,
+          "BUF_X1": 865,
+          "BUF_X2": 142,
+          "BUF_X4": 3,
+          "BUF_X8": 4,
+          "CLKBUF_X1": 227,
+          "CLKBUF_X3": 1,
+          "DFFR_X1": 1655,
+          "DFFS_X1": 9,
+          "DFF_X1": 273,
+          "DLL_X1": 1,
+          "INV_X1": 822,
+          "MUX2_X1": 1950,
+          "MUX2_X2": 2,
+          "NAND2_X1": 1182,
+          "NAND3_X1": 264,
+          "NAND4_X1": 59,
+          "NOR2_X1": 1234,
+          "NOR3_X1": 278,
+          "NOR3_X2": 1,
+          "NOR4_X1": 54,
+          "NOR4_X2": 17,
+          "NOR4_X4": 3,
+          "OAI211_X2": 13,
+          "OAI211_X4": 1,
+          "OAI21_X1": 1504,
+          "OAI21_X2": 4,
+          "OAI21_X4": 2,
+          "OAI221_X1": 220,
+          "OAI222_X1": 16,
+          "OAI22_X1": 273,
+          "OAI33_X1": 82,
+          "OR2_X1": 241,
+          "OR2_X2": 2,
+          "OR3_X1": 108,
+          "OR4_X1": 28,
+          "OR4_X2": 3,
+          "XNOR2_X1": 551,
+          "XNOR2_X2": 1,
+          "XOR2_X1": 353,
+          "XOR2_X2": 1
+        },
+        "num_memories": 0,
+        "num_memory_bits": 0,
+        "num_processes": 0,
+        "sequential_area": 10086.986
+      },
+      "structure": {
+        "cell_count": 15494,
+        "cell_type_count": 55,
+        "liberty_cell_inventory_count": 135,
+        "liberty_cell_inventory_sha256": "1cf511d764ec1ae8da9b566a5b71fb542021d245ff0092b48b7e15f04f366a26",
+        "module": "ibex_core",
+        "port_bit_count": 264,
+        "port_count": 30
+      },
+      "tool_identity_stable": true,
+      "unmapped_cell_types": []
+    },
+    "execution_status": "completed",
+    "exit_code": 0,
+    "operation_profile": "openada.operation/logic.synthesize/v1alpha1",
+    "summary": "Yosys produced and independently validated a complete Liberty-mapped ASIC netlist.",
+    "surface_id": "openada.surface/cli.synthesize/v1"
+  },
+  "technology": {
+    "latch_techmap_path": "flow/platforms/nangate45/cells_latch.v",
+    "liberty_path": "flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib",
+    "license": {
+      "path": "flow/platforms/nangate45/LICENSE",
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+      "spdx": "Apache-2.0"
+    },
+    "name": "NangateOpenCellLibrary",
+    "version": "PDKv1.3_v2010_12.Apache.CCL"
+  },
+  "timing": {
+    "assertion": "timing-constraints-satisfied",
+    "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+    "engineering_status": "fail",
+    "evidence": {
+      "analysis_model": "single_corner_ideal_interconnect_no_spef",
+      "changed_inputs": [],
+      "constraint_check_validation": "complete",
+      "constraints_complete": true,
+      "environment_policy": "closed-opensta-runtime-v1",
+      "hold": {
+        "critical_path": {
+          "endpoint": "_28920_/A1",
+          "path_group": "gated clock",
+          "slack_s": 4.45e-11,
+          "startpoint": "_30865_/Q"
+        },
+        "path_count": 31,
+        "tns_s": 0.0,
+        "wns_s": 4.4501293e-11
+      },
+      "inputs_stable": true,
+      "interconnect_model": "ideal",
+      "liberty_validation": "self-contained",
+      "limitations": [
+        "No SPEF parasitics are read; interconnect is ideal.",
+        "Only one Liberty/SDC corner is analyzed; this is not MCMM signoff.",
+        "Mapped Verilog and Liberty inputs must be self-contained; transitive include directives are rejected."
+      ],
+      "metric_consistency": "consistent",
+      "metrics_validation": "parsed",
+      "netlist_validation": "self-contained",
+      "path_reports_agree_with_wns": true,
+      "protocol": {
+        "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+        "implementation_id": "org.openada.driver.opensta",
+        "implementation_version": "1.0.0",
+        "operation_profile": "openada.operation/timing.analyze/v1alpha1"
+      },
+      "reports_complete": true,
+      "sdc_policy": "openada-sdc-v1",
+      "sdc_validation": "parsed-safe-subset",
+      "setup": {
+        "critical_path": {
+          "endpoint": "_30415_/D",
+          "path_group": "core_clock",
+          "slack_s": -8.249e-10,
+          "startpoint": "_29657_/QN"
+        },
+        "path_count": 31,
+        "tns_s": -1.2118150634770001e-06,
+        "wns_s": -8.248910900000001e-10
+      },
+      "signoff_level": false,
+      "spef_supplied": false,
+      "time_unit": "1ns",
+      "time_unit_seconds": 1e-09,
+      "timing_constraints_satisfied": false,
+      "tool_identity_stable": true,
+      "top": "ibex_core"
+    },
+    "execution_status": "completed",
+    "exit_code": 0,
+    "operation_profile": "openada.operation/timing.analyze/v1alpha1",
+    "summary": "OpenSTA found a setup or hold timing violation for the supplied corner.",
+    "surface_id": "openada.surface/cli.timing-analyze/v1"
+  }
+}

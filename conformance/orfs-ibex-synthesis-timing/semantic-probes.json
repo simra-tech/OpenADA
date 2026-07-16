@@ -1,0 +1,87 @@
+{
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "negative_replays": [
+    {
+      "covers": [
+        "surface|openada.surface/cli.synthesize/v1",
+        "preflight|asic-netlist-synthesized",
+        "profile|openada.operation/logic.synthesize/v1alpha1",
+        "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+        "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+      ],
+      "engineering_status": "fail",
+      "execution_status": "completed",
+      "exit_code": 1,
+      "expected_status": "fail",
+      "fixture": "the pinned Ibex sources with a real Yosys request for missing_ibex_core",
+      "id": "real-synthesis-missing-top",
+      "native_transcript_bound": true,
+      "observed_diagnostic": "missing_ibex_core",
+      "required_diagnostic": "missing_ibex_core",
+      "status": "observed"
+    },
+    {
+      "covers": [
+        "surface|openada.surface/cli.timing-analyze/v1",
+        "preflight|timing-constraints-satisfied",
+        "profile|openada.operation/timing.analyze/v1alpha1",
+        "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1",
+        "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+        "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1",
+        "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+      ],
+      "engineering_status": "fail",
+      "execution_status": "completed",
+      "exit_code": 0,
+      "expected_status": "fail",
+      "fixture": "the real mapped Ibex netlist analyzed against the pinned Nangate45 Liberty and ORFS Ibex SDC",
+      "id": "real-setup-timing-violation",
+      "native_transcript_bound": true,
+      "observed_diagnostic": "setup WNS is negative: -8.2489109e-10 s",
+      "required_diagnostic": "setup WNS is negative",
+      "status": "observed"
+    }
+  ],
+  "schema": "openada.semantic-chain-probes/v0alpha1",
+  "status": "pass",
+  "tamper_replays": [
+    {
+      "covers": [
+        "surface|openada.surface/cli.synthesize/v1",
+        "preflight|asic-netlist-synthesized",
+        "profile|openada.operation/logic.synthesize/v1alpha1",
+        "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+        "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "id": "reconciled-mapped-stat-count-change",
+      "mutation": "changed native mapped-stat num_cells and reconciled both the OpenADA artifact digest and run-level result/artifact digests",
+      "observed_diagnostic": "mapped statistics cell histogram does not sum to num_cells",
+      "required_diagnostic": "mapped statistics cell histogram does not sum to num_cells",
+      "status": "rejected",
+      "verifier": "conformance/orfs-ibex-synthesis-timing/verify.py"
+    },
+    {
+      "covers": [
+        "surface|openada.surface/cli.timing-analyze/v1",
+        "preflight|timing-constraints-satisfied",
+        "profile|openada.operation/timing.analyze/v1alpha1",
+        "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1",
+        "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+        "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1",
+        "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "id": "reconciled-setup-path-slack-change",
+      "mutation": "changed the native setup critical-path slack and reconciled both the OpenADA artifact digest and run-level result/artifact digests",
+      "observed_diagnostic": "setup critical path: expected {'startpoint': '_29657_/QN', 'endpoint': '_30416_/D', 'path_group': 'core_clock', 'slack_s': -8.249e-10}, got {'endpoint': '_30415_/D', 'path_group': 'core_clock', 'slack_s': -8.249e-10, 'startpoint': '_29657_/QN'}",
+      "required_diagnostic": "setup critical path",
+      "status": "rejected",
+      "verifier": "conformance/orfs-ibex-synthesis-timing/verify.py"
+    }
+  ]
+}

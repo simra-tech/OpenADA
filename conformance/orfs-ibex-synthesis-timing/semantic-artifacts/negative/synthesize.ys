@@ -1,0 +1,16 @@
+read_liberty -lib -ignore_miss_dir -setattr blackbox "/design/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib"
+read_slang --std 1800-2017 --top missing_ibex_core -I /design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl /design/flow/designs/src/ibex_sv/ibex_pkg.sv /design/flow/designs/src/ibex_sv/ibex_alu.sv /design/flow/designs/src/ibex_sv/ibex_compressed_decoder.sv /design/flow/designs/src/ibex_sv/ibex_controller.sv /design/flow/designs/src/ibex_sv/ibex_core.sv /design/flow/designs/src/ibex_sv/ibex_counter.sv /design/flow/designs/src/ibex_sv/ibex_cs_registers.sv /design/flow/designs/src/ibex_sv/ibex_csr.sv /design/flow/designs/src/ibex_sv/ibex_decoder.sv /design/flow/designs/src/ibex_sv/ibex_ex_block.sv /design/flow/designs/src/ibex_sv/ibex_fetch_fifo.sv /design/flow/designs/src/ibex_sv/ibex_id_stage.sv /design/flow/designs/src/ibex_sv/ibex_if_stage.sv /design/flow/designs/src/ibex_sv/ibex_load_store_unit.sv /design/flow/designs/src/ibex_sv/ibex_multdiv_fast.sv /design/flow/designs/src/ibex_sv/ibex_multdiv_slow.sv /design/flow/designs/src/ibex_sv/ibex_pmp.sv /design/flow/designs/src/ibex_sv/ibex_prefetch_buffer.sv /design/flow/designs/src/ibex_sv/ibex_register_file_ff.sv /design/flow/designs/src/ibex_sv/ibex_wb_stage.sv /design/flow/designs/src/ibex_sv/syn/rtl/prim_clock_gating.v
+hierarchy -check -top missing_ibex_core
+synth -top missing_ibex_core -flatten -noabc
+tee -o inference-stats.json stat -json -top missing_ibex_core
+techmap -map "/design/flow/platforms/nangate45/cells_latch.v"
+dfflibmap -liberty "/design/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib" -dont_use "TAPCELL_X1" -dont_use "FILLCELL_X1" -dont_use "AOI211_X1" -dont_use "OAI211_X1"
+opt
+setundef -zero
+abc -exe "/foss/tools/yosys/bin/yosys-abc" -liberty "/design/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib" -dont_use "TAPCELL_X1" -dont_use "FILLCELL_X1" -dont_use "AOI211_X1" -dont_use "OAI211_X1" -constr "/openada/conformance/orfs-ibex-synthesis-timing/abc.constr" -D 2200
+splitnets
+opt_clean -purge
+check -assert
+tee -o mapped-stats.json stat -json -top missing_ibex_core -liberty "/design/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib"
+write_verilog -noattr -noexpr "mapped.v"
+write_json "mapped.json"

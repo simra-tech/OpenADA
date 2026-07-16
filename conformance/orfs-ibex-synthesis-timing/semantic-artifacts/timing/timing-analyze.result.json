@@ -1,0 +1,179 @@
+{
+  "artifacts": [
+    {
+      "bytes": 907,
+      "exists": true,
+      "kind": "opensta-script",
+      "path": "/evidence/timing/timing-analyze.tcl",
+      "role": "timing.script",
+      "sha256": "fb16a770e9a96dc6d0b20372f31787cf7242b302cb4177282156651081486d27"
+    },
+    {
+      "bytes": 611,
+      "exists": true,
+      "kind": "sdc",
+      "path": "/evidence/timing/timing-input.sdc",
+      "role": "timing.sdc-snapshot",
+      "sha256": "d55ba02e513f05c6b9b531633acf835a10942b8202d1e1b06989cf58b41ce389"
+    },
+    {
+      "bytes": 934,
+      "exists": true,
+      "kind": "opensta-log",
+      "path": "/evidence/timing/timing-analyze.log",
+      "role": "timing.log",
+      "sha256": "4eed563169acab129ab3997b1ee64361b04ffa3c2778b95a2777dddf7d555db6"
+    },
+    {
+      "bytes": 0,
+      "exists": true,
+      "kind": "opensta-check-setup",
+      "path": "/evidence/timing/check-setup.txt",
+      "role": "timing.constraint-check",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 450210,
+      "exists": true,
+      "kind": "opensta-report-json",
+      "path": "/evidence/timing/setup-paths.json",
+      "role": "timing.setup-paths",
+      "sha256": "9513f7182a226d4eff9891f33df7997e0aa19664f6da1614c578feca4217ccca"
+    },
+    {
+      "bytes": 76582,
+      "exists": true,
+      "kind": "opensta-report-json",
+      "path": "/evidence/timing/hold-paths.json",
+      "role": "timing.hold-paths",
+      "sha256": "93977af57563ca83b82681559a32db65914c56d38d14568ee80773be038ed996"
+    }
+  ],
+  "data": {
+    "analysis_model": "single_corner_ideal_interconnect_no_spef",
+    "changed_inputs": [],
+    "constraint_check_validation": "complete",
+    "constraints_complete": true,
+    "environment_policy": "closed-opensta-runtime-v1",
+    "hold": {
+      "critical_path": {
+        "endpoint": "_28920_/A1",
+        "path_group": "gated clock",
+        "slack_s": 4.45e-11,
+        "startpoint": "_30865_/Q"
+      },
+      "path_count": 31,
+      "tns_s": 0.0,
+      "wns_s": 4.4501293e-11
+    },
+    "inputs_stable": true,
+    "interconnect_model": "ideal",
+    "liberty_validation": "self-contained",
+    "limitations": [
+      "No SPEF parasitics are read; interconnect is ideal.",
+      "Only one Liberty/SDC corner is analyzed; this is not MCMM signoff.",
+      "Mapped Verilog and Liberty inputs must be self-contained; transitive include directives are rejected."
+    ],
+    "metric_consistency": "consistent",
+    "metrics_validation": "parsed",
+    "netlist_validation": "self-contained",
+    "path_reports_agree_with_wns": true,
+    "protocol": {
+      "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+      "implementation_id": "org.openada.driver.opensta",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/timing.analyze/v1alpha1"
+    },
+    "reports_complete": true,
+    "sdc_policy": "openada-sdc-v1",
+    "sdc_validation": "parsed-safe-subset",
+    "setup": {
+      "critical_path": {
+        "endpoint": "_30415_/D",
+        "path_group": "core_clock",
+        "slack_s": -8.249e-10,
+        "startpoint": "_29657_/QN"
+      },
+      "path_count": 31,
+      "tns_s": -1.2118150634770001e-06,
+      "wns_s": -8.248910900000001e-10
+    },
+    "signoff_level": false,
+    "spef_supplied": false,
+    "time_unit": "1ns",
+    "time_unit_seconds": 1e-09,
+    "timing_constraints_satisfied": false,
+    "tool_identity_stable": true,
+    "top": "ibex_core"
+  },
+  "diagnostics": [
+    {
+      "code": "timing.setup_violation",
+      "message": "Setup WNS is -8.2489109e-10 s.",
+      "severity": "error"
+    },
+    {
+      "code": "timing.ideal_interconnect",
+      "message": "No SPEF parasitics were supplied; this single-corner result is not signoff timing.",
+      "severity": "warning"
+    }
+  ],
+  "engineering": {
+    "status": "fail",
+    "summary": "OpenSTA found a setup or hold timing violation for the supplied corner."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/openroad/bin/sta",
+      "-no_init",
+      "-exit",
+      "/evidence/timing/timing-analyze.tcl"
+    ],
+    "cwd": "/evidence/timing/.openada-sta-b2xofwfm",
+    "duration_ms": 1118,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 2045217,
+      "exists": true,
+      "kind": "verilog-netlist",
+      "path": "/evidence/synthesis/mapped.v",
+      "role": "timing.netlist",
+      "sha256": "3ddce3d689c7712b315ed9deb7b3a5031f3221e2f3d3b623c7d0f0a65ea2cfca"
+    },
+    {
+      "bytes": 6692032,
+      "exists": true,
+      "kind": "liberty",
+      "path": "/design/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib",
+      "role": "technology.liberty",
+      "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"
+    },
+    {
+      "bytes": 611,
+      "exists": true,
+      "kind": "sdc",
+      "path": "/design/flow/designs/nangate45/ibex/constraint.sdc",
+      "role": "timing.sdc",
+      "sha256": "d55ba02e513f05c6b9b531633acf835a10942b8202d1e1b06989cf58b41ce389"
+    }
+  ],
+  "operation": "timing-analyze",
+  "provenance": {
+    "created_at": "2026-07-16T15:22:57.011996Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "sta",
+    "path": "/foss/tools/openroad/bin/sta",
+    "version": "3.1.0"
+  }
+}

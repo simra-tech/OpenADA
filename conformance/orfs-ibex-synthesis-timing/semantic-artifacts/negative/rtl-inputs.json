@@ -1,0 +1,259 @@
+{
+  "declared_include_directories": [
+    "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl"
+  ],
+  "defines": [],
+  "input_records": [
+    {
+      "bytes": 11475,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_pkg.sv",
+      "role": "rtl.source",
+      "sha256": "59c6f37dc285b02d785c38094553283070b50b69f572a81b8ba3bc8b39475170"
+    },
+    {
+      "bytes": 46881,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_alu.sv",
+      "role": "rtl.source",
+      "sha256": "919bb850b1cacb672e3b545fd040af9afbf22d684137dbc76ad13dcdfa4bd122"
+    },
+    {
+      "bytes": 10742,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_compressed_decoder.sv",
+      "role": "rtl.source",
+      "sha256": "324d65eb47bd973781cdb65b55e3ece3d03d543d04417009fdf983811ea917a2"
+    },
+    {
+      "bytes": 33885,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_controller.sv",
+      "role": "rtl.source",
+      "sha256": "582949bdbb8b115319c4796d0eb40b7deb9ed88666ebfd3d870f29d3024626d5"
+    },
+    {
+      "bytes": 59689,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_core.sv",
+      "role": "rtl.source",
+      "sha256": "a35ec2de657657b1d02a0a473a44ffa944e53052dc08ac76f7b438cec7382504"
+    },
+    {
+      "bytes": 2148,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_counter.sv",
+      "role": "rtl.source",
+      "sha256": "fc9862a2af52ef7a9e83af9c2c47c52ac4767022f7591f241f771368a1613614"
+    },
+    {
+      "bytes": 50215,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_cs_registers.sv",
+      "role": "rtl.source",
+      "sha256": "d4c2f7d56f5b4071fa4921832460ddfc456c89bb1e08d3e7d8a7c4d82383fee7"
+    },
+    {
+      "bytes": 1307,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_csr.sv",
+      "role": "rtl.source",
+      "sha256": "32a842f1c5cab160be4930f1743f5f8e9e0450187545eef1b48ac80a89afc0d8"
+    },
+    {
+      "bytes": 43909,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_decoder.sv",
+      "role": "rtl.source",
+      "sha256": "9f1b68f98d6675d6ad3d8d940967b36afb6ca7bc84f636d83107f184fa504559"
+    },
+    {
+      "bytes": 8214,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_ex_block.sv",
+      "role": "rtl.source",
+      "sha256": "78f719958d133eb20436d20ae70ac871251a5220218f840380c2bf5049969043"
+    },
+    {
+      "bytes": 9487,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_fetch_fifo.sv",
+      "role": "rtl.source",
+      "sha256": "84c314f0216545339e53b447f4432e7940726029ae63bb2c9c382d44a825f2d5"
+    },
+    {
+      "bytes": 42559,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_id_stage.sv",
+      "role": "rtl.source",
+      "sha256": "180fa414832b5d60d73a966df5b1904109b0007b9ff105813eaa3c53c8075bc1"
+    },
+    {
+      "bytes": 26661,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_if_stage.sv",
+      "role": "rtl.source",
+      "sha256": "9777ab9f63bb3f2262ee14879e5196058768e8836f95bc4218385a98f08c0adf"
+    },
+    {
+      "bytes": 17384,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_load_store_unit.sv",
+      "role": "rtl.source",
+      "sha256": "cc6e0c901a895a7ab2c7aa2371391c48ff956c5d4b2848fc419db7b4f9dd83a8"
+    },
+    {
+      "bytes": 17786,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_multdiv_fast.sv",
+      "role": "rtl.source",
+      "sha256": "30f302d258aa96a303d426ebf543262a02a0531626815ca0b651df9a81d3b44f"
+    },
+    {
+      "bytes": 13148,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_multdiv_slow.sv",
+      "role": "rtl.source",
+      "sha256": "9e5a86e8b0be442866dd431655244e90319ba4e6a37b11f3ca7e4fedd7a225f3"
+    },
+    {
+      "bytes": 5641,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_pmp.sv",
+      "role": "rtl.source",
+      "sha256": "e778718b97e45a9171e856c966523a6add3dda90022002b60ccd11d4c8a508b6"
+    },
+    {
+      "bytes": 12627,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_prefetch_buffer.sv",
+      "role": "rtl.source",
+      "sha256": "95b3d99082c6ebf77cc45c08fd620bd8b70f11efaa3a574c5a543e2bae19ac83"
+    },
+    {
+      "bytes": 3092,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_register_file_ff.sv",
+      "role": "rtl.source",
+      "sha256": "0b3fcfeb3f92560e9995ece3aacb7ca6cb9cb01368720881b5c4b9efef648138"
+    },
+    {
+      "bytes": 6892,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_wb_stage.sv",
+      "role": "rtl.source",
+      "sha256": "8425144d2367756b634a66b6498a32b55071f0a493b8c98d3a6682800bbe1ed6"
+    },
+    {
+      "bytes": 452,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/syn/rtl/prim_clock_gating.v",
+      "role": "rtl.source",
+      "sha256": "2b03684abf70d0a4b92a5f3026ff8a306db5e367cd038957c0bc96ec5cbbefc2"
+    },
+    {
+      "bytes": 5178,
+      "exists": true,
+      "kind": "hdl-include",
+      "path": "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv",
+      "role": "rtl.include",
+      "sha256": "ebca923df65c9d03905b63244675a1434ed8cca9018fe7ecca319fe14338f3f7"
+    },
+    {
+      "bytes": 894,
+      "exists": true,
+      "kind": "hdl-include",
+      "path": "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert_dummy_macros.svh",
+      "role": "rtl.include",
+      "sha256": "310e3d2b87105d1892310fa68c5b284e7a9c26c50dd7aa43d0f11c8044750fb5"
+    },
+    {
+      "bytes": 6692032,
+      "exists": true,
+      "kind": "liberty",
+      "path": "/design/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib",
+      "role": "technology.liberty",
+      "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"
+    },
+    {
+      "bytes": 289,
+      "exists": true,
+      "kind": "yosys-techmap",
+      "path": "/design/flow/platforms/nangate45/cells_latch.v",
+      "role": "synthesis.techmap",
+      "sha256": "7e2330df874405c28f92d37f17be088b371b9f378a913e7ca3dbda25ca4c7802"
+    },
+    {
+      "bytes": 39,
+      "exists": true,
+      "kind": "abc-constraint",
+      "path": "/openada/conformance/orfs-ibex-synthesis-timing/abc.constr",
+      "role": "synthesis.abc-constraint",
+      "sha256": "51bf1a4f73a383e038c95dc3eba81fdd33811736285d77e7aaeabf9bd83c69a1"
+    },
+    {
+      "bytes": 21104032,
+      "exists": true,
+      "kind": "eda-executable",
+      "path": "/foss/tools/yosys/bin/yosys-abc",
+      "role": "synthesis.abc-executable",
+      "sha256": "8841cec163543e372becfd08940a4c5d03dc836cd1d3257d53525372d7f2b194"
+    }
+  ],
+  "ordered_sources": [
+    "/design/flow/designs/src/ibex_sv/ibex_pkg.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_alu.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_compressed_decoder.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_controller.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_core.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_counter.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_cs_registers.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_csr.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_decoder.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_ex_block.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_fetch_fifo.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_id_stage.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_if_stage.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_load_store_unit.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_multdiv_fast.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_multdiv_slow.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_pmp.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_prefetch_buffer.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_register_file_ff.sv",
+    "/design/flow/designs/src/ibex_sv/ibex_wb_stage.sv",
+    "/design/flow/designs/src/ibex_sv/syn/rtl/prim_clock_gating.v"
+  ],
+  "resolved_literal_includes": [
+    "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv",
+    "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert_dummy_macros.svh"
+  ],
+  "schema": "openada.hdl-inputs/v1",
+  "unresolved_literal_includes": [
+    "/design/flow/designs/src/ibex_sv/ibex_multdiv_fast.sv:formal_tb_frag.svh",
+    "/design/flow/designs/src/ibex_sv/ibex_multdiv_slow.sv:formal_tb_frag.svh",
+    "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv:uvm_macros.svh",
+    "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv:prim_assert_yosys_macros.svh",
+    "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv:prim_assert_standard_macros.svh"
+  ]
+}

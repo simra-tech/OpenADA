@@ -1,0 +1,547 @@
+{
+  "basis": [
+    "the pinned public Ibex source closure elaborated through the declared Slang frontend",
+    "Yosys produced a flattened netlist whose complete cell histogram is declared by the pinned Liberty",
+    "mapped and inference statistics, mapped Verilog, mapped JSON, scripts, logs, and configuration are digest-bound",
+    "OpenSTA completed with complete constraints and setup/hold reports under the declared single-corner ideal-interconnect model",
+    "setup WNS and TNS are negative, so the timing assertion fails even though hold is nonnegative",
+    "the real missing-top synthesis request and real timing violation are preserved as fail replays",
+    "reconciled synthesis-stat and timing-path tampering are rejected as unknown evidence"
+  ],
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "decision": "block",
+  "limitations": [
+    {
+      "id": "single-corner-ideal-interconnect",
+      "impact": "Timing uses one Nangate45 Liberty/SDC corner with ideal interconnect and no SPEF. It is useful synthesis-stage evidence, not routed or MCMM signoff timing."
+    },
+    {
+      "id": "setup-timing-fails",
+      "impact": "The reviewed run has negative setup WNS/TNS. Synthesis evidence may inform architecture and implementation work, but the timing assertion is blocked."
+    },
+    {
+      "id": "no-physical-or-power-closure",
+      "impact": "The chain performs no floorplan, placement, clock-tree synthesis, routing, extraction, IR-drop, power, DRC, LVS, or gate-level functional simulation."
+    },
+    {
+      "id": "implementation-specific-language-and-library-support",
+      "impact": "The evidence certifies the pinned Slang/Yosys, OpenSTA, Liberty, SDC, and Nangate collateral behavior, not complete language or file-format conformance."
+    },
+    {
+      "id": "inactive-include-branches-recorded",
+      "impact": "Five literal includes in inactive conditional branches are unresolved and retained explicitly; the active Slang elaboration and resolved closure pass."
+    }
+  ],
+  "next_checks": [
+    "inspect the setup critical path and revise constraints, microarchitecture, or synthesis strategy",
+    "run placement, clock-tree synthesis, routing, extraction, and multi-corner timing",
+    "perform equivalence or gate-level functional verification of the mapped netlist",
+    "add power, signal-integrity, DRC, and LVS evidence before physical signoff decisions"
+  ],
+  "operations": {
+    "synthesis": {
+      "assertion": "asic-netlist-synthesized",
+      "assertion_profile": "openada.assertion/synthesized-netlist.valid/v1alpha1",
+      "engineering_status": "pass",
+      "evidence": {
+        "abc_tool": {
+          "bytes": 21104032,
+          "name": "abc",
+          "path": "/foss/tools/yosys/bin/yosys-abc",
+          "sha256": "8841cec163543e372becfd08940a4c5d03dc836cd1d3257d53525372d7f2b194",
+          "version": "UC Berkeley, ABC 1.01 (compiled Jun 22 2026 11:38:08)"
+        },
+        "abc_tool_identity_stable": true,
+        "dependency_closure_stable": true,
+        "environment_policy": {
+          "id": "closed-yosys-abc-v1",
+          "inherit_parent": false,
+          "variables": {
+            "HOME": "/nonexistent",
+            "LANG": "C",
+            "LC_ALL": "C",
+            "PATH": "/foss/tools/bin:/foss/tools/yosys/bin:/usr/bin:/bin",
+            "TMPDIR": "/tmp",
+            "TOOLS": "/foss/tools"
+          }
+        },
+        "inference_stats": {
+          "area": null,
+          "num_cells": 17148,
+          "num_cells_by_type": {
+            "$_AND_": 4106,
+            "$_DFFE_PN0P_": 1619,
+            "$_DFFE_PN1P_": 6,
+            "$_DFFE_PP_": 271,
+            "$_DFF_PN0_": 36,
+            "$_DFF_PN1_": 3,
+            "$_DLATCH_N_": 1,
+            "$_MUX_": 5520,
+            "$_NOT_": 771,
+            "$_OR_": 3677,
+            "$_SDFFCE_PN0P_": 2,
+            "$_XOR_": 1136
+          },
+          "num_memories": 0,
+          "num_memory_bits": 0,
+          "num_processes": 0,
+          "sequential_area": null
+        },
+        "inputs_stable": true,
+        "mapped_structure": {
+          "num_cells": 15494,
+          "num_cells_by_type": {
+            "AND2_X1": 278,
+            "AND2_X2": 1,
+            "AND3_X1": 101,
+            "AND3_X2": 2,
+            "AND4_X1": 22,
+            "AOI211_X2": 9,
+            "AOI211_X4": 1,
+            "AOI21_X1": 1542,
+            "AOI21_X2": 5,
+            "AOI21_X4": 2,
+            "AOI221_X1": 576,
+            "AOI221_X2": 4,
+            "AOI221_X4": 1,
+            "AOI222_X1": 148,
+            "AOI22_X1": 353,
+            "BUF_X1": 865,
+            "BUF_X2": 142,
+            "BUF_X4": 3,
+            "BUF_X8": 4,
+            "CLKBUF_X1": 227,
+            "CLKBUF_X3": 1,
+            "DFFR_X1": 1655,
+            "DFFS_X1": 9,
+            "DFF_X1": 273,
+            "DLL_X1": 1,
+            "INV_X1": 822,
+            "MUX2_X1": 1950,
+            "MUX2_X2": 2,
+            "NAND2_X1": 1182,
+            "NAND3_X1": 264,
+            "NAND4_X1": 59,
+            "NOR2_X1": 1234,
+            "NOR3_X1": 278,
+            "NOR3_X2": 1,
+            "NOR4_X1": 54,
+            "NOR4_X2": 17,
+            "NOR4_X4": 3,
+            "OAI211_X2": 13,
+            "OAI211_X4": 1,
+            "OAI21_X1": 1504,
+            "OAI21_X2": 4,
+            "OAI21_X4": 2,
+            "OAI221_X1": 220,
+            "OAI222_X1": 16,
+            "OAI22_X1": 273,
+            "OAI33_X1": 82,
+            "OR2_X1": 241,
+            "OR2_X2": 2,
+            "OR3_X1": 108,
+            "OR4_X1": 28,
+            "OR4_X2": 3,
+            "XNOR2_X1": 551,
+            "XNOR2_X2": 1,
+            "XOR2_X1": 353,
+            "XOR2_X2": 1
+          },
+          "top": "ibex_core"
+        },
+        "mapping_complete": true,
+        "mapping_policy": {
+          "abc_constraint_supplied": true,
+          "abc_delay_target_ns": 2.2,
+          "dont_use": [
+            "TAPCELL_X1",
+            "FILLCELL_X1",
+            "AOI211_X1",
+            "OAI211_X1"
+          ],
+          "flatten": true,
+          "set_undefined_to_zero": true
+        },
+        "stats": {
+          "area": 26239.836,
+          "num_cells": 15494,
+          "num_cells_by_type": {
+            "AND2_X1": 278,
+            "AND2_X2": 1,
+            "AND3_X1": 101,
+            "AND3_X2": 2,
+            "AND4_X1": 22,
+            "AOI211_X2": 9,
+            "AOI211_X4": 1,
+            "AOI21_X1": 1542,
+            "AOI21_X2": 5,
+            "AOI21_X4": 2,
+            "AOI221_X1": 576,
+            "AOI221_X2": 4,
+            "AOI221_X4": 1,
+            "AOI222_X1": 148,
+            "AOI22_X1": 353,
+            "BUF_X1": 865,
+            "BUF_X2": 142,
+            "BUF_X4": 3,
+            "BUF_X8": 4,
+            "CLKBUF_X1": 227,
+            "CLKBUF_X3": 1,
+            "DFFR_X1": 1655,
+            "DFFS_X1": 9,
+            "DFF_X1": 273,
+            "DLL_X1": 1,
+            "INV_X1": 822,
+            "MUX2_X1": 1950,
+            "MUX2_X2": 2,
+            "NAND2_X1": 1182,
+            "NAND3_X1": 264,
+            "NAND4_X1": 59,
+            "NOR2_X1": 1234,
+            "NOR3_X1": 278,
+            "NOR3_X2": 1,
+            "NOR4_X1": 54,
+            "NOR4_X2": 17,
+            "NOR4_X4": 3,
+            "OAI211_X2": 13,
+            "OAI211_X4": 1,
+            "OAI21_X1": 1504,
+            "OAI21_X2": 4,
+            "OAI21_X4": 2,
+            "OAI221_X1": 220,
+            "OAI222_X1": 16,
+            "OAI22_X1": 273,
+            "OAI33_X1": 82,
+            "OR2_X1": 241,
+            "OR2_X2": 2,
+            "OR3_X1": 108,
+            "OR4_X1": 28,
+            "OR4_X2": 3,
+            "XNOR2_X1": 551,
+            "XNOR2_X2": 1,
+            "XOR2_X1": 353,
+            "XOR2_X2": 1
+          },
+          "num_memories": 0,
+          "num_memory_bits": 0,
+          "num_processes": 0,
+          "sequential_area": 10086.986
+        },
+        "structure": {
+          "cell_count": 15494,
+          "cell_type_count": 55,
+          "liberty_cell_inventory_count": 135,
+          "liberty_cell_inventory_sha256": "1cf511d764ec1ae8da9b566a5b71fb542021d245ff0092b48b7e15f04f366a26",
+          "module": "ibex_core",
+          "port_bit_count": 264,
+          "port_count": 30
+        },
+        "tool_identity_stable": true,
+        "unmapped_cell_types": []
+      },
+      "execution_status": "completed",
+      "exit_code": 0,
+      "operation_profile": "openada.operation/logic.synthesize/v1alpha1",
+      "summary": "Yosys produced and independently validated a complete Liberty-mapped ASIC netlist.",
+      "surface_id": "openada.surface/cli.synthesize/v1"
+    },
+    "synthesis_missing_top_negative": {
+      "decision": "block",
+      "diagnostic": "missing_ibex_core",
+      "engineering_status": "fail"
+    },
+    "timing": {
+      "assertion": "timing-constraints-satisfied",
+      "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+      "engineering_status": "fail",
+      "evidence": {
+        "analysis_model": "single_corner_ideal_interconnect_no_spef",
+        "changed_inputs": [],
+        "constraint_check_validation": "complete",
+        "constraints_complete": true,
+        "environment_policy": "closed-opensta-runtime-v1",
+        "hold": {
+          "critical_path": {
+            "endpoint": "_28920_/A1",
+            "path_group": "gated clock",
+            "slack_s": 4.45e-11,
+            "startpoint": "_30865_/Q"
+          },
+          "path_count": 31,
+          "tns_s": 0.0,
+          "wns_s": 4.4501293e-11
+        },
+        "inputs_stable": true,
+        "interconnect_model": "ideal",
+        "liberty_validation": "self-contained",
+        "limitations": [
+          "No SPEF parasitics are read; interconnect is ideal.",
+          "Only one Liberty/SDC corner is analyzed; this is not MCMM signoff.",
+          "Mapped Verilog and Liberty inputs must be self-contained; transitive include directives are rejected."
+        ],
+        "metric_consistency": "consistent",
+        "metrics_validation": "parsed",
+        "netlist_validation": "self-contained",
+        "path_reports_agree_with_wns": true,
+        "protocol": {
+          "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+          "implementation_id": "org.openada.driver.opensta",
+          "implementation_version": "1.0.0",
+          "operation_profile": "openada.operation/timing.analyze/v1alpha1"
+        },
+        "reports_complete": true,
+        "sdc_policy": "openada-sdc-v1",
+        "sdc_validation": "parsed-safe-subset",
+        "setup": {
+          "critical_path": {
+            "endpoint": "_30415_/D",
+            "path_group": "core_clock",
+            "slack_s": -8.249e-10,
+            "startpoint": "_29657_/QN"
+          },
+          "path_count": 31,
+          "tns_s": -1.2118150634770001e-06,
+          "wns_s": -8.248910900000001e-10
+        },
+        "signoff_level": false,
+        "spef_supplied": false,
+        "time_unit": "1ns",
+        "time_unit_seconds": 1e-09,
+        "timing_constraints_satisfied": false,
+        "tool_identity_stable": true,
+        "top": "ibex_core"
+      },
+      "execution_status": "completed",
+      "exit_code": 0,
+      "operation_profile": "openada.operation/timing.analyze/v1alpha1",
+      "summary": "OpenSTA found a setup or hold timing violation for the supplied corner.",
+      "surface_id": "openada.surface/cli.timing-analyze/v1"
+    }
+  },
+  "replays": {
+    "negative_replays": [
+      {
+        "covers": [
+          "surface|openada.surface/cli.synthesize/v1",
+          "preflight|asic-netlist-synthesized",
+          "profile|openada.operation/logic.synthesize/v1alpha1",
+          "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+          "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+          "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+          "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+        ],
+        "engineering_status": "fail",
+        "execution_status": "completed",
+        "exit_code": 1,
+        "expected_status": "fail",
+        "fixture": "the pinned Ibex sources with a real Yosys request for missing_ibex_core",
+        "id": "real-synthesis-missing-top",
+        "native_transcript_bound": true,
+        "observed_diagnostic": "missing_ibex_core",
+        "required_diagnostic": "missing_ibex_core",
+        "status": "observed"
+      },
+      {
+        "covers": [
+          "surface|openada.surface/cli.timing-analyze/v1",
+          "preflight|timing-constraints-satisfied",
+          "profile|openada.operation/timing.analyze/v1alpha1",
+          "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1",
+          "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+          "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1",
+          "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+        ],
+        "engineering_status": "fail",
+        "execution_status": "completed",
+        "exit_code": 0,
+        "expected_status": "fail",
+        "fixture": "the real mapped Ibex netlist analyzed against the pinned Nangate45 Liberty and ORFS Ibex SDC",
+        "id": "real-setup-timing-violation",
+        "native_transcript_bound": true,
+        "observed_diagnostic": "setup WNS is negative: -8.2489109e-10 s",
+        "required_diagnostic": "setup WNS is negative",
+        "status": "observed"
+      }
+    ],
+    "tamper_replays": [
+      {
+        "covers": [
+          "surface|openada.surface/cli.synthesize/v1",
+          "preflight|asic-netlist-synthesized",
+          "profile|openada.operation/logic.synthesize/v1alpha1",
+          "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+          "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+          "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+          "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+        ],
+        "expected_status": "unknown",
+        "id": "reconciled-mapped-stat-count-change",
+        "mutation": "changed native mapped-stat num_cells and reconciled both the OpenADA artifact digest and run-level result/artifact digests",
+        "observed_diagnostic": "mapped statistics cell histogram does not sum to num_cells",
+        "required_diagnostic": "mapped statistics cell histogram does not sum to num_cells",
+        "status": "rejected",
+        "verifier": "conformance/orfs-ibex-synthesis-timing/verify.py"
+      },
+      {
+        "covers": [
+          "surface|openada.surface/cli.timing-analyze/v1",
+          "preflight|timing-constraints-satisfied",
+          "profile|openada.operation/timing.analyze/v1alpha1",
+          "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1",
+          "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+          "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1",
+          "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+        ],
+        "expected_status": "unknown",
+        "id": "reconciled-setup-path-slack-change",
+        "mutation": "changed the native setup critical-path slack and reconciled both the OpenADA artifact digest and run-level result/artifact digests",
+        "observed_diagnostic": "setup critical path: expected {'startpoint': '_29657_/QN', 'endpoint': '_30416_/D', 'path_group': 'core_clock', 'slack_s': -8.249e-10}, got {'endpoint': '_30415_/D', 'path_group': 'core_clock', 'slack_s': -8.249e-10, 'startpoint': '_29657_/QN'}",
+        "required_diagnostic": "setup critical path",
+        "status": "rejected",
+        "verifier": "conformance/orfs-ibex-synthesis-timing/verify.py"
+      }
+    ]
+  },
+  "schema": "openada.digital-agent-evidence/v0alpha1",
+  "scope": "use the mapped synthesis evidence for architecture and implementation iteration, but block timing closure and signoff claims",
+  "standards": {
+    "hdl_language": {
+      "basis": "The request declares SystemVerilog 1800-2017 to the pinned Slang frontend; this is implementation evidence, not full standard compliance.",
+      "official_url": "https://standards.ieee.org/ieee/1800/7743/",
+      "standard": "IEEE 1800-2023",
+      "status": "context-only"
+    },
+    "ieee_measurement_standard": {
+      "basis": "The chain reports deterministic STA slack metrics and performs no waveform-quality measurement such as SNR.",
+      "status": "not-applicable"
+    },
+    "timing_formats": {
+      "basis": "Liberty and SDC inputs are pinned by exact bytes; no IEEE conformance claim is made for those industry formats.",
+      "status": "implementation-specific"
+    }
+  },
+  "trust_chain": {
+    "decision": {
+      "bytes": 4469,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-decision.json",
+      "sha256": "72aef16c24fa8a6550ebf985dad7da1e10a0014fbcfa8da96452d1608c5e37e9"
+    },
+    "native_artifacts": [
+      {
+        "bytes": 6116,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/design-provenance.json",
+        "sha256": "6f477f0ee1b16948dcc3d793d1c63f1c2d182bf56089fc6a59ade2ab0438ec5c"
+      },
+      {
+        "bytes": 17869,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/synthesize.result.json",
+        "sha256": "08ecf8e2cc7e5ced7e4398180be9c536d7be853a58eace2478d3b136624e6a16"
+      },
+      {
+        "bytes": 2239,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/synthesize.ys",
+        "sha256": "78ffaa50415a7b5c86326bc7c2c3e3e63288511cce3aa1dce562ff021e6d5a29"
+      },
+      {
+        "bytes": 285820,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/synthesize.log",
+        "sha256": "c3d176c17c59d3c4763fe16ea182abcf1ff5664e6bed67465d2d0c4ca8153501"
+      },
+      {
+        "bytes": 1795,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/inference-stats.json",
+        "sha256": "e8dab5d71dc10b4ed1f57208703e6aab55f79c82d86e48450685cc8b64f2256b"
+      },
+      {
+        "bytes": 4382,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/mapped-stats.json",
+        "sha256": "06531029a866b8cc99833bfe78143314d57e953c1acb4d1d721177e936ebdf6e"
+      },
+      {
+        "bytes": 2045217,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/mapped.v",
+        "sha256": "3ddce3d689c7712b315ed9deb7b3a5031f3221e2f3d3b623c7d0f0a65ea2cfca"
+      },
+      {
+        "bytes": 10736900,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/mapped.json",
+        "sha256": "fd178a08d629cd983332c557d875e130691f37dba39abd5b3b02fd0545578a3e"
+      },
+      {
+        "bytes": 9433,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/rtl-inputs.json",
+        "sha256": "17fa29d012eb003703ba9d9ff3eeccae4213ee462b3788892ed0863a119e81c8"
+      },
+      {
+        "bytes": 5462,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-analyze.result.json",
+        "sha256": "b74464a3eedc148c7b921f4398a2bdcb5cdc5c65718d7c913817b018b8daed0d"
+      },
+      {
+        "bytes": 907,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-analyze.tcl",
+        "sha256": "fb16a770e9a96dc6d0b20372f31787cf7242b302cb4177282156651081486d27"
+      },
+      {
+        "bytes": 611,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-input.sdc",
+        "sha256": "d55ba02e513f05c6b9b531633acf835a10942b8202d1e1b06989cf58b41ce389"
+      },
+      {
+        "bytes": 934,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-analyze.log",
+        "sha256": "4eed563169acab129ab3997b1ee64361b04ffa3c2778b95a2777dddf7d555db6"
+      },
+      {
+        "bytes": 0,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/check-setup.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "bytes": 450210,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/setup-paths.json",
+        "sha256": "9513f7182a226d4eff9891f33df7997e0aa19664f6da1614c578feca4217ccca"
+      },
+      {
+        "bytes": 76582,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/hold-paths.json",
+        "sha256": "93977af57563ca83b82681559a32db65914c56d38d14568ee80773be038ed996"
+      },
+      {
+        "bytes": 13971,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/synthesize.result.json",
+        "sha256": "52f78f3e47612033f71b1737b2d28d6fb7187f648fd773c95d77d5173414bbaf"
+      },
+      {
+        "bytes": 2279,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/synthesize.ys",
+        "sha256": "c8a456e89a8b85dd55560c49fce685ef0a579b70f7817a90cac05f0889547892"
+      },
+      {
+        "bytes": 568,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/synthesize.log",
+        "sha256": "1a441c231a929a3eb9111b7dc567b11315ad59386e3a54a20665c3faef1d55d1"
+      },
+      {
+        "bytes": 9433,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/rtl-inputs.json",
+        "sha256": "17fa29d012eb003703ba9d9ff3eeccae4213ee462b3788892ed0863a119e81c8"
+      },
+      {
+        "bytes": 5732,
+        "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/run.json",
+        "sha256": "4102dc841a75370fd8fcc797a065c77d3a31d88b605dc3c1a892f4c77099f000"
+      }
+    ],
+    "normalized": {
+      "bytes": 11715,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-normalized.json",
+      "sha256": "5c93cb52232e59b24321955b4e5f2606fe25cc1c20e280b015b6118ca1f00648"
+    },
+    "oracle": {
+      "bytes": 15660,
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-oracle.json",
+      "sha256": "04fcf3ada8507fbdacaa136ae963f2528bc42e9390bf19928411e02a21204d88"
+    }
+  }
+}

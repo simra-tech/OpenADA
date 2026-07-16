@@ -1,0 +1,20 @@
+{
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "covers": [
+    "surface|openada.surface/cli.timing-analyze/v1",
+    "preflight|timing-constraints-satisfied",
+    "profile|openada.operation/timing.analyze/v1alpha1",
+    "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1",
+    "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+    "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1",
+    "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+  ],
+  "expected_status": "unknown",
+  "id": "reconciled-setup-path-slack-change",
+  "mutation": "changed the native setup critical-path slack and reconciled both the OpenADA artifact digest and run-level result/artifact digests",
+  "observed_diagnostic": "setup critical path: expected {'startpoint': '_29657_/QN', 'endpoint': '_30416_/D', 'path_group': 'core_clock', 'slack_s': -8.249e-10}, got {'endpoint': '_30415_/D', 'path_group': 'core_clock', 'slack_s': -8.249e-10, 'startpoint': '_29657_/QN'}",
+  "required_diagnostic": "setup critical path",
+  "schema": "openada.semantic-replay-verdict/v0alpha1",
+  "status": "rejected",
+  "verifier": "conformance/orfs-ibex-synthesis-timing/verify.py"
+}

@@ -1,0 +1,37 @@
+status: completed
+exit_code: 0
+stdout_bytes: 790
+stderr_bytes: 0
+stdout_truncated: false
+stderr_truncated: false
+--- stdout ---
+OpenSTA 3.1.0 244797f162 Copyright (c) 2026, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details. 
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+OPENADA_UNITS_BEGIN
+ time 1ns
+ capacitance 1fF
+ resistance 1kohm
+ voltage 1v
+ current 1mA
+ power 1nW
+ distance 1um
+OPENADA_UNITS_END
+OPENADA_SETUP_WNS_BEGIN
+worst slack max -0.824891090
+OPENADA_SETUP_WNS_END
+OPENADA_SETUP_TNS_BEGIN
+tns max -1211.815063477
+OPENADA_SETUP_TNS_END
+OPENADA_HOLD_WNS_BEGIN
+worst slack min 0.044501293
+OPENADA_HOLD_WNS_END
+OPENADA_HOLD_TNS_BEGIN
+tns min 0.000000000
+OPENADA_HOLD_TNS_END
+OPENADA_ANALYSIS_COMPLETE
+
+--- stderr ---

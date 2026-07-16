@@ -1,0 +1,61 @@
+{
+   "creator": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)",
+   "invocation": "stat -json -top ibex_core ",
+   "modules": {
+      "\\ibex_core": {
+         "num_wires":         6765,
+         "num_wire_bits":     36576,
+         "num_pub_wires":     1262,
+         "num_pub_wire_bits": 19646,
+         "num_ports":         30,
+         "num_port_bits":     264,
+         "num_memories":      0,
+         "num_memory_bits":   0,
+         "num_processes":     0,
+         "num_cells":         17148,
+         "num_submodules":       0,
+         "num_cells_by_type": {
+            "$_AND_": 4106,
+            "$_DFFE_PN0P_": 1619,
+            "$_DFFE_PN1P_": 6,
+            "$_DFFE_PP_": 271,
+            "$_DFF_PN0_": 36,
+            "$_DFF_PN1_": 3,
+            "$_DLATCH_N_": 1,
+            "$_MUX_": 5520,
+            "$_NOT_": 771,
+            "$_OR_": 3677,
+            "$_SDFFCE_PN0P_": 2,
+            "$_XOR_": 1136
+         }
+      }
+   },
+      "design": {
+         "num_wires":         6765,
+         "num_wire_bits":     36576,
+         "num_pub_wires":     1262,
+         "num_pub_wire_bits": 19646,
+         "num_ports":         30,
+         "num_port_bits":     264,
+         "num_memories":      0,
+         "num_memory_bits":   0,
+         "num_processes":     0,
+         "num_cells":         17148,
+         "num_submodules":       0,
+         "num_cells_by_type": {
+            "$_AND_": 4106,
+            "$_DFFE_PN0P_": 1619,
+            "$_DFFE_PN1P_": 6,
+            "$_DFFE_PP_": 271,
+            "$_DFF_PN0_": 36,
+            "$_DFF_PN1_": 3,
+            "$_DLATCH_N_": 1,
+            "$_MUX_": 5520,
+            "$_NOT_": 771,
+            "$_OR_": 3677,
+            "$_SDFFCE_PN0P_": 2,
+            "$_XOR_": 1136
+         }
+      }
+}
+

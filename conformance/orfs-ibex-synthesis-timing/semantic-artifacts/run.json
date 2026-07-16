@@ -1,0 +1,162 @@
+{
+  "analysis_scope": "single-corner synthesis-stage timing with ideal interconnect and no SPEF; not signoff",
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "conformance_id": "orfs-ibex-synthesis-timing",
+  "conformance_manifest_sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b",
+  "created_at": "2026-07-16T15:22:58.163658Z",
+  "design_revision": "bea7dcd7be7f26d1328f6058b01cf42bf4352aa2",
+  "design_tree": "b0979ac02253b74d4e22b426d2e4827b1fbf5fc3",
+  "image": {
+    "architecture": "amd64",
+    "id": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "os": "linux",
+    "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"
+  },
+  "input_inventory_sha256": "01b3476f34e76fd412e94f597e8110be18bf708a11d2ab726e2d528a222c63b3",
+  "native_artifacts": [
+    {
+      "bytes": 17869,
+      "path": "synthesis/synthesize.result.json",
+      "sha256": "08ecf8e2cc7e5ced7e4398180be9c536d7be853a58eace2478d3b136624e6a16"
+    },
+    {
+      "bytes": 2239,
+      "path": "synthesis/synthesize.ys",
+      "sha256": "78ffaa50415a7b5c86326bc7c2c3e3e63288511cce3aa1dce562ff021e6d5a29"
+    },
+    {
+      "bytes": 285820,
+      "path": "synthesis/synthesize.log",
+      "sha256": "c3d176c17c59d3c4763fe16ea182abcf1ff5664e6bed67465d2d0c4ca8153501"
+    },
+    {
+      "bytes": 1795,
+      "path": "synthesis/inference-stats.json",
+      "sha256": "e8dab5d71dc10b4ed1f57208703e6aab55f79c82d86e48450685cc8b64f2256b"
+    },
+    {
+      "bytes": 4382,
+      "path": "synthesis/mapped-stats.json",
+      "sha256": "06531029a866b8cc99833bfe78143314d57e953c1acb4d1d721177e936ebdf6e"
+    },
+    {
+      "bytes": 2045217,
+      "path": "synthesis/mapped.v",
+      "sha256": "3ddce3d689c7712b315ed9deb7b3a5031f3221e2f3d3b623c7d0f0a65ea2cfca"
+    },
+    {
+      "bytes": 10736900,
+      "path": "synthesis/mapped.json",
+      "sha256": "fd178a08d629cd983332c557d875e130691f37dba39abd5b3b02fd0545578a3e"
+    },
+    {
+      "bytes": 9433,
+      "path": "synthesis/rtl-inputs.json",
+      "sha256": "17fa29d012eb003703ba9d9ff3eeccae4213ee462b3788892ed0863a119e81c8"
+    },
+    {
+      "bytes": 5462,
+      "path": "timing/timing-analyze.result.json",
+      "sha256": "b74464a3eedc148c7b921f4398a2bdcb5cdc5c65718d7c913817b018b8daed0d"
+    },
+    {
+      "bytes": 907,
+      "path": "timing/timing-analyze.tcl",
+      "sha256": "fb16a770e9a96dc6d0b20372f31787cf7242b302cb4177282156651081486d27"
+    },
+    {
+      "bytes": 611,
+      "path": "timing/timing-input.sdc",
+      "sha256": "d55ba02e513f05c6b9b531633acf835a10942b8202d1e1b06989cf58b41ce389"
+    },
+    {
+      "bytes": 934,
+      "path": "timing/timing-analyze.log",
+      "sha256": "4eed563169acab129ab3997b1ee64361b04ffa3c2778b95a2777dddf7d555db6"
+    },
+    {
+      "bytes": 0,
+      "path": "timing/check-setup.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 450210,
+      "path": "timing/setup-paths.json",
+      "sha256": "9513f7182a226d4eff9891f33df7997e0aa19664f6da1614c578feca4217ccca"
+    },
+    {
+      "bytes": 76582,
+      "path": "timing/hold-paths.json",
+      "sha256": "93977af57563ca83b82681559a32db65914c56d38d14568ee80773be038ed996"
+    },
+    {
+      "bytes": 13971,
+      "path": "negative/synthesize.result.json",
+      "sha256": "52f78f3e47612033f71b1737b2d28d6fb7187f648fd773c95d77d5173414bbaf"
+    },
+    {
+      "bytes": 2279,
+      "path": "negative/synthesize.ys",
+      "sha256": "c8a456e89a8b85dd55560c49fce685ef0a579b70f7817a90cac05f0889547892"
+    },
+    {
+      "bytes": 568,
+      "path": "negative/synthesize.log",
+      "sha256": "1a441c231a929a3eb9111b7dc567b11315ad59386e3a54a20665c3faef1d55d1"
+    },
+    {
+      "bytes": 9433,
+      "path": "negative/rtl-inputs.json",
+      "sha256": "17fa29d012eb003703ba9d9ff3eeccae4213ee462b3788892ed0863a119e81c8"
+    }
+  ],
+  "network": "none during EDA execution",
+  "openada_checkout": {
+    "after": {
+      "commit": "b2c62c1cf3ba920fc5e4a130541f6deef39e2674",
+      "status_entry_count": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_files_modified": false,
+      "untracked_files_present": false,
+      "working_tree_modified": false
+    },
+    "before": {
+      "commit": "b2c62c1cf3ba920fc5e4a130541f6deef39e2674",
+      "status_entry_count": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_files_modified": false,
+      "untracked_files_present": false,
+      "working_tree_modified": false
+    },
+    "commit_exact": true,
+    "state_unchanged": true
+  },
+  "schema": "openada.conformance-run/v0alpha1",
+  "source_attestation": {
+    "clean_after": true,
+    "clean_before": true,
+    "extensions": {},
+    "receipt_class": "release",
+    "repository_revision": "b2c62c1cf3ba920fc5e4a130541f6deef39e2674",
+    "repository_tree": "89267a0ee6fa9eeb3587f21e2242ec3f21c048fe",
+    "semantic_subject_sha256": "1338756109b4ae767eb871c381aed905b41dee542bd622cf07f50f605044e0c1",
+    "state_unchanged": true
+  },
+  "tools": {
+    "abc": {
+      "bytes": 21104032,
+      "path": "/foss/tools/yosys/bin/yosys-abc",
+      "sha256": "8841cec163543e372becfd08940a4c5d03dc836cd1d3257d53525372d7f2b194",
+      "version": "UC Berkeley, ABC 1.01 (compiled Jun 22 2026 11:38:08)"
+    },
+    "opensta": {
+      "path": "/foss/tools/openroad/bin/sta",
+      "version": "3.1.0"
+    },
+    "yosys": {
+      "path": "/foss/tools/bin/yosys",
+      "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+    }
+  },
+  "upstream_revision": "77d801001554cce8fe69e742e96539eecbe74425"
+}

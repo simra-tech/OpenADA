@@ -1,0 +1,19 @@
+{
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "native_replay": {
+    "independent_verifier": "pass",
+    "real_synthesis_negative": "pass",
+    "real_timing_negative": "pass",
+    "synthesis_tamper_probe": "pass",
+    "timing_tamper_probe": "pass"
+  },
+  "schema": "openada.semantic-contract-test/v0alpha1",
+  "status": "pass",
+  "tests": {
+    "execution": "fresh pytest exit status zero",
+    "failed": 0,
+    "passed": 16,
+    "suite": "tests/test_orfs_ibex_synthesis_timing_conformance.py",
+    "suite_sha256": "0dd5e12b71b91a68a84f54337aeb225b3c285cd200cb61e7bd9f5f5b7eda7d0b"
+  }
+}

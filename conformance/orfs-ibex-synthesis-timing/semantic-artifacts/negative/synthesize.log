@@ -1,0 +1,21 @@
+status: completed
+exit_code: 1
+stdout_bytes: 275
+stderr_bytes: 147
+stdout_truncated: false
+stderr_truncated: false
+--- stdout ---
+
+-- Executing script file `/evidence/negative/synthesize.ys' --
+
+1. Executing Liberty frontend: /design/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib
+Imported 135 cell types from liberty file.
+
+2. Executing SLANG frontend.
+
+Build failed: 1 error, 1 warning
+
+--- stderr ---
+error: 'missing_ibex_core' is not a valid top-level module
+warning: no top-level modules found in design [-Wmissing-top]
+ERROR: Compilation failed

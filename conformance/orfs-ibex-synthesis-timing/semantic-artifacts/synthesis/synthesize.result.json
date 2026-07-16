@@ -1,0 +1,566 @@
+{
+  "artifacts": [
+    {
+      "bytes": 2239,
+      "exists": true,
+      "kind": "yosys-script",
+      "path": "/evidence/synthesis/synthesize.ys",
+      "role": "synthesis.script",
+      "sha256": "78ffaa50415a7b5c86326bc7c2c3e3e63288511cce3aa1dce562ff021e6d5a29"
+    },
+    {
+      "bytes": 285820,
+      "exists": true,
+      "kind": "yosys-log",
+      "path": "/evidence/synthesis/synthesize.log",
+      "role": "synthesis.log",
+      "sha256": "c3d176c17c59d3c4763fe16ea182abcf1ff5664e6bed67465d2d0c4ca8153501"
+    },
+    {
+      "bytes": 1795,
+      "exists": true,
+      "kind": "yosys-stat-json",
+      "path": "/evidence/synthesis/inference-stats.json",
+      "role": "synthesis.inference-statistics",
+      "sha256": "e8dab5d71dc10b4ed1f57208703e6aab55f79c82d86e48450685cc8b64f2256b"
+    },
+    {
+      "bytes": 4382,
+      "exists": true,
+      "kind": "yosys-stat-json",
+      "path": "/evidence/synthesis/mapped-stats.json",
+      "role": "synthesis.statistics",
+      "sha256": "06531029a866b8cc99833bfe78143314d57e953c1acb4d1d721177e936ebdf6e"
+    },
+    {
+      "bytes": 2045217,
+      "exists": true,
+      "kind": "verilog-netlist",
+      "path": "/evidence/synthesis/mapped.v",
+      "role": "synthesis.netlist",
+      "sha256": "3ddce3d689c7712b315ed9deb7b3a5031f3221e2f3d3b623c7d0f0a65ea2cfca"
+    },
+    {
+      "bytes": 10736900,
+      "exists": true,
+      "kind": "yosys-json",
+      "path": "/evidence/synthesis/mapped.json",
+      "role": "synthesis.netlist-structure",
+      "sha256": "fd178a08d629cd983332c557d875e130691f37dba39abd5b3b02fd0545578a3e"
+    },
+    {
+      "bytes": 9433,
+      "exists": true,
+      "kind": "hdl-input-manifest",
+      "path": "/evidence/synthesis/rtl-inputs.json",
+      "role": "rtl.dependencies",
+      "sha256": "17fa29d012eb003703ba9d9ff3eeccae4213ee462b3788892ed0863a119e81c8"
+    }
+  ],
+  "data": {
+    "abc_tool": {
+      "bytes": 21104032,
+      "name": "abc",
+      "path": "/foss/tools/yosys/bin/yosys-abc",
+      "sha256": "8841cec163543e372becfd08940a4c5d03dc836cd1d3257d53525372d7f2b194",
+      "version": "UC Berkeley, ABC 1.01 (compiled Jun 22 2026 11:38:08)"
+    },
+    "abc_tool_identity_stable": true,
+    "changed_inputs": [],
+    "changed_inputs_truncated": false,
+    "dependency_closure_stable": true,
+    "environment_policy": {
+      "id": "closed-yosys-abc-v1",
+      "inherit_parent": false,
+      "variables": {
+        "HOME": "/nonexistent",
+        "LANG": "C",
+        "LC_ALL": "C",
+        "PATH": "/foss/tools/bin:/foss/tools/yosys/bin:/usr/bin:/bin",
+        "TMPDIR": "/tmp",
+        "TOOLS": "/foss/tools"
+      }
+    },
+    "frontend": "slang",
+    "include_dependencies": [
+      "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv",
+      "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert_dummy_macros.svh"
+    ],
+    "inference_stats": {
+      "area": null,
+      "num_cells": 17148,
+      "num_cells_by_type": {
+        "$_AND_": 4106,
+        "$_DFFE_PN0P_": 1619,
+        "$_DFFE_PN1P_": 6,
+        "$_DFFE_PP_": 271,
+        "$_DFF_PN0_": 36,
+        "$_DFF_PN1_": 3,
+        "$_DLATCH_N_": 1,
+        "$_MUX_": 5520,
+        "$_NOT_": 771,
+        "$_OR_": 3677,
+        "$_SDFFCE_PN0P_": 2,
+        "$_XOR_": 1136
+      },
+      "num_memories": 0,
+      "num_memory_bits": 0,
+      "num_processes": 0,
+      "sequential_area": null
+    },
+    "inference_stats_validation": "parsed",
+    "inputs_stable": true,
+    "language": "1800-2017",
+    "mapped_json_validation": "parsed",
+    "mapped_structure": {
+      "num_cells": 15494,
+      "num_cells_by_type": {
+        "AND2_X1": 278,
+        "AND2_X2": 1,
+        "AND3_X1": 101,
+        "AND3_X2": 2,
+        "AND4_X1": 22,
+        "AOI211_X2": 9,
+        "AOI211_X4": 1,
+        "AOI21_X1": 1542,
+        "AOI21_X2": 5,
+        "AOI21_X4": 2,
+        "AOI221_X1": 576,
+        "AOI221_X2": 4,
+        "AOI221_X4": 1,
+        "AOI222_X1": 148,
+        "AOI22_X1": 353,
+        "BUF_X1": 865,
+        "BUF_X2": 142,
+        "BUF_X4": 3,
+        "BUF_X8": 4,
+        "CLKBUF_X1": 227,
+        "CLKBUF_X3": 1,
+        "DFFR_X1": 1655,
+        "DFFS_X1": 9,
+        "DFF_X1": 273,
+        "DLL_X1": 1,
+        "INV_X1": 822,
+        "MUX2_X1": 1950,
+        "MUX2_X2": 2,
+        "NAND2_X1": 1182,
+        "NAND3_X1": 264,
+        "NAND4_X1": 59,
+        "NOR2_X1": 1234,
+        "NOR3_X1": 278,
+        "NOR3_X2": 1,
+        "NOR4_X1": 54,
+        "NOR4_X2": 17,
+        "NOR4_X4": 3,
+        "OAI211_X2": 13,
+        "OAI211_X4": 1,
+        "OAI21_X1": 1504,
+        "OAI21_X2": 4,
+        "OAI21_X4": 2,
+        "OAI221_X1": 220,
+        "OAI222_X1": 16,
+        "OAI22_X1": 273,
+        "OAI33_X1": 82,
+        "OR2_X1": 241,
+        "OR2_X2": 2,
+        "OR3_X1": 108,
+        "OR4_X1": 28,
+        "OR4_X2": 3,
+        "XNOR2_X1": 551,
+        "XNOR2_X2": 1,
+        "XOR2_X1": 353,
+        "XOR2_X2": 1
+      },
+      "top": "ibex_core"
+    },
+    "mapping_complete": true,
+    "mapping_policy": {
+      "abc_constraint_supplied": true,
+      "abc_delay_target_ns": 2.2,
+      "dont_use": [
+        "TAPCELL_X1",
+        "FILLCELL_X1",
+        "AOI211_X1",
+        "OAI211_X1"
+      ],
+      "flatten": true,
+      "set_undefined_to_zero": true
+    },
+    "ordered_sources": [
+      "/design/flow/designs/src/ibex_sv/ibex_pkg.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_alu.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_compressed_decoder.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_controller.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_core.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_counter.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_cs_registers.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_csr.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_decoder.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_ex_block.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_fetch_fifo.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_id_stage.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_if_stage.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_load_store_unit.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_multdiv_fast.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_multdiv_slow.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_pmp.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_prefetch_buffer.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_register_file_ff.sv",
+      "/design/flow/designs/src/ibex_sv/ibex_wb_stage.sv",
+      "/design/flow/designs/src/ibex_sv/syn/rtl/prim_clock_gating.v"
+    ],
+    "protocol": {
+      "assertion_profile": "openada.assertion/synthesized-netlist.valid/v1alpha1",
+      "implementation_id": "org.openada.driver.yosys",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/logic.synthesize/v1alpha1"
+    },
+    "stats": {
+      "area": 26239.836,
+      "num_cells": 15494,
+      "num_cells_by_type": {
+        "AND2_X1": 278,
+        "AND2_X2": 1,
+        "AND3_X1": 101,
+        "AND3_X2": 2,
+        "AND4_X1": 22,
+        "AOI211_X2": 9,
+        "AOI211_X4": 1,
+        "AOI21_X1": 1542,
+        "AOI21_X2": 5,
+        "AOI21_X4": 2,
+        "AOI221_X1": 576,
+        "AOI221_X2": 4,
+        "AOI221_X4": 1,
+        "AOI222_X1": 148,
+        "AOI22_X1": 353,
+        "BUF_X1": 865,
+        "BUF_X2": 142,
+        "BUF_X4": 3,
+        "BUF_X8": 4,
+        "CLKBUF_X1": 227,
+        "CLKBUF_X3": 1,
+        "DFFR_X1": 1655,
+        "DFFS_X1": 9,
+        "DFF_X1": 273,
+        "DLL_X1": 1,
+        "INV_X1": 822,
+        "MUX2_X1": 1950,
+        "MUX2_X2": 2,
+        "NAND2_X1": 1182,
+        "NAND3_X1": 264,
+        "NAND4_X1": 59,
+        "NOR2_X1": 1234,
+        "NOR3_X1": 278,
+        "NOR3_X2": 1,
+        "NOR4_X1": 54,
+        "NOR4_X2": 17,
+        "NOR4_X4": 3,
+        "OAI211_X2": 13,
+        "OAI211_X4": 1,
+        "OAI21_X1": 1504,
+        "OAI21_X2": 4,
+        "OAI21_X4": 2,
+        "OAI221_X1": 220,
+        "OAI222_X1": 16,
+        "OAI22_X1": 273,
+        "OAI33_X1": 82,
+        "OR2_X1": 241,
+        "OR2_X2": 2,
+        "OR3_X1": 108,
+        "OR4_X1": 28,
+        "OR4_X2": 3,
+        "XNOR2_X1": 551,
+        "XNOR2_X2": 1,
+        "XOR2_X1": 353,
+        "XOR2_X2": 1
+      },
+      "num_memories": 0,
+      "num_memory_bits": 0,
+      "num_processes": 0,
+      "sequential_area": 10086.986
+    },
+    "stats_validation": "parsed",
+    "tool_identity_stable": true,
+    "top": "ibex_core",
+    "unmapped_cell_types": [],
+    "unmapped_cell_types_truncated": false,
+    "unresolved_literal_includes": [
+      "/design/flow/designs/src/ibex_sv/ibex_multdiv_fast.sv:formal_tb_frag.svh",
+      "/design/flow/designs/src/ibex_sv/ibex_multdiv_slow.sv:formal_tb_frag.svh",
+      "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv:uvm_macros.svh",
+      "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv:prim_assert_yosys_macros.svh",
+      "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv:prim_assert_standard_macros.svh"
+    ],
+    "unresolved_literal_includes_truncated": false,
+    "warning_count": 2,
+    "warnings": [
+      "ABC: Warning: Detected 2 multi-output cells (for example, \"FA_X1\").",
+      "ABC: Warning: The network is combinational (run \"fraig\" or \"fraig_sweep\")."
+    ],
+    "warnings_truncated": false
+  },
+  "diagnostics": [
+    {
+      "code": "yosys.warning",
+      "message": "ABC: Warning: Detected 2 multi-output cells (for example, \"FA_X1\").",
+      "severity": "warning"
+    },
+    {
+      "code": "yosys.warning",
+      "message": "ABC: Warning: The network is combinational (run \"fraig\" or \"fraig_sweep\").",
+      "severity": "warning"
+    }
+  ],
+  "engineering": {
+    "status": "pass",
+    "summary": "Yosys produced and independently validated a complete Liberty-mapped ASIC netlist."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/bin/yosys",
+      "-Q",
+      "-T",
+      "-s",
+      "/evidence/synthesis/synthesize.ys"
+    ],
+    "cwd": "/evidence/synthesis/.openada-synthesize-lrw4i4uq",
+    "duration_ms": 17167,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 11475,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_pkg.sv",
+      "role": "rtl.source",
+      "sha256": "59c6f37dc285b02d785c38094553283070b50b69f572a81b8ba3bc8b39475170"
+    },
+    {
+      "bytes": 46881,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_alu.sv",
+      "role": "rtl.source",
+      "sha256": "919bb850b1cacb672e3b545fd040af9afbf22d684137dbc76ad13dcdfa4bd122"
+    },
+    {
+      "bytes": 10742,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_compressed_decoder.sv",
+      "role": "rtl.source",
+      "sha256": "324d65eb47bd973781cdb65b55e3ece3d03d543d04417009fdf983811ea917a2"
+    },
+    {
+      "bytes": 33885,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_controller.sv",
+      "role": "rtl.source",
+      "sha256": "582949bdbb8b115319c4796d0eb40b7deb9ed88666ebfd3d870f29d3024626d5"
+    },
+    {
+      "bytes": 59689,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_core.sv",
+      "role": "rtl.source",
+      "sha256": "a35ec2de657657b1d02a0a473a44ffa944e53052dc08ac76f7b438cec7382504"
+    },
+    {
+      "bytes": 2148,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_counter.sv",
+      "role": "rtl.source",
+      "sha256": "fc9862a2af52ef7a9e83af9c2c47c52ac4767022f7591f241f771368a1613614"
+    },
+    {
+      "bytes": 50215,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_cs_registers.sv",
+      "role": "rtl.source",
+      "sha256": "d4c2f7d56f5b4071fa4921832460ddfc456c89bb1e08d3e7d8a7c4d82383fee7"
+    },
+    {
+      "bytes": 1307,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_csr.sv",
+      "role": "rtl.source",
+      "sha256": "32a842f1c5cab160be4930f1743f5f8e9e0450187545eef1b48ac80a89afc0d8"
+    },
+    {
+      "bytes": 43909,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_decoder.sv",
+      "role": "rtl.source",
+      "sha256": "9f1b68f98d6675d6ad3d8d940967b36afb6ca7bc84f636d83107f184fa504559"
+    },
+    {
+      "bytes": 8214,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_ex_block.sv",
+      "role": "rtl.source",
+      "sha256": "78f719958d133eb20436d20ae70ac871251a5220218f840380c2bf5049969043"
+    },
+    {
+      "bytes": 9487,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_fetch_fifo.sv",
+      "role": "rtl.source",
+      "sha256": "84c314f0216545339e53b447f4432e7940726029ae63bb2c9c382d44a825f2d5"
+    },
+    {
+      "bytes": 42559,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_id_stage.sv",
+      "role": "rtl.source",
+      "sha256": "180fa414832b5d60d73a966df5b1904109b0007b9ff105813eaa3c53c8075bc1"
+    },
+    {
+      "bytes": 26661,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_if_stage.sv",
+      "role": "rtl.source",
+      "sha256": "9777ab9f63bb3f2262ee14879e5196058768e8836f95bc4218385a98f08c0adf"
+    },
+    {
+      "bytes": 17384,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_load_store_unit.sv",
+      "role": "rtl.source",
+      "sha256": "cc6e0c901a895a7ab2c7aa2371391c48ff956c5d4b2848fc419db7b4f9dd83a8"
+    },
+    {
+      "bytes": 17786,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_multdiv_fast.sv",
+      "role": "rtl.source",
+      "sha256": "30f302d258aa96a303d426ebf543262a02a0531626815ca0b651df9a81d3b44f"
+    },
+    {
+      "bytes": 13148,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_multdiv_slow.sv",
+      "role": "rtl.source",
+      "sha256": "9e5a86e8b0be442866dd431655244e90319ba4e6a37b11f3ca7e4fedd7a225f3"
+    },
+    {
+      "bytes": 5641,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_pmp.sv",
+      "role": "rtl.source",
+      "sha256": "e778718b97e45a9171e856c966523a6add3dda90022002b60ccd11d4c8a508b6"
+    },
+    {
+      "bytes": 12627,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_prefetch_buffer.sv",
+      "role": "rtl.source",
+      "sha256": "95b3d99082c6ebf77cc45c08fd620bd8b70f11efaa3a574c5a543e2bae19ac83"
+    },
+    {
+      "bytes": 3092,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_register_file_ff.sv",
+      "role": "rtl.source",
+      "sha256": "0b3fcfeb3f92560e9995ece3aacb7ca6cb9cb01368720881b5c4b9efef648138"
+    },
+    {
+      "bytes": 6892,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/ibex_wb_stage.sv",
+      "role": "rtl.source",
+      "sha256": "8425144d2367756b634a66b6498a32b55071f0a493b8c98d3a6682800bbe1ed6"
+    },
+    {
+      "bytes": 452,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/flow/designs/src/ibex_sv/syn/rtl/prim_clock_gating.v",
+      "role": "rtl.source",
+      "sha256": "2b03684abf70d0a4b92a5f3026ff8a306db5e367cd038957c0bc96ec5cbbefc2"
+    },
+    {
+      "bytes": 5178,
+      "exists": true,
+      "kind": "hdl-include",
+      "path": "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv",
+      "role": "rtl.include",
+      "sha256": "ebca923df65c9d03905b63244675a1434ed8cca9018fe7ecca319fe14338f3f7"
+    },
+    {
+      "bytes": 894,
+      "exists": true,
+      "kind": "hdl-include",
+      "path": "/design/flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert_dummy_macros.svh",
+      "role": "rtl.include",
+      "sha256": "310e3d2b87105d1892310fa68c5b284e7a9c26c50dd7aa43d0f11c8044750fb5"
+    },
+    {
+      "bytes": 6692032,
+      "exists": true,
+      "kind": "liberty",
+      "path": "/design/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib",
+      "role": "technology.liberty",
+      "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"
+    },
+    {
+      "bytes": 289,
+      "exists": true,
+      "kind": "yosys-techmap",
+      "path": "/design/flow/platforms/nangate45/cells_latch.v",
+      "role": "synthesis.techmap",
+      "sha256": "7e2330df874405c28f92d37f17be088b371b9f378a913e7ca3dbda25ca4c7802"
+    },
+    {
+      "bytes": 39,
+      "exists": true,
+      "kind": "abc-constraint",
+      "path": "/openada/conformance/orfs-ibex-synthesis-timing/abc.constr",
+      "role": "synthesis.abc-constraint",
+      "sha256": "51bf1a4f73a383e038c95dc3eba81fdd33811736285d77e7aaeabf9bd83c69a1"
+    },
+    {
+      "bytes": 21104032,
+      "exists": true,
+      "kind": "eda-executable",
+      "path": "/foss/tools/yosys/bin/yosys-abc",
+      "role": "synthesis.abc-executable",
+      "sha256": "8841cec163543e372becfd08940a4c5d03dc836cd1d3257d53525372d7f2b194"
+    }
+  ],
+  "operation": "synthesize",
+  "provenance": {
+    "created_at": "2026-07-16T15:22:54.801782Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "yosys",
+    "path": "/foss/tools/bin/yosys",
+    "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+  }
+}

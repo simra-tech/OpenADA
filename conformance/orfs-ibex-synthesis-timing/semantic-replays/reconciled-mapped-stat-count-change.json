@@ -1,0 +1,20 @@
+{
+  "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "covers": [
+    "surface|openada.surface/cli.synthesize/v1",
+    "preflight|asic-netlist-synthesized",
+    "profile|openada.operation/logic.synthesize/v1alpha1",
+    "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+    "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+  ],
+  "expected_status": "unknown",
+  "id": "reconciled-mapped-stat-count-change",
+  "mutation": "changed native mapped-stat num_cells and reconciled both the OpenADA artifact digest and run-level result/artifact digests",
+  "observed_diagnostic": "mapped statistics cell histogram does not sum to num_cells",
+  "required_diagnostic": "mapped statistics cell histogram does not sum to num_cells",
+  "schema": "openada.semantic-replay-verdict/v0alpha1",
+  "status": "rejected",
+  "verifier": "conformance/orfs-ibex-synthesis-timing/verify.py"
+}
