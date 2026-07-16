@@ -264,8 +264,17 @@ def _run_contract_tests(chain_id: str) -> dict[str, Any]:
     suite = HERE / "test_agent_chain.py"
     environment = os.environ.copy()
     environment.pop("OPENADA_RUN_IHP_AGENT_CHAIN", None)
+    environment.pop("PYTEST_ADDOPTS", None)
     completed = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", str(suite.relative_to(REPOSITORY_ROOT))],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-o",
+            "addopts=",
+            str(suite.relative_to(REPOSITORY_ROOT)),
+        ],
         cwd=REPOSITORY_ROOT,
         env=environment,
         check=False,

@@ -1606,17 +1606,22 @@ def verify_supporting_documents(
 
 def _run_contract_tests() -> dict[str, Any]:
     suite = REPOSITORY_ROOT / "tests/test_conformance.py"
+    environment = os.environ.copy()
+    environment.pop("PYTEST_ADDOPTS", None)
     completed = subprocess.run(
         [
             sys.executable,
             "-m",
             "pytest",
             "-q",
+            "-o",
+            "addopts=",
             "tests/test_conformance.py",
             "-k",
             "not semantic_",
         ],
         cwd=REPOSITORY_ROOT,
+        env=environment,
         check=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
