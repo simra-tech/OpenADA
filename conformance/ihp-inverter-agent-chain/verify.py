@@ -432,9 +432,11 @@ def _expected_evidence_files(manifest: dict[str, Any], require_chain_run: bool) 
         "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
         "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log",
         "provider/work/test_inverter.raw",
+        "provider/work/openada-native-ngspice",
         "provider/simulation/inverter_tb.log",
         "provider/simulation/inverter_tb.openada-control.sp",
         "provider-fail/work/test_inverter_fail.raw",
+        "provider-fail/work/openada-native-ngspice",
         "provider-fail/simulation/inverter_terminal_nonconvergence.log",
         "provider-fail/simulation/inverter_terminal_nonconvergence.openada-control.sp",
     }
@@ -1427,7 +1429,8 @@ def _verify_provider_result(
     if not isinstance(command, list) or len(command) != 6:
         raise ConformanceError("provider native ngspice command has an unexpected shape")
     expected_script = f"{destination}/simulation/{stem}.openada-control.sp"
-    if command[:4] != [ngspice["path"], "-i", "-n", "-o"] or NGSPICE_TEMP_LOG_RE.fullmatch(command[4]) is None:
+    executable_snapshot = f"{destination}/work/openada-native-ngspice"
+    if command[:4] != [executable_snapshot, "-i", "-n", "-o"] or NGSPICE_TEMP_LOG_RE.fullmatch(command[4]) is None:
         raise ConformanceError("provider native ngspice command differs from the reviewed launcher")
     _expect(command[5], expected_script, f"provider_{expected_status}.command.script")
     _expect(result["execution"]["cwd"], f"{destination}/work", f"provider_{expected_status}.execution.cwd")
@@ -1504,11 +1507,15 @@ def _verify_provider_result(
         )
 
     inputs = _records_by_path(result["inputs"], f"provider_{expected_status}.inputs")
+    native_executable_sha256 = manifest["runtime"]["extensions"]["org.openada"][
+        "ngspice_executable"
+    ]["sha256"]
     expected_hashes = {
         request["target"]["locator"]["path"]: deck_sha256,
         "/evidence/provider-config.json": request["configuration"][0]["locator"]["sha256"],
         "/foss/pdks/ihp-sg13g2/COMMIT": request["configuration"][1]["locator"]["sha256"],
-        "/foss/tools/ngspice/bin/ngspice": manifest["runtime"]["extensions"]["org.openada"]["ngspice_executable"]["sha256"],
+        "/foss/tools/ngspice/bin/ngspice": native_executable_sha256,
+        executable_snapshot: native_executable_sha256,
         "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit": manifest["runtime"]["extensions"]["org.openada"]["pdk"]["ngspice_init"]["sha256"],
         "/foss/tools/ngspice/share/ngspice/scripts/spinit": manifest["runtime"]["extensions"]["org.openada"]["ngspice_system_init"]["sha256"],
     }
@@ -1516,6 +1523,18 @@ def _verify_provider_result(
     for path, digest in expected_hashes.items():
         _expect(inputs[path]["sha256"], digest, f"provider_{expected_status}.inputs[{path}].sha256")
         _expect(inputs[path]["exists"], True, f"provider_{expected_status}.inputs[{path}].exists")
+    snapshot_path = evidence / executable_snapshot.removeprefix("/evidence/")
+    _file_record(
+        inputs[executable_snapshot],
+        snapshot_path,
+        role="configuration",
+        kind="eda-executable-snapshot",
+    )
+    _expect(
+        inputs[executable_snapshot]["bytes"],
+        inputs["/foss/tools/ngspice/bin/ngspice"]["bytes"],
+        f"provider_{expected_status}.executable_snapshot.bytes",
+    )
     return raw_path, parsed
 
 
