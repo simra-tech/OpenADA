@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 import stat
 import tempfile
-from typing import Callable, Sequence
+from typing import Callable, Mapping, Sequence
 
 from ..contract import (
     FileRecordError,
@@ -48,6 +48,19 @@ MAX_CAPTURE_BYTES = 256 * 1024 * 1024
 MAX_MEASUREMENTS = 200
 MAX_MEASUREMENT_NAME_CHARS = 256
 MAX_SOLVER_WARNING_EXAMPLES = 50
+NGSPICE_ENVIRONMENT_OVERRIDE_NAMES = frozenset({"PDK", "PDK_ROOT"})
+NGSPICE_ENVIRONMENT_MODES = frozenset({"inherit", "sanitized"})
+# Provider execution must not resolve helper programs through the caller's
+# PATH.  The built-in driver retains its historical inherited-environment
+# default; the closed provider opts into this fixed POSIX search path.
+NGSPICE_SANITIZED_PATH = "/usr/local/bin:/usr/bin:/bin"
+_SANITIZED_FIXED_ENVIRONMENT = {
+    "LANG": "C",
+    "LC_ALL": "C",
+    "PATH": NGSPICE_SANITIZED_PATH,
+    "TZ": "UTC",
+}
+_PDK_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
 
 TERMINAL_CONVERGENCE_PATTERNS = tuple(
     re.compile(pattern, re.IGNORECASE)
@@ -123,6 +136,31 @@ PURE_CONTROL_SCRIPT_RE = re.compile(
     re.IGNORECASE,
 )
 CONTROL_ARGUMENT_SAFE_RE = re.compile(r"^[A-Za-z0-9_./:@%+,=-]+$")
+
+
+def _sanitized_ngspice_environment(
+    runtime_root: Path,
+    *,
+    overrides: Mapping[str, str],
+    system_init_path: Path | None,
+) -> dict[str, str]:
+    """Build a closed child environment rooted in one private run directory."""
+
+    home = runtime_root / "home"
+    temporary = runtime_root / "tmp"
+    home.mkdir(mode=0o700)
+    temporary.mkdir(mode=0o700)
+    environment = {
+        **_SANITIZED_FIXED_ENVIRONMENT,
+        "HOME": str(home),
+        "TEMP": str(temporary),
+        "TMP": str(temporary),
+        "TMPDIR": str(temporary),
+        **overrides,
+    }
+    if system_init_path is not None:
+        environment["SPICE_SCRIPTS"] = str(system_init_path.parent)
+    return environment
 
 
 @dataclass(frozen=True, slots=True)
@@ -897,12 +935,21 @@ class NgspiceDriver:
         expected_outputs: Sequence[NgspiceOutput] = (),
         init_file: str | Path | None = None,
         system_init_file: str | Path | None = None,
+        environment_overrides: Mapping[str, str] | None = None,
+        environment_mode: str = "inherit",
         timeout: float = 120.0,
     ) -> dict:
         source = Path(spice_file).expanduser().resolve()
         out_dir = Path(output_dir).expanduser().resolve()
         run_dir = Path(workdir).expanduser().resolve() if workdir else source.parent
-        info = self.discovery.inspect_tool("ngspice")
+        # Preserve the built-in driver's historical probe behavior.  A
+        # sanitized invocation defers the native version probe until after all
+        # request-controlled paths and environment values have been checked.
+        info = (
+            self.discovery.inspect_tool("ngspice")
+            if environment_mode == "inherit"
+            else {"version": None}
+        )
         tool = tool_record("ngspice", path=self.binary, version=info["version"])
         base_data = {
             "execution_mode": bounded_text(execution_mode, limit=128),
@@ -959,6 +1006,78 @@ class NgspiceDriver:
                 ),
                 data=base_data,
             )
+        if (
+            not isinstance(environment_mode, str)
+            or environment_mode not in NGSPICE_ENVIRONMENT_MODES
+        ):
+            return _static_invalid(
+                tool,
+                input_records,
+                summary="The ngspice child-environment mode is invalid.",
+                code="environment.invalid",
+                message=(
+                    "environment_mode must be one of "
+                    f"{sorted(NGSPICE_ENVIRONMENT_MODES)}."
+                ),
+                data=base_data,
+            )
+        normalized_environment: dict[str, str] = {}
+        if environment_overrides is not None:
+            if not isinstance(environment_overrides, Mapping):
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The explicit ngspice environment is invalid.",
+                    code="environment.invalid",
+                    message="environment_overrides must be a mapping.",
+                    data=base_data,
+                )
+            if set(environment_overrides) - NGSPICE_ENVIRONMENT_OVERRIDE_NAMES:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The explicit ngspice environment is invalid.",
+                    code="environment.invalid",
+                    message=(
+                        "Only the PDK and PDK_ROOT environment variables may be "
+                        "overridden by this bounded driver interface."
+                    ),
+                    data=base_data,
+                )
+            if any(
+                not isinstance(name, str)
+                or not isinstance(value, str)
+                or not value
+                or len(value) > 4_096
+                or any(ord(character) < 32 or ord(character) == 127 for character in value)
+                for name, value in environment_overrides.items()
+            ):
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The explicit ngspice environment is invalid.",
+                    code="environment.invalid",
+                    message="Environment override values must be bounded non-control text.",
+                    data=base_data,
+                )
+            normalized_environment = dict(environment_overrides)
+            pdk_name = normalized_environment.get("PDK")
+            pdk_root = normalized_environment.get("PDK_ROOT")
+            if (pdk_name is not None and _PDK_NAME_RE.fullmatch(pdk_name) is None) or (
+                pdk_root is not None and not Path(pdk_root).is_absolute()
+            ):
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The explicit ngspice environment is invalid.",
+                    code="environment.invalid",
+                    message=(
+                        "PDK must be a bounded portable name and PDK_ROOT must be "
+                        "an absolute path."
+                    ),
+                    data=base_data,
+                )
+        base_data["requested_environment_overrides"] = normalized_environment
         if not run_dir.is_dir():
             return _static_invalid(
                 tool,
@@ -1319,6 +1438,51 @@ class NgspiceDriver:
                 data=base_data,
             )
 
+        if environment_mode == "sanitized":
+            with tempfile.TemporaryDirectory(
+                prefix="openada-ngspice-probe-environment-"
+            ) as probe_environment_dir:
+                probe_environment = _sanitized_ngspice_environment(
+                    Path(probe_environment_dir),
+                    overrides=normalized_environment,
+                    system_init_path=system_init_path,
+                )
+                info = self.discovery.inspect_tool(
+                    "ngspice",
+                    probe_environment=probe_environment,
+                    include_probe_details=True,
+                )
+            tool = tool_record("ngspice", path=self.binary, version=info["version"])
+            if info.get("status") != "available" or info.get("version") is None:
+                return result(
+                    "simulate",
+                    tool=tool,
+                    execution=static_execution("not_available"),
+                    engineering_status="unknown",
+                    summary="The bound ngspice executable identity could not be verified.",
+                    inputs=input_records,
+                    diagnostics=[
+                        diagnostic(
+                            "error",
+                            "tool.identity_unverified",
+                            "The sanitized ngspice version probe did not return an "
+                            "accepted ngspice identity.",
+                        )
+                    ],
+                    data={
+                        **base_data,
+                        "environment_policy": {
+                            "mode": "sanitized",
+                            "ambient_inherited": False,
+                            "child_variable_names": sorted(probe_environment),
+                            "effective_variables": dict(
+                                sorted(probe_environment.items())
+                            ),
+                        },
+                        "version_probe": info.get("version_probe"),
+                    },
+                )
+
         out_dir.mkdir(parents=True, exist_ok=True)
         if wrapper_raw_required:
             raw_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1338,35 +1502,60 @@ class NgspiceDriver:
             "ambient_startup_files_enumerated": system_init_path is not None,
         }
         base_data["initialization"] = initialization
-        process_environment = None
-        if system_init_path is not None:
+        process_environment: dict[str, str] | None = None
+        if environment_mode == "inherit" and (
+            system_init_path is not None or normalized_environment
+        ):
             process_environment = dict(os.environ)
+            process_environment.update(normalized_environment)
+        if environment_mode == "inherit" and system_init_path is not None:
+            assert process_environment is not None
             process_environment["SPICE_SCRIPTS"] = str(system_init_path.parent)
-        effective_environment = process_environment or os.environ
-        base_data["environment"] = {
-            name: (
-                bounded_text(effective_environment[name], limit=1_024)
-                if name in effective_environment
-                else None
-            )
-            for name in (
-                "PDK",
-                "PDK_ROOT",
-                "SPICE_ASCIIRAWFILE",
-                "SPICE_LIB_DIR",
-                "SPICE_SCRIPTS",
-                "NGSPICE_INPUT_DIR",
-            )
+        base_data["environment_overrides"] = {
+            **normalized_environment,
+            **(
+                {"SPICE_SCRIPTS": str(system_init_path.parent)}
+                if system_init_path is not None
+                else {}
+            ),
         }
-        base_data["environment_overrides"] = (
-            {"SPICE_SCRIPTS": str(system_init_path.parent)}
-            if system_init_path is not None
-            else {}
-        )
+        base_data["environment_policy"] = {
+            "mode": environment_mode,
+            "ambient_inherited": environment_mode == "inherit",
+        }
 
         output_anchors: list[_OutputAnchor] = []
         with tempfile.TemporaryDirectory(prefix="openada-ngspice-") as temp_dir:
             temp_root = Path(temp_dir)
+            if environment_mode == "sanitized":
+                process_environment = _sanitized_ngspice_environment(
+                    temp_root,
+                    overrides=normalized_environment,
+                    system_init_path=system_init_path,
+                )
+            effective_environment = process_environment or os.environ
+            base_data["environment"] = {
+                name: (
+                    bounded_text(effective_environment[name], limit=1_024)
+                    if name in effective_environment
+                    else None
+                )
+                for name in (
+                    "PDK",
+                    "PDK_ROOT",
+                    "SPICE_ASCIIRAWFILE",
+                    "SPICE_LIB_DIR",
+                    "SPICE_SCRIPTS",
+                    "NGSPICE_INPUT_DIR",
+                )
+            }
+            if environment_mode == "sanitized":
+                base_data["environment_policy"]["child_variable_names"] = sorted(
+                    effective_environment
+                )
+                base_data["environment_policy"]["effective_variables"] = dict(
+                    sorted(effective_environment.items())
+                )
             temp_raw = temp_root / "simulation.raw"
             temp_log = temp_root / "simulation.log"
             if execution_mode == "batch":
@@ -1848,4 +2037,9 @@ class NgspiceDriver:
 SpiceEngine = NgspiceDriver
 
 
-__all__ = ["NgspiceDriver", "NgspiceOutput", "SpiceEngine"]
+__all__ = [
+    "NGSPICE_SANITIZED_PATH",
+    "NgspiceDriver",
+    "NgspiceOutput",
+    "SpiceEngine",
+]

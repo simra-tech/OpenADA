@@ -22,6 +22,7 @@ import signal
 import stat
 import subprocess
 import sysconfig
+import tempfile
 import threading
 from typing import Any
 
@@ -43,6 +44,15 @@ MAX_PROVIDER_INPUT_TOTAL_BYTES = 512 * 1024 * 1024
 MAX_PROVIDER_EVIDENCE_BYTES = 512 * 1024 * 1024
 MAX_VALIDATION_ISSUES = 100
 MAX_VALIDATION_ISSUE_CHARS = 2_000
+LOCAL_PROVIDER_SANITIZED_PATH = "/usr/bin:/bin"
+_LOCAL_PROVIDER_FIXED_ENVIRONMENT = {
+    "LANG": "C",
+    "LC_ALL": "C",
+    "PATH": LOCAL_PROVIDER_SANITIZED_PATH,
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "TZ": "UTC",
+}
 
 _SCHEMA_FILENAMES = {
     REQUEST_SCHEMA_ID: "request-v0alpha1.schema.json",
@@ -114,6 +124,16 @@ class ResolvedLocalProvider:
     required_features: tuple[str, ...]
     operation_profile: Mapping[str, Any]
     request_inputs: tuple[_BoundRequestInput, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _ProviderProcessObservation:
+    stdout: bytes
+    stderr: bytes
+    stdout_bytes: int
+    stderr_bytes: int
+    write_errors: tuple[str, ...]
+    returncode: int
 
 
 def _bounded_text(value: object, *, limit: int = MAX_VALIDATION_ISSUE_CHARS) -> str:
@@ -904,11 +924,20 @@ def _resolve_executable(argv0: str, *, cwd: Path) -> str:
                 issues=(_bounded_text(exc),),
             ) from exc
     else:
-        found = shutil.which(argv0)
+        # Bare provider entrypoints are resolved only from paths derived from
+        # the authorized working directory/current Python installation plus
+        # fixed system locations.  Ambient PATH must not select provider code.
+        search_entries = [str(cwd / "bin")]
+        scripts = sysconfig.get_path("scripts")
+        if scripts:
+            search_entries.append(scripts)
+        search_entries.extend(LOCAL_PROVIDER_SANITIZED_PATH.split(os.pathsep))
+        search_path = os.pathsep.join(dict.fromkeys(search_entries))
+        found = shutil.which(argv0, path=search_path)
         if found is None:
             raise ProviderRuntimeError(
                 "provider.transport.unavailable",
-                f"The provider executable is not on PATH: {argv0!r}",
+                f"The provider executable is not on the bounded provider search path: {argv0!r}",
             )
         resolved = Path(found).resolve()
     try:
@@ -1360,6 +1389,260 @@ def _write_stdin(stream, body: bytes, error: list[str]) -> None:
             pass
 
 
+def _local_provider_environment(root: Path) -> dict[str, str]:
+    """Return the exact environment visible to a local provider process."""
+
+    home = root / "home"
+    temporary = root / "tmp"
+    home.mkdir(mode=0o700)
+    temporary.mkdir(mode=0o700)
+    return {
+        **_LOCAL_PROVIDER_FIXED_ENVIRONMENT,
+        "HOME": str(home),
+        "TEMP": str(temporary),
+        "TMP": str(temporary),
+        "TMPDIR": str(temporary),
+    }
+
+
+def _snapshot_transport_file(
+    source: Path,
+    destination: Path,
+    *,
+    expected_identity: tuple[int, int, int, int, int, int],
+    executable: bool,
+) -> tuple[int, int, int, int, int, int, str]:
+    """Copy one already-bound launch file into a fresh private directory."""
+
+    read_flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    write_flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_CLOEXEC", 0)
+    try:
+        source_fd = os.open(source, read_flags)
+        try:
+            opened = os.fstat(source_fd)
+            observed_identity = (
+                opened.st_dev,
+                opened.st_ino,
+                opened.st_mode,
+                opened.st_size,
+                opened.st_mtime_ns,
+                opened.st_ctime_ns,
+            )
+            if (
+                observed_identity != expected_identity
+                or not stat.S_ISREG(opened.st_mode)
+                or opened.st_nlink != 1
+                or opened.st_size > MAX_PROVIDER_CONFIGURATION_BYTES
+            ):
+                raise OSError("launch input identity changed or is not a bounded regular file")
+            destination_fd = os.open(destination, write_flags, 0o500 if executable else 0o400)
+            digest = hashlib.sha256()
+            total = 0
+            try:
+                while block := os.read(source_fd, 1024 * 1024):
+                    total += len(block)
+                    if total > MAX_PROVIDER_CONFIGURATION_BYTES:
+                        raise OSError("launch input exceeded the snapshot ceiling")
+                    digest.update(block)
+                    position = 0
+                    while position < len(block):
+                        position += os.write(destination_fd, block[position:])
+                os.fsync(destination_fd)
+            finally:
+                os.close(destination_fd)
+            finished = os.fstat(source_fd)
+        finally:
+            os.close(source_fd)
+        if _executable_identity(str(source)) != expected_identity or (
+            finished.st_dev,
+            finished.st_ino,
+            finished.st_mode,
+            finished.st_size,
+            finished.st_mtime_ns,
+            finished.st_ctime_ns,
+        ) != expected_identity:
+            raise OSError("launch input changed while its private snapshot was created")
+        snapshot = destination.stat()
+        return (
+            snapshot.st_dev,
+            snapshot.st_ino,
+            snapshot.st_mode,
+            snapshot.st_size,
+            snapshot.st_mtime_ns,
+            snapshot.st_ctime_ns,
+            digest.hexdigest(),
+        )
+    except OSError:
+        try:
+            destination.unlink()
+        except OSError:
+            pass
+        raise
+
+
+def _snapshot_transport_argv(
+    argv: Sequence[str],
+    snapshot_indices: Sequence[int],
+    expected_identities: Mapping[str, tuple[int, int, int, int, int, int]],
+    root: Path,
+) -> tuple[list[str], dict[Path, tuple[int, int, int, int, int, int, str]]]:
+    private = root / "launch"
+    private.mkdir(mode=0o700)
+    snapped = list(argv)
+    identities: dict[Path, tuple[int, int, int, int, int, int, str]] = {}
+    for index in sorted(set(snapshot_indices)):
+        source = Path(argv[index])
+        destination = private / f"{index:03d}-{source.name}"
+        identity = _snapshot_transport_file(
+            source,
+            destination,
+            expected_identity=expected_identities[str(source)],
+            executable=index == 0 or os.access(source, os.X_OK),
+        )
+        snapped[index] = str(destination)
+        identities[destination] = identity
+    return snapped, identities
+
+
+def _run_local_provider_transport(
+    argv: Sequence[str],
+    *,
+    directory: Path,
+    request_body: bytes,
+    timeout: float,
+    max_result_bytes: int,
+    max_stderr_bytes: int,
+    snapshot_indices: Sequence[int],
+    expected_identities: Mapping[str, tuple[int, int, int, int, int, int]],
+) -> _ProviderProcessObservation:
+    """Run one JSON-stdio provider under a closed, private environment."""
+
+    with tempfile.TemporaryDirectory(
+        prefix="openada-provider-environment-"
+    ) as environment_directory:
+        environment = _local_provider_environment(Path(environment_directory))
+        environment_root = Path(environment_directory)
+        try:
+            launch_argv, snapshot_identities = _snapshot_transport_argv(
+                argv,
+                snapshot_indices,
+                expected_identities,
+                environment_root,
+            )
+            process = subprocess.Popen(
+                launch_argv,
+                cwd=str(directory),
+                env=environment,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                start_new_session=os.name == "posix",
+            )
+        except (OSError, ValueError) as exc:
+            raise ProviderRuntimeError(
+                "provider.transport.unavailable",
+                "The external provider could not be launched",
+                issues=(_bounded_text(exc),),
+            ) from exc
+
+        assert process.stdin is not None
+        assert process.stdout is not None
+        assert process.stderr is not None
+        stdout = bytearray()
+        stderr = bytearray()
+        stdout_total = [0]
+        stderr_total = [0]
+        write_errors: list[str] = []
+        threads = (
+            threading.Thread(
+                target=_write_stdin,
+                args=(process.stdin, request_body, write_errors),
+                daemon=True,
+            ),
+            threading.Thread(
+                target=_drain_bounded,
+                args=(
+                    process.stdout,
+                    stdout,
+                    stdout_total,
+                    max_result_bytes,
+                    process,
+                ),
+                daemon=True,
+            ),
+            threading.Thread(
+                target=_drain_bounded,
+                args=(
+                    process.stderr,
+                    stderr,
+                    stderr_total,
+                    max_stderr_bytes,
+                    process,
+                ),
+                daemon=True,
+            ),
+        )
+        for thread in threads:
+            thread.start()
+
+        try:
+            process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired as exc:
+            _kill_process_group(process)
+            process.wait()
+            raise ProviderRuntimeError(
+                "provider.transport.timed_out",
+                f"The provider exceeded the declared {timeout:g}-second timeout",
+            ) from exc
+        else:
+            # A wait transport owns the whole fresh process group.  A provider
+            # may not return while leaving inherited descendants alive.
+            _kill_process_group(process)
+        finally:
+            for thread in threads:
+                thread.join(timeout=1.0)
+            for stream in (process.stdout, process.stderr):
+                try:
+                    stream.close()
+                except (OSError, ValueError):
+                    pass
+
+        assert process.returncode is not None
+        for snapshot, expected in snapshot_identities.items():
+            try:
+                observed = snapshot.stat()
+                digest = hashlib.sha256(snapshot.read_bytes()).hexdigest()
+            except OSError as exc:
+                raise ProviderRuntimeError(
+                    "provider.transport.identity_changed",
+                    "A private provider launch snapshot disappeared during invocation",
+                    issues=(_bounded_text(exc),),
+                ) from exc
+            identity = (
+                observed.st_dev,
+                observed.st_ino,
+                observed.st_mode,
+                observed.st_size,
+                observed.st_mtime_ns,
+                observed.st_ctime_ns,
+                digest,
+            )
+            if identity != expected:
+                raise ProviderRuntimeError(
+                    "provider.transport.identity_changed",
+                    "A private provider launch snapshot changed during invocation",
+                    issues=(str(snapshot),),
+                )
+        return _ProviderProcessObservation(
+            stdout=bytes(stdout),
+            stderr=bytes(stderr),
+            stdout_bytes=stdout_total[0],
+            stderr_bytes=stderr_total[0],
+            write_errors=tuple(write_errors),
+            returncode=process.returncode,
+        )
+
+
 def _parse_result(body: bytes) -> dict[str, Any]:
     try:
         parsed = json.loads(
@@ -1553,7 +1836,17 @@ def _circuit_result_issues(
             issues.append(
                 "#/data/analysis/convergence: fail requires 'non-converged'"
             )
-        for field, value in {"request_binding": "exact", "freshness": "fresh"}.items():
+        for field in ("point_count", "dependent_variable_count", "finite_value_count"):
+            value = analysis[field]
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                issues.append(
+                    f"#/data/analysis/{field}: fail requires a positive integer"
+                )
+        for field, value in {
+            "request_binding": "exact",
+            "freshness": "fresh",
+            "structure": "valid",
+        }.items():
             if evidence[field] != value:
                 issues.append(f"#/data/evidence/{field}: fail requires {value!r}")
     elif status == "unknown" and not payload["diagnostics"]:
@@ -1856,72 +2149,17 @@ def invoke_local_provider(
     before_identities = {
         path: _executable_identity(path) for path in identity_paths
     }
-    try:
-        process = subprocess.Popen(
-            argv,
-            cwd=str(directory),
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            start_new_session=os.name == "posix",
-        )
-    except (OSError, ValueError) as exc:
-        raise ProviderRuntimeError(
-            "provider.transport.unavailable",
-            "The external provider could not be launched",
-            issues=(_bounded_text(exc),),
-        ) from exc
-
-    assert process.stdin is not None
-    assert process.stdout is not None
-    assert process.stderr is not None
-    stdout = bytearray()
-    stderr = bytearray()
-    stdout_total = [0]
-    stderr_total = [0]
-    write_errors: list[str] = []
-    threads = (
-        threading.Thread(
-            target=_write_stdin,
-            args=(process.stdin, request_body, write_errors),
-            daemon=True,
-        ),
-        threading.Thread(
-            target=_drain_bounded,
-            args=(process.stdout, stdout, stdout_total, max_result_bytes, process),
-            daemon=True,
-        ),
-        threading.Thread(
-            target=_drain_bounded,
-            args=(process.stderr, stderr, stderr_total, max_stderr_bytes, process),
-            daemon=True,
-        ),
-    )
-    for thread in threads:
-        thread.start()
-
     timeout = request["execution_constraints"]["timeout_ms"] / 1000.0
-    try:
-        process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired as exc:
-        _kill_process_group(process)
-        process.wait()
-        raise ProviderRuntimeError(
-            "provider.transport.timed_out",
-            f"The provider exceeded the declared {timeout:g}-second timeout",
-        ) from exc
-    else:
-        # A wait transport owns the whole fresh process group.  A provider may
-        # not return a final result while leaving inherited descendants alive.
-        _kill_process_group(process)
-    finally:
-        for thread in threads:
-            thread.join(timeout=1.0)
-        for stream in (process.stdout, process.stderr):
-            try:
-                stream.close()
-            except (OSError, ValueError):
-                pass
+    observation = _run_local_provider_transport(
+        argv,
+        directory=directory,
+        request_body=request_body,
+        timeout=timeout,
+        max_result_bytes=max_result_bytes,
+        max_stderr_bytes=max_stderr_bytes,
+        snapshot_indices=[0, *(index for index, _ in resolved.bound_argv_files)],
+        expected_identities=before_identities,
+    )
 
     try:
         after_identities = {
@@ -1947,31 +2185,31 @@ def invoke_local_provider(
     _check_evidence_destination_parent(
         evidence_destination, destination_parent_identity
     )
-    if stdout_total[0] > max_result_bytes:
+    if observation.stdout_bytes > max_result_bytes:
         raise ProviderRuntimeError(
             "provider.result.over_limit",
             f"Provider stdout exceeded the {max_result_bytes}-byte result limit",
         )
-    if stderr_total[0] > max_stderr_bytes:
+    if observation.stderr_bytes > max_stderr_bytes:
         raise ProviderRuntimeError(
             "provider.transport.stderr_over_limit",
             f"Provider stderr exceeded the {max_stderr_bytes}-byte transport limit",
         )
-    if write_errors:
+    if observation.write_errors:
         raise ProviderRuntimeError(
             "provider.transport.failed",
             "The request could not be written completely to provider stdin",
-            issues=write_errors,
+            issues=observation.write_errors,
         )
-    if process.returncode != 0:
+    if observation.returncode != 0:
         raise ProviderRuntimeError(
             "provider.transport.failed",
             "The provider transport process did not exit zero after delivering its result",
-            issues=(f"exit code: {process.returncode}",),
+            issues=(f"exit code: {observation.returncode}",),
         )
-    if stderr_total[0]:
+    if observation.stderr_bytes:
         try:
-            stderr_text = bytes(stderr).decode("utf-8", errors="strict")
+            stderr_text = observation.stderr.decode("utf-8", errors="strict")
         except UnicodeDecodeError:
             stderr_text = "provider stderr was not valid UTF-8"
         raise ProviderRuntimeError(
@@ -1979,12 +2217,13 @@ def invoke_local_provider(
             "The provider wrote outside the JSON result stream",
             issues=(_bounded_text(stderr_text),),
         )
-    payload = _parse_result(bytes(stdout))
+    payload = _parse_result(observation.stdout)
     validate_provider_result(payload, request, resolved)
     return payload
 
 
 __all__ = [
+    "LOCAL_PROVIDER_SANITIZED_PATH",
     "MANIFEST_SCHEMA_ID",
     "MAX_MANIFEST_BYTES",
     "MAX_REQUEST_BYTES",

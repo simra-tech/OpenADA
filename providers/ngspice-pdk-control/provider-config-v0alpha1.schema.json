@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
+  "title": "OpenADA ngspice PDK-control provider configuration v0alpha1",
+  "description": "Explicit content identities for the two startup files consumed by the reference PDK-control provider. The native ngspice executable is selected only by the provider-owned host boundary.",
+  "type": "object",
+  "required": [
+    "schema",
+    "init_file",
+    "system_init_file",
+    "environment",
+    "extensions"
+  ],
+  "properties": {
+    "schema": {
+      "const": "openada.ngspice-provider-config/v0alpha1"
+    },
+    "init_file": {
+      "$ref": "#/$defs/fileIdentity"
+    },
+    "system_init_file": {
+      "$ref": "#/$defs/fileIdentity"
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "PDK",
+        "PDK_ROOT"
+      ],
+      "properties": {
+        "PDK": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+        },
+        "PDK_ROOT": {
+          "type": "string",
+          "pattern": "^/",
+          "maxLength": 4096
+        }
+      },
+      "additionalProperties": false
+    },
+    "extensions": {
+      "type": "object",
+      "maxProperties": 0
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "fileIdentity": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^/"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

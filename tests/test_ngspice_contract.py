@@ -44,6 +44,7 @@ def _write_fake_ngspice(
     deck_outputs: dict[str, bytes] | None = None,
     log: str = "No. of Data Rows : 2\n",
     exit_code: int = 0,
+    environment_capture: Path | None = None,
 ) -> None:
     encoded_wrapper = base64.b64encode(wrapper_raw).decode("ascii")
     encoded_outputs = {
@@ -52,9 +53,16 @@ def _write_fake_ngspice(
     }
     body = f"""#!/usr/bin/env python3
 import base64
+import json
+import os
 import pathlib
 import re
 import sys
+
+capture_path = {str(environment_capture) if environment_capture is not None else None!r}
+if capture_path is not None:
+    with pathlib.Path(capture_path).open('a', encoding='utf-8') as handle:
+        handle.write(json.dumps(dict(os.environ), sort_keys=True) + '\\n')
 
 if '--version' in sys.argv or '-v' in sys.argv:
     print('ngspice-1.0')
@@ -116,6 +124,142 @@ def test_default_mode_uses_only_exact_streaming_batch_flags(tmp_path):
     assert command[6] == str(source.resolve())
     assert "-n" not in command
     assert payload["data"]["execution_mode"] == "batch"
+
+
+def test_explicit_pdk_environment_is_allowlisted_and_recorded(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        environment_overrides={"PDK": "ihp-sg13g2", "PDK_ROOT": "/foss/pdks"},
+    )
+
+    assert payload["engineering"]["status"] == "pass"
+    assert payload["data"]["requested_environment_overrides"] == {
+        "PDK": "ihp-sg13g2",
+        "PDK_ROOT": "/foss/pdks",
+    }
+    assert payload["data"]["environment"]["PDK"] == "ihp-sg13g2"
+    assert payload["data"]["environment"]["PDK_ROOT"] == "/foss/pdks"
+    assert payload["data"]["environment_overrides"] == {
+        "PDK": "ihp-sg13g2",
+        "PDK_ROOT": "/foss/pdks",
+    }
+
+    rejected = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "rejected",
+        environment_overrides={"LD_PRELOAD": "/tmp/untrusted.so"},
+    )
+    assert rejected["execution"]["status"] == "invalid_request"
+    assert rejected["engineering"]["status"] == "unknown"
+    assert _diagnostic_codes(rejected) == {"environment.invalid"}
+
+
+def test_sanitized_environment_blocks_hostile_ambient_from_probe_and_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    binary = tmp_path / "ngspice"
+    capture = tmp_path / "child-environments.jsonl"
+    _write_fake_ngspice(binary, environment_capture=capture)
+    source = _source(tmp_path)
+    init_file = tmp_path / "provider-init"
+    init_file.write_text("set numdgt=12\n", encoding="utf-8")
+    scripts = tmp_path / "scripts"
+    scripts.mkdir()
+    system_init = scripts / "spinit"
+    system_init.write_text("* explicit system init\n", encoding="utf-8")
+    hostile = {
+        "LD_PRELOAD": "/attacker/preload.so",
+        "LD_LIBRARY_PATH": "/attacker/lib",
+        "PYTHONPATH": "/attacker/python",
+        "PYTHONHOME": "/attacker/home",
+        "HOME": "/attacker/user-home",
+        "NGSPICE_INPUT_DIR": "/attacker/ngspice-input",
+        "SPICE_LIB_DIR": "/attacker/spice-lib",
+        "SPICE_ASCIIRAWFILE": "1",
+        "TMPDIR": "/attacker/tmp",
+    }
+    for name, value in hostile.items():
+        monkeypatch.setenv(name, value)
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        execution_mode="control",
+        init_file=init_file,
+        system_init_file=system_init,
+        environment_overrides={"PDK": "fixture-pdk", "PDK_ROOT": str(tmp_path)},
+        environment_mode="sanitized",
+    )
+
+    assert payload["engineering"]["status"] == "pass"
+    observed = [json.loads(line) for line in capture.read_text().splitlines()]
+    assert len(observed) == 2  # accepted version probe and simulation
+    expected_names = {
+        "HOME",
+        "LANG",
+        "LC_ALL",
+        "PATH",
+        "PDK",
+        "PDK_ROOT",
+        "SPICE_SCRIPTS",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+        "TZ",
+    }
+    forbidden_names = set(hostile) - {"HOME", "TMPDIR"}
+    for child_environment in observed:
+        assert set(child_environment) == expected_names
+        assert forbidden_names.isdisjoint(child_environment)
+        assert child_environment["HOME"] != hostile["HOME"]
+        assert child_environment["TMPDIR"] != hostile["TMPDIR"]
+        assert child_environment["PDK"] == "fixture-pdk"
+        assert child_environment["PDK_ROOT"] == str(tmp_path)
+        assert child_environment["SPICE_SCRIPTS"] == str(scripts)
+    policy = payload["data"]["environment_policy"]
+    assert policy["mode"] == "sanitized"
+    assert policy["ambient_inherited"] is False
+    assert policy["child_variable_names"] == sorted(expected_names)
+    assert policy["effective_variables"] == observed[-1]
+
+
+@pytest.mark.parametrize("version_output", ["", "not actually ngspice\n"])
+def test_sanitized_mode_does_not_launch_an_unverified_executable(
+    tmp_path: Path,
+    version_output: str,
+) -> None:
+    binary = tmp_path / "ngspice"
+    launch_marker = tmp_path / "launched"
+    binary.write_text(
+        "#!/usr/bin/env python3\n"
+        "import pathlib, sys\n"
+        f"version_output = {version_output!r}\n"
+        "if '--version' in sys.argv or '-v' in sys.argv:\n"
+        "    if version_output:\n"
+        "        print(version_output, end='')\n"
+        "    raise SystemExit(0)\n"
+        f"pathlib.Path({str(launch_marker)!r}).write_text('launched')\n",
+        encoding="utf-8",
+    )
+    binary.chmod(0o755)
+    source = _source(tmp_path)
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        environment_mode="sanitized",
+    )
+
+    assert payload["execution"]["status"] == "not_available"
+    assert payload["engineering"]["status"] == "unknown"
+    assert _diagnostic_codes(payload) == {"tool.identity_unverified"}
+    assert not launch_marker.exists()
 
 
 @pytest.mark.parametrize(

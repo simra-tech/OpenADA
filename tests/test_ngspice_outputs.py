@@ -218,6 +218,65 @@ def test_request_binding_treats_dc_stop_as_an_upper_limit(tmp_path):
     ) == (30, 2, 60)
 
 
+def test_request_binding_accepts_ngspice_generic_dc_axis_for_named_source(tmp_path):
+    raw = tmp_path / "dc-v1.raw"
+    raw.write_bytes(
+        _ascii_plot(
+            plotname="DC transfer characteristic",
+            points=3,
+            variables=["v(v-sweep) voltage", "v(out) voltage"],
+            rows=[["0", "1.2"], ["0.5", "0.6"], ["1", "0"]],
+        )
+    )
+    validation = validate_ngspice_raw(raw)
+    analysis = {
+        "type": "dc",
+        "source_name": "V1",
+        "source_unit": "V",
+        "start": 0.0,
+        "stop": 1.0,
+        "step": 0.5,
+        "extensions": {},
+    }
+
+    assert validation.valid is True
+    assert analysis_raw_counts({"validation": validation.to_dict()}, analysis) == (
+        3,
+        1,
+        3,
+    )
+
+
+def test_request_binding_accepts_exact_ngspice_linearized_transient_plot(tmp_path):
+    raw = tmp_path / "linearized.raw"
+    raw.write_bytes(
+        _ascii_plot(
+            plotname="Transient Analysis (linearized)",
+            points=4,
+            variables=["time time", "v(out) voltage"],
+            rows=[
+                ["5e-7", "0.0"],
+                ["5.3125e-7", "0.5"],
+                ["5.625e-7", "1.0"],
+                ["5.9375e-7", "0.5"],
+            ],
+        )
+    )
+    validation = validate_ngspice_raw(raw)
+    analysis = {
+        "type": "tran",
+        "step_s": 3.125e-8,
+        "start_s": 5e-7,
+        "stop_s": 5.9375e-7,
+        "extensions": {},
+    }
+
+    assert validation.valid is True
+    assert analysis_raw_counts(
+        {"validation": validation.to_dict()}, analysis
+    ) == (4, 1, 4)
+
+
 def test_raw_validator_handles_unpadded_variable_dimensions(tmp_path):
     raw = tmp_path / "unpadded.raw"
     variables = ["yes notype dims=1", "short voltage dims=3", "long voltage"]

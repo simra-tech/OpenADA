@@ -1,0 +1,118 @@
+{
+  "schema": "openada.driver-manifest/v0alpha1",
+  "driver": {
+    "id": "org.openada.driver.ngspice-pdk-control",
+    "name": "OpenADA ngspice PDK control-deck provider",
+    "version": "0.5.0",
+    "homepage": "https://github.com/simra-tech/OpenADA",
+    "source": "https://github.com/simra-tech/OpenADA/tree/main/src/openada/providers/ngspice_pdk_control.py",
+    "license": "MIT",
+    "extensions": {}
+  },
+  "native_products": [
+    {
+      "product_id": "org.ngspice.simulator",
+      "name": "ngspice",
+      "vendor": "ngspice project",
+      "roles": [
+        "circuit-simulator"
+      ],
+      "version_policy": {
+        "mode": "probe-and-record",
+        "tested_versions": [
+          "** ngspice-46 : Circuit level simulation program"
+        ],
+        "extensions": {}
+      },
+      "executable_names": [
+        "ngspice"
+      ],
+      "extensions": {}
+    }
+  ],
+  "transports": [
+    {
+      "id": "local-json-stdio",
+      "type": "local-cli",
+      "argv": [
+        "openada-provider-ngspice"
+      ],
+      "request_encoding": "json-stdin",
+      "result_encoding": "json-stdout",
+      "completion_modes": [
+        "wait"
+      ],
+      "extensions": {}
+    }
+  ],
+  "capabilities": [
+    {
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "assertion_profiles": [
+        "openada.assertion/simulation.evidence.valid/v1alpha1"
+      ],
+      "result_schema_ids": [
+        "openada.result/v0alpha1"
+      ],
+      "features": [
+        "openada.feature/simulation.analysis.op/v1alpha1",
+        "openada.feature/simulation.analysis.dc/v1alpha1",
+        "openada.feature/simulation.analysis.ac/v1alpha1",
+        "openada.feature/simulation.analysis.tran/v1alpha1"
+      ],
+      "locator_types": [
+        "filesystem"
+      ],
+      "completion_modes": [
+        "wait"
+      ],
+      "side_effect_modes": [
+        "evidence-only"
+      ],
+      "transport_ids": [
+        "local-json-stdio"
+      ],
+      "native_product_ids": [
+        "org.ngspice.simulator"
+      ],
+      "maturity": "workflow-validated",
+      "conformance_record_ids": [
+        "org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1"
+      ],
+      "extensions": {}
+    }
+  ],
+  "conformance_records": [
+    {
+      "record_id": "org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1",
+      "level": "workflow-validated",
+      "case": "success",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "status": "pass",
+      "result_schema_id": "openada.result/v0alpha1",
+      "driver_version": "0.5.0",
+      "verified_at": "2026-07-16T00:47:39Z",
+      "evidence": {
+        "uri": "https://github.com/simra-tech/OpenADA/tree/main/conformance/ihp-ngspice-provider-analyses",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "extensions": {}
+      },
+      "native_product_versions": [
+        {
+          "product_id": "org.ngspice.simulator",
+          "version": "** ngspice-46 : Circuit level simulation program",
+          "extensions": {}
+        }
+      ],
+      "environment": {
+        "operating_system": "Linux",
+        "architecture": "x86_64",
+        "runtime": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+        "extensions": {}
+      },
+      "extensions": {}
+    }
+  ],
+  "extensions": {}
+}

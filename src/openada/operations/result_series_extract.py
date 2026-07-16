@@ -34,6 +34,11 @@ _NATIVE_TYPE_UNITS = {
 }
 _DRIVER_BACKENDS = {
     "org.openada.driver.ngspice": ("ngspice", "ngspice", "ngspice-raw"),
+    "org.openada.driver.ngspice-pdk-control": (
+        "ngspice",
+        "ngspice",
+        "ngspice-raw",
+    ),
     "org.openada.driver.xyce": ("xyce", "xyce", "xyce-raw"),
 }
 

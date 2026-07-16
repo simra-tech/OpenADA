@@ -146,7 +146,7 @@
           "required": ["operation_profile", "request_id", "driver_id", "driver_version", "backend", "analysis_type", "artifact", "binding"],
           "properties": {
             "operation_profile": {"const": "openada.operation/circuit.simulate/v1alpha2"}, "request_id": {"type": "string", "format": "uuid"},
-            "driver_id": {"enum": ["org.openada.driver.ngspice", "org.openada.driver.xyce"]}, "driver_version": {"type": "string", "minLength": 1},
+            "driver_id": {"enum": ["org.openada.driver.ngspice", "org.openada.driver.ngspice-pdk-control", "org.openada.driver.xyce"]}, "driver_version": {"type": "string", "minLength": 1},
             "backend": {"enum": ["ngspice", "xyce"]}, "analysis_type": {"enum": ["op", "dc", "ac", "tran"]},
             "artifact": {"$ref": "#/$defs/fileRecord"}, "binding": {"enum": ["verified", "not-established"]}
           },
@@ -216,7 +216,17 @@
       "freshness": "immutable-input",
       "integrity": ["Require one passing circuit.simulate/v1alpha2 result with exact request and fresh structural evidence.", "Reopen one stable regular file and require exact retained canonical path, bytes, and SHA-256 throughout bounded extraction."],
       "native_authority": "The retained ngspice or Xyce raw artifact remains authoritative; the normalized series is a bounded selected projection with exact lineage.",
-      "extensions": {}
+      "extensions": {
+        "org.openada": {
+          "additional_simulation_driver_mappings": [
+            {
+              "driver_id": "org.openada.driver.ngspice-pdk-control",
+              "native_format": "ngspice-raw",
+              "conformance_chain_id": "openada.chain/ihp-inverter-agent-chain/v1"
+            }
+          ]
+        }
+      }
     }],
     "integrity_rules": ["Reject duplicate or absent native selectors and output names.", "Bind axis and dependent units only through typed analysis parameters and closed native variable types.", "Hash the normalized series independently of the native artifact and retain both identities."],
     "provenance_limitations": ["The extraction verifies only the top-level simulation result and exact retained artifact, not complete transitive model/PDK provenance beyond that result.", "result.measure/v1alpha1 independently treats optional native lineage as unverified even when this extraction result established it."],
@@ -238,7 +248,7 @@
   ],
   "native_mappings": [
     {
-      "driver_id": "org.openada.kernel.ngspice-series",
+      "driver_id": "org.openada.kernel.spice3-series",
       "native_product_id": "org.openada.format.ngspice-raw",
       "backend_name": "Bounded ngspice Spice3 raw extractor",
       "supported_analyses": ["op", "dc", "ac", "tran"],
@@ -249,7 +259,7 @@
       "extensions": {}
     },
     {
-      "driver_id": "org.openada.kernel.xyce-series",
+      "driver_id": "org.openada.kernel.spice3-series",
       "native_product_id": "org.openada.format.xyce-raw",
       "backend_name": "Bounded Xyce ASCII Spice3 raw extractor",
       "supported_analyses": ["dc", "ac", "tran"],

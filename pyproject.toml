@@ -35,6 +35,7 @@ Issues = "https://github.com/simra-tech/OpenADA/issues"
 
 [project.scripts]
 openada = "openada.cli:main"
+openada-provider-ngspice = "openada.providers.ngspice_pdk_control:main"
 
 [project.optional-dependencies]
 conformance = [
@@ -58,6 +59,13 @@ where = ["src"]
   "schemas/operation-profile-v0alpha2.schema.json",
   "schemas/request-v0alpha1.schema.json",
   "schemas/result-v0alpha1.schema.json",
+  "schemas/design-provenance-v0alpha1.schema.json",
+  "schemas/semantic-chain-manifest-v0alpha1.schema.json",
+  "schemas/semantic-chain-run-v0alpha1.schema.json",
+  "schemas/semantic-surface-catalog-v0alpha1.schema.json",
+]
+"share/openada/catalog" = [
+  "catalog/semantic-surfaces-v0alpha1.json",
 ]
 "share/openada/profiles" = [
   "profiles/circuit.simulate-v1alpha1.json",
@@ -67,6 +75,10 @@ where = ["src"]
   "profiles/result.spectral.measure-v1alpha1.json",
   "profiles/result.transfer.measure-v1alpha1.json",
   "profiles/specification.evaluate-v1alpha1.json",
+]
+"share/openada/providers/ngspice-pdk-control" = [
+  "providers/ngspice-pdk-control/driver-manifest.json",
+  "providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
 ]
 
 [tool.pytest.ini_options]

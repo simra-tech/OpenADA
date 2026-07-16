@@ -407,6 +407,14 @@ streams and time, uses a fresh process group, and terminates that group on
 timeout, overflow, and after the provider parent exits. Only descendants that
 remain in the fresh group are killed; a process that deliberately detaches from
 it can escape this containment. This lifecycle hygiene is not a sandbox.
+Bare entrypoints resolve from the authorized working directory's `bin`, the
+current Python installation's scripts directory, and fixed system paths; caller
+`PATH` is not consulted. The provider process receives a closed environment
+with fixed locale, timezone, and `/usr/bin:/bin` search path, Python user-site
+and bytecode writes disabled, and private home/temp directories. Ambient
+Python, loader, PDK, and tool variables do not cross the transport boundary.
+Provider-specific configuration must be carried by the request and explicitly
+reintroduced by the selected provider for its native child.
 
 After parsing, the runtime validates the generic result, installed profile data
 schema, assertion truth table, evidence roles and byte ceilings, and

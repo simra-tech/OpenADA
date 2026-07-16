@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""Run the reference ngspice PDK-control provider from source or a plugin cache."""
+
+from pathlib import Path
+import sys
+
+
+ROOT = Path.cwd().resolve()
+if not (ROOT / "src" / "openada").is_dir():
+    ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from openada.providers.ngspice_pdk_control import main  # noqa: E402
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

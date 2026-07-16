@@ -742,7 +742,15 @@ def _analysis_plot_matches(plotname: object, analysis_type: str) -> bool:
     if analysis_type == "ac":
         return normalized == "ac analysis"
     if analysis_type == "tran":
-        return normalized == "transient analysis"
+        # ngspice gives a uniformly resampled transient created by the exact
+        # ``linearize`` command a distinct plot name.  It is still evidence
+        # for the requested transient analysis; accepting only this reviewed
+        # spelling keeps plot selection closed while allowing coherent FFT
+        # workflows to consume the native result.
+        return normalized in {
+            "transient analysis",
+            "transient analysis (linearized)",
+        }
     return False
 
 
@@ -914,7 +922,14 @@ def analysis_raw_counts(
             return None
         source_name = _normalized_axis_name(analysis.get("source_name"))
         axis_name = _normalized_axis_name(plot.get("independent_variable"))
-        if not source_name or (axis_name != "sweep" and not axis_name.endswith(source_name)):
+        ngspice_generic_axis = (
+            metadata.get("format") == "ngspice-raw" and axis_name == "vvsweep"
+        )
+        if not source_name or (
+            axis_name != "sweep"
+            and not ngspice_generic_axis
+            and not axis_name.endswith(source_name)
+        ):
             return None
         if not _axis_matches(plot.get("axis_first"), analysis.get("start")):
             return None

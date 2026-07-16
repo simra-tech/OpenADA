@@ -5,7 +5,7 @@
     "operation_profile": {
       "id": "openada.operation/circuit.simulate/v1alpha2",
       "repository_path": "profiles/circuit.simulate-v1alpha2.json",
-      "sha256": "35fd0b69d8e3e99eeceb9d4f13bcfddd045ba425305cc28ef6c92849d65a292d"
+      "sha256": "498c6e6c42f441f22fa881885623a5bd4358a40130828f942fff50f7c61bfdfc"
     }
   },
   "fixture": {

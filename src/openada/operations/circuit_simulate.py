@@ -149,7 +149,7 @@ def _analysis_within_point_limit(analysis: Mapping[str, object]) -> bool:
     return points is not None and 1 <= points <= MAX_SHARED_ANALYSIS_POINTS
 
 
-def _parse_analysis_parameters(
+def parse_simulation_analysis_line(
     analysis: str,
     line: str,
 ) -> dict[str, object] | None:
@@ -304,7 +304,7 @@ def inspect_simulation_deck(path: str | Path) -> dict[str, object]:
         source_unstable = True
 
     parameters = (
-        _parse_analysis_parameters(analyses[0], analysis_lines[0])
+        parse_simulation_analysis_line(analyses[0], analysis_lines[0])
         if len(analyses) == 1 and len(analysis_lines) == 1
         else None
     )
@@ -488,7 +488,9 @@ def _same_number(left: object, right: object) -> bool:
     )
 
 
-def _parameters_match(declared: dict[str, object], observed: dict[str, object]) -> bool:
+def circuit_simulation_parameters_match(
+    declared: dict[str, object], observed: dict[str, object]
+) -> bool:
     declared_analysis = declared.get("analysis")
     observed_analysis = observed.get("analysis")
     if not isinstance(declared_analysis, dict) or not isinstance(observed_analysis, dict):
@@ -763,13 +765,14 @@ def _canonicalize_diagnostics(payload: dict) -> list[dict]:
     return normalized
 
 
-def _decorate(
+def decorate_circuit_simulation_result(
     payload: dict,
     *,
     driver: BuiltinDriver | None,
     request_id: str,
     deck: dict[str, object],
     parameters: dict[str, object] | None,
+    provenance_limitations: list[str] | None = None,
 ) -> dict:
     native_data = deepcopy(payload.get("data", {}))
     native_diagnostics = deepcopy(payload.get("diagnostics", []))
@@ -777,15 +780,15 @@ def _decorate(
     status = payload["engineering"]["status"]
     counts = (
         _analysis_counts(native_data, analysis)
-        if status == "pass" and isinstance(analysis, dict)
+        if status in {"pass", "fail"} and isinstance(analysis, dict)
         else None
     )
-    if status == "pass" and counts is None:
+    if status in {"pass", "fail"} and counts is None:
         payload["engineering"] = {
             "status": "unknown",
             "summary": (
-                "The native result could not be bound structurally to the requested "
-                "analysis and sweep bounds."
+                "The native result or terminal failure could not be bound "
+                "structurally to the requested analysis and sweep bounds."
             ),
         }
         payload.setdefault("diagnostics", []).append(
@@ -864,7 +867,7 @@ def _decorate(
                 if (
                     parameters is not None
                     and inputs_stable
-                    and (counts is not None or status == "fail")
+                    and counts is not None
                 )
                 else "not-established"
             ),
@@ -872,7 +875,9 @@ def _decorate(
             "structure": structure,
             "artifact_roles_present": roles,
             "provenance": "bounded" if inputs_stable else "incomplete",
-            "provenance_limitations": [
+            "provenance_limitations": provenance_limitations
+            if provenance_limitations is not None
+            else [
                 "Only the declared top-level model-free analysis deck and "
                 "selected native executable were content-bound; host runtime "
                 "libraries and simulator defaults remain bounded provenance."
@@ -975,7 +980,9 @@ def simulate_circuit_profile(
             "simulation.analysis.unsupported",
             "The shared profile requires exactly one parseable top-level .op, .dc, .ac, or .tran analysis.",
         )
-    elif requested is None or not _parameters_match(requested, deck["parameters"]):
+    elif requested is None or not circuit_simulation_parameters_match(
+        requested, deck["parameters"]
+    ):
         invalid = (
             "simulation.request.invalid",
             "The typed analysis parameters do not match the authoritative deck directive.",
@@ -994,7 +1001,7 @@ def simulate_circuit_profile(
             code=invalid[0],
             message=invalid[1],
         )
-        return _decorate(
+        return decorate_circuit_simulation_result(
             payload,
             driver=driver,
             request_id=correlation_id,
@@ -1020,7 +1027,7 @@ def simulate_circuit_profile(
             timeout=timeout,
             analysis=analysis,
         )
-    return _decorate(
+    return decorate_circuit_simulation_result(
         payload,
         driver=driver,
         request_id=correlation_id,
@@ -1033,8 +1040,11 @@ __all__ = [
     "MAX_SHARED_ANALYSIS_POINTS",
     "MAX_SOURCE_BYTES",
     "circuit_simulation_parameter_issue",
+    "circuit_simulation_parameters_match",
+    "decorate_circuit_simulation_result",
     "invalid_circuit_simulation_request",
     "inspect_simulation_deck",
     "inspect_transient_deck",
+    "parse_simulation_analysis_line",
     "simulate_circuit_profile",
 ]

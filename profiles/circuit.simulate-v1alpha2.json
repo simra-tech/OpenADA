@@ -48,7 +48,8 @@
         ],
         "required_evidence": [
           "data.analysis.completion is terminal-failure and data.analysis.convergence is non-converged.",
-          "data.evidence.request_binding is exact and data.evidence.freshness is fresh.",
+          "data.evidence.request_binding is exact, data.evidence.freshness is fresh, and data.evidence.structure is valid.",
+          "A fresh simulation.result artifact retains at least one structurally valid requested-analysis point, dependent variable, and finite dependent value produced before the terminal failure.",
           "A fresh, stable, untruncated simulation.log artifact contains a recognized terminal solver non-convergence record bound to the requested analysis.",
           "No missing, conflicting, malformed, stale, or over-limit evidence undermines the terminal classification."
         ],
@@ -609,10 +610,11 @@
           "null"
         ],
         "required_for": [
-          "pass"
+          "pass",
+          "fail"
         ],
         "description": "Number of structurally validated native points for the requested analysis.",
-        "bounds": "At least 1 for pass; null when unavailable for fail or unknown.",
+        "bounds": "At least 1 for pass or fail; null only when the analysis remains unknown.",
         "extensions": {}
       },
       {
@@ -622,10 +624,11 @@
           "null"
         ],
         "required_for": [
-          "pass"
+          "pass",
+          "fail"
         ],
         "description": "Count of dependent result variables, excluding the independent sweep, frequency, or time axis.",
-        "bounds": "At least 1 for pass; null when unavailable for fail or unknown.",
+        "bounds": "At least 1 for pass or fail; null only when the analysis remains unknown.",
         "extensions": {}
       },
       {
@@ -635,10 +638,11 @@
           "null"
         ],
         "required_for": [
-          "pass"
+          "pass",
+          "fail"
         ],
         "description": "Count of finite scalar values among validated dependent variables.",
-        "bounds": "At least 1 for pass; non-finite values do not contribute and a result containing only non-finite dependent values cannot pass.",
+        "bounds": "At least 1 for pass or fail; non-finite values do not contribute and a result containing only non-finite dependent values cannot support either conclusion.",
         "extensions": {}
       },
       {
@@ -718,7 +722,8 @@
         "role": "simulation.result",
         "kind": "native-simulation-result",
         "required_for": [
-          "pass"
+          "pass",
+          "fail"
         ],
         "freshness": "fresh-per-invocation",
         "integrity": [

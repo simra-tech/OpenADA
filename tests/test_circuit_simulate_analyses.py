@@ -98,6 +98,21 @@ RAW_RESULTS = {
             ],
         )
     ).encode("ascii"),
+    "tran": _raw_plot(
+        title=True,
+        plotname="Transient Analysis",
+        numeric_type="real",
+        variables=[
+            ("time", "time"),
+            ("v(in)", "voltage"),
+            ("v(out)", "voltage"),
+        ],
+        rows=[
+            ["0.0", "0.0", "0.0"],
+            ["1e-7", "1.0", "0.25"],
+            ["2e-7", "1.0", "0.5"],
+        ],
+    ).encode("ascii"),
 }
 
 
@@ -126,6 +141,15 @@ PARAMETERS = {
         },
         "extensions": {},
     },
+    "tran": {
+        "analysis": {
+            "type": "tran",
+            "step_s": 1e-7,
+            "stop_s": 2e-6,
+            "extensions": {},
+        },
+        "extensions": {},
+    },
 }
 
 
@@ -133,6 +157,7 @@ FIXTURE_NAMES = {
     "op": "resistor-divider-op.cir",
     "dc": "resistor-divider-dc.cir",
     "ac": "rc-ac.cir",
+    "tran": "rc-transient.cir",
 }
 
 
@@ -142,14 +167,17 @@ def _write_fake_simulator(
     backend: str,
     raw: bytes,
     marker: Path | None = None,
+    log_text: str | None = None,
+    exit_code: int = 0,
 ) -> None:
     encoded = base64.b64encode(raw).decode("ascii")
     if backend == "ngspice":
         version = "ngspice-45.2"
+        ngspice_log = log_text if log_text is not None else "No. of Data Rows : 3\n"
         body = f"""
 log = pathlib.Path(sys.argv[sys.argv.index('-o') + 1])
 result = pathlib.Path(sys.argv[sys.argv.index('-r') + 1])
-log.write_text('No. of Data Rows : 3\\n', encoding='utf-8')
+log.write_text({ngspice_log!r}, encoding='utf-8')
 result.write_bytes(base64.b64decode({encoded!r}))
 """
     else:
@@ -177,6 +205,7 @@ if len(sys.argv) == 2 and sys.argv[1] in {{'-v', '--version'}}:
     raise SystemExit(0)
 {marker_statement}
 {body}
+raise SystemExit({exit_code})
 """,
         encoding="utf-8",
     )
@@ -257,6 +286,46 @@ def test_ac_counts_finite_real_and_imaginary_dependent_scalars(tmp_path: Path) -
         "output_captures"
     ][0]["validation"]["metadata"]["plots"]
     assert [plot["plotname"] for plot in plots] == ["DC operating point", "AC Analysis"]
+
+
+def test_ngspice_terminal_failure_retains_request_bound_partial_transient(
+    tmp_path: Path,
+) -> None:
+    binary = tmp_path / "ngspice"
+    _write_fake_simulator(
+        binary,
+        backend="ngspice",
+        raw=RAW_RESULTS["tran"],
+        log_text=(
+            "No. of Data Rows : 3\n"
+            "doAnalyses: TRAN: Timestep too small; time = 2e-7\n"
+        ),
+        exit_code=1,
+    )
+
+    payload = simulate_circuit_profile(
+        FIXTURES / FIXTURE_NAMES["tran"],
+        tmp_path / "evidence",
+        backend="ngspice",
+        discovery=DiscoveryManager(binary_overrides={"ngspice": binary}),
+        parameters=PARAMETERS["tran"],
+    )
+
+    assert payload["engineering"]["status"] == "fail"
+    assert payload["data"]["analysis"] == {
+        "type": "tran",
+        "completion": "terminal-failure",
+        "convergence": "non-converged",
+        "point_count": 3,
+        "dependent_variable_count": 2,
+        "finite_value_count": 6,
+        "extensions": {},
+    }
+    assert payload["data"]["evidence"]["request_binding"] == "exact"
+    assert payload["data"]["evidence"]["structure"] == "valid"
+    assert "simulation.analysis.non_convergent" in {
+        item["code"] for item in payload["diagnostics"]
+    }
 
 
 def test_xyce_op_is_explicitly_unsupported_and_never_launched(tmp_path: Path) -> None:

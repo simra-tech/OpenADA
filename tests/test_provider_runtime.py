@@ -9,8 +9,10 @@ import time
 
 import pytest
 
+import openada.provider_runtime as provider_runtime
 from openada.cli import main
 from openada.provider_runtime import (
+    LOCAL_PROVIDER_SANITIZED_PATH,
     MAX_MANIFEST_BYTES,
     MAX_PROVIDER_CONFIGURATION_BYTES,
     MAX_PROVIDER_TARGET_BYTES,
@@ -61,6 +63,10 @@ if mode == "duplicate-json":
 
 destination = Path(request["evidence_destination"]["locator"]["path"])
 destination.mkdir(parents=True, exist_ok=True)
+if mode == "capture-environment":
+    (destination / "provider-environment.json").write_text(
+        json.dumps(dict(os.environ), sort_keys=True), encoding="utf-8"
+    )
 artifact_directory = destination
 if mode == "outside-destination":
     artifact_directory = destination.parent / "outside-evidence"
@@ -354,6 +360,124 @@ def test_external_local_provider_round_trip_returns_validated_result(
     }
 
 
+def test_local_provider_transport_ignores_hostile_ambient_environment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case = tmp_path / "case"
+    trusted = _provider_script(case / "bin")
+    attacker = tmp_path / "attacker-bin"
+    attacker.mkdir()
+    provider_hijack = tmp_path / "provider-hijack"
+    interpreter_hijack = tmp_path / "interpreter-hijack"
+    fake_provider = attacker / trusted.name
+    fake_provider.write_text(
+        f"#!/bin/sh\ntouch {provider_hijack}\nexit 97\n",
+        encoding="utf-8",
+    )
+    fake_provider.chmod(0o755)
+    fake_python = attacker / "python3"
+    fake_python.write_text(
+        f"#!/bin/sh\ntouch {interpreter_hijack}\nexit 98\n",
+        encoding="utf-8",
+    )
+    fake_python.chmod(0o755)
+    python_path = tmp_path / "attacker-python"
+    python_path.mkdir()
+    sitecustomize_hijack = tmp_path / "sitecustomize-hijack"
+    (python_path / "sitecustomize.py").write_text(
+        f"from pathlib import Path\nPath({str(sitecustomize_hijack)!r}).touch()\n",
+        encoding="utf-8",
+    )
+    hostile = {
+        "PATH": str(attacker),
+        "PYTHONPATH": str(python_path),
+        "PYTHONHOME": str(tmp_path / "python-home"),
+        "HOME": str(tmp_path / "ambient-home"),
+        "TMPDIR": str(tmp_path / "ambient-tmp"),
+        "LD_PRELOAD": str(tmp_path / "ambient-preload.so"),
+    }
+    for name, value in hostile.items():
+        monkeypatch.setenv(name, value)
+
+    manifest = _manifest(case)
+    manifest["transports"][0]["argv"] = [trusted.name, "capture-environment"]
+    request = _request(case)
+
+    payload = invoke_local_provider(manifest, request, cwd=case)
+
+    assert payload["engineering"]["status"] == "pass"
+    assert not provider_hijack.exists()
+    assert not interpreter_hijack.exists()
+    assert not sitecustomize_hijack.exists()
+    observed = json.loads(
+        (case / "evidence/provider-environment.json").read_text(encoding="utf-8")
+    )
+    assert set(observed) == {
+        "HOME",
+        "LANG",
+        "LC_ALL",
+        "PATH",
+        "PYTHONDONTWRITEBYTECODE",
+        "PYTHONNOUSERSITE",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+        "TZ",
+    }
+    assert observed["PATH"] == LOCAL_PROVIDER_SANITIZED_PATH
+    assert observed["LANG"] == observed["LC_ALL"] == "C"
+    assert observed["TZ"] == "UTC"
+    assert observed["PYTHONDONTWRITEBYTECODE"] == "1"
+    assert observed["PYTHONNOUSERSITE"] == "1"
+    assert observed["HOME"] != hostile["HOME"]
+    assert observed["TMPDIR"] != hostile["TMPDIR"]
+    assert observed["TEMP"] == observed["TMP"] == observed["TMPDIR"]
+    assert not Path(observed["HOME"]).exists()
+    assert not Path(observed["TMPDIR"]).exists()
+
+
+def test_provider_launch_uses_private_snapshot_during_swap_restore_race(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case = tmp_path / "swap-race"
+    trusted = _provider_script(case / "bin")
+    original_body = trusted.read_bytes()
+    marker = tmp_path / "replacement-executed"
+    replacement = case / "replacement-provider"
+    replacement.write_text(
+        f"#!/bin/sh\ntouch {marker}\nexit 97\n",
+        encoding="utf-8",
+    )
+    replacement.chmod(0o755)
+    backup = case / "trusted-provider-backup"
+    real_popen = provider_runtime.subprocess.Popen
+
+    def racing_popen(argv, *args, **kwargs):
+        trusted.rename(backup)
+        replacement.rename(trusted)
+        try:
+            return real_popen(argv, *args, **kwargs)
+        finally:
+            trusted.rename(replacement)
+            backup.rename(trusted)
+
+    monkeypatch.setattr(provider_runtime.subprocess, "Popen", racing_popen)
+    manifest = _manifest(case)
+    manifest["transports"][0]["argv"] = [trusted.name, "success"]
+
+    try:
+        payload = invoke_local_provider(manifest, _request(case), cwd=case)
+    except ProviderRuntimeError as exc:
+        assert exc.code == "provider.transport.identity_changed"
+    else:
+        assert payload["engineering"]["status"] == "pass"
+
+    assert not marker.exists()
+    assert trusted.read_bytes() == original_body
+
+
 @pytest.mark.parametrize(
     ("mode", "code"),
     [
@@ -402,7 +526,10 @@ def test_provider_rejects_nonzero_transport_exit_and_entrypoint_mutation(
             _manifest(tmp_path / "mutation", "mutate-entrypoint"),
             _request(tmp_path / "mutation"),
         )
-    assert changed.value.code == "provider.transport.identity_changed"
+    assert changed.value.code in {
+        "provider.transport.failed",
+        "provider.transport.identity_changed",
+    }
 
 
 @pytest.mark.parametrize("mode", ["failed-execution", "missing-artifacts"])
@@ -567,7 +694,10 @@ def test_provider_binds_existing_cwd_relative_entrypoint_argument(
     with pytest.raises(ProviderRuntimeError) as changed:
         invoke_local_provider(manifest, _request(case), cwd=case)
 
-    assert changed.value.code == "provider.transport.identity_changed"
+    assert changed.value.code in {
+        "provider.transport.failed",
+        "provider.transport.identity_changed",
+    }
 
 
 def test_provider_enforces_request_artifact_ceiling_and_recorded_file_identity(

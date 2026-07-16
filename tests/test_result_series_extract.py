@@ -188,12 +188,17 @@ def _simulation_result(
     return payload
 
 
-def _transient_case(tmp_path: Path, backend: str) -> tuple[Path, dict]:
+def _transient_case(
+    tmp_path: Path,
+    backend: str,
+    *,
+    plotname: str = "Transient Analysis",
+) -> tuple[Path, dict]:
     if backend == "ngspice":
         path = tmp_path / "transient.raw"
         variables = [("time", "time"), ("v(out)", "voltage")]
         body = _binary_raw(
-            plotname="Transient Analysis",
+            plotname=plotname,
             numeric_type="real",
             variables=variables,
             rows=[[0.0, 0.0], [1e-6, 0.5], [2e-6, 1.0]],
@@ -202,7 +207,7 @@ def _transient_case(tmp_path: Path, backend: str) -> tuple[Path, dict]:
         path = tmp_path / "transient.xyce"
         variables = [("time", "time"), ("OUT", "voltage")]
         body = _ascii_raw(
-            plotname="Transient Analysis",
+            plotname=plotname,
             numeric_type="real",
             variables=variables,
             rows=[[0.0, 0.0], [1e-6, 0.5], [2e-6, 1.0]],
@@ -224,6 +229,65 @@ def _transient_case(tmp_path: Path, backend: str) -> tuple[Path, dict]:
         dependent_variables=1,
         finite_values=3,
     )
+
+
+def test_extracts_exact_ngspice_linearized_transient_plot(tmp_path: Path) -> None:
+    raw_path, simulation = _transient_case(
+        tmp_path,
+        "ngspice",
+        plotname="Transient Analysis (linearized)",
+    )
+
+    extracted = extract_result_series(
+        simulation,
+        raw_path,
+        [
+            {
+                "native_name": "v(out)",
+                "output_name": "v(out)",
+                "unit": "V",
+                "component": "real",
+            }
+        ],
+        request_id=REQUEST_ID,
+    )
+
+    assert extracted["engineering"]["status"] == "pass"
+    assert extracted["data"]["extraction"]["plot"]["plotname"] == (
+        "Transient Analysis (linearized)"
+    )
+
+
+def test_conformance_backed_external_ngspice_provider_can_feed_extraction(
+    tmp_path: Path,
+) -> None:
+    raw_path, simulation = _transient_case(tmp_path, "ngspice")
+    simulation["data"]["protocol"].update(
+        {
+            "driver_id": "org.openada.driver.ngspice-pdk-control",
+            "driver_version": "0.4.0",
+        }
+    )
+
+    extracted = extract_result_series(
+        simulation,
+        raw_path,
+        [
+            {
+                "native_name": "v(out)",
+                "output_name": "v(out)",
+                "unit": "V",
+                "component": "real",
+            }
+        ],
+        request_id=REQUEST_ID,
+    )
+
+    assert extracted["engineering"]["status"] == "pass"
+    assert extracted["data"]["extraction"]["source"]["driver_id"] == (
+        "org.openada.driver.ngspice-pdk-control"
+    )
+    assert list(SERIES_DATA_VALIDATOR.iter_errors(extracted["data"])) == []
 
 
 @pytest.mark.parametrize(

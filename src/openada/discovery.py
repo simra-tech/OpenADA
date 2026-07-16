@@ -122,6 +122,7 @@ class DiscoveryManager:
         profile: str = "auto",
         pdk_roots: Iterable[str | Path] | None = None,
         binary_overrides: Mapping[str, str | Path] | None = None,
+        executable_search_path: str | None = None,
     ) -> None:
         if profile not in {"auto", "native", "iic-osic-tools"}:
             raise ValueError(f"unsupported runtime profile: {profile}")
@@ -130,6 +131,7 @@ class DiscoveryManager:
         self._binary_overrides = {
             key: str(value) for key, value in (binary_overrides or {}).items()
         }
+        self._executable_search_path = executable_search_path
 
     @staticmethod
     def _detect_profile() -> str:
@@ -159,7 +161,7 @@ class DiscoveryManager:
                         return str(candidate.resolve())
 
         for binary_name in binary_names:
-            discovered = shutil.which(binary_name)
+            discovered = shutil.which(binary_name, path=self._executable_search_path)
             if discovered:
                 return str(Path(discovered).resolve())
         return None
@@ -180,7 +182,11 @@ class DiscoveryManager:
         )
 
     def _version(
-        self, spec: ToolSpec, binary: str, timeout: float
+        self,
+        spec: ToolSpec,
+        binary: str,
+        timeout: float,
+        probe_environment: Mapping[str, str] | None = None,
     ) -> tuple[str | None, str, int | None]:
         observed_failure = "probe_failed"
         # Some legacy EDA CLIs interpret an unsupported version flag as a
@@ -188,7 +194,12 @@ class DiscoveryManager:
         # never leave generated files in the user's workspace.
         with tempfile.TemporaryDirectory(prefix="openada-probe-") as probe_dir:
             for args in spec.version_args:
-                process = run_process([binary, *args], cwd=probe_dir, timeout=timeout)
+                process = run_process(
+                    [binary, *args],
+                    cwd=probe_dir,
+                    timeout=timeout,
+                    env=probe_environment,
+                )
                 if process.status == "timed_out":
                     observed_failure = "probe_timed_out"
                     continue
@@ -245,6 +256,7 @@ class DiscoveryManager:
         *,
         version_timeout: float = 3.0,
         include_probe_details: bool = False,
+        probe_environment: Mapping[str, str] | None = None,
     ) -> dict:
         if tool_name not in TOOL_SPECS:
             raise KeyError(f"unknown tool: {tool_name}")
@@ -252,7 +264,7 @@ class DiscoveryManager:
         binary = self.find_binary(tool_name)
         before_identity = self._binary_identity(binary) if binary else None
         version, probe_status, accepted_exit_code = (
-            self._version(spec, binary, version_timeout)
+            self._version(spec, binary, version_timeout, probe_environment)
             if binary and before_identity is not None
             else (None, "not_run", None)
         )
