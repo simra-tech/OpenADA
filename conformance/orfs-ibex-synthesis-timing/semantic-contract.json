@@ -14,6 +14,6 @@
     "failed": 0,
     "passed": 16,
     "suite": "tests/test_orfs_ibex_synthesis_timing_conformance.py",
-    "suite_sha256": "0dd5e12b71b91a68a84f54337aeb225b3c285cd200cb61e7bd9f5f5b7eda7d0b"
+    "suite_sha256": "69771c891368e8762f6a0cec68dc586edeb4949eaaf67ba62de584924f9ca8da"
   }
 }

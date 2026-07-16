@@ -6,7 +6,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-contract.json",
       "role": "contract-test",
-      "sha256": "71540bdee528c310cfb0a5f75103acfd88727e62e671fde0c6e37be70d7900fa",
+      "sha256": "a20f35687146f97adf7f34535ca7068e9d4a8a7bab4d8b9e30f6182467a196da",
       "source_output": "contract-test-verdict",
       "source_step": "contract-tests"
     },
@@ -24,7 +24,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/synthesize.result.json",
       "role": "native-artifact",
-      "sha256": "08ecf8e2cc7e5ced7e4398180be9c536d7be853a58eace2478d3b136624e6a16",
+      "sha256": "6d7acab36c49a7981c86e100382b7d30297ec7207d9562894211f1d15356fa46",
       "source_output": "synthesis-synthesize-result-json",
       "source_step": "synthesize-ibex"
     },
@@ -96,7 +96,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-analyze.result.json",
       "role": "native-artifact",
-      "sha256": "b74464a3eedc148c7b921f4398a2bdcb5cdc5c65718d7c913817b018b8daed0d",
+      "sha256": "f43712679b330a3d0f933381cc493f50a875b82a3b5cece77f23bcc60fdff9d2",
       "source_output": "timing-timing-analyze-result-json",
       "source_step": "analyze-ibex-timing"
     },
@@ -150,7 +150,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/synthesize.result.json",
       "role": "native-artifact",
-      "sha256": "52f78f3e47612033f71b1737b2d28d6fb7187f648fd773c95d77d5173414bbaf",
+      "sha256": "e3ae73e191adfe3bf6b42ba90cafa649333a98fc8251307970f57a6b4cf8f2c3",
       "source_output": "negative-synthesize-result-json",
       "source_step": "synthesis-missing-top"
     },
@@ -173,20 +173,11 @@
       "source_step": "synthesis-missing-top"
     },
     {
-      "bytes": 9433,
-      "replay_id": null,
-      "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/rtl-inputs.json",
-      "role": "native-artifact",
-      "sha256": "17fa29d012eb003703ba9d9ff3eeccae4213ee462b3788892ed0863a119e81c8",
-      "source_output": "negative-rtl-inputs-json",
-      "source_step": "synthesis-missing-top"
-    },
-    {
       "bytes": 5732,
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/run.json",
       "role": "native-artifact",
-      "sha256": "4102dc841a75370fd8fcc797a065c77d3a31d88b605dc3c1a892f4c77099f000",
+      "sha256": "6ce343c970f8cc50534919de152f1be14dcc09fb9a9998652da3e4174bf221f9",
       "source_output": "run-json",
       "source_step": "synthesize-ibex"
     },
@@ -195,7 +186,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-oracle.json",
       "role": "independent-oracle",
-      "sha256": "04fcf3ada8507fbdacaa136ae963f2528bc42e9390bf19928411e02a21204d88",
+      "sha256": "ebed385f2cbae55ebc7de2fc1ae74cb154be869a10c577a9f99e35920543d7a6",
       "source_output": "independent-oracle-verdict",
       "source_step": "independent-verifier"
     },
@@ -204,7 +195,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-normalized.json",
       "role": "normalized-evidence",
-      "sha256": "5c93cb52232e59b24321955b4e5f2606fe25cc1c20e280b015b6118ca1f00648",
+      "sha256": "8dd3dfc35fc6a0a5c2bcd0270da7dfacd7a1ab612784241ec05b01db1d6ad077",
       "source_output": "normalized-digital-evidence",
       "source_step": "normalize-digital-evidence"
     },
@@ -213,7 +204,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-decision.json",
       "role": "downstream-decision",
-      "sha256": "72aef16c24fa8a6550ebf985dad7da1e10a0014fbcfa8da96452d1608c5e37e9",
+      "sha256": "6066dc7681d7ec2ccf5cc8f612326bfebcf6119c0ff83f6dce30d4c94a7bc65e",
       "source_output": "downstream-digital-decision",
       "source_step": "engineering-decision"
     },
@@ -222,7 +213,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-evidence.json",
       "role": "agent-visible-evidence",
-      "sha256": "38dc59b02d016bf306ad6f4d6ea2e54f88f9b93b1ef49041a5239b68b60ce239",
+      "sha256": "f5c860352580af33d25758b91dad9031df4f74cde8e47f2d20630c568aa633ba",
       "source_output": "agent-visible-digital-evidence",
       "source_step": "agent-evidence"
     },
@@ -264,7 +255,7 @@
     }
   ],
   "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
-  "chain_manifest_sha256": "b4fb533c88965893450bf913f4e63bae65789954d852da2df2222266742ff052",
+  "chain_manifest_sha256": "3c63e6f145df8ffb169750db9f6213bf454b5fa0ca79cf22655525c5171187dc",
   "checks": {
     "agent_visible_evidence": true,
     "contract_test": true,
@@ -289,8 +280,8 @@
     "clean_before": true,
     "extensions": {},
     "receipt_class": "release",
-    "repository_revision": "b2c62c1cf3ba920fc5e4a130541f6deef39e2674",
-    "repository_tree": "89267a0ee6fa9eeb3587f21e2242ec3f21c048fe",
+    "repository_revision": "36d887443781cb728bd0648a259ea60391aa4acf",
+    "repository_tree": "78697d53311f07d42529516caf49958642f20e30",
     "semantic_subject_sha256": "1338756109b4ae767eb871c381aed905b41dee542bd622cf07f50f605044e0c1",
     "state_unchanged": true
   },
