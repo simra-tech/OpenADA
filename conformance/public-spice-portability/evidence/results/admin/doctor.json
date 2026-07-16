@@ -334,9 +334,96 @@
           "local-cli",
           "in-process"
         ]
+      },
+      {
+        "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [
+              "ihp-sar-rtl-check"
+            ],
+            "id": "openada.feature/rtl.lint.systemverilog/v1alpha1",
+            "maturity": "workflow-validated"
+          }
+        ],
+        "locator_types": [
+          "filesystem"
+        ],
+        "native_product": "verilator",
+        "operation_profile": "openada.operation/rtl.lint/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.driver.verilator",
+        "provider_kind": "eda-driver",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli"
+        ]
+      },
+      {
+        "assertion_profile": "openada.assertion/synthesized-netlist.valid/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [
+              "orfs-ibex-synthesis-timing"
+            ],
+            "id": "openada.feature/synthesis.asic-liberty/v1alpha1",
+            "maturity": "workflow-validated"
+          }
+        ],
+        "locator_types": [
+          "filesystem"
+        ],
+        "native_product": "yosys",
+        "operation_profile": "openada.operation/logic.synthesize/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.driver.yosys",
+        "provider_kind": "eda-driver",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli"
+        ]
+      },
+      {
+        "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [
+              "orfs-ibex-synthesis-timing"
+            ],
+            "id": "openada.feature/timing.setup-hold/v1alpha1",
+            "maturity": "workflow-validated"
+          }
+        ],
+        "locator_types": [
+          "filesystem"
+        ],
+        "native_product": "sta",
+        "operation_profile": "openada.operation/timing.analyze/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.driver.opensta",
+        "provider_kind": "eda-driver",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli"
+        ]
       }
     ],
     "tools": {
+      "abc": {
+        "binary": "/foss/tools/yosys/bin/yosys-abc",
+        "maturity": "workflow-validated",
+        "operations": [
+          "synthesize"
+        ],
+        "status": "available",
+        "version": "UC Berkeley, ABC 1.01 (compiled Jun 22 2026 11:38:08)"
+      },
       "gtkwave": {
         "binary": "/foss/tools/gtkwave/bin/gtkwave",
         "maturity": "discovered",
@@ -420,6 +507,15 @@
         "status": "available",
         "version": "slang version 11.0.387+24809c8e"
       },
+      "sta": {
+        "binary": "/foss/tools/openroad/bin/sta",
+        "maturity": "workflow-validated",
+        "operations": [
+          "timing-analyze"
+        ],
+        "status": "available",
+        "version": "3.1.0"
+      },
       "surelog": {
         "binary": "/foss/tools/surelog/bin/surelog",
         "maturity": "discovered",
@@ -428,9 +524,11 @@
         "version": "VERSION: 1.86"
       },
       "verilator": {
-        "binary": "/foss/tools/verilator/bin/verilator",
-        "maturity": "discovered",
-        "operations": [],
+        "binary": "/foss/tools/verilator/bin/verilator_bin",
+        "maturity": "workflow-validated",
+        "operations": [
+          "rtl-lint"
+        ],
         "status": "available",
         "version": "Verilator 5.048 2026-04-26 rev v5.048"
       },
@@ -454,9 +552,10 @@
       },
       "yosys": {
         "binary": "/foss/tools/bin/yosys",
-        "maturity": "structured",
+        "maturity": "workflow-validated",
         "operations": [
-          "rtl-check"
+          "rtl-check",
+          "synthesize"
         ],
         "status": "available",
         "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
@@ -466,7 +565,7 @@
   "diagnostics": [],
   "engineering": {
     "status": "not_applicable",
-    "summary": "Discovered 15 of 16 inspected tool(s)."
+    "summary": "Discovered 17 of 18 inspected tool(s)."
   },
   "execution": {
     "command": [],
@@ -477,7 +576,7 @@
   "inputs": [],
   "operation": "doctor",
   "provenance": {
-    "created_at": "2026-07-16T08:37:30.457863Z",
+    "created_at": "2026-07-16T15:21:56.236601Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

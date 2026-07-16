@@ -6,7 +6,7 @@
       "kind": "simulation-log",
       "path": "/evidence/sim/ngspice-ac/ota-ac.log",
       "role": "simulation.log",
-      "sha256": "b084e163b6577c9acd065b102c5264a9caa9a25629c5b7b2964f95514db63080"
+      "sha256": "ebc6a5f1744de5eec2146f701e3c42d4276615c8cb32d485c0d4f69fe28e5050"
     },
     {
       "bytes": 24869,
@@ -14,7 +14,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
       "role": "simulation.result",
-      "sha256": "916d1183d40a4c8aa615b14d20611cbc7f0b2193c3169fe3d6f184e7683bfd8f"
+      "sha256": "81a836c63d98faeb146fcf8949789e3a55d9762a818da1518bf0031e23c5fc5b"
     }
   ],
   "data": {
@@ -81,10 +81,10 @@
           "log_capture": {
             "bytes": 757,
             "path": "/evidence/sim/ngspice-ac/ota-ac.log",
-            "sha256": "b084e163b6577c9acd065b102c5264a9caa9a25629c5b7b2964f95514db63080",
+            "sha256": "ebc6a5f1744de5eec2146f701e3c42d4276615c8cb32d485c0d4f69fe28e5050",
             "status": "valid"
           },
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-ota/ota_testbench.sch\n\nbinary raw file \"/tmp/openada-ngspice-u5thq9c7/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\nNo. of Data Columns : 29  \n\nNo. of Data Rows : 51\n\nTotal analysis time (seconds) = 0.0206198\n\nTotal elapsed time (seconds) = 0.051 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 18102.555 MB.\nMaximum ngspice program size =  531.730 MB.\nCurrent ngspice program size =   15.039 MB.\n\nShared ngspice pages =   11.531 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.215 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-ota/ota_testbench.sch\n\nbinary raw file \"/tmp/openada-ngspice-88jutii_/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\nNo. of Data Columns : 29  \n\nNo. of Data Rows : 51\n\nTotal analysis time (seconds) = 0.0170781\n\nTotal elapsed time (seconds) = 0.038 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 17053.637 MB.\nMaximum ngspice program size =  531.734 MB.\nCurrent ngspice program size =   15.070 MB.\n\nShared ngspice pages =   11.559 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.219 MB.\n\n",
           "measurement_section_count": 0,
           "measurements": [],
           "measurements_truncated": false,
@@ -95,7 +95,7 @@
               "kind": "raw",
               "origin": "wrapper",
               "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
-              "sha256": "916d1183d40a4c8aa615b14d20611cbc7f0b2193c3169fe3d6f184e7683bfd8f",
+              "sha256": "81a836c63d98faeb146fcf8949789e3a55d9762a818da1518bf0031e23c5fc5b",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -157,7 +157,7 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "09c0b2bb-c6c9-4a56-8cef-a0b5262d193d"
+      "request_id": "e99770f8-6371-46fa-847d-74e284ca9e93"
     }
   },
   "diagnostics": [],
@@ -170,9 +170,9 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-u5thq9c7/simulation.raw",
+      "/tmp/openada-ngspice-88jutii_/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-u5thq9c7/simulation.log",
+      "/tmp/openada-ngspice-88jutii_/simulation.log",
       "/evidence/work/ota-ac.spice"
     ],
     "cwd": "/evidence",
@@ -192,7 +192,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-16T08:37:20.993598Z",
+    "created_at": "2026-07-16T15:21:46.939727Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

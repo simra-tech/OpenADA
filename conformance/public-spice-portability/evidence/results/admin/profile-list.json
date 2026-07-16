@@ -26,6 +26,14 @@
         "schema": "openada.operation-profile/v0alpha1"
       },
       {
+        "assertion_profile": "openada.assertion/synthesized-netlist.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/synthesis.asic-liberty/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/logic.synthesize/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
         "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
         "feature_ids": [
           "openada.feature/measurement.sample-at/v1alpha1",
@@ -70,6 +78,14 @@
         "schema": "openada.operation-profile/v0alpha2"
       },
       {
+        "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+        "feature_ids": [
+          "openada.feature/rtl.lint.systemverilog/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/rtl.lint/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
         "assertion_profile": "openada.assertion/specification.satisfied/v1alpha1",
         "feature_ids": [
           "openada.feature/specification.bound-evaluation/v1alpha1",
@@ -77,13 +93,21 @@
         ],
         "operation_profile": "openada.operation/specification.evaluate/v1alpha1",
         "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
+        "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+        "feature_ids": [
+          "openada.feature/timing.setup-hold/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/timing.analyze/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
       }
     ]
   },
   "diagnostics": [],
   "engineering": {
     "status": "pass",
-    "summary": "Listed 7 packaged operation profiles."
+    "summary": "Listed 10 packaged operation profiles."
   },
   "execution": {
     "command": [],
@@ -94,7 +118,7 @@
   "inputs": [],
   "operation": "profile.list",
   "provenance": {
-    "created_at": "2026-07-16T08:37:32.405102Z",
+    "created_at": "2026-07-16T15:21:58.418492Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
