@@ -6,7 +6,7 @@
       "locator": {
         "extensions": {},
         "path": "/evidence/requests/provider-config.json",
-        "sha256": "51794a232531fc6364eea3f66253b6f8e55d8d18131260b63107799661fb17b8",
+        "sha256": "b171dc2ad16f88a69f64fa1e4e51d6560cbe6d80ae45d12c4906b46f6e9f34fd",
         "type": "filesystem"
       },
       "required": true,

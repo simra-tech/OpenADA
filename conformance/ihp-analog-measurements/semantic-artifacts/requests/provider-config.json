@@ -3,10 +3,6 @@
     "PDK": "ihp-sg13g2",
     "PDK_ROOT": "/foss/pdks"
   },
-  "executable_file": {
-    "path": "/foss/tools/ngspice/bin/ngspice",
-    "sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
-  },
   "extensions": {},
   "init_file": {
     "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
