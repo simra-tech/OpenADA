@@ -268,11 +268,7 @@ def _negative_replay(verified: dict[str, Any]) -> dict[str, Any]:
 
 
 def _native_records() -> list[dict[str, Any]]:
-    return [
-        _bundle_record(relative)
-        for relative in NATIVE_FILES
-        if relative != "design-provenance.json"
-    ]
+    return [_bundle_record(relative) for relative in NATIVE_FILES]
 
 
 def _contract_document() -> dict[str, Any]:
