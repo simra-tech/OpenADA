@@ -34,6 +34,9 @@ YOSYS_VERSION = (
     "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 "
     "-fPIC -O3)"
 )
+VERILATOR_REQUESTED_PATH = "/foss/tools/verilator/bin/verilator_bin"
+NATIVE_VERILATOR_PATH = "/foss/tools/verilator/bin/verilator_bin"
+VERILATOR_VERSION = "Verilator 5.048 2026-04-26 rev v5.048"
 
 
 class ConformanceError(RuntimeError):
@@ -87,6 +90,26 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
     _expect(tool.get("wrapper_path"), WRAPPER_PATH, "runtime.tool.wrapper_path", errors)
     _expect(tool.get("native_path"), NATIVE_YOSYS_PATH, "runtime.tool.native_path", errors)
     _expect(tool.get("version"), YOSYS_VERSION, "runtime.tool.version", errors)
+    lint_tool = runtime.get("lint_tool") if isinstance(runtime.get("lint_tool"), dict) else {}
+    _expect(lint_tool.get("name"), "verilator", "runtime.lint_tool.name", errors)
+    _expect(
+        lint_tool.get("requested_path"),
+        VERILATOR_REQUESTED_PATH,
+        "runtime.lint_tool.requested_path",
+        errors,
+    )
+    _expect(
+        lint_tool.get("native_path"),
+        NATIVE_VERILATOR_PATH,
+        "runtime.lint_tool.native_path",
+        errors,
+    )
+    _expect(
+        lint_tool.get("version"),
+        VERILATOR_VERSION,
+        "runtime.lint_tool.version",
+        errors,
+    )
     policy = manifest.get("policy") if isinstance(manifest.get("policy"), dict) else {}
     _expect(policy.get("eda_network"), "none", "policy.eda_network", errors)
     _expect(policy.get("openada_mount"), "read-only", "policy.openada_mount", errors)
@@ -98,8 +121,17 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
     _expect(source.get("bytes"), SOURCE_BYTES, "source.bytes", errors)
     _expect(source.get("sha256"), SOURCE_SHA256, "source.sha256", errors)
     operations = manifest.get("operations") if isinstance(manifest.get("operations"), dict) else {}
-    if set(operations) != {"rtl_check", "missing_top"}:
-        errors.append("operations must contain exactly rtl_check and missing_top")
+    if set(operations) != {
+        "rtl_check",
+        "missing_top",
+        "rtl_lint",
+        "rtl_lint_2023",
+        "lint_missing_top",
+    }:
+        errors.append(
+            "operations must contain exactly rtl_check, missing_top, rtl_lint, "
+            "rtl_lint_2023, and lint_missing_top"
+        )
     expected = {
         "rtl_check": {
             "top": "sar_logic",
@@ -130,6 +162,94 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         _expect(transcript.get("path"), pins["transcript"], f"operations.{name}.transcript.path", errors)
         _expect(operation.get("container_timeout_seconds"), 180, f"operations.{name}.container_timeout_seconds", errors)
         _expect(operation.get("tool_timeout_seconds"), 120, f"operations.{name}.tool_timeout_seconds", errors)
+    expected_lint = {
+        "rtl_lint": {
+            "top": "sar_logic",
+            "directory": "/evidence/positive",
+            "result": "positive/rtl-lint.result.json",
+            "log_path": "/evidence/positive/rtl-lint.log",
+            "log_filename": "positive/rtl-lint.log",
+            "exit_code": 0,
+            "engineering_status": "pass",
+            "diagnostics": [],
+        },
+        "rtl_lint_2023": {
+            "top": "sar_logic",
+            "language": "1800-2023",
+            "directory": "/evidence/positive-2023",
+            "result": "positive-2023/rtl-lint.result.json",
+            "log_path": "/evidence/positive-2023/rtl-lint.log",
+            "log_filename": "positive-2023/rtl-lint.log",
+            "exit_code": 0,
+            "engineering_status": "pass",
+            "summary": "Verilator completed strict RTL lint with no warnings or errors.",
+            "diagnostics": [],
+        },
+        "lint_missing_top": {
+            "top": "missing_sar_logic",
+            "directory": "/evidence/negative",
+            "result": "negative/rtl-lint.result.json",
+            "log_path": "/evidence/negative/rtl-lint.log",
+            "log_filename": "negative/rtl-lint.log",
+            "exit_code": 1,
+            "engineering_status": "fail",
+            "diagnostics": [
+                "Specified --top-module 'missing_sar_logic' was not found in design.",
+                "Exiting due to 1 error(s)",
+            ],
+        },
+    }
+    for name, pins in expected_lint.items():
+        operation = operations.get(name) if isinstance(operations.get(name), dict) else {}
+        _expect(operation.get("top"), pins["top"], f"operations.{name}.top", errors)
+        _expect(
+            operation.get("output_directory"),
+            pins["directory"],
+            f"operations.{name}.output_directory",
+            errors,
+        )
+        _expect(
+            operation.get("result_filename"),
+            pins["result"],
+            f"operations.{name}.result_filename",
+            errors,
+        )
+        log = operation.get("log") if isinstance(operation.get("log"), dict) else {}
+        _expect(log.get("path"), pins["log_path"], f"operations.{name}.log.path", errors)
+        _expect(
+            log.get("filename"),
+            pins["log_filename"],
+            f"operations.{name}.log.filename",
+            errors,
+        )
+        _expect(log.get("kind"), "verilator-log", f"operations.{name}.log.kind", errors)
+        _expect(log.get("role"), "rtl.lint.log", f"operations.{name}.log.role", errors)
+        _expect(
+            operation.get("language"),
+            pins.get("language", "1800-2017"),
+            f"operations.{name}.language",
+            errors,
+        )
+        _expect(operation.get("warning_policy"), "strict", f"operations.{name}.warning_policy", errors)
+        _expect(operation.get("container_timeout_seconds"), 180, f"operations.{name}.container_timeout_seconds", errors)
+        _expect(operation.get("tool_timeout_seconds"), 120, f"operations.{name}.tool_timeout_seconds", errors)
+        expectation = operation.get("expect") if isinstance(operation.get("expect"), dict) else {}
+        _expect(expectation.get("execution_status"), "completed", f"operations.{name}.expect.execution_status", errors)
+        _expect(expectation.get("exit_code"), pins["exit_code"], f"operations.{name}.expect.exit_code", errors)
+        _expect(
+            expectation.get("engineering_status"),
+            pins["engineering_status"],
+            f"operations.{name}.expect.engineering_status",
+            errors,
+        )
+        if "summary" in pins:
+            _expect(
+                expectation.get("summary"),
+                pins["summary"],
+                f"operations.{name}.expect.summary",
+                errors,
+            )
+        _expect(expectation.get("diagnostics"), pins["diagnostics"], f"operations.{name}.expect.diagnostics", errors)
     if errors:
         raise ConformanceError("invalid conformance manifest:\n- " + "\n- ".join(errors))
 

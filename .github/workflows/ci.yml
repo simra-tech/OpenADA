@@ -21,7 +21,7 @@ jobs:
         run: python -m pip install --upgrade pip && python -m pip install -e '.[dev]'
       - name: Confirm static chain manifests are current
         run: python tools/semantic_refresh_manifests.py
-      - name: Confirm the six-receipt index is mechanically current
+      - name: Confirm the seven-receipt index is mechanically current
         run: python tools/semantic_publish_index.py
       - name: Enforce release semantic coverage
         run: python tools/verify_semantic_coverage.py --mode release --compact > semantic-coverage.json
@@ -34,8 +34,8 @@ jobs:
           report = json.loads(Path("semantic-coverage.json").read_text())
           assert report["status"] == "pass", report
           assert report["issues"] == [], report["issues"]
-          assert report["summary"]["row_count"] == 134, report["summary"]
-          assert report["summary"]["active_row_count"] == 126, report["summary"]
+          assert report["summary"]["row_count"] == 155, report["summary"]
+          assert report["summary"]["active_row_count"] == 147, report["summary"]
           assert report["summary"]["gap_count"] == 0, report["summary"]
           assert report["gaps"] == [], report["gaps"]
           PY
@@ -96,11 +96,14 @@ jobs:
               "share/openada/catalog/semantic-surfaces-v0alpha1.json",
               "share/openada/profiles/circuit.simulate-v1alpha1.json",
               "share/openada/profiles/circuit.simulate-v1alpha2.json",
+              "share/openada/profiles/logic.synthesize-v1alpha1.json",
               "share/openada/profiles/result.measure-v1alpha1.json",
               "share/openada/profiles/result.series.extract-v1alpha1.json",
               "share/openada/profiles/result.spectral.measure-v1alpha1.json",
               "share/openada/profiles/result.transfer.measure-v1alpha1.json",
+              "share/openada/profiles/rtl.lint-v1alpha1.json",
               "share/openada/profiles/specification.evaluate-v1alpha1.json",
+              "share/openada/profiles/timing.analyze-v1alpha1.json",
               "share/openada/providers/ngspice-pdk-control/driver-manifest.json",
               "share/openada/providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
           }:
@@ -178,8 +181,11 @@ jobs:
               "fixtures/smoke/smoke_ngspice.cir",
               "profiles/circuit.simulate-v1alpha1.json",
               "profiles/circuit.simulate-v1alpha2.json",
+              "profiles/logic.synthesize-v1alpha1.json",
               "profiles/result.measure-v1alpha1.json",
+              "profiles/rtl.lint-v1alpha1.json",
               "profiles/specification.evaluate-v1alpha1.json",
+              "profiles/timing.analyze-v1alpha1.json",
               "providers/ngspice-pdk-control/README.md",
               "providers/ngspice-pdk-control/driver-manifest.json",
               "providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
@@ -192,6 +198,9 @@ jobs:
               "skills/analyze-feedback-stability/SKILL.md",
               "skills/analyze-spectral-linearity/SKILL.md",
               "skills/assess-pvt-and-yield/SKILL.md",
+              "skills/review-rtl-architecture/SKILL.md",
+              "skills/assess-synthesis-and-inference/SKILL.md",
+              "skills/assess-asic-timing/SKILL.md",
           }
           for required in required_source_paths:
               assert any(name.endswith("/" + required) for name in source_names), required
@@ -238,6 +247,13 @@ jobs:
                   "conformance/public-spice-portability/run.py",
                   "conformance/public-spice-portability/verify.py",
               ),
+              (
+                  "conformance/orfs-ibex-synthesis-timing/README.md",
+                  "conformance/orfs-ibex-synthesis-timing/semantic-chain.json",
+                  "conformance/orfs-ibex-synthesis-timing/semantic-chain-run.json",
+                  "conformance/orfs-ibex-synthesis-timing/semantic.py",
+                  "conformance/orfs-ibex-synthesis-timing/verify.py",
+              ),
           )
 
           with tarfile.open(sdists[0]) as archive:
@@ -277,6 +293,9 @@ jobs:
               "analyze-feedback-stability",
               "analyze-spectral-linearity",
               "assess-pvt-and-yield",
+              "review-rtl-architecture",
+              "assess-synthesis-and-inference",
+              "assess-asic-timing",
           }
           observed_skills = {
               name.split("/skills/", 1)[1].split("/", 1)[0]

@@ -16,6 +16,9 @@
     "xschem",
     "ngspice",
     "xyce",
+    "verilator",
+    "yosys",
+    "opensta",
     "engineering-workflows",
     "klayout"
   ],
@@ -33,7 +36,7 @@
     "defaultPrompt": [
       "Plan this analog block's characterization and execute the next supported intent.",
       "Review this circuit simulation and recommend the next engineering step.",
-      "Inspect this EDA workspace and report available tools, PDKs, and contract gaps."
+      "Review this ASIC RTL, then assess its synthesis and timing evidence."
     ]
   }
 }

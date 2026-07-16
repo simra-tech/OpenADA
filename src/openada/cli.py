@@ -21,6 +21,8 @@ from .engines import (
     NetgenDriver,
     NgspiceDriver,
     NgspiceOutput,
+    OpenSTADriver,
+    VerilatorDriver,
     XschemDriver,
     YosysDriver,
 )
@@ -81,6 +83,9 @@ _COMMAND_OPERATIONS = {
     "drc": "drc",
     "lvs": "lvs",
     "rtl-check": "rtl-check",
+    "rtl-lint": "rtl-lint",
+    "synthesize": "synthesize",
+    "timing-analyze": "timing-analyze",
 }
 
 MAX_PREFLIGHT_PATH_CHARS = 4_095
@@ -618,6 +623,51 @@ def build_parser() -> argparse.ArgumentParser:
     rtl.add_argument("--json-netlist")
     rtl.add_argument("--timeout", type=_positive_float, default=120.0)
     _common_tool_argument(rtl, "yosys")
+
+    lint = commands.add_parser(
+        "rtl-lint", help="Lint ordered SystemVerilog sources under a strict warning policy."
+    )
+    lint.add_argument("sources", nargs="+")
+    lint.add_argument("--top", required=True)
+    lint.add_argument("--include-dir", action="append", default=[])
+    lint.add_argument("--define", action="append", default=[])
+    lint.add_argument(
+        "--language", choices=["1800-2017", "1800-2023"], default="1800-2017"
+    )
+    lint.add_argument("--output-dir")
+    lint.add_argument("--timeout", type=_positive_float, default=120.0)
+    _common_tool_argument(lint, "verilator")
+
+    synth = commands.add_parser(
+        "synthesize", help="Produce and validate a flattened Liberty-mapped ASIC netlist."
+    )
+    synth.add_argument("sources", nargs="+")
+    synth.add_argument("--top", required=True)
+    synth.add_argument("--liberty", required=True)
+    synth.add_argument("--frontend", choices=["verilog", "slang"], default="verilog")
+    synth.add_argument("--include-dir", action="append", default=[])
+    synth.add_argument("--define", action="append", default=[])
+    synth.add_argument(
+        "--language", choices=["yosys-sv", "1800-2017", "1800-2023"]
+    )
+    synth.add_argument("--techmap", action="append", default=[])
+    synth.add_argument("--dont-use", action="append", default=[])
+    synth.add_argument("--abc-delay-target-ns", type=_positive_float)
+    synth.add_argument("--abc-constraint")
+    synth.add_argument("--output-dir")
+    synth.add_argument("--timeout", type=_positive_float, default=300.0)
+    _common_tool_argument(synth, "yosys")
+
+    timing = commands.add_parser(
+        "timing-analyze", help="Analyze one mapped netlist for setup and hold timing."
+    )
+    timing.add_argument("netlist")
+    timing.add_argument("--top", required=True)
+    timing.add_argument("--liberty", required=True)
+    timing.add_argument("--sdc", required=True)
+    timing.add_argument("--output-dir")
+    timing.add_argument("--timeout", type=_positive_float, default=120.0)
+    _common_tool_argument(timing, "sta")
     return parser
 
 
@@ -795,6 +845,56 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
             },
         ]
     )
+    digital_capabilities = (
+        (
+            "org.openada.driver.verilator",
+            "verilator",
+            "openada.operation/rtl.lint/v1alpha1",
+            "openada.assertion/rtl.lint.clean/v1alpha1",
+            "openada.feature/rtl.lint.systemverilog/v1alpha1",
+            "ihp-sar-rtl-check",
+        ),
+        (
+            "org.openada.driver.yosys",
+            "yosys",
+            "openada.operation/logic.synthesize/v1alpha1",
+            "openada.assertion/synthesized-netlist.valid/v1alpha1",
+            "openada.feature/synthesis.asic-liberty/v1alpha1",
+            "orfs-ibex-synthesis-timing",
+        ),
+        (
+            "org.openada.driver.opensta",
+            "sta",
+            "openada.operation/timing.analyze/v1alpha1",
+            "openada.assertion/timing.constraints-satisfied/v1alpha1",
+            "openada.feature/timing.setup-hold/v1alpha1",
+            "orfs-ibex-synthesis-timing",
+        ),
+    )
+    for provider_id, native_product, operation, assertion, feature, conformance in digital_capabilities:
+        tool = tools.get(native_product)
+        records.append(
+            {
+                "provider_id": provider_id,
+                "provider_version": "1.0.0",
+                "provider_kind": "eda-driver",
+                "availability": tool["status"] if tool is not None else "not-inspected",
+                "native_product": native_product,
+                "operation_profile": operation,
+                "operation_profile_schema": "openada.operation-profile/v0alpha2",
+                "assertion_profile": assertion,
+                "result_schema": "openada.result/v0alpha1",
+                "transports": ["local-cli"],
+                "locator_types": ["filesystem"],
+                "features": [
+                    {
+                        "id": feature,
+                        "maturity": "workflow-validated",
+                        "conformance_ids": [conformance],
+                    }
+                ],
+            }
+        )
     return records
 
 
@@ -1744,6 +1844,56 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             output_dir,
             top=args.top,
             json_netlist=args.json_netlist,
+            timeout=args.timeout,
+        )
+    if args.command == "rtl-lint":
+        output_dir = (
+            Path(args.output_dir).expanduser().resolve()
+            if args.output_dir
+            else Path.cwd() / "openada-out" / "rtl-lint"
+        )
+        return VerilatorDriver(discovery=discovery).rtl_lint(
+            args.sources,
+            output_dir,
+            top=args.top,
+            include_dirs=args.include_dir,
+            defines=args.define,
+            language=args.language,
+            timeout=args.timeout,
+        )
+    if args.command == "synthesize":
+        output_dir = (
+            Path(args.output_dir).expanduser().resolve()
+            if args.output_dir
+            else Path.cwd() / "openada-out" / "synthesize"
+        )
+        return YosysDriver(discovery=discovery).synthesize(
+            args.sources,
+            args.liberty,
+            output_dir,
+            top=args.top,
+            frontend=args.frontend,
+            include_dirs=args.include_dir,
+            defines=args.define,
+            language=args.language,
+            techmaps=args.techmap,
+            dont_use=args.dont_use,
+            abc_delay_target_ns=args.abc_delay_target_ns,
+            abc_constraint=args.abc_constraint,
+            timeout=args.timeout,
+        )
+    if args.command == "timing-analyze":
+        output_dir = (
+            Path(args.output_dir).expanduser().resolve()
+            if args.output_dir
+            else Path.cwd() / "openada-out" / "timing-analyze"
+        )
+        return OpenSTADriver(discovery=discovery).timing_analyze(
+            args.netlist,
+            args.liberty,
+            args.sdc,
+            output_dir,
+            top=args.top,
             timeout=args.timeout,
         )
     raise ValueError(f"unknown command: {args.command}")

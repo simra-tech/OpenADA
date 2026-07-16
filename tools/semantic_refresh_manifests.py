@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 STATIC_MANIFESTS = (
     ROOT / "conformance/ihp-inverter/semantic-chain.json",
     ROOT / "conformance/ihp-sar-rtl/semantic-chain.json",
+    ROOT / "conformance/orfs-ibex-synthesis-timing/semantic-chain.json",
     ROOT / "conformance/ihp-analog-measurements/manifest.json",
     ROOT / "conformance/ihp-inverter-agent-chain/manifest.json",
     ROOT / "conformance/public-spice-portability/manifest.json",
@@ -113,7 +114,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "manifests",
         nargs="*",
         type=Path,
-        help="Optional manifest paths; defaults to the five static publishers.",
+        help="Optional manifest paths; defaults to the six static publishers.",
     )
     return parser.parse_args(argv)
 

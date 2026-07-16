@@ -37,7 +37,7 @@ Exit behavior is deliberate:
   or other inventory invariant is invalid.
 
 CI runs release mode as a required offline gate. A release checkout must first
-prove that every byte-bound static manifest and the six-record index are
+prove that every byte-bound static manifest and the seven-record index are
 mechanically current:
 
 ```bash
@@ -48,8 +48,8 @@ python tools/verify_semantic_coverage.py --mode release
 
 The release index at
 [`conformance/semantic-chains/index.json`](../conformance/semantic-chains/index.json)
-is generated only from the six declared source-frozen receipts. Release mode
-requires 126 active rows, zero gaps, zero issues, a passing offline verifier for
+is generated only from the seven declared source-frozen receipts. Release mode
+requires 147 active rows, zero gaps, zero issues, a passing offline verifier for
 every chain, and a resolved provider receipt digest. The ledger never infers
 coverage from maturity prose, unit-test counts, or self-declared provider
 conformance metadata.
@@ -206,7 +206,7 @@ chain. Evidence-only commits may have different Git trees while retaining the
 same semantic-subject digest; the gate verifies each attested revision and
 tree directly.
 
-After all six receipts exist, run
+After all seven receipts exist, run
 `python tools/semantic_publish_index.py --write`. Set any registered provider
 conformance digest to the generated index entry's exact run SHA-256, commit the
 index/digest update, and rerun the three no-write checks shown above. Do not

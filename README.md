@@ -27,8 +27,8 @@ replacement for them. The same simulation intent can run through ngspice or
 Xyce; the agent should not have to relearn every command surface and log
 grammar to understand whether valid evidence was produced.
 
-The `0.4.0` preview provides thirteen CLI command families, six open-source EDA
-drivers, the versioned `openada.result/v0alpha1` evidence envelope, and six
+The `0.4.0` preview provides sixteen CLI command families, eight open-source EDA
+drivers, the versioned `openada.result/v0alpha1` evidence envelope, and nine
 agent skills. It closes the first native-artifact-to-specification chain with
 verified ngspice/Xyce series extraction and deterministic coherent single-tone
 SNR, SINAD, THD, and SFDR measurements, plus closed AC gain, bandwidth,
@@ -206,10 +206,11 @@ The plugin has two deliberately separate layers:
 
 - `skills/openada` is the thin execution and evidence adapter. It selects a
   semantic operation, invokes OpenADA, and interprets the versioned result.
-- Five experimental engineering skills sit above it:
+- Eight experimental engineering skills sit above it:
   `review-circuit-simulation`, `characterize-analog-block`,
   `analyze-feedback-stability`, `analyze-spectral-linearity`, and
-  `assess-pvt-and-yield`. They preserve the
+  `assess-pvt-and-yield`, plus `review-rtl-architecture`,
+  `assess-synthesis-and-inference`, and `assess-asic-timing`. They preserve the
   execution/evidence/measurement/specification boundary and inspect advertised
   operations and feature IDs before planning work. An unavailable primitive is
   reported as not evaluated; a skill does not fall through to native syntax.
@@ -228,17 +229,17 @@ contribution gate.
 ## Evidence-backed semantic release
 
 Every active semantic command, feature, provider mapping, and preflight route
-is derived into a closed coverage row. The `0.4.0` source has 126 active rows,
-and release CI requires every one to reach `agent-ready` through one of six
+is derived into a closed coverage row. The current source has 147 active rows,
+and release CI requires every one to reach `agent-ready` through one of seven
 pinned public-design chains: physical DRC/LVS, analog measurements, the full
 inverter agent workflow, all four ngspice-provider analyses, SAR RTL, and
-ngspice/Xyce portability.
+ngspice/Xyce portability, plus ORFS Ibex synthesis and timing.
 
 A release row needs a real native run, independently parsed native artifacts,
 normalized evidence, an engineering decision, a trustworthy negative, a
 tamper rejection, and an agent-visible result. Every receipt also binds the
 exact semantic source and the clean Git tree used during replay. The generated
-six-record index is therefore a release ledger, not a maturity label or a list
+seven-record index is therefore a release ledger, not a maturity label or a list
 of demonstrations.
 
 Run the offline release checks with:
@@ -258,11 +259,11 @@ adjacent command or be waived through prose.
 
 | Contract layer | Current checkout | Protocol target |
 |---|---|---|
-| Agent intent | Thirteen CLI command families; five fixed scoped-preflight assertions; six active typed operation profiles plus one historical simulation profile; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
+| Agent intent | Sixteen CLI command families; eight fixed scoped-preflight assertions; nine active typed operation profiles plus one historical simulation profile; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
-| Drivers | Six open-source EDA drivers; ngspice OP/DC/AC and Xyce DC/AC are structured, while shared transient mappings are workflow-validated | Capability manifests and independently installable drivers |
+| Drivers | Eight open-source EDA drivers; circuit simulation, strict RTL lint, mapped synthesis, and synthesis-stage timing expose typed evidence at feature-specific maturity | Capability manifests and independently installable drivers |
 | Portability proof | Analysis-specific `circuit.simulate` requests have pinned native ngspice/Xyce success replay with independently parsed artifacts; the expanded replay does not yet cover every maturity outcome | More operations, open-source backends, runtime environments, and complete outcome corpora |
-| Engineering skills | One execution skill plus five experimental capability-gated engineering skills | Contributed workflows that compose stable operations across backends |
+| Engineering skills | One execution skill plus eight experimental capability-gated engineering skills across analog and digital review | Contributed workflows that compose stable operations across backends |
 | Workflow composition | Simulation → verified native series extraction → scalar, coherent spectral, or closed AC transfer measurement → explicit specification evaluation, with digest lineage and the verified extraction envelope retained separately | Integrated noise, corners, statistical campaigns, and richer standard-reviewed methods |
 | Design mutation | Deliberately outside the current preview | Preconditioned, transactional change sets with declared writes, native diffs, rollback evidence, and source-revision identity |
 
@@ -301,7 +302,7 @@ engineering assertion instead of inventorying every tool or project file:
   --assertion spice-analysis-evidence-valid
 ```
 
-Scoped preflight accepts one of five fixed assertion IDs and selects exactly
+Scoped preflight accepts one of eight fixed assertion IDs and selects exactly
 one smallest semantic operation:
 
 | Assertion | Tool inspected | Next operation |
@@ -311,6 +312,9 @@ one smallest semantic operation:
 | `drc-clean` | KLayout | `drc` |
 | `lvs-match` | Netgen | `lvs` |
 | `rtl-structural-check-passes` | Yosys | `rtl-check` |
+| `rtl-lint-clean` | Verilator | `rtl-lint` |
+| `asic-netlist-synthesized` | Yosys | `synthesize` |
+| `timing-constraints-satisfied` | OpenSTA | `timing-analyze` |
 
 The result records the canonical root, exact binary/version observation,
 runtime profile, configured PDK roots, connector startup policy, and one
@@ -454,15 +458,19 @@ thin.
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |
+| `rtl-lint` | Verilator | workflow-validated | Apply a strict no-warning/no-error SystemVerilog lint assertion with hashed source/include evidence |
+| `synthesize` | Yosys + ABC | workflow-validated | Bind the external ABC executable by version and digest, retain generic inference facts, and validate a complete flattened Liberty-mapped ASIC netlist |
+| `timing-analyze` | OpenSTA | workflow-validated | Validate constraints and report one-corner setup/hold WNS, TNS, and bounded critical paths in seconds |
 
-Magic, OpenROAD, Icarus Verilog, Verilator, Surelog, slang, OpenVAF,
+Magic, OpenROAD, Icarus Verilog, Surelog, standalone slang, OpenVAF,
 Qucs-S, GTKWave, and LibreLane are currently discoverable but do not yet have a
 stable structured operation in the preview contract.
 
 Xschem-to-ngspice simulation, KLayout DRC, and Netgen LVS pass pinned public IHP
-inverter conformance cases. The other structured drivers have real native or
-pinned-design evidence but do not yet have a public workflow recipe. The
-roadmap preserves that distinction.
+inverter conformance cases. Strict Verilator lint passes the public IHP SAR RTL,
+and Yosys/Slang synthesis plus OpenSTA timing are replayed on pinned ORFS Ibex
+RTL and Nangate45 collateral. The roadmap preserves the boundary between this
+synthesis-stage evidence and physical or signoff closure.
 
 See [the current result contract](docs/CONTRACT.md),
 [semantic model](docs/SEMANTIC_MODEL.md),

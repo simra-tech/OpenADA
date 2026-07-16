@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/rtl.lint/v1alpha1",
+    "title": "Strict SystemVerilog RTL lint",
+    "summary": "Run bounded noninteractive RTL lint over an explicitly ordered SystemVerilog source set and preserve complete diagnostics as decision evidence.",
+    "side_effect_mode": "evidence-only",
+    "target_kinds": ["rtl-source-set"],
+    "locator_types": ["filesystem", "artifact", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/rtl.lint.clean/v1alpha1",
+    "statement": "The exact ordered RTL source set produces no Verilator warning or error under the declared strict SystemVerilog lint policy.",
+    "non_goals": [
+      "This assertion does not establish functional correctness, synthesizability, clock-domain safety, reset intent, formal properties, or implementation timing.",
+      "This assertion does not waive, downgrade, or suppress a native warning; every recognized warning is engineering fail under v1alpha1.",
+      "This assertion does not claim portability to another parser, language revision, file order, include tree, macro set, or top module.",
+      "Selecting 1800-2017 or 1800-2023 requests a Verilator SystemVerilog language edition; it does not certify the implementation or design as conformant to IEEE 1800.",
+      "This assertion does not run generated-model simulation or prove that an inferred latch or combinational loop is intentional."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "Verilator completed on the exact bound inputs with complete UTF-8 output capture, exit code zero, and no recognized warning or error.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.warning_policy is strict, data.environment_policy is closed-verilator-runtime-v1, and data.warning_count, data.error_count, and data.diagnostic_count are all zero.",
+          "The ordered source paths, recursively resolved literal include dependencies, stable before/after closure, top module, language revision, tool path, and tool version are retained.",
+          "A fresh bounded rtl.lint.log artifact proves complete stdout and stderr capture without truncation."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Complete trustworthy Verilator output contains at least one recognized warning or error under the strict policy.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.diagnostic_count is greater than zero and equals data.warning_count plus data.error_count.",
+          "Each retained diagnostic preserves its native warning or error severity, stable Verilator code, bounded message, and design-finding classification from the closed v1alpha1 grammar.",
+          "The complete fresh lint transcript is retained even when Verilator exits zero because warnings are nonfatal.",
+          "Captured inputs and the literal dependency closure remain unchanged across the invocation, and the same closed-verilator-runtime-v1 environment governs the version probe and lint execution."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The request, tool availability, execution, diagnostic capture, or native exit classification is insufficient to prove clean or conclusively report a lint finding.",
+        "allowed_execution_statuses": ["completed", "timed_out", "not_available", "invalid_request", "failed"],
+        "required_evidence": [
+          "At least one stable diagnostic identifies the invalid input, unavailable or identity-rejected tool, incomplete capture, timeout, unclassified native diagnostic, or unclassified nonzero native exit.",
+          "Unknown is never promoted to clean merely because no diagnostic was parsed from incomplete evidence."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {
+        "role": "rtl-source-set",
+        "required": true,
+        "locator_types": ["filesystem", "artifact", "workspace"],
+        "identity_requirement": "content-digest",
+        "description": "One or more existing regular HDL sources whose explicit order is semantically significant.",
+        "extensions": {}
+      },
+      {
+        "role": "rtl-include-tree",
+        "required": false,
+        "locator_types": ["filesystem", "artifact", "workspace"],
+        "identity_requirement": "snapshot",
+        "description": "Optional include roots used to resolve the recursively scanned literal include closure; every resolved dependency is retained by content digest.",
+        "extensions": {}
+      }
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "rtl.lint v1alpha1 request parameters",
+      "type": "object",
+      "required": ["top", "language", "defines", "warning_policy", "extensions"],
+      "properties": {
+        "top": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$", "maxLength": 256},
+        "language": {"enum": ["1800-2017", "1800-2023"]},
+        "defines": {"type": "array", "maxItems": 256, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:=[A-Za-z0-9_./:+@'\\-]*)?$", "maxLength": 1024}},
+        "warning_policy": {"const": "strict"},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "At least one source is required, source order is preserved exactly, canonical source/include-directory paths and resolved or unresolved dependency identities must contain no ASCII control or DEL character, and no output path may overwrite a source or recursively discovered include dependency.",
+      "The top module and every preprocessor definition must satisfy the closed portable token grammar; v1alpha1 accepts no whitespace, quoting, script delimiters, arbitrary native command fragments, or waiver flags.",
+      "One closed runtime environment is shared by the version probe and lint execution: PATH contains only the selected executable directory plus the platform default search path, LANG and LC_ALL are C, and ambient loader, interpreter, shell-startup, and VERILATOR_* variables are not inherited.",
+      "Verilator is invoked with relative-include resolution and fixed extension mappings for .v, .sv, .vh, and .svh so the recursively hashed literal closure and declared language edition govern native parsing rather than ambient extension defaults.",
+      "Every literal include resolved from the sources is scanned transitively and retained as an input dependency; the same closure is rescanned after invocation, while unresolved literal references are disclosed separately because they may occur in inactive preprocessor branches.",
+      "The strict policy maps any recognized Verilator warning or error to engineering fail and never relies on the native process exit code alone."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "rtl.lint v1alpha1 normalized result data",
+      "type": "object",
+      "required": ["protocol", "top", "language", "warning_policy", "environment_policy", "ordered_sources", "include_dependencies", "unresolved_literal_includes", "unresolved_literal_includes_truncated", "inputs_stable", "dependency_closure_stable", "changed_inputs", "changed_inputs_truncated", "tool_identity_stable", "warning_count", "error_count", "diagnostic_count", "unclassified_diagnostic_count", "diagnostics", "diagnostics_truncated"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/protocol"},
+        "top": {"type": ["string", "null"], "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$", "maxLength": 256},
+        "language": {"enum": ["1800-2017", "1800-2023", null]},
+        "warning_policy": {"const": "strict"},
+        "environment_policy": {"const": "closed-verilator-runtime-v1"},
+        "ordered_sources": {"type": "array", "maxItems": 4096, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "include_dependencies": {"type": "array", "maxItems": 100000, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "unresolved_literal_includes": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "unresolved_literal_includes_truncated": {"type": "boolean"},
+        "inputs_stable": {"type": ["boolean", "null"]},
+        "dependency_closure_stable": {"type": ["boolean", "null"]},
+        "changed_inputs": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "changed_inputs_truncated": {"type": "boolean"},
+        "tool_identity_stable": {"type": ["boolean", "null"]},
+        "warning_count": {"type": "integer", "minimum": 0},
+        "error_count": {"type": "integer", "minimum": 0},
+        "diagnostic_count": {"type": "integer", "minimum": 0},
+        "unclassified_diagnostic_count": {"type": "integer", "minimum": 0},
+        "diagnostics": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/diagnostic"}},
+        "diagnostics_truncated": {"type": "boolean"}
+      },
+      "$defs": {
+        "protocol": {
+          "type": "object",
+          "required": ["operation_profile", "assertion_profile", "implementation_id", "implementation_version"],
+          "properties": {
+            "operation_profile": {"const": "openada.operation/rtl.lint/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/rtl.lint.clean/v1alpha1"},
+            "implementation_id": {"const": "org.openada.driver.verilator"},
+            "implementation_version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "diagnostic": {
+          "type": "object",
+          "properties": {
+            "severity": {"enum": ["warning", "error"]},
+            "code": {"type": "string", "pattern": "^[A-Z0-9_]+$", "maxLength": 120},
+            "message": {"type": "string", "minLength": 1, "maxLength": 1000},
+            "classification": {"enum": ["design-finding", "unclassified"]}
+          },
+          "required": ["severity", "code", "message", "classification"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.warning_policy", "type": "string", "required_for": ["pass", "fail"], "description": "The immutable strict policy under which every warning and error is a finding.", "extensions": {}},
+      {"path": "data.environment_policy", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "The fixed closed environment shared by probe and execution: deterministic PATH and C locale only, plus platform process essentials on Windows; no ambient loader, interpreter, shell-startup, or VERILATOR_* variables.", "extensions": {}},
+      {"path": "data.warning_count", "type": "integer", "required_for": ["pass", "fail"], "description": "Total recognized Verilator warning records in complete captured output.", "bounds": "Zero or greater; zero is required for pass.", "extensions": {}},
+      {"path": "data.error_count", "type": "integer", "required_for": ["pass", "fail"], "description": "Total recognized Verilator error records in complete captured output.", "bounds": "Zero or greater; zero is required for pass.", "extensions": {}},
+      {"path": "data.diagnostics", "type": "array", "required_for": ["pass", "fail"], "description": "At most 100 bounded native diagnostics; truncation is explicit and never hidden.", "extensions": {}},
+      {"path": "data.ordered_sources", "type": "array", "required_for": ["pass", "fail"], "description": "Canonical absolute source paths retained in native parse order.", "extensions": {}},
+      {"path": "data.include_dependencies", "type": "array", "required_for": ["pass", "fail"], "description": "Canonical recursively resolved include dependency paths bound as inputs.", "extensions": {}},
+      {"path": "data.unresolved_literal_includes", "type": "array", "required_for": ["pass", "fail"], "description": "Bounded literal include tokens not resolved by conservative pre-scan; these can occur in inactive preprocessor branches and are disclosed rather than silently treated as active dependencies.", "extensions": {}},
+      {"path": "data.inputs_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True only when every captured source and resolved include retains the same byte count and SHA-256 after invocation.", "extensions": {}},
+      {"path": "data.dependency_closure_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True only when a post-run rescan reproduces the ordered sources, resolved literal include closure, and unresolved literal inventory.", "extensions": {}},
+      {"path": "data.tool_identity_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True only when the selected Verilator path and filesystem identity stay fixed from before the bounded version probe through execution.", "extensions": {}},
+      {"path": "data.unclassified_diagnostic_count", "type": "integer", "required_for": ["pass", "fail", "unknown"], "description": "Native records outside the closed v1alpha1 design-finding grammar; any nonzero value forces unknown.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {
+        "role": "rtl.lint.log",
+        "kind": "verilator-log",
+        "required_for": ["pass", "fail"],
+        "freshness": "fresh-per-invocation",
+        "integrity": ["Create the transcript only from the current invocation.", "Require complete valid UTF-8 stdout and stderr capture within the separate one-mebibyte per-stream bounds before pass or fail."],
+        "native_authority": "The complete Verilator transcript is authoritative for native warnings and errors; normalized diagnostics are a bounded deterministic projection.",
+        "extensions": {}
+      }
+    ],
+    "integrity_rules": [
+      "Hash every source and recursively resolved literal include dependency before native invocation, rehash them afterward, and reproduce the same dependency closure before pass or fail.",
+      "Use the same closed-verilator-runtime-v1 environment for the bounded version probe and lint invocation, retaining only deterministic PATH and C locale plus platform process essentials on Windows; do not inherit ambient LD_*, DYLD_*, PERL*, PYTHON*, ENV, BASH_ENV, IFS, CDPATH, SHELLOPTS, or VERILATOR_* keys.",
+      "Retain the resolved executable path and reported version with the result.",
+      "Stat-bind the selected executable before the bounded version probe, require the inspected path and identity to remain identical after that probe, and recheck the same identity after invocation.",
+      "Reject truncated or non-UTF-8 output and unclassified nonzero exits as unknown rather than clean."
+    ],
+    "provenance_limitations": [
+      "Literal include scanning may retain files in inactive branches and cannot attest macro-computed includes; it is conservative rather than proof of exact conditional compilation.",
+      "Verilator lint semantics, warning inventory, and language support can change across tool versions, so evidence is comparable only with an identical retained tool identity.",
+      "Direct verilator_bin discovery is preferred. If an explicit script-wrapper entrypoint is selected, OpenADA binds that selected path and version under the closed environment but does not separately enumerate or hash the wrapper interpreter or its installed companion binary.",
+      "No waiver file, project generator, simulator model, external preprocessor, or vendor library outside the bound sources and include roots is represented."
+    ],
+    "limits": {"max_log_bytes": 4194304, "max_artifact_bytes": 4194304, "max_artifact_count": 1, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {
+      "id": "openada.feature/rtl.lint.systemverilog/v1alpha1",
+      "parameter_path": "language",
+      "parameter_values": ["1800-2017", "1800-2023"],
+      "request_effect": "Select the declared SystemVerilog language revision while preserving file order, include roots, macro definitions, top module, and the strict warning policy.",
+      "conformance_case": "Run a pinned public RTL design to warning-free pass and replay at least one real or injected recognized warning to strict fail while retaining complete native evidence.",
+      "extensions": {}
+    }
+  ],
+  "diagnostics": [
+    {"code": "input.invalid", "severity": "error", "condition": "A source, include dependency, define, language, top, or output binding is absent, invalid, unsafe, or contains a control-bearing HDL path identity.", "next_action": "Correct the explicit request and bind every required HDL input with control-free canonical paths; do not infer file order, top, macros, or waivers.", "extensions": {}},
+    {"code": "tool.missing", "severity": "error", "condition": "The selected runtime cannot resolve Verilator.", "next_action": "Install or select a pinned Verilator runtime and rerun the exact request.", "extensions": {}},
+    {"code": "tool.unusable", "severity": "error", "condition": "An executable exists but its bounded version output does not identify supported Verilator.", "next_action": "Select an identity-validated Verilator build; do not execute a wrong or unversioned binary.", "extensions": {}},
+    {"code": "tool.changed", "severity": "error", "condition": "The inspected executable path differs from the selected path, or the selected Verilator filesystem identity changes during the version probe or invocation.", "next_action": "Freeze the tool installation and PATH selection, then rerun; reject evidence whose version probe is not bound to the executed binary.", "extensions": {}},
+    {"code": "output.unavailable", "severity": "error", "condition": "The isolated workspace or fresh evidence output cannot be created safely.", "next_action": "Use a writable fresh evidence directory and rerun without accepting partial output.", "extensions": {}},
+    {"code": "artifact.uncaptured", "severity": "error", "condition": "The fresh complete transcript cannot be created exclusively or captured as a bounded stable regular file.", "next_action": "Reject the result and regenerate evidence in a protected fresh directory.", "extensions": {}},
+    {"code": "evidence.incomplete", "severity": "error", "condition": "Native output was truncated or was not valid UTF-8.", "next_action": "Preserve a complete bounded transcript before making a lint decision.", "extensions": {}},
+    {"code": "input.changed", "severity": "error", "condition": "A captured RTL source or include changed during invocation.", "next_action": "Freeze the source tree and rerun the exact request; do not interpret evidence from moving inputs.", "extensions": {}},
+    {"code": "input.dependency_closure_changed", "severity": "error", "condition": "The post-run literal include scan differs from the pre-run source/dependency closure.", "next_action": "Freeze generated files and include roots, then rerun from a stable source configuration.", "extensions": {}},
+    {"code": "execution.timed_out", "severity": "error", "condition": "The bounded Verilator process or its output-producing process group did not complete before the declared timeout.", "next_action": "Inspect the retained execution state, choose a justified larger bound or reduce the source scope, and rerun without making a lint conclusion.", "extensions": {}},
+    {"code": "execution.failed", "severity": "error", "condition": "OpenADA could not launch, monitor, or complete the selected Verilator process.", "next_action": "Repair the executable/runtime or isolated workspace and rerun; do not classify the RTL from partial evidence.", "extensions": {}},
+    {"code": "execution.not_available", "severity": "error", "condition": "The identity-validated Verilator path was no longer executable or available at process launch.", "next_action": "Freeze the tool installation and rerun preflight plus the exact lint request.", "extensions": {}},
+    {"code": "verilator.unclassified_exit", "severity": "error", "condition": "Verilator exited nonzero without a recognized diagnostic in complete output.", "next_action": "Inspect the native transcript and add a versioned parser mapping; do not classify the RTL as clean.", "extensions": {}},
+    {"code": "verilator.unclassified_diagnostic", "severity": "error", "condition": "A native record is outside the closed v1alpha1 design-finding grammar, including option, language, or capability errors.", "next_action": "Treat the result as unknown; validate the tool capability or add a reviewed versioned mapping before making an RTL claim.", "extensions": {}},
+    {"code": "verilator.native-warning", "severity": "warning", "condition": "Verilator emitted a warning in the closed v1alpha1 design-finding grammar.", "next_action": "Resolve or explicitly redesign the RTL condition; v1alpha1 has no waiver mechanism.", "extensions": {}},
+    {"code": "verilator.native-error", "severity": "error", "condition": "Verilator emitted an error in the closed v1alpha1 design-finding grammar.", "next_action": "Correct the cited RTL/top condition and rerun the exact manifest; do not use partial output.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.driver.verilator",
+      "native_product_id": "org.verilator.verilator",
+      "backend_name": "Verilator strict lint-only",
+      "supported_features": ["openada.feature/rtl.lint.systemverilog/v1alpha1"],
+      "semantic_bindings": [
+        {
+          "feature_id": "openada.feature/rtl.lint.systemverilog/v1alpha1",
+          "implementation": "Invoke Verilator lint-only under the closed-verilator-runtime-v1 environment policy with timing, Wall, nonfatal warning capture, relative includes, fixed .v/.sv/.vh/.svh mappings for the declared language edition, and explicit top/include/define/source bindings, then classify complete parsed diagnostics under the strict OpenADA policy.",
+          "output_fact_paths": ["data.warning_policy", "data.environment_policy", "data.warning_count", "data.error_count", "data.diagnostics", "data.ordered_sources", "data.include_dependencies", "data.unresolved_literal_includes", "data.inputs_stable", "data.dependency_closure_stable"],
+          "extensions": {}
+        }
+      ],
+      "native_actions": ["Resolve and hash ordered HDL inputs.", "Invoke noninteractive Verilator lint-only without user-supplied native command fragments.", "Parse complete native warning and error records and retain the fresh transcript."],
+      "artifact_bindings": [{"native_kind": "Verilator stdout/stderr transcript", "canonical_role": "rtl.lint.log", "extensions": {}}],
+      "limitations": ["The mapping is strict: warnings and errors both produce engineering fail.", "Only SystemVerilog 1800-2017 and 1800-2023 revision selectors are exposed.", "Native output must fit the bounded complete capture; otherwise status is unknown."],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["operation, assertion, and strict truth table", "ordered source, include, macro, language, and top identity", "native diagnostic grammar, sanitized environment, and warning-to-fail policy", "normalized diagnostic counts and bounded records", "fresh complete transcript integrity"],
+    "change_policy": "Any change to warning or environment policy, accepted language or input semantics, native diagnostic classification, evidence completeness, normalized facts, or pass/fail/unknown meaning requires a new profile identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

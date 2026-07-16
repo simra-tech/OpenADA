@@ -24,7 +24,7 @@ with one explicitly supplied manifest and resolves one unambiguous local
 JSON-stdio `wait` transport. It does not discover, install, rank, or approve
 providers, and it does not implement session, remote-job, marketplace, or MCP
 transport semantics. External dispatch is currently registered only for
-`circuit.simulate/v1alpha2`; operation-specific CLI bridges execute all six
+`circuit.simulate/v1alpha2`; operation-specific CLI bridges execute all nine
 active typed profiles directly, and one historical simulation profile remains
 packaged. Publishing any other schema or transport binding still does not imply
 runtime support. `request_id` equality is correlation, not a complete request

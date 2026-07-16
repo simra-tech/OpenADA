@@ -1,0 +1,359 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.semantic-chain/v0alpha1",
+  "id": "openada.chain/orfs-ibex-synthesis-timing/v1",
+  "design": {
+    "class": "public-design",
+    "repository": "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git",
+    "revision": "bea7dcd7be7f26d1328f6058b01cf42bf4352aa2",
+    "tree": "b0979ac02253b74d4e22b426d2e4827b1fbf5fc3",
+    "subtree": "flow/designs/src/ibex_sv",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "flow/designs/src/ibex_sv/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "inputs": [
+      {"path": "flow/designs/src/ibex_sv/ibex_pkg.sv", "sha256": "59c6f37dc285b02d785c38094553283070b50b69f572a81b8ba3bc8b39475170"},
+      {"path": "flow/designs/src/ibex_sv/ibex_alu.sv", "sha256": "919bb850b1cacb672e3b545fd040af9afbf22d684137dbc76ad13dcdfa4bd122"},
+      {"path": "flow/designs/src/ibex_sv/ibex_compressed_decoder.sv", "sha256": "324d65eb47bd973781cdb65b55e3ece3d03d543d04417009fdf983811ea917a2"},
+      {"path": "flow/designs/src/ibex_sv/ibex_controller.sv", "sha256": "582949bdbb8b115319c4796d0eb40b7deb9ed88666ebfd3d870f29d3024626d5"},
+      {"path": "flow/designs/src/ibex_sv/ibex_core.sv", "sha256": "a35ec2de657657b1d02a0a473a44ffa944e53052dc08ac76f7b438cec7382504"},
+      {"path": "flow/designs/src/ibex_sv/ibex_counter.sv", "sha256": "fc9862a2af52ef7a9e83af9c2c47c52ac4767022f7591f241f771368a1613614"},
+      {"path": "flow/designs/src/ibex_sv/ibex_cs_registers.sv", "sha256": "d4c2f7d56f5b4071fa4921832460ddfc456c89bb1e08d3e7d8a7c4d82383fee7"},
+      {"path": "flow/designs/src/ibex_sv/ibex_csr.sv", "sha256": "32a842f1c5cab160be4930f1743f5f8e9e0450187545eef1b48ac80a89afc0d8"},
+      {"path": "flow/designs/src/ibex_sv/ibex_decoder.sv", "sha256": "9f1b68f98d6675d6ad3d8d940967b36afb6ca7bc84f636d83107f184fa504559"},
+      {"path": "flow/designs/src/ibex_sv/ibex_ex_block.sv", "sha256": "78f719958d133eb20436d20ae70ac871251a5220218f840380c2bf5049969043"},
+      {"path": "flow/designs/src/ibex_sv/ibex_fetch_fifo.sv", "sha256": "84c314f0216545339e53b447f4432e7940726029ae63bb2c9c382d44a825f2d5"},
+      {"path": "flow/designs/src/ibex_sv/ibex_id_stage.sv", "sha256": "180fa414832b5d60d73a966df5b1904109b0007b9ff105813eaa3c53c8075bc1"},
+      {"path": "flow/designs/src/ibex_sv/ibex_if_stage.sv", "sha256": "9777ab9f63bb3f2262ee14879e5196058768e8836f95bc4218385a98f08c0adf"},
+      {"path": "flow/designs/src/ibex_sv/ibex_load_store_unit.sv", "sha256": "cc6e0c901a895a7ab2c7aa2371391c48ff956c5d4b2848fc419db7b4f9dd83a8"},
+      {"path": "flow/designs/src/ibex_sv/ibex_multdiv_fast.sv", "sha256": "30f302d258aa96a303d426ebf543262a02a0531626815ca0b651df9a81d3b44f"},
+      {"path": "flow/designs/src/ibex_sv/ibex_multdiv_slow.sv", "sha256": "9e5a86e8b0be442866dd431655244e90319ba4e6a37b11f3ca7e4fedd7a225f3"},
+      {"path": "flow/designs/src/ibex_sv/ibex_pmp.sv", "sha256": "e778718b97e45a9171e856c966523a6add3dda90022002b60ccd11d4c8a508b6"},
+      {"path": "flow/designs/src/ibex_sv/ibex_prefetch_buffer.sv", "sha256": "95b3d99082c6ebf77cc45c08fd620bd8b70f11efaa3a574c5a543e2bae19ac83"},
+      {"path": "flow/designs/src/ibex_sv/ibex_register_file_ff.sv", "sha256": "0b3fcfeb3f92560e9995ece3aacb7ca6cb9cb01368720881b5c4b9efef648138"},
+      {"path": "flow/designs/src/ibex_sv/ibex_wb_stage.sv", "sha256": "8425144d2367756b634a66b6498a32b55071f0a493b8c98d3a6682800bbe1ed6"},
+      {"path": "flow/designs/src/ibex_sv/syn/rtl/prim_clock_gating.v", "sha256": "2b03684abf70d0a4b92a5f3026ff8a306db5e367cd038957c0bc96ec5cbbefc2"},
+      {"path": "flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv", "sha256": "ebca923df65c9d03905b63244675a1434ed8cca9018fe7ecca319fe14338f3f7"},
+      {"path": "flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert_dummy_macros.svh", "sha256": "310e3d2b87105d1892310fa68c5b284e7a9c26c50dd7aa43d0f11c8044750fb5"},
+      {"path": "flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib", "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"},
+      {"path": "flow/platforms/nangate45/cells_latch.v", "sha256": "7e2330df874405c28f92d37f17be088b371b9f378a913e7ca3dbda25ca4c7802"},
+      {"path": "flow/designs/nangate45/ibex/constraint.sdc", "sha256": "d55ba02e513f05c6b9b531633acf835a10942b8202d1e1b06989cf58b41ce389"},
+      {"path": "flow/designs/nangate45/ibex/config.mk", "sha256": "27d81bc59f83275eba0f5580ea934e0c3e986bb0690c3f2c977be8558327ff37"},
+      {"path": "flow/platforms/nangate45/config.mk", "sha256": "1d8e639ccc138e72b5fe02dc0130e167455aee1c53b5aa3ee50ff442dc47d6cc"},
+      {"path": "flow/designs/src/ibex_sv/README.md", "sha256": "c8ca1237111cc4c0823a807848df1e1264c2635662a75240e3883900686a1cb1"},
+      {"path": "flow/platforms/nangate45/LICENSE", "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"},
+      {"path": "LICENSE_BUILD_RUN_SCRIPTS", "sha256": "fae0db7a4c00c3125f037e5818e8cd0c8aa5c67fff2e8c558312068e9f2d1592"}
+    ],
+    "extensions": {
+      "org.openada.digital": {
+        "upstream_repository": "https://github.com/lowRISC/ibex.git",
+        "upstream_revision": "77d801001554cce8fe69e742e96539eecbe74425"
+      }
+    }
+  },
+  "runtime": {
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "platform": "linux/amd64",
+    "pdk_revision": "NangateOpenCellLibrary PDKv1.3_v2010_12.Apache.CCL",
+    "tools": [
+      {
+        "id": "yosys",
+        "path": "/foss/tools/bin/yosys",
+        "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+      },
+      {
+        "id": "opensta",
+        "path": "/foss/tools/openroad/bin/sta",
+        "version": "3.1.0"
+      }
+    ],
+    "extensions": {
+      "org.openada.digital": {
+        "eda_network": "none",
+        "analysis_scope": "single-corner synthesis-stage timing with ideal interconnect and no SPEF; not signoff",
+        "abc_constraint": "conformance/orfs-ibex-synthesis-timing/abc.constr"
+      }
+    }
+  },
+  "contracts": [
+    {"repository_path": "schemas/semantic-chain-manifest-v0alpha1.schema.json", "sha256": "dfe687c78b361b91600dcb1889f14d52301b4c1c8f200b7dacb6c96126f3f600", "extensions": {}},
+    {"repository_path": "schemas/semantic-chain-run-v0alpha1.schema.json", "sha256": "c4916d3b4d3e63337d47da46a2e4aa94ea15fb41b755207f04a41907cc993613", "extensions": {}},
+    {"repository_path": "schemas/design-provenance-v0alpha1.schema.json", "sha256": "0e3e3ba2c6fdce6f22e93f23a26bb8b3e286cacdf109dc25d8d51aefa418e745", "extensions": {}},
+    {"repository_path": "schemas/result-v0alpha1.schema.json", "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15", "extensions": {}},
+    {"repository_path": "profiles/logic.synthesize-v1alpha1.json", "sha256": "88adadc5a7f8246915e6352bb3c49af26e542f2c51bfeb28b54317892e56f808", "extensions": {}},
+    {"repository_path": "profiles/timing.analyze-v1alpha1.json", "sha256": "c3821a1b32f0929dc5e8f31ad370dfdd522118d78beb8c219bc9445a6f30edb0", "extensions": {}},
+    {"repository_path": "tools/semantic_receipts.py", "sha256": "983637e95cc33c8259142dd80c96e005364dd49c6cc729e4a7f0d2d7cbcb13f0", "extensions": {}},
+    {"repository_path": "catalog/semantic-surfaces-v0alpha1.json", "sha256": "db7d34b0c3044647e39d2cc5b205b38367767a2eaa2b8edb902849ae08d0962f", "extensions": {}},
+    {"repository_path": "conformance/orfs-ibex-synthesis-timing/run.schema.json", "sha256": "884fecd6a97d1a733f4a3bb0fb9806d9b6e9883fa6c3f04ab4ad49a03cd8699d", "extensions": {}},
+    {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
+    {"repository_path": "conformance/orfs-ibex-synthesis-timing/common.py", "sha256": "ec134819214db5c49d73131abe3f91e95b755702eadd8c7123c3843ddb856a17", "extensions": {}},
+    {"repository_path": "conformance/orfs-ibex-synthesis-timing/abc.constr", "sha256": "51bf1a4f73a383e038c95dc3eba81fdd33811736285d77e7aaeabf9bd83c69a1", "extensions": {}},
+    {"repository_path": "tests/test_orfs_ibex_synthesis_timing_conformance.py", "sha256": "0dd5e12b71b91a68a84f54337aeb225b3c285cd200cb61e7bd9f5f5b7eda7d0b", "extensions": {}}
+  ],
+  "covers": [
+    "surface|openada.surface/cli.synthesize/v1",
+    "preflight|asic-netlist-synthesized",
+    "profile|openada.operation/logic.synthesize/v1alpha1",
+    "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+    "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+    "surface|openada.surface/cli.timing-analyze/v1",
+    "preflight|timing-constraints-satisfied",
+    "profile|openada.operation/timing.analyze/v1alpha1",
+    "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1",
+    "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+    "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1",
+    "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+  ],
+  "steps": [
+    {
+      "id": "materialize-pinned-inputs",
+      "kind": "source-materialize",
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/setup.py", "sha256": "f2309d038f22b866cb40623eb308e21f3e6666a51cf5a2891a587c046ebcfbb5", "extensions": {}},
+      "native_execution": false,
+      "covers": [],
+      "consumes": [],
+      "produces": ["pinned-ibex-sources", "pinned-nangate-collateral", "pinned-runtime-image", "design-provenance", "contract-test-suite"],
+      "extensions": {}
+    },
+    {
+      "id": "synthesize-ibex",
+      "kind": "semantic-command",
+      "request": {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/run.py", "sha256": "b33059eaaf57af62e2cc7841a798dd5494757204ba5d9db87f92dc54f521aae2", "extensions": {}},
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.synthesize/v1",
+        "preflight|asic-netlist-synthesized",
+        "profile|openada.operation/logic.synthesize/v1alpha1",
+        "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+        "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+      ],
+      "consumes": ["pinned-ibex-sources", "pinned-nangate-collateral", "pinned-runtime-image"],
+      "produces": [
+        "synthesis-synthesize-result-json", "synthesis-synthesize-ys", "synthesis-synthesize-log",
+        "synthesis-inference-stats-json", "synthesis-mapped-stats-json", "synthesis-mapped-v",
+        "synthesis-mapped-json", "synthesis-rtl-inputs-json", "run-json"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "analyze-ibex-timing",
+      "kind": "semantic-command",
+      "request": {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/run.py", "sha256": "b33059eaaf57af62e2cc7841a798dd5494757204ba5d9db87f92dc54f521aae2", "extensions": {}},
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.timing-analyze/v1",
+        "preflight|timing-constraints-satisfied",
+        "profile|openada.operation/timing.analyze/v1alpha1",
+        "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1",
+        "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+        "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1",
+        "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+      ],
+      "consumes": ["synthesis-mapped-v", "pinned-nangate-collateral", "pinned-runtime-image"],
+      "produces": [
+        "timing-timing-analyze-result-json", "timing-timing-analyze-tcl", "timing-timing-input-sdc", "timing-timing-analyze-log",
+        "timing-check-setup-txt", "timing-setup-paths-json", "timing-hold-paths-json"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "synthesis-missing-top",
+      "kind": "semantic-command",
+      "request": {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/run.py", "sha256": "b33059eaaf57af62e2cc7841a798dd5494757204ba5d9db87f92dc54f521aae2", "extensions": {}},
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.synthesize/v1",
+        "preflight|asic-netlist-synthesized",
+        "profile|openada.operation/logic.synthesize/v1alpha1",
+        "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+        "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+      ],
+      "consumes": ["pinned-ibex-sources", "pinned-nangate-collateral", "pinned-runtime-image"],
+      "produces": ["negative-synthesize-result-json", "negative-synthesize-ys", "negative-synthesize-log", "negative-rtl-inputs-json"],
+      "extensions": {}
+    },
+    {
+      "id": "independent-verifier",
+      "kind": "independent-oracle",
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/verify.py", "sha256": "1de6e578c89649237b06406b465427edf08c4a846ae2054d17b72f82cfb61edb", "extensions": {}},
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "synthesis-synthesize-result-json", "synthesis-synthesize-ys", "synthesis-synthesize-log",
+        "synthesis-inference-stats-json", "synthesis-mapped-stats-json", "synthesis-mapped-v",
+        "synthesis-mapped-json", "synthesis-rtl-inputs-json", "timing-timing-analyze-result-json",
+        "timing-timing-analyze-tcl", "timing-timing-input-sdc", "timing-timing-analyze-log", "timing-check-setup-txt",
+        "timing-setup-paths-json", "timing-hold-paths-json", "negative-synthesize-result-json",
+        "negative-synthesize-ys", "negative-synthesize-log", "negative-rtl-inputs-json", "run-json"
+      ],
+      "produces": ["independent-oracle-verdict"],
+      "extensions": {}
+    },
+    {
+      "id": "normalize-digital-evidence",
+      "kind": "semantic-command",
+      "request": {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.synthesize/v1", "preflight|asic-netlist-synthesized",
+        "profile|openada.operation/logic.synthesize/v1alpha1", "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+        "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1", "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1", "surface|openada.surface/cli.timing-analyze/v1",
+        "preflight|timing-constraints-satisfied", "profile|openada.operation/timing.analyze/v1alpha1",
+        "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1", "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+        "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1", "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+      ],
+      "consumes": ["synthesis-synthesize-result-json", "synthesis-mapped-stats-json", "synthesis-mapped-json", "timing-timing-analyze-result-json", "timing-setup-paths-json", "timing-hold-paths-json", "independent-oracle-verdict"],
+      "produces": ["normalized-digital-evidence"],
+      "extensions": {}
+    },
+    {
+      "id": "adversarial-replays",
+      "kind": "independent-oracle",
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+      "native_execution": false,
+      "covers": [],
+      "consumes": ["synthesis-mapped-stats-json", "timing-setup-paths-json", "negative-synthesize-result-json", "timing-timing-analyze-result-json", "independent-oracle-verdict"],
+      "produces": ["negative-real-synthesis-missing-top", "negative-real-setup-timing-violation", "tamper-reconciled-mapped-stat-count-change", "tamper-reconciled-setup-path-slack-change"],
+      "extensions": {}
+    },
+    {
+      "id": "engineering-decision",
+      "kind": "semantic-command",
+      "request": {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.synthesize/v1", "preflight|asic-netlist-synthesized",
+        "profile|openada.operation/logic.synthesize/v1alpha1", "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1",
+        "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1", "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1", "surface|openada.surface/cli.timing-analyze/v1",
+        "preflight|timing-constraints-satisfied", "profile|openada.operation/timing.analyze/v1alpha1",
+        "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1", "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+        "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1", "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+      ],
+      "consumes": ["normalized-digital-evidence", "independent-oracle-verdict", "negative-real-synthesis-missing-top", "negative-real-setup-timing-violation", "tamper-reconciled-mapped-stat-count-change", "tamper-reconciled-setup-path-slack-change"],
+      "produces": ["downstream-digital-decision"],
+      "extensions": {}
+    },
+    {
+      "id": "agent-evidence",
+      "kind": "independent-decision",
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+      "native_execution": false,
+      "covers": [],
+      "consumes": ["normalized-digital-evidence", "independent-oracle-verdict", "downstream-digital-decision", "negative-real-synthesis-missing-top", "negative-real-setup-timing-violation", "tamper-reconciled-mapped-stat-count-change", "tamper-reconciled-setup-path-slack-change"],
+      "produces": ["agent-visible-digital-evidence"],
+      "extensions": {}
+    },
+    {
+      "id": "contract-tests",
+      "kind": "independent-oracle",
+      "implementation": {"repository_path": "tests/test_orfs_ibex_synthesis_timing_conformance.py", "sha256": "0dd5e12b71b91a68a84f54337aeb225b3c285cd200cb61e7bd9f5f5b7eda7d0b", "extensions": {}},
+      "native_execution": false,
+      "covers": [],
+      "consumes": ["contract-test-suite", "agent-visible-digital-evidence"],
+      "produces": ["contract-test-verdict"],
+      "extensions": {}
+    }
+  ],
+  "negative_replays": [
+    {
+      "id": "real-synthesis-missing-top",
+      "covers": [
+        "surface|openada.surface/cli.synthesize/v1", "preflight|asic-netlist-synthesized", "profile|openada.operation/logic.synthesize/v1alpha1",
+        "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1", "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1", "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "missing_ibex_core",
+      "extensions": {}
+    },
+    {
+      "id": "real-setup-timing-violation",
+      "covers": [
+        "surface|openada.surface/cli.timing-analyze/v1", "preflight|timing-constraints-satisfied", "profile|openada.operation/timing.analyze/v1alpha1",
+        "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1", "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+        "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1", "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "setup WNS is negative",
+      "extensions": {}
+    }
+  ],
+  "tamper_replays": [
+    {
+      "id": "reconciled-mapped-stat-count-change",
+      "covers": [
+        "surface|openada.surface/cli.synthesize/v1", "preflight|asic-netlist-synthesized", "profile|openada.operation/logic.synthesize/v1alpha1",
+        "assertion|openada.operation/logic.synthesize/v1alpha1|openada.assertion/synthesized-netlist.valid/v1alpha1", "feature|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1",
+        "native-mapping|openada.operation/logic.synthesize/v1alpha1|org.openada.driver.yosys|org.yosyshq.yosys|openada.feature/synthesis.asic-liberty/v1alpha1", "provider|org.openada.driver.yosys|openada.operation/logic.synthesize/v1alpha1|openada.feature/synthesis.asic-liberty/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "mapped statistics cell histogram does not sum to num_cells",
+      "extensions": {}
+    },
+    {
+      "id": "reconciled-setup-path-slack-change",
+      "covers": [
+        "surface|openada.surface/cli.timing-analyze/v1", "preflight|timing-constraints-satisfied", "profile|openada.operation/timing.analyze/v1alpha1",
+        "assertion|openada.operation/timing.analyze/v1alpha1|openada.assertion/timing.constraints-satisfied/v1alpha1", "feature|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1",
+        "native-mapping|openada.operation/timing.analyze/v1alpha1|org.openada.driver.opensta|org.openroad.opensta|openada.feature/timing.setup-hold/v1alpha1", "provider|org.openada.driver.opensta|openada.operation/timing.analyze/v1alpha1|openada.feature/timing.setup-hold/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "setup critical path",
+      "extensions": {}
+    }
+  ],
+  "agent_evidence": {
+    "result_step": "agent-evidence",
+    "required_json_pointers": [
+      "/decision", "/scope", "/basis", "/next_checks",
+      "/operations/synthesis/engineering_status", "/operations/synthesis/evidence/stats/num_cells",
+      "/operations/synthesis/evidence/stats/area", "/operations/synthesis/evidence/stats/sequential_area",
+      "/operations/synthesis/evidence/structure/liberty_cell_inventory_count", "/operations/synthesis/evidence/structure/liberty_cell_inventory_sha256",
+      "/operations/synthesis/evidence/mapping_complete", "/operations/synthesis/evidence/unmapped_cell_types",
+      "/operations/synthesis/evidence/tool_identity_stable",
+      "/operations/synthesis/evidence/abc_tool/path", "/operations/synthesis/evidence/abc_tool/version",
+      "/operations/synthesis/evidence/abc_tool/sha256", "/operations/synthesis/evidence/abc_tool_identity_stable",
+      "/operations/synthesis/evidence/environment_policy/id",
+      "/operations/synthesis/evidence/mapped_structure/top", "/operations/synthesis/evidence/mapped_structure/num_cells",
+      "/operations/timing/engineering_status", "/operations/timing/evidence/analysis_model",
+      "/operations/timing/evidence/environment_policy",
+      "/operations/timing/evidence/netlist_validation", "/operations/timing/evidence/liberty_validation",
+      "/operations/timing/evidence/tool_identity_stable",
+      "/operations/timing/evidence/sdc_policy", "/operations/timing/evidence/sdc_validation",
+      "/operations/timing/evidence/setup/wns_s", "/operations/timing/evidence/setup/tns_s",
+      "/operations/timing/evidence/hold/wns_s", "/operations/timing/evidence/timing_constraints_satisfied",
+      "/replays/negative_replays", "/replays/tamper_replays", "/trust_chain", "/limitations",
+      "/standards/ieee_measurement_standard/status", "/standards/hdl_language/status", "/standards/timing_formats/status"
+    ],
+    "extensions": {}
+  },
+  "release_verification": {
+    "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+    "arguments": [],
+    "timeout_seconds": 180,
+    "extensions": {}
+  },
+  "extensions": {
+    "org.openada.digital": {
+      "analysis_scope": "single-corner ideal-interconnect synthesis-stage timing; not signoff",
+      "timing_expected_engineering_status": "fail",
+      "synthesis_expected_engineering_status": "pass"
+    }
+  }
+}

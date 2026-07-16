@@ -134,18 +134,37 @@ SURFACE_CLASSIFICATIONS: dict[tuple[str, ...], str] = {
     ("provider", "list"): "administrative",
     ("provider", "validate"): "administrative",
     ("rtl-check",): "semantic-execution",
+    ("rtl-lint",): "semantic-execution",
     ("simulate",): "semantic-execution",
+    ("synthesize",): "semantic-execution",
+    ("timing-analyze",): "semantic-execution",
     ("spectral",): "semantic-execution",
     ("transfer",): "semantic-execution",
 }
 NATIVE_EDA_SURFACES = frozenset(
-    {"drc", "lvs", "netlist", "rtl-check", "simulate", "provider-invoke"}
+    {
+        "drc",
+        "lvs",
+        "netlist",
+        "provider-invoke",
+        "rtl-check",
+        "rtl-lint",
+        "simulate",
+        "synthesize",
+        "timing-analyze",
+    }
 )
 ARTIFACT_KERNEL_SURFACES = frozenset(
     {"evaluate", "extract", "measure", "spectral", "transfer"}
 )
 NATIVE_EDA_OPERATIONS = frozenset(
-    {"openada.operation/circuit.simulate/v1alpha1", "openada.operation/circuit.simulate/v1alpha2"}
+    {
+        "openada.operation/circuit.simulate/v1alpha1",
+        "openada.operation/circuit.simulate/v1alpha2",
+        "openada.operation/logic.synthesize/v1alpha1",
+        "openada.operation/rtl.lint/v1alpha1",
+        "openada.operation/timing.analyze/v1alpha1",
+    }
 )
 
 

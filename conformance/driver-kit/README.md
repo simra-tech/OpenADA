@@ -113,7 +113,7 @@ openada profile list
 openada profile show openada.operation/circuit.simulate/v1alpha2
 ```
 
-It contains six active typed profiles plus the immutable historical simulation
+It contains nine active typed profiles plus the immutable historical simulation
 profile; catalog presence alone does not make a profile externally dispatchable.
 
 ## Same-intent simulation proof

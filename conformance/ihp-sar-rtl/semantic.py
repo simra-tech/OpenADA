@@ -36,10 +36,20 @@ CONTRACT_PATH = HERE / "semantic-contract.json"
 CHAIN_MANIFEST_PATH = HERE / "semantic-chain.json"
 CHAIN_RUN_PATH = HERE / "semantic-chain-run.json"
 CHAIN_ID = "openada.chain/ihp-sar-rtl/v1"
-ROWS = [
+STRUCTURAL_ROWS = [
     "surface|openada.surface/cli.rtl-check/v1",
     "preflight|rtl-structural-check-passes",
 ]
+LINT_ROWS = [
+    "surface|openada.surface/cli.rtl-lint/v1",
+    "preflight|rtl-lint-clean",
+    "profile|openada.operation/rtl.lint/v1alpha1",
+    "assertion|openada.operation/rtl.lint/v1alpha1|openada.assertion/rtl.lint.clean/v1alpha1",
+    "feature|openada.operation/rtl.lint/v1alpha1|openada.feature/rtl.lint.systemverilog/v1alpha1",
+    "native-mapping|openada.operation/rtl.lint/v1alpha1|org.openada.driver.verilator|org.verilator.verilator|openada.feature/rtl.lint.systemverilog/v1alpha1",
+    "provider|org.openada.driver.verilator|openada.operation/rtl.lint/v1alpha1|openada.feature/rtl.lint.systemverilog/v1alpha1",
+]
+ROWS = [*STRUCTURAL_ROWS, *LINT_ROWS]
 NATIVE_FILES = [
     "design-provenance.json",
     "positive/rtl-check.result.json",
@@ -49,6 +59,12 @@ NATIVE_FILES = [
     "negative/rtl-check.result.json",
     "negative/rtl-check.ys",
     "negative/yosys.transcript.json",
+    "positive/rtl-lint.result.json",
+    "positive/rtl-lint.log",
+    "positive-2023/rtl-lint.result.json",
+    "positive-2023/rtl-lint.log",
+    "negative/rtl-lint.result.json",
+    "negative/rtl-lint.log",
     "run.json",
 ]
 TOOLS_ROOT = REPOSITORY_ROOT / "tools"
@@ -59,12 +75,23 @@ from semantic_receipts import semantic_subject  # noqa: E402
 NEGATIVE_ID = "real-missing-top"
 TAMPER_ID = "reconciled-json-port-removal"
 TAMPER_DIAGNOSTIC = "positive Yosys JSON ports"
+LINT_NEGATIVE_ID = "real-verilator-missing-top"
+LINT_TAMPER_ID = "reconciled-lint-log-finding-injection"
+LINT_TAMPER_DIAGNOSTIC = "native Verilator transcript diagnostics"
 LIMITATIONS = [
     {
         "id": "structural-elaboration-only",
         "impact": (
             "This proves pinned Yosys elaboration and check -assert structural checks; "
             "it does not prove cycle-accurate behavior, formal properties, or mixed-signal behavior."
+        ),
+    },
+    {
+        "id": "strict-lint-only",
+        "impact": (
+            "Strict Verilator lint under the pinned 1800-2017 and 1800-2023 selectors proves "
+            "only that those requests emitted no warning or error. It is not proof of "
+            "functional correctness, CDC safety, timing closure, or physical correctness."
         ),
     },
     {
@@ -77,8 +104,9 @@ LIMITATIONS = [
     {
         "id": "implementation-specific-language-support",
         "impact": (
-            "The source is parsed with Yosys read_verilog -sv. The chain records pinned "
-            "Yosys behavior and is not a certification of complete IEEE 1800-2023 support."
+            "The source is parsed with Yosys read_verilog -sv and linted with pinned Verilator "
+            "selectors for 1800-2017 and 1800-2023. The chain records those implementation "
+            "behaviors and is not a certification of complete IEEE 1800-2023 support."
         ),
     },
     {
@@ -239,12 +267,79 @@ def _run_tamper_probe(manifest: dict[str, Any], evidence: Path) -> dict[str, Any
         "id": TAMPER_ID,
         "status": "rejected",
         "expected_status": "unknown",
-        "covers": ROWS,
+        "covers": STRUCTURAL_ROWS,
         "mutation": (
             "removed the rst port from native Yosys JSON and reconciled both the OpenADA "
             "artifact digest and run-level artifact digests"
         ),
         "required_diagnostic": TAMPER_DIAGNOSTIC,
+        "observed_diagnostic": diagnostic,
+        "verifier": "conformance/ihp-sar-rtl/verify.py",
+    }
+
+
+def _run_lint_tamper_probe(manifest: dict[str, Any], evidence: Path) -> dict[str, Any]:
+    with tempfile.TemporaryDirectory(prefix="openada-ihp-sar-lint-tamper-") as temporary:
+        tampered = Path(temporary) / "evidence"
+        shutil.copytree(evidence, tampered)
+        log_path = tampered / "positive/rtl-lint.log"
+        try:
+            body = log_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise ConformanceError(f"cannot read lint tamper transcript: {exc}") from exc
+        injected = "%Warning-LATCH: injected reconciled native finding\n"
+        if "stderr_bytes: 0\n" not in body or not body.endswith("--- stderr ---\n"):
+            raise ConformanceError("lint tamper fixture is not the reviewed clean transcript")
+        body = body.replace(
+            "stderr_bytes: 0\n",
+            f"stderr_bytes: {len(injected.encode('utf-8'))}\n",
+            1,
+        )
+        log_path.write_text(body + injected, encoding="utf-8")
+
+        result_path = tampered / "positive/rtl-lint.result.json"
+        result = _read_json(result_path, label="tamper positive lint result")
+        records = [
+            item
+            for item in result["artifacts"]
+            if item.get("path") == "/evidence/positive/rtl-lint.log"
+        ]
+        if len(records) != 1:
+            raise ConformanceError("lint tamper fixture cannot find the positive log record")
+        records[0]["bytes"] = log_path.stat().st_size
+        records[0]["sha256"] = sha256_file(log_path)
+        _write_json(result_path, result)
+
+        run_path = tampered / "run.json"
+        run = _read_json(run_path, label="lint tamper run metadata")
+        _replace_run_record(run, tampered, "positive/rtl-lint.log")
+        _replace_run_record(run, tampered, "positive/rtl-lint.result.json")
+        _write_json(run_path, run)
+        try:
+            independent_verifier.verify_evidence(
+                manifest,
+                tampered,
+                manifest_sha256=sha256_file(MANIFEST_PATH),
+            )
+        except ConformanceError as exc:
+            diagnostic = str(exc)
+        else:
+            raise ConformanceError("independent verifier accepted reconciled lint-log tampering")
+    if LINT_TAMPER_DIAGNOSTIC not in diagnostic:
+        raise ConformanceError(
+            "lint tamper probe failed for the wrong reason: "
+            f"expected {LINT_TAMPER_DIAGNOSTIC!r}, got {diagnostic!r}"
+        )
+    return {
+        "id": LINT_TAMPER_ID,
+        "status": "rejected",
+        "expected_status": "unknown",
+        "covers": LINT_ROWS,
+        "mutation": (
+            "injected a native Verilator latch warning into the clean lint transcript and "
+            "reconciled both the OpenADA artifact digest and run-level artifact digests"
+        ),
+        "required_diagnostic": LINT_TAMPER_DIAGNOSTIC,
         "observed_diagnostic": diagnostic,
         "verifier": "conformance/ihp-sar-rtl/verify.py",
     }
@@ -256,7 +351,7 @@ def _negative_replay(verified: dict[str, Any]) -> dict[str, Any]:
         "id": NEGATIVE_ID,
         "status": "observed",
         "expected_status": "fail",
-        "covers": ROWS,
+        "covers": STRUCTURAL_ROWS,
         "fixture": "the pinned source with a real native Yosys request for missing_sar_logic",
         "execution_status": negative["result"]["execution"]["status"],
         "exit_code": negative["result"]["execution"]["exit_code"],
@@ -267,8 +362,52 @@ def _negative_replay(verified: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _lint_negative_replay(verified: dict[str, Any]) -> dict[str, Any]:
+    negative = verified["lint_negative"]
+    messages = [item["message"] for item in negative["transcript"]["diagnostics"]]
+    return {
+        "id": LINT_NEGATIVE_ID,
+        "status": "observed",
+        "expected_status": "fail",
+        "covers": LINT_ROWS,
+        "fixture": "the pinned source with a real native Verilator request for missing_sar_logic",
+        "execution_status": negative["result"]["execution"]["status"],
+        "exit_code": negative["result"]["execution"]["exit_code"],
+        "engineering_status": negative["result"]["engineering"]["status"],
+        "required_diagnostic": messages[0],
+        "observed_diagnostic": messages[0],
+        "observed_diagnostics": messages,
+        "native_transcript_bound": True,
+    }
+
+
 def _native_records() -> list[dict[str, Any]]:
     return [_bundle_record(relative) for relative in NATIVE_FILES]
+
+
+def _normalized_lint_operation(
+    verified: dict[str, Any],
+    *,
+    verified_key: str,
+    result_relative: str,
+    log_relative: str,
+) -> dict[str, Any]:
+    result = verified[verified_key]["result"]
+    return {
+        "surface_id": "openada.surface/cli.rtl-lint/v1",
+        "operation_profile": "openada.operation/rtl.lint/v1alpha1",
+        "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+        "assertion": "rtl-lint-clean",
+        "execution_status": result["execution"]["status"],
+        "exit_code": result["execution"]["exit_code"],
+        "engineering_status": result["engineering"]["status"],
+        "summary": result["engineering"]["summary"],
+        "evidence": copy.deepcopy(result["data"]),
+        "native_artifacts": [
+            _bundle_record(result_relative),
+            _bundle_record(log_relative),
+        ],
+    }
 
 
 def _contract_document() -> dict[str, Any]:
@@ -294,6 +433,9 @@ def _contract_document() -> dict[str, Any]:
             "independent_verifier": "pass",
             "real_negative": "pass",
             "tamper_probe": "pass",
+            "real_lint_negative": "pass",
+            "clean_lint_2023": "pass",
+            "lint_tamper_probe": "pass",
         },
     }
 
@@ -338,7 +480,9 @@ def _publish(evidence: Path) -> None:
         manifest_sha256=sha256_file(MANIFEST_PATH),
     )
     tamper = _run_tamper_probe(manifest, evidence)
+    lint_tamper = _run_lint_tamper_probe(manifest, evidence)
     negative = _negative_replay(verified)
+    lint_negative = _lint_negative_replay(verified)
     _copy_verified_evidence(evidence)
 
     if REPLAY_DIR.exists():
@@ -348,6 +492,8 @@ def _publish(evidence: Path) -> None:
     REPLAY_DIR.mkdir()
     negative_path = REPLAY_DIR / f"{NEGATIVE_ID}.json"
     tamper_path = REPLAY_DIR / f"{TAMPER_ID}.json"
+    lint_negative_path = REPLAY_DIR / f"{LINT_NEGATIVE_ID}.json"
+    lint_tamper_path = REPLAY_DIR / f"{LINT_TAMPER_ID}.json"
     _write_json(
         negative_path,
         {"schema": "openada.semantic-replay-verdict/v0alpha1", "chain_id": CHAIN_ID, **negative},
@@ -355,6 +501,22 @@ def _publish(evidence: Path) -> None:
     _write_json(
         tamper_path,
         {"schema": "openada.semantic-replay-verdict/v0alpha1", "chain_id": CHAIN_ID, **tamper},
+    )
+    _write_json(
+        lint_negative_path,
+        {
+            "schema": "openada.semantic-replay-verdict/v0alpha1",
+            "chain_id": CHAIN_ID,
+            **lint_negative,
+        },
+    )
+    _write_json(
+        lint_tamper_path,
+        {
+            "schema": "openada.semantic-replay-verdict/v0alpha1",
+            "chain_id": CHAIN_ID,
+            **lint_tamper,
+        },
     )
 
     structure = verified["positive"]["structure"]
@@ -375,6 +537,26 @@ def _publish(evidence: Path) -> None:
             "native_artifacts": native_records,
         },
         "positive_facts": copy.deepcopy(structure),
+        "positive_lint_facts": {
+            "top": "sar_logic",
+            "language": "1800-2017",
+            "engineering_status": verified["lint_positive"]["result"]["engineering"]["status"],
+            "warning_policy": "strict",
+            "environment_policy": "closed-verilator-runtime-v1",
+            "warning_count": 0,
+            "error_count": 0,
+            "diagnostic_count": 0,
+        },
+        "positive_lint_2023_facts": {
+            "top": "sar_logic",
+            "language": "1800-2023",
+            "engineering_status": verified["lint_positive_2023"]["result"]["engineering"]["status"],
+            "warning_policy": "strict",
+            "environment_policy": "closed-verilator-runtime-v1",
+            "warning_count": 0,
+            "error_count": 0,
+            "diagnostic_count": 0,
+        },
         "negative_facts": {
             "top": "missing_sar_logic",
             "engineering_status": "fail",
@@ -385,6 +567,17 @@ def _publish(evidence: Path) -> None:
             "id": TAMPER_ID,
             "status": "rejected",
             "diagnostic": tamper["observed_diagnostic"],
+        },
+        "negative_lint_facts": {
+            "top": "missing_sar_logic",
+            "engineering_status": "fail",
+            "exit_code": 1,
+            "diagnostic": lint_negative["observed_diagnostic"],
+        },
+        "lint_tamper_facts": {
+            "id": LINT_TAMPER_ID,
+            "status": "rejected",
+            "diagnostic": lint_tamper["observed_diagnostic"],
         },
     }
     _write_json(ORACLE_PATH, oracle)
@@ -407,6 +600,7 @@ def _publish(evidence: Path) -> None:
             "image_reference": manifest["runtime"]["image"]["reference"],
             "image_config_digest": manifest["runtime"]["image"]["config_digest"],
             "tool": copy.deepcopy(manifest["runtime"]["tool"]),
+            "lint_tool": copy.deepcopy(manifest["runtime"]["lint_tool"]),
             "eda_network": "none",
         },
         "operation": {
@@ -419,6 +613,18 @@ def _publish(evidence: Path) -> None:
             "evidence": copy.deepcopy(structure),
             "native_artifacts": native_records,
         },
+        "lint_operation": _normalized_lint_operation(
+            verified,
+            verified_key="lint_positive",
+            result_relative="positive/rtl-lint.result.json",
+            log_relative="positive/rtl-lint.log",
+        ),
+        "lint_2023_operation": _normalized_lint_operation(
+            verified,
+            verified_key="lint_positive_2023",
+            result_relative="positive-2023/rtl-lint.result.json",
+            log_relative="positive-2023/rtl-lint.log",
+        ),
         "independent_oracle": _file_record(
             ORACLE_PATH, "conformance/ihp-sar-rtl/semantic-oracle.json"
         ),
@@ -440,20 +646,22 @@ def _publish(evidence: Path) -> None:
             "the exact five-input and three-output interface is retained, including 8-bit B, BN, and D",
             "B is structurally aliased to D; counter, BN, and D map to three state elements with widths 4, 8, and 8",
             "Yosys check -assert completed with no warnings or errors and a parsed native JSON netlist",
+            "strict Verilator lint completed with zero warnings and zero errors on the same pinned source and top under both 1800-2017 and 1800-2023 selectors",
             "an independent parser bound the source, script, result, transcript, JSON structure, image, and tool",
-            "the real missing-top negative failed with the required native diagnostic",
-            "reconciled native-JSON port tampering was rejected by the independent structural oracle",
+            "real Yosys and Verilator missing-top requests failed with the required native diagnostics",
+            "reconciled native-JSON port tampering and native lint-log finding injection were rejected by the independent oracle",
         ],
         "next_checks": [
             "run directed and randomized RTL simulation against SAR sequencing requirements",
             "add formal assertions for reset, counter termination, and B/D/BN relationships",
             "review reset and clock-domain behavior at the mixed-signal integration boundary",
-            "synthesize with target constraints and run static timing, lint, and implementation checks",
+            "synthesize with target constraints and run static timing and implementation checks",
         ],
         "block_conditions": [
             "any source, image, wrapper, tool, script, native artifact, or manifest digest differs",
             "the independent oracle no longer finds the exact interface and reviewed state structure",
             "native Yosys reports warnings, errors, black boxes, missing JSON, or nonzero exit",
+            "strict Verilator lint under either reviewed language selector reports any warning or error, or either bounded transcript is incomplete",
         ],
         "evidence": {
             "normalized": _file_record(
@@ -467,6 +675,14 @@ def _publish(evidence: Path) -> None:
             "tamper_replay": _file_record(
                 tamper_path,
                 f"conformance/ihp-sar-rtl/semantic-replays/{TAMPER_ID}.json",
+            ),
+            "lint_negative_replay": _file_record(
+                lint_negative_path,
+                f"conformance/ihp-sar-rtl/semantic-replays/{LINT_NEGATIVE_ID}.json",
+            ),
+            "lint_tamper_replay": _file_record(
+                lint_tamper_path,
+                f"conformance/ihp-sar-rtl/semantic-replays/{LINT_TAMPER_ID}.json",
             ),
         },
         "limitations": LIMITATIONS,
@@ -482,16 +698,24 @@ def _publish(evidence: Path) -> None:
         "next_checks": copy.deepcopy(decision["next_checks"]),
         "operations": {
             "rtl_structural_check": copy.deepcopy(normalized["operation"]),
+            "rtl_lint": copy.deepcopy(normalized["lint_operation"]),
+            "rtl_lint_2023": copy.deepcopy(normalized["lint_2023_operation"]),
             "missing_top_negative": {
                 "decision": "block",
                 "engineering_status": "fail",
                 "exit_code": 1,
                 "diagnostic": negative["observed_diagnostic"],
             },
+            "lint_missing_top_negative": {
+                "decision": "block",
+                "engineering_status": "fail",
+                "exit_code": 1,
+                "diagnostic": lint_negative["observed_diagnostic"],
+            },
         },
         "replays": {
-            "negative_replays": [negative],
-            "tamper_replays": [tamper],
+            "negative_replays": [negative, lint_negative],
+            "tamper_replays": [tamper, lint_tamper],
         },
         "trust_chain": {
             "oracle": _file_record(ORACLE_PATH, "conformance/ihp-sar-rtl/semantic-oracle.json"),
@@ -507,13 +731,13 @@ def _publish(evidence: Path) -> None:
         "standards": {
             "ieee_measurement_standard": {
                 "status": "not-applicable",
-                "basis": "This chain performs RTL elaboration and structural checks; it computes no electrical or signal-quality measurement such as SNR.",
+                "basis": "This chain performs RTL elaboration, structural checks, and lint; it computes no electrical or signal-quality measurement such as SNR.",
             },
             "hdl_language": {
                 "standard": "IEEE 1800-2023",
                 "official_url": "https://standards.ieee.org/ieee/1800/7743/",
                 "status": "context-only",
-                "basis": "The driver invokes read_verilog -sv, while the evidence certifies only the pinned Yosys implementation behavior and not full language-standard compliance.",
+                "basis": "The drivers invoke Yosys read_verilog -sv and independently replay Verilator with declared 1800-2017 and 1800-2023 selectors; the evidence certifies only those pinned implementations and not full language-standard compliance.",
             },
         },
     }
@@ -524,8 +748,8 @@ def _publish(evidence: Path) -> None:
             "schema": "openada.semantic-chain-probes/v0alpha1",
             "chain_id": CHAIN_ID,
             "status": "pass",
-            "negative_replays": [negative],
-            "tamper_replays": [tamper],
+            "negative_replays": [negative, lint_negative],
+            "tamper_replays": [tamper, lint_tamper],
         },
     )
     contract_document = _contract_document()
@@ -625,6 +849,48 @@ def _chain_artifact_definitions() -> list[tuple[Path, str, str | None, str | Non
             None,
         ),
         (
+            BUNDLE / "positive/rtl-lint.result.json",
+            "native-artifact",
+            "rtl-lint-clean",
+            "positive-lint-result",
+            None,
+        ),
+        (
+            BUNDLE / "positive/rtl-lint.log",
+            "native-artifact",
+            "rtl-lint-clean",
+            "positive-verilator-transcript",
+            None,
+        ),
+        (
+            BUNDLE / "positive-2023/rtl-lint.result.json",
+            "native-artifact",
+            "rtl-lint-clean-2023",
+            "positive-lint-2023-result",
+            None,
+        ),
+        (
+            BUNDLE / "positive-2023/rtl-lint.log",
+            "native-artifact",
+            "rtl-lint-clean-2023",
+            "positive-verilator-2023-transcript",
+            None,
+        ),
+        (
+            BUNDLE / "negative/rtl-lint.result.json",
+            "native-artifact",
+            "lint-missing-top-native",
+            "negative-lint-result",
+            None,
+        ),
+        (
+            BUNDLE / "negative/rtl-lint.log",
+            "native-artifact",
+            "lint-missing-top-native",
+            "negative-verilator-transcript",
+            None,
+        ),
+        (
             BUNDLE / "run.json",
             "native-artifact",
             "rtl-structural-check",
@@ -648,6 +914,20 @@ def _chain_artifact_definitions() -> list[tuple[Path, str, str | None, str | Non
             None,
             None,
             TAMPER_ID,
+        ),
+        (
+            REPLAY_DIR / f"{LINT_NEGATIVE_ID}.json",
+            "negative-replay",
+            None,
+            None,
+            LINT_NEGATIVE_ID,
+        ),
+        (
+            REPLAY_DIR / f"{LINT_TAMPER_ID}.json",
+            "tamper-replay",
+            None,
+            None,
+            LINT_TAMPER_ID,
         ),
     ]
     return definitions
@@ -752,6 +1032,7 @@ def verify_publication() -> None:
         manifest, BUNDLE, manifest_sha256=sha256_file(MANIFEST_PATH)
     )
     tamper = _run_tamper_probe(manifest, BUNDLE)
+    lint_tamper = _run_lint_tamper_probe(manifest, BUNDLE)
     oracle = _read_json(ORACLE_PATH, label="semantic oracle")
     normalized = _read_json(NORMALIZED_PATH, label="semantic normalized evidence")
     decision = _read_json(DECISION_PATH, label="semantic downstream decision")
@@ -766,10 +1047,40 @@ def verify_publication() -> None:
     _expect(oracle.get("verdict"), "pass", "oracle.verdict")
     _expect(normalized.get("coverage"), ROWS, "normalized.coverage")
     _expect(normalized["operation"].get("engineering_status"), "pass", "normalized operation status")
+    _expect(
+        normalized["lint_operation"].get("engineering_status"),
+        "pass",
+        "normalized lint operation status",
+    )
+    _expect(
+        normalized["lint_operation"]["evidence"].get("language"),
+        "1800-2017",
+        "normalized 2017 lint language",
+    )
+    _expect(
+        normalized["lint_2023_operation"].get("engineering_status"),
+        "pass",
+        "normalized 2023 lint operation status",
+    )
+    _expect(
+        normalized["lint_2023_operation"]["evidence"].get("language"),
+        "1800-2023",
+        "normalized 2023 lint language",
+    )
     _expect(decision.get("decision"), "proceed", "decision.decision")
     _expect(agent.get("decision"), "proceed", "agent.decision")
     _expect(agent["operations"]["missing_top_negative"].get("decision"), "block", "agent missing-top decision")
+    _expect(
+        agent["operations"]["lint_missing_top_negative"].get("decision"),
+        "block",
+        "agent lint missing-top decision",
+    )
     _expect(agent["replays"]["tamper_replays"][0].get("observed_diagnostic"), tamper["observed_diagnostic"], "agent tamper diagnostic")
+    _expect(
+        agent["replays"]["tamper_replays"][1].get("observed_diagnostic"),
+        lint_tamper["observed_diagnostic"],
+        "agent lint tamper diagnostic",
+    )
     _expect(probes.get("status"), "pass", "probes.status")
     _expect(contract, _contract_document(), "contract evidence")
     trust = agent["trust_chain"]
@@ -800,6 +1111,16 @@ def verify_publication() -> None:
     if len(distinct) != 4:
         raise ConformanceError("oracle, normalized, downstream, and agent evidence digests must differ")
     _expect(verified["positive"]["structure"]["cell_count"], 18, "published cell count")
+    _expect(
+        verified["lint_positive"]["result"]["data"]["diagnostic_count"],
+        0,
+        "published strict lint diagnostic count",
+    )
+    _expect(
+        verified["lint_positive_2023"]["result"]["data"]["diagnostic_count"],
+        0,
+        "published strict 2023 lint diagnostic count",
+    )
     _verify_chain_run()
 
 

@@ -60,22 +60,22 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     assert payload["status"] == "pass"
     assert payload["issues"] == []
     assert payload["inventory"] == {
-        "active_profile_count": 6,
-        "builtin_provider_mapping_count": 7,
-        "cli_leaf_count": 17,
-        "preflight_assertion_count": 5,
-        "profile_count": 7,
-        "profile_feature_count": 27,
-        "provider_mapping_count": 8,
+        "active_profile_count": 9,
+        "builtin_provider_mapping_count": 10,
+        "cli_leaf_count": 20,
+        "preflight_assertion_count": 8,
+        "profile_count": 10,
+        "profile_feature_count": 30,
+        "provider_mapping_count": 11,
         "shipped_provider_capability_count": 1,
         "shipped_provider_manifest_count": 1,
-        "surface_count": 17,
+        "surface_count": 20,
     }
-    assert payload["summary"]["row_count"] == 134
-    assert payload["summary"]["active_row_count"] == 126
+    assert payload["summary"]["row_count"] == 155
+    assert payload["summary"]["active_row_count"] == 147
     assert payload["summary"]["gap_count"] == 0
     assert payload["summary"]["rows_by_coverage_level"] == {
-        "agent-ready": 126,
+        "agent-ready": 147,
         "unverified": 8,
     }
     assert payload["gaps"] == []
@@ -171,7 +171,7 @@ def test_enforcement_modes_pass_only_after_every_active_row_is_agent_ready() -> 
         payload = json.loads(completed.stdout)
         assert payload["status"] == "pass"
         assert payload["issues"] == []
-        assert payload["summary"]["active_row_count"] == 126
+        assert payload["summary"]["active_row_count"] == 147
         assert payload["summary"]["gap_count"] == 0
 
 

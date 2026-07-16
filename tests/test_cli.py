@@ -218,6 +218,196 @@ def test_capabilities_exposes_semantic_provider_records(capsys):
         "openada.feature/transfer.unity-gain-frequency/v1alpha1",
         "openada.feature/transfer.phase-margin/v1alpha1",
     }
+    assert {
+        provider: by_provider[provider]["features"]
+        for provider in (
+            "org.openada.driver.verilator",
+            "org.openada.driver.yosys",
+            "org.openada.driver.opensta",
+        )
+    } == {
+        "org.openada.driver.verilator": [
+            {
+                "id": "openada.feature/rtl.lint.systemverilog/v1alpha1",
+                "maturity": "workflow-validated",
+                "conformance_ids": ["ihp-sar-rtl-check"],
+            }
+        ],
+        "org.openada.driver.yosys": [
+            {
+                "id": "openada.feature/synthesis.asic-liberty/v1alpha1",
+                "maturity": "workflow-validated",
+                "conformance_ids": ["orfs-ibex-synthesis-timing"],
+            }
+        ],
+        "org.openada.driver.opensta": [
+            {
+                "id": "openada.feature/timing.setup-hold/v1alpha1",
+                "maturity": "workflow-validated",
+                "conformance_ids": ["orfs-ibex-synthesis-timing"],
+            }
+        ],
+    }
+
+
+def test_digital_commands_dispatch_every_declared_semantic_option(
+    tmp_path: Path, capsys, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: dict[str, tuple[tuple, dict]] = {}
+
+    class FakeVerilator:
+        def __init__(self, *, discovery):
+            assert discovery is not None
+
+        def rtl_lint(self, *args, **kwargs):
+            calls["rtl-lint"] = (args, kwargs)
+            return result(
+                "rtl-lint",
+                tool=None,
+                execution=static_execution(),
+                engineering_status="pass",
+                summary="fake lint",
+            )
+
+    class FakeYosys:
+        def __init__(self, *, discovery):
+            assert discovery is not None
+
+        def synthesize(self, *args, **kwargs):
+            calls["synthesize"] = (args, kwargs)
+            return result(
+                "synthesize",
+                tool=None,
+                execution=static_execution(),
+                engineering_status="pass",
+                summary="fake synthesis",
+            )
+
+    class FakeOpenSTA:
+        def __init__(self, *, discovery):
+            assert discovery is not None
+
+        def timing_analyze(self, *args, **kwargs):
+            calls["timing-analyze"] = (args, kwargs)
+            return result(
+                "timing-analyze",
+                tool=None,
+                execution=static_execution(),
+                engineering_status="pass",
+                summary="fake timing",
+            )
+
+    monkeypatch.setattr(cli, "VerilatorDriver", FakeVerilator)
+    monkeypatch.setattr(cli, "YosysDriver", FakeYosys)
+    monkeypatch.setattr(cli, "OpenSTADriver", FakeOpenSTA)
+    source = tmp_path / "top.sv"
+    include = tmp_path / "include"
+    liberty = tmp_path / "cells.lib"
+    techmap = tmp_path / "map.v"
+    constraint = tmp_path / "abc.constr"
+    netlist = tmp_path / "mapped.v"
+    sdc = tmp_path / "top.sdc"
+
+    assert main(
+        [
+            "--compact",
+            "rtl-lint",
+            str(source),
+            "--top",
+            "top",
+            "--include-dir",
+            str(include),
+            "--define",
+            "ASIC=1",
+            "--language",
+            "1800-2023",
+            "--output-dir",
+            str(tmp_path / "lint"),
+            "--timeout",
+            "17",
+        ]
+    ) == 0
+    assert json.loads(capsys.readouterr().out)["operation"] == "rtl-lint"
+    assert main(
+        [
+            "--compact",
+            "synthesize",
+            str(source),
+            "--top",
+            "top",
+            "--liberty",
+            str(liberty),
+            "--frontend",
+            "slang",
+            "--include-dir",
+            str(include),
+            "--define",
+            "ASIC=1",
+            "--language",
+            "1800-2023",
+            "--techmap",
+            str(techmap),
+            "--dont-use",
+            "CLKGATE_*",
+            "--abc-delay-target-ns",
+            "2.2",
+            "--abc-constraint",
+            str(constraint),
+            "--output-dir",
+            str(tmp_path / "synth"),
+            "--timeout",
+            "31",
+        ]
+    ) == 0
+    assert json.loads(capsys.readouterr().out)["operation"] == "synthesize"
+    assert main(
+        [
+            "--compact",
+            "timing-analyze",
+            str(netlist),
+            "--top",
+            "top",
+            "--liberty",
+            str(liberty),
+            "--sdc",
+            str(sdc),
+            "--output-dir",
+            str(tmp_path / "timing"),
+            "--timeout",
+            "43",
+        ]
+    ) == 0
+    assert json.loads(capsys.readouterr().out)["operation"] == "timing-analyze"
+
+    assert calls["rtl-lint"] == (
+        ([str(source)], (tmp_path / "lint").resolve()),
+        {
+            "top": "top",
+            "include_dirs": [str(include)],
+            "defines": ["ASIC=1"],
+            "language": "1800-2023",
+            "timeout": 17.0,
+        },
+    )
+    assert calls["synthesize"] == (
+        ([str(source)], str(liberty), (tmp_path / "synth").resolve()),
+        {
+            "top": "top",
+            "frontend": "slang",
+            "include_dirs": [str(include)],
+            "defines": ["ASIC=1"],
+            "language": "1800-2023",
+            "techmaps": [str(techmap)],
+            "dont_use": ["CLKGATE_*"],
+            "abc_delay_target_ns": 2.2,
+            "abc_constraint": str(constraint),
+            "timeout": 31.0,
+        },
+    )
+    assert calls["timing-analyze"] == (
+        (str(netlist), str(liberty), str(sdc), (tmp_path / "timing").resolve()),
+        {"top": "top", "timeout": 43.0},
+    )
 
 
 def test_capabilities_help_uses_the_invoked_command_name(capsys):

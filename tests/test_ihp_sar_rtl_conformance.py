@@ -70,9 +70,17 @@ def test_manifest_pins_public_source_image_and_real_negative() -> None:
     assert manifest["source"]["bytes"] == 576
     assert manifest["runtime"]["image"]["reference"] == common.IMAGE_REFERENCE
     assert manifest["runtime"]["image"]["config_digest"] == common.IMAGE_CONFIG_DIGEST
+    assert manifest["runtime"]["lint_tool"] == {
+        "name": "verilator",
+        "requested_path": common.VERILATOR_REQUESTED_PATH,
+        "native_path": common.NATIVE_VERILATOR_PATH,
+        "version": common.VERILATOR_VERSION,
+    }
     assert manifest["operations"]["missing_top"]["expect"]["diagnostic"] == (
         "ERROR: Module `missing_sar_logic' not found!"
     )
+    assert manifest["operations"]["rtl_lint"]["language"] == "1800-2017"
+    assert manifest["operations"]["rtl_lint_2023"]["language"] == "1800-2023"
 
 
 def test_wrapper_is_executable_and_calls_only_pinned_yosys() -> None:
@@ -95,6 +103,9 @@ def test_independent_verifier_accepts_complete_publication() -> None:
     assert verified["verified"] is True
     assert verified["positive"]["result"]["engineering"]["status"] == "pass"
     assert verified["negative"]["result"]["engineering"]["status"] == "fail"
+    assert verified["lint_positive"]["result"]["engineering"]["status"] == "pass"
+    assert verified["lint_positive_2023"]["result"]["engineering"]["status"] == "pass"
+    assert verified["lint_negative"]["result"]["engineering"]["status"] == "fail"
     assert verified["run"]["openada_checkout"]["state_unchanged"] is True
 
 
@@ -126,12 +137,57 @@ def test_real_missing_top_native_failure_is_exact() -> None:
     assert negative["diagnostic"] in negative["native_stderr"]
 
 
+def test_strict_lint_is_clean_and_real_missing_top_is_exact() -> None:
+    verified = _verify(PUBLISHED)
+    positive = verified["lint_positive"]
+    assert positive["result"]["tool"] == {
+        "name": "verilator",
+        "path": common.NATIVE_VERILATOR_PATH,
+        "version": common.VERILATOR_VERSION,
+    }
+    assert positive["result"]["data"]["warning_policy"] == "strict"
+    assert positive["result"]["data"]["warning_count"] == 0
+    assert positive["result"]["data"]["error_count"] == 0
+    assert positive["result"]["data"]["inputs_stable"] is True
+    assert positive["result"]["data"]["dependency_closure_stable"] is True
+    assert positive["result"]["data"]["tool_identity_stable"] is True
+    assert positive["transcript"]["diagnostics"] == []
+    positive_2023 = verified["lint_positive_2023"]
+    assert positive_2023["result"]["engineering"]["status"] == "pass"
+    assert positive_2023["result"]["data"]["language"] == "1800-2023"
+    assert positive_2023["result"]["data"]["warning_count"] == 0
+    assert positive_2023["result"]["data"]["error_count"] == 0
+    assert positive_2023["result"]["data"]["diagnostic_count"] == 0
+    assert positive_2023["result"]["data"]["inputs_stable"] is True
+    assert positive_2023["result"]["data"]["dependency_closure_stable"] is True
+    assert positive_2023["result"]["data"]["tool_identity_stable"] is True
+    command_2023 = positive_2023["result"]["execution"]["command"]
+    assert command_2023[command_2023.index("--default-language") + 1] == "1800-2023"
+    for suffix in ("v", "sv", "vh", "svh"):
+        assert f"+1800-2023ext+{suffix}" in command_2023
+    negative = verified["lint_negative"]
+    assert negative["result"]["execution"]["exit_code"] == 1
+    assert negative["result"]["engineering"]["status"] == "fail"
+    assert [item["message"] for item in negative["transcript"]["diagnostics"]] == [
+        "Specified --top-module 'missing_sar_logic' was not found in design.",
+        "Exiting due to 1 error(s)",
+    ]
+
+
 def test_reconciled_native_json_port_tamper_is_rejected() -> None:
     verdict = semantic._run_tamper_probe(_manifest(), PUBLISHED)
     assert verdict["status"] == "rejected"
     assert verdict["id"] == "reconciled-json-port-removal"
     assert "positive Yosys JSON ports" in verdict["observed_diagnostic"]
     assert "reconciled" in verdict["mutation"]
+
+
+def test_reconciled_lint_log_finding_injection_is_rejected() -> None:
+    verdict = semantic._run_lint_tamper_probe(_manifest(), PUBLISHED)
+    assert verdict["status"] == "rejected"
+    assert verdict["id"] == "reconciled-lint-log-finding-injection"
+    assert "native Verilator transcript diagnostics" in verdict["observed_diagnostic"]
+    assert verdict["covers"] == semantic.LINT_ROWS
 
 
 def test_source_hash_drift_is_rejected_even_if_run_digest_is_reconciled(tmp_path: Path) -> None:
@@ -188,9 +244,14 @@ def test_publication_is_closed_and_has_distinct_trust_artifacts() -> None:
     agent = json.loads((HERE / "semantic-evidence.json").read_text(encoding="utf-8"))
     assert agent["decision"] == "proceed"
     assert agent["operations"]["missing_top_negative"]["decision"] == "block"
+    assert agent["operations"]["rtl_lint"]["engineering_status"] == "pass"
+    assert agent["operations"]["rtl_lint"]["evidence"]["language"] == "1800-2017"
+    assert agent["operations"]["rtl_lint_2023"]["engineering_status"] == "pass"
+    assert agent["operations"]["rtl_lint_2023"]["evidence"]["language"] == "1800-2023"
+    assert agent["operations"]["lint_missing_top_negative"]["decision"] == "block"
     assert len(agent["trust_chain"]["native_artifacts"]) == len(semantic.NATIVE_FILES)
     contract = json.loads((HERE / "semantic-contract.json").read_text(encoding="utf-8"))
-    assert contract["tests"]["passed"] == 16
+    assert contract["tests"]["passed"] == 18
     assert contract["tests"]["failed"] == 0
 
 
@@ -202,6 +263,17 @@ def test_agent_decision_states_next_checks_and_scope_limits() -> None:
     limitation_ids = {item["id"] for item in agent["limitations"]}
     assert "structural-elaboration-only" in limitation_ids
     assert "no-timing-or-physical-closure" in limitation_ids
+    assert "strict-lint-only" in limitation_ids
+    strict_lint = next(
+        item for item in agent["limitations"] if item["id"] == "strict-lint-only"
+    )
+    for boundary in (
+        "functional correctness",
+        "CDC safety",
+        "timing closure",
+        "physical correctness",
+    ):
+        assert boundary in strict_lint["impact"]
 
 
 def test_ieee_boundary_is_explicit_and_does_not_claim_conformance() -> None:
@@ -214,7 +286,7 @@ def test_ieee_boundary_is_explicit_and_does_not_claim_conformance() -> None:
     assert "not full language-standard compliance" in standards["hdl_language"]["basis"]
 
 
-def test_semantic_chain_manifest_is_closed_and_covers_only_two_exact_rows() -> None:
+def test_semantic_chain_manifest_is_closed_and_covers_structural_and_lint_rows() -> None:
     schema = json.loads(
         (ROOT / "schemas/semantic-chain-manifest-v0alpha1.schema.json").read_text(
             encoding="utf-8"
@@ -223,10 +295,7 @@ def test_semantic_chain_manifest_is_closed_and_covers_only_two_exact_rows() -> N
     chain = json.loads((HERE / "semantic-chain.json").read_text(encoding="utf-8"))
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
     assert list(validator.iter_errors(chain)) == []
-    expected = {
-        "surface|openada.surface/cli.rtl-check/v1",
-        "preflight|rtl-structural-check-passes",
-    }
+    expected = set(semantic.STRUCTURAL_ROWS + semantic.LINT_ROWS)
     assert set(chain["covers"]) == expected
     semantic_steps = [item for item in chain["steps"] if item["kind"] == "semantic-command"]
     assert set().union(*(set(item["covers"]) for item in semantic_steps)) == expected
@@ -236,7 +305,19 @@ def test_semantic_chain_manifest_is_closed_and_covers_only_two_exact_rows() -> N
         if item["id"] == "rtl-structural-check" and item["native_execution"]
     ]
     assert len(native_positive) == 1
-    assert set(native_positive[0]["covers"]) == expected
+    assert set(native_positive[0]["covers"]) == set(semantic.STRUCTURAL_ROWS)
+    lint_positive = [
+        item
+        for item in semantic_steps
+        if item["id"] in {"rtl-lint-clean", "rtl-lint-clean-2023"}
+        and item["native_execution"]
+    ]
+    assert {item["id"] for item in lint_positive} == {
+        "rtl-lint-clean",
+        "rtl-lint-clean-2023",
+    }
+    for item in lint_positive:
+        assert set(item["covers"]) == set(semantic.LINT_ROWS)
     assert chain["agent_evidence"]["result_step"] == "agent-evidence"
 
 

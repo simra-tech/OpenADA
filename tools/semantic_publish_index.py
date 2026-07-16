@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the release semantic-chain index from six verified run receipts."""
+"""Build the release semantic-chain index from seven verified run receipts."""
 
 from __future__ import annotations
 
@@ -58,6 +58,10 @@ PUBLICATIONS = (
     ChainPublication(
         "conformance/public-spice-portability/manifest.json",
         "conformance/public-spice-portability/evidence/chain-run.json",
+    ),
+    ChainPublication(
+        "conformance/orfs-ibex-synthesis-timing/semantic-chain.json",
+        "conformance/orfs-ibex-synthesis-timing/semantic-chain-run.json",
     ),
 )
 

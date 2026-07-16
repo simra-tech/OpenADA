@@ -54,4 +54,27 @@ PREFLIGHT_SPECS: dict[str, PreflightSpec] = {
         pdk_applicable=False,
         startup_policy="no-startup-selector-in-contract",
     ),
+    "rtl-lint-clean": PreflightSpec(
+        assertion="rtl-lint-clean",
+        operation="rtl-lint",
+        tool="verilator",
+        pdk_applicable=False,
+        startup_policy="fixed-strict-warning-policy",
+    ),
+    "asic-netlist-synthesized": PreflightSpec(
+        assertion="asic-netlist-synthesized",
+        operation="synthesize",
+        tool="yosys",
+        pdk_applicable=True,
+        startup_policy="explicit-liberty-and-mapping-policy",
+        startup_options=("--liberty", "--techmap", "--abc-constraint"),
+    ),
+    "timing-constraints-satisfied": PreflightSpec(
+        assertion="timing-constraints-satisfied",
+        operation="timing-analyze",
+        tool="sta",
+        pdk_applicable=True,
+        startup_policy="no-init-explicit-netlist-liberty-sdc",
+        startup_options=("--liberty", "--sdc"),
+    ),
 }

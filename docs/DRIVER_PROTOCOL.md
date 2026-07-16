@@ -43,7 +43,16 @@ The published protocol documents are:
 - [`specification.evaluate/v1alpha1`](../profiles/specification.evaluate-v1alpha1.json),
   the exact-unit specification profile.
 
-Those are six active profiles plus the immutable historical circuit profile.
+The digital set adds:
+
+- [`rtl.lint/v1alpha1`](../profiles/rtl.lint-v1alpha1.json), strict
+  SystemVerilog lint evidence;
+- [`logic.synthesize/v1alpha1`](../profiles/logic.synthesize-v1alpha1.json),
+  generic inference and Liberty-mapped synthesis evidence; and
+- [`timing.analyze/v1alpha1`](../profiles/timing.analyze-v1alpha1.json),
+  single-corner setup/hold timing evidence.
+
+Those are nine active profiles plus the immutable historical circuit profile.
 `openada profile list` returns their installed identities and
 `openada profile show OPERATION-PROFILE-ID` returns one complete validated
 document. Profile inspection is not external-provider discovery.

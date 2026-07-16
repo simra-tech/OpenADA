@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review RTL Architecture"
+  short_description: "Review RTL structure and architecture evidence"
+  default_prompt: "Use $openada:review-rtl-architecture to review this RTL architecture and identify the smallest evidence-backed next step."

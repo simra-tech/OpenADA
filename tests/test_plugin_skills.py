@@ -24,6 +24,28 @@ ANALOG_CONTRACT_IDS = {
     "openada.operation/specification.evaluate/v1alpha1",
     "openada.assertion/specification.satisfied/v1alpha1",
 }
+DIGITAL_SKILLS = {
+    "review-rtl-architecture",
+    "assess-synthesis-and-inference",
+    "assess-asic-timing",
+}
+DIGITAL_CONTRACT_IDS = {
+    "review-rtl-architecture": {
+        "openada.operation/rtl.lint/v1alpha1",
+        "openada.assertion/rtl.lint.clean/v1alpha1",
+        "openada.feature/rtl.lint.systemverilog/v1alpha1",
+    },
+    "assess-synthesis-and-inference": {
+        "openada.operation/logic.synthesize/v1alpha1",
+        "openada.assertion/synthesized-netlist.valid/v1alpha1",
+        "openada.feature/synthesis.asic-liberty/v1alpha1",
+    },
+    "assess-asic-timing": {
+        "openada.operation/timing.analyze/v1alpha1",
+        "openada.assertion/timing.constraints-satisfied/v1alpha1",
+        "openada.feature/timing.setup-hold/v1alpha1",
+    },
+}
 
 
 def _skill_directories() -> list[Path]:
@@ -48,7 +70,7 @@ def test_all_plugin_skills_have_minimal_valid_metadata():
     assert {path.name for path in skill_directories} >= {
         "openada",
         "review-circuit-simulation",
-    } | ANALOG_SKILLS
+    } | ANALOG_SKILLS | DIGITAL_SKILLS
 
     for skill_directory in skill_directories:
         fields, body = _frontmatter(skill_directory / "SKILL.md")
@@ -132,6 +154,15 @@ def test_package_runtime_and_plugin_release_versions_match():
     assert __version__ == "0.4.0"
 
 
+def test_both_plugin_manifests_advertise_the_digital_connectors():
+    for path in (
+        ROOT / ".codex-plugin" / "plugin.json",
+        ROOT / ".claude-plugin" / "plugin.json",
+    ):
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        assert {"verilator", "yosys", "opensta"}.issubset(manifest["keywords"])
+
+
 def test_engineering_skill_catalog_names_every_shipped_skill():
     catalog = (ROOT / "docs" / "ENGINEERING_SKILLS.md").read_text(encoding="utf-8")
 
@@ -185,6 +216,66 @@ def test_analog_characterization_composes_the_focused_skills():
     assert intent_routing.is_file()
     assert "openada.operation/result.series.extract/v1alpha1" in text
     assert "openada.operation/result.spectral.measure/v1alpha1" in text
+
+
+def test_digital_skills_use_exact_semantic_contracts_and_stop_boundaries():
+    for skill_name, contract_ids in DIGITAL_CONTRACT_IDS.items():
+        text = (SKILLS_ROOT / skill_name / "SKILL.md").read_text(encoding="utf-8")
+
+        for contract_id in contract_ids:
+            assert contract_id in text
+        assert "$openada:openada" in text
+        assert "signoff: not claimed" in text
+        assert "capability" in text.lower()
+        assert "unavailable" in text.lower()
+        assert "engineering `unknown`" in text
+
+    timing = (SKILLS_ROOT / "assess-asic-timing" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert "ideal interconnect" in timing
+    assert "routed" in timing
+    assert "MCMM" in timing
+
+
+def test_digital_skills_invoke_openada_surfaces_not_native_tool_commands():
+    for skill_name in DIGITAL_SKILLS:
+        text = (SKILLS_ROOT / skill_name / "SKILL.md").read_text(encoding="utf-8")
+
+        assert "openada profile show" in text
+        assert "openada doctor" in text
+        assert "yosys " not in text.lower()
+        assert "verilator " not in text.lower()
+        assert "opensta " not in text.lower()
+
+
+def test_digital_skills_stay_within_the_current_result_and_workflow_boundary():
+    texts = {
+        skill_name: (SKILLS_ROOT / skill_name / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        for skill_name in DIGITAL_SKILLS
+    }
+
+    for text in texts.values():
+        assert "request/result IDs" not in text
+        assert "result ID" not in text
+        assert "normalized evidence" in text
+        assert "source" in text.lower() and "inspection" in text.lower()
+
+    rtl = texts["review-rtl-architecture"]
+    synthesis = texts["assess-synthesis-and-inference"]
+    timing = texts["assess-asic-timing"]
+    timing_compact = " ".join(timing.split())
+
+    assert "no module-parameter override" in rtl
+    assert "conservative capture" in rtl
+    assert "no module-parameter override" in synthesis
+    assert "conservative rather than exact conditional-preprocessor" in synthesis
+    assert "not a violating-endpoint count" in timing
+    assert "neither violating-path" in timing
+    assert "one `critical_path` summary per analysis" in timing
+    assert "does not expose multiple ranked paths" in timing_compact
 
 
 def test_spectral_skill_uses_the_closed_method_and_standards_reference():

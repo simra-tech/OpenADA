@@ -15,11 +15,13 @@ OpenADA uses explicit maturity levels:
 | ngspice | yes | `simulate` including shared OP/DC/AC/TRAN | shared TRAN workflow-validated; OP/DC/AC have pinned structured success evidence |
 | KLayout | yes | `drc` | pinned public IHP inverter recipe |
 | Netgen | yes | `lvs` | pinned public IHP inverter recipe |
-| Yosys | yes | `rtl-check` | pinned IHP run; public recipe pending |
+| Yosys | yes | `rtl-check`; Liberty-mapped `synthesize` | pinned public IHP SAR structural check and ORFS Ibex synthesis recipes |
+| Verilator | yes | strict `rtl-lint` | pinned public IHP SAR clean/failure recipe |
+| OpenSTA | yes | single-corner `timing-analyze` | pinned ORFS Ibex/Nangate45 setup-hold recipe |
 | Magic | yes | no | no |
 | Xyce | yes | `simulate` shared DC/AC/TRAN alpha; OP unsupported | shared TRAN workflow-validated; DC/AC have pinned structured success evidence |
 | OpenROAD / LibreLane | yes | no | no |
-| Icarus / Verilator / slang / Surelog | yes | no | no |
+| Icarus / standalone slang / Surelog | yes | no | no |
 | OpenVAF / Qucs-S / GTKWave | yes | no | no |
 | OpenADA evidence kernels | n/a | verified series extraction; scalar/specification; coherent SNR/SINAD/THD/SFDR; closed AC transfer/gain/bandwidth/unity-frequency/phase-margin | structured unit/profile conformance; public native-chain bundle pending |
 | Explicit external provider | explicit manifest | local JSON-stdio wait dispatch for active `circuit.simulate/v1alpha2` | hardened out-of-tree fake-provider suite; independent real provider pending |
@@ -34,7 +36,7 @@ one-off wrappers does not substitute for passing the gate.
 Current status: milestone A is published in this repository. Milestone B now
 includes executable request and driver-manifest v0alpha1 validation, immutable
 operation-profile schemas v0alpha1 and v0alpha2, valid contributor templates,
-six active implemented typed profiles, one historical simulation profile,
+nine active implemented typed profiles, one historical simulation profile,
 cwd-independent profile inspection, and an explicit-manifest local JSON-stdio
 wait resolver registered for active circuit simulation. Automatic discovery,
 session/remote transports, and
@@ -42,8 +44,8 @@ MCP remain unimplemented. Milestone C's bounded portability gate now covers
 ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN success paths through pinned native
 replay; the new OP/DC/AC rows remain structured until broader outcome cases are
 published. The same native formats now feed verified normalized series and a
-closed spectral and AC transfer kernels. Milestone D has five experimental tool-independent
-engineering skills above the execution adapter; the analog coordinator now
+closed spectral and AC transfer kernels. Milestone D has eight experimental
+tool-independent engineering skills above the execution adapter; the analog coordinator now
 uses an immutable intent ledger and implemented-primitive routing. Fresh-agent
 forward tests and external engineering review still gate promotion.
 
@@ -196,7 +198,7 @@ the bundled `ihp-sg13g2` PDK revision
 `144f811cdffda49b71d28f64e8a92b697b61cf06` through its hashed `COMMIT`
 file. In that environment:
 
-- all six structured or workflow-validated tool binaries pass bounded
+- all eight structured or workflow-validated tool binaries pass bounded
   discovery;
 - a real IHP Xschem inverter netlists without unresolved symbols;
 - the real inverter GDS reports zero multiplicity-weighted KLayout DRC
@@ -206,6 +208,13 @@ file. In that environment:
   an exact fresh comparison report, agreeing native JSON, and a clean bounded
   setup/completion transcript;
 - the SAR logic RTL elaborates and passes Yosys structural checks;
+- the same SAR logic passes strict Verilator lint with no warnings or errors;
+- pinned ORFS Ibex RTL synthesizes through the Slang/Yosys frontend into a
+  complete Nangate45 Liberty-mapped netlist with retained inference and mapped
+  statistics;
+- OpenSTA returns constraint-complete setup/hold evidence for that mapped Ibex
+  netlist and exact ORFS SDC; any negative slack remains an engineering failure,
+  not a connector failure;
 - the Xschem-to-ngspice path captures an explicitly declared deck-owned raw
   artifact and independently verifies finite transient inverter behavior;
 - the shared model-free RC profile runs natively through ngspice 46 and Xyce
@@ -221,8 +230,9 @@ are workflow-validated through the public
 shared transient ngspice/Xyce mappings retain workflow-validated maturity.
 Expanded OP/DC/AC success cases are independently checked through the
 [native portability replay](../conformance/circuit-simulate-v0alpha2/README.md)
-at structured maturity. Yosys remains below workflow-validated until its own
-clean public recipe exists.
+at structured maturity. The public IHP SAR and ORFS Ibex recipes separately
+bind Yosys structural and mapped-synthesis evidence; Verilator lint and OpenSTA
+timing remain scoped to their exact declared contexts.
 
 ## First public conformance case
 

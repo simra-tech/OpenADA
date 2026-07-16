@@ -13,7 +13,7 @@ license-files = ["LICENSE"]
 authors = [
   { name = "Simra Tech" },
 ]
-keywords = ["eda", "agents", "xschem", "ngspice", "xyce", "klayout", "netgen", "yosys"]
+keywords = ["eda", "agents", "xschem", "ngspice", "xyce", "klayout", "netgen", "verilator", "yosys", "opensta"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -41,6 +41,7 @@ openada-provider-ngspice = "openada.providers.ngspice_pdk_control:main"
 conformance = [
   "cryptography>=38",
   "jsonschema>=4.18",
+  "pytest>=8",
 ]
 dev = [
   "build>=1.2",
@@ -70,11 +71,14 @@ where = ["src"]
 "share/openada/profiles" = [
   "profiles/circuit.simulate-v1alpha1.json",
   "profiles/circuit.simulate-v1alpha2.json",
+  "profiles/logic.synthesize-v1alpha1.json",
   "profiles/result.measure-v1alpha1.json",
   "profiles/result.series.extract-v1alpha1.json",
   "profiles/result.spectral.measure-v1alpha1.json",
   "profiles/result.transfer.measure-v1alpha1.json",
+  "profiles/rtl.lint-v1alpha1.json",
   "profiles/specification.evaluate-v1alpha1.json",
+  "profiles/timing.analyze-v1alpha1.json",
 ]
 "share/openada/providers/ngspice-pdk-control" = [
   "providers/ngspice-pdk-control/driver-manifest.json",

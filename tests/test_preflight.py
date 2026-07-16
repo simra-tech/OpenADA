@@ -28,6 +28,9 @@ ASSERTIONS = {
     "drc-clean": ("klayout", "drc"),
     "lvs-match": ("netgen", "lvs"),
     "rtl-structural-check-passes": ("yosys", "rtl-check"),
+    "rtl-lint-clean": ("verilator", "rtl-lint"),
+    "asic-netlist-synthesized": ("yosys", "synthesize"),
+    "timing-constraints-satisfied": ("sta", "timing-analyze"),
 }
 
 
@@ -80,7 +83,7 @@ def test_preflight_specs_are_fixed_one_to_one_operation_mappings():
     } == ASSERTIONS
     assert len({spec.operation for spec in PREFLIGHT_SPECS.values()}) == len(ASSERTIONS)
     for spec in PREFLIGHT_SPECS.values():
-        assert TOOL_SPECS[spec.tool].operations == (spec.operation,)
+        assert spec.operation in TOOL_SPECS[spec.tool].operations
 
 
 @pytest.mark.parametrize(("assertion", "expected"), ASSERTIONS.items())
@@ -103,6 +106,8 @@ def test_preflight_probes_exactly_one_mapped_tool(
         banner = (
             "Netgen 2.0 compiled on test date"
             if tool == "netgen"
+            else "OpenSTA 1.0"
+            if tool == "sta"
             else f"{tool} 1.0"
         )
         _write_executable(

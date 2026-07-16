@@ -118,6 +118,65 @@ def test_public_conformance_maturity_is_machine_readable():
     assert TOOL_SPECS["netgen"].maturity == "workflow-validated"
     assert TOOL_SPECS["xyce"].maturity == "workflow-validated"
     assert TOOL_SPECS["xyce"].operations == ("simulate",)
+    assert TOOL_SPECS["yosys"].maturity == "workflow-validated"
+    assert TOOL_SPECS["yosys"].operations == ("rtl-check", "synthesize")
+    assert TOOL_SPECS["abc"].maturity == "workflow-validated"
+    assert TOOL_SPECS["abc"].operations == ("synthesize",)
+    assert TOOL_SPECS["verilator"].maturity == "workflow-validated"
+    assert TOOL_SPECS["verilator"].binaries == ("verilator_bin", "verilator")
+    assert TOOL_SPECS["verilator"].operations == ("rtl-lint",)
+    assert TOOL_SPECS["sta"].maturity == "workflow-validated"
+    assert TOOL_SPECS["sta"].operations == ("timing-analyze",)
+
+
+@pytest.mark.parametrize(
+    ("tool", "version_line"),
+    [
+        ("yosys", "Yosys 0.66+123"),
+        ("abc", "UC Berkeley, ABC 1.01 (compiled Jun 22 2026 11:38:08)"),
+        ("verilator", "Verilator 5.048 2026-01-01 rev test"),
+        ("sta", "OpenSTA 3.1.0"),
+        ("sta", "3.1.0"),
+    ],
+)
+def test_digital_tool_identity_patterns_accept_public_runtime_banners(
+    tmp_path: Path, tool: str, version_line: str
+) -> None:
+    binary = tmp_path / tool
+    _write_executable(binary, f"print({version_line!r})\n")
+
+    info = DiscoveryManager(
+        profile="native", binary_overrides={tool: binary}
+    ).inspect_tool(tool, include_probe_details=True)
+
+    assert info["status"] == "available"
+    assert info["version"] == version_line
+    assert info["version_probe"]["status"] == "accepted"
+
+
+def test_abc_discovery_prefers_yosys_distribution_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for name, marker in (
+        ("yosys-abc", "yosys"),
+        ("berkeley-abc", "berkeley"),
+        ("abc", "generic"),
+    ):
+        _write_executable(
+            tmp_path / name,
+            "import sys\n"
+            "assert sys.argv[1:] == ['-c', 'version']\n"
+            f"print('UC Berkeley, ABC 1.01 (compiled {marker})')\n",
+        )
+    monkeypatch.setenv(
+        "PATH", str(tmp_path) + os.pathsep + os.environ.get("PATH", "")
+    )
+
+    info = DiscoveryManager(profile="native").inspect_tool("abc")
+
+    assert info["status"] == "available"
+    assert info["binary"] == str((tmp_path / "yosys-abc").resolve())
+    assert info["version"] == "UC Berkeley, ABC 1.01 (compiled yosys)"
 
 
 def test_xyce_discovery_rejects_a_zero_exit_non_xyce_banner(tmp_path):

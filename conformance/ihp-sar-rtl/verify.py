@@ -19,11 +19,13 @@ from jsonschema.exceptions import SchemaError
 
 from common import (
     ConformanceError,
+    NATIVE_VERILATOR_PATH,
     NATIVE_YOSYS_PATH,
     RESULT_SCHEMA,
     SOURCE_BYTES,
     SOURCE_PATH,
     SOURCE_SHA256,
+    VERILATOR_VERSION,
     WRAPPER_PATH,
     YOSYS_VERSION,
     load_manifest,
@@ -40,13 +42,22 @@ if str(TOOLS_ROOT) not in sys.path:
 from semantic_receipts import semantic_subject  # noqa: E402
 
 RESULT_SCHEMA_PATH = REPOSITORY_ROOT / "schemas/result-v0alpha1.schema.json"
+LINT_PROFILE_PATH = REPOSITORY_ROOT / "profiles/rtl.lint-v1alpha1.json"
 RUN_SCHEMA_PATH = HERE / "run.schema.json"
 DESIGN_PROVENANCE_SCHEMA_PATH = (
     REPOSITORY_ROOT / "schemas/design-provenance-v0alpha1.schema.json"
 )
 MAX_JSON_BYTES = 8 * 1024 * 1024
 MAX_NATIVE_BYTES = 64 * 1024 * 1024
-TEMP_CWD_RE = re.compile(r"^/evidence/(positive|negative)/\.openada-yosys-[A-Za-z0-9_-]+$")
+YOSYS_TEMP_CWD_RE = re.compile(
+    r"^/evidence/(positive|negative)/\.openada-yosys-[A-Za-z0-9_-]+$"
+)
+VERILATOR_TEMP_CWD_RE = re.compile(
+    r"^/evidence/(positive|positive-2023|negative)/\.openada-verilator-[A-Za-z0-9_-]+$"
+)
+VERILATOR_DIAGNOSTIC_RE = re.compile(
+    r"^%(Warning|Error)(?:-([A-Z0-9_]+))?:\s*(.*)$"
+)
 EXPECTED_FILES = {
     "design-provenance.json",
     "run.json",
@@ -57,6 +68,12 @@ EXPECTED_FILES = {
     "negative/rtl-check.result.json",
     "negative/rtl-check.ys",
     "negative/yosys.transcript.json",
+    "positive/rtl-lint.result.json",
+    "positive/rtl-lint.log",
+    "positive-2023/rtl-lint.result.json",
+    "positive-2023/rtl-lint.log",
+    "negative/rtl-lint.result.json",
+    "negative/rtl-lint.log",
 }
 EXPECTED_PORTS = {
     "clk": ("input", 1),
@@ -128,6 +145,19 @@ def _validator(path: Path, *, label: str) -> Draft202012Validator:
         Draft202012Validator.check_schema(schema)
     except SchemaError as exc:
         raise ConformanceError(f"invalid {label} schema: {exc.message}") from exc
+    return Draft202012Validator(schema, format_checker=FormatChecker())
+
+
+def _lint_data_validator() -> Draft202012Validator:
+    profile = _read_json(LINT_PROFILE_PATH, label="RTL lint operation profile")
+    try:
+        schema = profile["normalized_result"]["data_schema"]
+    except (KeyError, TypeError) as exc:
+        raise ConformanceError("RTL lint operation profile lacks its result data schema") from exc
+    try:
+        Draft202012Validator.check_schema(schema)
+    except SchemaError as exc:
+        raise ConformanceError(f"invalid RTL lint result data schema: {exc.message}") from exc
     return Draft202012Validator(schema, format_checker=FormatChecker())
 
 
@@ -217,7 +247,7 @@ def _verify_transcript(
         "transcript.command",
     )
     cwd = transcript.get("cwd")
-    if not isinstance(cwd, str) or TEMP_CWD_RE.fullmatch(cwd) is None:
+    if not isinstance(cwd, str) or YOSYS_TEMP_CWD_RE.fullmatch(cwd) is None:
         raise ConformanceError(f"transcript.cwd is not a bounded Yosys temporary path: {cwd!r}")
     if not cwd.startswith(f"/evidence/{expected_cwd_kind}/"):
         raise ConformanceError(f"transcript.cwd is not under {expected_cwd_kind!r}")
@@ -255,7 +285,7 @@ def _verify_result_common(
         f"{kind}.execution.command",
     )
     cwd = execution.get("cwd")
-    if not isinstance(cwd, str) or TEMP_CWD_RE.fullmatch(cwd) is None or not cwd.startswith(f"/evidence/{kind}/"):
+    if not isinstance(cwd, str) or YOSYS_TEMP_CWD_RE.fullmatch(cwd) is None or not cwd.startswith(f"/evidence/{kind}/"):
         raise ConformanceError(f"{kind}.execution.cwd is not the reviewed temporary directory: {cwd!r}")
     _expect(
         result.get("engineering"),
@@ -302,6 +332,222 @@ def _verify_artifact_record(
     _expect(record.get("role"), role, f"{relative}.role")
     _expect(record.get("bytes"), size, f"{relative}.bytes")
     _expect(record.get("sha256"), sha256_file(path), f"{relative}.sha256")
+
+
+def _verify_lint_log(
+    path: Path,
+    *,
+    expected_exit: int,
+    expected_messages: list[str],
+) -> dict[str, Any]:
+    _require_regular(path, label="native Verilator transcript", maximum=1024 * 1024)
+    try:
+        body = path.read_bytes()
+    except OSError as exc:
+        raise ConformanceError(f"cannot read native Verilator transcript {path}: {exc}") from exc
+    header, stdout_marker, payload = body.partition(b"--- stdout ---\n")
+    stdout, stderr_marker, stderr = payload.partition(b"\n--- stderr ---\n")
+    if not stdout_marker or not stderr_marker:
+        raise ConformanceError("native Verilator transcript lacks closed stdout/stderr sections")
+    try:
+        header_text = header.decode("utf-8")
+        stdout_text = stdout.decode("utf-8")
+        stderr_text = stderr.decode("utf-8")
+    except UnicodeError as exc:
+        raise ConformanceError(f"native Verilator transcript is not valid UTF-8: {exc}") from exc
+    fields: dict[str, str] = {}
+    for line in header_text.splitlines():
+        key, separator, value = line.partition(": ")
+        if not separator or key in fields:
+            raise ConformanceError("native Verilator transcript header is not closed")
+        fields[key] = value
+    _expect(
+        set(fields),
+        {
+            "status",
+            "exit_code",
+            "stdout_bytes",
+            "stderr_bytes",
+            "stdout_truncated",
+            "stderr_truncated",
+        },
+        "native Verilator transcript header keys",
+    )
+    _expect(fields["status"], "completed", "native Verilator transcript status")
+    _expect(fields["exit_code"], str(expected_exit), "native Verilator transcript exit code")
+    _expect(fields["stdout_bytes"], str(len(stdout)), "native Verilator stdout bytes")
+    _expect(fields["stderr_bytes"], str(len(stderr)), "native Verilator stderr bytes")
+    _expect(fields["stdout_truncated"], "false", "native Verilator stdout truncation")
+    _expect(fields["stderr_truncated"], "false", "native Verilator stderr truncation")
+    diagnostics: list[dict[str, str]] = []
+    for line in (stdout_text + stderr_text).splitlines():
+        match = VERILATOR_DIAGNOSTIC_RE.fullmatch(line.strip())
+        if match:
+            diagnostics.append(
+                {
+                    "severity": match.group(1).lower(),
+                    "code": match.group(2) or "UNCLASSIFIED",
+                    "message": match.group(3),
+                }
+            )
+    _expect(
+        [item["message"] for item in diagnostics],
+        expected_messages,
+        "native Verilator transcript diagnostics",
+    )
+    if expected_exit == 0:
+        if VERILATOR_VERSION not in stdout_text or stderr:
+            raise ConformanceError(
+                "positive native Verilator transcript lacks the pinned report or has stderr"
+            )
+    return {"stdout": stdout_text, "stderr": stderr_text, "diagnostics": diagnostics}
+
+
+def _verify_lint_result(
+    manifest: dict[str, Any],
+    evidence: Path,
+    result_validator: Draft202012Validator,
+    data_validator: Draft202012Validator,
+    *,
+    operation_name: str,
+    directory: str,
+) -> dict[str, Any]:
+    operation = manifest["operations"][operation_name]
+    expected = operation["expect"]
+    result_document = _read_json(
+        evidence / operation["result_filename"],
+        label=f"{operation_name} OpenADA result",
+    )
+    _validate(result_document, result_validator, label=f"{operation_name} OpenADA result")
+    _validate(result_document.get("data"), data_validator, label=f"{operation_name} result data")
+    _expect(result_document.get("schema"), RESULT_SCHEMA, f"{operation_name}.schema")
+    _expect(result_document.get("operation"), "rtl-lint", f"{operation_name}.operation")
+    _expect(
+        result_document.get("tool"),
+        {
+            "name": "verilator",
+            "path": NATIVE_VERILATOR_PATH,
+            "version": VERILATOR_VERSION,
+        },
+        f"{operation_name}.tool",
+    )
+    execution = result_document["execution"]
+    _expect(execution.get("status"), "completed", f"{operation_name}.execution.status")
+    _expect(execution.get("exit_code"), expected["exit_code"], f"{operation_name}.execution.exit_code")
+    _expect(
+        execution.get("command"),
+        [
+            NATIVE_VERILATOR_PATH,
+            "--lint-only",
+            "--timing",
+            "--Wall",
+            "-Wno-fatal",
+            "--relative-includes",
+            "--default-language",
+            operation["language"],
+            "--top-module",
+            operation["top"],
+            f"+{operation['language']}ext+v",
+            f"+{operation['language']}ext+sv",
+            f"+{operation['language']}ext+vh",
+            f"+{operation['language']}ext+svh",
+            SOURCE_PATH,
+        ],
+        f"{operation_name}.execution.command",
+    )
+    cwd = execution.get("cwd")
+    if (
+        not isinstance(cwd, str)
+        or VERILATOR_TEMP_CWD_RE.fullmatch(cwd) is None
+        or not cwd.startswith(f"/evidence/{directory}/")
+    ):
+        raise ConformanceError(
+            f"{operation_name}.execution.cwd is not the reviewed Verilator temporary directory: {cwd!r}"
+        )
+    _expect(
+        result_document.get("engineering"),
+        {"status": expected["engineering_status"], "summary": expected["summary"]},
+        f"{operation_name}.engineering",
+    )
+    _expect(
+        result_document.get("inputs"),
+        [
+            {
+                "path": SOURCE_PATH,
+                "exists": True,
+                "bytes": SOURCE_BYTES,
+                "sha256": SOURCE_SHA256,
+                "kind": "hdl-source",
+                "role": "rtl.source",
+            }
+        ],
+        f"{operation_name}.inputs",
+    )
+    data = result_document["data"]
+    _expect(data.get("top"), operation["top"], f"{operation_name}.data.top")
+    _expect(data.get("language"), operation["language"], f"{operation_name}.data.language")
+    _expect(data.get("warning_policy"), "strict", f"{operation_name}.data.warning_policy")
+    _expect(
+        data.get("environment_policy"),
+        "closed-verilator-runtime-v1",
+        f"{operation_name}.data.environment_policy",
+    )
+    _expect(data.get("ordered_sources"), [SOURCE_PATH], f"{operation_name}.data.ordered_sources")
+    _expect(data.get("include_dependencies"), [], f"{operation_name}.data.include_dependencies")
+    _expect(data.get("unresolved_literal_includes"), [], f"{operation_name}.data.unresolved_literal_includes")
+    _expect(data.get("unresolved_literal_includes_truncated"), False, f"{operation_name}.data.unresolved_literal_includes_truncated")
+    _expect(data.get("inputs_stable"), True, f"{operation_name}.data.inputs_stable")
+    _expect(data.get("dependency_closure_stable"), True, f"{operation_name}.data.dependency_closure_stable")
+    _expect(data.get("tool_identity_stable"), True, f"{operation_name}.data.tool_identity_stable")
+    _expect(data.get("changed_inputs"), [], f"{operation_name}.data.changed_inputs")
+    _expect(data.get("changed_inputs_truncated"), False, f"{operation_name}.data.changed_inputs_truncated")
+    native_diagnostics = [
+        {
+            "severity": "error",
+            "code": "UNCLASSIFIED",
+            "message": message,
+            "classification": "design-finding",
+        }
+        for message in expected["diagnostics"]
+    ]
+    _expect(data.get("warning_count"), 0, f"{operation_name}.data.warning_count")
+    _expect(data.get("error_count"), len(native_diagnostics), f"{operation_name}.data.error_count")
+    _expect(data.get("diagnostic_count"), len(native_diagnostics), f"{operation_name}.data.diagnostic_count")
+    _expect(
+        data.get("unclassified_diagnostic_count"),
+        0,
+        f"{operation_name}.data.unclassified_diagnostic_count",
+    )
+    _expect(data.get("diagnostics"), native_diagnostics, f"{operation_name}.data.diagnostics")
+    _expect(data.get("diagnostics_truncated"), False, f"{operation_name}.data.diagnostics_truncated")
+    expected_result_diagnostics = [
+        {
+            "severity": "error",
+            "code": "verilator.native-error",
+            "message": message,
+        }
+        for message in expected["diagnostics"]
+    ]
+    _expect(
+        result_document.get("diagnostics"),
+        expected_result_diagnostics,
+        f"{operation_name}.diagnostics",
+    )
+    artifacts = _artifact_map(result_document.get("artifacts"), f"{operation_name}.artifacts")
+    _expect(set(artifacts), {operation["log"]["path"]}, f"{operation_name}.artifact paths")
+    _verify_artifact_record(
+        artifacts[operation["log"]["path"]],
+        evidence=evidence,
+        relative=operation["log"]["filename"],
+        kind="verilator-log",
+        role="rtl.lint.log",
+    )
+    transcript = _verify_lint_log(
+        evidence / operation["log"]["filename"],
+        expected_exit=expected["exit_code"],
+        expected_messages=expected["diagnostics"],
+    )
+    return {"result": result_document, "transcript": transcript}
 
 
 def _binary_width(value: Any, location: str) -> int:
@@ -515,6 +761,15 @@ def _verify_run(
         sha256_file(HERE / "yosys_wrapper.py"),
         "run.tool.wrapper_sha256",
     )
+    _expect(
+        run.get("lint_tool"),
+        {
+            "requested_path": "/foss/tools/verilator/bin/verilator_bin",
+            "native_path": NATIVE_VERILATOR_PATH,
+            "version": VERILATOR_VERSION,
+        },
+        "run.lint_tool",
+    )
     records = _artifact_map(run["native_artifacts"], "run.native_artifacts")
     expected = EXPECTED_FILES - {"run.json", "design-provenance.json"}
     _expect(set(records), expected, "run.native_artifacts paths")
@@ -590,9 +845,34 @@ def verify_evidence(
     if (evidence / "design-provenance.json").is_file():
         _verify_design_provenance(manifest, evidence)
     result_validator = _validator(RESULT_SCHEMA_PATH, label="OpenADA result")
+    lint_data_validator = _lint_data_validator()
     run_validator = _validator(RUN_SCHEMA_PATH, label="conformance run")
     positive = _verify_positive(manifest, evidence, result_validator)
     negative = _verify_negative(manifest, evidence, result_validator)
+    lint_positive = _verify_lint_result(
+        manifest,
+        evidence,
+        result_validator,
+        lint_data_validator,
+        operation_name="rtl_lint",
+        directory="positive",
+    )
+    lint_positive_2023 = _verify_lint_result(
+        manifest,
+        evidence,
+        result_validator,
+        lint_data_validator,
+        operation_name="rtl_lint_2023",
+        directory="positive-2023",
+    )
+    lint_negative = _verify_lint_result(
+        manifest,
+        evidence,
+        result_validator,
+        lint_data_validator,
+        operation_name="lint_missing_top",
+        directory="negative",
+    )
     run = _verify_run(
         manifest, evidence, manifest_sha256=manifest_sha256, run_validator=run_validator
     )
@@ -600,6 +880,9 @@ def verify_evidence(
         "verified": True,
         "positive": positive,
         "negative": negative,
+        "lint_positive": lint_positive,
+        "lint_positive_2023": lint_positive_2023,
+        "lint_negative": lint_negative,
         "run": run,
     }
 
@@ -627,7 +910,9 @@ def main(argv: list[str] | None = None) -> int:
     structure = summary["positive"]["structure"]
     print(
         "Evidence verified: sar_logic elaborated with "
-        f"{structure['cell_count']} cells and the real missing-top replay was rejected."
+        f"{structure['cell_count']} cells, strict lint was clean under the "
+        "1800-2017 and 1800-2023 selectors, and both real "
+        "missing-top replays were rejected."
     )
     return 0
 

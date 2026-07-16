@@ -39,6 +39,11 @@ SPECTRAL_PROFILE = PROFILES / "result.spectral.measure-v1alpha1.json"
 TRANSFER_PROFILE = PROFILES / "result.transfer.measure-v1alpha1.json"
 SPECIFICATION_PROFILE = PROFILES / "specification.evaluate-v1alpha1.json"
 CIRCUIT_PROFILE = PROFILES / "circuit.simulate-v1alpha1.json"
+DIGITAL_PROFILES = (
+    PROFILES / "rtl.lint-v1alpha1.json",
+    PROFILES / "logic.synthesize-v1alpha1.json",
+    PROFILES / "timing.analyze-v1alpha1.json",
+)
 
 
 def _load(path: Path) -> dict:
@@ -83,6 +88,7 @@ def test_typed_evidence_profiles_and_embedded_schemas_validate() -> None:
         SPECTRAL_PROFILE,
         TRANSFER_PROFILE,
         SPECIFICATION_PROFILE,
+        *DIGITAL_PROFILES,
     ):
         profile = _load(path)
         validator.validate(profile)
@@ -186,3 +192,33 @@ def test_profile_schemas_close_extensions_and_bound_condition_strings() -> None:
         assert extensions["additionalProperties"] is False
         assert condition_value["maxLength"] == 256
         assert result_condition_value["maxLength"] == 256
+
+
+def test_synthesis_frontend_language_pairs_are_explicit() -> None:
+    profile = _load(PROFILES / "logic.synthesize-v1alpha1.json")
+    validator = Draft202012Validator(profile["request"]["parameters_schema"])
+    base = {
+        "top": "top",
+        "defines": [],
+        "dont_use": [],
+        "abc_delay_target_ns": None,
+        "mapping_policy": {"flatten": True, "set_undefined_to_zero": True},
+        "extensions": {},
+    }
+
+    for frontend, language in (
+        ("verilog", "yosys-sv"),
+        ("slang", "1800-2017"),
+        ("slang", "1800-2023"),
+    ):
+        validator.validate({**base, "frontend": frontend, "language": language})
+    assert list(
+        validator.iter_errors(
+            {**base, "frontend": "verilog", "language": "1800-2017"}
+        )
+    )
+    assert list(
+        validator.iter_errors(
+            {**base, "frontend": "slang", "language": "yosys-sv"}
+        )
+    )

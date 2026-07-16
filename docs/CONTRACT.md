@@ -152,6 +152,9 @@ Both options are required together and cannot be combined with `--tool` or
 - `drc-clean` → KLayout `drc`;
 - `lvs-match` → Netgen `lvs`;
 - `rtl-structural-check-passes` → Yosys `rtl-check`.
+- `rtl-lint-clean` → Verilator `rtl-lint`.
+- `asic-netlist-synthesized` → Yosys `synthesize`.
+- `timing-constraints-satisfied` → OpenSTA `timing-analyze`.
 
 This mode resolves one canonical existing project directory, probes exactly
 the assertion's one mapped binary, reports configured PDK roots without
@@ -528,7 +531,7 @@ and specification binding available for audit.
 
 `profile list` and `profile show OPERATION-PROFILE-ID` inspect the packaged
 operation-profile catalog. `list` returns schema, operation, assertion, and
-feature identities for all six active typed profiles plus the immutable
+feature identities for all nine active typed profiles plus the immutable
 historical `circuit.simulate/v1alpha1` profile. `show` returns one complete
 packaged profile or a typed `profile.not_found` failure. These commands validate
 the installed profile documents before returning them; they are control-plane
@@ -746,6 +749,48 @@ records that transitive setup inputs and ambient environment are not enumerated.
 
 Run Yosys elaboration and `check -assert`, then retain a JSON netlist as an
 artifact. This is a structural front-end check, not a complete digital flow.
+
+### `rtl-lint`
+
+Run strict Verilator lint over the exact ordered source, include, define,
+language, and top context. Any recognized warning or error is `fail`; a
+truncated, invalid, or unclassified transcript is `unknown`. The version probe
+and lint invocation share the closed `closed-verilator-runtime-v1` environment:
+the selected executable directory plus the platform default `PATH`, a C locale,
+and only required Windows process variables. Ambient loader, interpreter,
+shell-startup, and `VERILATOR_*` variables cannot suppress the strict policy or
+select a different native binary/root. Discovery prefers a direct
+`verilator_bin`; an explicitly selected script wrapper remains bound at its own
+path/version, but its interpreter and installed companion are not separately
+identified or hashed.
+
+### `synthesize`
+
+Run a fixed flattened Yosys/ABC flow against one exact Liberty and mapping
+policy. Pass requires fresh generic and mapped statistics, a validated mapped
+Verilog/JSON netlist, no remaining processes or memories, and no cell type
+outside the declared Liberty. The external ABC mapper is positively identified,
+content-digest bound, passed through the native `abc -exe` option, and checked
+for stability under the same closed environment used for Yosys inspection and
+execution. Scoped preflight checks the primary Yosys connector; the synthesis
+operation itself is the authoritative ABC gate. This does not assert
+equivalence, timing, power, or physical closure. The built-in frontend is explicitly identified as the
+`yosys-sv` tool dialect. IEEE `1800-2017` and `1800-2023` selectors apply only
+to Slang and request a language edition without certifying conformance.
+
+### `timing-analyze`
+
+Run OpenSTA with `-no_init` on one exact mapped netlist, Liberty, and SDC.
+Pass/fail requires complete constraint checks, stable inputs, agreeing scalar
+and path JSON evidence, and finite setup/hold WNS/TNS. The v1 model has ideal
+interconnect, no SPEF, and one corner; it is not signoff timing. Before launch,
+the connector validates the fixed declarative `openada-sdc-v1` subset and
+executes only a fresh snapshot whose SHA-256 equals the original SDC input.
+The version probe and execution use the same closed non-inheriting
+`closed-opensta-runtime-v1` environment.
+Sourced files, procedures, loops, conditionals, environment access, arbitrary
+Tcl, and parasitic-file reads are rejected rather than treated as bound timing
+evidence.
 
 ## Runtime profiles
 

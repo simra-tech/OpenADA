@@ -1,0 +1,194 @@
+{
+  "schema": "openada.conformance/v0alpha1",
+  "id": "orfs-ibex-synthesis-timing",
+  "description": "Pinned Liberty-mapped synthesis and synthesis-stage ideal-interconnect setup/hold analysis of the public Ibex core vendored by OpenROAD-flow-scripts, with a real missing-top replay.",
+  "design": {
+    "repository": "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts.git",
+    "revision": "bea7dcd7be7f26d1328f6058b01cf42bf4352aa2",
+    "tree": "b0979ac02253b74d4e22b426d2e4827b1fbf5fc3",
+    "subtree": "flow/designs/src/ibex_sv",
+    "upstream": {
+      "repository": "https://github.com/lowRISC/ibex.git",
+      "revision": "77d801001554cce8fe69e742e96539eecbe74425",
+      "attestation_path": "flow/designs/src/ibex_sv/README.md",
+      "attestation_sha256": "c8ca1237111cc4c0823a807848df1e1264c2635662a75240e3883900686a1cb1"
+    },
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "flow/designs/src/ibex_sv/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    }
+  },
+  "technology": {
+    "name": "NangateOpenCellLibrary",
+    "version": "PDKv1.3_v2010_12.Apache.CCL",
+    "liberty_path": "flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib",
+    "latch_techmap_path": "flow/platforms/nangate45/cells_latch.v",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "flow/platforms/nangate45/LICENSE",
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    }
+  },
+  "repository_license": {
+    "spdx": "BSD-3-Clause",
+    "path": "LICENSE_BUILD_RUN_SCRIPTS",
+    "sha256": "fae0db7a4c00c3125f037e5818e8cd0c8aa5c67fff2e8c558312068e9f2d1592"
+  },
+  "runtime": {
+    "image": {
+      "name": "hpretl/iic-osic-tools",
+      "tag": "2026.06",
+      "platform": "linux/amd64",
+      "manifest_digest": "sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+      "config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+      "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"
+    },
+    "tools": {
+      "yosys": {
+        "path": "/foss/tools/bin/yosys",
+        "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+      },
+      "abc": {
+        "path": "/foss/tools/yosys/bin/yosys-abc",
+        "version": "UC Berkeley, ABC 1.01 (compiled Jun 22 2026 11:38:08)",
+        "bytes": 21104032,
+        "sha256": "8841cec163543e372becfd08940a4c5d03dc836cd1d3257d53525372d7f2b194"
+      },
+      "opensta": {
+        "path": "/foss/tools/openroad/bin/sta",
+        "version": "3.1.0",
+        "banner": "OpenSTA 3.1.0 244797f162"
+      }
+    }
+  },
+  "policy": {
+    "setup_network": "allowed for the pinned Git fetch and image pull only",
+    "eda_network": "none",
+    "openada_mount": "read-only",
+    "design_mount": "read-only",
+    "evidence_directory": "new and writable",
+    "analysis_scope": "single-corner synthesis-stage timing with ideal interconnect and no SPEF; not signoff"
+  },
+  "pinned_files": [
+    {"path": "flow/designs/src/ibex_sv/ibex_pkg.sv", "bytes": 11475, "sha256": "59c6f37dc285b02d785c38094553283070b50b69f572a81b8ba3bc8b39475170", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_alu.sv", "bytes": 46881, "sha256": "919bb850b1cacb672e3b545fd040af9afbf22d684137dbc76ad13dcdfa4bd122", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_compressed_decoder.sv", "bytes": 10742, "sha256": "324d65eb47bd973781cdb65b55e3ece3d03d543d04417009fdf983811ea917a2", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_controller.sv", "bytes": 33885, "sha256": "582949bdbb8b115319c4796d0eb40b7deb9ed88666ebfd3d870f29d3024626d5", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_core.sv", "bytes": 59689, "sha256": "a35ec2de657657b1d02a0a473a44ffa944e53052dc08ac76f7b438cec7382504", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_counter.sv", "bytes": 2148, "sha256": "fc9862a2af52ef7a9e83af9c2c47c52ac4767022f7591f241f771368a1613614", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_cs_registers.sv", "bytes": 50215, "sha256": "d4c2f7d56f5b4071fa4921832460ddfc456c89bb1e08d3e7d8a7c4d82383fee7", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_csr.sv", "bytes": 1307, "sha256": "32a842f1c5cab160be4930f1743f5f8e9e0450187545eef1b48ac80a89afc0d8", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_decoder.sv", "bytes": 43909, "sha256": "9f1b68f98d6675d6ad3d8d940967b36afb6ca7bc84f636d83107f184fa504559", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_ex_block.sv", "bytes": 8214, "sha256": "78f719958d133eb20436d20ae70ac871251a5220218f840380c2bf5049969043", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_fetch_fifo.sv", "bytes": 9487, "sha256": "84c314f0216545339e53b447f4432e7940726029ae63bb2c9c382d44a825f2d5", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_id_stage.sv", "bytes": 42559, "sha256": "180fa414832b5d60d73a966df5b1904109b0007b9ff105813eaa3c53c8075bc1", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_if_stage.sv", "bytes": 26661, "sha256": "9777ab9f63bb3f2262ee14879e5196058768e8836f95bc4218385a98f08c0adf", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_load_store_unit.sv", "bytes": 17384, "sha256": "cc6e0c901a895a7ab2c7aa2371391c48ff956c5d4b2848fc419db7b4f9dd83a8", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_multdiv_fast.sv", "bytes": 17786, "sha256": "30f302d258aa96a303d426ebf543262a02a0531626815ca0b651df9a81d3b44f", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_multdiv_slow.sv", "bytes": 13148, "sha256": "9e5a86e8b0be442866dd431655244e90319ba4e6a37b11f3ca7e4fedd7a225f3", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_pmp.sv", "bytes": 5641, "sha256": "e778718b97e45a9171e856c966523a6add3dda90022002b60ccd11d4c8a508b6", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_prefetch_buffer.sv", "bytes": 12627, "sha256": "95b3d99082c6ebf77cc45c08fd620bd8b70f11efaa3a574c5a543e2bae19ac83", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_register_file_ff.sv", "bytes": 3092, "sha256": "0b3fcfeb3f92560e9995ece3aacb7ca6cb9cb01368720881b5c4b9efef648138", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/ibex_wb_stage.sv", "bytes": 6892, "sha256": "8425144d2367756b634a66b6498a32b55071f0a493b8c98d3a6682800bbe1ed6", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/syn/rtl/prim_clock_gating.v", "bytes": 452, "sha256": "2b03684abf70d0a4b92a5f3026ff8a306db5e367cd038957c0bc96ec5cbbefc2", "role": "rtl-source"},
+    {"path": "flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert.sv", "bytes": 5178, "sha256": "ebca923df65c9d03905b63244675a1434ed8cca9018fe7ecca319fe14338f3f7", "role": "rtl-include"},
+    {"path": "flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl/prim_assert_dummy_macros.svh", "bytes": 894, "sha256": "310e3d2b87105d1892310fa68c5b284e7a9c26c50dd7aa43d0f11c8044750fb5", "role": "rtl-include"},
+    {"path": "flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib", "bytes": 6692032, "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1", "role": "technology-liberty"},
+    {"path": "flow/platforms/nangate45/cells_latch.v", "bytes": 289, "sha256": "7e2330df874405c28f92d37f17be088b371b9f378a913e7ca3dbda25ca4c7802", "role": "synthesis-techmap"},
+    {"path": "flow/designs/nangate45/ibex/constraint.sdc", "bytes": 611, "sha256": "d55ba02e513f05c6b9b531633acf835a10942b8202d1e1b06989cf58b41ce389", "role": "timing-sdc"},
+    {"path": "flow/designs/nangate45/ibex/config.mk", "bytes": 546, "sha256": "27d81bc59f83275eba0f5580ea934e0c3e986bb0690c3f2c977be8558327ff37", "role": "flow-configuration"},
+    {"path": "flow/platforms/nangate45/config.mk", "bytes": 3628, "sha256": "1d8e639ccc138e72b5fe02dc0130e167455aee1c53b5aa3ee50ff442dc47d6cc", "role": "platform-configuration"},
+    {"path": "flow/designs/src/ibex_sv/README.md", "bytes": 453, "sha256": "c8ca1237111cc4c0823a807848df1e1264c2635662a75240e3883900686a1cb1", "role": "upstream-attestation"},
+    {"path": "flow/designs/src/ibex_sv/LICENSE", "bytes": 11358, "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30", "role": "design-license"},
+    {"path": "flow/platforms/nangate45/LICENSE", "bytes": 10174, "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594", "role": "technology-license"},
+    {"path": "LICENSE_BUILD_RUN_SCRIPTS", "bytes": 2030, "sha256": "fae0db7a4c00c3125f037e5818e8cd0c8aa5c67fff2e8c558312068e9f2d1592", "role": "repository-license"}
+  ],
+  "derived_inputs": [
+    {
+      "repository_path": "conformance/orfs-ibex-synthesis-timing/abc.constr",
+      "bytes": 39,
+      "sha256": "51bf1a4f73a383e038c95dc3eba81fdd33811736285d77e7aaeabf9bd83c69a1",
+      "role": "synthesis-abc-constraint",
+      "derivation": "Reviewed projection of ABC_DRIVER_CELL=BUF_X1 and ABC_LOAD_IN_FF=3.898 from pinned flow/platforms/nangate45/config.mk."
+    }
+  ],
+  "operations": {
+    "synthesize": {
+      "top": "ibex_core",
+      "source_paths": [
+        "flow/designs/src/ibex_sv/ibex_pkg.sv",
+        "flow/designs/src/ibex_sv/ibex_alu.sv",
+        "flow/designs/src/ibex_sv/ibex_compressed_decoder.sv",
+        "flow/designs/src/ibex_sv/ibex_controller.sv",
+        "flow/designs/src/ibex_sv/ibex_core.sv",
+        "flow/designs/src/ibex_sv/ibex_counter.sv",
+        "flow/designs/src/ibex_sv/ibex_cs_registers.sv",
+        "flow/designs/src/ibex_sv/ibex_csr.sv",
+        "flow/designs/src/ibex_sv/ibex_decoder.sv",
+        "flow/designs/src/ibex_sv/ibex_ex_block.sv",
+        "flow/designs/src/ibex_sv/ibex_fetch_fifo.sv",
+        "flow/designs/src/ibex_sv/ibex_id_stage.sv",
+        "flow/designs/src/ibex_sv/ibex_if_stage.sv",
+        "flow/designs/src/ibex_sv/ibex_load_store_unit.sv",
+        "flow/designs/src/ibex_sv/ibex_multdiv_fast.sv",
+        "flow/designs/src/ibex_sv/ibex_multdiv_slow.sv",
+        "flow/designs/src/ibex_sv/ibex_pmp.sv",
+        "flow/designs/src/ibex_sv/ibex_prefetch_buffer.sv",
+        "flow/designs/src/ibex_sv/ibex_register_file_ff.sv",
+        "flow/designs/src/ibex_sv/ibex_wb_stage.sv",
+        "flow/designs/src/ibex_sv/syn/rtl/prim_clock_gating.v"
+      ],
+      "include_directories": ["flow/designs/src/ibex_sv/vendor/lowrisc_ip/prim/rtl"],
+      "frontend": "slang",
+      "language": "1800-2017",
+      "liberty": "flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib",
+      "techmaps": ["flow/platforms/nangate45/cells_latch.v"],
+      "dont_use": ["TAPCELL_X1", "FILLCELL_X1", "AOI211_X1", "OAI211_X1"],
+      "abc_delay_target_ns": 2.2,
+      "abc_constraint": "conformance/orfs-ibex-synthesis-timing/abc.constr",
+      "output_directory": "/evidence/synthesis",
+      "result_filename": "synthesis/synthesize.result.json",
+      "container_timeout_seconds": 1500,
+      "tool_timeout_seconds": 1200,
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "pass",
+        "summary": "Yosys produced and independently validated a complete Liberty-mapped ASIC netlist."
+      }
+    },
+    "timing_analyze": {
+      "top": "ibex_core",
+      "netlist": "/evidence/synthesis/mapped.v",
+      "liberty": "flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib",
+      "sdc": "flow/designs/nangate45/ibex/constraint.sdc",
+      "output_directory": "/evidence/timing",
+      "result_filename": "timing/timing-analyze.result.json",
+      "container_timeout_seconds": 420,
+      "tool_timeout_seconds": 300,
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "cli_exit_code": 1,
+        "engineering_status": "fail",
+        "summary": "OpenSTA found a setup or hold timing violation for the supplied corner.",
+        "setup_wns_relation": "negative",
+        "hold_wns_relation": "nonnegative"
+      }
+    },
+    "missing_top": {
+      "top": "missing_ibex_core",
+      "output_directory": "/evidence/negative",
+      "result_filename": "negative/synthesize.result.json",
+      "container_timeout_seconds": 420,
+      "tool_timeout_seconds": 300,
+      "expect": {
+        "execution_status": "completed",
+        "cli_exit_code": 1,
+        "engineering_status": "fail",
+        "diagnostic_substring": "missing_ibex_core"
+      }
+    }
+  }
+}

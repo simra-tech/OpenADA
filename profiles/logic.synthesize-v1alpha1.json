@@ -1,0 +1,350 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/logic.synthesize/v1alpha1",
+    "title": "Liberty-mapped ASIC logic synthesis",
+    "summary": "Elaborate, flatten, synthesize, and validate an explicitly configured RTL design as a nonempty Liberty-mapped ASIC netlist with inference and mapped statistics.",
+    "side_effect_mode": "evidence-only",
+    "target_kinds": ["rtl-source-set", "technology-liberty"],
+    "locator_types": ["filesystem", "artifact", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/synthesized-netlist.valid/v1alpha1",
+    "statement": "The exact RTL, frontend, mapping policy, inspected Yosys and external ABC executables, technology Liberty, and optional mapping inputs produced a nonempty flattened netlist containing no processes, memories, internal cells, or cell types absent from the declared Liberty.",
+    "non_goals": [
+      "This assertion does not establish RTL-to-netlist formal or simulation equivalence.",
+      "This assertion does not establish setup or hold timing, physical routability, power, signal integrity, test coverage, CDC/RDC safety, or signoff readiness.",
+      "This assertion does not claim that inferred memories, latches, arithmetic structures, or reset behavior match architectural intent; it reports their pre-mapping inventory as evidence.",
+      "This assertion does not validate Liberty timing arcs, units, operating conditions, or characterization quality beyond a bounded cell-name inventory.",
+      "This assertion does not certify IEEE 1800 conformance; only the Slang frontend exposes an IEEE-edition selector, while the built-in Yosys frontend is identified as its own yosys-sv dialect.",
+      "This assertion does not preserve unknown-state behavior because v1alpha1 explicitly maps undefined values to zero before technology mapping."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "An inspected Yosys completed with complete output capture and produced fresh nonempty Verilog and structurally valid JSON netlists whose requested-top cell inventory exactly agrees with bounded requested-top statistics and proves complete mapping to the declared Liberty cell inventory.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.mapping_complete is true; data.stats reports zero processes, memories, and memory bits, data.unmapped_cell_types is empty, and fresh mapped Verilog is nonempty even when the valid optimized design contains zero cells.",
+          "data.mapped_structure identifies the exact requested top and its cell count and histogram exactly equal data.stats.",
+          "Fresh mapped Verilog, mapped JSON, mapped statistics, inference statistics, synthesis script, and complete synthesis log artifacts are retained and hashed.",
+          "data.mapping_policy retains flattening, undefined-to-zero, dont-use, ABC delay-target, and ABC constraint-presence choices.",
+          "data.abc_tool binds the exact external ABC executable path, accepted version, byte count, and SHA-256; data.abc_tool_identity_stable is true.",
+          "data.environment_policy proves the identical closed environment snapshot used for Yosys and ABC inspection and synthesis.",
+          "The exact ordered sources, resolved include dependencies, Liberty, techmaps, optional ABC constraint, frontend, language, macros, top, executable, and tool version are retained."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Complete trustworthy evidence contains a specifically whitelisted Yosys engineering error or conclusively proves an otherwise valid fresh output retains processes, memories, memory bits, or cell types outside the declared Liberty.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "A bounded yosys.error diagnostic identifies the native failure, or valid mapped statistics and JSON with fresh nonempty Verilog prove data.mapping_complete is false.",
+          "For a conclusive incomplete-mapping fail, data.unmapped_cell_types or validated nonzero process/memory counts preserve the exact structural reason.",
+          "The exact failed synthesis script, input identities, process transcript, and every available validated output are retained; missing, malformed, empty, oversized, or capture-incomplete evidence remains unknown."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The request, tool, execution, capture, output freshness, JSON/statistics validation, dependency binding, Liberty inventory, or mapping completeness is insufficient for a conclusive valid or recognized-error result.",
+        "allowed_execution_statuses": ["completed", "timed_out", "not_available", "invalid_request", "failed"],
+        "required_evidence": [
+          "data.mapping_complete is false or unavailable and a stable diagnostic identifies the missing, unsafe, incomplete, unvalidated, unclassified, or unmapped condition.",
+          "A nonzero exit without a whitelisted engineering error, any unclassified native ERROR line, and any truncated or non-UTF-8 output remain unknown."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {"role": "rtl-source-set", "required": true, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "One or more ordered Verilog or SystemVerilog source files.", "extensions": {}},
+      {"role": "rtl-include-tree", "required": false, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "snapshot", "description": "Optional include roots used to resolve the recursively scanned literal include closure; every resolved dependency is retained by content digest.", "extensions": {}},
+      {"role": "technology.liberty", "required": true, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "One Liberty library that defines the complete allowed mapped cell-name inventory.", "extensions": {}},
+      {"role": "synthesis.techmap", "required": false, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "Zero or more ordered, self-contained Yosys technology-map files applied after generic synthesis; v1alpha1 rejects every techmap include directive so no uncaptured transitive dependency can affect mapping.", "extensions": {}},
+      {"role": "synthesis.abc-constraint", "required": false, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "Optional ABC delay constraint input; its presence is retained separately from the numeric delay target.", "extensions": {}},
+      {"role": "synthesis.abc-executable", "required": true, "locator_types": ["filesystem"], "identity_requirement": "content-digest", "description": "The exact external ABC executable selected by the yosys-abc, berkeley-abc, or abc discovery aliases; it must pass the closed -c version identity probe and is supplied to Yosys through abc -exe.", "extensions": {}}
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "logic.synthesize v1alpha1 request parameters",
+      "type": "object",
+      "required": ["top", "frontend", "language", "defines", "dont_use", "abc_delay_target_ns", "mapping_policy", "extensions"],
+      "properties": {
+        "top": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$", "maxLength": 256},
+        "frontend": {"enum": ["verilog", "slang"]},
+        "language": {"enum": ["yosys-sv", "1800-2017", "1800-2023"]},
+        "defines": {"type": "array", "maxItems": 256, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:=[A-Za-z0-9_./:+@'\\-]*)?$", "maxLength": 1024}},
+        "dont_use": {"type": "array", "maxItems": 1024, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z0-9_.$*?\\[\\]-]+$", "maxLength": 256}},
+        "abc_delay_target_ns": {"type": ["number", "null"], "minimum": 0.001, "maximum": 2147483.647, "multipleOf": 0.001},
+        "mapping_policy": {"type": "object", "required": ["flatten", "set_undefined_to_zero"], "properties": {"flatten": {"const": true}, "set_undefined_to_zero": {"const": true}}, "additionalProperties": false},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "allOf": [
+        {"if": {"properties": {"frontend": {"const": "verilog"}}, "required": ["frontend"]}, "then": {"properties": {"language": {"const": "yosys-sv"}}}},
+        {"if": {"properties": {"frontend": {"const": "slang"}}, "required": ["frontend"]}, "then": {"properties": {"language": {"enum": ["1800-2017", "1800-2023"]}}}}
+      ],
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "All source, include, Liberty, techmap, and ABC constraint inputs must be existing regular files captured by canonical path, byte count, and SHA-256; output paths must not overlap inputs.",
+      "Every canonical HDL source, include-directory, and resolved-include path is nonempty, no longer than 4096 characters, and free of ASCII control characters before script generation.",
+      "The source order, techmap order, frontend, language, definitions, top, dont-use patterns, ABC target, and ABC constraint presence are semantic and must match for result comparison.",
+      "Every definition uses the closed portable token grammar; whitespace, quoting, semicolons, backslashes, and other native-script syntax are rejected before either frontend script is generated.",
+      "Every technology-map file is bounded, UTF-8, and self-contained; any literal or macro-computed `include directive is rejected in v1alpha1 rather than leaving a transitive mapping input uncaptured.",
+      "A numeric ABC delay target must resolve exactly, without rounding, to an integer from 1 through 2147483647 picoseconds before it is emitted as the native -D argument.",
+      "Yosys and external ABC must each resolve to one exact pre-inspected executable path with a stable filesystem identity; ABC is additionally retained as a bounded content-digest input and supplied through the native abc -exe option.",
+      "Yosys inspection, ABC inspection, and synthesis receive the identical closed environment containing PATH, LANG, LC_ALL, HOME, and TMPDIR plus only a structurally validated canonical TOOLS installation root when the selected IIC-OSIC-TOOLS Yosys wrapper requires it; no parent YOSYS_*, ABC-specific, loader, interpreter, shell-startup, IFS, CDPATH, or SHELLOPTS value is inherited.",
+      "The built-in Yosys verilog frontend is recorded as the yosys-sv dialect; only Slang accepts the 1800-2017 or 1800-2023 selector, and a pass from either frontend does not imply a pass or IEEE conformance from the other.",
+      "v1alpha1 always flattens hierarchy, runs generic synthesis without ABC, records inference statistics, applies ordered techmaps, maps sequential cells, converts undefined values to zero, runs ABC, splits nets, purges unused logic, and requires check -assert.",
+      "Mapped statistics must identify the requested top and describe a design with zero processes, memories, and memory bits; every mapped cell type must be named by the bounded declared Liberty inventory and no internal dollar-prefixed cell may remain.",
+      "The mapped JSON document must be nonempty, parse completely within 33554432 bytes, contain the requested module with a coherent top attribute, and report a requested-top cell count and histogram identical to mapped statistics; larger or incoherent JSON is unknown rather than partially trusted.",
+      "Every native output is copied only from a stable bounded regular file with exactly one hard link into a fresh OpenADA-owned destination; missing, empty, symlinked, multiply linked, oversized, or changing output cannot support pass or structural fail.",
+      "Every JSON number used as a normalized statistic must be finite and nonnegative."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "logic.synthesize v1alpha1 normalized result data",
+      "type": "object",
+      "required": ["protocol", "top", "frontend", "language", "ordered_sources", "include_dependencies", "unresolved_literal_includes", "unresolved_literal_includes_truncated", "inputs_stable", "dependency_closure_stable", "tool_identity_stable", "abc_tool", "abc_tool_identity_stable", "environment_policy", "changed_inputs", "changed_inputs_truncated", "mapping_policy", "stats", "inference_stats", "inference_stats_validation", "stats_validation", "mapped_json_validation", "mapped_structure", "unmapped_cell_types", "unmapped_cell_types_truncated", "mapping_complete", "warning_count", "warnings", "warnings_truncated"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/protocol"},
+        "top": {"type": ["string", "null"], "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$", "maxLength": 256},
+        "frontend": {"enum": ["verilog", "slang", null]},
+        "language": {"enum": ["yosys-sv", "1800-2017", "1800-2023", null]},
+        "ordered_sources": {"type": "array", "maxItems": 4096, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "include_dependencies": {"type": "array", "maxItems": 100000, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "unresolved_literal_includes": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "unresolved_literal_includes_truncated": {"type": "boolean"},
+        "inputs_stable": {"type": ["boolean", "null"]},
+        "dependency_closure_stable": {"type": ["boolean", "null"]},
+        "tool_identity_stable": {"type": ["boolean", "null"]},
+        "abc_tool": {"$ref": "#/$defs/abcTool"},
+        "abc_tool_identity_stable": {"type": ["boolean", "null"]},
+        "environment_policy": {"$ref": "#/$defs/environmentPolicy"},
+        "changed_inputs": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "changed_inputs_truncated": {"type": "boolean"},
+        "mapping_policy": {"$ref": "#/$defs/mappingPolicy"},
+        "stats": {"oneOf": [{"$ref": "#/$defs/statistics"}, {"type": "null"}]},
+        "inference_stats": {"oneOf": [{"$ref": "#/$defs/statistics"}, {"type": "null"}]},
+        "inference_stats_validation": {"type": "string", "minLength": 1, "maxLength": 120},
+        "stats_validation": {"type": "string", "minLength": 1, "maxLength": 120},
+        "mapped_json_validation": {"type": "string", "minLength": 1, "maxLength": 120},
+        "mapped_structure": {"oneOf": [{"$ref": "#/$defs/mappedStructure"}, {"type": "null"}]},
+        "unmapped_cell_types": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+        "unmapped_cell_types_truncated": {"type": "boolean"},
+        "mapping_complete": {"type": "boolean"},
+        "warning_count": {"type": "integer", "minimum": 0},
+        "warnings": {"type": "array", "maxItems": 100, "items": {"type": "string", "minLength": 1, "maxLength": 1000}},
+        "warnings_truncated": {"type": "boolean"}
+      },
+      "$defs": {
+        "protocol": {
+          "type": "object",
+          "required": ["operation_profile", "assertion_profile", "implementation_id", "implementation_version"],
+          "properties": {
+            "operation_profile": {"const": "openada.operation/logic.synthesize/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/synthesized-netlist.valid/v1alpha1"},
+            "implementation_id": {"const": "org.openada.driver.yosys"},
+            "implementation_version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "mappingPolicy": {
+          "type": "object",
+          "required": ["flatten", "set_undefined_to_zero", "dont_use", "abc_delay_target_ns", "abc_constraint_supplied"],
+          "properties": {
+            "flatten": {"const": true},
+            "set_undefined_to_zero": {"const": true},
+            "dont_use": {"type": "array", "maxItems": 1024, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+            "abc_delay_target_ns": {"type": ["number", "null"], "minimum": 0.001, "maximum": 2147483.647, "multipleOf": 0.001},
+            "abc_constraint_supplied": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "statistics": {
+          "type": "object",
+          "required": ["num_cells", "num_memories", "num_memory_bits", "num_processes", "area", "sequential_area", "num_cells_by_type"],
+          "properties": {
+            "num_cells": {"type": "integer", "minimum": 0},
+            "num_memories": {"type": "integer", "minimum": 0},
+            "num_memory_bits": {"type": "integer", "minimum": 0},
+            "num_processes": {"type": "integer", "minimum": 0},
+            "area": {"type": ["number", "null"], "minimum": 0},
+            "sequential_area": {"type": ["number", "null"], "minimum": 0},
+            "num_cells_by_type": {"type": "object", "maxProperties": 8192, "propertyNames": {"type": "string", "minLength": 1, "maxLength": 256}, "additionalProperties": {"type": "integer", "minimum": 0}}
+          },
+          "additionalProperties": false
+        },
+        "mappedStructure": {
+          "type": "object",
+          "required": ["top", "num_cells", "num_cells_by_type"],
+          "properties": {
+            "top": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$", "maxLength": 256},
+            "num_cells": {"type": "integer", "minimum": 0, "maximum": 2000000},
+            "num_cells_by_type": {"type": "object", "maxProperties": 8192, "propertyNames": {"type": "string", "minLength": 1, "maxLength": 256}, "additionalProperties": {"type": "integer", "minimum": 0}}
+          },
+          "additionalProperties": false
+        },
+        "abcTool": {
+          "type": "object",
+          "required": ["name", "path", "version", "bytes", "sha256"],
+          "properties": {
+            "name": {"const": "abc"},
+            "path": {"type": ["string", "null"], "minLength": 1, "maxLength": 4096},
+            "version": {"type": ["string", "null"], "minLength": 1, "maxLength": 500},
+            "bytes": {"type": ["integer", "null"], "minimum": 0, "maximum": 134217728},
+            "sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+          },
+          "additionalProperties": false
+        },
+        "environmentPolicy": {
+          "type": "object",
+          "required": ["id", "inherit_parent", "variables"],
+          "properties": {
+            "id": {"const": "closed-yosys-abc-v1"},
+            "inherit_parent": {"const": false},
+            "variables": {
+              "type": "object",
+              "required": ["PATH", "LANG", "LC_ALL", "HOME", "TMPDIR"],
+              "properties": {
+                "PATH": {"type": "string", "minLength": 1, "maxLength": 16384},
+                "LANG": {"const": "C"},
+                "LC_ALL": {"const": "C"},
+                "HOME": {"const": "/nonexistent"},
+                "TMPDIR": {"const": "/tmp"},
+                "TOOLS": {"type": "string", "pattern": "^/", "minLength": 1, "maxLength": 4096}
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.mapping_complete", "type": "boolean", "required_for": ["pass", "unknown"], "description": "True only when all bounded mapped-netlist, statistics, process, memory, cell-inventory, and fresh artifact checks succeed.", "extensions": {}},
+      {"path": "data.stats", "type": ["object", "null"], "required_for": ["pass", "unknown"], "description": "Bounded mapped design cell counts, areas, process and memory counts, and complete cell-type histogram.", "extensions": {}},
+      {"path": "data.inference_stats", "type": ["object", "null"], "required_for": ["pass", "unknown"], "description": "Bounded post-generic-synthesis, pre-technology-mapping statistics for architectural inference review.", "extensions": {}},
+      {"path": "data.mapped_structure", "type": ["object", "null"], "required_for": ["pass", "fail", "unknown"], "description": "The bounded requested-top identity, cell count, and full cell-type histogram parsed from mapped JSON and cross-checked against mapped statistics.", "extensions": {}},
+      {"path": "data.mapping_policy", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Exact flattening, undefined-value, dont-use, ABC delay, and ABC constraint-presence decisions.", "extensions": {}},
+      {"path": "data.unmapped_cell_types", "type": "array", "required_for": ["pass", "unknown"], "description": "Bounded cell types absent from the declared Liberty or retained as internal Yosys cells; empty is required for pass.", "extensions": {}},
+      {"path": "data.ordered_sources", "type": "array", "required_for": ["pass", "fail"], "description": "Canonical source paths in frontend parse order.", "extensions": {}},
+      {"path": "data.unresolved_literal_includes", "type": "array", "required_for": ["pass", "fail"], "description": "Bounded literal include tokens not resolved by conservative pre-scan; they can occur in inactive preprocessor branches and are disclosed separately from captured active dependencies.", "extensions": {}},
+      {"path": "data.warning_count", "type": "integer", "required_for": ["pass", "fail"], "description": "Total recognized native Yosys warning lines; warnings remain visible evidence but do not alone invalidate a fully mapped result in v1alpha1.", "extensions": {}},
+      {"path": "data.inputs_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True only when every captured RTL, include, Liberty, techmap, ABC constraint, and external ABC executable retains its byte count and SHA-256 after invocation.", "extensions": {}},
+      {"path": "data.dependency_closure_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True only when a post-run rescan reproduces the ordered sources, resolved literal include closure, and unresolved literal inventory.", "extensions": {}},
+      {"path": "data.tool_identity_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True only when the version-validated Yosys executable retains the same filesystem identity from the enclosing discovery probe through synthesis.", "extensions": {}},
+      {"path": "data.abc_tool", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Closed exact-path, accepted-version, byte-count, and SHA-256 identity of the external ABC executable selected for the native abc -exe argument.", "extensions": {}},
+      {"path": "data.abc_tool_identity_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True only when the inspected and content-digest-bound external ABC executable retains its filesystem identity and content through synthesis.", "extensions": {}},
+      {"path": "data.environment_policy", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "The exact closed environment policy shared by Yosys inspection, ABC inspection, and synthesis; parent variables are not inherited, and a validated canonical TOOLS root is present only for a wrapper that structurally requires it.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {"role": "synthesis.script", "kind": "yosys-script", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Generate the closed script from validated request fields only.", "Hash the exact current script before reporting."], "native_authority": "The generated script is authoritative for the native command sequence and mapping policy.", "extensions": {}},
+      {"role": "synthesis.log", "kind": "yosys-log", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Capture complete valid UTF-8 native output within the thirty-two-mebibyte transcript bound before pass or fail."], "native_authority": "The complete Yosys transcript is authoritative for native errors; normalized diagnostics are a bounded projection.", "extensions": {}},
+      {"role": "synthesis.netlist", "kind": "verilog-netlist", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["Capture only a stable, bounded, nonempty native regular file with one hard link into a fresh OpenADA-owned file and retain its SHA-256."], "native_authority": "The mapped Verilog file is the downstream logical netlist; it must be paired with structural JSON and statistics evidence.", "extensions": {}},
+      {"role": "synthesis.netlist-structure", "kind": "yosys-json", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["Capture only a stable bounded native regular file with one hard link, parse the entire document, require the requested top with a coherent top attribute, and cross-check its exact cell histogram against mapped statistics."], "native_authority": "Yosys JSON is authoritative for bounded structural validation, not timing or formal equivalence.", "extensions": {}},
+      {"role": "synthesis.statistics", "kind": "yosys-stat-json", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["Parse and cross-check the complete bounded mapped statistics record and cell histogram."], "native_authority": "Yosys stat -json is authoritative for mapped counts and Liberty-derived area fields.", "extensions": {}},
+      {"role": "synthesis.inference-statistics", "kind": "yosys-stat-json", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["Parse the complete bounded statistics record after generic synthesis and before technology mapping."], "native_authority": "Yosys stat -json is authoritative for the reported inference-stage structural inventory.", "extensions": {}},
+      {"role": "rtl.dependencies", "kind": "hdl-input-manifest", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["Generate and hash a manifest of ordered sources, resolved literal includes, unresolved literal references, declared include directories, defines, and captured input records before invocation.", "Require it and the dependency closure to remain unchanged through execution."], "native_authority": "The OpenADA input manifest binds the conservative literal include closure supplied to either frontend; it does not prove exact conditional preprocessing.", "extensions": {}}
+    ],
+    "integrity_rules": [
+      "Run in an isolated temporary directory and copy only stable, bounded, single-link native regular files into exclusive OpenADA-owned destinations.",
+      "Require accepted pre-execution Yosys and ABC inspections under the same closed environment, complete process capture, successful native exit, no native errors, valid bounded requested-top statistics, an exactly matching requested-top JSON histogram, nonempty mapped Verilog, zero processes, memories, and memory bits, and no cell type outside the declared Liberty before pass.",
+      "Hash every input and retained artifact, reject Liberty and techmap transitive include constructs, rehash inputs and reproduce the literal dependency closure after execution, and never accept a preexisting destination as current evidence.",
+      "Bracket the accepted Yosys and ABC version probes with executable identity checks, bind ABC by content digest, emit its safely quoted exact path through abc -exe, and require both identities after synthesis."
+    ],
+    "provenance_limitations": [
+      "Literal include scanning is conservative and cannot attest macro-computed includes or prove exact conditional preprocessing; the generated manifest binds what OpenADA resolved and supplied.",
+      "Liberty validation inventories cell names only and does not prove timing arcs, units, corners, voltage, temperature, functional models, or characterization accuracy.",
+      "The generic Yosys and ABC sequence is one explicit mapping policy, not proof of optimal area, power, timing, congestion, or technology-specific quality of results.",
+      "The design is flattened and undefined values are forced to zero, so hierarchy and four-state behavior are not preserved.",
+      "The emitted Verilog netlist is not independently parsed by a second frontend or proven equivalent to RTL in v1alpha1."
+    ],
+    "limits": {"max_log_bytes": 33554432, "max_artifact_bytes": 134217728, "max_artifact_count": 7, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {
+      "id": "openada.feature/synthesis.asic-liberty/v1alpha1",
+      "parameter_path": "frontend",
+      "parameter_values": ["verilog", "slang"],
+      "request_effect": "Select either the explicit built-in yosys-sv dialect or a Slang IEEE 1800-2017/2023 selector while requiring the same flattened generic synthesis, inference inventory, sequential and combinational Liberty mapping, undefined-to-zero policy, mapped-netlist validation, and evidence contract.",
+      "conformance_case": "Synthesize a pinned public ASIC RTL design against a pinned open Liberty, prove nonempty complete mapping and inference/mapped statistics, and replay a recognized RTL or mapping error plus an evidence-tamper case.",
+      "extensions": {}
+    }
+  ],
+  "diagnostics": [
+    {"code": "input.invalid", "severity": "error", "condition": "An RTL, canonical control-free HDL path, include, Liberty, techmap, constraint, top, frontend, language, define, dont-use, delay, or output binding is absent, malformed, oversized, or unsafe.", "next_action": "Correct and explicitly bind the complete synthesis request; never infer a technology, top, frontend, or mapping policy.", "extensions": {}},
+    {"code": "tool.missing", "severity": "error", "condition": "The selected runtime cannot resolve Yosys.", "next_action": "Install or select the pinned conformance-tested Yosys runtime and rerun the exact request.", "extensions": {}},
+    {"code": "tool.unusable", "severity": "error", "condition": "A Yosys path exists but its bounded version probe is unaccepted, resolves a different executable than the bound launch path, or its executable identity changes during inspection.", "next_action": "Select a stable supported Yosys executable whose exact path, identity, and version can be inspected before synthesis.", "extensions": {}},
+    {"code": "tool.changed", "severity": "error", "condition": "The version-validated Yosys executable identity changes before synthesis evidence is finalized.", "next_action": "Freeze the tool installation and rerun; reject netlists produced by a changing executable.", "extensions": {}},
+    {"code": "abc.missing", "severity": "error", "condition": "No external ABC executable resolves through the yosys-abc, berkeley-abc, or abc discovery aliases.", "next_action": "Install or explicitly bind the ABC executable paired with the selected Yosys runtime.", "extensions": {}},
+    {"code": "abc.unusable", "severity": "error", "condition": "An ABC path exists but its exact path, bounded digest, -c version identity, or inspection-time filesystem identity cannot be trusted.", "next_action": "Select a stable supported ABC executable and rerun before synthesis.", "extensions": {}},
+    {"code": "abc.changed", "severity": "error", "condition": "The inspected and content-digest-bound external ABC executable changes during synthesis.", "next_action": "Freeze the ABC installation and reject the resulting mapping evidence.", "extensions": {}},
+    {"code": "execution.timed_out", "severity": "error", "condition": "The bounded Yosys synthesis process exceeded its timeout.", "next_action": "Inspect resource bounds, choose an explicit sufficient timeout, and rerun without using partial outputs.", "extensions": {}},
+    {"code": "execution.failed", "severity": "error", "condition": "The Yosys process could not be launched or supervised to completion.", "next_action": "Repair the closed runtime and rerun; keep the engineering conclusion unknown.", "extensions": {}},
+    {"code": "execution.not_available", "severity": "error", "condition": "The inspected Yosys executable disappeared or became unavailable before process launch.", "next_action": "Restore the exact inspected executable and rerun; never accept outputs from a substituted path.", "extensions": {}},
+    {"code": "evidence.incomplete", "severity": "error", "condition": "Native output was truncated or was not valid UTF-8.", "next_action": "Retain complete bounded native output before making a synthesis conclusion.", "extensions": {}},
+    {"code": "input.changed", "severity": "error", "condition": "A captured RTL, include, Liberty, techmap, or ABC constraint changed during invocation.", "next_action": "Freeze every synthesis input and rerun; never use a netlist produced from moving inputs.", "extensions": {}},
+    {"code": "input.dependency_closure_changed", "severity": "error", "condition": "The post-run literal include scan differs from the pre-run source/dependency closure.", "next_action": "Freeze generated files and include roots, then rerun the same source configuration.", "extensions": {}},
+    {"code": "artifact.changed", "severity": "error", "condition": "The generated Yosys script or HDL input manifest changed during execution.", "next_action": "Reject the evidence and rerun in a protected fresh output directory.", "extensions": {}},
+    {"code": "artifact.unsafe_capture", "severity": "error", "condition": "Generated evidence or a native output could not be retained as a stable bounded single-link regular file in a fresh destination.", "next_action": "Treat the result as unknown, isolate the runtime and output directory, and rerun without symlinks, hard links, races, or oversized outputs.", "extensions": {}},
+    {"code": "artifact.invalid_netlist", "severity": "error", "condition": "Fresh mapped Verilog is missing or empty.", "next_action": "Reject the result and regenerate a nonempty mapped netlist from the exact request.", "extensions": {}},
+    {"code": "yosys.error", "severity": "error", "condition": "Complete native output contains a recognized Yosys elaboration, synthesis, check, or mapping error.", "next_action": "Resolve the cited RTL or mapping condition and rerun with the same explicit policy.", "extensions": {}},
+    {"code": "yosys.unclassified_exit", "severity": "error", "condition": "Yosys exited nonzero without a recognized error in complete output.", "next_action": "Inspect the native log and add a versioned parser mapping; keep the engineering status unknown.", "extensions": {}},
+    {"code": "yosys.unclassified_error", "severity": "error", "condition": "Complete native output contains an ERROR line that is not in the closed engineering-error whitelist.", "next_action": "Inspect the native log, determine whether the condition is engineering or infrastructure, and keep status unknown until a versioned mapping exists.", "extensions": {}},
+    {"code": "yosys.warning", "severity": "warning", "condition": "Complete native output contains a recognized Yosys warning line.", "next_action": "Inspect the retained warning before using the mapped netlist; warnings remain visible but do not alone invalidate an otherwise complete v1alpha1 mapping.", "extensions": {}},
+    {"code": "artifact.invalid_stats", "severity": "error", "condition": "Mapped statistics are missing, malformed, inconsistent, oversized, nonfinite, or outside the closed shape.", "next_action": "Reject the result and regenerate complete bounded statistics from the current invocation.", "extensions": {}},
+    {"code": "artifact.invalid_json", "severity": "error", "condition": "Mapped JSON is missing, empty, malformed, structurally invalid, or too large for complete validation.", "next_action": "Reject the result and regenerate a bounded fully validated structural netlist.", "extensions": {}},
+    {"code": "synthesis.unmapped_cells", "severity": "error", "condition": "The mapped histogram retains an internal cell or a cell type absent from the declared Liberty inventory.", "next_action": "Correct the technology mapping or Liberty binding; do not use the netlist as a completely mapped design.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.driver.yosys",
+      "native_product_id": "org.yosyshq.yosys",
+      "backend_name": "Yosys and ABC Liberty-mapped synthesis",
+      "supported_features": ["openada.feature/synthesis.asic-liberty/v1alpha1"],
+      "semantic_bindings": [
+        {
+          "feature_id": "openada.feature/synthesis.asic-liberty/v1alpha1",
+          "implementation": "Under one closed environment, inspect exact Yosys and external ABC executables, bind ABC by path and digest, load the declared Liberty as black boxes, parse ordered RTL with the selected closed frontend, flatten and synthesize without ABC, record inference statistics, apply ordered techmaps, dfflibmap, set undefined values to zero, map through the exact abc -exe path, check the result, and validate fresh netlist and statistics artifacts against the Liberty cell inventory.",
+          "output_fact_paths": ["data.mapping_complete", "data.stats", "data.inference_stats", "data.mapping_policy", "data.abc_tool", "data.abc_tool_identity_stable", "data.environment_policy", "data.unmapped_cell_types", "data.ordered_sources", "data.unresolved_literal_includes", "data.inputs_stable", "data.dependency_closure_stable", "data.warning_count"],
+          "extensions": {}
+        }
+      ],
+      "native_actions": ["Inspect and bind exact Yosys and external ABC executables under the closed synthesis environment.", "Read the bound Liberty and ordered RTL with the selected frontend.", "Run the closed flattening, inference, sequential mapping, undefined-value, exact-path ABC, cleanup, and structural-check sequence.", "Emit and independently validate bounded mapped Verilog, mapped JSON, inference statistics, mapped statistics, dependency, script, and log evidence."],
+      "artifact_bindings": [
+        {"native_kind": "Yosys generated script", "canonical_role": "synthesis.script", "extensions": {}},
+        {"native_kind": "Yosys stdout/stderr transcript", "canonical_role": "synthesis.log", "extensions": {}},
+        {"native_kind": "Yosys mapped Verilog", "canonical_role": "synthesis.netlist", "extensions": {}},
+        {"native_kind": "Yosys structural JSON", "canonical_role": "synthesis.netlist-structure", "extensions": {}},
+        {"native_kind": "Yosys stat JSON", "canonical_role": "synthesis.statistics", "extensions": {}},
+        {"native_kind": "Yosys pre-mapping stat JSON", "canonical_role": "synthesis.inference-statistics", "extensions": {}},
+        {"native_kind": "OpenADA HDL input manifest", "canonical_role": "rtl.dependencies", "extensions": {}}
+      ],
+      "limitations": ["Only the explicit flattened ASIC Liberty mapping sequence is covered; FPGA flows and alternate Yosys synth targets are not mapped.", "The built-in yosys-sv dialect is not an IEEE revision claim; Slang 1800 selectors request a language edition but do not certify implementation or design conformance.", "Verilog and Slang are distinct frontend choices with potentially different accepted language subsets.", "The mapping performs setundef -zero and therefore does not preserve four-state unknown semantics.", "No equivalence, timing, physical, power, test, CDC, or signoff claim follows from a pass."],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["operation, assertion, and truth table", "ordered source and complete technology input identity", "frontend and explicit mapping policy", "inference and mapped statistics semantics", "mapped cell-inventory and structural validation", "fresh artifact roles and integrity bounds"],
+    "change_policy": "Any change to frontend semantics, synthesis or mapping sequence, undefined-value policy, Liberty validation, completeness criteria, normalized statistics, artifact contract, or status meaning requires a new profile identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

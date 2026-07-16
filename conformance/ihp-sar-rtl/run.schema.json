@@ -12,6 +12,7 @@
     "source",
     "image",
     "tool",
+    "lint_tool",
     "openada_checkout",
     "network",
     "native_artifacts"
@@ -58,6 +59,16 @@
       },
       "additionalProperties": false
     },
+    "lint_tool": {
+      "type": "object",
+      "required": ["requested_path", "native_path", "version"],
+      "properties": {
+        "requested_path": {"const": "/foss/tools/verilator/bin/verilator_bin"},
+        "native_path": {"const": "/foss/tools/verilator/bin/verilator_bin"},
+        "version": {"const": "Verilator 5.048 2026-04-26 rev v5.048"}
+      },
+      "additionalProperties": false
+    },
     "openada_checkout": {
       "type": "object",
       "required": ["before", "after", "state_unchanged", "commit_exact"],
@@ -73,8 +84,8 @@
     "source_attestation": {"$ref": "#/$defs/sourceAttestation"},
     "native_artifacts": {
       "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
+      "minItems": 13,
+      "maxItems": 13,
       "items": {"$ref": "#/$defs/fileRecord"}
     }
   },
@@ -107,7 +118,7 @@
       "type": "object",
       "required": ["path", "bytes", "sha256"],
       "properties": {
-        "path": {"type": "string", "pattern": "^(?:positive|negative)/[A-Za-z0-9._-]+$"},
+        "path": {"type": "string", "pattern": "^(?:positive|positive-2023|negative)/[A-Za-z0-9._-]+$"},
         "bytes": {"type": "integer", "minimum": 1, "maximum": 67108864},
         "sha256": {"$ref": "#/$defs/sha256"}
       },

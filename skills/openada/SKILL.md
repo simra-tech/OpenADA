@@ -1,6 +1,6 @@
 ---
 name: openada
-description: Discover, invoke, and interpret open-source EDA tools through OpenADA's versioned CLI contract. Use for semiconductor or electronics work involving Xschem schematics (.sch), SPICE netlists and ngspice or Xyce simulation, GDS/KLayout DRC, Netgen LVS, Verilog/SystemVerilog RTL and Yosys, PDK discovery, or diagnosing an open EDA environment in Codex, Claude Code, or another terminal-capable agent.
+description: Discover, invoke, and interpret open-source EDA tools through OpenADA's versioned CLI contract. Use for semiconductor or electronics work involving Xschem schematics (.sch), SPICE simulation, GDS/KLayout DRC, Netgen LVS, Verilog/SystemVerilog lint, Yosys ASIC synthesis, OpenSTA timing, PDK discovery, or diagnosing an open EDA environment in Codex, Claude Code, or another terminal-capable agent.
 ---
 
 # OpenADA
@@ -57,6 +57,9 @@ Use these one-to-one mappings:
 | Determine whether the supplied DRC deck is clean | `drc-clean` | KLayout `drc` |
 | Determine whether two netlists match under the supplied setup | `lvs-match` | Netgen `lvs` |
 | Elaborate RTL and pass structural checks | `rtl-structural-check-passes` | Yosys `rtl-check` |
+| Lint SystemVerilog with no warnings or errors | `rtl-lint-clean` | Verilator `rtl-lint` |
+| Produce a complete Liberty-mapped ASIC netlist | `asic-netlist-synthesized` | Yosys `synthesize` |
+| Satisfy setup and hold constraints for one declared corner | `timing-constraints-satisfied` | OpenSTA `timing-analyze` |
 
 If the request spans a chain, preflight only the smallest next assertion whose
 result is needed before later work. Do not run several preflights or recommend
@@ -152,9 +155,47 @@ openada lvs layout.spice schematic.spice --cell top \
 
 # Yosys elaboration and structural checks
 openada rtl-check rtl/top.sv rtl/block.sv --top top --output-dir evidence/rtl
+
+# Strict SystemVerilog lint; ordered sources, includes, and defines are part of the evidence
+openada rtl-lint rtl/package.sv rtl/top.sv --top top \
+  --include-dir rtl/include --define SYNTHESIS=1 \
+  --output-dir evidence/rtl-lint
+
+# Flatten and map to one exact Liberty; retain generic inference and mapped statistics
+openada synthesize rtl/package.sv rtl/top.sv --top top \
+  --frontend slang --include-dir rtl/include \
+  --liberty platform/typical.lib --techmap platform/cells_latch.v \
+  --abc-constraint platform/abc.constr --abc-delay-target-ns 2.0 \
+  --output-dir evidence/synthesis
+
+# Single-corner synthesis-stage timing with exact mapped netlist, Liberty, and SDC
+openada timing-analyze evidence/synthesis/mapped.v --top top \
+  --liberty platform/typical.lib --sdc constraints/top.sdc \
+  --output-dir evidence/timing
 ```
 
 Never substitute a generic DRC deck, LVS setup, PDK, model library, or top cell merely to obtain a passing result. Ask for the missing project-specific input.
+
+For digital commands, preserve source order, declared language dialect/revision, include
+directories, defines, top, Liberty, mapping policy, SDC, and tool identity as
+one comparison context. `rtl-lint` uses a strict policy: any recognized warning
+or error is an engineering `fail`. `synthesize` positively identifies and
+content-binds the exact external ABC executable under the same closed runtime
+environment as Yosys; operation-level evidence, not primary-tool preflight, is
+the authoritative ABC gate. `synthesize` passes only with fresh mapped
+netlist/statistics evidence, zero processes or memories after mapping, and no
+cell type outside the declared Liberty. Read `data.inference_stats` separately
+from `data.stats`; synthesis success does not establish behavioral equivalence,
+timing, area-budget, or power success. `timing-analyze` is intentionally one
+corner with ideal interconnect and no SPEF. A negative WNS is a trustworthy
+constraint failure only when `constraints_complete`, `reports_complete`,
+`inputs_stable`, `metric_consistency`, and path-report agreement establish
+complete evidence. Even a timing pass is not MCMM or physical signoff.
+The timing connector accepts only `openada-sdc-v1` declarative constraints and
+executes a fresh snapshot whose hash equals the declared SDC input; arbitrary
+Tcl, sourced files, environment access, and `read_spef` are unsupported.
+Its version probe and analysis share `closed-opensta-runtime-v1` rather than
+inheriting ambient loader, interpreter, Tcl, OpenSTA, or shell-control state.
 
 An explicit `--backend ngspice|xyce` selects the typed
 `openada.operation/circuit.simulate/v1alpha2` bridge. Its initial common subset

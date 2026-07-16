@@ -68,7 +68,10 @@ skills/
 ├── characterize-analog-block/     # application-aware coordinator
 ├── analyze-feedback-stability/    # loop-evidence workflow
 ├── analyze-spectral-linearity/    # waveform-derived spectrum review
-└── assess-pvt-and-yield/           # campaign accounting workflow
+├── assess-pvt-and-yield/           # campaign accounting workflow
+├── review-rtl-architecture/        # RTL evidence and architecture review
+├── assess-synthesis-and-inference/ # mapped-netlist and inference review
+└── assess-asic-timing/             # constraint-bound timing review
 ```
 
 Every workflow directory contains `SKILL.md` and `agents/openai.yaml`;
@@ -107,6 +110,24 @@ create the plugin namespace.
 | `analyze-feedback-stability` | Feedback-loop evidence workflow | experimental | AC Cartesian extraction → `result.transfer.measure/v1alpha1` for first-frequency gain, -3 dB bandwidth, unity frequency, and explicitly declared negative-feedback phase margin |
 | `analyze-spectral-linearity` | Waveform-derived spectral review | experimental | `circuit.simulate/v1alpha2` → `result.series.extract/v1alpha1` → coherent `result.spectral.measure/v1alpha1` → specification |
 | `assess-pvt-and-yield` | PVT/statistical campaign workflow | experimental | Repeated capability-gated simulation → verified series extraction → ordinary/spectral/AC-transfer measurement → specification intents |
+| `review-rtl-architecture` | RTL evidence and architecture-review workflow | experimental | Strict `rtl.lint/v1alpha1` plus the existing separate structural-check assertion; unsupported CDC, formal, simulation, and equivalence claims remain not evaluated |
+| `assess-synthesis-and-inference` | ASIC mapping and inferred-hardware review | experimental | `logic.synthesize/v1alpha1` → validated Liberty-mapped netlist, dependency lineage, mapping completeness, and bounded structural statistics |
+| `assess-asic-timing` | Synthesis-stage setup/hold review | experimental | Passing mapped-netlist lineage → `timing.analyze/v1alpha1` with exact Liberty and SDC; ideal-interconnect evidence is never promoted to routed or signoff timing |
+
+These digital skills stay within the current envelope boundary:
+
+- `openada.result/v0alpha1` has no general request or result correlation field,
+  so workflow lineage uses complete envelope paths plus input and artifact
+  hashes rather than invented IDs;
+- RTL include capture is conservative, not proof of the exact selected
+  conditional-preprocessor closure, and the v1alpha1 lint/synthesis CLI does
+  not expose module-parameter overrides;
+- timing `path_count` is the number of records in a bounded retained report,
+  not a violating-path count or ranking depth, and each normalized analysis
+  exposes only one worst-path startpoint, endpoint, path group, and slack;
+- contract fields are reported as **normalized evidence** while conclusions
+  obtained by reading RTL, SDC, netlists, or intent documents are labeled
+  **source/artifact inspection** or **inferred**.
 
 Track skill maturity separately from driver maturity. **Experimental** means
 the workflow boundary and prompts are open for refinement. **Reviewed** should
@@ -136,7 +157,8 @@ Good next candidates, after their required semantic profiles exist, are:
 - diagnose a DRC result without confusing rule-deck output with signoff;
 - review and route an LVS mismatch;
 - assess a design change by comparing pre/post evidence and lineage;
-- plan an open-source RTL-to-layout evidence chain.
+- verify RTL behavior and sequential equivalence;
+- close a routed, parasitic-aware open-source implementation chain.
 
 Keep each skill narrow enough that its engineering question, required evidence,
 and stop conditions can be reviewed independently.

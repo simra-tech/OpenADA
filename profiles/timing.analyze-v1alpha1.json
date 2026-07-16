@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/timing.analyze/v1alpha1",
+    "title": "Constrained setup and hold timing analysis",
+    "summary": "Analyze one mapped gate-level netlist against an explicit Liberty and SDC with OpenSTA, prove constraint completeness, and normalize setup and hold slack evidence in seconds.",
+    "side_effect_mode": "evidence-only",
+    "target_kinds": ["mapped-gate-netlist", "technology-liberty", "timing-constraints"],
+    "locator_types": ["filesystem", "artifact", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+    "statement": "For the exact linked netlist, Liberty, top, and SDC under the declared ideal-interconnect model, OpenSTA reports complete constraints and nonnegative worst setup and hold slack.",
+    "non_goals": [
+      "This assertion is not signoff timing and does not establish post-placement or post-route closure because v1alpha1 reads no SPEF and models ideal interconnect.",
+      "This assertion does not cover multiple process-voltage-temperature corners, modes, OCV/AOCV/POCV, crosstalk, propagated clocks, extracted parasitics, or statistical variation unless a future profile explicitly binds them.",
+      "This assertion does not establish functional equivalence, physical routability, power integrity, signal integrity, CDC/RDC safety, design-rule compliance, or manufacturing readiness.",
+      "This assertion does not infer or repair omitted clocks, I/O delays, exceptions, generated clocks, uncertainties, case analysis, or disabled timing arcs.",
+      "This assertion makes no IEEE OLA or SDF conformance claim; v1alpha1 binds the supplied Liberty and SDC directly and reads no SDF.",
+      "A negative slack result is valid decision evidence for the declared synthesis-stage model, not a claim that the same slack will occur after physical implementation."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "OpenSTA completed with complete trustworthy evidence, check_setup found no reported constraint/setup defects or unconstrained endpoints, and both normalized setup and hold worst slack are finite and nonnegative.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.constraints_complete, data.reports_complete, data.inputs_stable, data.path_reports_agree_with_wns, and data.timing_constraints_satisfied are true; data.analysis_model is single_corner_ideal_interconnect_no_spef.",
+          "data.setup.wns_s and data.hold.wns_s are finite and greater than or equal to zero; their TNS values and bounded critical path summaries are retained.",
+          "data.time_unit retains the exact native display unit and data.time_unit_seconds proves its positive SI scaling; every WNS, TNS, and critical-path slack field is emitted in seconds.",
+          "data.environment_policy is closed-opensta-runtime-v1 for both the accepted version probe and timing execution.",
+          "data.sdc_policy is openada-sdc-v1 and the supplied SDC passed the closed declarative-subset validator before a hash-identical fresh snapshot was executed.",
+          "Fresh OpenSTA script, SDC snapshot, complete log, empty constraint-check report, and valid setup and hold path JSON artifacts are retained and hashed.",
+          "The exact mapped netlist, Liberty, SDC, top, executable path, and tool version are retained."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Complete trustworthy and constraint-complete OpenSTA evidence reports finite negative worst setup or hold slack for the declared ideal-interconnect model.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.constraints_complete, data.reports_complete, data.inputs_stable, and data.path_reports_agree_with_wns are true; data.timing_constraints_satisfied is false and at least one of data.setup.wns_s or data.hold.wns_s is below zero.",
+          "The corresponding global total negative slack and bounded critical path summary are retained in seconds.",
+          "Fresh path reports, constraint check, script, process transcript, and exact input identities support the conclusion."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The request, tool, link, constraints, execution, capture, unit conversion, path reports, or setup/hold metrics are incomplete, malformed, unsupported, or otherwise insufficient for pass or fail.",
+        "allowed_execution_statuses": ["completed", "timed_out", "not_available", "invalid_request", "failed"],
+        "required_evidence": [
+          "data.constraints_complete, data.reports_complete, data.inputs_stable, or data.path_reports_agree_with_wns is false or unavailable; setup/hold evidence is null; or a stable diagnostic identifies the invalid, incomplete, unclassified, or unvalidated condition.",
+          "Any nonempty check_setup report, unconstrained endpoint, missing timing path class, truncated output, unit ambiguity, malformed JSON, or unclassified nonzero exit remains unknown rather than fail."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {"role": "timing.netlist", "required": true, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "One self-contained mapped gate-level Verilog netlist whose cell types and top design are linked by OpenSTA; native include directives are not accepted in v1alpha1.", "extensions": {}},
+      {"role": "technology.liberty", "required": true, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "One self-contained explicit Liberty library containing the linked cells and timing arcs for the analyzed corner; include/include_file constructs are not accepted in v1alpha1.", "extensions": {}},
+      {"role": "timing.sdc", "required": true, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "One explicit SDC file within the closed openada-sdc-v1 declarative subset; its clocks, I/O constraints, exceptions, and timing environment are executed from a hash-identical fresh snapshot without inferred defaults.", "extensions": {}}
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "timing.analyze v1alpha1 request parameters",
+      "type": "object",
+      "required": ["top", "analysis_model", "extensions"],
+      "properties": {
+        "top": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$", "maxLength": 256},
+        "analysis_model": {"const": "single_corner_ideal_interconnect_no_spef"},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "The mapped netlist, Liberty, and SDC must be distinct existing regular files captured by canonical path, byte count, and SHA-256; no output may overwrite an input.",
+      "The mapped Verilog and Liberty are scanned and rehashed as stable self-contained files; obvious Verilog include and Liberty include/include_file constructs are rejected because v1alpha1 has no transitive timing-input role.",
+      "Canonical netlist, Liberty, SDC, and output paths containing an ASCII control character or DEL are rejected before OpenSTA execution.",
+      "The top design must be explicit and link successfully; v1alpha1 runs OpenSTA with -no_init so no user or site startup file can change the analysis.",
+      "The accepted OpenSTA version probe and timing execution share closed-opensta-runtime-v1: PATH contains only the selected executable directory followed by the platform default executable path, LANG and LC_ALL are C, and only required process essentials are copied on Windows; ambient loader, interpreter, Tcl, OpenSTA, and shell variables are omitted.",
+      "The SDC is valid UTF-8 with at most 4096 one-line commands of at most 16384 characters; semicolons, backslashes, braces, unsafe or ambient variable forms, runtime/tool-control set targets, multiline Tcl, dynamic command names, and every command outside the fixed timing/query allowlists are rejected. Local variables must be assigned before use.",
+      "The allowed top-level commands are create_clock, create_generated_clock, current_design, group_path, set, set_case_analysis, set_clock_groups, set_clock_latency, set_clock_transition, set_clock_uncertainty, set_disable_timing, set_driving_cell, set_false_path, set_ideal_network, set_input_delay, set_load, set_max_capacitance, set_max_delay, set_max_fanout, set_max_transition, set_min_delay, set_multicycle_path, set_output_delay, and set_propagated_clock; bracket substitutions are limited to the declared collection queries, expr, list, concat, and lindex.",
+      "The closed script reads exactly one Liberty and one Verilog netlist, links one top, and reads a fresh SDC snapshot whose digest equals the declared input before check_setup and setup/hold reporting; source, read_spef, proc, rename, exec, open, file, glob, load, package, namespace, and other arbitrary Tcl are not representable.",
+      "A pass or fail requires an empty check_setup -verbose -unconstrained_endpoints report and valid nonempty bounded setup and hold JSON path reports.",
+      "Native display-unit WNS and TNS values are converted to SI seconds from the explicitly parsed report_units time scale; every normalized numeric value must be finite.",
+      "The critical path slack in each class must agree with normalized worst slack within the implementation's explicit numeric tolerance and have the same negative-versus-nonnegative sign; numeric or sign disagreement is unknown.",
+      "Setup means maximum-delay analysis and hold means minimum-delay analysis. Global TNS is not inferred from the bounded path-report subset.",
+      "v1alpha1 reads no SPEF and therefore always reports analysis_model single_corner_ideal_interconnect_no_spef; results with parasitic annotation or multiple timing contexts require a new feature/profile."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "timing.analyze v1alpha1 normalized result data",
+      "type": "object",
+      "required": ["protocol", "top", "analysis_model", "interconnect_model", "spef_supplied", "signoff_level", "environment_policy", "sdc_policy", "sdc_validation", "netlist_validation", "liberty_validation", "limitations", "constraints_complete", "constraint_check_validation", "reports_complete", "metrics_validation", "metric_consistency", "path_reports_agree_with_wns", "inputs_stable", "tool_identity_stable", "changed_inputs", "setup", "hold", "timing_constraints_satisfied"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/protocol"},
+        "top": {"type": ["string", "null"], "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$", "maxLength": 256},
+        "analysis_model": {"const": "single_corner_ideal_interconnect_no_spef"},
+        "interconnect_model": {"const": "ideal"},
+        "spef_supplied": {"const": false},
+        "signoff_level": {"const": false},
+        "environment_policy": {"const": "closed-opensta-runtime-v1"},
+        "sdc_policy": {"const": "openada-sdc-v1"},
+        "sdc_validation": {"type": "string", "minLength": 1, "maxLength": 120},
+        "netlist_validation": {"type": "string", "minLength": 1, "maxLength": 120},
+        "liberty_validation": {"type": "string", "minLength": 1, "maxLength": 120},
+        "limitations": {"type": "array", "minItems": 1, "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 1000}},
+        "constraints_complete": {"type": ["boolean", "null"]},
+        "reports_complete": {"type": "boolean"},
+        "inputs_stable": {"type": ["boolean", "null"]},
+        "tool_identity_stable": {"type": ["boolean", "null"]},
+        "changed_inputs": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "constraint_check_validation": {"type": "string", "minLength": 1, "maxLength": 120},
+        "metrics_validation": {"type": "string", "minLength": 1, "maxLength": 120},
+        "metric_consistency": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "path_reports_agree_with_wns": {"type": "boolean"},
+        "time_unit": {"type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+)?(?:s|ms|us|ns|ps|fs)$", "maxLength": 32},
+        "time_unit_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "setup": {"oneOf": [{"$ref": "#/$defs/analysis"}, {"type": "null"}]},
+        "hold": {"oneOf": [{"$ref": "#/$defs/analysis"}, {"type": "null"}]},
+        "timing_constraints_satisfied": {"type": ["boolean", "null"]}
+      },
+      "$defs": {
+        "protocol": {
+          "type": "object",
+          "required": ["operation_profile", "assertion_profile", "implementation_id", "implementation_version"],
+          "properties": {
+            "operation_profile": {"const": "openada.operation/timing.analyze/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/timing.constraints-satisfied/v1alpha1"},
+            "implementation_id": {"const": "org.openada.driver.opensta"},
+            "implementation_version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "criticalPath": {
+          "type": "object",
+          "required": ["startpoint", "endpoint", "path_group", "slack_s"],
+          "properties": {
+            "startpoint": {"type": "string", "minLength": 1, "maxLength": 1000},
+            "endpoint": {"type": "string", "minLength": 1, "maxLength": 1000},
+            "path_group": {"type": ["string", "null"], "minLength": 1, "maxLength": 4096},
+            "slack_s": {"type": "number"}
+          },
+          "additionalProperties": false
+        },
+        "analysis": {
+          "type": "object",
+          "required": ["wns_s", "tns_s", "path_count", "critical_path"],
+          "properties": {
+            "wns_s": {"type": "number"},
+            "tns_s": {"type": "number"},
+            "path_count": {"type": ["integer", "null"], "minimum": 0, "maximum": 4096},
+            "critical_path": {"oneOf": [{"$ref": "#/$defs/criticalPath"}, {"type": "null"}]}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.constraints_complete", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True only when the bounded OpenSTA setup check reports no constraint/setup defect or unconstrained endpoint; null means the check could not be established.", "extensions": {}},
+      {"path": "data.reports_complete", "type": "boolean", "required_for": ["pass", "fail", "unknown"], "description": "Whether both setup and hold JSON reports parsed completely within bounds.", "extensions": {}},
+      {"path": "data.inputs_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Whether exact netlist, Liberty, and SDC byte counts and SHA-256 digests remained unchanged across the invocation.", "extensions": {}},
+      {"path": "data.tool_identity_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True only when the exact accepted OpenSTA executable retains the same filesystem identity from the enclosing version probe through analysis.", "extensions": {}},
+      {"path": "data.setup.wns_s", "type": "number", "unit": "s", "required_for": ["pass", "fail"], "description": "Global worst maximum-delay slack normalized to SI seconds.", "extensions": {}},
+      {"path": "data.setup.tns_s", "type": "number", "unit": "s", "required_for": ["pass", "fail"], "description": "Global maximum-delay total negative slack normalized to SI seconds, independent of the bounded path subset.", "extensions": {}},
+      {"path": "data.hold.wns_s", "type": "number", "unit": "s", "required_for": ["pass", "fail"], "description": "Global worst minimum-delay slack normalized to SI seconds.", "extensions": {}},
+      {"path": "data.hold.tns_s", "type": "number", "unit": "s", "required_for": ["pass", "fail"], "description": "Global minimum-delay total negative slack normalized to SI seconds, independent of the bounded path subset.", "extensions": {}},
+      {"path": "data.setup.critical_path", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "Bounded maximum-delay startpoint, endpoint, path group, and independently normalized slack summary.", "extensions": {}},
+      {"path": "data.hold.critical_path", "type": ["object", "null"], "required_for": ["pass", "fail"], "description": "Bounded minimum-delay startpoint, endpoint, path group, and independently normalized slack summary.", "extensions": {}},
+      {"path": "data.path_reports_agree_with_wns", "type": "boolean", "required_for": ["pass", "fail", "unknown"], "description": "Whether independently parsed JSON critical slacks agree with transcript WNS within the closed cross-format tolerance.", "extensions": {}},
+      {"path": "data.timing_constraints_satisfied", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "True for complete nonnegative setup and hold evidence, false for a complete violation, and null when no conclusion is justified.", "extensions": {}},
+      {"path": "data.analysis_model", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Explicit disclosure that v1alpha1 is one timing context with ideal interconnect and no SPEF.", "extensions": {}},
+      {"path": "data.environment_policy", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "The fixed closed environment shared by OpenSTA inspection and execution: selected-binary-directory plus platform-default PATH, C locale, and only required Windows process essentials; ambient loader, interpreter, Tcl, OpenSTA, and shell variables are not inherited.", "extensions": {}},
+      {"path": "data.sdc_policy", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "The fixed declarative openada-sdc-v1 policy that excludes arbitrary Tcl and parasitic/file-loading commands.", "extensions": {}},
+      {"path": "data.sdc_validation", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "parsed-safe-subset for an executed result; otherwise the bounded reason no safe SDC execution occurred.", "extensions": {}},
+      {"path": "data.netlist_validation", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "self-contained only after a stable bounded scan and digest match; otherwise the bounded reason the mapped Verilog was not executable under v1alpha1.", "extensions": {}},
+      {"path": "data.liberty_validation", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "self-contained only after a stable bounded scan and digest match; otherwise the bounded reason the Liberty was not executable under v1alpha1.", "extensions": {}},
+      {"path": "data.constraint_check_validation", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "The bounded state of the current-invocation check_setup evidence, including not-run and missing states.", "extensions": {}},
+      {"path": "data.metrics_validation", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "The bounded parser state for marked units and global WNS/TNS evidence, including not-run and unavailable states.", "extensions": {}},
+      {"path": "data.metric_consistency", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "The bounded WNS/TNS internal-consistency state, including not-run or metrics-unavailable when no conclusion is possible.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {"role": "timing.script", "kind": "opensta-script", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Generate the closed Tcl script from validated file and top bindings only.", "Invoke it with -no_init and retain its SHA-256."], "native_authority": "The generated Tcl script is authoritative for the exact timing analysis sequence and absence of parasitic annotation.", "extensions": {}},
+      {"role": "timing.sdc-snapshot", "kind": "sdc", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Validate the original as openada-sdc-v1, write the exact validated bytes to a fresh output, and require its SHA-256 to equal the declared timing.sdc input.", "Reject any snapshot mutation before reporting."], "native_authority": "This hash-identical snapshot, rather than a moving source path, is the only SDC read by the generated OpenSTA script.", "extensions": {}},
+      {"role": "timing.log", "kind": "opensta-log", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Require complete valid UTF-8 native output within the bounded capture before pass or fail."], "native_authority": "The complete OpenSTA transcript is authoritative for units, global WNS/TNS, native errors, and analysis execution.", "extensions": {}},
+      {"role": "timing.constraint-check", "kind": "opensta-check-setup", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Run check_setup -verbose -unconstrained_endpoints and retain the exact current-invocation report.", "Require the report to be empty for pass or fail."], "native_authority": "OpenSTA check_setup output is authoritative for the bounded completeness gate exposed by v1alpha1.", "extensions": {}},
+      {"role": "timing.setup-paths", "kind": "opensta-report-json", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Parse a nonempty complete bounded JSON maximum-delay path report and cross-check its critical slack against global WNS."], "native_authority": "The OpenSTA maximum-delay JSON report is authoritative for the bounded setup critical path summary, not global TNS.", "extensions": {}},
+      {"role": "timing.hold-paths", "kind": "opensta-report-json", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Parse a nonempty complete bounded JSON minimum-delay path report and cross-check its critical slack against global WNS."], "native_authority": "The OpenSTA minimum-delay JSON report is authoritative for the bounded hold critical path summary, not global TNS.", "extensions": {}}
+    ],
+    "integrity_rules": [
+      "Use the identical closed-opensta-runtime-v1 environment for executable inspection and timing execution: selected executable directory plus os.defpath, C locale, and only necessary Windows process essentials; never inherit ambient loader, interpreter, Tcl, OpenSTA, or shell variables.",
+      "Hash the exact mapped netlist, Liberty, and SDC inputs before invocation; rehash the netlist and Liberty while rejecting transitive include constructs; validate the SDC subset; execute only its hash-identical snapshot; bracket the accepted OpenSTA version probe with executable identity checks; and require the same identity after analysis.",
+      "Create the generated script, SDC snapshot, transcript, and copied native reports exclusively without following or replacing a destination; run only the generated current-invocation script with -no_init in an isolated output context and reject preexisting or missing reports.",
+      "Require complete capture, successful native execution, no recognized native error, explicit time units, finite global metrics, an empty constraint-check report, valid nonempty setup and hold JSON, and same-sign critical-path/WNS agreement before pass or fail.",
+      "Convert display-unit WNS and TNS to seconds deterministically; never treat raw printed numbers as seconds without report_units evidence."
+    ],
+    "provenance_limitations": [
+      "No SPEF or other parasitic file command is representable in openada-sdc-v1; cell delay comes from the one Liberty while interconnect remains ideal.",
+      "The declarative SDC subset intentionally excludes Tcl procedures, loops, conditionals, sourced files, environment or ambient variable access, runtime/tool-control variables, braces, backslash continuations, and project constraints that require those mechanics.",
+      "Mapped Verilog and Liberty inputs must be self-contained in v1alpha1; projects that require native include/include_file resolution need a future profile with explicit transitive input roles.",
+      "Only one netlist, Liberty, SDC, top, and OpenSTA analysis context are represented; the profile is not MCMM or signoff coverage.",
+      "Constraint completeness is limited to the exposed OpenSTA check_setup and unconstrained-endpoint report and cannot prove that architecturally intended constraints were authored correctly.",
+      "The bounded setup and hold JSON reports retain up to the implementation limit of critical paths; global TNS is reported separately and cannot be reconstructed from that subset.",
+      "A timing pass or fail is comparable only for identical input digests, top, OpenSTA identity, analysis model, and normalized unit mapping."
+    ],
+    "limits": {"max_log_bytes": 16777216, "max_artifact_bytes": 33554432, "max_artifact_count": 6, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {
+      "id": "openada.feature/timing.setup-hold/v1alpha1",
+      "parameter_path": "analysis_model",
+      "parameter_values": ["single_corner_ideal_interconnect_no_spef"],
+      "request_effect": "Run both maximum-delay setup and minimum-delay hold analysis with explicit constraint checking, SI-second normalization, and ideal interconnect without SPEF.",
+      "conformance_case": "Analyze a pinned public synthesized ASIC netlist with its pinned open Liberty and exact SDC, retain complete setup and hold evidence, exercise a real negative-slack decision, and reject constraint or evidence tampering as unknown.",
+      "extensions": {}
+    }
+  ],
+  "diagnostics": [
+    {"code": "path.invalid", "severity": "error", "condition": "A requested path cannot be resolved safely before input capture.", "next_action": "Supply canonical resolvable filesystem paths without invalid characters or traversal assumptions.", "extensions": {}},
+    {"code": "input.invalid", "severity": "error", "condition": "The netlist, Liberty, SDC, top, output binding, or requested analysis model is absent, malformed, oversized, overlapping, unsafe, transitive, or outside openada-sdc-v1.", "next_action": "Bind self-contained mapped Verilog and Liberty inputs, the exact declarative constraints, and top explicitly; split unsupported Tcl or include preprocessing into reviewed immutable inputs rather than weakening the policy.", "extensions": {}},
+    {"code": "tool.missing", "severity": "error", "condition": "The selected runtime cannot resolve and positively identify a usable OpenSTA executable/version.", "next_action": "Install or select the pinned conformance-tested OpenSTA runtime and rerun the exact request.", "extensions": {}},
+    {"code": "tool.changed", "severity": "error", "condition": "The version-validated OpenSTA executable identity changes before timing evidence is finalized.", "next_action": "Freeze the tool installation and rerun; reject timing evidence produced by a changing executable.", "extensions": {}},
+    {"code": "output.unavailable", "severity": "error", "condition": "OpenADA cannot create the isolated generated timing script or output context.", "next_action": "Correct output permissions or path conflicts and rerun without reusing partial evidence.", "extensions": {}},
+    {"code": "execution.timed_out", "severity": "error", "condition": "The bounded OpenSTA invocation or its process group exceeded the declared timeout.", "next_action": "Treat timing as not evaluated, diagnose runtime scale or a hung tool, and rerun the unchanged request with an explicitly reviewed timeout.", "extensions": {}},
+    {"code": "execution.failed", "severity": "error", "condition": "OpenSTA could not launch or complete under the isolated execution policy.", "next_action": "Repair the runtime or evidence directory and rerun; do not interpret partial timing output.", "extensions": {}},
+    {"code": "execution.not_available", "severity": "error", "condition": "The accepted OpenSTA executable became unavailable at launch.", "next_action": "Restore the exact identified executable and rerun the unchanged request.", "extensions": {}},
+    {"code": "evidence.incomplete", "severity": "error", "condition": "Native output was truncated or was not valid UTF-8.", "next_action": "Retain complete bounded output before making a timing decision.", "extensions": {}},
+    {"code": "opensta.error", "severity": "error", "condition": "Complete native output contains a recognized OpenSTA read, link, constraint, or analysis error.", "next_action": "Resolve the cited netlist, Liberty, SDC, link, or timing context and rerun.", "extensions": {}},
+    {"code": "opensta.warning", "severity": "warning", "condition": "Complete native output contains an OpenSTA warning, making the v1alpha1 evidence gate incomplete.", "next_action": "Resolve or explicitly model the cited timing condition before interpreting slack.", "extensions": {}},
+    {"code": "opensta.nonzero_exit", "severity": "error", "condition": "OpenSTA exited nonzero, regardless of whether another native error was recognized.", "next_action": "Inspect the complete native log, resolve the execution failure, and rerun the exact request.", "extensions": {}},
+    {"code": "input.changed", "severity": "error", "condition": "A netlist, Liberty, or SDC byte count or SHA-256 changed during analysis.", "next_action": "Freeze the exact inputs and rerun; never interpret timing from concurrently changing files.", "extensions": {}},
+    {"code": "artifact.invalid", "severity": "error", "condition": "A native output is linked, nonregular, missing, or cannot be moved from the isolated work directory.", "next_action": "Reject all partial evidence and rerun in a safe writable output directory.", "extensions": {}},
+    {"code": "artifact.uncaptured", "severity": "error", "condition": "A retained timing artifact fails bounded stable-file capture.", "next_action": "Reject the unstable artifact and regenerate the full current-invocation evidence set.", "extensions": {}},
+    {"code": "timing.constraints_incomplete", "severity": "error", "condition": "check_setup reports a defect or unconstrained endpoint.", "next_action": "Complete or correct the SDC and linked timing environment before interpreting slack as pass or fail.", "extensions": {}},
+    {"code": "timing.setup_report_invalid", "severity": "error", "condition": "The setup JSON report is missing, empty, malformed, oversized, has an invalid path type, endpoint, or slack, or exceeds the path bound.", "next_action": "Regenerate complete bounded maximum-delay JSON evidence from the exact current invocation.", "extensions": {}},
+    {"code": "timing.hold_report_invalid", "severity": "error", "condition": "The hold JSON report is missing, empty, malformed, oversized, has an invalid path type, endpoint, or slack, or exceeds the path bound.", "next_action": "Regenerate complete bounded minimum-delay JSON evidence from the exact current invocation.", "extensions": {}},
+    {"code": "timing.metrics_invalid", "severity": "error", "condition": "The marked report_units, WNS, TNS, or completion blocks are absent, duplicated, nonfinite, or unparseable.", "next_action": "Retain an unambiguous supported native time scale and complete marked global metrics; do not guess values or units.", "extensions": {}},
+    {"code": "timing.metrics_inconsistent", "severity": "error", "condition": "Global WNS and TNS signs are internally inconsistent for setup or hold.", "next_action": "Reject the timing conclusion and inspect native OpenSTA reporting or parser compatibility.", "extensions": {}},
+    {"code": "timing.evidence_disagrees", "severity": "error", "condition": "A JSON report's critical path slack disagrees with transcript WNS outside the closed cross-format tolerance.", "next_action": "Reject the timing conclusion and reconcile the exact path report, global metrics, units, and tool version.", "extensions": {}},
+    {"code": "timing.setup_violation", "severity": "error", "condition": "Complete constraint-bound evidence reports negative setup WNS.", "next_action": "Treat this corner as a setup failure and revise constraints, logic, mapping, or the implementation plan before proceeding.", "extensions": {}},
+    {"code": "timing.hold_violation", "severity": "error", "condition": "Complete constraint-bound evidence reports negative hold WNS.", "next_action": "Treat this corner as a hold failure and revise constraints, logic, mapping, or the implementation plan before proceeding.", "extensions": {}},
+    {"code": "timing.ideal_interconnect", "severity": "warning", "condition": "Every completed v1alpha1 analysis intentionally omits SPEF and uses ideal interconnect.", "next_action": "Use the evidence for synthesis-stage decisions only and run a future parasitic-aware profile for physical timing closure.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.driver.opensta",
+      "native_product_id": "org.openroad.opensta",
+      "backend_name": "OpenSTA ideal-interconnect setup and hold",
+      "supported_features": ["openada.feature/timing.setup-hold/v1alpha1"],
+      "semantic_bindings": [
+        {
+          "feature_id": "openada.feature/timing.setup-hold/v1alpha1",
+          "implementation": "Validate the mapped Verilog and Liberty as self-contained, validate the declared SDC as openada-sdc-v1, snapshot its exact bytes, then invoke an accepted OpenSTA identity with -no_init on a generated script that reads one Liberty, mapped Verilog, linked top, and only that snapshot; run verbose setup and unconstrained-endpoint checks, report global setup/hold WNS and TNS with explicit units, emit bounded JSON paths, and cross-check same-sign critical slacks.",
+          "output_fact_paths": ["data.constraints_complete", "data.constraint_check_validation", "data.reports_complete", "data.metrics_validation", "data.metric_consistency", "data.inputs_stable", "data.netlist_validation", "data.liberty_validation", "data.environment_policy", "data.sdc_policy", "data.sdc_validation", "data.setup.wns_s", "data.setup.tns_s", "data.hold.wns_s", "data.hold.tns_s", "data.setup.critical_path", "data.hold.critical_path", "data.path_reports_agree_with_wns", "data.timing_constraints_satisfied", "data.analysis_model"],
+          "extensions": {}
+        }
+      ],
+      "native_actions": ["Validate the bound mapped Verilog and Liberty as self-contained, validate and snapshot the bound SDC, read those exact inputs, link the explicit top, and read only the SDC snapshot without startup initialization.", "Check setup and unconstrained endpoints before interpreting setup or hold slack.", "Report and normalize global setup/hold WNS and TNS and retain bounded same-sign JSON critical path evidence."],
+      "artifact_bindings": [
+        {"native_kind": "OpenSTA generated Tcl script", "canonical_role": "timing.script", "extensions": {}},
+        {"native_kind": "Validated immutable SDC bytes", "canonical_role": "timing.sdc-snapshot", "extensions": {}},
+        {"native_kind": "OpenSTA stdout/stderr transcript", "canonical_role": "timing.log", "extensions": {}},
+        {"native_kind": "OpenSTA check_setup report", "canonical_role": "timing.constraint-check", "extensions": {}},
+        {"native_kind": "OpenSTA maximum-delay JSON path report", "canonical_role": "timing.setup-paths", "extensions": {}},
+        {"native_kind": "OpenSTA minimum-delay JSON path report", "canonical_role": "timing.hold-paths", "extensions": {}}
+      ],
+      "limitations": ["v1alpha1 has ideal interconnect and no SPEF, so it is synthesis-stage evidence rather than physical signoff.", "Only self-contained mapped Verilog and Liberty inputs and the fixed declarative openada-sdc-v1 subset are executable; native include resolution, arbitrary Tcl, and sourced project constraint generators require a future provenance-aware profile.", "Only one linked Liberty/SDC context is analyzed; MCMM, OCV variants, crosstalk, and statistical timing are outside the mapping.", "Constraint completeness means only that the exposed OpenSTA check found no listed defect; it does not prove architectural constraint intent.", "The retained critical path subset is bounded while TNS is the native global metric."],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["operation, assertion, and setup/hold truth table", "exact self-contained mapped netlist, Liberty, SDC, and top identity", "openada-sdc-v1 validation, local-variable policy, and hash-identical snapshot execution", "closed-opensta-runtime-v1 probe and execution environment", "accepted OpenSTA identity, no-init, and ideal-interconnect-no-SPEF analysis model", "constraint-completeness gate", "SI-second WNS, TNS, same-sign critical path normalization", "exclusive fresh script, SDC snapshot, log, constraint, setup, and hold artifact integrity"],
+    "change_policy": "Any change to accepted timing inputs, startup behavior, constraint completeness, parasitic or corner model, setup/hold classification, unit conversion, normalized path facts, artifact integrity, or status meaning requires a new profile identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

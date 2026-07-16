@@ -1,0 +1,4 @@
+interface:
+  display_name: "Assess Synthesis and Inference"
+  short_description: "Review synthesis and hardware inference evidence"
+  default_prompt: "Use $openada:assess-synthesis-and-inference to assess this RTL synthesis and inference result."

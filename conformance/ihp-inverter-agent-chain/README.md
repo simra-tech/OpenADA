@@ -84,6 +84,15 @@ python3 conformance/ihp-inverter-agent-chain/verify.py \
 verified receipt to this bundle's `evidence/` directory; it does not bypass any
 replay or checkout check.
 
+Publish a release receipt from a clean checkout into a fresh external evidence
+directory with:
+
+```bash
+python3 conformance/ihp-inverter-agent-chain/run.py \
+  --evidence-dir /tmp/openada-ihp-inverter-agent-release \
+  --publish
+```
+
 Use `--cache-dir` and `--container-engine` consistently for non-default cache
 locations or OCI clients.
 

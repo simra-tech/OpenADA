@@ -52,15 +52,27 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   analyses, independently reconstructs engineering facts and scoped agent
   decisions, and exercises request, native-error, and tamper boundaries. Its
   provider conformance claim is bound to the exact source-frozen chain receipt.
+- Three complete digital semantic operations and their engineering workflows:
+  strict `rtl.lint/v1alpha1` through Verilator, flattened Liberty-mapped
+  `logic.synthesize/v1alpha1` through Yosys/ABC, and constraint-complete
+  one-corner `timing.analyze/v1alpha1` through OpenSTA. Results bind ordered
+  RTL, conservative literal-include closure, stable input hashes, mapping
+  policy, a version- and digest-bound external ABC executable, closed
+  non-inheriting tool environments, fresh native artifacts, normalized
+  inference/cell/area evidence, and
+  setup/hold WNS/TNS in seconds without claiming equivalence, physical timing,
+  or signoff. The plugin adds senior RTL-architecture, synthesis/inference, and
+  ASIC-timing skills that stay inside those evidence boundaries.
 - A closed semantic-surface catalog and non-waivable release ledger covering
-  all 126 active rows through six pinned public-design chains. Each accepted
+  all 147 active rows through seven pinned public-design chains. Each accepted
   row now carries contract tests, a real native EDA run, independent artifact
   verification, normalized evidence, a downstream engineering decision,
   negative and tamper replays, agent-visible evidence, and clean-source
-  attestation. CI mechanically checks manifest hashes, the six-record index,
+  attestation. CI mechanically checks manifest hashes, the seven-record index,
   provider receipt registration, offline verifiers, and zero release gaps.
 - Public real-design chains for IHP DRC/LVS, IHP analog measurement and full
-  agent workflows, IHP SAR RTL, and ngspice/Xyce analysis portability. Native
+  agent workflows, IHP SAR RTL/lint, ORFS Ibex Nangate45 synthesis/timing, and
+  ngspice/Xyce analysis portability. Native
   artifacts and public-design provenance are retained in the source
   distribution so downstream reviewers can rerun every offline oracle.
 - `profile list` and `profile show` for cwd-independent inspection of all
@@ -82,8 +94,8 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   `result.series.extract` envelope directly, removing an undocumented manual
   JSON handoff.
 - Advanced the Python package, Codex plugin, Claude plugin, and built-in driver
-  identity to 0.4.0; packaged wheels now include the three new operation
-  profiles.
+  identity to 0.4.0; packaged wheels now include every current analog,
+  measurement, digital, and specification operation profile.
 - Made the source/plugin launcher import optional schema validation lazily, so
   dependency-free discovery commands still run and schema-backed commands emit
   a structured missing-dependency diagnostic. Plugin setup now states clearly

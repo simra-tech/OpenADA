@@ -33,6 +33,12 @@
       "extensions": {}
     },
     {
+      "repository_path": "profiles/logic.synthesize-v1alpha1.json",
+      "lifecycle": "active",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
       "repository_path": "profiles/result.measure-v1alpha1.json",
       "lifecycle": "active",
       "dispatchable": true,
@@ -57,7 +63,19 @@
       "extensions": {}
     },
     {
+      "repository_path": "profiles/rtl.lint-v1alpha1.json",
+      "lifecycle": "active",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
       "repository_path": "profiles/specification.evaluate-v1alpha1.json",
+      "lifecycle": "active",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/timing.analyze-v1alpha1.json",
       "lifecycle": "active",
       "dispatchable": true,
       "extensions": {}
@@ -199,6 +217,15 @@
       "extensions": {}
     },
     {
+      "surface_id": "openada.surface/cli.rtl-lint/v1",
+      "command_path": ["rtl-lint"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/rtl.lint/v1alpha1"],
+      "variants": [],
+      "extensions": {}
+    },
+    {
       "surface_id": "openada.surface/cli.simulate/v1",
       "command_path": ["simulate"],
       "classification": "semantic-execution",
@@ -239,6 +266,24 @@
       "extensions": {}
     },
     {
+      "surface_id": "openada.surface/cli.synthesize/v1",
+      "command_path": ["synthesize"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/logic.synthesize/v1alpha1"],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.timing-analyze/v1",
+      "command_path": ["timing-analyze"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/timing.analyze/v1alpha1"],
+      "variants": [],
+      "extensions": {}
+    },
+    {
       "surface_id": "openada.surface/cli.transfer/v1",
       "command_path": ["transfer"],
       "classification": "semantic-execution",
@@ -249,6 +294,12 @@
     }
   ],
   "preflight_assertions": [
+    {
+      "assertion": "asic-netlist-synthesized",
+      "target_surface_id": "openada.surface/cli.synthesize/v1",
+      "target_operation": "synthesize",
+      "extensions": {}
+    },
     {
       "assertion": "drc-clean",
       "target_surface_id": "openada.surface/cli.drc/v1",
@@ -268,6 +319,12 @@
       "extensions": {}
     },
     {
+      "assertion": "rtl-lint-clean",
+      "target_surface_id": "openada.surface/cli.rtl-lint/v1",
+      "target_operation": "rtl-lint",
+      "extensions": {}
+    },
+    {
       "assertion": "schematic-netlist-generated",
       "target_surface_id": "openada.surface/cli.netlist/v1",
       "target_operation": "netlist",
@@ -278,9 +335,51 @@
       "target_surface_id": "openada.surface/cli.simulate/v1",
       "target_operation": "simulate",
       "extensions": {}
+    },
+    {
+      "assertion": "timing-constraints-satisfied",
+      "target_surface_id": "openada.surface/cli.timing-analyze/v1",
+      "target_operation": "timing-analyze",
+      "extensions": {}
     }
   ],
   "provider_mappings": [
+    {
+      "provider_id": "org.openada.driver.opensta",
+      "provider_kind": "eda-driver",
+      "native_product": "sta",
+      "operation_profile": "openada.operation/timing.analyze/v1alpha1",
+      "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/timing.setup-hold/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["orfs-ibex-synthesis-timing"], "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.verilator",
+      "provider_kind": "eda-driver",
+      "native_product": "verilator",
+      "operation_profile": "openada.operation/rtl.lint/v1alpha1",
+      "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/rtl.lint.systemverilog/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["ihp-sar-rtl-check"], "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.yosys",
+      "provider_kind": "eda-driver",
+      "native_product": "yosys",
+      "operation_profile": "openada.operation/logic.synthesize/v1alpha1",
+      "assertion_profile": "openada.assertion/synthesized-netlist.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/synthesis.asic-liberty/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["orfs-ibex-synthesis-timing"], "extensions": {}}
+      ],
+      "extensions": {}
+    },
     {
       "provider_id": "org.openada.driver.ngspice",
       "provider_kind": "eda-driver",

@@ -21,7 +21,7 @@ engineering assertion instead of inventorying every tool or project file:
   --assertion spice-analysis-evidence-valid
 ```
 
-Scoped preflight accepts one of five fixed assertion IDs and selects exactly
+Scoped preflight accepts one of eight fixed assertion IDs and selects exactly
 one smallest semantic operation:
 
 | Assertion | Tool inspected | Next operation |
@@ -31,6 +31,9 @@ one smallest semantic operation:
 | `drc-clean` | KLayout | `drc` |
 | `lvs-match` | Netgen | `lvs` |
 | `rtl-structural-check-passes` | Yosys | `rtl-check` |
+| `rtl-lint-clean` | Verilator | `rtl-lint` |
+| `asic-netlist-synthesized` | Yosys | `synthesize` |
+| `timing-constraints-satisfied` | OpenSTA | `timing-analyze` |
 
 The result records the canonical root, exact binary/version observation,
 runtime profile, configured PDK roots, connector startup policy, and one
@@ -209,7 +212,7 @@ Inspect the complete packaged ontology without guessing IDs:
 ./bin/openada profile show openada.operation/result.transfer.measure/v1alpha1
 ```
 
-The catalog contains six active profiles plus the immutable historical
+The catalog contains nine active profiles plus the immutable historical
 `circuit.simulate/v1alpha1` profile. Catalog presence is not an
 external-provider capability.
 
@@ -366,8 +369,56 @@ Elaborate Verilog or SystemVerilog and run the preview structural checks:
   --output-dir /tmp/openada-rtl-evidence
 ```
 
-The Yosys operation is structured alpha. It has pinned native-design evidence,
-but its own clean public workflow recipe is still pending.
+The structural Yosys operation has a pinned public SAR replay. It remains a
+front-end structural assertion, not functional or implementation proof.
+
+## Digital lint, ASIC synthesis, and timing
+
+Use exact ordered sources and frontend context for strict lint, then preserve
+one technology/mapping context for synthesis and timing:
+
+```bash
+./bin/openada rtl-lint rtl/package.sv rtl/top.sv --top top \
+  --include-dir rtl/include --output-dir /tmp/openada-lint
+
+./bin/openada synthesize rtl/package.sv rtl/top.sv --top top \
+  --frontend slang --include-dir rtl/include \
+  --liberty platform/typical.lib --techmap platform/cells_latch.v \
+  --abc-constraint platform/abc.constr --abc-delay-target-ns 2.0 \
+  --output-dir /tmp/openada-synthesis
+
+./bin/openada timing-analyze /tmp/openada-synthesis/mapped.v --top top \
+  --liberty platform/typical.lib --sdc constraints/top.sdc \
+  --output-dir /tmp/openada-timing
+```
+
+`rtl-lint` uses a strict warning policy. `synthesize` retains both generic
+inference and mapped statistics and passes only when every mapped cell belongs
+to the exact Liberty. It also binds the external ABC executable by exact path,
+accepted version, bytes, and SHA-256, supplies that path through `abc -exe`,
+and uses one closed non-inheriting environment for both tool probes and the
+native run. The built-in synthesis frontend reports its dialect as
+`yosys-sv`; only Slang accepts `1800-2017` or `1800-2023`, and those selectors
+are not an IEEE-conformance claim. `timing-analyze` accepts the closed
+declarative `openada-sdc-v1` subset, executes a fresh hash-identical SDC
+snapshot, and validates constraint completeness,
+scalar/path-report agreement, and setup/hold WNS/TNS in seconds. Its v1 model
+is one corner with ideal interconnect and no SPEF; it is not MCMM or signoff.
+The accepted OpenSTA version probe and analysis share
+`closed-opensta-runtime-v1`, so ambient loader, interpreter, Tcl, OpenSTA, and
+shell-control variables cannot change the declared run.
+
+Standards context is deliberately scoped. The lint `1800-2017` and
+`1800-2023` selectors name editions of the
+[IEEE SystemVerilog standard](https://standards.ieee.org/ieee/1800/7743/), but
+a successful frontend run is not an IEEE-conformance certification. IEEE also
+publishes [IEEE 1481-2019 OLA](https://standards.ieee.org/ieee/1481/7651/) for
+portable IC library architecture and
+[IEEE/IEC 61523-3-2004](https://standards.ieee.org/ieee/61523-3/3644/) for SDF.
+This timing profile consumes the declared Liberty and validated SDC snapshot,
+reads no SDF, and therefore claims neither OLA nor SDF alignment. Its WNS/TNS values are
+OpenSTA evidence normalized to SI seconds, not a separate standards-conformant
+measurement method.
 
 ## Maturity and discoverable tools
 
@@ -386,13 +437,16 @@ but its own clean public workflow recipe is still pending.
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |
+| `rtl-lint` | Verilator | workflow-validated | Strict warning/error lint with hashed RTL/include evidence |
+| `synthesize` | Yosys + ABC | workflow-validated | Bind external ABC by version/digest and validate a complete flattened Liberty-mapped ASIC netlist and statistics |
+| `timing-analyze` | OpenSTA | workflow-validated | Validate one-corner setup/hold timing evidence with explicit limitations |
 
-Magic, OpenROAD, Icarus Verilog, Verilator, Surelog, slang, OpenVAF,
+Magic, OpenROAD, Icarus Verilog, Surelog, standalone slang, OpenVAF,
 Qucs-S, GTKWave, and LibreLane are currently discoverable but do not yet have a
 stable structured operation in the preview contract.
 
-Xschem-to-ngspice simulation, KLayout DRC, and Netgen LVS pass pinned public IHP
-inverter conformance cases. The other structured drivers have real native or
-pinned-design evidence but do not yet have a public workflow recipe. See the
+Xschem-to-ngspice simulation, KLayout DRC, Netgen LVS, and Verilator lint pass
+pinned public IHP cases. Mapped synthesis and timing use pinned public ORFS
+Ibex/Nangate45 evidence. See the
 [driver roadmap](ROADMAP.md) for the exact maturity policy and validation
 status.

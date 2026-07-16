@@ -18,9 +18,12 @@ from typing import Any
 from common import (
     ConformanceError,
     NATIVE_YOSYS_PATH,
+    NATIVE_VERILATOR_PATH,
     SOURCE_REPOSITORY_PATH,
     WRAPPER_PATH,
     YOSYS_VERSION,
+    VERILATOR_REQUESTED_PATH,
+    VERILATOR_VERSION,
     default_cache_dir,
     ensure_external_cache,
     ensure_external_design_path,
@@ -142,11 +145,26 @@ def _container_base(
         "--compact",
         "--tool-path",
         f"yosys={WRAPPER_PATH}",
+        "--tool-path",
+        f"verilator={VERILATOR_REQUESTED_PATH}",
     ]
 
 
 def _operation_argv(manifest: dict[str, Any], name: str) -> list[str]:
     operation = manifest["operations"][name]
+    if name in {"rtl_lint", "rtl_lint_2023", "lint_missing_top"}:
+        return [
+            "rtl-lint",
+            manifest["source"]["path"],
+            "--top",
+            operation["top"],
+            "--language",
+            operation["language"],
+            "--output-dir",
+            operation["output_directory"],
+            "--timeout",
+            str(operation["tool_timeout_seconds"]),
+        ]
     return [
         "rtl-check",
         manifest["source"]["path"],
@@ -257,6 +275,7 @@ def _create_evidence(path: Path | None) -> Path:
         if path is not None:
             evidence.mkdir(parents=True, mode=0o700)
         (evidence / "positive").mkdir()
+        (evidence / "positive-2023").mkdir()
         (evidence / "negative").mkdir()
     except OSError as exc:
         raise ConformanceError(f"cannot create fresh evidence directory: {exc}") from exc
@@ -314,6 +333,12 @@ def _write_run_metadata(
         "negative/rtl-check.result.json",
         "negative/rtl-check.ys",
         "negative/yosys.transcript.json",
+        "positive/rtl-lint.result.json",
+        "positive/rtl-lint.log",
+        "positive-2023/rtl-lint.result.json",
+        "positive-2023/rtl-lint.log",
+        "negative/rtl-lint.result.json",
+        "negative/rtl-lint.log",
     ]
     state_available = before["commit"] is not None and after["commit"] is not None
     state_unchanged = bool(state_available and before == after)
@@ -339,6 +364,11 @@ def _write_run_metadata(
             "wrapper_sha256": sha256_file(openada_root / "conformance/ihp-sar-rtl/yosys_wrapper.py"),
             "native_path": NATIVE_YOSYS_PATH,
             "version": YOSYS_VERSION,
+        },
+        "lint_tool": {
+            "requested_path": VERILATOR_REQUESTED_PATH,
+            "native_path": NATIVE_VERILATOR_PATH,
+            "version": VERILATOR_VERSION,
         },
         "openada_checkout": {
             "before": before,
@@ -382,7 +412,13 @@ def main(argv: list[str] | None = None) -> int:
         receipt_before = receipt_git_state(openada_root)
         evidence = _create_evidence(requested)
         require_mount_safe_path(evidence)
-        for name in ("rtl_check", "missing_top"):
+        for name in (
+            "rtl_check",
+            "rtl_lint",
+            "rtl_lint_2023",
+            "missing_top",
+            "lint_missing_top",
+        ):
             operation = manifest["operations"][name]
             print(f"Running pinned {name} with network disabled ...", flush=True)
             container_name = f"openada-ihp-sar-{name.replace('_', '-')}-{os.getpid()}-{secrets.token_hex(4)}"
@@ -394,7 +430,7 @@ def main(argv: list[str] | None = None) -> int:
                     design_dir,
                     evidence,
                     container_name,
-                    operation["transcript"]["path"],
+                    operation.get("transcript", operation.get("log"))["path"],
                 ),
                 *_operation_argv(manifest, name),
             ]

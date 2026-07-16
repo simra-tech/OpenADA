@@ -1,0 +1,4 @@
+interface:
+  display_name: "Assess ASIC Timing"
+  short_description: "Review constraint-bound ASIC timing evidence"
+  default_prompt: "Use $openada:assess-asic-timing to assess this ASIC timing evidence and identify the next closure experiment."

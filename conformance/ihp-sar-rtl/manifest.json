@@ -1,7 +1,7 @@
 {
   "schema": "openada.conformance/v0alpha1",
   "id": "ihp-sar-rtl-check",
-  "description": "Pinned structural RTL check of the public IHP AnalogAcademy 8-bit SAR controller, including a real missing-top negative replay.",
+  "description": "Pinned structural RTL check and strict 1800-2017/1800-2023 lint of the public IHP AnalogAcademy 8-bit SAR controller, including real missing-top negative replays.",
   "design": {
     "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
     "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
@@ -25,6 +25,12 @@
       "wrapper_path": "/openada/conformance/ihp-sar-rtl/yosys_wrapper.py",
       "native_path": "/foss/tools/yosys/bin/yosys",
       "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+    },
+    "lint_tool": {
+      "name": "verilator",
+      "requested_path": "/foss/tools/verilator/bin/verilator_bin",
+      "native_path": "/foss/tools/verilator/bin/verilator_bin",
+      "version": "Verilator 5.048 2026-04-26 rev v5.048"
     }
   },
   "policy": {
@@ -102,6 +108,75 @@
         "summary": "Yosys reported an RTL elaboration or structural-check error.",
         "diagnostic": "ERROR: Module `missing_sar_logic' not found!",
         "json_validation": "missing"
+      }
+    },
+    "rtl_lint": {
+      "top": "sar_logic",
+      "language": "1800-2017",
+      "warning_policy": "strict",
+      "output_directory": "/evidence/positive",
+      "result_filename": "positive/rtl-lint.result.json",
+      "log": {
+        "path": "/evidence/positive/rtl-lint.log",
+        "filename": "positive/rtl-lint.log",
+        "kind": "verilator-log",
+        "role": "rtl.lint.log"
+      },
+      "container_timeout_seconds": 180,
+      "tool_timeout_seconds": 120,
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "pass",
+        "summary": "Verilator completed strict RTL lint with no warnings or errors.",
+        "diagnostics": []
+      }
+    },
+    "rtl_lint_2023": {
+      "top": "sar_logic",
+      "language": "1800-2023",
+      "warning_policy": "strict",
+      "output_directory": "/evidence/positive-2023",
+      "result_filename": "positive-2023/rtl-lint.result.json",
+      "log": {
+        "path": "/evidence/positive-2023/rtl-lint.log",
+        "filename": "positive-2023/rtl-lint.log",
+        "kind": "verilator-log",
+        "role": "rtl.lint.log"
+      },
+      "container_timeout_seconds": 180,
+      "tool_timeout_seconds": 120,
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "pass",
+        "summary": "Verilator completed strict RTL lint with no warnings or errors.",
+        "diagnostics": []
+      }
+    },
+    "lint_missing_top": {
+      "top": "missing_sar_logic",
+      "language": "1800-2017",
+      "warning_policy": "strict",
+      "output_directory": "/evidence/negative",
+      "result_filename": "negative/rtl-lint.result.json",
+      "log": {
+        "path": "/evidence/negative/rtl-lint.log",
+        "filename": "negative/rtl-lint.log",
+        "kind": "verilator-log",
+        "role": "rtl.lint.log"
+      },
+      "container_timeout_seconds": 180,
+      "tool_timeout_seconds": 120,
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 1,
+        "engineering_status": "fail",
+        "summary": "Verilator reported RTL lint warnings or errors under the strict policy.",
+        "diagnostics": [
+          "Specified --top-module 'missing_sar_logic' was not found in design.",
+          "Exiting due to 1 error(s)"
+        ]
       }
     }
   }

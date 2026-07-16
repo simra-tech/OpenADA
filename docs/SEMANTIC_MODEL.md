@@ -158,11 +158,12 @@ it with one explicitly supplied external manifest and local JSON-stdio wait
 transport. That runtime currently dispatches only
 `circuit.simulate/v1alpha2`, for which the host has a registered semantic and
 result validator. Operation-specific arguments remain the interface for all
-built-in operations. Six active typed profiles implement simulation, native
-series extraction, ordinary, spectral, and AC-transfer measurement, and
-specification evaluation. Automatic manifest discovery and transport-general
-dispatch remain future work. The request UUID is a correlation value, not a
-digest of the complete request.
+built-in operations. Nine active typed profiles implement simulation, native
+series extraction, ordinary, spectral, and AC-transfer measurement,
+specification evaluation, strict RTL lint, Liberty-mapped synthesis, and
+single-corner timing analysis. Automatic manifest discovery and transport-
+general dispatch remain future work. The request UUID is a correlation value,
+not a digest of the complete request.
 
 ### Driver and capabilities
 
@@ -386,6 +387,9 @@ not a list of accepted profile identifiers or a claim of current CLI support.
 | Verification | `layout.lvs` | Do the declared layout and schematic representations match under the declared LVS setup? | `lvs` through Netgen. |
 | Extraction | `layout.pex` | Was a parasitic representation generated and bound to the declared source layout/setup? | Not yet implemented as a shared operation. |
 | Digital | `rtl.check` | Did the declared RTL elaborate and pass the defined structural checks? | `rtl-check` through Yosys. |
+| Digital | `rtl.lint` | Is the declared SystemVerilog context free of recognized warnings and errors under the strict policy? | `rtl-lint` through Verilator. |
+| Digital | `logic.synthesize` | Did the declared RTL produce a complete validated netlist mapped only to the declared Liberty? | `synthesize` through Yosys/ABC. |
+| Digital | `timing.analyze` | Does one constraint-complete declared corner have nonnegative setup and hold slack? | `timing-analyze` through OpenSTA, explicitly ideal-interconnect and non-signoff. |
 
 Sweeps, corner matrices, Monte Carlo, optimization loops, schematic-to-layout
 flows, and signoff reviews are workflows composed from these operations. They
@@ -494,7 +498,7 @@ The distinction between shipped behavior and intended protocol is material.
 |---|---|---|
 | Result envelope | Closed `openada.result/v0alpha1` with execution/engineering separation, bounded diagnostics, artifact records, and provenance. | New immutable result version linked to typed operation and assertion profiles, with multi-step driver identity where needed. |
 | Requests | Per-operation built-in CLI arguments plus explicit external invocation of one complete `openada.request/v0alpha1`. | Catalog/session/remote request dispatch over installed typed profiles. |
-| Operations | Six active typed profiles cover simulation, verified series extraction, scalar/spectral/AC-transfer measurement, and specification evaluation; one historical simulation profile remains packaged. `profile list/show` provides local machine-readable inspection. | Independently versioned profiles for noise/campaign and remaining operations plus ecosystem discovery. |
+| Operations | Nine active typed profiles cover simulation, verified series extraction, scalar/spectral/AC-transfer measurement, specification evaluation, strict RTL lint, Liberty-mapped synthesis, and single-corner timing; one historical simulation profile remains packaged. `profile list/show` provides local machine-readable inspection. | Independently versioned profiles for noise/campaign and remaining operations plus ecosystem discovery. |
 | Drivers | Built-in discovery/static drivers plus explicit-manifest local JSON-stdio invocation for `circuit.simulate/v1alpha2`. | Trusted manifest discovery, deterministic catalog selection, more registered profiles, independent installation, sessions, and remote jobs. |
 | Portability proof | `circuit.simulate` maps one alpha profile to ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN, with pinned analysis-specific replay. | More operations, open-source backends, and runtime environments pass equivalent independently checked conformance. |
 | Artifacts | Declared files have roles, paths, sizes, and hashes; several drivers enforce fresh evidence. | Cross-run invocation and derivation lineage, including explicit incomplete-provenance records. |
