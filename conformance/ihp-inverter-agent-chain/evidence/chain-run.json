@@ -24,7 +24,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/provider/work/test_inverter.raw",
       "role": "native-artifact",
-      "sha256": "4cbf982ce74f6c038bb177d9a7991bda78ac05109d48665e5c2ea72101d7be5e",
+      "sha256": "75013aa48bf4950961c95bda051aa41aa7f804252502047eca85a09d0f6804ea",
       "source_output": "native-raw",
       "source_step": "provider-invoke"
     },
@@ -33,7 +33,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/independent-verification.json",
       "role": "independent-oracle",
-      "sha256": "d78947d304f409958caae0ac3fe36a0b1a5d5103acc1759425e3d22d98e24423",
+      "sha256": "b1590682c14da25d746ece64cf5a21b63697e427d75e946d931e1a3f2f9cc4a0",
       "source_output": "independent-chain-verdict",
       "source_step": "independent-verifier"
     },
@@ -42,7 +42,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/extract.json",
       "role": "normalized-evidence",
-      "sha256": "611b00bb7adb5e2d95a45b75d39aea21ce860bbb96256f5ba18152627c09d3ce",
+      "sha256": "d5129b388192f31119e4ec5002bdcef60b699ce834df17f9ce7080f51095a18e",
       "source_output": "normalized-vin-vout-series",
       "source_step": "extract"
     },
@@ -51,7 +51,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/specifications/sample-at-pass.json",
       "role": "downstream-decision",
-      "sha256": "fa764acd24662a77b85aec193989157479b00a36fba57c953a201a7790030f41",
+      "sha256": "f6a9a0279b42a2ebed3a70a86e374c316ecbed9ba75b5122e1fd154ef5fd9bf1",
       "source_output": "nine-passing-specification-decisions",
       "source_step": "evaluate-pass"
     },
@@ -60,7 +60,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/agent-evidence.json",
       "role": "agent-visible-evidence",
-      "sha256": "34469ae3d861e0b51394d65ee2cb68c19274f65d105ab446dcc47e942caa482c",
+      "sha256": "d7cdb3c3d8f1f0e9d9c36a6772117c2dedfb5c8047764b7d1d23b75f00f03c2a",
       "source_output": "agent-evidence",
       "source_step": "agent-decision"
     },
@@ -69,7 +69,7 @@
       "replay_id": "netlist-missing-symbol",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/netlist-missing-symbol.json",
       "role": "negative-replay",
-      "sha256": "fa4d41cf0833a2d521a4f43e85738fe9d18060ad9939a4d37f7de14bd4724cf1",
+      "sha256": "1a5022170a01893004ebdf28999267350e816c9c467efbd2d52312307b018776",
       "source_output": null,
       "source_step": null
     },
@@ -78,7 +78,7 @@
       "replay_id": "isolated-terminal-nonconvergence",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/provider-fail-result.json",
       "role": "negative-replay",
-      "sha256": "0dfe927f0ae9c8fe5c875f7d2a23d9715e3479047cbedbdcec5bae0eee45a617",
+      "sha256": "8b15e3fb31dcdd80488b517a4207de08c1da8978eec208d342df84edc05e4857",
       "source_output": null,
       "source_step": null
     },
@@ -87,7 +87,7 @@
       "replay_id": "isolated-builtin-terminal-nonconvergence",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/builtin-fail-result.json",
       "role": "negative-replay",
-      "sha256": "1a2ab5350c12f48bc95e85a6cdc6d4bb0eaaa25ec7d47635ff54dc348b3e16aa",
+      "sha256": "7d875aff125bb30d63076880ec7937680b75b326025964b8b81763e10889842f",
       "source_output": null,
       "source_step": null
     },
@@ -96,7 +96,7 @@
       "replay_id": "extract-missing-selector",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/extract-missing-selector.json",
       "role": "negative-replay",
-      "sha256": "562dbebab291d30a4bf65a4b582605c6cf4a06e9325971fb0bd99f1f4e0e2e27",
+      "sha256": "73827b4a4cdc5d96dbd8b7767a9548d24dc1b341c726c60d49c982321862dfe9",
       "source_output": null,
       "source_step": null
     },
@@ -105,7 +105,7 @@
       "replay_id": "measure-sample-at",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/measure-sample-at.json",
       "role": "negative-replay",
-      "sha256": "dd9ff11d2a227095e9715a588024f65164edbb10d54ea1a311d8fe72841ad2ad",
+      "sha256": "602893330c105c509c79823c9b53c9a59b87455dafd07a3eb3344df8d6176b49",
       "source_output": null,
       "source_step": null
     },
@@ -114,7 +114,7 @@
       "replay_id": "measure-minimum",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/measure-minimum.json",
       "role": "negative-replay",
-      "sha256": "3f2a776ae26fc3b7c731373973081353b84ee7e48142606160f080d98c57c446",
+      "sha256": "be1c9e060ace30394d8292d3f3d02b21d02b9c7ade7381609bf7cd0407f9a460",
       "source_output": null,
       "source_step": null
     },
@@ -123,7 +123,7 @@
       "replay_id": "measure-maximum",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/measure-maximum.json",
       "role": "negative-replay",
-      "sha256": "1c11d4c6bc0af8d85bfc84ea951e861019460f90cc02686fba289ca7f0945ead",
+      "sha256": "24a6b5a80159c8c3828b4c291935718d9ad8ea6814a82883797b2aaafbe9d0e2",
       "source_output": null,
       "source_step": null
     },
@@ -132,7 +132,7 @@
       "replay_id": "measure-mean",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/measure-mean.json",
       "role": "negative-replay",
-      "sha256": "365ae11743ec92fc6dd44305cbd0791b4e8aaccb97fd6a91967f52ae678d5d65",
+      "sha256": "f48a3c758c4080c3d66029ccab8598815fe74ab896aafaabd21db7eab2c9d0f4",
       "source_output": null,
       "source_step": null
     },
@@ -141,7 +141,7 @@
       "replay_id": "measure-rms",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/measure-rms.json",
       "role": "negative-replay",
-      "sha256": "97c10942c762d8ef8f972301b15799d44e93358f276cac5cde2e4b53860ec19d",
+      "sha256": "130a601f66b8a89ab64580e00a33990a8d77a10cc61948a3c699cad98feb2cbd",
       "source_output": null,
       "source_step": null
     },
@@ -150,7 +150,7 @@
       "replay_id": "measure-crossing",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/measure-crossing.json",
       "role": "negative-replay",
-      "sha256": "6640297056acbfc96845bd89a9b21d8f4c37ee2b3121cacbfe0c86d215b33876",
+      "sha256": "86f493877ebfbb2737cf16867f0690a16f18a48bc96119acd50c876e133f36ed",
       "source_output": null,
       "source_step": null
     },
@@ -159,7 +159,7 @@
       "replay_id": "measure-rise-time",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/measure-rise-time.json",
       "role": "negative-replay",
-      "sha256": "a06e8b6817d2faa2758978d1b6f8a5758e0cad5fcf03d7cdbe58ea2ddef0c5bb",
+      "sha256": "f3196768b6160363bc9458a2b9e4de101e9b87bef0c35bfbc491b41469667687",
       "source_output": null,
       "source_step": null
     },
@@ -168,7 +168,7 @@
       "replay_id": "measure-fall-time",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/measure-fall-time.json",
       "role": "negative-replay",
-      "sha256": "16e49acc7f2781c7622bbfc3abc1760dcd937f5b3846003f050bd0b98dd3934f",
+      "sha256": "52cb9d486209f5e914a357bfd36847b80fe15241261f287c890a4c3a7cea085b",
       "source_output": null,
       "source_step": null
     },
@@ -177,7 +177,7 @@
       "replay_id": "measure-settling-time",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/measure-settling-time.json",
       "role": "negative-replay",
-      "sha256": "607a85c5c5610b32ff8d5c6da6005d802b0b10660c2d6fb75f0b58d9176f8f05",
+      "sha256": "162ec5e2952c2b45292486db70b22f25c1d81f5ebca4b8201c65a2314c589b5a",
       "source_output": null,
       "source_step": null
     },
@@ -186,7 +186,7 @@
       "replay_id": "deliberately-violated-limits",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/specifications/sample-at-fail.json",
       "role": "negative-replay",
-      "sha256": "a95ea95ec99cdc891fd11e36239fdd78a33d0ab6c397b81fc971c60790d1bf79",
+      "sha256": "f008e4f1c6f274e1cef2ea14583798ce4945debf208f7883f66adff920b58e70",
       "source_output": null,
       "source_step": null
     },
@@ -195,7 +195,7 @@
       "replay_id": "specification-condition-mismatch",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/negative/spec-sample-at-condition-mismatch.json",
       "role": "negative-replay",
-      "sha256": "bfe16fb72e67d75cf48c75da4e9d73a7315863967729ae34e1fdc13107ee414d",
+      "sha256": "6fca2cc5cfbadf8acaef8a8d8063fb76546d2d4340487e4885d200bd8ee0a592",
       "source_output": null,
       "source_step": null
     },
@@ -213,7 +213,7 @@
       "replay_id": "native-raw-byte",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/native-raw-byte.json",
       "role": "tamper-replay",
-      "sha256": "36c1d84e70e07bb2d9a77f037cb9486c4a05f7f3014080c2d24b004df54173f0",
+      "sha256": "5f0c3b6ab7f724e473ec7c1ec562b5d4d9fa615c72ee27150aa41341b61e8b2d",
       "source_output": null,
       "source_step": null
     },
@@ -222,7 +222,7 @@
       "replay_id": "terminal-partial-raw-byte",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/terminal-partial-raw-byte.json",
       "role": "tamper-replay",
-      "sha256": "e43b653de69c68e6acd9a32d5f76212f156acc6a806e421cff4cc268b279e5ac",
+      "sha256": "9201007dc2e5494b1bc23a00046bda423c752833bd1008d6764af49f8eeb87f6",
       "source_output": null,
       "source_step": null
     },
@@ -240,7 +240,7 @@
       "replay_id": "builtin-native-raw-byte",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/builtin-native-raw-byte.json",
       "role": "tamper-replay",
-      "sha256": "5a705c6e51b14aa497fc504c388bf7f08c2dd44b62310b4f5a45e0dd21002ffb",
+      "sha256": "54de3e605758dd940ca141064a90b7448d99b0bb9e9466ca740f78f6176c7d9c",
       "source_output": null,
       "source_step": null
     },
@@ -249,7 +249,7 @@
       "replay_id": "builtin-terminal-partial-raw-byte",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/builtin-terminal-partial-raw-byte.json",
       "role": "tamper-replay",
-      "sha256": "bb69e5aa1541adc0fda37601ba1aedc0dce6c8c846085f5608e8fc3dc7ebf279",
+      "sha256": "8fc4eb23540e29ed147179a0882051c50c555196788a1416b687c269b2eb55aa",
       "source_output": null,
       "source_step": null
     },
@@ -258,7 +258,7 @@
       "replay_id": "builtin-terminal-native-log-byte",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/builtin-terminal-native-log-byte.json",
       "role": "tamper-replay",
-      "sha256": "bb0f3117dd70e6201a853018eab983e799a7199aa75b7f475b8dd756d55dd409",
+      "sha256": "210ae4995e77528effb45a7e6fca6d290bf4a199c397c183595e198a9095bbb2",
       "source_output": null,
       "source_step": null
     },
@@ -267,7 +267,7 @@
       "replay_id": "normalized-series-digest",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/normalized-series-digest.json",
       "role": "tamper-replay",
-      "sha256": "63dd8d5e3af0f8ad56fa59cd0a888307fd006ae71fb42ad904605a18e37a5332",
+      "sha256": "941425e59dd3f597034375588e484805cd6abb2f8acccfc3d257dd89d5908333",
       "source_output": null,
       "source_step": null
     },
@@ -276,7 +276,7 @@
       "replay_id": "measurement-sample-at-value",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/measurement-sample-at-value.json",
       "role": "tamper-replay",
-      "sha256": "79b1968b9211932e326bcee555c8be2a5221b0751642cdfc83ddeac94d22c739",
+      "sha256": "14e6e4c2e1f56b6c40b3603a6f92da502126f34694c3064b12991c5db5d1a8fe",
       "source_output": null,
       "source_step": null
     },
@@ -285,7 +285,7 @@
       "replay_id": "measurement-minimum-value",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/measurement-minimum-value.json",
       "role": "tamper-replay",
-      "sha256": "17f95b1d551603aff34721f5dc26f48e0198da6a2012713a0ff02af17bdeba1d",
+      "sha256": "617feb4929e44946917d20f7f1e5de2fabfd55ecbb6469b8b31a1814c56893ee",
       "source_output": null,
       "source_step": null
     },
@@ -294,7 +294,7 @@
       "replay_id": "measurement-maximum-value",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/measurement-maximum-value.json",
       "role": "tamper-replay",
-      "sha256": "8db0bbea8e0fd080bab9d92f91e513de9e5cf3f4fb95f0a830a76971019fc604",
+      "sha256": "ab5bd37d7e27ad9fd9b4435ae5e2f60ac9356eaa9fbc45071762036568ba3032",
       "source_output": null,
       "source_step": null
     },
@@ -303,7 +303,7 @@
       "replay_id": "measurement-mean-value",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/measurement-mean-value.json",
       "role": "tamper-replay",
-      "sha256": "7ba831d3bac969e8498f378d23e01131b3e93910efa24c10670f0833ff69384c",
+      "sha256": "8a1421874cc0c82880d69cf837cc006dcbada85d34b217a8bce8e7aa8569af75",
       "source_output": null,
       "source_step": null
     },
@@ -312,7 +312,7 @@
       "replay_id": "measurement-rms-value",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/measurement-rms-value.json",
       "role": "tamper-replay",
-      "sha256": "840293c3ecc6d9de1ef34a18f5366f855fb5011a0e746d7f8eaec6e476ff17ac",
+      "sha256": "68425864c120c6d5ad622ccd5cc326aae024558f0b3b6d926e428d291ff453b3",
       "source_output": null,
       "source_step": null
     },
@@ -321,7 +321,7 @@
       "replay_id": "measurement-crossing-value",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/measurement-crossing-value.json",
       "role": "tamper-replay",
-      "sha256": "ccc6ec056beeb742b7357b3df2760fcd38f2bb1d66e107bda14f288ae005c3ab",
+      "sha256": "ef423d10babb809dde980445a023d13c45250aca4b12bc3087c90d60727c1e7e",
       "source_output": null,
       "source_step": null
     },
@@ -330,7 +330,7 @@
       "replay_id": "measurement-rise-time-value",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/measurement-rise-time-value.json",
       "role": "tamper-replay",
-      "sha256": "441986d42a284804f7d352db44cfff00e456fe0d26ccb40603e85a94e46aa1c6",
+      "sha256": "948d72deee906ec70d76314d78777536654e57923167900a54039582aad38b9f",
       "source_output": null,
       "source_step": null
     },
@@ -339,7 +339,7 @@
       "replay_id": "measurement-fall-time-value",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/measurement-fall-time-value.json",
       "role": "tamper-replay",
-      "sha256": "81700ca396e8c32094ea80fa6923dc2b904fdd146b41f741d70bc127f5bc1114",
+      "sha256": "a113e0811de6c82debf71da5b0e262c84f6158e0a87802a963b59fe11d138988",
       "source_output": null,
       "source_step": null
     },
@@ -348,7 +348,7 @@
       "replay_id": "measurement-settling-time-value",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/measurement-settling-time-value.json",
       "role": "tamper-replay",
-      "sha256": "276fe6f22d83b538b18287c4a1fa9cdc8729d683b735b61fa834009755cb724c",
+      "sha256": "c0316f9034373783c97a481d98fc01d12fa9dbbf32bcedb1862e83c042de1adf",
       "source_output": null,
       "source_step": null
     },
@@ -357,7 +357,7 @@
       "replay_id": "specification-margin",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/specification-margin.json",
       "role": "tamper-replay",
-      "sha256": "4910039e109b737b7beda39379bf230992464d909e69689d195b0758adbadc4d",
+      "sha256": "85c68fc98e7a9942b7d02e7e0777d1f9cea4b909858299f171ecfd30603cc6ab",
       "source_output": null,
       "source_step": null
     },
@@ -366,7 +366,7 @@
       "replay_id": "specification-condition-binding",
       "repository_path": "conformance/ihp-inverter-agent-chain/evidence/tamper/specification-condition-binding.json",
       "role": "tamper-replay",
-      "sha256": "07b6eec3d3fd6a0536daeed521456ede3da99339692f3895eda37983d9b5925d",
+      "sha256": "81ff42c646fedbfeb4d9f8204b4bce907b90c36006205c6d316fdc3dabee86ca",
       "source_output": null,
       "source_step": null
     }
@@ -398,8 +398,8 @@
     "clean_before": true,
     "extensions": {},
     "receipt_class": "release",
-    "repository_revision": "31be908038109ecea4052592df468de585efb5ad",
-    "repository_tree": "1b26333b1f719d737a5673dd6697c93eb2b95b2d",
+    "repository_revision": "4ca8b7a132ed40ba0446b99e24158f6f66abfb38",
+    "repository_tree": "8b01bcb9791405a15e22a1220501f6da8eb35c53",
     "semantic_subject_sha256": "dd5aca9dc85dcabcda0b48f064de4ba16037bb226d4002ca625a1f17f65ff44e",
     "state_unchanged": true
   },
