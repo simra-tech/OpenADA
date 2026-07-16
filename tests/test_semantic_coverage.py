@@ -49,7 +49,7 @@ def _write_catalog(tmp_path: Path, payload: dict) -> Path:
     return path
 
 
-def test_audit_emits_the_complete_deterministic_gap_matrix() -> None:
+def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     first = _run("--compact")
     second = _run("--compact")
 
@@ -57,7 +57,7 @@ def test_audit_emits_the_complete_deterministic_gap_matrix() -> None:
     assert first.stderr == ""
     assert first.stdout == second.stdout
     payload = json.loads(first.stdout)
-    assert payload["status"] == "gaps"
+    assert payload["status"] == "pass"
     assert payload["issues"] == []
     assert payload["inventory"] == {
         "active_profile_count": 6,
@@ -73,12 +73,15 @@ def test_audit_emits_the_complete_deterministic_gap_matrix() -> None:
     }
     assert payload["summary"]["row_count"] == 134
     assert payload["summary"]["active_row_count"] == 126
-    assert payload["summary"]["gap_count"] == 126
-    assert payload["summary"]["rows_by_coverage_level"] == {"unverified": 134}
-    assert payload["gaps"] == sorted(payload["gaps"])
+    assert payload["summary"]["gap_count"] == 0
+    assert payload["summary"]["rows_by_coverage_level"] == {
+        "agent-ready": 126,
+        "unverified": 8,
+    }
+    assert payload["gaps"] == []
 
 
-def test_current_maturity_claims_do_not_become_coverage_claims() -> None:
+def test_maturity_and_release_evidence_remain_distinct() -> None:
     completed = _run("--compact")
     payload = json.loads(completed.stdout)
     rows = {row["row_id"]: row for row in payload["rows"]}
@@ -107,32 +110,39 @@ def test_current_maturity_claims_do_not_become_coverage_claims() -> None:
     assert transient["implementation_maturity"] == "workflow-validated"
     assert shipped["implementation_maturity"] == "workflow-validated"
     for row in (spectral, transient, shipped, claim):
-        assert row["coverage_level"] == "unverified"
+        assert row["coverage_level"] == "agent-ready"
         assert row["required_coverage_level"] == "agent-ready"
-        assert row["gap"] is True
-        assert row["missing_evidence"][:9] == [
-            "contract-test",
-            "native-run",
-            "independent-artifact-check",
-            "pinned-real-design",
-            "normalized-evidence",
-            "downstream-decision",
-            "negative-replay",
-            "tamper-replay",
-            "agent-visible-evidence",
-        ]
+        assert row["gap"] is False
+        assert row["missing_evidence"] == []
+        assert row["coverage_record_ids"]
+    assert spectral["coverage_record_ids"] == [
+        "openada.chain/ihp-analog-measurements/v1"
+    ]
+    assert transient["coverage_record_ids"] == [
+        "openada.chain/ihp-inverter-agent-chain/v1"
+    ]
+    assert set(shipped["coverage_record_ids"]) == {
+        "openada.chain/ihp-analog-measurements/v1",
+        "openada.chain/ihp-inverter-agent-chain/v1",
+        "openada.chain/ihp-ngspice-provider-analyses/v1",
+    }
     assert claim["implementation_maturity"] == "workflow-validated"
-    assert claim["conformance_resolution"]["status"] == "placeholder-digest"
+    assert claim["coverage_record_ids"] == [
+        "openada.chain/ihp-ngspice-provider-analyses/v1"
+    ]
+    assert claim["conformance_resolution"]["status"] == "resolved"
     assert claim["conformance_resolution"]["conformance_record_id"] == (
         "org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1"
     )
     assert claim["conformance_resolution"]["claimed_evidence_uri"].endswith(
         "/conformance/ihp-ngspice-provider-analyses"
     )
-    assert claim["missing_evidence"][-2:] == [
-        "non-placeholder-conformance-digest",
-        "registered-conformance-digest",
-    ]
+    assert claim["conformance_resolution"]["claimed_evidence_sha256"] == (
+        claim["conformance_resolution"]["registered_evidence_sha256"]
+    )
+    assert claim["conformance_resolution"]["registered_chain_id"] == (
+        "openada.chain/ihp-ngspice-provider-analyses/v1"
+    )
     assert shipped["conformance_resolution"] is None
 
 
@@ -149,18 +159,20 @@ def test_historical_profile_rows_are_visible_but_not_release_obligations() -> No
     assert all(row["gap"] is False for row in historical)
 
 
-def test_enforcement_modes_fail_on_every_incomplete_active_row() -> None:
+def test_enforcement_modes_pass_only_after_every_active_row_is_agent_ready() -> None:
     for arguments in (
         ("--fail-on-gaps", "--compact"),
         ("--mode", "agent-ready", "--compact"),
         ("--mode", "release", "--compact"),
     ):
         completed = _run(*arguments)
-        assert completed.returncode == 1
+        assert completed.returncode == 0
         assert completed.stderr == ""
         payload = json.loads(completed.stdout)
-        assert payload["status"] == "gaps"
-        assert payload["summary"]["gap_count"] == 126
+        assert payload["status"] == "pass"
+        assert payload["issues"] == []
+        assert payload["summary"]["active_row_count"] == 126
+        assert payload["summary"]["gap_count"] == 0
 
 
 def test_uncataloged_cli_leaf_is_an_inventory_error(tmp_path: Path) -> None:
