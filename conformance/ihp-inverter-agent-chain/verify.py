@@ -2534,6 +2534,7 @@ def _verify_chain_run(
     steps = {step["id"]: step for step in manifest["steps"]}
     origin_requirements = {
         "contract-test": ("independent-oracle", False),
+        "design-provenance": ("source-materialize", False),
         "native-artifact": ("semantic-command", True),
         "independent-oracle": ("independent-oracle", False),
         "normalized-evidence": ("semantic-command", False),
@@ -2558,7 +2559,12 @@ def _verify_chain_run(
             True,
             f"chain_run.artifacts[{index}].source_output",
         )
-        required_kind, required_native = origin_requirements[role]
+        requirement = origin_requirements.get(role)
+        if requirement is None:
+            raise ConformanceError(
+                f"chain_run.artifacts[{index}] has unsupported role {role!r}"
+            )
+        required_kind, required_native = requirement
         _expect(step["kind"], required_kind, f"chain_run.artifacts[{index}].source_step.kind")
         _expect(
             step["native_execution"],
