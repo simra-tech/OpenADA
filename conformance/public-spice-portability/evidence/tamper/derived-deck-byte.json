@@ -1,0 +1,10 @@
+{
+  "extensions": {},
+  "mutation": "append one derived-deck comment record",
+  "observed_diagnostic": "conformance.derivation.tampered",
+  "replay_id": "derived-deck-byte",
+  "required_diagnostic": "conformance.derivation.tampered",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown",
+  "verifier_message": "Xyce AC minimal derivation differs"
+}

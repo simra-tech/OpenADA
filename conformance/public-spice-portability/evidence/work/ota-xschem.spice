@@ -1,0 +1,54 @@
+** sch_path: /evidence/work/ihp-ota/ota_testbench.sch
+**.subckt ota_testbench vout
+*.iopin vout
+V1 vp GND DC 0.6 AC 1 0
+VDD vdd GND DC 1.2
+I0 net1 GND 80u
+Cload vout GND 500f
+L6 vout vm 4G
+C1 vm GND 4G
+x1 vdd net1 vp vm vout GND two_stage_OTA
+**** begin user architecture code
+
+.lib cornerMOSlv.lib mos_tt
+
+
+
+.control
+op
+save all
+write tb_OTA_op.raw
+.endc
+
+.control
+op
+ac dec 100 1 10e6
+save all
+let Av = db(v(vout))
+write output_file.raw
+.endc
+
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  two_stage_OTA.sym # of pins=6
+** sym_path: /evidence/work/ihp-ota/two_stage_OTA.sym
+** sch_path: /evidence/work/ihp-ota/two_stage_OTA.sch
+.subckt two_stage_OTA vdd iout v+ v- vout vss
+*.iopin v-
+*.iopin v+
+*.iopin vss
+*.iopin vdd
+*.iopin iout
+*.iopin vout
+XM4 vout net1 vss vss sg13_lv_nmos w=3.09u l=6.24u ng=1 m=1 mm_ok=1
+XM3 net1 net1 vss vss sg13_lv_nmos w=3.09u l=6.24u ng=1 m=1 mm_ok=1
+XM1 net1 v+ net2 vdd sg13_lv_pmos w=2.75u l=5.46u ng=1 m=1 mm_ok=1
+XM5 net2 iout vdd vdd sg13_lv_pmos w=66u l=9.98u ng=10 m=1 mm_ok=1
+XM6 iout iout vdd vdd sg13_lv_pmos w=66u l=9.98u ng=10 m=1 mm_ok=1
+XM2 vout v- net2 vdd sg13_lv_pmos w=2.75u l=5.46u ng=1 m=1 mm_ok=1
+.ends
+
+.GLOBAL GND
+.end

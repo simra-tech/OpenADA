@@ -1,0 +1,10 @@
+{
+  "extensions": {},
+  "mutation": "replace normalized OP analysis type with DC",
+  "observed_diagnostic": "conformance.analysis.tampered",
+  "replay_id": "simulation-analysis-type",
+  "required_diagnostic": "conformance.analysis.tampered",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown",
+  "verifier_message": "ngspice-op.analysis differs: expected 'op', observed 'dc'"
+}

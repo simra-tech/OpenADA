@@ -1,0 +1,85 @@
+{
+  "files": [
+    {
+      "bytes": 158,
+      "path": "/evidence/sources/xyce/Netlists/Output/DC/dc-noprn.cir",
+      "repository": "Xyce_Regression",
+      "sha256": "8cc7ba1548a9591c33bef458865b3f89cd6ceeae9dd84843e2a96b069e0f87d3",
+      "source_path": "Netlists/Output/DC/dc-noprn.cir"
+    },
+    {
+      "bytes": 164,
+      "path": "/evidence/sources/xyce/Netlists/Output/TRAN/tran-raw-override-noprint.cir",
+      "repository": "Xyce_Regression",
+      "sha256": "484561fd3d74d6835f8570465f619e0ed138078214156fb3e5ff911d561fcf20",
+      "source_path": "Netlists/Output/TRAN/tran-raw-override-noprint.cir"
+    },
+    {
+      "bytes": 918,
+      "path": "/evidence/sources/xyce/Netlists/ACtests/RC_simple.cir",
+      "repository": "Xyce_Regression",
+      "sha256": "e992eced2155febdb8b79922f0579a4798838385b7aa573dff5440719d9d7df9",
+      "source_path": "Netlists/ACtests/RC_simple.cir"
+    },
+    {
+      "bytes": 4460,
+      "path": "/evidence/sources/xyce/README.md",
+      "repository": "Xyce_Regression",
+      "sha256": "82ff6df7bddcdf639483d261949a02a5f43da85d579f1242b05c3aa0c430f7cb",
+      "source_path": "README.md"
+    },
+    {
+      "bytes": 1606,
+      "path": "/evidence/sources/ihp/modules/module_0_foundations/inverter/inverter_tb.sch",
+      "repository": "IHP-AnalogAcademy",
+      "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82",
+      "source_path": "modules/module_0_foundations/inverter/inverter_tb.sch"
+    },
+    {
+      "bytes": 683,
+      "path": "/evidence/sources/ihp/modules/module_0_foundations/inverter/inverter.sym",
+      "repository": "IHP-AnalogAcademy",
+      "sha256": "8658fa30ac994a0bedf511e59f064e6458e9b4a30d91382f6974a5117bd5c103",
+      "source_path": "modules/module_0_foundations/inverter/inverter.sym"
+    },
+    {
+      "bytes": 715,
+      "path": "/evidence/sources/ihp/modules/module_0_foundations/inverter/inverter.sch",
+      "repository": "IHP-AnalogAcademy",
+      "sha256": "6a2e03f44df59976b8ba4fca385b104b80802d367789171790bd238f912ec771",
+      "source_path": "modules/module_0_foundations/inverter/inverter.sch"
+    },
+    {
+      "bytes": 2738,
+      "path": "/evidence/sources/ihp/modules/module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench.sch",
+      "repository": "IHP-AnalogAcademy",
+      "sha256": "81577b238bdd926731d3ef54ba29e35e7f94c51aea91b0e8dd6dfbd8c4fc60c6",
+      "source_path": "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench.sch"
+    },
+    {
+      "bytes": 881,
+      "path": "/evidence/sources/ihp/modules/module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.sym",
+      "repository": "IHP-AnalogAcademy",
+      "sha256": "d6cbae50c9f6a425bab127f0644c5959c98c13893442420b6b25531af0d64126",
+      "source_path": "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.sym"
+    },
+    {
+      "bytes": 2175,
+      "path": "/evidence/sources/ihp/modules/module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.sch",
+      "repository": "IHP-AnalogAcademy",
+      "sha256": "2bfae18e0f02cbf7a2919bd8d219ea2d1edbb32457830365ae4d4965f6a2e232",
+      "source_path": "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.sch"
+    },
+    {
+      "bytes": 11357,
+      "path": "/evidence/sources/ihp/LICENSE",
+      "repository": "IHP-AnalogAcademy",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "source_path": "LICENSE"
+    }
+  ],
+  "ihp_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+  "schema": "openada.public-source-identities/v0alpha1",
+  "xyce_revision": "d6e278e371ec2f3df1325dcff4552e585bc7ecc1",
+  "xyce_tag": "Release-7.10.0"
+}

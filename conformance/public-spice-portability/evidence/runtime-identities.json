@@ -1,0 +1,57 @@
+{
+  "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+  "platform": "linux/amd64",
+  "records": {
+    "corner_moslv": {
+      "bytes": 21645,
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/cornerMOSlv.lib",
+      "sha256": "03d505847c880d233b341be115a1e5460edf4d8e9b3e8a7df791a52fa4455d67"
+    },
+    "isolated_spiceinit": {
+      "bytes": 62,
+      "path": "/tmp/openada-home/.spiceinit",
+      "sha256": "168ff70c9c37e8a2d687e782cb92b9df81e9f35ed1eb1d1ef14c4e02a27c082d"
+    },
+    "moslv_modules": {
+      "bytes": 10452,
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mod.lib",
+      "sha256": "84ec57080b9dd4666417f05db6f7b34c8dd3f12118929f9b308018613bece16e"
+    },
+    "moslv_parameters": {
+      "bytes": 94408,
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_parm.lib",
+      "sha256": "cbf10b8453a18bb70b8ad0d6e40faa0937338e699b5460947a94900db6c92a6e"
+    },
+    "pdk_commit": {
+      "bytes": 41,
+      "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+      "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+    },
+    "psp103_osdi": {
+      "bytes": 843184,
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi",
+      "sha256": "6538578a272040e70cf4542884e86d1aecd3c6936eee9e43564db49d2d05d5ab"
+    },
+    "tool:ngspice": {
+      "bytes": 8067696,
+      "path": "/foss/tools/ngspice/bin/ngspice",
+      "sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
+    },
+    "tool:xschem": {
+      "bytes": 1126312,
+      "path": "/foss/tools/xschem/bin/xschem",
+      "sha256": "c960e786685939e03fb76619bad6aed886190b0d5d1eed2941b745565eb95c22"
+    },
+    "tool:xyce": {
+      "bytes": 112984,
+      "path": "/foss/tools/xyce/bin/Xyce",
+      "sha256": "9a0645fd78a26b9bf42f2dc6fceb1a044ede6c7f7f420edacca97fb1d44473f2"
+    },
+    "xschem_rcfile": {
+      "bytes": 19794,
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+      "sha256": "d6d8fa5157ad2072e6d1ce63bda5f5d593ef4eb84631f23eed5e9ae3886f18b5"
+    }
+  },
+  "schema": "openada.public-runtime-identities/v0alpha1"
+}

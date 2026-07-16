@@ -1,0 +1,11 @@
+DC test of print output format
+*
+* Trivial resistor circuit, just do a DC sweep and there should be no output
+*
+
+R1 1 0 10
+V1 1 0 DC 0V
+
+.dc v1 0 10 .1
+
+.end

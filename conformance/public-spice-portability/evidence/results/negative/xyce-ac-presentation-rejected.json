@@ -1,0 +1,99 @@
+{
+  "artifacts": [],
+  "data": {
+    "analysis": {
+      "completion": "unproven",
+      "convergence": "not-established",
+      "dependent_variable_count": null,
+      "extensions": {},
+      "finite_value_count": null,
+      "point_count": null,
+      "type": "ac"
+    },
+    "evidence": {
+      "artifact_roles_present": [],
+      "extensions": {},
+      "freshness": "not-established",
+      "provenance": "incomplete",
+      "provenance_limitations": [
+        "Only the declared top-level model-free analysis deck and selected native executable were content-bound; host runtime libraries and simulator defaults remain bounded provenance."
+      ],
+      "request_binding": "not-established",
+      "structure": "not-established"
+    },
+    "extensions": {
+      "org.openada": {
+        "backend": "xyce",
+        "native_data": {},
+        "native_diagnostics": [
+          {
+            "code": "simulation.feature.unsupported",
+            "message": "The initial shared profile accepts no control, measurement, print, step, Fourier, or FFT directives.",
+            "severity": "error"
+          }
+        ],
+        "parameters": {
+          "analysis": {
+            "extensions": {},
+            "points": 10,
+            "start_hz": 1.0,
+            "stop_hz": 100000.0,
+            "sweep": "dec",
+            "type": "ac"
+          },
+          "extensions": {}
+        }
+      }
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "driver_id": "org.openada.driver.xyce",
+      "driver_version": "0.4.0",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "request_id": "58018b64-5860-4a01-83c9-025360adcd87"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "simulation.request.invalid",
+      "message": "The initial shared profile accepts no control, measurement, print, step, Fourier, or FFT directives.",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "unknown",
+    "summary": "The circuit.simulate request is outside the initial shared profile."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": null,
+    "status": "invalid_request"
+  },
+  "inputs": [
+    {
+      "bytes": 918,
+      "exists": true,
+      "kind": "spice-netlist",
+      "path": "/evidence/work/xyce-ac-source.cir",
+      "role": "input",
+      "sha256": "e992eced2155febdb8b79922f0579a4798838385b7aa573dff5440719d9d7df9"
+    }
+  ],
+  "operation": "simulate",
+  "provenance": {
+    "created_at": "2026-07-16T08:37:38.088886Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "xyce",
+    "path": "/foss/tools/xyce/bin/Xyce",
+    "version": "Xyce Release 7.10-opensource"
+  }
+}

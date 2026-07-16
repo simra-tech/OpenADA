@@ -1,0 +1,34 @@
+{
+  "conditions": [
+    {
+      "name": "design",
+      "unit": "1",
+      "value": "IHP-AnalogAcademy/inverter"
+    },
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "v(vin)",
+      "output_name": "vin",
+      "unit": "V"
+    },
+    {
+      "component": "real",
+      "native_name": "v(vout)",
+      "output_name": "vout",
+      "unit": "V"
+    }
+  ]
+}

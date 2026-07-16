@@ -1,0 +1,10 @@
+{
+  "extensions": {},
+  "mutation": "replace provider-validation summary",
+  "observed_diagnostic": "conformance.admin.tampered",
+  "replay_id": "admin-result-byte",
+  "required_diagnostic": "conformance.admin.tampered",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown",
+  "verifier_message": "agent.admin.provider-validate.digest differs: expected 'deb60dfb7570ec81d9fbb1e220a0b90b576e98cf7525efd51eb5301e43ff6dd9', observed '01e2566cb3d3ba7bd17e1e148d54974f86fe04dd51a93ec3c8826fc8e89be064'"
+}

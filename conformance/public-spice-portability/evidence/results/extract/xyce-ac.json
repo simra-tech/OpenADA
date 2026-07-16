@@ -1,0 +1,283 @@
+{
+  "artifacts": [],
+  "data": {
+    "extensions": {},
+    "extraction": {
+      "extensions": {},
+      "plot": {
+        "encoding": "ascii",
+        "extensions": {},
+        "native_axis_name": "frequency",
+        "native_axis_type": "frequency",
+        "numeric_type": "complex",
+        "plotname": "AC Analysis",
+        "point_count": 51
+      },
+      "request_sha256": "20ba60183c5a426ded83fb51fbface0ed031484457f641086c318a42ecdf6d25",
+      "series": {
+        "axis": {
+          "name": "frequency",
+          "unit": "Hz",
+          "values": [
+            1.0,
+            1.25892541,
+            1.58489319,
+            1.99526231,
+            2.51188643,
+            3.16227766,
+            3.98107171,
+            5.01187234,
+            6.30957344,
+            7.94328235,
+            10.0,
+            12.5892541,
+            15.8489319,
+            19.9526231,
+            25.1188643,
+            31.6227766,
+            39.8107171,
+            50.1187234,
+            63.0957344,
+            79.4328235,
+            100.0,
+            125.892541,
+            158.489319,
+            199.526231,
+            251.188643,
+            316.227766,
+            398.107171,
+            501.187234,
+            630.957344,
+            794.328235,
+            1000.0,
+            1258.92541,
+            1584.89319,
+            1995.26231,
+            2511.88643,
+            3162.27766,
+            3981.07171,
+            5011.87234,
+            6309.57344,
+            7943.28235,
+            10000.0,
+            12589.2541,
+            15848.9319,
+            19952.6231,
+            25118.8643,
+            31622.7766,
+            39810.7171,
+            50118.7234,
+            63095.7344,
+            79432.8235,
+            100000.0
+          ]
+        },
+        "conditions": [
+          {
+            "name": "design",
+            "unit": "1",
+            "value": "Xyce_Regression/RC_simple"
+          },
+          {
+            "name": "derivation",
+            "unit": "1",
+            "value": "remove-active-presentation-print"
+          },
+          {
+            "name": "xyce_release",
+            "unit": "1",
+            "value": "7.10.0"
+          }
+        ],
+        "extensions": {},
+        "signals": [
+          {
+            "name": "v1.real",
+            "unit": "V",
+            "values": [
+              -999.842111,
+              -999.749786,
+              -999.603496,
+              -999.371729,
+              -999.004624,
+              -998.423353,
+              -997.503485,
+              -996.04906,
+              -993.752619,
+              -990.134617,
+              -984.454124,
+              -975.583458,
+              -961.847251,
+              -940.851875,
+              -909.391182,
+              -863.622242,
+              -799.823206,
+              -715.993253,
+              -613.999566,
+              -500.909677,
+              -387.726637,
+              -285.488912,
+              -201.344496,
+              -137.237155,
+              -91.2102588,
+              -59.5544125,
+              -38.4207089,
+              -24.5904941,
+              -15.6576451,
+              -9.93672392,
+              -6.29272483,
+              -3.9796829,
+              -2.51470343,
+              -1.58814445,
+              -1.00263904,
+              -0.632856637,
+              -0.399398823,
+              -0.25204077,
+              -0.159041768,
+              -0.100354462,
+              -0.0633217299,
+              -0.0399542442,
+              -0.0252097955,
+              -0.0159064536,
+              -0.0100363527,
+              -0.00633253388,
+              -0.0039955681,
+              -0.00252103675,
+              -0.00159066813,
+              -0.00100364433,
+              -0.000633256997
+            ]
+          },
+          {
+            "name": "v1.imaginary",
+            "unit": "V",
+            "values": [
+              12.5643865,
+              15.8161649,
+              19.9084583,
+              25.057453,
+              31.5338765,
+              39.6756997,
+              49.9027278,
+              62.7322109,
+              78.7930932,
+              98.8334848,
+              123.710154,
+              154.338506,
+              191.564915,
+              235.901726,
+              287.052017,
+              343.189256,
+              400.132534,
+              450.940035,
+              486.830668,
+              499.999172,
+              487.231661,
+              451.646978,
+              401.00485,
+              344.097542,
+              287.90788,
+              236.659427,
+              192.209672,
+              154.873502,
+              124.147023,
+              99.1866193,
+              79.0767124,
+              62.9590742,
+              50.0837269,
+              39.8198725,
+              31.6485981,
+              25.1486805,
+              19.9809735,
+              15.8737912,
+              12.6101734,
+              10.0172047,
+              7.95724326,
+              6.3208107,
+              5.02087243,
+              3.98825784,
+              3.16800441,
+              2.51644467,
+              1.99888772,
+              1.5877753,
+              1.26121592,
+              1.00182001,
+              0.795774212
+            ]
+          }
+        ],
+        "source": {
+          "artifact_role": "measurement.source",
+          "artifact_sha256": "2b07af44ecc2b36be25a6342198c2fcfc39882c227ec260f4a499dcb875d3181",
+          "lineage": {
+            "artifact_role": "simulation.result",
+            "artifact_sha256": "7b82cbca49e9273bfac227619713bd54bed65986216fd2e3ac8f92cf345e8b6f",
+            "binding": "unverified",
+            "operation": "circuit.simulate",
+            "request_id": "f8bc22ed-8b49-4016-8873-f98c75582fbe"
+          },
+          "operation": "openada.operation/result.series.extract/v1alpha1",
+          "request_id": "21000000-0000-4000-8000-000000000005"
+        }
+      },
+      "source": {
+        "analysis_type": "ac",
+        "artifact": {
+          "bytes": 3657,
+          "exists": true,
+          "kind": "xyce-raw",
+          "path": "/evidence/sim/xyce-ac/xyce-ac-derived.xyce.raw",
+          "role": "simulation.result",
+          "sha256": "7b82cbca49e9273bfac227619713bd54bed65986216fd2e3ac8f92cf345e8b6f"
+        },
+        "backend": "xyce",
+        "binding": "verified",
+        "driver_id": "org.openada.driver.xyce",
+        "driver_version": "0.4.0",
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "request_id": "f8bc22ed-8b49-4016-8873-f98c75582fbe"
+      },
+      "status": "extracted"
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
+      "implementation_id": "org.openada.kernel.spice3-series",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/result.series.extract/v1alpha1",
+      "request_id": "21000000-0000-4000-8000-000000000005"
+    }
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "Extracted a bounded normalized real series from exact native simulation evidence."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 3657,
+      "exists": true,
+      "kind": "xyce-raw",
+      "path": "/evidence/sim/xyce-ac/xyce-ac-derived.xyce.raw",
+      "role": "simulation.result",
+      "sha256": "7b82cbca49e9273bfac227619713bd54bed65986216fd2e3ac8f92cf345e8b6f"
+    }
+  ],
+  "operation": "result.series.extract",
+  "provenance": {
+    "created_at": "2026-07-16T08:37:26.207645Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}

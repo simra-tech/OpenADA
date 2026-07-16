@@ -1,0 +1,34 @@
+{
+  "conditions": [
+    {
+      "name": "design",
+      "unit": "1",
+      "value": "Xyce_Regression/RC_simple"
+    },
+    {
+      "name": "derivation",
+      "unit": "1",
+      "value": "remove-active-presentation-print"
+    },
+    {
+      "name": "xyce_release",
+      "unit": "1",
+      "value": "7.10.0"
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "V(1)",
+      "output_name": "v1.real",
+      "unit": "V"
+    },
+    {
+      "component": "imaginary",
+      "native_name": "V(1)",
+      "output_name": "v1.imaginary",
+      "unit": "V"
+    }
+  ]
+}

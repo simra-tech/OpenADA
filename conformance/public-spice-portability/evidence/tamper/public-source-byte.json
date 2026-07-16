@@ -1,0 +1,10 @@
+{
+  "extensions": {},
+  "mutation": "append one source comment record",
+  "observed_diagnostic": "conformance.source.tampered",
+  "replay_id": "public-source-byte",
+  "required_diagnostic": "conformance.source.tampered",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown",
+  "verifier_message": "source[0].bytes differs: expected 166, observed 158"
+}

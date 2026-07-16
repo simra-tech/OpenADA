@@ -1,0 +1,10 @@
+{
+  "extensions": {},
+  "mutation": "append one whitespace byte to retained request contract",
+  "observed_diagnostic": "conformance.contract.tampered",
+  "replay_id": "request-contract-byte",
+  "required_diagnostic": "conformance.contract.tampered",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown",
+  "verifier_message": "retained request contract differs: expected '123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7', observed 'e4f2774199b37b7bd491be294591ed982b3a43f65f34ab9cd5884ebd36ee9721'"
+}

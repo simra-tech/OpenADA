@@ -1,0 +1,23 @@
+{
+  "conditions": [
+    {
+      "name": "design",
+      "unit": "1",
+      "value": "Xyce_Regression/dc-noprn"
+    },
+    {
+      "name": "xyce_release",
+      "unit": "1",
+      "value": "7.10.0"
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "does_not_exist",
+      "output_name": "missing",
+      "unit": "V"
+    }
+  ]
+}

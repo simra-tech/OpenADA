@@ -1,0 +1,45 @@
+{
+  "records": {
+    "inverter-dc": {
+      "analysis_directive": ".dc V1 0 1.2 0.1",
+      "derived_sha256": "b41a8e3a154454122074e6a1c9c2b0c39ceca6e06c4e3df553c8dff128184563",
+      "inlined_parameter_include_count": 4,
+      "operation": "remove reviewed control/library directives; inline pinned mos_tt closure; inject one typed analysis",
+      "removed_control_blocks": 1,
+      "removed_library_directives": 1,
+      "source_sha256": "95a38219b5284ca57fbeead4d6ffc34d63d163fdfaccb4a524c88eb0e9c942d7"
+    },
+    "inverter-op": {
+      "analysis_directive": ".op",
+      "derived_sha256": "a017954533340bf57ea8fb9e69c1a689477d5b89f92cae9ac388bf2799d53c43",
+      "inlined_parameter_include_count": 4,
+      "operation": "remove reviewed control/library directives; inline pinned mos_tt closure; inject one typed analysis",
+      "removed_control_blocks": 1,
+      "removed_library_directives": 1,
+      "source_sha256": "95a38219b5284ca57fbeead4d6ffc34d63d163fdfaccb4a524c88eb0e9c942d7"
+    },
+    "ota-ac": {
+      "analysis_directive": ".ac dec 10 1 100000",
+      "derived_sha256": "33a9c3440008ca72cf8ba1e75911587433137437b5c3f452f90c3f18d9055e38",
+      "inlined_parameter_include_count": 4,
+      "operation": "remove reviewed control/library directives; inline pinned mos_tt closure; inject one typed analysis",
+      "removed_control_blocks": 2,
+      "removed_library_directives": 1,
+      "source_sha256": "e53471d266d8cfdd3f43ed24a177497095caaaf8a6b8d179d8a3d7598159c1f9"
+    },
+    "xyce-ac": {
+      "derived_sha256": "5e1258932db2b737a94e9b1c61bfa7e6c37ef5da086ad68e22a452351f014cf0",
+      "operation": "remove exactly one active presentation directive",
+      "removed_count": 1,
+      "removed_line": ".print ac v(1)",
+      "source_sha256": "e992eced2155febdb8b79922f0579a4798838385b7aa573dff5440719d9d7df9"
+    },
+    "xyce-op-unsupported": {
+      "derived_sha256": "9d03d0ea3a52d2568de05646f7eb0eee3a537ed516232de992822d467700d674",
+      "operation": "replace exactly one .dc directive with .op to probe advertised support",
+      "replacement_count": 1,
+      "source_sha256": "8cc7ba1548a9591c33bef458865b3f89cd6ceeae9dd84843e2a96b069e0f87d3"
+    }
+  },
+  "schema": "openada.public-source-derivations/v0alpha1"
+}

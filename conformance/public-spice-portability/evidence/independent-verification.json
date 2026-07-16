@@ -1,0 +1,164 @@
+{
+  "agent_evidence_sha256": "09d89fea6ef9cc9e11bd7f241994ba9c44a33187eaf9f34f40f418ec9503a316",
+  "chain_id": "openada.chain/public-spice-portability/v1",
+  "checks": {
+    "admin_surface_semantics": "pass",
+    "agent_decision_lineage": "pass",
+    "electrical_oracles": "pass",
+    "independent_native_raw_parse": "pass",
+    "negative_replays": "pass",
+    "normalized_extraction_equivalence": "pass",
+    "pinned_public_sources": "pass",
+    "runtime_identity": "pass",
+    "source_derivations": "pass",
+    "strict_contracts": "pass"
+  },
+  "extensions": {},
+  "manifest_sha256": "fd082e4de03e6e18e43dfd6a4fed0b7d06f9f204ad12ee1524eeb74667197ccf",
+  "provisional": false,
+  "raw_summary": {
+    "legacy-ngspice-op": {
+      "encoding": "binary",
+      "numeric_type": "real",
+      "point_count": 1,
+      "sha256": "16b2d2722764ad3951761e4b83fa0cfd554824ee972a9a73d623cb4c9dde92be",
+      "variable_count": 11
+    },
+    "ngspice-ac": {
+      "encoding": "binary",
+      "numeric_type": "complex",
+      "point_count": 51,
+      "sha256": "916d1183d40a4c8aa615b14d20611cbc7f0b2193c3169fe3d6f184e7683bfd8f",
+      "variable_count": 29
+    },
+    "ngspice-dc": {
+      "encoding": "binary",
+      "numeric_type": "real",
+      "point_count": 13,
+      "sha256": "9da5d571d08ca8d648961413b2ff330f5af1a4b9852d0e5ab8509f40d6e1afc1",
+      "variable_count": 12
+    },
+    "ngspice-op": {
+      "encoding": "binary",
+      "numeric_type": "real",
+      "point_count": 1,
+      "sha256": "1a50a154f9cee26b1d25e2f0f5f645eea4299d3dc85c8e183eccdc79c7dc7612",
+      "variable_count": 11
+    },
+    "xyce-ac": {
+      "encoding": "ascii",
+      "numeric_type": "complex",
+      "point_count": 51,
+      "sha256": "7b82cbca49e9273bfac227619713bd54bed65986216fd2e3ac8f92cf345e8b6f",
+      "variable_count": 2
+    },
+    "xyce-dc": {
+      "encoding": "ascii",
+      "numeric_type": "real",
+      "point_count": 101,
+      "sha256": "03e80690e04be0d219298be33f41c64e7c4df6ccf462fdce01b2f46165f86050",
+      "variable_count": 3
+    },
+    "xyce-tran": {
+      "encoding": "ascii",
+      "numeric_type": "real",
+      "point_count": 18,
+      "sha256": "5554b238ce5455c318708e64a7908a987cf86070e66a507e6cb9fd961916e920",
+      "variable_count": 3
+    }
+  },
+  "schema": "openada.public-spice-portability-independent-verification/v0alpha1",
+  "status": "pass",
+  "tamper_replays": [
+    {
+      "extensions": {},
+      "mutation": "append one whitespace byte to retained request contract",
+      "observed_diagnostic": "conformance.contract.tampered",
+      "replay_id": "request-contract-byte",
+      "required_diagnostic": "conformance.contract.tampered",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown",
+      "verifier_message": "retained request contract differs: expected '123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7', observed 'e4f2774199b37b7bd491be294591ed982b3a43f65f34ab9cd5884ebd36ee9721'"
+    },
+    {
+      "extensions": {},
+      "mutation": "append one source comment record",
+      "observed_diagnostic": "conformance.source.tampered",
+      "replay_id": "public-source-byte",
+      "required_diagnostic": "conformance.source.tampered",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown",
+      "verifier_message": "source[0].bytes differs: expected 166, observed 158"
+    },
+    {
+      "extensions": {},
+      "mutation": "append one derived-deck comment record",
+      "observed_diagnostic": "conformance.derivation.tampered",
+      "replay_id": "derived-deck-byte",
+      "required_diagnostic": "conformance.derivation.tampered",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown",
+      "verifier_message": "Xyce AC minimal derivation differs"
+    },
+    {
+      "extensions": {},
+      "mutation": "flip one retained raw byte",
+      "observed_diagnostic": "conformance.native.tampered",
+      "replay_id": "native-raw-byte",
+      "required_diagnostic": "conformance.native.tampered",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown",
+      "verifier_message": "native artifact sha256 differs: expected '297c3a01db6d3255294e209b184f664bbb2688d68dcff1ce80b14ae854fc8364', observed '03e80690e04be0d219298be33f41c64e7c4df6ccf462fdce01b2f46165f86050'"
+    },
+    {
+      "extensions": {},
+      "mutation": "replace normalized OP analysis type with DC",
+      "observed_diagnostic": "conformance.analysis.tampered",
+      "replay_id": "simulation-analysis-type",
+      "required_diagnostic": "conformance.analysis.tampered",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown",
+      "verifier_message": "ngspice-op.analysis differs: expected 'op', observed 'dc'"
+    },
+    {
+      "extensions": {},
+      "mutation": "replace Xyce driver identity with ngspice",
+      "observed_diagnostic": "conformance.backend.tampered",
+      "replay_id": "simulation-backend-id",
+      "required_diagnostic": "conformance.backend.tampered",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown",
+      "verifier_message": "xyce-dc.driver differs: expected 'org.openada.driver.xyce', observed 'org.openada.driver.ngspice'"
+    },
+    {
+      "extensions": {},
+      "mutation": "replace extraction raw-lineage digest",
+      "observed_diagnostic": "conformance.lineage.tampered",
+      "replay_id": "extraction-series-digest",
+      "required_diagnostic": "conformance.lineage.tampered",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown",
+      "verifier_message": "ngspice-dc.extract.lineage differs: expected '9da5d571d08ca8d648961413b2ff330f5af1a4b9852d0e5ab8509f40d6e1afc1', observed '0000000000000000000000000000000000000000000000000000000000000000'"
+    },
+    {
+      "extensions": {},
+      "mutation": "replace provider-validation summary",
+      "observed_diagnostic": "conformance.admin.tampered",
+      "replay_id": "admin-result-byte",
+      "required_diagnostic": "conformance.admin.tampered",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown",
+      "verifier_message": "agent.admin.provider-validate.digest differs: expected 'deb60dfb7570ec81d9fbb1e220a0b90b576e98cf7525efd51eb5301e43ff6dd9', observed '01e2566cb3d3ba7bd17e1e148d54974f86fe04dd51a93ec3c8826fc8e89be064'"
+    },
+    {
+      "extensions": {},
+      "mutation": "replace agent conclusion",
+      "observed_diagnostic": "conformance.decision.tampered",
+      "replay_id": "agent-decision-byte",
+      "required_diagnostic": "conformance.decision.tampered",
+      "schema": "openada.tamper-replay/v0alpha1",
+      "status": "unknown",
+      "verifier_message": "agent.conclusion differs: expected 'portable-for-reviewed-analysis-matrix', observed 'unreviewed'"
+    }
+  ]
+}

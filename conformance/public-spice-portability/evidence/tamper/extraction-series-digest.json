@@ -1,0 +1,10 @@
+{
+  "extensions": {},
+  "mutation": "replace extraction raw-lineage digest",
+  "observed_diagnostic": "conformance.lineage.tampered",
+  "replay_id": "extraction-series-digest",
+  "required_diagnostic": "conformance.lineage.tampered",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown",
+  "verifier_message": "ngspice-dc.extract.lineage differs: expected '9da5d571d08ca8d648961413b2ff330f5af1a4b9852d0e5ab8509f40d6e1afc1', observed '0000000000000000000000000000000000000000000000000000000000000000'"
+}

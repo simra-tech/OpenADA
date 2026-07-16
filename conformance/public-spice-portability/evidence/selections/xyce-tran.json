@@ -1,0 +1,23 @@
+{
+  "conditions": [
+    {
+      "name": "design",
+      "unit": "1",
+      "value": "Xyce_Regression/tran-raw-override-noprint"
+    },
+    {
+      "name": "xyce_release",
+      "unit": "1",
+      "value": "7.10.0"
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "V(1)",
+      "output_name": "v1",
+      "unit": "V"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "extensions": {},
+  "mutation": "flip one retained raw byte",
+  "observed_diagnostic": "conformance.native.tampered",
+  "replay_id": "native-raw-byte",
+  "required_diagnostic": "conformance.native.tampered",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown",
+  "verifier_message": "native artifact sha256 differs: expected '297c3a01db6d3255294e209b184f664bbb2688d68dcff1ce80b14ae854fc8364', observed '03e80690e04be0d219298be33f41c64e7c4df6ccf462fdce01b2f46165f86050'"
+}

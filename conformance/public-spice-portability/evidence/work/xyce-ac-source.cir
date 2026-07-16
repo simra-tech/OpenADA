@@ -1,0 +1,40 @@
+Simple RC circuit
+**********************************************************************
+*
+* This circuit has the voltage source applied directly to the
+* resistor, with the capacitor tied to ground.
+*
+**********************************************************************
+*Vsrc 1 0 sin(0 1 1e+9 0 0) 
+*R1 1 2 0.2
+*C1 2 0 0.5e-6
+  
+*Vsrc 1 0 AC 1 0 
+Isrc 1 0 AC 1 0 sin(0 1 1e+5 0 0)
+*Vsrc 1 0 sin(0 1 1e+5 0 0)
+*Vsrc 1 0 sin(0 1 1e+5 0 0)
+*R1 1 2 1e3 
+*C1 2 0 2e-6
+R1 1 0 1e3
+C1 1 0 2e-6
+
+*.print ac v(2)
+.print ac v(1)
+*.print tran v(2)
+*.print shooting V(1) V(2) I(Vsrc)
+
+*.tran 5e-7 1e-4
+
+.AC DEC 10 1 1e5 
+*.DC LIN Vsrc 0 5 1
+*.tran 1e-7 1e-4
+*.options mpde n2=51 diff=3 T2=1e-9 IC=0
+*.mpde 0.5e-10 1.0e-8 5e-7
+*.hb 1e-9
+*.hb 1e-5
+*.shooting 1e-5
+*.options hb m=20
+*.options hb m=5 gmres=1  matimplicit=1
+*.options hb m=1 gmres=1  matimplicit=1 real=1 
+*.options hb m=5 gmres=1  matimplicit=1 precondition=1
+.END

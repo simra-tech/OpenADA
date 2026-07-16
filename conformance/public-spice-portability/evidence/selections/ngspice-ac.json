@@ -1,0 +1,34 @@
+{
+  "conditions": [
+    {
+      "name": "design",
+      "unit": "1",
+      "value": "IHP-AnalogAcademy/two-stage-OTA"
+    },
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "v(vout)",
+      "output_name": "vout.real",
+      "unit": "V"
+    },
+    {
+      "component": "imaginary",
+      "native_name": "v(vout)",
+      "output_name": "vout.imaginary",
+      "unit": "V"
+    }
+  ]
+}

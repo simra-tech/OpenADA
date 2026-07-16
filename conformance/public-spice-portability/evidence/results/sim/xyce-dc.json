@@ -1,0 +1,198 @@
+{
+  "artifacts": [
+    {
+      "bytes": 2883,
+      "exists": true,
+      "kind": "xyce-log",
+      "path": "/evidence/sim/xyce-dc/xyce-dc.xyce.log",
+      "role": "simulation.log",
+      "sha256": "b7ba19eaeaa1ec7c3c6bc9631dd9e113bf2b99cef3ab2c76a0879a16b025b774"
+    },
+    {
+      "bytes": 5535,
+      "exists": true,
+      "kind": "xyce-raw",
+      "path": "/evidence/sim/xyce-dc/xyce-dc.xyce.raw",
+      "role": "simulation.result",
+      "sha256": "03e80690e04be0d219298be33f41c64e7c4df6ccf462fdce01b2f46165f86050"
+    }
+  ],
+  "data": {
+    "analysis": {
+      "completion": "completed",
+      "convergence": "converged",
+      "dependent_variable_count": 2,
+      "extensions": {},
+      "finite_value_count": 202,
+      "point_count": 101,
+      "type": "dc"
+    },
+    "evidence": {
+      "artifact_roles_present": [
+        "simulation.log",
+        "simulation.result"
+      ],
+      "extensions": {},
+      "freshness": "fresh",
+      "provenance": "bounded",
+      "provenance_limitations": [
+        "Only the declared top-level model-free analysis deck and selected native executable were content-bound; host runtime libraries and simulator defaults remain bounded provenance."
+      ],
+      "request_binding": "exact",
+      "structure": "valid"
+    },
+    "extensions": {
+      "org.openada": {
+        "backend": "xyce",
+        "native_data": {
+          "analysis": {
+            "extensions": {},
+            "source_name": "V1",
+            "source_unit": "V",
+            "start": 0.0,
+            "step": 0.1,
+            "stop": 10.0,
+            "type": "dc"
+          },
+          "analysis_evidence": {
+            "dependent_variable_count": 2,
+            "finite_value_count": 202,
+            "point_count": 101,
+            "raw": true
+          },
+          "converged": true,
+          "deck_inspection": {
+            "analyses": [
+              "dc"
+            ],
+            "include_detected": false,
+            "line_too_long": false,
+            "source_too_large": false,
+            "source_unstable": false,
+            "unsupported_directives": []
+          },
+          "environment_overrides": {
+            "XYCE_NO_TRACKING": "1"
+          },
+          "inputs_stable": true,
+          "log_capture": {
+            "bytes": 2883,
+            "path": "/evidence/sim/xyce-dc/xyce-dc.xyce.log",
+            "sha256": "b7ba19eaeaa1ec7c3c6bc9631dd9e113bf2b99cef3ab2c76a0879a16b025b774",
+            "status": "valid"
+          },
+          "log_tail": "\n*****\n***** Welcome to the Xyce(TM) Parallel Electronic Simulator\n*****\n***** This is version Xyce Release 7.10-opensource\n***** Date: Thu Jul 16 10:37:22 CEST 2026\n\n\n***** Executing netlist /evidence/work/xyce-dc.cir\n\n***** Reading and parsing netlist...\nNetlist warning: No print specified\n***** Setting up topology...\n\n***** Device Count Summary ...\n       R level 1 (Resistor)                   1\n       V level 1 (Independent Voltage Source) 1\n       ----------------------------------------\n       Total Devices                          2\n***** Setting up matrix structure...\n***** Number of Unknowns = 2\n***** Initializing...\n\n\n***** Solution Summary *****\n\tNumber Successful Steps Taken:\t\t101\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t201\n\tNumber Linear Solves:\t\t\t201\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t303\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t0.00148392 seconds\n\tTotal Jacobian Load Time:\t\t0.000305891 seconds\n\tTotal Linear Solution Time:\t\t0.00254512 seconds\n\n\n***** Total Simulation Solvers Run Time: 0.0182822 seconds\n***** Total Elapsed Run Time:            0.0763359 seconds\n*****\n***** End of Xyce(TM) Simulation\n*****\n\nTiming summary of 1 processor\n                 Stats                   Count       CPU Time              Wall Time\n---------------------------------------- ----- --------------------- ---------------------\nXyce                                         1        0.032 (100.0%)        0.375 (100.0%)\n  Analysis                                   1        0.005 (14.24%)        0.017 ( 4.52%)\n    DC Sweep                                 1        0.005 (14.14%)        0.017 ( 4.49%)\n      Solve                                101        0.003 (10.79%)        0.014 ( 3.70%)\n        Residual                           303        0.001 ( 2.17%)        0.002 ( 0.49%)\n        Jacobian                           201        0.000 ( 0.96%)        0.001 ( 0.14%)\n        Linear Solve                       201        0.001 ( 2.02%)        0.003 ( 0.73%)\n      Successful Step                      101        0.001 ( 1.71%)        0.001 ( 0.29%)\n  Netlist Import                             1        0.003 (10.79%)        0.039 (10.30%)\n    Parse Context                            1        0.000 ( 0.00%)        0.002 ( 0.49%)\n    Distribute Devices                       1        0.000 ( 1.27%)        0.003 ( 0.83%)\n    Verify Devices                           1        0.000 ( 0.07%)        0.000 ( 0.02%)\n    Instantiate                              1        0.001 ( 2.05%)        0.001 ( 0.29%)\n  Late Initialization                        1        0.004 (11.57%)        0.011 ( 2.83%)\n    Global Indices                           1        0.000 ( 0.51%)        0.000 ( 0.04%)\n  Setup Matrix Structure                     1        0.002 ( 6.36%)        0.005 ( 1.27%)\n\n",
+          "output_captures": [
+            {
+              "bytes": 5535,
+              "kind": "raw",
+              "origin": "wrapper",
+              "path": "/evidence/sim/xyce-dc/xyce-dc.xyce.raw",
+              "sha256": "03e80690e04be0d219298be33f41c64e7c4df6ccf462fdce01b2f46165f86050",
+              "status": "valid",
+              "validation": {
+                "metadata": {
+                  "analysis_plot_count": 1,
+                  "bytes": 5535,
+                  "format": "xyce-raw",
+                  "has_analysis_plot": true,
+                  "numeric_scalar_count": 303,
+                  "plot_count": 1,
+                  "plots": [
+                    {
+                      "axis_first": 0.0,
+                      "axis_last": 10.0,
+                      "axis_linear_step": 0.1,
+                      "axis_log_ratio": null,
+                      "axis_strictly_increasing": true,
+                      "encoding": "ascii",
+                      "independent_variable": "sweep",
+                      "numeric_type": "real",
+                      "plotname": "DC Sweep: Step 2 of 101 params:  name = v1 value = 0  DC transfer characteristic",
+                      "points": 101,
+                      "unpadded": false,
+                      "values": 303,
+                      "variables": 3
+                    }
+                  ],
+                  "value_count": 303
+                },
+                "reason": "valid",
+                "valid": true
+              }
+            }
+          ],
+          "transitive_inputs_enumerated": false,
+          "working_directory": "/evidence",
+          "working_directory_is_sandbox": false
+        },
+        "native_diagnostics": [],
+        "parameters": {
+          "analysis": {
+            "extensions": {},
+            "source_name": "V1",
+            "source_unit": "V",
+            "start": 0.0,
+            "step": 0.1,
+            "stop": 10.0,
+            "type": "dc"
+          },
+          "extensions": {}
+        }
+      }
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "driver_id": "org.openada.driver.xyce",
+      "driver_version": "0.4.0",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "request_id": "9f817b32-aa17-4b03-ab39-28ec60594e1b"
+    }
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "Xyce produced fresh, structurally valid dc simulation evidence."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/xyce/bin/Xyce",
+      "-l",
+      "/tmp/openada-xyce-igzb773i/simulation.log",
+      "-r",
+      "/tmp/openada-xyce-igzb773i/simulation.raw",
+      "-a",
+      "/evidence/work/xyce-dc.cir"
+    ],
+    "cwd": "/evidence",
+    "duration_ms": 466,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 158,
+      "exists": true,
+      "kind": "spice-netlist",
+      "path": "/evidence/work/xyce-dc.cir",
+      "role": "input",
+      "sha256": "8cc7ba1548a9591c33bef458865b3f89cd6ceeae9dd84843e2a96b069e0f87d3"
+    }
+  ],
+  "operation": "simulate",
+  "provenance": {
+    "created_at": "2026-07-16T08:37:22.504798Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "xyce",
+    "path": "/foss/tools/xyce/bin/Xyce",
+    "version": "Xyce Release 7.10-opensource"
+  }
+}

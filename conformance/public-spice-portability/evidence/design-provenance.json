@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "checkout_clean": true,
+  "extensions": {},
+  "inputs": [
+    {
+      "bytes": 158,
+      "path": "Netlists/Output/DC/dc-noprn.cir",
+      "sha256": "8cc7ba1548a9591c33bef458865b3f89cd6ceeae9dd84843e2a96b069e0f87d3"
+    },
+    {
+      "bytes": 164,
+      "path": "Netlists/Output/TRAN/tran-raw-override-noprint.cir",
+      "sha256": "484561fd3d74d6835f8570465f619e0ed138078214156fb3e5ff911d561fcf20"
+    },
+    {
+      "bytes": 918,
+      "path": "Netlists/ACtests/RC_simple.cir",
+      "sha256": "e992eced2155febdb8b79922f0579a4798838385b7aa573dff5440719d9d7df9"
+    }
+  ],
+  "license": {
+    "bytes": 4460,
+    "path": "README.md",
+    "sha256": "82ff6df7bddcdf639483d261949a02a5f43da85d579f1242b05c3aa0c430f7cb"
+  },
+  "remote_url_verified": true,
+  "repository": "https://github.com/Xyce/Xyce_Regression.git",
+  "revision": "d6e278e371ec2f3df1325dcff4552e585bc7ecc1",
+  "schema": "openada.design-provenance/v0alpha1",
+  "tree": "bf4e9753365af33c82814e4c44aeb7a687490b96"
+}

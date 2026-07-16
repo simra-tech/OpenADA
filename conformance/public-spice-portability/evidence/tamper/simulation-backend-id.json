@@ -1,0 +1,10 @@
+{
+  "extensions": {},
+  "mutation": "replace Xyce driver identity with ngspice",
+  "observed_diagnostic": "conformance.backend.tampered",
+  "replay_id": "simulation-backend-id",
+  "required_diagnostic": "conformance.backend.tampered",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown",
+  "verifier_message": "xyce-dc.driver differs: expected 'org.openada.driver.xyce', observed 'org.openada.driver.ngspice'"
+}

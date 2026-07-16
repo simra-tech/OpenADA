@@ -1,0 +1,13 @@
+{
+  "chain_id": "openada.chain/public-spice-portability/v1",
+  "extensions": {},
+  "schema": "openada.contract-test-report/public-spice-portability/v1",
+  "status": "pass",
+  "suite": {
+    "failed": 0,
+    "passed": 4,
+    "repository_path": "conformance/public-spice-portability/test_portability_chain.py",
+    "sha256": "3fb66c4bfba4835ae2288b13f328f58d572f913504ab99cdaf266b7d1d027019",
+    "skipped": 1
+  }
+}

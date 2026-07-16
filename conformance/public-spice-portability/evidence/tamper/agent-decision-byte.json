@@ -1,0 +1,10 @@
+{
+  "extensions": {},
+  "mutation": "replace agent conclusion",
+  "observed_diagnostic": "conformance.decision.tampered",
+  "replay_id": "agent-decision-byte",
+  "required_diagnostic": "conformance.decision.tampered",
+  "schema": "openada.tamper-replay/v0alpha1",
+  "status": "unknown",
+  "verifier_message": "agent.conclusion differs: expected 'portable-for-reviewed-analysis-matrix', observed 'unreviewed'"
+}

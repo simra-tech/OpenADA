@@ -1,0 +1,209 @@
+{
+  "artifacts": [
+    {
+      "bytes": 757,
+      "exists": true,
+      "kind": "simulation-log",
+      "path": "/evidence/sim/ngspice-ac/ota-ac.log",
+      "role": "simulation.log",
+      "sha256": "b084e163b6577c9acd065b102c5264a9caa9a25629c5b7b2964f95514db63080"
+    },
+    {
+      "bytes": 24869,
+      "exists": true,
+      "kind": "ngspice-raw",
+      "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
+      "role": "simulation.result",
+      "sha256": "916d1183d40a4c8aa615b14d20611cbc7f0b2193c3169fe3d6f184e7683bfd8f"
+    }
+  ],
+  "data": {
+    "analysis": {
+      "completion": "completed",
+      "convergence": "converged",
+      "dependent_variable_count": 28,
+      "extensions": {},
+      "finite_value_count": 2856,
+      "point_count": 51,
+      "type": "ac"
+    },
+    "evidence": {
+      "artifact_roles_present": [
+        "simulation.log",
+        "simulation.result"
+      ],
+      "extensions": {},
+      "freshness": "fresh",
+      "provenance": "bounded",
+      "provenance_limitations": [
+        "Only the declared top-level model-free analysis deck and selected native executable were content-bound; host runtime libraries and simulator defaults remain bounded provenance."
+      ],
+      "request_binding": "exact",
+      "structure": "valid"
+    },
+    "extensions": {
+      "org.openada": {
+        "backend": "ngspice",
+        "native_data": {
+          "analysis_evidence": {
+            "completed_log_record": true,
+            "raw": true
+          },
+          "control_script_capture": null,
+          "converged": true,
+          "duplicate_measurements": [],
+          "environment": {
+            "NGSPICE_INPUT_DIR": null,
+            "PDK": null,
+            "PDK_ROOT": "/foss/pdks",
+            "SPICE_ASCIIRAWFILE": null,
+            "SPICE_LIB_DIR": null,
+            "SPICE_SCRIPTS": null
+          },
+          "environment_overrides": {},
+          "environment_policy": {
+            "ambient_inherited": true,
+            "mode": "inherit"
+          },
+          "execution_mode": "batch",
+          "expected_outputs": [],
+          "initialization": {
+            "ambient_startup_files_enumerated": false,
+            "file": null,
+            "local_user_spiceinit": "native-default",
+            "policy": "native-default",
+            "system_spinit": {
+              "file": null,
+              "policy": "native-default-unenumerated"
+            }
+          },
+          "inputs_stable": true,
+          "log_capture": {
+            "bytes": 757,
+            "path": "/evidence/sim/ngspice-ac/ota-ac.log",
+            "sha256": "b084e163b6577c9acd065b102c5264a9caa9a25629c5b7b2964f95514db63080",
+            "status": "valid"
+          },
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-ota/ota_testbench.sch\n\nbinary raw file \"/tmp/openada-ngspice-u5thq9c7/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\nNo. of Data Columns : 29  \n\nNo. of Data Rows : 51\n\nTotal analysis time (seconds) = 0.0206198\n\nTotal elapsed time (seconds) = 0.051 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 18102.555 MB.\nMaximum ngspice program size =  531.730 MB.\nCurrent ngspice program size =   15.039 MB.\n\nShared ngspice pages =   11.531 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.215 MB.\n\n",
+          "measurement_section_count": 0,
+          "measurements": [],
+          "measurements_truncated": false,
+          "missing_measurements": [],
+          "output_captures": [
+            {
+              "bytes": 24869,
+              "kind": "raw",
+              "origin": "wrapper",
+              "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
+              "sha256": "916d1183d40a4c8aa615b14d20611cbc7f0b2193c3169fe3d6f184e7683bfd8f",
+              "status": "valid",
+              "validation": {
+                "metadata": {
+                  "analysis_plot_count": 1,
+                  "bytes": 24869,
+                  "format": "ngspice-raw",
+                  "has_analysis_plot": true,
+                  "numeric_scalar_count": 2958,
+                  "plot_count": 1,
+                  "plots": [
+                    {
+                      "axis_first": 1.0,
+                      "axis_last": 100000.00000000033,
+                      "axis_linear_step": null,
+                      "axis_log_ratio": 1.2589254117941673,
+                      "axis_strictly_increasing": true,
+                      "encoding": "binary",
+                      "independent_variable": "frequency",
+                      "numeric_type": "complex",
+                      "plotname": "AC Analysis",
+                      "points": 51,
+                      "unpadded": false,
+                      "values": 1479,
+                      "variables": 29
+                    }
+                  ],
+                  "value_count": 1479
+                },
+                "reason": "valid",
+                "valid": true
+              }
+            }
+          ],
+          "requested_environment_overrides": {},
+          "solver_warning_count": 0,
+          "solver_warning_examples": [],
+          "solver_warning_examples_truncated": false,
+          "transitive_include_detected": false,
+          "transitive_inputs_enumerated": false,
+          "working_directory": "/evidence",
+          "working_directory_is_sandbox": false
+        },
+        "native_diagnostics": [],
+        "parameters": {
+          "analysis": {
+            "extensions": {},
+            "points": 10,
+            "start_hz": 1.0,
+            "stop_hz": 100000.0,
+            "sweep": "dec",
+            "type": "ac"
+          },
+          "extensions": {}
+        }
+      }
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "driver_id": "org.openada.driver.ngspice",
+      "driver_version": "0.4.0",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "request_id": "09c0b2bb-c6c9-4a56-8cef-a0b5262d193d"
+    }
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "ngspice produced all required, structurally valid simulation evidence."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/ngspice/bin/ngspice",
+      "-b",
+      "-r",
+      "/tmp/openada-ngspice-u5thq9c7/simulation.raw",
+      "-o",
+      "/tmp/openada-ngspice-u5thq9c7/simulation.log",
+      "/evidence/work/ota-ac.spice"
+    ],
+    "cwd": "/evidence",
+    "duration_ms": 65,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 390865,
+      "exists": true,
+      "kind": "spice-netlist",
+      "path": "/evidence/work/ota-ac.spice",
+      "role": "input",
+      "sha256": "33a9c3440008ca72cf8ba1e75911587433137437b5c3f452f90c3f18d9055e38"
+    }
+  ],
+  "operation": "simulate",
+  "provenance": {
+    "created_at": "2026-07-16T08:37:20.993598Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "ngspice",
+    "path": "/foss/tools/ngspice/bin/ngspice",
+    "version": "** ngspice-46 : Circuit level simulation program"
+  }
+}

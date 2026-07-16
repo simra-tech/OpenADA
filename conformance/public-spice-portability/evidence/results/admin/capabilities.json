@@ -1,0 +1,490 @@
+{
+  "artifacts": [],
+  "data": {
+    "pdk_roots": [
+      "/foss/pdks"
+    ],
+    "pdks": [
+      {
+        "name": "ciel",
+        "root": "/foss/pdks"
+      },
+      {
+        "name": "gf180mcuD",
+        "root": "/foss/pdks"
+      },
+      {
+        "name": "ihp-sg13cmos5l",
+        "root": "/foss/pdks"
+      },
+      {
+        "name": "ihp-sg13g2",
+        "root": "/foss/pdks"
+      },
+      {
+        "name": "sky130A",
+        "root": "/foss/pdks"
+      }
+    ],
+    "runtime": {
+      "profile": "iic-osic-tools",
+      "reference_profile": true
+    },
+    "semantic_capabilities": [
+      {
+        "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [
+              "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+            ],
+            "id": "openada.feature/simulation.analysis.op/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+            ],
+            "id": "openada.feature/simulation.analysis.dc/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+            ],
+            "id": "openada.feature/simulation.analysis.ac/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+            ],
+            "id": "openada.feature/simulation.analysis.tran/v1alpha1",
+            "maturity": "workflow-validated"
+          }
+        ],
+        "locator_types": [
+          "filesystem"
+        ],
+        "native_product": "ngspice",
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "operation_profile_schema": "openada.operation-profile/v0alpha1",
+        "provider_id": "org.openada.driver.ngspice",
+        "provider_kind": "eda-driver",
+        "provider_version": "0.4.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli"
+        ]
+      },
+      {
+        "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [
+              "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+            ],
+            "id": "openada.feature/simulation.analysis.dc/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+            ],
+            "id": "openada.feature/simulation.analysis.ac/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+            ],
+            "id": "openada.feature/simulation.analysis.tran/v1alpha1",
+            "maturity": "workflow-validated"
+          }
+        ],
+        "locator_types": [
+          "filesystem"
+        ],
+        "native_product": "xyce",
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "operation_profile_schema": "openada.operation-profile/v0alpha1",
+        "provider_id": "org.openada.driver.xyce",
+        "provider_kind": "eda-driver",
+        "provider_version": "0.4.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli"
+        ]
+      },
+      {
+        "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
+        "availability": "available",
+        "features": [],
+        "locator_types": [
+          "filesystem",
+          "artifact"
+        ],
+        "native_product": null,
+        "operation_profile": "openada.operation/result.series.extract/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.kernel.spice3-series",
+        "provider_kind": "evidence-kernel",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli",
+          "in-process"
+        ]
+      },
+      {
+        "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/measurement.sample-at/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/measurement.minimum/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/measurement.maximum/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/measurement.mean/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/measurement.rms/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/measurement.crossing/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/measurement.rise-time/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/measurement.fall-time/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/measurement.settling-time/v1alpha1",
+            "maturity": "structured"
+          }
+        ],
+        "locator_types": [
+          "artifact"
+        ],
+        "native_product": null,
+        "operation_profile": "openada.operation/result.measure/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.kernel.typed-evidence",
+        "provider_kind": "evidence-kernel",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli",
+          "in-process"
+        ]
+      },
+      {
+        "assertion_profile": "openada.assertion/spectral.measurement.valid/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/spectral.snr/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/spectral.sinad/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/spectral.thd/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/spectral.sfdr/v1alpha1",
+            "maturity": "structured"
+          }
+        ],
+        "locator_types": [
+          "artifact"
+        ],
+        "native_product": null,
+        "operation_profile": "openada.operation/result.spectral.measure/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.kernel.spectral-evidence",
+        "provider_kind": "evidence-kernel",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli",
+          "in-process"
+        ]
+      },
+      {
+        "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/transfer.low-frequency-gain/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/transfer.bandwidth-3db/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/transfer.unity-gain-frequency/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/transfer.phase-margin/v1alpha1",
+            "maturity": "structured"
+          }
+        ],
+        "locator_types": [
+          "artifact"
+        ],
+        "native_product": null,
+        "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.kernel.transfer-evidence",
+        "provider_kind": "evidence-kernel",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli",
+          "in-process"
+        ]
+      },
+      {
+        "assertion_profile": "openada.assertion/specification.satisfied/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/specification.bound-evaluation/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha1"
+            ],
+            "id": "openada.feature/specification.condition-binding/v1alpha1",
+            "maturity": "structured"
+          }
+        ],
+        "locator_types": [
+          "artifact"
+        ],
+        "native_product": null,
+        "operation_profile": "openada.operation/specification.evaluate/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.kernel.typed-evidence",
+        "provider_kind": "evidence-kernel",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli",
+          "in-process"
+        ]
+      }
+    ],
+    "tools": {
+      "gtkwave": {
+        "binary": "/foss/tools/gtkwave/bin/gtkwave",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "available",
+        "version": "Usage: /foss/tools/gtkwave/bin/gtkwave [OPTION]... [DUMPFILE] [SAVEFILE] [RCFILE]"
+      },
+      "iverilog": {
+        "binary": "/foss/tools/iverilog/bin/iverilog",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "available",
+        "version": "Icarus Verilog version 14.0 (devel) (s20260301-217-g8c7f8f3f-dirty)"
+      },
+      "klayout": {
+        "binary": "/foss/tools/klayout/klayout",
+        "maturity": "workflow-validated",
+        "operations": [
+          "drc"
+        ],
+        "status": "available",
+        "version": "KLayout 0.30.9"
+      },
+      "librelane": {
+        "binary": "/foss/tools/bin/librelane",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "available",
+        "version": "LibreLane v3.1.0.dev1"
+      },
+      "magic": {
+        "binary": "/foss/tools/magic/bin/magic",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "available",
+        "version": "8.3.664"
+      },
+      "netgen": {
+        "binary": "/foss/tools/netgen/bin/netgen",
+        "maturity": "workflow-validated",
+        "operations": [
+          "lvs"
+        ],
+        "status": "available",
+        "version": "Netgen 1.5.321 compiled on Mon Jun 22 11:31:27 AM CEST 2026"
+      },
+      "ngspice": {
+        "binary": "/foss/tools/ngspice/bin/ngspice",
+        "maturity": "workflow-validated",
+        "operations": [
+          "simulate"
+        ],
+        "status": "available",
+        "version": "** ngspice-46 : Circuit level simulation program"
+      },
+      "openroad": {
+        "binary": "/foss/tools/openroad/bin/openroad",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "available",
+        "version": "26Q2-2270-g4c26918f5"
+      },
+      "openvaf": {
+        "binary": "/foss/tools/openvaf/bin/openvaf-r",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "available",
+        "version": "OpenVAF-reloaded 20260616-2-gc592eed-dirty"
+      },
+      "qucs-s": {
+        "binary": "/foss/tools/qucs-s/bin/qucs-s",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "unusable",
+        "version": null
+      },
+      "slang": {
+        "binary": "/foss/tools/slang/bin/slang",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "available",
+        "version": "slang version 11.0.387+24809c8e"
+      },
+      "surelog": {
+        "binary": "/foss/tools/surelog/bin/surelog",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "available",
+        "version": "VERSION: 1.86"
+      },
+      "verilator": {
+        "binary": "/foss/tools/verilator/bin/verilator",
+        "maturity": "discovered",
+        "operations": [],
+        "status": "available",
+        "version": "Verilator 5.048 2026-04-26 rev v5.048"
+      },
+      "xschem": {
+        "binary": "/foss/tools/xschem/bin/xschem",
+        "maturity": "workflow-validated",
+        "operations": [
+          "netlist"
+        ],
+        "status": "available",
+        "version": "XSCHEM V3.4.8RC"
+      },
+      "xyce": {
+        "binary": "/foss/tools/xyce/bin/Xyce",
+        "maturity": "workflow-validated",
+        "operations": [
+          "simulate"
+        ],
+        "status": "available",
+        "version": "Xyce Release 7.10-opensource"
+      },
+      "yosys": {
+        "binary": "/foss/tools/bin/yosys",
+        "maturity": "structured",
+        "operations": [
+          "rtl-check"
+        ],
+        "status": "available",
+        "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+      }
+    }
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "not_applicable",
+    "summary": "Discovered 15 of 16 inspected tool(s)."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [],
+  "operation": "doctor",
+  "provenance": {
+    "created_at": "2026-07-16T08:37:28.794824Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}

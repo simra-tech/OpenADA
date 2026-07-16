@@ -1,0 +1,107 @@
+{
+  "artifacts": [],
+  "data": {
+    "extensions": {},
+    "profiles": [
+      {
+        "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/simulation.analysis.op/v1alpha1",
+          "openada.feature/simulation.analysis.dc/v1alpha1",
+          "openada.feature/simulation.analysis.ac/v1alpha1",
+          "openada.feature/simulation.analysis.tran/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha1"
+      },
+      {
+        "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/simulation.analysis.op/v1alpha1",
+          "openada.feature/simulation.analysis.dc/v1alpha1",
+          "openada.feature/simulation.analysis.ac/v1alpha1",
+          "openada.feature/simulation.analysis.tran/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "schema": "openada.operation-profile/v0alpha1"
+      },
+      {
+        "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/measurement.sample-at/v1alpha1",
+          "openada.feature/measurement.minimum/v1alpha1",
+          "openada.feature/measurement.maximum/v1alpha1",
+          "openada.feature/measurement.mean/v1alpha1",
+          "openada.feature/measurement.rms/v1alpha1",
+          "openada.feature/measurement.crossing/v1alpha1",
+          "openada.feature/measurement.rise-time/v1alpha1",
+          "openada.feature/measurement.fall-time/v1alpha1",
+          "openada.feature/measurement.settling-time/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/result.measure/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
+        "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
+        "feature_ids": [],
+        "operation_profile": "openada.operation/result.series.extract/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
+        "assertion_profile": "openada.assertion/spectral.measurement.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/spectral.snr/v1alpha1",
+          "openada.feature/spectral.sinad/v1alpha1",
+          "openada.feature/spectral.thd/v1alpha1",
+          "openada.feature/spectral.sfdr/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/result.spectral.measure/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
+        "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/transfer.low-frequency-gain/v1alpha1",
+          "openada.feature/transfer.bandwidth-3db/v1alpha1",
+          "openada.feature/transfer.unity-gain-frequency/v1alpha1",
+          "openada.feature/transfer.phase-margin/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
+        "assertion_profile": "openada.assertion/specification.satisfied/v1alpha1",
+        "feature_ids": [
+          "openada.feature/specification.bound-evaluation/v1alpha1",
+          "openada.feature/specification.condition-binding/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/specification.evaluate/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      }
+    ]
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "Listed 7 packaged operation profiles."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [],
+  "operation": "profile.list",
+  "provenance": {
+    "created_at": "2026-07-16T08:37:32.405102Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}
