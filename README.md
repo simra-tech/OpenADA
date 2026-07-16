@@ -439,6 +439,24 @@ with `skills/openada`, then add the engineering workflows relevant to the
 project. The CLI is the portable contract; the harness adapter should stay
 thin.
 
+### Hermes
+
+An OpenADA release produces two Python wheels from one immutable repository
+revision: the evidence-attested `openada` runtime and the separate
+`openada-hermes-plugin` adapter under `integrations/hermes`. Install both at
+the same version. The adapter depends on that exact `openada` version and
+exposes a thin `hermes_agent.plugins` entry point named `openada`.
+
+Hermes discovers the adapter on its next startup and registers every shipped
+skill as an advertised, read-only `openada:<skill-name>` skill. Add `openada`
+to `plugins.enabled` when the host uses an explicit plugin allowlist, then
+start a new conversation so its stable skill index includes the plugin.
+
+The adapter wheel copies the canonical root `skills/` tree at build time. It
+does not register model tools, wrap native EDA executables, or change the
+OpenADA CLI contract. Production must build and install both wheels from the
+same reviewed commit rather than mixing runtime and skill revisions.
+
 ## Preview operations
 
 | Operation | Native tool | Maturity | Preview behavior |
@@ -595,10 +613,8 @@ usage totals, and pair membership.
 
 ## Project status
 
-The initial implementation is derived from reusable work in Simra's open-EDA
-integration. Simra will
-consume OpenADA through a thin adapter; OpenADA itself remains harness-neutral
-and open source.
+The initial implementation consolidates reusable open-source EDA integration
+work. OpenADA remains harness-neutral and open source.
 
 No institutional collaboration or endorsement is implied by support for a
 tool, PDK, design, or runtime profile.

@@ -56,7 +56,7 @@ jobs:
       - name: Install development dependencies
         run: python -m pip install --upgrade pip && python -m pip install -e '.[dev]'
       - name: Compile Python sources
-        run: python -m compileall -q src tests conformance evaluation tools
+        run: python -m compileall -q src integrations/hermes/src tests conformance evaluation tools
       - name: Run tests
         run: python -m pytest -q
 
@@ -71,6 +71,8 @@ jobs:
           python-version: "3.12"
       - name: Build distributions
         run: python -m pip install --upgrade pip build && python -m build
+      - name: Build the separate Hermes adapter wheel
+        run: python -m build --wheel --outdir dist/hermes integrations/hermes
       - name: Check wheel contents
         run: |
           python - <<'PY'
@@ -111,6 +113,38 @@ jobs:
                   packaged_contract,
                   sorted(names),
               )
+
+          assert not any(
+              name.startswith("openada_hermes_plugin/") for name in names
+          ), sorted(names)
+
+          adapter_wheels = list(
+              Path("dist/hermes").glob("openada_hermes_plugin-*.whl")
+          )
+          assert len(adapter_wheels) == 1, adapter_wheels
+          with zipfile.ZipFile(adapter_wheels[0]) as archive:
+              adapter_names = set(archive.namelist())
+
+          expected_skill_files = {
+              path.as_posix()
+              for path in Path("skills").rglob("*")
+              if path.is_file()
+          }
+          wheel_skill_files = {
+              "skills/" + name.split("openada_hermes_plugin/skills/", 1)[1]
+              for name in adapter_names
+              if name.startswith("openada_hermes_plugin/skills/")
+              and not name.endswith("/")
+          }
+          assert wheel_skill_files == expected_skill_files, (
+              sorted(wheel_skill_files),
+              sorted(expected_skill_files),
+          )
+          with zipfile.ZipFile(adapter_wheels[0]) as archive:
+              for source_path in expected_skill_files:
+                  assert archive.read(
+                      "openada_hermes_plugin/" + source_path
+                  ) == Path(source_path).read_bytes(), source_path
 
           sdists = list(Path("dist").glob("openada-*.tar.gz"))
           assert len(sdists) == 1, sdists
@@ -322,7 +356,9 @@ jobs:
       - name: Test the installed wheel contract
         run: |
           python -m venv /tmp/openada-wheel-test
-          /tmp/openada-wheel-test/bin/python -m pip install dist/openada-*.whl
+          /tmp/openada-wheel-test/bin/python -m pip install \
+            dist/openada-*.whl \
+            dist/hermes/openada_hermes_plugin-*.whl
           /tmp/openada-wheel-test/bin/openada --version
           /tmp/openada-wheel-test/bin/python - <<'PY'
           from importlib.metadata import distribution
@@ -336,14 +372,70 @@ jobs:
           from openada.provider_runtime import provider_manifest_issues
 
           assert result_schema_path().is_file()
+          runtime_distribution = distribution("openada")
+          adapter_distribution = distribution("openada-hermes-plugin")
+          assert adapter_distribution.version == runtime_distribution.version
+          assert f"openada=={runtime_distribution.version}" in (
+              adapter_distribution.requires or []
+          )
+
           console_scripts = {
               entry.name: entry.value
-              for entry in distribution("openada").entry_points
+              for entry in runtime_distribution.entry_points
               if entry.group == "console_scripts"
           }
           assert console_scripts["openada-provider-ngspice"] == (
               "openada.providers.ngspice_pdk_control:main"
           )
+
+          plugin_entries = {
+              entry.name: entry
+              for entry in adapter_distribution.entry_points
+              if entry.group == "hermes_agent.plugins"
+          }
+          assert set(plugin_entries) == {"openada"}
+          assert plugin_entries["openada"].value == "openada_hermes_plugin"
+          assert not any(
+              entry.group == "hermes_agent.plugins"
+              for entry in runtime_distribution.entry_points
+          )
+
+          class FakePluginContext:
+              def __init__(self):
+                  self.skills = []
+
+              def register_skill(
+                  self,
+                  name,
+                  path,
+                  description="",
+                  *,
+                  advertise=False,
+                  category=None,
+              ):
+                  self.skills.append(
+                      (name, Path(path), description, advertise, category)
+                  )
+
+          plugin_context = FakePluginContext()
+          plugin_entries["openada"].load().register(plugin_context)
+          assert {skill[0] for skill in plugin_context.skills} == {
+              "openada",
+              "review-circuit-simulation",
+              "characterize-analog-block",
+              "analyze-feedback-stability",
+              "analyze-spectral-linearity",
+              "assess-pvt-and-yield",
+              "review-rtl-architecture",
+              "assess-synthesis-and-inference",
+              "assess-asic-timing",
+          }
+          for name, path, description, advertise, category in plugin_context.skills:
+              assert path.is_file(), (name, path)
+              assert (path.parent / "agents" / "openai.yaml").is_file(), name
+              assert description, name
+              assert advertise is True, name
+              assert category == "openada", name
 
           provider_root = (
               Path(sys.prefix) / "share/openada/providers/ngspice-pdk-control"
