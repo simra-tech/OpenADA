@@ -1,0 +1,33 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-physical/v1",
+  "extensions": {},
+  "replay": {
+    "covers": [
+      "surface|openada.surface/cli.drc/v1",
+      "preflight|drc-clean"
+    ],
+    "expected_status": "unknown",
+    "fixture": "tampered-copy-of-real-replay",
+    "id": "reconciled-seven-item-drc",
+    "mutation": {
+      "bytes": 123059,
+      "method": "remove one item and reconcile the normalized count and digest",
+      "sha256": "456fd75e5f9dc78b3baf8eaf9b9bf2fe460c3431dfa0918644d16f91c5ea5458",
+      "target": "lvs-tester.drc.lyrdb"
+    },
+    "observed_diagnostic": "native DRC item count: expected 8, got 7",
+    "observed_status": "rejected",
+    "required_diagnostic": "native DRC item count",
+    "verdict": "expected-rejection"
+  },
+  "replay_type": "tamper-replay",
+  "schema": "openada.semantic-replay-verdict/v0alpha1",
+  "source_evidence": {
+    "conformance_manifest_sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+    "run": {
+      "bytes": 1337,
+      "filename": "run.json",
+      "sha256": "336f3f775b13f571e4bcc85261a1f6cf9e78a8f05117e66b1346efbb272ac841"
+    }
+  }
+}

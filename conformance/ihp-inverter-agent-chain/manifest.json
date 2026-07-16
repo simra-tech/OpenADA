@@ -1,0 +1,1685 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.semantic-chain/v0alpha1",
+  "id": "openada.chain/ihp-inverter-agent-chain/v1",
+  "design": {
+    "class": "public-design",
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "tree": "2a710fd503226e9642e4337a324e6c192a9d8a31",
+    "subtree": "modules/module_0_foundations/inverter",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "inputs": [
+      {
+        "path": "modules/module_0_foundations/inverter/inverter_tb.sch",
+        "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
+      },
+      {
+        "path": "modules/module_0_foundations/inverter/inverter.sym",
+        "sha256": "8658fa30ac994a0bedf511e59f064e6458e9b4a30d91382f6974a5117bd5c103"
+      },
+      {
+        "path": "modules/module_0_foundations/inverter/inverter.sch",
+        "sha256": "6a2e03f44df59976b8ba4fca385b104b80802d367789171790bd238f912ec771"
+      }
+    ],
+    "extensions": {}
+  },
+  "runtime": {
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "platform": "linux/amd64",
+    "pdk_revision": "144f811cdffda49b71d28f64e8a92b697b61cf06",
+    "tools": [
+      {
+        "id": "xschem",
+        "path": "/foss/tools/xschem/bin/xschem",
+        "version": "XSCHEM V3.4.8RC"
+      },
+      {
+        "id": "ngspice",
+        "path": "/foss/tools/ngspice/bin/ngspice",
+        "version": "** ngspice-46 : Circuit level simulation program"
+      }
+    ],
+    "extensions": {
+      "org.openada": {
+        "image_manifest_digest": "sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+        "pdk": {
+          "name": "ihp-sg13g2",
+          "commit_file": {
+            "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+            "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+          },
+          "xschem_rcfile": {
+            "path": "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc",
+            "sha256": "d6d8fa5157ad2072e6d1ce63bda5f5d593ef4eb84631f23eed5e9ae3886f18b5"
+          },
+          "ngspice_init": {
+            "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+            "sha256": "56ec1880a943fa481c3c321d62857b6240387e39d5aa8ded403835c34edb515d"
+          }
+        },
+        "ngspice_system_init": {
+          "path": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+          "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
+        },
+        "ngspice_executable": {
+          "path": "/foss/tools/ngspice/bin/ngspice",
+          "sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
+        },
+        "model_files": {
+          "corner_moslv": {
+            "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/cornerMOSlv.lib",
+            "sha256": "03d505847c880d233b341be115a1e5460edf4d8e9b3e8a7df791a52fa4455d67"
+          },
+          "moslv_modules": {
+            "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mod.lib",
+            "sha256": "84ec57080b9dd4666417f05db6f7b34c8dd3f12118929f9b308018613bece16e"
+          },
+          "moslv_parameters": {
+            "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_parm.lib",
+            "sha256": "cbf10b8453a18bb70b8ad0d6e40faa0937338e699b5460947a94900db6c92a6e"
+          }
+        },
+        "psp103_osdi": {
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi",
+          "sha256": "6538578a272040e70cf4542884e86d1aecd3c6936eee9e43564db49d2d05d5ab"
+        }
+      }
+    }
+  },
+  "contracts": [
+    {
+      "repository_path": "schemas/semantic-chain-manifest-v0alpha1.schema.json",
+      "sha256": "dfe687c78b361b91600dcb1889f14d52301b4c1c8f200b7dacb6c96126f3f600",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/semantic-chain-run-v0alpha1.schema.json",
+      "sha256": "c4916d3b4d3e63337d47da46a2e4aa94ea15fb41b755207f04a41907cc993613",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/design-provenance-v0alpha1.schema.json",
+      "sha256": "0e3e3ba2c6fdce6f22e93f23a26bb8b3e286cacdf109dc25d8d51aefa418e745",
+      "extensions": {}
+    },
+    {
+      "repository_path": "tools/semantic_receipts.py",
+      "sha256": "983637e95cc33c8259142dd80c96e005364dd49c6cc729e4a7f0d2d7cbcb13f0",
+      "extensions": {}
+    },
+    {
+      "repository_path": "tools/verify_semantic_coverage.py",
+      "sha256": "09bc68c3c444f228c29aec78a84742c3c7ad7663795ab2db51c88cace67b58b1",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/result-v0alpha1.schema.json",
+      "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15",
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/circuit.simulate-v1alpha2.json",
+      "sha256": "498c6e6c42f441f22fa881885623a5bd4358a40130828f942fff50f7c61bfdfc",
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.series.extract-v1alpha1.json",
+      "sha256": "6d2baf44313e97b5070b8e68afe529abfafec8b6ab0e7808941078a0dd201164",
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.measure-v1alpha1.json",
+      "sha256": "0612a935cb7aa07736676b6bd63e5713473b5686f83280eb51ced0727c49b197",
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/specification.evaluate-v1alpha1.json",
+      "sha256": "7adc0319e1b15efc7da04010a4390e759597402bf876e7e7b89391e2fa9b9592",
+      "extensions": {}
+    },
+    {
+      "repository_path": "providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
+      "sha256": "d1351bed7bb18e06913d63b5b31bfced97a5d684854d3b9de1ccbed9b2e4ab2c",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter-agent-chain/common.py",
+      "sha256": "3929ca867ad8f8c92be34e42106903c52e0abe9e9299d531255a0b776f4a1a59",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter/common.py",
+      "sha256": "068f6f84a6e94c7267474eb3f8f908144d610ba74f3e6b3c073651b1c2069cdd",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter-agent-chain/inside.py",
+      "sha256": "3aee3d87106729929a6f91d00aa5a90793f5df52c6cfc561ad65e913d98a0392",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter-agent-chain/run.py",
+      "sha256": "ae21505d79231fc6d7e8bdcc32d73c81eaec5157b6d9cc5a53c34c30afa9695a",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter-agent-chain/setup.py",
+      "sha256": "edec3cd9a381a72ce781a267ad236b081623f81dada5d0eaeac25effa76874c9",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
+      "sha256": "8e2a5c1f9e8abd39f78126f90f77ee08c9d164b4d558ca4d0522d6ce78e149e5",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
+      "sha256": "57554e622024d38bfbbe903defbd3e726eaffb2984dbbd8eb01d4540d0246a95",
+      "extensions": {}
+    }
+  ],
+  "covers": [
+    "surface|openada.surface/cli.netlist/v1",
+    "preflight|schematic-netlist-generated",
+    "surface|openada.surface/cli.provider-invoke/v1",
+    "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+    "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+    "profile|openada.operation/circuit.simulate/v1alpha2",
+    "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+    "preflight|spice-analysis-evidence-valid",
+    "surface|openada.surface/cli.simulate/v1",
+    "surface-variant|openada.surface/cli.simulate/v1|shared-ngspice",
+    "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+    "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:tran",
+    "surface|openada.surface/cli.extract/v1",
+    "profile|openada.operation/result.series.extract/v1alpha1",
+    "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+    "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+    "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran",
+    "surface|openada.surface/cli.measure/v1",
+    "profile|openada.operation/result.measure/v1alpha1",
+    "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1",
+    "surface|openada.surface/cli.evaluate/v1",
+    "profile|openada.operation/specification.evaluate/v1alpha1",
+    "assertion|openada.operation/specification.evaluate/v1alpha1|openada.assertion/specification.satisfied/v1alpha1",
+    "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+    "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.bound-evaluation/v1alpha1",
+    "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+    "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.condition-binding/v1alpha1"
+  ],
+  "steps": [
+    {
+      "id": "materialize-pinned-sources",
+      "kind": "source-materialize",
+      "native_execution": false,
+      "covers": [],
+      "consumes": [],
+      "produces": [
+        "pinned-schematic",
+        "pinned-local-design-symbol",
+        "pinned-local-design-schematic",
+        "pinned-xschem-rcfile",
+        "pinned-pdk",
+        "pinned-ngspice-startup",
+        "pinned-mos-model-closure",
+    "pinned-psp103-osdi",
+    "isolated-official-ngspice-regression",
+        "request-contract",
+        "design-provenance",
+        "contract-test-suite"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "netlist",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated"
+      ],
+      "consumes": [
+        "pinned-schematic",
+        "pinned-xschem-rcfile"
+      ],
+      "produces": [
+        "generated-control-deck",
+        "netlist-result"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "netlist-missing-symbol",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated"
+      ],
+      "consumes": [
+        "pinned-schematic",
+        "pinned-local-design-symbol",
+        "pinned-local-design-schematic",
+        "pinned-xschem-rcfile"
+      ],
+      "produces": [
+        "missing-symbol-schematic",
+        "missing-symbol-deck",
+        "netlist-negative-result"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "provider-invoke",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "consumes": [
+        "generated-control-deck",
+        "pinned-pdk",
+        "pinned-ngspice-startup"
+      ],
+      "produces": [
+        "native-raw",
+        "native-log",
+        "provider-result"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "provider-terminal-fail",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "consumes": [
+        "generated-control-deck",
+        "isolated-official-ngspice-regression",
+        "pinned-pdk",
+        "pinned-ngspice-startup"
+      ],
+      "produces": [
+        "partial-native-raw",
+        "terminal-nonconvergence-log",
+        "provider-fail-result"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "builtin-simulate",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.simulate/v1",
+        "surface-variant|openada.surface/cli.simulate/v1|shared-ngspice",
+        "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:tran",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "consumes": [
+        "generated-control-deck",
+        "pinned-mos-model-closure",
+        "pinned-psp103-osdi"
+      ],
+      "produces": [
+        "shared-profile-deck",
+        "builtin-native-raw",
+        "builtin-native-log",
+        "builtin-result"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "builtin-terminal-fail",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.simulate/v1",
+        "surface-variant|openada.surface/cli.simulate/v1|shared-ngspice",
+        "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:tran",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "consumes": [
+        "generated-control-deck",
+        "pinned-mos-model-closure",
+        "pinned-psp103-osdi",
+        "isolated-official-ngspice-regression"
+      ],
+      "produces": [
+        "shared-terminal-deck",
+        "builtin-partial-native-raw",
+        "builtin-terminal-nonconvergence-log",
+        "builtin-fail-result"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "extract",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran"
+      ],
+      "consumes": [
+        "provider-result",
+        "native-raw"
+      ],
+      "produces": [
+        "normalized-vin-vout-series"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-sample-at",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-sample-at"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-minimum",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-minimum"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-maximum",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-maximum"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-mean",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-mean"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-rms",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-rms"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-crossing",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-crossing"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-rise-time",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-rise-time"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-fall-time",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-fall-time"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-settling-time",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-settling-time"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "evaluate-pass",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.evaluate/v1",
+        "profile|openada.operation/specification.evaluate/v1alpha1",
+        "assertion|openada.operation/specification.evaluate/v1alpha1|openada.assertion/specification.satisfied/v1alpha1",
+        "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+        "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.bound-evaluation/v1alpha1",
+        "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+        "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "consumes": [
+        "measurement-sample-at",
+        "measurement-minimum",
+        "measurement-maximum",
+        "measurement-mean",
+        "measurement-rms",
+        "measurement-crossing",
+        "measurement-rise-time",
+        "measurement-fall-time",
+        "measurement-settling-time"
+      ],
+      "produces": [
+        "nine-passing-specification-decisions"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "evaluate-fail",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.evaluate/v1",
+        "profile|openada.operation/specification.evaluate/v1alpha1",
+        "assertion|openada.operation/specification.evaluate/v1alpha1|openada.assertion/specification.satisfied/v1alpha1",
+        "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+        "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.bound-evaluation/v1alpha1"
+      ],
+      "consumes": [
+        "measurement-sample-at",
+        "measurement-minimum",
+        "measurement-maximum",
+        "measurement-mean",
+        "measurement-rms",
+        "measurement-crossing",
+        "measurement-rise-time",
+        "measurement-fall-time",
+        "measurement-settling-time"
+      ],
+      "produces": [
+        "nine-failing-specification-decisions"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "evaluate-condition-mismatch",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.evaluate/v1",
+        "profile|openada.operation/specification.evaluate/v1alpha1",
+        "assertion|openada.operation/specification.evaluate/v1alpha1|openada.assertion/specification.satisfied/v1alpha1",
+        "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+        "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "consumes": [
+        "measurement-sample-at"
+      ],
+      "produces": [
+        "condition-mismatch-decision"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "independent-verifier",
+      "kind": "independent-oracle",
+      "implementation": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
+        "sha256": "57554e622024d38bfbbe903defbd3e726eaffb2984dbbd8eb01d4540d0246a95",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "generated-control-deck",
+        "missing-symbol-deck",
+        "native-raw",
+        "partial-native-raw",
+        "provider-result",
+        "provider-fail-result",
+        "shared-profile-deck",
+        "builtin-native-raw",
+        "builtin-result",
+        "shared-terminal-deck",
+        "builtin-partial-native-raw",
+        "builtin-fail-result",
+        "normalized-vin-vout-series",
+        "nine-passing-specification-decisions",
+        "nine-failing-specification-decisions",
+        "condition-mismatch-decision"
+      ],
+      "produces": [
+        "independent-chain-verdict"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "agent-decision",
+      "kind": "independent-decision",
+      "implementation": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
+        "sha256": "57554e622024d38bfbbe903defbd3e726eaffb2984dbbd8eb01d4540d0246a95",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "independent-chain-verdict",
+        "nine-passing-specification-decisions",
+        "nine-failing-specification-decisions",
+        "condition-mismatch-decision"
+      ],
+      "produces": [
+        "agent-evidence"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "contract-tests",
+      "kind": "independent-oracle",
+      "implementation": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
+        "sha256": "8e2a5c1f9e8abd39f78126f90f77ee08c9d164b4d558ca4d0522d6ce78e149e5",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "contract-test-suite",
+        "agent-evidence"
+      ],
+      "produces": [
+        "contract-test-verdict"
+      ],
+      "extensions": {}
+    }
+  ],
+  "negative_replays": [
+    {
+      "id": "netlist-missing-symbol",
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "xschem.missing_symbol",
+      "extensions": {}
+    },
+    {
+      "id": "isolated-terminal-nonconvergence",
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "simulation.analysis.non_convergent",
+      "extensions": {}
+    },
+    {
+      "id": "isolated-builtin-terminal-nonconvergence",
+      "covers": [
+        "surface|openada.surface/cli.simulate/v1",
+        "surface-variant|openada.surface/cli.simulate/v1|shared-ngspice",
+        "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:tran",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "simulation.analysis.non_convergent",
+      "extensions": {}
+    },
+    {
+      "id": "extract-missing-selector",
+      "covers": [
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "series.selector.missing",
+      "extensions": {}
+    },
+    {
+      "id": "measure-sample-at",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "measurement.domain.invalid",
+      "extensions": {}
+    },
+    {
+      "id": "measure-minimum",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "measure-maximum",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "measure-mean",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "measure-rms",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "measure-crossing",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "measure-rise-time",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "measure-fall-time",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "measure-settling-time",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "deliberately-violated-limits",
+      "covers": [
+        "surface|openada.surface/cli.evaluate/v1",
+        "profile|openada.operation/specification.evaluate/v1alpha1",
+        "assertion|openada.operation/specification.evaluate/v1alpha1|openada.assertion/specification.satisfied/v1alpha1",
+        "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+        "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.bound-evaluation/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "specification.limit.violated",
+      "extensions": {}
+    },
+    {
+      "id": "specification-condition-mismatch",
+      "covers": [
+        "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+        "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "specification.condition.unproven",
+      "extensions": {}
+    }
+  ],
+  "tamper_replays": [
+    {
+      "id": "generated-netlist-byte",
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.evidence.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "native-raw-byte",
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.evidence.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "terminal-partial-raw-byte",
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.evidence.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "terminal-native-log-byte",
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.evidence.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "builtin-native-raw-byte",
+      "covers": [
+        "surface|openada.surface/cli.simulate/v1",
+        "surface-variant|openada.surface/cli.simulate/v1|shared-ngspice",
+        "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:tran",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.evidence.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "builtin-terminal-partial-raw-byte",
+      "covers": [
+        "surface|openada.surface/cli.simulate/v1",
+        "surface-variant|openada.surface/cli.simulate/v1|shared-ngspice",
+        "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:tran",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.evidence.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "builtin-terminal-native-log-byte",
+      "covers": [
+        "surface|openada.surface/cli.simulate/v1",
+        "surface-variant|openada.surface/cli.simulate/v1|shared-ngspice",
+        "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:tran",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.evidence.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "normalized-series-digest",
+      "covers": [
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.lineage.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-sample-at-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-minimum-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-maximum-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-mean-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-rms-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-crossing-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-rise-time-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-fall-time-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-settling-time-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha1",
+        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "specification-margin",
+      "covers": [
+        "surface|openada.surface/cli.evaluate/v1",
+        "profile|openada.operation/specification.evaluate/v1alpha1",
+        "assertion|openada.operation/specification.evaluate/v1alpha1|openada.assertion/specification.satisfied/v1alpha1",
+        "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.bound-evaluation/v1alpha1",
+        "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.bound-evaluation/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.decision.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "specification-condition-binding",
+      "covers": [
+        "feature|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/specification.evaluate/v1alpha1|openada.feature/specification.condition-binding/v1alpha1",
+        "native-mapping|openada.operation/specification.evaluate/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/specification.condition-binding/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.decision.tampered",
+      "extensions": {}
+    }
+  ],
+  "agent_evidence": {
+    "result_step": "agent-decision",
+    "required_json_pointers": [
+      "/chain_id",
+      "/netlist_negative",
+      "/provider",
+      "/builtin_ngspice/pass/native_artifact/sha256",
+      "/builtin_ngspice/terminal_nonconvergence",
+      "/native_artifact/sha256",
+      "/terminal_nonconvergence",
+      "/series/sha256",
+      "/measurements",
+      "/specifications/pass_count",
+      "/specifications/fail_count",
+      "/negative_replays",
+      "/limitations"
+    ],
+    "extensions": {}
+  },
+  "release_verification": {
+    "implementation": {
+      "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
+      "sha256": "57554e622024d38bfbbe903defbd3e726eaffb2984dbbd8eb01d4540d0246a95",
+      "extensions": {}
+    },
+    "arguments": [
+      "conformance/ihp-inverter-agent-chain/evidence",
+      "--run-tamper-probes"
+    ],
+    "timeout_seconds": 300,
+    "extensions": {}
+  },
+  "extensions": {
+    "org.openada": {
+      "policy": {
+        "setup_network": "allowed for the pinned Git fetch and image pull only",
+        "eda_network": "none",
+        "openada_mount": "read-only",
+        "design_mount": "read-only",
+        "pdk_mount": "read-only image filesystem",
+        "container_root": "read-only",
+        "evidence_directory": "fresh and solely writable",
+        "local_user_ngspice_init": "disabled with -n",
+        "system_ngspice_init": "explicit and hash-bound"
+      },
+      "provider": {
+        "manifest_path": "/openada/providers/ngspice-pdk-control/driver-manifest.json",
+        "driver_id": "org.openada.driver.ngspice-pdk-control",
+        "driver_version": "0.5.0",
+        "transport_id": "local-json-stdio",
+        "configuration_schema": "openada.ngspice-provider-config/v0alpha1",
+        "environment": {"PDK": "ihp-sg13g2", "PDK_ROOT": "/foss/pdks"},
+        "evidence_destination": "/evidence/provider",
+        "raw_artifact": "/evidence/provider/work/test_inverter.raw",
+        "analysis": {
+          "type": "tran",
+          "step_s": 5e-8,
+          "stop_s": 2e-6,
+          "extensions": {}
+        }
+      },
+      "terminal_nonconvergence": {
+        "purpose": "Deliberate engine-boundary injection isolated from the inverter DUT; it does not assert that the DUT is unstable.",
+        "source": {
+          "project": "ngspice",
+          "attachment": "p.cir",
+          "url": "https://sourceforge.net/p/ngspice/discussion/127605/thread/e04a5c4f59/d871/attachment/p.cir",
+          "sha256": "871f04308597526544d6748031a2a0e223a69f774b72c13d7dbb4fbe329fcdba"
+        },
+        "mapping": {
+          "description": "The four official protection-switch device records are ASCII-normalized (micro sign to u), node/instance names are namespaced, and injected without electrical connection to Vin, Vout, Vdd, or GND except the global reference node 0.",
+          "injected_records_sha256": "f32de2d66578ae881b789d91681724a8050380a637013219d4020007b280c4dd",
+          "isolated_node": "__openada_fail"
+        },
+        "request_id": "14000000-0000-4000-8000-000000000001",
+        "generated_deck": "/evidence/work/inverter_terminal_nonconvergence.spice",
+        "provider_request": "provider-fail-request.json",
+        "provider_result": "provider-fail-result.json",
+        "evidence_destination": "/evidence/provider-fail",
+        "raw_artifact": "/evidence/provider-fail/work/test_inverter_fail.raw",
+        "analysis": {
+          "type": "tran",
+          "step_s": 1e-6,
+          "stop_s": 1e-3,
+          "extensions": {}
+        },
+        "expected": {
+          "engineering_status": "fail",
+          "diagnostic": "simulation.analysis.non_convergent",
+          "minimum_partial_points": 2,
+          "maximum_partial_stop_s": 0.001,
+          "log_markers": ["doAnalyses: TRAN:  Timestep too small", "time = 0.0001045"]
+        }
+      },
+      "builtin_ngspice": {
+        "driver_id": "org.openada.driver.ngspice",
+        "driver_version": "0.4.0",
+        "isolated_startup": {
+          "path": "/tmp/openada-home/.spiceinit",
+          "sha256": "168ff70c9c37e8a2d687e782cb92b9df81e9f35ed1eb1d1ef14c4e02a27c082d",
+          "content": "osdi /foss/pdks/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi\n"
+        },
+        "pass": {
+          "result": "builtin-result.json",
+          "deck": "/evidence/work/inverter_shared.spice",
+          "output_dir": "/evidence/builtin/simulation",
+          "workdir": "/evidence/builtin/work",
+          "raw_artifact": "/evidence/builtin/simulation/inverter_shared.raw",
+          "log_artifact": "/evidence/builtin/simulation/inverter_shared.log"
+        },
+        "terminal_fail": {
+          "result": "builtin-fail-result.json",
+          "deck": "/evidence/work/inverter_shared_terminal_nonconvergence.spice",
+          "output_dir": "/evidence/builtin-fail/simulation",
+          "workdir": "/evidence/builtin-fail/work",
+          "raw_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
+          "log_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log"
+        },
+        "extensions": {}
+      },
+      "workflow": {
+        "schematic": "/design/modules/module_0_foundations/inverter/inverter_tb.sch",
+        "generated_deck": "/evidence/work/inverter_tb.spice",
+        "netlist_result": "netlist.json",
+        "provider_configuration": "provider-config.json",
+        "provider_request": "provider-request.json",
+        "provider_result": "provider-result.json",
+        "extract_selection": "extract-selection.json",
+        "extract_result": "extract.json",
+        "agent_evidence": "agent-evidence.json",
+        "conditions": [
+          {
+            "name": "corner",
+            "value": "mos_tt",
+            "unit": "1"
+          },
+          {
+            "name": "supply_voltage",
+            "value": 1.2,
+            "unit": "V"
+          }
+        ],
+        "extract_request_id": "10000000-0000-4000-8000-000000000002",
+        "selectors": [
+          {
+            "native_name": "v(vin)",
+            "output_name": "v(vin)",
+            "unit": "V",
+            "component": "real"
+          },
+          {
+            "native_name": "v(vout)",
+            "output_name": "v(vout)",
+            "unit": "V",
+            "component": "real"
+          }
+        ]
+      },
+      "waveform": {
+        "plotname": "Transient Analysis",
+        "encoding": "binary",
+        "numeric_type": "real",
+        "acceptable_point_counts": [80, 81],
+        "start_s": 0.0,
+        "stop_s": 2e-6,
+        "required_variables": ["time", "v(vdd)", "v(vin)", "v(vout)"],
+        "settled_windows": [
+          {
+            "start_s": 2e-7,
+            "stop_s": 4.5e-7,
+            "vin_max": 0.05,
+            "vout_min": 1.1
+          },
+          {
+            "start_s": 7e-7,
+            "stop_s": 1.3e-6,
+            "vin_min": 1.15,
+            "vout_max": 0.1
+          },
+          {
+            "start_s": 1.7e-6,
+            "stop_s": 1.95e-6,
+            "vin_max": 0.05,
+            "vout_min": 1.1
+          }
+        ]
+      },
+      "measurements": [
+        {
+          "id": "sample-at",
+          "request_id": "11000000-0000-4000-8000-000000000001",
+          "request": {
+            "measurement_id": "inverter.vout.sample-at",
+            "kind": "sample_at",
+            "signal": "v(vout)",
+            "parameters": {
+              "at": {"value": 3e-7, "unit": "s"},
+              "interpolation": "linear"
+            },
+            "extensions": {}
+          },
+          "interpretation": "Linearly interpolated retained v(vout) samples at 0.3 us, inside the first settled-high window.",
+          "pass_limits": {"lower": {"value": 1.0, "unit": "V", "inclusive": true}},
+          "fail_limits": {"upper": {"value": 0.5, "unit": "V", "inclusive": true}}
+        },
+        {
+          "id": "minimum",
+          "request_id": "11000000-0000-4000-8000-000000000002",
+          "request": {
+            "measurement_id": "inverter.vout.minimum",
+            "kind": "minimum",
+            "signal": "v(vout)",
+            "parameters": {},
+            "extensions": {}
+          },
+          "interpretation": "Minimum retained v(vout) sample over the complete native transient.",
+          "pass_limits": {"upper": {"value": 0.2, "unit": "V", "inclusive": true}},
+          "fail_limits": {"lower": {"value": 0.5, "unit": "V", "inclusive": true}}
+        },
+        {
+          "id": "maximum",
+          "request_id": "11000000-0000-4000-8000-000000000003",
+          "request": {
+            "measurement_id": "inverter.vout.maximum",
+            "kind": "maximum",
+            "signal": "v(vout)",
+            "parameters": {},
+            "extensions": {}
+          },
+          "interpretation": "Maximum retained v(vout) sample over the complete native transient.",
+          "pass_limits": {"lower": {"value": 1.0, "unit": "V", "inclusive": true}},
+          "fail_limits": {"upper": {"value": 0.5, "unit": "V", "inclusive": true}}
+        },
+        {
+          "id": "mean",
+          "request_id": "11000000-0000-4000-8000-000000000004",
+          "request": {
+            "measurement_id": "inverter.vout.mean",
+            "kind": "mean",
+            "signal": "v(vout)",
+            "parameters": {},
+            "extensions": {}
+          },
+          "interpretation": "Arithmetic mean of retained adaptive v(vout) samples; this is not a time-weighted electrical average.",
+          "pass_limits": {
+            "lower": {"value": 0.0, "unit": "V", "inclusive": true},
+            "upper": {"value": 1.3, "unit": "V", "inclusive": true}
+          },
+          "fail_limits": {"lower": {"value": 2.0, "unit": "V", "inclusive": true}}
+        },
+        {
+          "id": "rms",
+          "request_id": "11000000-0000-4000-8000-000000000005",
+          "request": {
+            "measurement_id": "inverter.vout.rms",
+            "kind": "rms",
+            "signal": "v(vout)",
+            "parameters": {},
+            "extensions": {}
+          },
+          "interpretation": "RMS of retained adaptive v(vout) samples; this is not a time-weighted electrical RMS.",
+          "pass_limits": {
+            "lower": {"value": 0.0, "unit": "V", "inclusive": true},
+            "upper": {"value": 1.3, "unit": "V", "inclusive": true}
+          },
+          "fail_limits": {"lower": {"value": 2.0, "unit": "V", "inclusive": true}}
+        },
+        {
+          "id": "crossing",
+          "request_id": "11000000-0000-4000-8000-000000000006",
+          "request": {
+            "measurement_id": "inverter.vin.first-rising-crossing",
+            "kind": "crossing",
+            "signal": "v(vin)",
+            "parameters": {
+              "threshold": {"value": 0.6, "unit": "V"},
+              "direction": "rising",
+              "occurrence": 1
+            },
+            "extensions": {}
+          },
+          "interpretation": "First linearly interpolated rising 0.6 V crossing of the explicit input pulse.",
+          "pass_limits": {
+            "lower": {"value": 4.5e-7, "unit": "s", "inclusive": true},
+            "upper": {"value": 5.6e-7, "unit": "s", "inclusive": true}
+          },
+          "fail_limits": {"upper": {"value": 2.5e-7, "unit": "s", "inclusive": true}}
+        },
+        {
+          "id": "rise-time",
+          "request_id": "11000000-0000-4000-8000-000000000007",
+          "request": {
+            "measurement_id": "inverter.vout.rise-time",
+            "kind": "rise_time",
+            "signal": "v(vout)",
+            "parameters": {
+              "lower_threshold": {"value": 0.12, "unit": "V"},
+              "upper_threshold": {"value": 1.08, "unit": "V"},
+              "occurrence": 1
+            },
+            "extensions": {}
+          },
+          "interpretation": "First complete retained v(vout) 10%-to-90% rising transition, caused by the input falling edge.",
+          "pass_limits": {"upper": {"value": 1e-7, "unit": "s", "inclusive": true}},
+          "fail_limits": {"lower": {"value": 2e-7, "unit": "s", "inclusive": true}}
+        },
+        {
+          "id": "fall-time",
+          "request_id": "11000000-0000-4000-8000-000000000008",
+          "request": {
+            "measurement_id": "inverter.vout.fall-time",
+            "kind": "fall_time",
+            "signal": "v(vout)",
+            "parameters": {
+              "lower_threshold": {"value": 0.12, "unit": "V"},
+              "upper_threshold": {"value": 1.08, "unit": "V"},
+              "occurrence": 1
+            },
+            "extensions": {}
+          },
+          "interpretation": "First complete retained v(vout) 90%-to-10% falling transition, caused by the input rising edge.",
+          "pass_limits": {"upper": {"value": 1e-7, "unit": "s", "inclusive": true}},
+          "fail_limits": {"lower": {"value": 2e-7, "unit": "s", "inclusive": true}}
+        },
+        {
+          "id": "settling-time",
+          "request_id": "11000000-0000-4000-8000-000000000009",
+          "request": {
+            "measurement_id": "inverter.vout.final-high-settling-time",
+            "kind": "settling_time",
+            "signal": "v(vout)",
+            "parameters": {
+              "target": {"value": 1.2, "unit": "V"},
+              "tolerance": {"value": 0.1, "unit": "V"},
+              "reference": {"value": 1.5e-6, "unit": "s"},
+              "hold_for": {"value": 2e-7, "unit": "s"}
+            },
+            "extensions": {}
+          },
+          "interpretation": "Elapsed time from 1.5 us until every retained tail sample stays within 1.2 V +/- 0.1 V for at least 0.2 us.",
+          "pass_limits": {"upper": {"value": 3e-7, "unit": "s", "inclusive": true}},
+          "fail_limits": {"lower": {"value": 5e-7, "unit": "s", "inclusive": true}}
+        }
+      ]
+    }
+  }
+}

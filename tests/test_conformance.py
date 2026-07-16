@@ -14,6 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "conformance" / "ihp-inverter"
 MANIFEST = BUNDLE / "manifest.json"
 VERIFY = BUNDLE / "verify.py"
+SEMANTIC = BUNDLE / "semantic.py"
+IMAGE_CONFIG_DIGEST = (
+    "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb"
+)
 TRANSITIVE_PROVENANCE_MESSAGE = (
     "KLayout decks are executable Ruby. Only the main deck, declared provenance "
     "inputs, and optional waiver database are hashed by this operation."
@@ -32,10 +36,94 @@ NETGEN_TRANSCRIPT_LIMITATION = (
     "Pass or fail requires both native streams to fit the complete capture bound; "
     "the artifact is not an unbounded native log."
 )
+DRC_FAIL_DESCRIPTIONS = {
+    "Cnt.d": "5.14. Cnt.d Min. GatPoly enclosure of Cont is 0.07 um",
+    "Cnt.e": "5.14. Cnt.e Min. Cont on GatPoly space to Activ is 0.14 um",
+    "M1.b": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 μm.",
+}
+DRC_FAIL_GEOMETRY_VALUES = [
+    "edge-pair: (3.215,-0.065;3.055,-0.065)/(3.283,-0.08;2.987,-0.08)",
+    "edge-pair: (3.055,0.095;3.215,0.095)/(3.355,0.1;2.915,0.1)",
+    "edge-pair: (2.93,-0.065;2.93,0.095)|(2.79,0.208;2.79,-0.178)",
+    "edge-pair: (3.46,-0.095;3.46,0.208)|(3.32,0.095;3.32,-0.065)",
+    "edge-pair: (3.46,-0.095;3.46,0.1)|(3.32,0.095;3.32,-0.065)",
+    "edge-pair: (2.93,-0.065;2.93,0.095)|(2.79,0.1;2.79,-0.178)",
+    "edge-pair: (0.37,-0.113;0.37,-0.005)|(0.23,0.108;0.23,0)",
+    "edge-pair: (0.76,-0.005;0.76,-0.113)|(0.9,0;0.9,0.108)",
+]
+DRC_FAIL_COORDINATES = [
+    [[3.215, -0.065], [3.055, -0.065], [3.283, -0.08], [2.987, -0.08]],
+    [[3.055, 0.095], [3.215, 0.095], [3.355, 0.1], [2.915, 0.1]],
+    [[2.93, -0.065], [2.93, 0.095], [2.79, 0.208], [2.79, -0.178]],
+    [[3.46, -0.095], [3.46, 0.208], [3.32, 0.095], [3.32, -0.065]],
+    [[3.46, -0.095], [3.46, 0.1], [3.32, 0.095], [3.32, -0.065]],
+    [[2.93, -0.065], [2.93, 0.095], [2.79, 0.1], [2.79, -0.178]],
+    [[0.37, -0.113], [0.37, -0.005], [0.23, 0.108], [0.23, 0.0]],
+    [[0.76, -0.005], [0.76, -0.113], [0.9, 0.0], [0.9, 0.108]],
+]
 
 
 def _sha256(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
+
+
+def _is_drc(operation: dict) -> bool:
+    return operation["tool"] == "klayout"
+
+
+def _synthetic_drc_summary(operation: dict) -> dict:
+    native = operation["native_report"]
+    expected_violations = native.get("expected_violations", [])
+    if not expected_violations:
+        return {
+            "category_count": 4,
+            "cell_count": 1,
+            "item_count": 0,
+            "total_violations": 0,
+            "waived_violations": 0,
+            "category_counts": [],
+            "violations": [],
+            "normalization": {
+                "geometry_values": 0,
+                "retained_geometries": 0,
+                "retained_coordinate_pairs": 0,
+                "global_geometry_limit_reached": False,
+            },
+        }
+    assert len(expected_violations) == len(DRC_FAIL_COORDINATES)
+    violations = []
+    for expected, coordinates in zip(expected_violations, DRC_FAIL_COORDINATES):
+        category_path = expected["category_path"]
+        category = ".".join(category_path)
+        violations.append(
+            {
+                "category": category,
+                "category_path": category_path,
+                "description": DRC_FAIL_DESCRIPTIONS[category],
+                "cell": expected["cell"],
+                "multiplicity": expected["multiplicity"],
+                "waived": expected["waived"],
+                "tags": [],
+                "geometries": [
+                    {
+                        "type": "edge-pair",
+                        "coordinates": coordinates,
+                        "coordinates_truncated": False,
+                    }
+                ],
+                "geometries_truncated": False,
+            }
+        )
+    return {
+        "category_count": len(DRC_FAIL_DESCRIPTIONS),
+        "cell_count": len({item["cell"] for item in expected_violations}),
+        "item_count": native["expected_item_count"],
+        "total_violations": native["expected_total_violations"],
+        "waived_violations": native["expected_waived_violations"],
+        "category_counts": native["expected_category_counts"],
+        "violations": violations,
+        "normalization": native["expected_normalization"],
+    }
 
 
 def _synthetic_result(operation_name: str, operation: dict, artifact: bytes) -> dict:
@@ -52,7 +140,7 @@ def _synthetic_result(operation_name: str, operation: dict, artifact: bytes) -> 
     ]
     identity = operation["tool_identity"]
     arguments = operation["arguments"]
-    if operation_name == "drc":
+    if _is_drc(operation):
         command = [
             identity["path"],
             "-b",
@@ -86,7 +174,7 @@ def _synthetic_result(operation_name: str, operation: dict, artifact: bytes) -> 
             "sha256": _sha256(artifact),
         }
     ]
-    if operation_name == "drc":
+    if _is_drc(operation):
         transcript = _transcript_content()
         artifacts.append(
             {
@@ -118,7 +206,7 @@ def _synthetic_result(operation_name: str, operation: dict, artifact: bytes) -> 
             )
     result = {
         "schema": "openada.result/v0alpha1",
-        "operation": operation_name,
+        "operation": "drc" if _is_drc(operation) else operation_name,
         "tool": {
             "name": operation["tool"],
             "path": identity["path"],
@@ -131,7 +219,24 @@ def _synthetic_result(operation_name: str, operation: dict, artifact: bytes) -> 
             "command": command,
             "cwd": "/evidence",
         },
-        "engineering": {"status": "pass", "summary": "synthetic verifier fixture"},
+        "engineering": {
+            "status": operation["expect"]["engineering_status"],
+            "summary": (
+                (
+                    "KLayout reported zero DRC violations."
+                    if operation["expect"].get("total_violations") == 0
+                    else (
+                        f"KLayout reported {operation['expect']['total_violations']} "
+                        "DRC violation(s)."
+                    )
+                )
+                if _is_drc(operation)
+                else (
+                    "Netgen produced clean, agreeing native evidence for a unique "
+                    "LVS match."
+                )
+            ),
+        },
         "inputs": inputs,
         "artifacts": artifacts,
         "diagnostics": [],
@@ -146,7 +251,8 @@ def _synthetic_result(operation_name: str, operation: dict, artifact: bytes) -> 
             },
         },
     }
-    if operation_name == "drc":
+    if _is_drc(operation):
+        drc_summary = _synthetic_drc_summary(operation)
         transcript = _transcript_content()
         validation = {
             "valid": True,
@@ -161,7 +267,7 @@ def _synthetic_result(operation_name: str, operation: dict, artifact: bytes) -> 
             }
         ]
         result["data"] = {
-            "drc_clean": True,
+            "drc_clean": operation["expect"]["drc_clean"],
             "inputs_stable": True,
             "changed_inputs": [],
             "working_directory": "/evidence",
@@ -230,21 +336,16 @@ def _synthetic_result(operation_name: str, operation: dict, artifact: bytes) -> 
                 "generator": operation["native_report"]["generator"],
                 "generator_script": arguments["rules"],
                 "top_cell": operation["native_report"]["top_cell"],
-                "category_count": 4,
-                "cell_count": 1,
-                "item_count": 0,
-                "total_violations": 0,
-                "waived_violations": 0,
-                "category_counts": [],
+                "category_count": drc_summary["category_count"],
+                "cell_count": drc_summary["cell_count"],
+                "item_count": drc_summary["item_count"],
+                "total_violations": drc_summary["total_violations"],
+                "waived_violations": drc_summary["waived_violations"],
+                "category_counts": drc_summary["category_counts"],
                 "category_counts_truncated": False,
-                "violations": [],
+                "violations": drc_summary["violations"],
                 "violations_truncated": False,
-                "normalization": {
-                    "geometry_values": 0,
-                    "retained_geometries": 0,
-                    "retained_coordinate_pairs": 0,
-                    "global_geometry_limit_reached": False,
-                },
+                "normalization": drc_summary["normalization"],
             },
         }
     else:
@@ -418,7 +519,7 @@ def _write_run_metadata(evidence: Path, manifest: dict) -> None:
         "design_revision": manifest["design"]["revision"],
         "image": {
             "reference": manifest["runtime"]["image"]["reference"],
-            "id": "sha256:" + ("0" * 64),
+            "id": IMAGE_CONFIG_DIGEST,
             "os": "linux",
             "architecture": "amd64",
         },
@@ -515,7 +616,48 @@ def _lvs_transcript_content(
 
 
 def _artifact_content(operation_name: str, operation: dict) -> bytes:
-    if operation_name == "drc":
+    if _is_drc(operation):
+        expected_violations = operation["native_report"].get(
+            "expected_violations", []
+        )
+        if expected_violations:
+            category_xml = "".join(
+                (
+                    "<category>"
+                    f"<name>{category}</name>"
+                    f"<description>{description}</description>"
+                    "<categories/>"
+                    "</category>"
+                )
+                for category, description in DRC_FAIL_DESCRIPTIONS.items()
+            )
+            cell_xml = "".join(
+                f"<cell><name>{cell}</name><variant/></cell>"
+                for cell in ("lvs_tester", "nmos$1")
+            )
+            item_xml = "".join(
+                (
+                    "<item><tags/>"
+                    f"<category>'{'.'.join(expected['category_path'])}'</category>"
+                    f"<cell>{expected['cell']}</cell>"
+                    f"<multiplicity>{expected['multiplicity']}</multiplicity>"
+                    f"<values><value>{geometry}</value></values>"
+                    "</item>"
+                )
+                for expected, geometry in zip(
+                    expected_violations, DRC_FAIL_GEOMETRY_VALUES
+                )
+            )
+            return (
+                '<?xml version="1.0" encoding="utf-8"?>\n'
+                "<report-database>"
+                f"<generator>{operation['native_report']['generator']}</generator>"
+                f"<top-cell>{operation['native_report']['top_cell']}</top-cell>"
+                f"<categories>{category_xml}</categories>"
+                f"<cells>{cell_xml}</cells>"
+                f"<items>{item_xml}</items>"
+                "</report-database>\n"
+            ).encode("utf-8")
         return (
             b'<?xml version="1.0" encoding="utf-8"?>\n'
             b"<report-database>"
@@ -524,8 +666,12 @@ def _artifact_content(operation_name: str, operation: dict) -> bytes:
             + b"<categories><category><name>P1</name><categories><category><name>SAME</name>"
             b"</category></categories></category><category><name>P2</name><categories>"
             b"<category><name>SAME</name></category></categories></category></categories>"
-            b"<cells><cell><name>inverter</name><variant/></cell></cells>"
-            b"<items></items></report-database>\n"
+            + (
+                "<cells><cell><name>"
+                f"{operation['native_report']['top_cell']}"
+                "</name><variant/></cell></cells>"
+            ).encode()
+            + b"<items></items></report-database>\n"
         )
     return (
         b"Subcircuit summary:\n"
@@ -548,7 +694,7 @@ def _write_synthetic_evidence(evidence: Path, manifest: dict) -> None:
     for name, operation in manifest["operations"].items():
         artifact = _artifact_content(name, operation)
         (evidence / operation["artifact"]["filename"]).write_bytes(artifact)
-        if name == "drc":
+        if _is_drc(operation):
             (evidence / operation["transcript_artifact"]["filename"]).write_bytes(
                 _transcript_content()
             )
@@ -650,6 +796,189 @@ def test_pinned_ihp_manifest_and_offline_verifier(tmp_path: Path) -> None:
 
     verified = _verify(evidence)
     assert verified.returncode == 0, verified.stderr
+
+
+def test_manifest_pins_real_ihp_drc_failure_and_exact_native_outcome() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    operation = manifest["operations"]["drc_fail"]
+
+    assert operation["arguments"]["gds"] == (
+        "/design/modules/module_0_foundations/lvs_tester/GDS/gallery.gds"
+    )
+    assert operation["arguments"]["top_cell"] == "lvs_tester"
+    assert operation["inputs"][0]["sha256"] == (
+        "c536ff737248e62cc209a6aec764a7f21750d0978e2e8351a4f0c2a6f144bc96"
+    )
+    assert operation["expect"] == {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "fail",
+        "drc_clean": False,
+        "total_violations": 8,
+    }
+    native = operation["native_report"]
+    assert native["expected_item_count"] == 8
+    assert native["expected_total_violations"] == 8
+    assert native["expected_waived_violations"] == 0
+    assert [
+        (entry["category"], entry["violations"])
+        for entry in native["expected_category_counts"]
+    ] == [("M1.b", 6), ("Cnt.d", 1), ("Cnt.e", 1)]
+    assert [entry["cell"] for entry in native["expected_violations"]] == [
+        "lvs_tester",
+        "lvs_tester",
+        "lvs_tester",
+        "lvs_tester",
+        "lvs_tester",
+        "lvs_tester",
+        "nmos$1",
+        "nmos$1",
+    ]
+    assert native["expected_normalization"] == {
+        "geometry_values": 8,
+        "retained_geometries": 8,
+        "retained_coordinate_pairs": 32,
+        "global_geometry_limit_reached": False,
+    }
+
+
+def test_verifier_rejects_seven_item_failure_even_with_reconciled_result(
+    tmp_path: Path,
+) -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    evidence = tmp_path / "evidence"
+    _write_synthetic_evidence(evidence, manifest)
+    operation = manifest["operations"]["drc_fail"]
+    artifact = _artifact_content("drc_fail", operation)
+    last_start = artifact.rfind(b"<item>")
+    last_end = artifact.find(b"</item>", last_start) + len(b"</item>")
+    artifact = artifact[:last_start] + artifact[last_end:]
+    artifact_path = evidence / operation["artifact"]["filename"]
+    artifact_path.write_bytes(artifact)
+
+    result_path = evidence / operation["result_filename"]
+    result = json.loads(result_path.read_text(encoding="utf-8"))
+    digest = _sha256(artifact)
+    artifact_record = next(
+        record
+        for record in result["artifacts"]
+        if record["kind"] == "klayout-lyrdb"
+    )
+    artifact_record.update({"bytes": len(artifact), "sha256": digest})
+    validation = {"valid": True, "reason": "lyrdb.valid", "bytes": len(artifact)}
+    result["data"]["report_output"]["capture"].update(
+        {"bytes": len(artifact), "sha256": digest, "validation": validation}
+    )
+    report = result["data"]["report"]
+    report.update(
+        {
+            "validation": validation,
+            "item_count": 7,
+            "total_violations": 7,
+            "category_counts": [
+                {"category": "M1.b", "category_path": ["M1.b"], "violations": 5},
+                {"category": "Cnt.d", "category_path": ["Cnt.d"], "violations": 1},
+                {"category": "Cnt.e", "category_path": ["Cnt.e"], "violations": 1},
+            ],
+            "violations": report["violations"][:-1],
+            "normalization": {
+                "geometry_values": 7,
+                "retained_geometries": 7,
+                "retained_coordinate_pairs": 28,
+                "global_geometry_limit_reached": False,
+            },
+        }
+    )
+    result_path.write_text(json.dumps(result), encoding="utf-8")
+
+    verified = _verify(evidence)
+
+    assert verified.returncode == 1
+    assert "native DRC item count" in verified.stderr
+
+
+@pytest.mark.parametrize(
+    "path,value,location",
+    [
+        (("engineering", "status"), "pass", "drc_fail.engineering.status"),
+        (("data", "drc_clean"), True, "drc_fail.data.drc_clean"),
+        (
+            ("data", "report", "total_violations"),
+            7,
+            "drc.data.report.total_violations",
+        ),
+        (("data", "report", "category_counts"), [], "drc_fail.data.report.category_counts"),
+    ],
+)
+def test_verifier_rejects_normalized_drc_failure_claim_tamper(
+    tmp_path: Path,
+    path: tuple[str, ...],
+    value: object,
+    location: str,
+) -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    evidence = tmp_path / "evidence"
+    _write_synthetic_evidence(evidence, manifest)
+    operation = manifest["operations"]["drc_fail"]
+    result_path = evidence / operation["result_filename"]
+    result = json.loads(result_path.read_text(encoding="utf-8"))
+    target = result
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    result_path.write_text(json.dumps(result), encoding="utf-8")
+
+    verified = _verify(evidence)
+
+    assert verified.returncode == 1
+    assert location in verified.stderr
+
+
+@pytest.mark.parametrize(
+    "path,value",
+    [
+        (
+            ("operations", "drc_fail", "arguments", "gds"),
+            "/design/unreviewed.gds",
+        ),
+        (("operations", "drc_fail", "inputs", 0, "sha256"), "0" * 64),
+        (
+            ("operations", "drc_fail", "native_report", "expected_item_count"),
+            7,
+        ),
+    ],
+)
+def test_manifest_rejects_drc_failure_pin_tamper(
+    tmp_path: Path,
+    path: tuple[object, ...],
+    value: object,
+) -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    target = manifest
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    verified = subprocess.run(
+        [
+            sys.executable,
+            str(VERIFY),
+            "--manifest",
+            str(manifest_path),
+            "--manifest-only",
+        ],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    assert verified.returncode == 1
+    assert "operations.drc_fail" in verified.stderr
+    assert "reviewed" in verified.stderr
 
 
 def test_verifier_rejects_an_artifact_hash_mismatch(tmp_path: Path) -> None:
@@ -1464,6 +1793,99 @@ def test_runner_and_result_bind_the_reviewed_top_cell_argv(tmp_path: Path) -> No
     assert len(result["execution"]["command"]) == 10
 
 
+def test_runner_and_result_bind_the_reviewed_failing_drc_argv(
+    tmp_path: Path,
+) -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    operation = manifest["operations"]["drc_fail"]
+    arguments = operation["arguments"]
+    runner_probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import json,sys; "
+                f"sys.path.insert(0, {str(BUNDLE)!r}); "
+                "import run; "
+                f"manifest=json.load(open({str(MANIFEST)!r}, encoding='utf-8')); "
+                "print(json.dumps(run._operation_argv("
+                "'drc_fail', manifest['operations']['drc_fail'])))"
+            ),
+        ],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert runner_probe.returncode == 0, runner_probe.stderr
+    assert json.loads(runner_probe.stdout) == [
+        "drc",
+        arguments["gds"],
+        "--rules",
+        arguments["rules"],
+        "--report",
+        arguments["report"],
+        "--top-cell",
+        "lvs_tester",
+        "--timeout",
+        "180",
+        "--provenance-input",
+        "/foss/pdks/ihp-sg13g2/COMMIT",
+    ]
+
+    evidence = tmp_path / "evidence"
+    _write_synthetic_evidence(evidence, manifest)
+    result = json.loads(
+        (evidence / operation["result_filename"]).read_text(encoding="utf-8")
+    )
+    assert result["operation"] == "drc"
+    assert result["execution"]["command"] == [
+        operation["tool_identity"]["path"],
+        "-b",
+        "-r",
+        arguments["rules"],
+        "-rd",
+        f"input={arguments['gds']}",
+        "-rd",
+        f"report={arguments['report']}",
+        "-rd",
+        "topcell=lvs_tester",
+    ]
+
+
+def test_runner_accepts_reviewed_cli_failure_exit_as_engineering_evidence(
+    tmp_path: Path,
+) -> None:
+    result_path = tmp_path / "result.json"
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import json,pathlib,sys; "
+                f"sys.path.insert(0, {str(BUNDLE)!r}); "
+                "import run; "
+                "command=[sys.executable,'-c',"
+                '"import json,sys; print(json.dumps({\'fixture\': True})); sys.exit(1)"]; '
+                f"result=pathlib.Path({str(result_path)!r}); "
+                "run._run_operation(command,result,timeout=10,"
+                "container_engine='unused',container_name='unused',"
+                "expected_returncode=1); "
+                "print(json.dumps(json.loads(result.read_text())))"
+            ),
+        ],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    assert probe.returncode == 0, probe.stderr
+    assert json.loads(probe.stdout) == {"fixture": True}
+
+
 def test_runner_and_result_bind_the_reviewed_lvs_argv_and_pdk_provenance(
     tmp_path: Path,
 ) -> None:
@@ -1964,3 +2386,272 @@ def test_real_pinned_ihp_inverter_conformance(tmp_path: Path) -> None:
         stderr=subprocess.PIPE,
     )
     assert verified.returncode == 0, verified.stderr
+
+
+def _publish_semantic_fixture(
+    tmp_path: Path,
+    evidence: Path,
+) -> tuple[Path, Path, Path, subprocess.CompletedProcess[str]]:
+    snapshot = tmp_path / "semantic-evidence.json"
+    probes = tmp_path / "semantic-probes.json"
+    bundle = tmp_path / "semantic-artifacts"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(SEMANTIC),
+            "--native-evidence",
+            str(evidence),
+            "--bundle-dir",
+            str(bundle),
+            "--snapshot-output",
+            str(snapshot),
+            "--probe-output",
+            str(probes),
+            "--normalized-output",
+            str(tmp_path / "semantic-normalized.json"),
+            "--oracle-output",
+            str(tmp_path / "semantic-oracle.json"),
+            "--decision-output",
+            str(tmp_path / "semantic-decision.json"),
+            "--replay-output-dir",
+            str(tmp_path / "semantic-replays"),
+        ],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    return snapshot, probes, bundle, completed
+
+
+def test_semantic_publication_closes_native_evidence_to_scoped_agent_decisions(
+    tmp_path: Path,
+) -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    evidence = tmp_path / "evidence"
+    _write_synthetic_evidence(evidence, manifest)
+
+    snapshot_path, probes_path, bundle, published = _publish_semantic_fixture(
+        tmp_path,
+        evidence,
+    )
+
+    assert published.returncode == 0, published.stderr
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    assert snapshot["chain_id"] == "openada.chain/ihp-inverter-physical/v1"
+    assert snapshot["decisions"]["inverter"]["decision"] == "proceed"
+    assert snapshot["decisions"]["gallery"]["decision"] == "block"
+    failing = snapshot["operations"]["drc_fail"]["evidence"]
+    assert failing["total_violations"] == 8
+    assert failing["category_counts"] == [
+        {"category": "M1.b", "category_path": ["M1.b"], "violations": 6},
+        {"category": "Cnt.d", "category_path": ["Cnt.d"], "violations": 1},
+        {"category": "Cnt.e", "category_path": ["Cnt.e"], "violations": 1},
+    ]
+    assert [
+        violation["geometries"][0]["coordinates"]
+        for violation in failing["violations"]
+    ] == DRC_FAIL_COORDINATES
+    assert failing["normalization"] == {
+        "geometry_values": 8,
+        "global_geometry_limit_reached": False,
+        "retained_coordinate_pairs": 32,
+        "retained_geometries": 8,
+    }
+    lvs = snapshot["operations"]["lvs_match"]["evidence"]
+    assert lvs["lvs_match"] is True
+    assert lvs["mismatch_count"] == 0
+    assert lvs["report"]["final_match"] is True
+    assert lvs["evidence_agrees"] is True
+    assert snapshot["standards"]["ieee_measurement_standard"]["status"] == (
+        "not-applicable"
+    )
+    assert {item["id"] for item in snapshot["limitations"]} >= {
+        "pre-extracted-layout-netlist",
+        "reference-flow-not-signoff",
+        "separate-negative-fixture",
+    }
+
+    probes = json.loads(probes_path.read_text(encoding="utf-8"))
+    assert probes["summary"] == {
+        "all_required_diagnostics_observed": True,
+        "probe_count": 4,
+        "status": "pass",
+    }
+    assert [record["id"] for record in probes["negative_replays"]] == [
+        "real-gallery-drc-fail",
+        "synthetic-native-lvs-mismatch",
+    ]
+    assert [record["id"] for record in probes["tamper_replays"]] == [
+        "reconciled-seven-item-drc",
+        "unbound-native-lvs-json",
+    ]
+
+    expected_bundle = {"run.json"}
+    for operation in manifest["operations"].values():
+        expected_bundle.add(operation["result_filename"])
+        for key in ("artifact", "json_artifact", "transcript_artifact"):
+            if key in operation:
+                expected_bundle.add(operation[key]["filename"])
+    assert {path.name for path in bundle.iterdir()} == expected_bundle
+    for filename in expected_bundle:
+        assert (bundle / filename).read_bytes() == (evidence / filename).read_bytes()
+
+    offline = subprocess.run(
+        [
+            sys.executable,
+            str(SEMANTIC),
+            str(snapshot_path),
+            "--probe-report",
+            str(probes_path),
+            "--bundle-dir",
+            str(bundle),
+            "--normalized-output",
+            str(tmp_path / "semantic-normalized.json"),
+            "--oracle-output",
+            str(tmp_path / "semantic-oracle.json"),
+            "--decision-output",
+            str(tmp_path / "semantic-decision.json"),
+            "--replay-output-dir",
+            str(tmp_path / "semantic-replays"),
+        ],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert offline.returncode == 0, offline.stderr
+    supporting_paths = [
+        tmp_path / "semantic-normalized.json",
+        tmp_path / "semantic-oracle.json",
+        tmp_path / "semantic-decision.json",
+        *sorted((tmp_path / "semantic-replays").glob("*.json")),
+    ]
+    assert len(supporting_paths) == 7
+    assert len({_sha256(path.read_bytes()) for path in supporting_paths}) == 7
+
+    fresh_compare = subprocess.run(
+        [
+            sys.executable,
+            str(SEMANTIC),
+            str(snapshot_path),
+            "--native-evidence",
+            str(evidence),
+            "--bundle-dir",
+            str(bundle),
+        ],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert fresh_compare.returncode == 0, fresh_compare.stderr
+
+
+@pytest.mark.parametrize(
+    "path,value,diagnostic",
+    [
+        (
+            ("decisions", "gallery", "decision"),
+            "proceed",
+            "semantic evidence.decisions",
+        ),
+        (
+            (
+                "operations",
+                "drc_fail",
+                "evidence",
+                "violations",
+                0,
+                "geometries",
+                0,
+                "coordinates",
+                0,
+                0,
+            ),
+            99.0,
+            "semantic evidence.operations.drc_fail.evidence.violations",
+        ),
+        (
+            ("operations", "lvs_match", "evidence", "lvs_match"),
+            False,
+            "semantic evidence.operations.lvs_match.evidence",
+        ),
+        (
+            (
+                "operations",
+                "drc_clean",
+                "retained_artifacts",
+                1,
+                "sha256",
+            ),
+            "0" * 64,
+            "semantic evidence.trust_chain",
+        ),
+    ],
+    ids=["decision", "geometry", "lvs-match", "published-artifact-digest"],
+)
+def test_semantic_offline_verifier_rejects_agent_evidence_tamper(
+    tmp_path: Path,
+    path: tuple[object, ...],
+    value: object,
+    diagnostic: str,
+) -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    evidence = tmp_path / "evidence"
+    _write_synthetic_evidence(evidence, manifest)
+    snapshot_path, probes_path, bundle, published = _publish_semantic_fixture(
+        tmp_path,
+        evidence,
+    )
+    assert published.returncode == 0, published.stderr
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    target: object = snapshot
+    for part in path[:-1]:
+        target = target[part]  # type: ignore[index]
+    target[path[-1]] = value  # type: ignore[index]
+    snapshot_path.write_text(json.dumps(snapshot), encoding="utf-8")
+
+    verified = subprocess.run(
+        [
+            sys.executable,
+            str(SEMANTIC),
+            str(snapshot_path),
+            "--probe-report",
+            str(probes_path),
+            "--bundle-dir",
+            str(bundle),
+        ],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    assert verified.returncode == 1
+    assert diagnostic in verified.stderr
+
+
+def test_semantic_publication_rejects_unverified_native_input_before_writing(
+    tmp_path: Path,
+) -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    evidence = tmp_path / "evidence"
+    _write_synthetic_evidence(evidence, manifest)
+    native_json = evidence / manifest["operations"]["lvs"]["json_artifact"]["filename"]
+    native_json.write_bytes(native_json.read_bytes() + b" ")
+
+    snapshot_path, probes_path, bundle, published = _publish_semantic_fixture(
+        tmp_path,
+        evidence,
+    )
+
+    assert published.returncode == 1
+    assert "lvs.netgen-comparison-json.bytes" in published.stderr
+    assert not snapshot_path.exists()
+    assert not probes_path.exists()
+    assert not bundle.exists()

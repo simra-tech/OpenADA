@@ -1,0 +1,85 @@
+{
+  "analyses": {
+    "ac": {
+      "deck_sha256": "073f05e1032fdcf8c936da81679d16ba8ee711b2d143fc23c9f7620557904863",
+      "dependent_variable_count": 101,
+      "finite_value_count": 141602,
+      "frequency_first_hz": 1.0,
+      "frequency_last_hz": 9999999.999999788,
+      "launcher_sha256": "43767ad51ff9af6519a7c06be11721baf8bca75563a5a14f17cc45a316af9eda",
+      "log_sha256": "3582be1267b994da36d89cbcb506bb4ee22983fbc8024e4d70b6419318f76326",
+      "low_frequency_gain_db": 70.11974138671727,
+      "phase_margin_deg": 61.42309151169668,
+      "plotname": "AC Analysis",
+      "point_count": 701,
+      "raw_sha256": "cb6762efd30b6efcfaf9e0f9e683290e8892b9722380764c1ed726663d0e1836",
+      "request_id": "11000000-0000-4000-8000-000000000003",
+      "unity_crossing_in_band": true,
+      "unity_gain_frequency_hz": 4157414.5570058143
+    },
+    "dc": {
+      "axis_first_v": 0.0,
+      "axis_last_v": 1.2000000000000008,
+      "deck_sha256": "6fef2dd9842b863a540aac74099d18899f117f5e28ebf986ed806ada944696d7",
+      "dependent_variable_count": 11,
+      "finite_value_count": 1331,
+      "inverter_half_supply_crossing_input_v": 0.5200000000000002,
+      "inverter_half_supply_crossing_output_v": 0.6393511933939843,
+      "launcher_sha256": "7f4f49b763d705aa3db93365aa5e88944bada3595fa4802e3afffe9f75f25f31",
+      "log_sha256": "c0fb2c5e708e89bd616642a1a57eb15845544115388479dd07717429d218c892",
+      "plotname": "DC transfer characteristic",
+      "point_count": 121,
+      "raw_sha256": "1c5de0d3b280213acc2b599219593c8e15ade35e09e47f6394988d5fd9ee851d",
+      "request_id": "11000000-0000-4000-8000-000000000002"
+    },
+    "op": {
+      "deck_sha256": "efbdfc741202de50ba7cf04b62d15cc55719f0ba2a86ea6b1d0976e0cb3f8fee",
+      "dependent_variable_count": 11,
+      "finite_value_count": 11,
+      "launcher_sha256": "5f87082dc1e47f94e189b60c546f12d0f9beaf37daeca8382b52ec69d84ad9c6",
+      "log_sha256": "4466b9688c9c63c6d76892805e8b540eb23187ec4e0cadd927c28af67b78efbb",
+      "plotname": "Operating Point",
+      "point_count": 1,
+      "raw_sha256": "376bcc1acfc8bcc38ccdd488e51c4579da5973ce4e77327370d40f5c7e8d0e24",
+      "request_id": "11000000-0000-4000-8000-000000000001",
+      "vout_v": 1.1999991371378251
+    },
+    "tran": {
+      "deck_sha256": "de1be4d17d9c169a210f78d128e4f7281c79ffeba6dc552efb39fcc7ead33066",
+      "dependent_variable_count": 11,
+      "finite_value_count": 11264,
+      "launcher_sha256": "fb8b51950752a511c15ab43ec524d7249be0bc0dce45334f6d831b7540cd3495",
+      "log_sha256": "6193cf7f5998a39a1e0fcd75220c8040f9288a502c4ab8744483ee7b755c0213",
+      "plotname": "Transient Analysis (linearized)",
+      "point_count": 1024,
+      "raw_sha256": "bfb7b835f0e10f06a285625aa8a21979e4f0a1f0e451598e180628e84a951f6c",
+      "request_id": "11000000-0000-4000-8000-000000000004",
+      "time_first_s": 5e-07,
+      "time_last_s": 3.246875000000037e-05,
+      "uniform_step_s": 3.125000000000002e-08,
+      "vin_max_v": 1.2000000000003217,
+      "vin_min_v": 0.0,
+      "vout_max_v": 1.2002118288110082,
+      "vout_min_v": -6.040828387125774e-05
+    }
+  },
+  "extensions": {},
+  "provider": {
+    "driver_id": "org.openada.driver.ngspice-pdk-control",
+    "driver_version": "0.5.0",
+    "native_tool": "ngspice-46",
+    "pdk_revision": "144f811cdffda49b71d28f64e8a92b697b61cf06"
+  },
+  "schema": "openada.normalized-evidence/ihp-ngspice-provider-analyses/v1",
+  "standards_assessment": {
+    "extensions": {},
+    "reason": "This chain validates nominal analog OP/DC/AC/TRAN provider evidence. It does not measure an ADC, DAC, waveform-recorder spectral figure, or a transition-time parameter.",
+    "reviewed_not_applied": [
+      "IEEE 1241-2023",
+      "IEEE 1658-2023",
+      "IEEE 1057-2017",
+      "IEEE 181-2025"
+    ],
+    "status": "no-applicable-ieee-conformance-claim"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "conditions": [
+    {
+      "name": "temperature",
+      "unit": "degC",
+      "value": 27.0
+    },
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    },
+    {
+      "name": "load_capacitance",
+      "unit": "F",
+      "value": 5e-13
+    },
+    {
+      "name": "bias_current",
+      "unit": "A",
+      "value": 8e-05
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "v(vp)",
+      "output_name": "vp.real",
+      "unit": "V"
+    },
+    {
+      "component": "imaginary",
+      "native_name": "v(vp)",
+      "output_name": "vp.imag",
+      "unit": "V"
+    },
+    {
+      "component": "real",
+      "native_name": "v(vout)",
+      "output_name": "vout.real",
+      "unit": "V"
+    },
+    {
+      "component": "imaginary",
+      "native_name": "v(vout)",
+      "output_name": "vout.imag",
+      "unit": "V"
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-physical/v1",
+  "claim": "Every normalized result, retained native artifact, exact reviewed outcome, and replay metadata record passed independent verification.",
+  "extensions": {},
+  "implementation": {
+    "bytes": 85085,
+    "repository_path": "conformance/ihp-inverter/verify.py",
+    "sha256": "5944fa1d92c410aeb3c1d6d09131354e39cf602dc82bcd282a259acfa7d01fe0"
+  },
+  "replay_summary": {
+    "all_required_diagnostics_observed": true,
+    "probe_count": 4,
+    "status": "pass"
+  },
+  "schema": "openada.physical-oracle/v0alpha1",
+  "source": {
+    "conformance_id": "ihp-inverter-drc-lvs",
+    "conformance_manifest_sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+    "license": {
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "spdx": "Apache-2.0"
+    },
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623"
+  },
+  "status": "pass",
+  "verified_artifacts": [
+    {
+      "bytes": 1337,
+      "filename": "run.json",
+      "kind": "conformance-run",
+      "path": "/evidence/run.json",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/run.json",
+      "role": "native-run-metadata",
+      "sha256": "336f3f775b13f571e4bcc85261a1f6cf9e78a8f05117e66b1346efbb272ac841"
+    },
+    {
+      "bytes": 9670,
+      "filename": "drc.json",
+      "kind": "openada-result",
+      "path": "/evidence/drc.json",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/drc.json",
+      "role": "normalized-evidence",
+      "sha256": "f6ddf537905f30146ffe1795d96d5faac005c9564493b9f99fbb9bb5a8280a3e"
+    },
+    {
+      "bytes": 120878,
+      "filename": "inverter.drc.lyrdb",
+      "kind": "klayout-lyrdb",
+      "path": "/evidence/inverter.drc.lyrdb",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.drc.lyrdb",
+      "role": "native-evidence",
+      "sha256": "52d617caa4d63a49ca8adb94f13b56e8a195d4acf94de79d40c5297914baa6a3"
+    },
+    {
+      "bytes": 12218,
+      "filename": "inverter.drc.lyrdb.openada.log",
+      "kind": "klayout-transcript",
+      "path": "/evidence/inverter.drc.lyrdb.openada.log",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.drc.lyrdb.openada.log",
+      "role": "native-evidence",
+      "sha256": "67c17ef4431c7a09e74e4294dacb8d88ff3bbffeb77af7be24b78c4af257f9ef"
+    },
+    {
+      "bytes": 17266,
+      "filename": "drc-fail.json",
+      "kind": "openada-result",
+      "path": "/evidence/drc-fail.json",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/drc-fail.json",
+      "role": "normalized-evidence",
+      "sha256": "4ad534042c61bdbcae6d2d8e6b4cd9f874c01bd9fefee34b5ecc4ba10bd546d1"
+    },
+    {
+      "bytes": 123327,
+      "filename": "lvs-tester.drc.lyrdb",
+      "kind": "klayout-lyrdb",
+      "path": "/evidence/lvs-tester.drc.lyrdb",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/lvs-tester.drc.lyrdb",
+      "role": "native-evidence",
+      "sha256": "205d85acb90e313a36565feb231953b9b33a96a471ff9ce3f4a12a9dd1840104"
+    },
+    {
+      "bytes": 12218,
+      "filename": "lvs-tester.drc.lyrdb.openada.log",
+      "kind": "klayout-transcript",
+      "path": "/evidence/lvs-tester.drc.lyrdb.openada.log",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/lvs-tester.drc.lyrdb.openada.log",
+      "role": "native-evidence",
+      "sha256": "1c10b0ab38a133f76a143d55198fe6bff11cbb9cc53977579f6895437433da8e"
+    },
+    {
+      "bytes": 12824,
+      "filename": "lvs.json",
+      "kind": "openada-result",
+      "path": "/evidence/lvs.json",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/lvs.json",
+      "role": "normalized-evidence",
+      "sha256": "a1e88a2f94cafa0819752b224575924d797a81585f3ccf77a576f130c0c8deea"
+    },
+    {
+      "bytes": 1598,
+      "filename": "inverter.lvs.comp",
+      "kind": "netgen-comparison",
+      "path": "/evidence/inverter.lvs.comp",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.lvs.comp",
+      "role": "native-evidence",
+      "sha256": "6df6dab97e8ee40587f4a37f10cd82364e3088b6a8b33b80b691cf214380e906"
+    },
+    {
+      "bytes": 578,
+      "filename": "inverter.lvs.json",
+      "kind": "netgen-comparison-json",
+      "path": "/evidence/inverter.lvs.json",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.lvs.json",
+      "role": "native-evidence",
+      "sha256": "d0fe4e41e1e70342dec83bd439eacdf6e49c0577334e9728f1147fe26b47390b"
+    },
+    {
+      "bytes": 6115,
+      "filename": "inverter.lvs.comp.openada.log",
+      "kind": "netgen-transcript",
+      "path": "/evidence/inverter.lvs.comp.openada.log",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.lvs.comp.openada.log",
+      "role": "native-evidence",
+      "sha256": "fdd3b097f9debc0c6c8d3327da28d52031397cffed4a4be9f14cce4ef3c7bddd"
+    }
+  ]
+}

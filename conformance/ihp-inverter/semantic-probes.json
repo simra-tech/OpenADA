@@ -1,0 +1,106 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-physical/v1",
+  "extensions": {},
+  "negative_replays": [
+    {
+      "covers": [
+        "surface|openada.surface/cli.drc/v1",
+        "preflight|drc-clean"
+      ],
+      "evidence": [
+        {
+          "bytes": 17266,
+          "filename": "drc-fail.json",
+          "sha256": "4ad534042c61bdbcae6d2d8e6b4cd9f874c01bd9fefee34b5ecc4ba10bd546d1"
+        },
+        {
+          "bytes": 123327,
+          "filename": "lvs-tester.drc.lyrdb",
+          "sha256": "205d85acb90e313a36565feb231953b9b33a96a471ff9ce3f4a12a9dd1840104"
+        }
+      ],
+      "expected_status": "fail",
+      "fixture": "public-design-native-run",
+      "id": "real-gallery-drc-fail",
+      "mutation": null,
+      "observed_diagnostic": "KLayout reported 8 DRC violation(s).",
+      "observed_status": "fail",
+      "required_diagnostic": "KLayout reported 8 DRC violation(s).",
+      "verdict": "accepted-negative-outcome"
+    },
+    {
+      "covers": [
+        "surface|openada.surface/cli.lvs/v1",
+        "preflight|lvs-match"
+      ],
+      "evidence": [],
+      "expected_status": "fail",
+      "fixture": "synthetic-mismatch-injection-into-real-replay",
+      "id": "synthetic-native-lvs-mismatch",
+      "mutation": {
+        "bytes": 37,
+        "method": "replace with an explicit native mismatch terminal",
+        "sha256": "f2433fc8564bcccf3478d618bd48f9e96d02ec75fa3214d9f998ed835587be28",
+        "target": "inverter.lvs.comp"
+      },
+      "observed_diagnostic": "native LVS report contains mismatch evidence: ['Final result: Circuits do not match.']",
+      "observed_status": "rejected",
+      "required_diagnostic": "native LVS report contains mismatch evidence",
+      "verdict": "expected-rejection"
+    }
+  ],
+  "schema": "openada.semantic-chain-probes/v0alpha1",
+  "source_evidence": {
+    "conformance_manifest_sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+    "run": {
+      "bytes": 1337,
+      "filename": "run.json",
+      "sha256": "336f3f775b13f571e4bcc85261a1f6cf9e78a8f05117e66b1346efbb272ac841"
+    }
+  },
+  "summary": {
+    "all_required_diagnostics_observed": true,
+    "probe_count": 4,
+    "status": "pass"
+  },
+  "tamper_replays": [
+    {
+      "covers": [
+        "surface|openada.surface/cli.drc/v1",
+        "preflight|drc-clean"
+      ],
+      "expected_status": "unknown",
+      "fixture": "tampered-copy-of-real-replay",
+      "id": "reconciled-seven-item-drc",
+      "mutation": {
+        "bytes": 123059,
+        "method": "remove one item and reconcile the normalized count and digest",
+        "sha256": "456fd75e5f9dc78b3baf8eaf9b9bf2fe460c3431dfa0918644d16f91c5ea5458",
+        "target": "lvs-tester.drc.lyrdb"
+      },
+      "observed_diagnostic": "native DRC item count: expected 8, got 7",
+      "observed_status": "rejected",
+      "required_diagnostic": "native DRC item count",
+      "verdict": "expected-rejection"
+    },
+    {
+      "covers": [
+        "surface|openada.surface/cli.lvs/v1",
+        "preflight|lvs-match"
+      ],
+      "expected_status": "unknown",
+      "fixture": "tampered-copy-of-real-replay",
+      "id": "unbound-native-lvs-json",
+      "mutation": {
+        "bytes": 579,
+        "method": "append one unbound byte without changing the normalized artifact digest",
+        "sha256": "81ee321edbcb132fbd2cb7955ffbafdf3ffb6f3af4b1af0f939569545eb46c2b",
+        "target": "inverter.lvs.json"
+      },
+      "observed_diagnostic": "lvs.netgen-comparison-json.sha256: expected '81ee321edbcb132fbd2cb7955ffbafdf3ffb6f3af4b1af0f939569545eb46c2b', got 'd0fe4e41e1e70342dec83bd439eacdf6e49c0577334e9728f1147fe26b47390b'",
+      "observed_status": "rejected",
+      "required_diagnostic": "lvs.netgen-comparison-json.sha256",
+      "verdict": "expected-rejection"
+    }
+  ]
+}

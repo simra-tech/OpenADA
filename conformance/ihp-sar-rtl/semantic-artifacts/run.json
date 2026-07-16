@@ -1,0 +1,82 @@
+{
+  "conformance_id": "ihp-sar-rtl-check",
+  "conformance_manifest_sha256": "3f929ba9f755773e97905e61cf4c9c6a03e68d3f9db351b74820d30cd445f6aa",
+  "created_at": "2026-07-16T00:23:43.860285Z",
+  "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+  "image": {
+    "architecture": "amd64",
+    "id": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "os": "linux",
+    "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"
+  },
+  "native_artifacts": [
+    {
+      "bytes": 1902,
+      "path": "positive/rtl-check.result.json",
+      "sha256": "3269ee1e04e1123ecdfbc91574b29a5949cce5744bd68427d4dc39a0eb53dc74"
+    },
+    {
+      "bytes": 190,
+      "path": "positive/rtl-check.ys",
+      "sha256": "4c61fff924adbfe0f9022d88309da79ee2c2951f441c912586157a7200e30137"
+    },
+    {
+      "bytes": 25451,
+      "path": "positive/sar_logic.json",
+      "sha256": "7b1e3f7f8e256db0e29ace683d6c2b5c90fd1e173c436a8fe8726395782d752a"
+    },
+    {
+      "bytes": 507,
+      "path": "positive/yosys.transcript.json",
+      "sha256": "f932bceca691f19a055211f28d518ef2e3757e987b6fcc13541bcf4e590f154b"
+    },
+    {
+      "bytes": 1985,
+      "path": "negative/rtl-check.result.json",
+      "sha256": "eadb9206c02361b706bc6e15c61f3a00fef73ee4a15a85cb204645c9a24226a7"
+    },
+    {
+      "bytes": 198,
+      "path": "negative/rtl-check.ys",
+      "sha256": "4855a5981b1d0b10525004bb90242f4d77bdb749a0ae57ecfc02ee6a1bba3b3b"
+    },
+    {
+      "bytes": 568,
+      "path": "negative/yosys.transcript.json",
+      "sha256": "17bc1d2f212aafe0235c67eb2f0ef12945b0025fdb9b5acf2f7da4c4c37055f6"
+    }
+  ],
+  "network": "none during EDA execution",
+  "openada_checkout": {
+    "after": {
+      "commit": "d1c31972e70538511afd6197f47ba3d7072ed45e",
+      "status_entry_count": 104,
+      "status_sha256": "4d8f26d7abb99b8a3e5a25a237c7aa441d8b8066637f5343e59c14bbe7ed984d",
+      "tracked_files_modified": true,
+      "untracked_files_present": true,
+      "working_tree_modified": true
+    },
+    "before": {
+      "commit": "d1c31972e70538511afd6197f47ba3d7072ed45e",
+      "status_entry_count": 104,
+      "status_sha256": "4d8f26d7abb99b8a3e5a25a237c7aa441d8b8066637f5343e59c14bbe7ed984d",
+      "tracked_files_modified": true,
+      "untracked_files_present": true,
+      "working_tree_modified": true
+    },
+    "commit_exact": false,
+    "state_unchanged": true
+  },
+  "schema": "openada.conformance-run/v0alpha1",
+  "source": {
+    "bytes": 576,
+    "path": "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v",
+    "sha256": "b33c7b25215ac916b3b07e0dc385ae353294f6872eaa226f4c0126ecfd7063da"
+  },
+  "tool": {
+    "native_path": "/foss/tools/yosys/bin/yosys",
+    "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)",
+    "wrapper_path": "conformance/ihp-sar-rtl/yosys_wrapper.py",
+    "wrapper_sha256": "a75b13acbc68debdd6d70e23caaae3f0d1fcb23e3ea8067f0b128e0a2c27bc6d"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "analysis": "ac",
+  "expected_status": "invalid_request",
+  "extensions": {},
+  "id": "ac-result-digest",
+  "mutation": "result-artifact-digest-substitution",
+  "observed_diagnostic": "evidence.binding.invalid",
+  "observed_status": "invalid_request",
+  "oracle_rejection": "does not bind raw bytes",
+  "rejected": true,
+  "required_diagnostic": "evidence.binding.invalid",
+  "schema": "openada.tamper-replay/ihp-ngspice-provider-analyses/v1"
+}

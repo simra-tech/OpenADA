@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/foss/tools/yosys/bin/yosys",
+    "-q",
+    "-s",
+    "/evidence/positive/rtl-check.ys"
+  ],
+  "cwd": "/evidence/positive/.openada-yosys-ms700e17",
+  "exit_code": 0,
+  "schema": "openada.yosys-native-transcript/v1",
+  "stderr": {
+    "base64": "",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stdout": {
+    "base64": "",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

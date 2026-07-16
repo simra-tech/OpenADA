@@ -1,0 +1,20 @@
+{
+  "schema": "openada.ihp-inverter-agent-chain-requests/v0alpha1",
+  "chain_id": "openada.chain/ihp-inverter-agent-chain/v1",
+  "definition_source": "manifest.json#/extensions/org.openada",
+  "definition_fields": [
+    "provider",
+    "terminal_nonconvergence",
+    "workflow",
+    "measurements"
+  ],
+  "definition_sha256": "6193dfe2d027ceae17105118eb9855e936cc8b9525af36c30cf679ef292b8c45",
+  "materialized_requests": [
+    "provider-request.json",
+    "provider-fail-request.json",
+    "extract-selection.json",
+    "requests/measure-{measurement-id}.json",
+    "requests/spec-{measurement-id}-{pass-or-fail}.json"
+  ],
+  "extensions": {}
+}

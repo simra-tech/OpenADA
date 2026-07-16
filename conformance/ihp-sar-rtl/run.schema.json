@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/conformance/ihp-sar-rtl/run.schema.json",
+  "title": "OpenADA IHP SAR RTL conformance run metadata v0alpha1",
+  "type": "object",
+  "required": [
+    "schema",
+    "conformance_id",
+    "conformance_manifest_sha256",
+    "created_at",
+    "design_revision",
+    "source",
+    "image",
+    "tool",
+    "openada_checkout",
+    "network",
+    "native_artifacts"
+  ],
+  "properties": {
+    "schema": {"const": "openada.conformance-run/v0alpha1"},
+    "conformance_id": {"const": "ihp-sar-rtl-check"},
+    "conformance_manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+    },
+    "design_revision": {"const": "133ecf657572e021b5921b5a1b7693abfb209623"},
+    "source": {
+      "type": "object",
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": {"const": "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"},
+        "bytes": {"const": 576},
+        "sha256": {"const": "b33c7b25215ac916b3b07e0dc385ae353294f6872eaa226f4c0126ecfd7063da"}
+      },
+      "additionalProperties": false
+    },
+    "image": {
+      "type": "object",
+      "required": ["reference", "id", "os", "architecture"],
+      "properties": {
+        "reference": {"const": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"},
+        "id": {"const": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb"},
+        "os": {"const": "linux"},
+        "architecture": {"const": "amd64"}
+      },
+      "additionalProperties": false
+    },
+    "tool": {
+      "type": "object",
+      "required": ["wrapper_path", "wrapper_sha256", "native_path", "version"],
+      "properties": {
+        "wrapper_path": {"const": "conformance/ihp-sar-rtl/yosys_wrapper.py"},
+        "wrapper_sha256": {"$ref": "#/$defs/sha256"},
+        "native_path": {"const": "/foss/tools/yosys/bin/yosys"},
+        "version": {"const": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"}
+      },
+      "additionalProperties": false
+    },
+    "openada_checkout": {
+      "type": "object",
+      "required": ["before", "after", "state_unchanged", "commit_exact"],
+      "properties": {
+        "before": {"$ref": "#/$defs/checkoutState"},
+        "after": {"$ref": "#/$defs/checkoutState"},
+        "state_unchanged": {"type": "boolean"},
+        "commit_exact": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "network": {"const": "none during EDA execution"},
+    "source_attestation": {"$ref": "#/$defs/sourceAttestation"},
+    "native_artifacts": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {"$ref": "#/$defs/fileRecord"}
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "gitObject": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "extensions": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"},
+      "additionalProperties": {"type": "object"}
+    },
+    "sourceAttestation": {
+      "type": "object",
+      "required": ["receipt_class", "repository_revision", "repository_tree", "semantic_subject_sha256", "clean_before", "clean_after", "state_unchanged", "extensions"],
+      "properties": {
+        "receipt_class": {"enum": ["provisional", "release"]},
+        "repository_revision": {"$ref": "#/$defs/gitObject"},
+        "repository_tree": {"$ref": "#/$defs/gitObject"},
+        "semantic_subject_sha256": {"$ref": "#/$defs/sha256"},
+        "clean_before": {"type": "boolean"},
+        "clean_after": {"type": "boolean"},
+        "state_unchanged": {"type": "boolean"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "fileRecord": {
+      "type": "object",
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^(?:positive|negative)/[A-Za-z0-9._-]+$"},
+        "bytes": {"type": "integer", "minimum": 1, "maximum": 67108864},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "checkoutState": {
+      "type": "object",
+      "required": ["commit", "tracked_files_modified", "untracked_files_present", "working_tree_modified", "status_entry_count", "status_sha256"],
+      "properties": {
+        "commit": {"oneOf": [{"type": "string", "pattern": "^[0-9a-f]{40}$"}, {"type": "null"}]},
+        "tracked_files_modified": {"type": ["boolean", "null"]},
+        "untracked_files_present": {"type": ["boolean", "null"]},
+        "working_tree_modified": {"type": ["boolean", "null"]},
+        "status_entry_count": {"type": ["integer", "null"], "minimum": 0},
+        "status_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,1224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.semantic-chain/v0alpha1",
+  "id": "openada.chain/ihp-analog-measurements/v1",
+  "design": {
+    "class": "public-design",
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "tree": "2a710fd503226e9642e4337a324e6c192a9d8a31",
+    "subtree": "modules",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "inputs": [
+      {
+        "path": "modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch",
+        "sha256": "861a27e4fcfec15e267ed18816db791460aae1f94f1a7c83ca0c114d4379d4bc"
+      },
+      {
+        "path": "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sch",
+        "sha256": "4385e81ad81c229b81095fe2060153b2817376cfcfbb6d9adfc908d58d7e34a7"
+      },
+      {
+        "path": "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sym",
+        "sha256": "d6cbae50c9f6a425bab127f0644c5959c98c13893442420b6b25531af0d64126"
+      },
+      {
+        "path": "modules/module_0_foundations/inverter/inverter_tb.sch",
+        "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
+      },
+      {
+        "path": "modules/module_0_foundations/inverter/inverter.sch",
+        "sha256": "6a2e03f44df59976b8ba4fca385b104b80802d367789171790bd238f912ec771"
+      },
+      {
+        "path": "modules/module_0_foundations/inverter/inverter.sym",
+        "sha256": "8658fa30ac994a0bedf511e59f064e6458e9b4a30d91382f6974a5117bd5c103"
+      }
+    ],
+    "extensions": {}
+  },
+  "runtime": {
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "platform": "linux/amd64",
+    "pdk_revision": "144f811cdffda49b71d28f64e8a92b697b61cf06",
+    "tools": [
+      {
+        "id": "xschem",
+        "path": "/foss/tools/xschem/bin/xschem",
+        "version": "XSCHEM V3.4.8RC"
+      },
+      {
+        "id": "ngspice",
+        "path": "/foss/tools/ngspice/bin/ngspice",
+        "version": "** ngspice-46 : Circuit level simulation program"
+      }
+    ],
+    "extensions": {
+      "org.openada.measurements": {
+        "pdk_commit": {
+          "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+          "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+        },
+          "xschem_executable": {
+            "path": "/foss/tools/xschem/bin/xschem",
+            "sha256": "c960e786685939e03fb76619bad6aed886190b0d5d1eed2941b745565eb95c22"
+        },
+        "ngspice_executable": {
+          "path": "/foss/tools/ngspice/bin/ngspice",
+          "sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
+        },
+        "ngspice_init": {
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/.spiceinit",
+          "sha256": "56ec1880a943fa481c3c321d62857b6240387e39d5aa8ded403835c34edb515d"
+        },
+        "ngspice_system_init": {
+          "path": "/foss/tools/ngspice/share/ngspice/scripts/spinit",
+          "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
+        },
+        "provider": {
+          "driver_id": "org.openada.driver.ngspice-pdk-control",
+          "driver_version": "0.5.0",
+          "transport_id": "local-json-stdio"
+        },
+        "standards": {
+          "review_level": "public lifecycle and scope only",
+          "licensed_clause_review": false,
+          "conformance_claim": false
+        }
+      }
+    }
+  },
+  "contracts": [
+    {
+      "repository_path": "schemas/semantic-chain-manifest-v0alpha1.schema.json",
+      "sha256": "dfe687c78b361b91600dcb1889f14d52301b4c1c8f200b7dacb6c96126f3f600",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/semantic-chain-run-v0alpha1.schema.json",
+      "sha256": "c4916d3b4d3e63337d47da46a2e4aa94ea15fb41b755207f04a41907cc993613",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/design-provenance-v0alpha1.schema.json",
+      "sha256": "0e3e3ba2c6fdce6f22e93f23a26bb8b3e286cacdf109dc25d8d51aefa418e745",
+      "extensions": {}
+    },
+    {
+      "repository_path": "tools/semantic_receipts.py",
+      "sha256": "983637e95cc33c8259142dd80c96e005364dd49c6cc729e4a7f0d2d7cbcb13f0",
+      "extensions": {}
+    },
+    {
+      "repository_path": "tools/verify_semantic_coverage.py",
+      "sha256": "09bc68c3c444f228c29aec78a84742c3c7ad7663795ab2db51c88cace67b58b1",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/result-v0alpha1.schema.json",
+      "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15",
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/circuit.simulate-v1alpha2.json",
+      "sha256": "498c6e6c42f441f22fa881885623a5bd4358a40130828f942fff50f7c61bfdfc",
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.series.extract-v1alpha1.json",
+      "sha256": "6d2baf44313e97b5070b8e68afe529abfafec8b6ab0e7808941078a0dd201164",
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.transfer.measure-v1alpha1.json",
+      "sha256": "aadf3617a2277d2c53048f6fa41cab89772dfb2fdec5f2157156d32344f4c8fa",
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.spectral.measure-v1alpha1.json",
+      "sha256": "e1493aeb5a99470b5ef688f10440c74744cbe6539e91964eeb512351b2b072c3",
+      "extensions": {}
+    },
+    {
+      "repository_path": "providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
+      "sha256": "d1351bed7bb18e06913d63b5b31bfced97a5d684854d3b9de1ccbed9b2e4ab2c",
+      "extensions": {}
+    },
+    {
+      "repository_path": "docs/MEASUREMENT_METHODS.md",
+      "sha256": "ea6193dac467a5294a9d8947925b0b7921b54faa62270684b5b17699009ee89c",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-analog-measurements/requests.json",
+      "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-analog-measurements/inside.py",
+      "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-analog-measurements/verify.py",
+      "sha256": "b839078d446aa316e82ade1cc5d7a773139ca612e93003c56facb8011ef037b3",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-analog-measurements/common.py",
+      "sha256": "bf7313a6ef6ce2166890fd2e9c9f15886b7feac012abc95bcd6af8722a55748a",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter/common.py",
+      "sha256": "068f6f84a6e94c7267474eb3f8f908144d610ba74f3e6b3c073651b1c2069cdd",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-analog-measurements/run.py",
+      "sha256": "3bac7614858f8525df7454049ba860dc33d7aa1801f4eb2d10b32c43ec843b09",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-analog-measurements/setup.py",
+      "sha256": "b0cdda545217d919bc0deb9c8d7dff81dd1851c9f0f8abc0064c3090f022d567",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-analog-measurements/test_measurement_chain.py",
+      "sha256": "2e70b9ce415201ed87b4cf660a1c38dd4bfcd8567a92f21998c81d475001e9cd",
+      "extensions": {}
+    }
+  ],
+  "covers": [
+    "surface|openada.surface/cli.netlist/v1",
+    "preflight|schematic-netlist-generated",
+    "surface|openada.surface/cli.provider-invoke/v1",
+    "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+    "profile|openada.operation/circuit.simulate/v1alpha2",
+    "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+    "preflight|spice-analysis-evidence-valid",
+    "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+    "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+    "surface|openada.surface/cli.extract/v1",
+    "profile|openada.operation/result.series.extract/v1alpha1",
+    "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+    "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+    "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac",
+    "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran",
+    "surface|openada.surface/cli.transfer/v1",
+    "profile|openada.operation/result.transfer.measure/v1alpha1",
+    "assertion|openada.operation/result.transfer.measure/v1alpha1|openada.assertion/transfer.measurement.valid/v1alpha1",
+    "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+    "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+    "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-gain/v1alpha1",
+    "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+    "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+    "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.bandwidth-3db/v1alpha1",
+    "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+    "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+    "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+    "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+    "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+    "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+    "surface|openada.surface/cli.spectral/v1",
+    "profile|openada.operation/result.spectral.measure/v1alpha1",
+    "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
+    "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+    "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+    "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.snr/v1alpha1",
+    "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+    "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+    "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sinad/v1alpha1",
+    "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+    "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+    "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.thd/v1alpha1",
+    "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+    "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+    "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sfdr/v1alpha1"
+  ],
+  "steps": [
+    {
+      "id": "materialize-pinned-sources",
+      "kind": "source-materialize",
+      "native_execution": false,
+      "covers": [],
+      "consumes": [],
+      "produces": [
+        "pinned-ota-testbench",
+        "pinned-ota-schematic",
+        "pinned-ota-symbol",
+        "pinned-inverter-testbench",
+        "pinned-inverter-schematic",
+        "pinned-inverter-symbol",
+        "derived-ota-schematic",
+        "derived-inverter-schematic",
+        "derived-ota-rcfile",
+        "derived-inverter-rcfile",
+        "provider-configuration",
+        "request-contract",
+        "contract-test-verdict",
+        "design-provenance"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "netlist-ota",
+      "kind": "semantic-command",
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated"
+      ],
+      "consumes": [
+        "pinned-ota-testbench",
+        "pinned-ota-schematic",
+        "pinned-ota-symbol",
+        "derived-ota-schematic",
+        "derived-ota-rcfile"
+      ],
+      "produces": [
+        "ota-deck",
+        "ota-netlist-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "netlist-inverter",
+      "kind": "semantic-command",
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated"
+      ],
+      "consumes": [
+        "pinned-inverter-testbench",
+        "pinned-inverter-schematic",
+        "pinned-inverter-symbol",
+        "derived-inverter-schematic",
+        "derived-inverter-rcfile"
+      ],
+      "produces": [
+        "inverter-deck",
+        "inverter-netlist-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "provider-ac",
+      "kind": "semantic-command",
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1"
+      ],
+      "consumes": [
+        "ota-deck",
+        "provider-configuration"
+      ],
+      "produces": [
+        "ota-ac-raw",
+        "ota-ac-log",
+        "ota-ac-launcher",
+        "ota-ac-provider-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "provider-tran",
+      "kind": "semantic-command",
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1"
+      ],
+      "consumes": [
+        "inverter-deck",
+        "provider-configuration"
+      ],
+      "produces": [
+        "inverter-tran-raw",
+        "inverter-tran-log",
+        "inverter-tran-launcher",
+        "inverter-tran-provider-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "extract-ac",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac"
+      ],
+      "consumes": [
+        "ota-ac-raw",
+        "ota-ac-provider-result"
+      ],
+      "produces": [
+        "ota-ac-series",
+        "ota-ac-extraction-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "extract-tran",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran"
+      ],
+      "consumes": [
+        "inverter-tran-raw",
+        "inverter-tran-provider-result"
+      ],
+      "produces": [
+        "inverter-tran-series",
+        "inverter-tran-extraction-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "independent-native-oracle",
+      "kind": "independent-oracle",
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "ota-ac-raw",
+        "inverter-tran-raw",
+        "ota-ac-extraction-result",
+        "inverter-tran-extraction-result"
+      ],
+      "produces": [
+        "independent-oracle-verdict"
+      ],
+      "extensions": {},
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/verify.py",
+        "sha256": "b839078d446aa316e82ade1cc5d7a773139ca612e93003c56facb8011ef037b3",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "transfer-low-frequency-gain-db",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.transfer/v1",
+        "profile|openada.operation/result.transfer.measure/v1alpha1",
+        "assertion|openada.operation/result.transfer.measure/v1alpha1|openada.assertion/transfer.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-gain/v1alpha1"
+      ],
+      "consumes": [
+        "ota-ac-series",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "transfer-low_frequency_gain_db-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "transfer-bandwidth-3db",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.bandwidth-3db/v1alpha1"
+      ],
+      "consumes": [
+        "ota-ac-series",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "transfer-bandwidth_3db-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "transfer-unity-gain-frequency",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.unity-gain-frequency/v1alpha1"
+      ],
+      "consumes": [
+        "ota-ac-series",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "transfer-unity_gain_frequency-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "transfer-phase-margin",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1"
+      ],
+      "consumes": [
+        "ota-ac-series",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "transfer-phase_margin-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "spectral-snr",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.spectral/v1",
+        "profile|openada.operation/result.spectral.measure/v1alpha1",
+        "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.snr/v1alpha1"
+      ],
+      "consumes": [
+        "inverter-tran-series",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "spectral-snr-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "spectral-sinad",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sinad/v1alpha1"
+      ],
+      "consumes": [
+        "inverter-tran-series",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "spectral-sinad-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "spectral-thd",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.thd/v1alpha1"
+      ],
+      "consumes": [
+        "inverter-tran-series",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "spectral-thd-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "spectral-sfdr",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sfdr/v1alpha1"
+      ],
+      "consumes": [
+        "inverter-tran-series",
+        "independent-oracle-verdict",
+        "transfer-low_frequency_gain_db-result",
+        "transfer-bandwidth_3db-result",
+        "transfer-unity_gain_frequency-result",
+        "transfer-phase_margin-result",
+        "spectral-snr-result",
+        "spectral-sinad-result",
+        "spectral-thd-result"
+      ],
+      "produces": [
+        "spectral-sfdr-result",
+        "normalized-measurement-evidence",
+        "downstream-engineering-decision"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "agent-evidence",
+      "kind": "independent-decision",
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "independent-oracle-verdict",
+        "normalized-measurement-evidence",
+        "downstream-engineering-decision"
+      ],
+      "produces": [
+        "agent-visible-measurement-evidence"
+      ],
+      "extensions": {},
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/verify.py",
+        "sha256": "b839078d446aa316e82ade1cc5d7a773139ca612e93003c56facb8011ef037b3",
+        "extensions": {}
+      }
+    }
+  ],
+  "negative_replays": [
+    {
+      "id": "netlist-missing-symbol",
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "xschem.missing_symbol",
+      "extensions": {}
+    },
+    {
+      "id": "provider-ac-parameter-mismatch",
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "simulation.request.invalid",
+      "extensions": {}
+    },
+    {
+      "id": "provider-tran-parameter-mismatch",
+      "covers": [
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "simulation.request.invalid",
+      "extensions": {}
+    },
+    {
+      "id": "extract-ac-missing-selector",
+      "covers": [
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "series.selector.missing",
+      "extensions": {}
+    },
+    {
+      "id": "extract-tran-missing-selector",
+      "covers": [
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "series.selector.missing",
+      "extensions": {}
+    },
+    {
+      "id": "transfer-low-frequency-gain-invalid-unit",
+      "covers": [
+        "surface|openada.surface/cli.transfer/v1",
+        "profile|openada.operation/result.transfer.measure/v1alpha1",
+        "assertion|openada.operation/result.transfer.measure/v1alpha1|openada.assertion/transfer.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-gain/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "transfer.unit.mismatch",
+      "extensions": {}
+    },
+    {
+      "id": "transfer-bandwidth-unsupported-drop",
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.bandwidth-3db/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "transfer.method.unsupported",
+      "extensions": {}
+    },
+    {
+      "id": "transfer-unity-unsupported-policy",
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.unity-gain-frequency/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "transfer.method.unsupported",
+      "extensions": {}
+    },
+    {
+      "id": "transfer-phase-margin-invalid-context",
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "transfer.phase_margin.invalid_context",
+      "extensions": {}
+    },
+    {
+      "id": "spectral-snr-noncoherent",
+      "covers": [
+        "surface|openada.surface/cli.spectral/v1",
+        "profile|openada.operation/result.spectral.measure/v1alpha1",
+        "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.snr/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "spectral.coherence.not_established",
+      "extensions": {}
+    },
+    {
+      "id": "spectral-sinad-record-length",
+      "covers": [
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sinad/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "spectral.method.record_length_mismatch",
+      "extensions": {}
+    },
+    {
+      "id": "spectral-thd-unsupported-window",
+      "covers": [
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.thd/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "spectral.method.unsupported",
+      "extensions": {}
+    },
+    {
+      "id": "spectral-sfdr-invalid-standard-context",
+      "covers": [
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sfdr/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "spectral.standard_context.invalid",
+      "extensions": {}
+    }
+  ],
+  "tamper_replays": [
+    {
+      "id": "native-raw-byte",
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated",
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran",
+        "surface|openada.surface/cli.transfer/v1",
+        "profile|openada.operation/result.transfer.measure/v1alpha1",
+        "assertion|openada.operation/result.transfer.measure/v1alpha1|openada.assertion/transfer.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "surface|openada.surface/cli.spectral/v1",
+        "profile|openada.operation/result.spectral.measure/v1alpha1",
+        "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.snr/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sinad/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.thd/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sfdr/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "independent-verifier.rejected",
+      "extensions": {}
+    },
+    {
+      "id": "normalized-metric-value",
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated",
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran",
+        "surface|openada.surface/cli.transfer/v1",
+        "profile|openada.operation/result.transfer.measure/v1alpha1",
+        "assertion|openada.operation/result.transfer.measure/v1alpha1|openada.assertion/transfer.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "surface|openada.surface/cli.spectral/v1",
+        "profile|openada.operation/result.spectral.measure/v1alpha1",
+        "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.snr/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sinad/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.thd/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sfdr/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "independent-verifier.rejected",
+      "extensions": {}
+    },
+    {
+      "id": "standards-context",
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated",
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran",
+        "surface|openada.surface/cli.transfer/v1",
+        "profile|openada.operation/result.transfer.measure/v1alpha1",
+        "assertion|openada.operation/result.transfer.measure/v1alpha1|openada.assertion/transfer.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "surface|openada.surface/cli.spectral/v1",
+        "profile|openada.operation/result.spectral.measure/v1alpha1",
+        "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.snr/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sinad/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.thd/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sfdr/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "independent-verifier.rejected",
+      "extensions": {}
+    },
+    {
+      "id": "source-contract-hash",
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated",
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran",
+        "surface|openada.surface/cli.transfer/v1",
+        "profile|openada.operation/result.transfer.measure/v1alpha1",
+        "assertion|openada.operation/result.transfer.measure/v1alpha1|openada.assertion/transfer.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "surface|openada.surface/cli.spectral/v1",
+        "profile|openada.operation/result.spectral.measure/v1alpha1",
+        "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.snr/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sinad/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.thd/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sfdr/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "independent-verifier.rejected",
+      "extensions": {}
+    },
+    {
+      "id": "engineering-decision",
+      "covers": [
+        "surface|openada.surface/cli.netlist/v1",
+        "preflight|schematic-netlist-generated",
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "surface|openada.surface/cli.extract/v1",
+        "profile|openada.operation/result.series.extract/v1alpha1",
+        "assertion|openada.operation/result.series.extract/v1alpha1|openada.assertion/series.extraction.valid/v1alpha1",
+        "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac",
+        "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran",
+        "surface|openada.surface/cli.transfer/v1",
+        "profile|openada.operation/result.transfer.measure/v1alpha1",
+        "assertion|openada.operation/result.transfer.measure/v1alpha1|openada.assertion/transfer.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.bandwidth-3db/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.unity-gain-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha1|openada.feature/transfer.phase-margin/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha1|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "surface|openada.surface/cli.spectral/v1",
+        "profile|openada.operation/result.spectral.measure/v1alpha1",
+        "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.snr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.snr/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sinad/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sinad/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.thd/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.thd/v1alpha1",
+        "feature|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "provider|org.openada.kernel.spectral-evidence|openada.operation/result.spectral.measure/v1alpha1|openada.feature/spectral.sfdr/v1alpha1",
+        "native-mapping|openada.operation/result.spectral.measure/v1alpha1|org.openada.kernel.spectral-evidence|org.openada.core.runtime|openada.feature/spectral.sfdr/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "independent-verifier.rejected",
+      "extensions": {}
+    }
+  ],
+  "agent_evidence": {
+    "result_step": "agent-evidence",
+    "required_json_pointers": [
+      "/status",
+      "/engineering/ota/metrics",
+      "/engineering/ota/decision",
+      "/engineering/inverter/metrics",
+      "/engineering/inverter/decision",
+      "/standards/review_level",
+      "/standards/conformance_claim",
+      "/limitations",
+      "/lineage/ota_raw_sha256",
+      "/lineage/inverter_raw_sha256"
+    ],
+    "extensions": {}
+  },
+  "release_verification": {
+    "implementation": {
+      "repository_path": "conformance/ihp-analog-measurements/verify.py",
+      "sha256": "b839078d446aa316e82ade1cc5d7a773139ca612e93003c56facb8011ef037b3",
+      "extensions": {}
+    },
+    "arguments": [
+      "conformance/ihp-analog-measurements/semantic-artifacts",
+      "--run-tamper-probes"
+    ],
+    "timeout_seconds": 120,
+    "extensions": {}
+  },
+  "extensions": {
+    "org.openada.measurements": {
+      "requested_measurement_row_count": 30,
+      "prerequisite_row_count": 17,
+      "exact_unique_row_count": 47,
+      "publication": "provisional until global semantic-source freeze",
+      "source_freeze_replay_required": true
+    }
+  }
+}

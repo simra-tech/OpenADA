@@ -1,12 +1,21 @@
-# IHP inverter DRC + LVS conformance
+# IHP clean/failing DRC + inverter LVS conformance
 
 This is OpenADA's first pinned, reproducible real-design conformance workflow.
-It checks a small inverter with the `ihp-sg13g2` PDK and requires both:
+It checks two real layouts and one pre-extracted inverter comparison with the
+`ihp-sg13g2` PDK. All three reviewed outcomes must be reproduced:
 
 - KLayout DRC completes, returns an engineering pass, and reports zero
-  violations.
+  violations for the inverter.
+- KLayout DRC completes natively but returns an engineering failure with
+  exactly eight violations for the `lvs_tester` gallery: `M1.b` × 6,
+  `Cnt.d` × 1, and `Cnt.e` × 1.
 - Netgen LVS completes, returns an engineering pass, and reports a unique
   circuit match with zero recognized mismatches.
+
+The failing DRC is successful conformance evidence, not a runner error. The
+native KLayout process must exit zero and produce a valid report; the semantic
+result must then classify the eight markers as an engineering failure. The
+runner succeeds only after the independent verifier accepts that whole chain.
 
 The LVS operation compares the design's pinned, pre-extracted layout netlist
 with its pinned schematic netlist. It does not extract that netlist from the GDS;
@@ -21,9 +30,11 @@ bound to revision `144f811cdffda49b71d28f64e8a92b697b61cf06` through the
 hash of `/foss/pdks/ihp-sg13g2/COMMIT`. Referencing these projects does not
 imply an endorsement or collaboration.
 
-No PDK, third-party design file, or generated evidence is stored in this
-repository. The container is a frozen reference runtime for comparison; it is
-not required by OpenADA's architecture or by native installations.
+No PDK or third-party design input is stored in this repository. The reviewed
+semantic publication does retain generated reports, normalized results, and
+bounded transcripts so every coverage claim can be checked from repository
+bytes. The container is a frozen reference runtime for comparison; it is not
+required by OpenADA's architecture or by native installations.
 
 ## Prerequisites
 
@@ -58,8 +69,8 @@ vendored. Existing checkouts must already be clean and at the pinned revision.
 ## 2. Network-disabled EDA replay
 
 The runner first verifies the local image identity, design revision, license,
-and all design input hashes. It never pulls an image. Both operations also hash
-the PDK revision file as a declared rules dependency. Each EDA operation
+and all design input hashes. It never pulls an image. All three operations also
+hash the PDK revision file as a declared rules dependency. Each EDA operation
 then runs in a separate container with `--network none`, a read-only root
 filesystem, all capabilities dropped, and read-only mounts for both OpenADA and
 the design. Only a newly created evidence directory and an isolated `/tmp`
@@ -69,7 +80,8 @@ if cleanup cannot be confirmed.
 
 ```bash
 python3 conformance/ihp-inverter/run.py \
-  --evidence-dir /tmp/openada-ihp-inverter-evidence
+  --evidence-dir /tmp/openada-ihp-inverter-evidence \
+  --receipt-class release
 ```
 
 The named evidence path must not exist and must be outside the OpenADA checkout,
@@ -82,6 +94,8 @@ The evidence directory contains:
 
 - `drc.json`, `inverter.drc.lyrdb`, and the bounded process transcript
   `inverter.drc.lyrdb.openada.log`
+- `drc-fail.json`, `lvs-tester.drc.lyrdb`, and the bounded process transcript
+  `lvs-tester.drc.lyrdb.openada.log`
 - `lvs.json`, the final Netgen comparison `inverter.lvs.comp`, native structured
   output `inverter.lvs.json`, and complete-or-unknown process transcript
   `inverter.lvs.comp.openada.log`
@@ -99,15 +113,19 @@ python3 conformance/ihp-inverter/verify.py \
   /tmp/openada-ihp-inverter-evidence
 ```
 
-The verifier checks both JSON documents against strict schemas, binds the exact
-runtime tool identities and reviewed argv shape, and checks exact declared
-input and native artifact hashes. It then independently requires the LYRDB's
-native child generator, top cell, nonempty category catalog, cells/items
-sections, and zero multiplicity-weighted markers; validates the bounded KLayout
-transcript header and byte metadata; and independently parses and cross-checks
-Netgen's final report, native JSON, complete transcript, setup-read status, and
-declared PDK provenance. Generated artifact hashes are deliberately not frozen
-in the manifest.
+The verifier checks all three JSON documents against strict schemas, binds the
+exact runtime tool identities and reviewed argv shape, and checks exact
+declared input and native artifact hashes. It then independently requires the
+LYRDB's native child generator, top cell, nonempty category catalog, cells/items
+sections, item category/cell bindings, positive multiplicities, waiver tags,
+and geometry values. The clean report must have zero weighted markers. The
+failing report must have exactly eight unwaived items in the reviewed order and
+cell distribution, with eight retained edge-pair geometries and 32 coordinate
+pairs. Those independently parsed facts are cross-checked against the normalized
+JSON result. The verifier also validates both bounded KLayout transcripts and
+independently parses and cross-checks Netgen's final report, native JSON,
+complete transcript, setup-read status, and declared PDK provenance. Generated
+artifact hashes are deliberately not frozen in the manifest.
 
 For the pinned PDK, Netgen may emit native `Unable to permute model ... pins
 ...` warning lines on stderr while still producing a valid match. The driver and
@@ -133,6 +151,43 @@ OPENADA_RUN_IHP_CONFORMANCE=1 \
 Set `OPENADA_IHP_CACHE_DIR` or `OPENADA_CONTAINER_ENGINE` for non-default
 locations. The real test invokes only `run.py`; it never performs setup or a
 pull.
+
+## 4. Agent-facing semantic publication
+
+After a fresh replay passes `verify.py`, publish the complete, content-addressed
+evidence chain with:
+
+```bash
+python3 conformance/ihp-inverter/semantic.py \
+  --publish \
+  --native-evidence /tmp/openada-ihp-inverter-evidence
+```
+
+Release publication requires the source-attested clean replay produced by the
+command above and writes the fixed repository paths plus
+`semantic-chain-run.json`. Publication first reruns the independent verifier.
+It then executes four
+adversarial checks: the real gallery DRC failure, an explicitly labeled
+synthetic native-LVS mismatch injection, a seven-item LYRDB whose normalized
+count and digest were reconciled, and an unbound Netgen JSON byte. Every
+negative/tamper verdict is retained separately with its exact observed
+diagnostic. The bundle keeps the clean and failing LYRDB databases, authoritative
+Netgen comparison and native JSON, all normalized results, bounded transcripts,
+and replay metadata as distinct files.
+
+`semantic-evidence.json` gives an agent two scope-specific decisions. The clean
+inverter may proceed to the next engineering stage because DRC is clean and LVS
+matches uniquely; this is not tapeout signoff. The separate gallery fixture is
+blocked with all eight exact rule classes and edge-pair geometries attached.
+The document also retains provenance and tool limitations. No IEEE measurement
+standard is claimed for these geometry and structural-equivalence assertions;
+the pinned IHP DRC deck and Netgen setup are the governing sources.
+
+Verify the repository-local publication without Docker or the external design:
+
+```bash
+python3 conformance/ihp-inverter/semantic.py
+```
 
 For direct script use with a non-default cache or container CLI, pass the same
 `--cache-dir` or `--container-engine` option to setup and run. The verifier only

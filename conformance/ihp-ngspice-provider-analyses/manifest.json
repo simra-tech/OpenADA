@@ -1,0 +1,620 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "agent_evidence": {
+    "extensions": {},
+    "required_json_pointers": [
+      "/provider/driver_id",
+      "/analyses/op/point_count",
+      "/analyses/dc/point_count",
+      "/analyses/ac/point_count",
+      "/analyses/tran/point_count",
+      "/decisions",
+      "/limitations",
+      "/standards_assessment",
+      "/recommended_next_actions"
+    ],
+    "result_step": "agent-decision"
+  },
+  "contracts": [
+    {
+      "extensions": {},
+      "repository_path": "schemas/semantic-chain-manifest-v0alpha1.schema.json",
+      "sha256": "dfe687c78b361b91600dcb1889f14d52301b4c1c8f200b7dacb6c96126f3f600"
+    },
+    {
+      "extensions": {},
+      "repository_path": "schemas/semantic-chain-run-v0alpha1.schema.json",
+      "sha256": "c4916d3b4d3e63337d47da46a2e4aa94ea15fb41b755207f04a41907cc993613"
+    },
+    {
+      "extensions": {},
+      "repository_path": "schemas/design-provenance-v0alpha1.schema.json",
+      "sha256": "0e3e3ba2c6fdce6f22e93f23a26bb8b3e286cacdf109dc25d8d51aefa418e745"
+    },
+    {
+      "extensions": {},
+      "repository_path": "schemas/result-v0alpha1.schema.json",
+      "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15"
+    },
+    {
+      "extensions": {},
+      "repository_path": "tools/semantic_receipts.py",
+      "sha256": "983637e95cc33c8259142dd80c96e005364dd49c6cc729e4a7f0d2d7cbcb13f0"
+    },
+    {
+      "extensions": {},
+      "repository_path": "profiles/circuit.simulate-v1alpha2.json",
+      "sha256": "498c6e6c42f441f22fa881885623a5bd4358a40130828f942fff50f7c61bfdfc"
+    },
+    {
+      "extensions": {},
+      "repository_path": "providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
+      "sha256": "d1351bed7bb18e06913d63b5b31bfced97a5d684854d3b9de1ccbed9b2e4ab2c"
+    },
+    {
+      "extensions": {},
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/contract.json",
+      "sha256": "b0e59b5b1a40203a194725faa5a9082b5934aea94638c1e0eacb60c64a2ea130"
+    },
+    {
+      "extensions": {},
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/inside.py",
+      "sha256": "16395f6956679272f5f29985abe2264c67016719f478c36d1729d317f99f707a"
+    },
+    {
+      "extensions": {},
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/oracle.py",
+      "sha256": "73ccb804a761b43b052107e412551bf6c490b7ecf408ca898f1423885b7a7044"
+    },
+    {
+      "extensions": {},
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/replay.py",
+      "sha256": "06b16bbe3dc6ad3330591a8bca712194fafa967ea52faa63f8d8cd9f158116fa"
+    },
+    {
+      "extensions": {},
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/verify.py",
+      "sha256": "cbb602594ae1d754bb19ee61c09ab946a5c0762f9e451b2c7277a0bcc371b865"
+    },
+    {
+      "extensions": {},
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/rcfiles/inverter.xschemrc",
+      "sha256": "545bad31eb18aff523d296a885d68c72b578598ea547d0631ce9b3e68b16645f"
+    },
+    {
+      "extensions": {},
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/rcfiles/ota.xschemrc",
+      "sha256": "b90bfea6744e25dcbe4321ad3dd7ddd109ab2820370c2e52550ef83230ec114d"
+    },
+    {
+      "extensions": {},
+      "repository_path": "tests/test_ngspice_provider.py",
+      "sha256": "bbe4dae8c3475dd45f7a900b58dbf601bfdea57c3aa62c8239b35aab827caed4"
+    },
+    {
+      "extensions": {},
+      "repository_path": "tests/test_ngspice_outputs.py",
+      "sha256": "9c9abbe6f3fdb19981bcec7642bef28626e676e1d54514f3d8b06e7c02ea2a0d"
+    }
+  ],
+  "covers": [
+    "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1",
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1",
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+    "preflight|spice-analysis-evidence-valid",
+    "profile|openada.operation/circuit.simulate/v1alpha2",
+    "provider-conformance|org.openada.driver.ngspice-pdk-control|org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1",
+    "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+    "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.dc/v1alpha1",
+    "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.op/v1alpha1",
+    "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+    "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+    "surface|openada.surface/cli.provider-invoke/v1"
+  ],
+  "design": {
+    "class": "public-design",
+    "extensions": {},
+    "inputs": [
+      {
+        "path": "modules/module_0_foundations/inverter/inverter_tb.sch",
+        "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
+      },
+      {
+        "path": "modules/module_0_foundations/inverter/inverter.sch",
+        "sha256": "6a2e03f44df59976b8ba4fca385b104b80802d367789171790bd238f912ec771"
+      },
+      {
+        "path": "modules/module_0_foundations/inverter/inverter.sym",
+        "sha256": "8658fa30ac994a0bedf511e59f064e6458e9b4a30d91382f6974a5117bd5c103"
+      },
+      {
+        "path": "modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch",
+        "sha256": "861a27e4fcfec15e267ed18816db791460aae1f94f1a7c83ca0c114d4379d4bc"
+      },
+      {
+        "path": "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sch",
+        "sha256": "4385e81ad81c229b81095fe2060153b2817376cfcfbb6d9adfc908d58d7e34a7"
+      },
+      {
+        "path": "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sym",
+        "sha256": "d6cbae50c9f6a425bab127f0644c5959c98c13893442420b6b25531af0d64126"
+      }
+    ],
+    "license": {
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "spdx": "Apache-2.0"
+    },
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "subtree": "modules",
+    "tree": "2a710fd503226e9642e4337a324e6c192a9d8a31"
+  },
+  "extensions": {},
+  "id": "openada.chain/ihp-ngspice-provider-analyses/v1",
+  "negative_replays": [
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.op/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1",
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "provider-conformance|org.openada.driver.ngspice-pdk-control|org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1"
+      ],
+      "expected_status": "unknown",
+      "extensions": {},
+      "id": "op-unsafe-command",
+      "required_diagnostic": "simulation.request.invalid"
+    },
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.dc/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "extensions": {},
+      "id": "dc-parameter-mismatch",
+      "required_diagnostic": "simulation.request.invalid"
+    },
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "extensions": {},
+      "id": "ac-feature-mismatch",
+      "required_diagnostic": "simulation.request.invalid"
+    },
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "extensions": {},
+      "id": "tran-duplicate-write",
+      "required_diagnostic": "simulation.request.invalid"
+    },
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "extensions": {},
+      "id": "tran-native-error",
+      "required_diagnostic": "simulation.result.malformed"
+    }
+  ],
+  "release_verification": {
+    "arguments": [
+      "conformance/ihp-ngspice-provider-analyses/artifacts"
+    ],
+    "extensions": {},
+    "implementation": {
+      "extensions": {},
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/verify.py",
+      "sha256": "cbb602594ae1d754bb19ee61c09ab946a5c0762f9e451b2c7277a0bcc371b865"
+    },
+    "timeout_seconds": 120
+  },
+  "runtime": {
+    "extensions": {},
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "pdk_revision": "144f811cdffda49b71d28f64e8a92b697b61cf06",
+    "platform": "linux/amd64",
+    "tools": [
+      {
+        "id": "xschem",
+        "path": "/foss/tools/xschem/bin/xschem",
+        "version": "XSCHEM V3.4.8RC"
+      },
+      {
+        "id": "ngspice",
+        "path": "/foss/tools/ngspice/bin/ngspice",
+        "version": "** ngspice-46 : Circuit level simulation program"
+      }
+    ]
+  },
+  "schema": "openada.semantic-chain/v0alpha1",
+  "steps": [
+    {
+      "consumes": [],
+      "covers": [],
+      "extensions": {},
+      "id": "materialize-pinned-sources",
+      "kind": "source-materialize",
+      "native_execution": false,
+      "produces": [
+        "pinned-inverter",
+        "pinned-ota",
+        "pinned-pdk",
+        "pinned-runtime",
+        "design-provenance"
+      ]
+    },
+    {
+      "consumes": [
+        "pinned-inverter",
+        "pinned-pdk",
+        "pinned-runtime"
+      ],
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.op/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1",
+        "provider-conformance|org.openada.driver.ngspice-pdk-control|org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1",
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid"
+      ],
+      "extensions": {},
+      "id": "provider-op",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/inside.py",
+        "sha256": "16395f6956679272f5f29985abe2264c67016719f478c36d1729d317f99f707a"
+      },
+      "kind": "semantic-command",
+      "native_execution": true,
+      "produces": [
+        "op-deck",
+        "op-request",
+        "op-result",
+        "op-raw",
+        "op-log",
+        "op-launcher"
+      ],
+      "request": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/contract.json",
+        "sha256": "b0e59b5b1a40203a194725faa5a9082b5934aea94638c1e0eacb60c64a2ea130"
+      }
+    },
+    {
+      "consumes": [
+        "pinned-inverter",
+        "pinned-pdk",
+        "pinned-runtime"
+      ],
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.dc/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1",
+        "provider-conformance|org.openada.driver.ngspice-pdk-control|org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1"
+      ],
+      "extensions": {},
+      "id": "provider-dc",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/inside.py",
+        "sha256": "16395f6956679272f5f29985abe2264c67016719f478c36d1729d317f99f707a"
+      },
+      "kind": "semantic-command",
+      "native_execution": true,
+      "produces": [
+        "dc-deck",
+        "dc-request",
+        "dc-result",
+        "dc-raw",
+        "dc-log",
+        "dc-launcher"
+      ],
+      "request": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/contract.json",
+        "sha256": "b0e59b5b1a40203a194725faa5a9082b5934aea94638c1e0eacb60c64a2ea130"
+      }
+    },
+    {
+      "consumes": [
+        "pinned-ota",
+        "pinned-pdk",
+        "pinned-runtime"
+      ],
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+        "provider-conformance|org.openada.driver.ngspice-pdk-control|org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1"
+      ],
+      "extensions": {},
+      "id": "provider-ac",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/inside.py",
+        "sha256": "16395f6956679272f5f29985abe2264c67016719f478c36d1729d317f99f707a"
+      },
+      "kind": "semantic-command",
+      "native_execution": true,
+      "produces": [
+        "ac-deck",
+        "ac-request",
+        "ac-result",
+        "ac-raw",
+        "ac-log",
+        "ac-launcher"
+      ],
+      "request": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/contract.json",
+        "sha256": "b0e59b5b1a40203a194725faa5a9082b5934aea94638c1e0eacb60c64a2ea130"
+      }
+    },
+    {
+      "consumes": [
+        "pinned-inverter",
+        "pinned-pdk",
+        "pinned-runtime"
+      ],
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+        "provider-conformance|org.openada.driver.ngspice-pdk-control|org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1"
+      ],
+      "extensions": {},
+      "id": "provider-tran",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/inside.py",
+        "sha256": "16395f6956679272f5f29985abe2264c67016719f478c36d1729d317f99f707a"
+      },
+      "kind": "semantic-command",
+      "native_execution": true,
+      "produces": [
+        "tran-deck",
+        "tran-request",
+        "tran-result",
+        "tran-raw",
+        "tran-log",
+        "tran-launcher"
+      ],
+      "request": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/contract.json",
+        "sha256": "b0e59b5b1a40203a194725faa5a9082b5934aea94638c1e0eacb60c64a2ea130"
+      }
+    },
+    {
+      "consumes": [
+        "op-deck",
+        "op-request",
+        "op-result",
+        "op-raw",
+        "op-log",
+        "op-launcher",
+        "dc-deck",
+        "dc-request",
+        "dc-result",
+        "dc-raw",
+        "dc-log",
+        "dc-launcher",
+        "ac-deck",
+        "ac-request",
+        "ac-result",
+        "ac-raw",
+        "ac-log",
+        "ac-launcher",
+        "tran-deck",
+        "tran-request",
+        "tran-result",
+        "tran-raw",
+        "tran-log",
+        "tran-launcher"
+      ],
+      "covers": [],
+      "extensions": {},
+      "id": "independent-native-oracle",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/oracle.py",
+        "sha256": "73ccb804a761b43b052107e412551bf6c490b7ecf408ca898f1423885b7a7044"
+      },
+      "kind": "independent-oracle",
+      "native_execution": false,
+      "produces": [
+        "independent-oracle"
+      ]
+    },
+    {
+      "consumes": [
+        "independent-oracle"
+      ],
+      "covers": [
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1"
+      ],
+      "extensions": {},
+      "id": "normalize-evidence",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/replay.py",
+        "sha256": "06b16bbe3dc6ad3330591a8bca712194fafa967ea52faa63f8d8cd9f158116fa"
+      },
+      "kind": "semantic-command",
+      "native_execution": false,
+      "produces": [
+        "normalized-evidence"
+      ],
+      "request": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/contract.json",
+        "sha256": "b0e59b5b1a40203a194725faa5a9082b5934aea94638c1e0eacb60c64a2ea130"
+      }
+    },
+    {
+      "consumes": [
+        "normalized-evidence",
+        "independent-oracle"
+      ],
+      "covers": [
+        "profile|openada.operation/circuit.simulate/v1alpha2"
+      ],
+      "extensions": {},
+      "id": "publish-scoped-decision",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/replay.py",
+        "sha256": "06b16bbe3dc6ad3330591a8bca712194fafa967ea52faa63f8d8cd9f158116fa"
+      },
+      "kind": "semantic-command",
+      "native_execution": false,
+      "produces": [
+        "downstream-decision"
+      ],
+      "request": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/contract.json",
+        "sha256": "b0e59b5b1a40203a194725faa5a9082b5934aea94638c1e0eacb60c64a2ea130"
+      }
+    },
+    {
+      "consumes": [
+        "downstream-decision",
+        "normalized-evidence",
+        "independent-oracle"
+      ],
+      "covers": [],
+      "extensions": {},
+      "id": "agent-decision",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/replay.py",
+        "sha256": "06b16bbe3dc6ad3330591a8bca712194fafa967ea52faa63f8d8cd9f158116fa"
+      },
+      "kind": "independent-decision",
+      "native_execution": false,
+      "produces": [
+        "agent-visible-evidence"
+      ]
+    },
+    {
+      "consumes": [
+        "agent-visible-evidence"
+      ],
+      "covers": [],
+      "extensions": {},
+      "id": "contract-tests",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/replay.py",
+        "sha256": "06b16bbe3dc6ad3330591a8bca712194fafa967ea52faa63f8d8cd9f158116fa"
+      },
+      "kind": "independent-oracle",
+      "native_execution": false,
+      "produces": [
+        "contract-test-report"
+      ]
+    },
+    {
+      "consumes": [
+        "agent-visible-evidence",
+        "contract-test-report",
+        "design-provenance"
+      ],
+      "covers": [],
+      "extensions": {},
+      "id": "publication-verifier",
+      "implementation": {
+        "extensions": {},
+        "repository_path": "conformance/ihp-ngspice-provider-analyses/verify.py",
+        "sha256": "cbb602594ae1d754bb19ee61c09ab946a5c0762f9e451b2c7277a0bcc371b865"
+      },
+      "kind": "independent-oracle",
+      "native_execution": false,
+      "produces": [
+        "publication-verdict"
+      ]
+    }
+  ],
+  "tamper_replays": [
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.op/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1",
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "provider-conformance|org.openada.driver.ngspice-pdk-control|org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1"
+      ],
+      "expected_status": "invalid_request",
+      "extensions": {},
+      "id": "op-raw-byte",
+      "required_diagnostic": "evidence.binding.invalid"
+    },
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.dc/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1"
+      ],
+      "expected_status": "invalid_request",
+      "extensions": {},
+      "id": "dc-request-feature",
+      "required_diagnostic": "evidence.binding.invalid"
+    },
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.ac/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1"
+      ],
+      "expected_status": "invalid_request",
+      "extensions": {},
+      "id": "ac-result-digest",
+      "required_diagnostic": "evidence.binding.invalid"
+    },
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.tran/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1"
+      ],
+      "expected_status": "invalid_request",
+      "extensions": {},
+      "id": "tran-raw-header",
+      "required_diagnostic": "evidence.binding.invalid"
+    },
+    {
+      "covers": [
+        "repository-provider|org.openada.driver.ngspice-pdk-control|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1|openada.feature/simulation.analysis.op/v1alpha1",
+        "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1",
+        "surface|openada.surface/cli.provider-invoke/v1",
+        "surface-variant|openada.surface/cli.provider-invoke/v1|explicit-local-provider",
+        "profile|openada.operation/circuit.simulate/v1alpha2",
+        "assertion|openada.operation/circuit.simulate/v1alpha2|openada.assertion/simulation.evidence.valid/v1alpha1",
+        "preflight|spice-analysis-evidence-valid",
+        "provider-conformance|org.openada.driver.ngspice-pdk-control|org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1"
+      ],
+      "expected_status": "invalid_request",
+      "extensions": {},
+      "id": "provider-version",
+      "required_diagnostic": "evidence.binding.invalid"
+    }
+  ]
+}

@@ -86,10 +86,34 @@
     },
     "network": {
       "const": "none during EDA execution"
-    }
+    },
+    "source_attestation": {"$ref": "#/$defs/sourceAttestation"}
   },
   "additionalProperties": false,
   "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "gitObject": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "extensions": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"},
+      "additionalProperties": {"type": "object"}
+    },
+    "sourceAttestation": {
+      "type": "object",
+      "required": ["receipt_class", "repository_revision", "repository_tree", "semantic_subject_sha256", "clean_before", "clean_after", "state_unchanged", "extensions"],
+      "properties": {
+        "receipt_class": {"enum": ["provisional", "release"]},
+        "repository_revision": {"$ref": "#/$defs/gitObject"},
+        "repository_tree": {"$ref": "#/$defs/gitObject"},
+        "semantic_subject_sha256": {"$ref": "#/$defs/sha256"},
+        "clean_before": {"type": "boolean"},
+        "clean_after": {"type": "boolean"},
+        "state_unchanged": {"type": "boolean"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
     "checkoutState": {
       "type": "object",
       "required": [

@@ -1,0 +1,234 @@
+{
+  "decision_sha256": "1710cd5e2478a61a2f54b8f6d683c426260345ea7971a1905e3cadf0a6d4a15e",
+  "extensions": {},
+  "native_bindings": {
+    "ac": {
+      "analysis": {
+        "extensions": {},
+        "points": 100,
+        "start_hz": 1.0,
+        "stop_hz": 10000000.0,
+        "sweep": "dec",
+        "type": "ac"
+      },
+      "plotname": "AC Analysis",
+      "point_count": 701,
+      "raw_bytes": 1147866,
+      "raw_sha256": "c5e74d5f6845221b3344179bfe2711312cb045e799295539ac2eba4165d07415",
+      "request_id": "24000000-0000-4000-8000-000000000001",
+      "retained": {
+        "simulation.launcher": {
+          "bytes": 130,
+          "sha256": "49a969b9ad3068b1237788aadf0c2108768826c751a1095f6173e02ba9d98c98"
+        },
+        "simulation.log": {
+          "bytes": 911,
+          "sha256": "9f70940d94c632ba814e7a240a78dcf61aef8fbb62939c5e47fba9579b025925"
+        }
+      }
+    },
+    "tran": {
+      "analysis": {
+        "extensions": {},
+        "start_s": 5e-07,
+        "step_s": 3.125e-08,
+        "stop_s": 3.246875e-05,
+        "type": "tran"
+      },
+      "plotname": "Transient Analysis (linearized)",
+      "point_count": 1024,
+      "raw_bytes": 98906,
+      "raw_sha256": "d6964199a2cef20939d948d48680f96e12998af3189d1c1ea6990993798b4de8",
+      "request_id": "24000000-0000-4000-8000-000000000002",
+      "retained": {
+        "simulation.launcher": {
+          "bytes": 135,
+          "sha256": "2d2d1697075b4d047232cf1bd71a45ffbde096d848bfb04597302f38c2fa3836"
+        },
+        "simulation.log": {
+          "bytes": 1245,
+          "sha256": "3ee1c23ec0b61074105aa98791d5f4382290d83f4323959e7ed5404ef9ded69b"
+        }
+      }
+    }
+  },
+  "negative_replays": {
+    "extract-ac-missing-selector": {
+      "diagnostic": "series.selector.missing",
+      "engineering_status": "unknown",
+      "execution_status": "completed",
+      "result_sha256": "0ceeb3960233c0cc93af6816ec6ada57166f3ab3dc96fe7ac3ade4d69701fce4"
+    },
+    "extract-tran-missing-selector": {
+      "diagnostic": "series.selector.missing",
+      "engineering_status": "unknown",
+      "execution_status": "completed",
+      "result_sha256": "2b5692d18d9fb6678df145931399ed372abaa337c844e7c3edd4def5b90b1970"
+    },
+    "netlist-missing-symbol": {
+      "diagnostic": "xschem.missing_symbol",
+      "engineering_status": "fail",
+      "execution_status": "completed",
+      "result_sha256": "37fd611635647a53314758bd658576cdb826d9000500458d7f50d56b539ca976"
+    },
+    "provider-ac-parameter-mismatch": {
+      "diagnostic": "simulation.request.invalid",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "0a9fea82a363a1d1ea64bcd3d77c1b872910cb6fc65f5de9ee31defcba15962a"
+    },
+    "provider-tran-parameter-mismatch": {
+      "diagnostic": "simulation.request.invalid",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "26137e3894bbc6b4f3979212cbee81aaa5b42281a60211b9887e2caaaf4af2d5"
+    },
+    "spectral-sfdr-invalid-standard-context": {
+      "diagnostic": "spectral.standard_context.invalid",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "2c008ef9c2df5b970cd9aa2289f9fe5b2b8e5e242fa37561c494718be64eff48"
+    },
+    "spectral-sinad-record-length": {
+      "diagnostic": "spectral.method.record_length_mismatch",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "3c98c02e809c5dfeb2cd2626f607936a0c110a59162d85e293006b7ca6b1646d"
+    },
+    "spectral-snr-noncoherent": {
+      "diagnostic": "spectral.coherence.not_established",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "2b836cc88827f505dcbaf7c08ec15ff9f1a0b4158fe01697e3237ca258195789"
+    },
+    "spectral-thd-unsupported-window": {
+      "diagnostic": "spectral.method.unsupported",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "55b5834ca26720de94ee6bcfb4abcfdf0b05421926a9b89cd9f6127dc4aaa673"
+    },
+    "transfer-bandwidth-unsupported-drop": {
+      "diagnostic": "transfer.method.unsupported",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "ec7096a913fa0a4fa7e8279a108173ddb808771cb10726d2b3d05565b6c4e7c4"
+    },
+    "transfer-low-frequency-gain-invalid-unit": {
+      "diagnostic": "transfer.unit.mismatch",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "613a68d779d34c756da1a85cd4963fb550a92c538126162c5500290df7299e4c"
+    },
+    "transfer-phase-margin-invalid-context": {
+      "diagnostic": "transfer.phase_margin.invalid_context",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "6c0512aeed6cc856f00c051205f37923bdb144640d4761be262e58b8f15c0faf"
+    },
+    "transfer-unity-unsupported-policy": {
+      "diagnostic": "transfer.method.unsupported",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "95cca9489c63faaabf052b020cb5c6160d227907038df5dd71087f69bd97636c"
+    }
+  },
+  "schema": "openada.ihp-analog-independent-oracle/v0alpha1",
+  "spectral": {
+    "method": "independent direct O(N^2) DFT and explicit bin partition",
+    "metrics": {
+      "sfdr": 9.598544308390936,
+      "sinad": 6.3276550536545955,
+      "snr": 93.28584204315911,
+      "thd": -6.32765506240374
+    },
+    "partition": {
+      "bin_width_hz": 31249.999999999636,
+      "fundamental_bin": 16,
+      "harmonic_bins": [
+        32,
+        48,
+        64,
+        80,
+        96,
+        112,
+        128,
+        144,
+        160,
+        176,
+        192,
+        208,
+        224,
+        240,
+        256,
+        272,
+        288,
+        304,
+        320,
+        336,
+        352,
+        368,
+        384,
+        400,
+        416,
+        432,
+        448,
+        464,
+        480,
+        496
+      ],
+      "noise_bin_count": 480,
+      "powers": {
+        "fundamental": 0.2913359670485024,
+        "harmonics": 0.06786230359924167,
+        "noise": 1.3671302714340932e-10,
+        "residual": 0.0678623037359547,
+        "winning_spur": 0.031955062637044104
+      },
+      "residual_bin_count": 510,
+      "sample_count": 1024,
+      "sample_rate_hz": 31999999.999999627,
+      "winning_spur_bin": 48
+    }
+  },
+  "standards": {
+    "conformance_claim": false,
+    "reason": "The spectral source is a continuous-time digital inverter square wave, not an ADC, DAC, or waveform recorder under test; generic OpenADA definitions apply. The OTA transfer metrics are not a transition-parameter conformance test.",
+    "references": [
+      {
+        "applicable": false,
+        "id": "IEEE 1241-2023",
+        "scope": "ADC terminology and test methods",
+        "url": "https://standards.ieee.org/ieee/1241/6797/"
+      },
+      {
+        "applicable": false,
+        "id": "IEEE 1658-2023",
+        "scope": "DAC terminology and test methods",
+        "url": "https://standards.ieee.org/ieee/1658/7350/"
+      },
+      {
+        "applicable": false,
+        "id": "IEEE 1057-2017",
+        "scope": "digitizing waveform recorder terminology and tests",
+        "url": "https://standards.ieee.org/ieee/1057/5945/"
+      },
+      {
+        "applicable": false,
+        "id": "IEEE 181-2025",
+        "scope": "transition, pulse, and waveform terminology",
+        "url": "https://standards.ieee.org/ieee/181/10551/"
+      }
+    ],
+    "review_level": "public lifecycle and scope only; no licensed clause-level review"
+  },
+  "status": "pass",
+  "transfer": {
+    "method": "independent native complex-ratio and log-frequency crossing recomputation",
+    "metrics": {
+      "bandwidth_3db": 1332.3043851822767,
+      "low_frequency_gain_db": 70.11974138671727,
+      "phase_margin": 61.42309151169668,
+      "unity_gain_frequency": 4157414.5570058133
+    }
+  }
+}

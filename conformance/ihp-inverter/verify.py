@@ -17,11 +17,22 @@ import xml.etree.ElementTree as ET
 from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import SchemaError
 
-from common import ConformanceError, RESULT_SCHEMA, load_manifest, sha256_file
+from common import (
+    ConformanceError,
+    DRC_OPERATION_NAMES,
+    RESULT_SCHEMA,
+    load_manifest,
+    sha256_file,
+)
 
 
 HERE = Path(__file__).resolve().parent
 REPOSITORY_ROOT = HERE.parents[1]
+TOOLS_ROOT = REPOSITORY_ROOT / "tools"
+if str(TOOLS_ROOT) not in sys.path:
+    sys.path.insert(0, str(TOOLS_ROOT))
+
+from semantic_receipts import semantic_subject  # noqa: E402
 RESULT_SCHEMA_PATH = REPOSITORY_ROOT / "schemas" / "result-v0alpha1.schema.json"
 RUN_SCHEMA_PATH = HERE / "run.schema.json"
 MAX_JSON_BYTES = 5 * 1024 * 1024
@@ -47,7 +58,15 @@ MAX_NATIVE_PATH_CHARS = 4_096
 MAX_NATIVE_TAGS = 256
 MAX_NATIVE_TAG_CHARS = 512
 MAX_NATIVE_TAGS_CHARS = 4_096
+MAX_NATIVE_DESCRIPTION_CHARS = 1_000
+MAX_NATIVE_GEOMETRY_SCAN_CHARS = 65_536
+MAX_NATIVE_GEOMETRIES_PER_ITEM = 8
+MAX_NATIVE_COORDINATE_PAIRS = 4_096
 ASCII_COUNT_RE = re.compile(r"[1-9][0-9]{0,18}")
+NATIVE_NUMBER_PATTERN = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
+NATIVE_COORDINATE_PAIR_RE = re.compile(
+    rf"({NATIVE_NUMBER_PATTERN})\s*,\s*({NATIVE_NUMBER_PATTERN})"
+)
 TRANSCRIPT_METADATA_RE = re.compile(
     rb"(stdout|stderr): retained_tail_bytes=(0|[1-9][0-9]{0,4}) "
     rb"observed_bytes=(0|[1-9][0-9]{0,18}) truncated=(true|false)"
@@ -218,7 +237,7 @@ def _verify_artifacts(
     operation_name: str, operation: dict, result: dict, evidence: Path
 ) -> dict[str, Path]:
     expected_records = [operation["artifact"]]
-    if operation_name == "drc":
+    if operation_name in DRC_OPERATION_NAMES:
         expected_records.append(operation["transcript_artifact"])
     else:
         expected_records.extend(
@@ -405,6 +424,36 @@ def _parse_item_tags(value: str | None) -> tuple[str, ...] | None:
     return tags
 
 
+def _parse_native_geometry(value: str | None) -> tuple[dict[str, Any] | None, int]:
+    text = (value or "").strip()
+    if not text:
+        return None, 0
+    if len(text) > MAX_NATIVE_GEOMETRY_SCAN_CHARS:
+        raise ConformanceError("native DRC item contains an overlong geometry value")
+    matches = list(NATIVE_COORDINATE_PAIR_RE.finditer(text))
+    if len(matches) > MAX_NATIVE_COORDINATE_PAIRS:
+        raise ConformanceError("native DRC geometry exceeds the coordinate-pair limit")
+    coordinates: list[list[float]] = []
+    for match in matches:
+        pair = [float(match.group(1)), float(match.group(2))]
+        if not all(math.isfinite(coordinate) for coordinate in pair):
+            raise ConformanceError("native DRC geometry contains a non-finite coordinate")
+        coordinates.append(pair)
+    if text.startswith("edge-pair:") and coordinates:
+        return {
+            "type": "edge-pair",
+            "coordinates": coordinates,
+            "coordinates_truncated": False,
+        }, len(coordinates)
+    if text.startswith("polygon:") and coordinates:
+        return {
+            "type": "polygon",
+            "coordinates": coordinates,
+            "coordinates_truncated": False,
+        }, len(coordinates)
+    return {"type": "unknown", "raw": text}, 0
+
+
 def _verify_native_drc(path: Path, operation: dict) -> dict[str, Any]:
     tags: list[str] = []
     elements: list[ET.Element] = []
@@ -412,13 +461,20 @@ def _verify_native_drc(path: Path, operation: dict) -> dict[str, Any]:
     section_counts: dict[str, int] = {}
     generator = ""
     top_cell = ""
-    categories: set[tuple[str, ...]] = set()
+    categories: dict[tuple[str, ...], str] = {}
     cells: set[str] = set()
     base_cells: set[str] = set()
+    category_counts: dict[tuple[str, ...], int] = {}
+    violations: list[dict[str, Any]] = []
     item_count = 0
     weighted_count = 0
     waived_count = 0
+    total_geometry_values = 0
+    retained_geometries = 0
+    retained_coordinate_pairs = 0
     item_fields: dict[str, Any] | None = None
+    expected = operation["native_report"]
+    expected_item_count = expected.get("expected_item_count", 0)
     try:
         for event, element in ET.iterparse(path, events=("start", "end")):
             tag = _local_name(element.tag)
@@ -472,6 +528,9 @@ def _verify_native_drc(path: Path, operation: dict) -> dict[str, Any]:
                         "tags": (),
                         "multiplicity_count": 0,
                         "multiplicity": None,
+                        "geometry_value_count": 0,
+                        "geometries": [],
+                        "coordinate_pair_count": 0,
                     }
                 elif tag == "category" and not (
                     ancestry == ("report-database", "items", "item", "category")
@@ -561,7 +620,24 @@ def _verify_native_drc(path: Path, operation: dict) -> dict[str, Any]:
                     )
                 if len(categories) >= MAX_NATIVE_CATEGORIES:
                     raise ConformanceError("native DRC report exceeds the category-count limit")
-                categories.add(category_path)
+                description_fields = _children_named(element, "description")
+                if len(description_fields) > 1:
+                    raise ConformanceError(
+                        "native DRC category contains more than one direct description"
+                    )
+                description = (
+                    (description_fields[0].text or "").strip()
+                    if description_fields
+                    else ""
+                )
+                if len(description) > MAX_NATIVE_DESCRIPTION_CHARS or any(
+                    ord(character) < 32 and character not in {"\t", "\n", "\r"}
+                    for character in description
+                ):
+                    raise ConformanceError(
+                        "native DRC category contains an invalid description"
+                    )
+                categories[category_path] = description
             elif ancestry == ("report-database", "cells", "cell"):
                 name_fields = _children_named(element, "name")
                 variant_fields = _children_named(element, "variant")
@@ -621,6 +697,30 @@ def _verify_native_drc(path: Path, operation: dict) -> dict[str, Any]:
                     element.text,
                     label="item multiplicity",
                 )
+            elif ancestry == (
+                "report-database",
+                "items",
+                "item",
+                "values",
+                "value",
+            ):
+                assert item_fields is not None
+                item_fields["geometry_value_count"] += 1
+                total_geometry_values += 1
+                if item_fields["geometry_value_count"] > MAX_NATIVE_GEOMETRIES_PER_ITEM:
+                    raise ConformanceError(
+                        "native DRC item exceeds the reviewed geometry-value limit"
+                    )
+                geometry, coordinate_pairs = _parse_native_geometry(element.text)
+                if geometry is not None:
+                    item_fields["geometries"].append(geometry)
+                    retained_geometries += 1
+                    item_fields["coordinate_pair_count"] += coordinate_pairs
+                    retained_coordinate_pairs += coordinate_pairs
+                    if retained_coordinate_pairs > MAX_NATIVE_COORDINATE_PAIRS:
+                        raise ConformanceError(
+                            "native DRC report exceeds the coordinate-pair limit"
+                        )
             elif ancestry == ("report-database", "items", "item"):
                 assert item_fields is not None
                 if (
@@ -648,10 +748,32 @@ def _verify_native_drc(path: Path, operation: dict) -> dict[str, Any]:
                 weighted_count += multiplicity
                 if "waived" in item_fields["tags"]:
                     waived_count += multiplicity
+                category_counts[category_path] = (
+                    category_counts.get(category_path, 0) + multiplicity
+                )
+                if len(violations) <= expected_item_count:
+                    violations.append(
+                        {
+                            "category": ".".join(category_path),
+                            "category_path": list(category_path),
+                            "description": categories[category_path],
+                            "cell": cell,
+                            "multiplicity": multiplicity,
+                            "waived": "waived" in item_fields["tags"],
+                            "tags": list(item_fields["tags"]),
+                            "geometries": item_fields["geometries"],
+                            "geometries_truncated": (
+                                item_fields["geometry_value_count"]
+                                > len(item_fields["geometries"])
+                            ),
+                            "geometry_value_count": item_fields["geometry_value_count"],
+                            "coordinate_pair_count": item_fields["coordinate_pair_count"],
+                        }
+                    )
                 item_fields = None
-            if tag in {"category", "cell", "item"} or parent == "report-database":
+            if tag in {"category", "cell", "item", "value"} or parent == "report-database":
                 element.clear()
-            if tag in {"category", "cell", "item", "tags"} and parent_element is not None:
+            if tag in {"category", "cell", "item", "tags", "value"} and parent_element is not None:
                 try:
                     parent_element.remove(element)
                 except ValueError:
@@ -669,17 +791,79 @@ def _verify_native_drc(path: Path, operation: dict) -> dict[str, Any]:
             raise ConformanceError(
                 f"native DRC report must contain one direct {section} section"
             )
-    expected = operation["native_report"]
     _expect_equal(generator, expected["generator"], "native DRC generator")
     _expect_equal(top_cell, expected["top_cell"], "native DRC top cell")
     if top_cell not in base_cells:
         raise ConformanceError("native DRC top cell is absent from the cells section")
     if len(categories) < expected["minimum_categories"]:
         raise ConformanceError("native DRC report contains no executed check categories")
-    if item_count != 0 or weighted_count != 0:
+    expected_total = expected.get("expected_total_violations", 0)
+    expected_waived = expected.get("expected_waived_violations", 0)
+    if expected_item_count == 0 and (item_count != 0 or weighted_count != 0):
         raise ConformanceError(
-            f"native DRC report contains {item_count} item(s), weighted as {weighted_count} violation(s)"
+            f"native DRC report contains {item_count} item(s), weighted as "
+            f"{weighted_count} violation(s)"
         )
+    _expect_equal(item_count, expected_item_count, "native DRC item count")
+    _expect_equal(weighted_count, expected_total, "native DRC total violations")
+    _expect_equal(waived_count, expected_waived, "native DRC waived violations")
+    count_summaries = [
+        {
+            "category": ".".join(category_path),
+            "category_path": list(category_path),
+            "violations": count,
+        }
+        for category_path, count in sorted(
+            category_counts.items(), key=lambda item: (-item[1], item[0])
+        )
+    ]
+    _expect_equal(
+        count_summaries,
+        expected.get("expected_category_counts", []),
+        "native DRC category counts",
+    )
+    expected_violations = expected.get("expected_violations", [])
+    _expect_equal(
+        len(violations),
+        len(expected_violations),
+        "native DRC reviewed violation count",
+    )
+    reviewed_violations = [
+        {key: violation.get(key) for key in reviewed}
+        for violation, reviewed in zip(violations, expected_violations)
+    ]
+    _expect_equal(
+        reviewed_violations,
+        expected_violations,
+        "native DRC reviewed violations",
+    )
+    normalization = {
+        "geometry_values": total_geometry_values,
+        "retained_geometries": retained_geometries,
+        "retained_coordinate_pairs": retained_coordinate_pairs,
+        "global_geometry_limit_reached": False,
+    }
+    _expect_equal(
+        normalization,
+        expected.get(
+            "expected_normalization",
+            {
+                "geometry_values": 0,
+                "retained_geometries": 0,
+                "retained_coordinate_pairs": 0,
+                "global_geometry_limit_reached": False,
+            },
+        ),
+        "native DRC normalization",
+    )
+    normalized_violations = [
+        {
+            key: value
+            for key, value in violation.items()
+            if key not in {"geometry_value_count", "coordinate_pair_count"}
+        }
+        for violation in violations
+    ]
     return {
         "generator": generator,
         "top_cell": top_cell,
@@ -688,6 +872,9 @@ def _verify_native_drc(path: Path, operation: dict) -> dict[str, Any]:
         "item_count": item_count,
         "total_violations": weighted_count,
         "waived_violations": waived_count,
+        "category_counts": count_summaries,
+        "violations": normalized_violations,
+        "normalization": normalization,
     }
 
 
@@ -785,7 +972,7 @@ def _bounded_contract_text(value: str, *, limit: int = 4_000) -> str:
     return value[:head] + marker + value[-(retained - head) :]
 
 
-def _verify_drc_diagnostics(result: dict[str, Any]) -> None:
+def _verify_drc_diagnostics(operation_name: str, result: dict[str, Any]) -> None:
     expected = [
         {
             "severity": "warning",
@@ -793,10 +980,13 @@ def _verify_drc_diagnostics(result: dict[str, Any]) -> None:
             "message": TRANSITIVE_PROVENANCE_MESSAGE,
         }
     ]
-    _expect_equal(result.get("diagnostics"), expected, "drc.diagnostics")
+    _expect_equal(
+        result.get("diagnostics"), expected, f"{operation_name}.diagnostics"
+    )
 
 
 def _verify_drc_result_data(
+    operation_name: str,
     operation: dict[str, Any],
     result: dict[str, Any],
     *,
@@ -807,14 +997,22 @@ def _verify_drc_result_data(
 ) -> None:
     data = result.get("data")
     if not isinstance(data, dict):
-        raise ConformanceError("drc.data must be an object")
+        raise ConformanceError(f"{operation_name}.data must be an object")
     arguments = operation["arguments"]
-    report_record = _record_map(result["artifacts"], "drc.artifacts")[arguments["report"]]
-    transcript_record = _record_map(result["artifacts"], "drc.artifacts")[
+    report_record = _record_map(
+        result["artifacts"], f"{operation_name}.artifacts"
+    )[arguments["report"]]
+    transcript_record = _record_map(
+        result["artifacts"], f"{operation_name}.artifacts"
+    )[
         operation["transcript_artifact"]["path"]
     ]
 
-    _expect_equal(data.get("drc_clean"), True, "drc.data.drc_clean")
+    _expect_equal(
+        data.get("drc_clean"),
+        operation["expect"]["drc_clean"],
+        f"{operation_name}.data.drc_clean",
+    )
     _expect_equal(data.get("inputs_stable"), True, "drc.data.inputs_stable")
     _expect_equal(data.get("changed_inputs"), [], "drc.data.changed_inputs")
     _expect_equal(data.get("working_directory"), "/evidence", "drc.data.working_directory")
@@ -915,13 +1113,21 @@ def _verify_drc_result_data(
         arguments["rules"],
         "drc.data.report.generator_script",
     )
-    _expect_equal(report.get("category_counts"), [], "drc.data.report.category_counts")
+    _expect_equal(
+        report.get("category_counts"),
+        native_report["category_counts"],
+        f"{operation_name}.data.report.category_counts",
+    )
     _expect_equal(
         report.get("category_counts_truncated"),
         False,
         "drc.data.report.category_counts_truncated",
     )
-    _expect_equal(report.get("violations"), [], "drc.data.report.violations")
+    _expect_equal(
+        report.get("violations"),
+        native_report["violations"],
+        f"{operation_name}.data.report.violations",
+    )
     _expect_equal(
         report.get("violations_truncated"),
         False,
@@ -929,13 +1135,8 @@ def _verify_drc_result_data(
     )
     _expect_equal(
         report.get("normalization"),
-        {
-            "geometry_values": 0,
-            "retained_geometries": 0,
-            "retained_coordinate_pairs": 0,
-            "global_geometry_limit_reached": False,
-        },
-        "drc.data.report.normalization",
+        native_report["normalization"],
+        f"{operation_name}.data.report.normalization",
     )
 
     waiver = data.get("waiver_database")
@@ -1590,7 +1791,7 @@ def _verify_execution_identity(operation_name: str, operation: dict, result: dic
     _expect_equal(execution.get("cwd"), "/evidence", f"{operation_name}.execution.cwd")
     command = execution["command"]
     arguments = operation["arguments"]
-    if operation_name == "drc":
+    if operation_name in DRC_OPERATION_NAMES:
         expected_command = [
             identity["path"],
             "-b",
@@ -1604,7 +1805,10 @@ def _verify_execution_identity(operation_name: str, operation: dict, result: dic
             f"topcell={arguments['top_cell']}",
         ]
         if command != expected_command:
-            raise ConformanceError(f"drc.execution.command differs from the reviewed argv: {command!r}")
+            raise ConformanceError(
+                f"{operation_name}.execution.command differs from the reviewed argv: "
+                f"{command!r}"
+            )
         return
 
     expected_command = [
@@ -1707,6 +1911,53 @@ def _verify_run_metadata(
         expected_commit_exact,
         "run.openada_checkout.commit_exact",
     )
+    source = metadata.get("source_attestation")
+    if source is not None:
+        subject = semantic_subject(
+            REPOSITORY_ROOT,
+            REPOSITORY_ROOT / "catalog/semantic-surfaces-v0alpha1.json",
+        )
+        _expect_equal(
+            source["semantic_subject_sha256"],
+            subject,
+            "run.source_attestation.semantic_subject_sha256",
+        )
+        _expect_equal(
+            source["state_unchanged"], True, "run.source_attestation.state_unchanged"
+        )
+        if source["receipt_class"] == "release":
+            _expect_equal(source["clean_before"], True, "run.source_attestation.clean_before")
+            _expect_equal(source["clean_after"], True, "run.source_attestation.clean_after")
+
+
+def _verify_design_provenance(evidence: Path) -> None:
+    provenance = _read_json(
+        evidence / "design-provenance.json", label="design provenance"
+    )
+    validator = _load_validator(
+        REPOSITORY_ROOT / "schemas/design-provenance-v0alpha1.schema.json",
+        label="design provenance",
+    )
+    _validate_schema(provenance, validator, label="design provenance")
+    chain = _read_json(
+        HERE / "semantic-chain.json", label="semantic chain manifest"
+    )
+    design = chain["design"]
+    for field in ("repository", "revision", "tree"):
+        _expect_equal(provenance[field], design[field], f"design provenance {field}")
+    _expect_equal(
+        {key: provenance["license"][key] for key in ("path", "sha256")},
+        {key: design["license"][key] for key in ("path", "sha256")},
+        "design provenance license",
+    )
+    _expect_equal(
+        [
+            {key: item[key] for key in ("path", "sha256")}
+            for item in provenance["inputs"]
+        ],
+        design["inputs"],
+        "design provenance inputs",
+    )
 
 
 def verify_evidence(
@@ -1729,18 +1980,21 @@ def verify_evidence(
         if operation.get("transcript_artifact"):
             expected_files.add(operation["transcript_artifact"]["filename"])
     actual_files = {entry.name for entry in evidence.iterdir()}
-    if actual_files != expected_files:
+    allowed_files = expected_files | {"design-provenance.json"}
+    if actual_files not in (expected_files, allowed_files):
         raise ConformanceError(
             "evidence directory contents differ; "
             f"missing={sorted(expected_files - actual_files)}, "
-            f"unexpected={sorted(actual_files - expected_files)}"
+            f"unexpected={sorted(actual_files - allowed_files)}"
         )
 
     result_validator = _load_validator(RESULT_SCHEMA_PATH, label="OpenADA result")
     run_validator = _load_validator(RUN_SCHEMA_PATH, label="conformance run")
     _verify_run_metadata(manifest, evidence, manifest_sha256, run_validator)
+    if (evidence / "design-provenance.json").is_file():
+        _verify_design_provenance(evidence)
 
-    for operation_name in ("drc", "lvs"):
+    for operation_name in ("drc", "drc_fail", "lvs"):
         operation = manifest["operations"][operation_name]
         result = _read_json(
             evidence / operation["result_filename"],
@@ -1748,7 +2002,12 @@ def verify_evidence(
         )
         _validate_schema(result, result_validator, label=f"{operation_name} result")
         _expect_equal(result.get("schema"), RESULT_SCHEMA, f"{operation_name}.schema")
-        _expect_equal(result.get("operation"), operation_name, f"{operation_name}.operation")
+        semantic_operation = (
+            "drc" if operation_name in DRC_OPERATION_NAMES else operation_name
+        )
+        _expect_equal(
+            result.get("operation"), semantic_operation, f"{operation_name}.operation"
+        )
         _verify_execution_identity(operation_name, operation, result)
 
         expectation = operation["expect"]
@@ -1765,12 +2024,25 @@ def verify_evidence(
             expectation["engineering_status"],
             f"{operation_name}.engineering.status",
         )
-        if operation_name == "drc":
-            _verify_drc_diagnostics(result)
+        if operation_name in DRC_OPERATION_NAMES:
+            expected_summary = (
+                "KLayout reported zero DRC violations."
+                if expectation["total_violations"] == 0
+                else (
+                    f"KLayout reported {expectation['total_violations']} "
+                    "DRC violation(s)."
+                )
+            )
+            _expect_equal(
+                engineering.get("summary"),
+                expected_summary,
+                f"{operation_name}.engineering.summary",
+            )
+            _verify_drc_diagnostics(operation_name, result)
 
         _verify_input_records(operation_name, operation, result)
         artifact_paths = _verify_artifacts(operation_name, operation, result, evidence)
-        if operation_name == "drc":
+        if operation_name in DRC_OPERATION_NAMES:
             native_report = _verify_native_drc(
                 artifact_paths["klayout-lyrdb"],
                 operation,
@@ -1779,6 +2051,7 @@ def verify_evidence(
                 artifact_paths["klayout-transcript"]
             )
             _verify_drc_result_data(
+                operation_name,
                 operation,
                 result,
                 report_path=artifact_paths["klayout-lyrdb"],

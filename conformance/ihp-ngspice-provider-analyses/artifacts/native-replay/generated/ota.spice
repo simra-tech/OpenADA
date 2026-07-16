@@ -1,0 +1,72 @@
+** sch_path: /design/modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch
+**.subckt ota_testbench vout vout1 vout2
+*.iopin vout
+*.iopin vout1
+*.iopin vout2
+V1 vp GND DC 0.6 AC 1 0
+VDD vdd GND DC 1.2
+I0 net1 GND 80u
+Cload vout GND 500f
+L6 vout vm 4G
+C1 vm GND 4G
+I1 net2 GND 80u
+Cload1 vout1 GND 500f
+I2 net3 GND 80u
+L13 vout2 vm 4G
+C2 vm GND 4G
+V2 VDDac GND DC 1.2 AC 1 0
+V4 net4 GND DC 0.6
+x1 vdd net1 vp vm vout GND two_stage_OTA
+x2 VDDac net3 net4 vm vout2 GND two_stage_OTA
+x3 vdd net2 vp vp vout1 GND two_stage_OTA
+**** begin user architecture code
+
+.lib /foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/cornerCAP.lib cap_typ
+.lib cornerMOSlv.lib mos_tt
+
+
+
+.control
+op
+save all
+write tb_OTA_op.raw
+.endc
+
+.control
+op
+ac dec 100 1 10e6
+save all
+let Av = db(v(vout))
+let PSRR_linear = v(vout2)/v(VDDac)
+let CMRR = db((v(vout)/v(vp))/(v(vout1)/v(vp)))
+let phase = 180*cph(vout)/pi
+write output_file.raw
+.endc
+
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  two_stage_OTA.sym # of pins=6
+** sym_path: /design/modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sym
+** sch_path: /design/modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sch
+.subckt two_stage_OTA vdd iout v+ v- vout vss
+*.iopin v-
+*.iopin v+
+*.iopin vss
+*.iopin vdd
+*.iopin iout
+*.iopin vout
+XM4 vss net1 net3 vss sg13_lv_nmos w=720n l=9.75u ng=1 m=1 mm_ok=1
+XM3 vss net1 net1 vss sg13_lv_nmos w=720n l=9.75u ng=1 m=1 mm_ok=1
+XM1 net1 v- net2 vdd sg13_lv_pmos w=3.64u l=3.7u ng=1 m=2 mm_ok=1
+XM2 net3 v+ net2 vdd sg13_lv_pmos w=3.64u l=3.7u ng=1 m=2 mm_ok=1
+XM5 net2 iout vdd vdd sg13_lv_pmos w=5.3u l=1.95u ng=1 m=1 mm_ok=1
+XM7 vout iout vdd vdd sg13_lv_pmos w=75u l=2.08u ng=8 m=1 mm_ok=1
+XM6 vss net3 vout vss sg13_lv_nmos w=28.8u l=9.75u ng=4 m=1 mm_ok=1
+XM9 iout iout vdd vdd sg13_lv_pmos w=75u l=2.08u ng=8 m=1 mm_ok=1
+XC2 net3 vout cap_cmim w=22.295e-6 l=22.295e-6 m=1 mm_ok=1
+.ends
+
+.GLOBAL GND
+.end

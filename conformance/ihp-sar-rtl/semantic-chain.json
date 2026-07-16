@@ -1,0 +1,400 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.semantic-chain/v0alpha1",
+  "id": "openada.chain/ihp-sar-rtl/v1",
+  "design": {
+    "class": "public-design",
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "tree": "2a710fd503226e9642e4337a324e6c192a9d8a31",
+    "subtree": "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "inputs": [
+      {
+        "path": "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v",
+        "sha256": "b33c7b25215ac916b3b07e0dc385ae353294f6872eaa226f4c0126ecfd7063da"
+      }
+    ],
+    "extensions": {}
+  },
+  "runtime": {
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "platform": "linux/amd64",
+    "pdk_revision": null,
+    "tools": [
+      {
+        "id": "yosys",
+        "path": "/foss/tools/yosys/bin/yosys",
+        "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+      }
+    ],
+    "extensions": {
+      "org.openada.rtl": {
+        "wrapper_path": "/openada/conformance/ihp-sar-rtl/yosys_wrapper.py",
+        "wrapper_sha256": "a75b13acbc68debdd6d70e23caaae3f0d1fcb23e3ea8067f0b128e0a2c27bc6d",
+        "eda_network": "none"
+      }
+    }
+  },
+  "contracts": [
+    {
+      "repository_path": "schemas/semantic-chain-manifest-v0alpha1.schema.json",
+      "sha256": "dfe687c78b361b91600dcb1889f14d52301b4c1c8f200b7dacb6c96126f3f600",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/semantic-chain-run-v0alpha1.schema.json",
+      "sha256": "c4916d3b4d3e63337d47da46a2e4aa94ea15fb41b755207f04a41907cc993613",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/design-provenance-v0alpha1.schema.json",
+      "sha256": "0e3e3ba2c6fdce6f22e93f23a26bb8b3e286cacdf109dc25d8d51aefa418e745",
+      "extensions": {}
+    },
+    {
+      "repository_path": "tools/semantic_receipts.py",
+      "sha256": "983637e95cc33c8259142dd80c96e005364dd49c6cc729e4a7f0d2d7cbcb13f0",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/result-v0alpha1.schema.json",
+      "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/run.schema.json",
+      "sha256": "57ccabba9b012bf49080a977678d6b0ae4f98fa2c7c9e11b5f327f13e2d1c22d",
+      "extensions": {}
+    },
+    {
+      "repository_path": "catalog/semantic-surfaces-v0alpha1.json",
+      "sha256": "4d8568674fd4dfc5c5d27b4b70e1dd8bd67884058ce40d8f124dc8ea30ef1b97",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/manifest.json",
+      "sha256": "3f929ba9f755773e97905e61cf4c9c6a03e68d3f9db351b74820d30cd445f6aa",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/common.py",
+      "sha256": "5b0c96123e17ff55509269a56a88d5d7860490b6698b305098e1923ff1091cf3",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/yosys_wrapper.py",
+      "sha256": "a75b13acbc68debdd6d70e23caaae3f0d1fcb23e3ea8067f0b128e0a2c27bc6d",
+      "extensions": {}
+    },
+    {
+      "repository_path": "tests/test_ihp_sar_rtl_conformance.py",
+      "sha256": "86b340ffdf5eb84d24346d2a56072ee721d653a81af9310c16aae2eacfb4dc80",
+      "extensions": {}
+    }
+  ],
+  "covers": [
+    "surface|openada.surface/cli.rtl-check/v1",
+    "preflight|rtl-structural-check-passes"
+  ],
+  "steps": [
+    {
+      "id": "materialize-pinned-sources",
+      "kind": "source-materialize",
+      "implementation": {
+        "repository_path": "conformance/ihp-sar-rtl/setup.py",
+        "sha256": "6a694e54383ff8f444cd1502e80ec0385f7365d80770a4e91c978de313c99266",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [],
+      "produces": [
+        "pinned-sar-source",
+        "pinned-runtime-image",
+        "pinned-yosys-wrapper",
+        "contract-test-suite",
+        "design-provenance"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "rtl-structural-check",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-sar-rtl/manifest.json",
+        "sha256": "3f929ba9f755773e97905e61cf4c9c6a03e68d3f9db351b74820d30cd445f6aa",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-sar-rtl/run.py",
+        "sha256": "7446ecd4855a570408cb5a5640539bdd659c631572c8db5358cc334d892987c6",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.rtl-check/v1",
+        "preflight|rtl-structural-check-passes"
+      ],
+      "consumes": [
+        "pinned-sar-source",
+        "pinned-runtime-image",
+        "pinned-yosys-wrapper"
+      ],
+      "produces": [
+        "positive-rtl-result",
+        "positive-yosys-script",
+        "positive-yosys-json",
+        "positive-yosys-transcript",
+        "native-run-receipt"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "missing-top-native",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-sar-rtl/manifest.json",
+        "sha256": "3f929ba9f755773e97905e61cf4c9c6a03e68d3f9db351b74820d30cd445f6aa",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-sar-rtl/run.py",
+        "sha256": "7446ecd4855a570408cb5a5640539bdd659c631572c8db5358cc334d892987c6",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.rtl-check/v1"
+      ],
+      "consumes": [
+        "pinned-sar-source",
+        "pinned-runtime-image",
+        "pinned-yosys-wrapper"
+      ],
+      "produces": [
+        "negative-rtl-result",
+        "negative-yosys-script",
+        "negative-yosys-transcript"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "independent-verifier",
+      "kind": "independent-oracle",
+      "implementation": {
+        "repository_path": "conformance/ihp-sar-rtl/verify.py",
+        "sha256": "f3b99c7cd6d7065f62ce5dd57f7408e346849863221e3dbbe4d89101ec76051f",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "positive-rtl-result",
+        "positive-yosys-script",
+        "positive-yosys-json",
+        "positive-yosys-transcript",
+        "negative-rtl-result",
+        "negative-yosys-script",
+        "negative-yosys-transcript",
+        "native-run-receipt"
+      ],
+      "produces": [
+        "independent-oracle-verdict"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "normalize-rtl-evidence",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-sar-rtl/manifest.json",
+        "sha256": "3f929ba9f755773e97905e61cf4c9c6a03e68d3f9db351b74820d30cd445f6aa",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-sar-rtl/semantic.py",
+        "sha256": "18bfff2f25dee11ed12b05c6883b48a2131c1666eca357cbdf8aaac897021aad",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.rtl-check/v1",
+        "preflight|rtl-structural-check-passes"
+      ],
+      "consumes": [
+        "positive-rtl-result",
+        "positive-yosys-json",
+        "positive-yosys-transcript",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "normalized-rtl-evidence"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "adversarial-replays",
+      "kind": "independent-oracle",
+      "implementation": {
+        "repository_path": "conformance/ihp-sar-rtl/semantic.py",
+        "sha256": "18bfff2f25dee11ed12b05c6883b48a2131c1666eca357cbdf8aaac897021aad",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "positive-rtl-result",
+        "positive-yosys-json",
+        "negative-rtl-result",
+        "negative-yosys-transcript",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "negative-real-missing-top",
+        "tamper-reconciled-json-port-removal"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "engineering-decision",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-sar-rtl/manifest.json",
+        "sha256": "3f929ba9f755773e97905e61cf4c9c6a03e68d3f9db351b74820d30cd445f6aa",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-sar-rtl/semantic.py",
+        "sha256": "18bfff2f25dee11ed12b05c6883b48a2131c1666eca357cbdf8aaac897021aad",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.rtl-check/v1",
+        "preflight|rtl-structural-check-passes"
+      ],
+      "consumes": [
+        "normalized-rtl-evidence",
+        "independent-oracle-verdict",
+        "negative-real-missing-top",
+        "tamper-reconciled-json-port-removal"
+      ],
+      "produces": [
+        "downstream-rtl-decision"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "agent-evidence",
+      "kind": "independent-decision",
+      "implementation": {
+        "repository_path": "conformance/ihp-sar-rtl/semantic.py",
+        "sha256": "18bfff2f25dee11ed12b05c6883b48a2131c1666eca357cbdf8aaac897021aad",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "normalized-rtl-evidence",
+        "independent-oracle-verdict",
+        "downstream-rtl-decision",
+        "negative-real-missing-top",
+        "tamper-reconciled-json-port-removal"
+      ],
+      "produces": [
+        "agent-visible-rtl-evidence"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "contract-tests",
+      "kind": "independent-oracle",
+      "implementation": {
+        "repository_path": "tests/test_ihp_sar_rtl_conformance.py",
+        "sha256": "86b340ffdf5eb84d24346d2a56072ee721d653a81af9310c16aae2eacfb4dc80",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "contract-test-suite",
+        "agent-visible-rtl-evidence"
+      ],
+      "produces": [
+        "contract-test-verdict"
+      ],
+      "extensions": {}
+    }
+  ],
+  "negative_replays": [
+    {
+      "id": "real-missing-top",
+      "covers": [
+        "surface|openada.surface/cli.rtl-check/v1",
+        "preflight|rtl-structural-check-passes"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "ERROR: Module `missing_sar_logic' not found!",
+      "extensions": {}
+    }
+  ],
+  "tamper_replays": [
+    {
+      "id": "reconciled-json-port-removal",
+      "covers": [
+        "surface|openada.surface/cli.rtl-check/v1",
+        "preflight|rtl-structural-check-passes"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "positive Yosys JSON ports",
+      "extensions": {}
+    }
+  ],
+  "agent_evidence": {
+    "result_step": "agent-evidence",
+    "required_json_pointers": [
+      "/decision",
+      "/scope",
+      "/basis",
+      "/next_checks",
+      "/operations/rtl_structural_check/engineering_status",
+      "/operations/rtl_structural_check/evidence/module_names",
+      "/operations/rtl_structural_check/evidence/ports",
+      "/operations/rtl_structural_check/evidence/cell_count",
+      "/operations/rtl_structural_check/evidence/cell_type_counts",
+      "/operations/rtl_structural_check/evidence/state_widths",
+      "/operations/rtl_structural_check/evidence/b_aliases_d",
+      "/operations/missing_top_negative/decision",
+      "/operations/missing_top_negative/diagnostic",
+      "/replays/negative_replays",
+      "/replays/tamper_replays",
+      "/trust_chain",
+      "/limitations",
+      "/standards/ieee_measurement_standard/status",
+      "/standards/hdl_language/status"
+    ],
+    "extensions": {}
+  },
+  "release_verification": {
+    "implementation": {
+      "repository_path": "conformance/ihp-sar-rtl/semantic.py",
+      "sha256": "18bfff2f25dee11ed12b05c6883b48a2131c1666eca357cbdf8aaac897021aad",
+      "extensions": {}
+    },
+    "arguments": [],
+    "timeout_seconds": 120,
+    "extensions": {}
+  },
+  "extensions": {
+    "org.openada.rtl": {
+      "coverage_scope": "exact catalog rows only; no variants or native mappings are claimed",
+      "decision_scope": "engineering proceed/block with explicit next checks, not tapeout signoff"
+    }
+  }
+}

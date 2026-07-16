@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/semantic-chain-run-v0alpha1.schema.json",
+  "title": "OpenADA semantic chain run v0alpha1",
+  "description": "Content-addressed result of a fresh semantic-chain replay. A passing record is necessary but not sufficient; the repository verifier also checks its manifest, artifacts, coverage links, and semantic subject.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "chain_id",
+    "chain_manifest_sha256",
+    "semantic_subject_sha256",
+    "source_attestation",
+    "status",
+    "checks",
+    "artifacts",
+    "extensions"
+  ],
+  "properties": {
+    "$schema": {"const": "https://json-schema.org/draft/2020-12/schema"},
+    "schema": {"const": "openada.semantic-chain-run/v0alpha1"},
+    "chain_id": {"type": "string", "pattern": "^openada\\.chain/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+$", "maxLength": 256},
+    "chain_manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "semantic_subject_sha256": {"$ref": "#/$defs/sha256"},
+    "source_attestation": {"$ref": "#/$defs/sourceAttestation"},
+    "status": {"const": "pass"},
+    "checks": {
+      "type": "object",
+      "required": [
+        "contract_test",
+        "pinned_real_design",
+        "native_run",
+        "independent_artifact_check",
+        "normalized_evidence",
+        "downstream_decision",
+        "negative_replay",
+        "tamper_replay",
+        "agent_visible_evidence"
+      ],
+      "properties": {
+        "contract_test": {"type": "boolean"},
+        "pinned_real_design": {"type": "boolean"},
+        "native_run": {"type": "boolean"},
+        "independent_artifact_check": {"type": "boolean"},
+        "normalized_evidence": {"type": "boolean"},
+        "downstream_decision": {"type": "boolean"},
+        "negative_replay": {"type": "boolean"},
+        "tamper_replay": {"type": "boolean"},
+        "agent_visible_evidence": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2048,
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "gitObject": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "extensions": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"},
+      "additionalProperties": {"type": "object"}
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "repository_path",
+        "bytes",
+        "sha256",
+        "role",
+        "source_step",
+        "source_output",
+        "replay_id"
+      ],
+      "properties": {
+        "repository_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+        },
+        "bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "role": {"type": "string", "minLength": 1, "maxLength": 256},
+        "source_step": {
+          "oneOf": [
+            {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 128},
+            {"type": "null"}
+          ]
+        },
+        "source_output": {
+          "oneOf": [
+            {"type": "string", "minLength": 1, "maxLength": 256},
+            {"type": "null"}
+          ]
+        },
+        "replay_id": {
+          "oneOf": [
+            {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 128},
+            {"type": "null"}
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"role": {"enum": ["negative-replay", "tamper-replay"]}},
+            "required": ["role"]
+          },
+          "then": {
+            "properties": {
+              "source_step": {"type": "null"},
+              "source_output": {"type": "null"},
+              "replay_id": {"type": "string"}
+            }
+          },
+          "else": {
+            "properties": {
+              "source_step": {"type": "string"},
+              "source_output": {"type": "string"},
+              "replay_id": {"type": "null"}
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "sourceAttestation": {
+      "type": "object",
+      "required": [
+        "receipt_class",
+        "repository_revision",
+        "repository_tree",
+        "semantic_subject_sha256",
+        "clean_before",
+        "clean_after",
+        "state_unchanged",
+        "extensions"
+      ],
+      "properties": {
+        "receipt_class": {"enum": ["provisional", "release"]},
+        "repository_revision": {"$ref": "#/$defs/gitObject"},
+        "repository_tree": {"$ref": "#/$defs/gitObject"},
+        "semantic_subject_sha256": {"$ref": "#/$defs/sha256"},
+        "clean_before": {"type": "boolean"},
+        "clean_after": {"type": "boolean"},
+        "state_unchanged": {"type": "boolean"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

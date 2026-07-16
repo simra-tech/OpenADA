@@ -1,0 +1,9 @@
+{
+  "expected": "independent verifier rejection",
+  "extensions": {},
+  "id": "normalized-metric-value",
+  "mutation": "one normalized transfer scalar",
+  "observed": "transfer low_frequency_gain_db independent recomputation is 71.119741386717266, expected 70.119741386717266 (atol=1e-08, rtol=1e-12)",
+  "schema": "openada.ihp-analog-tamper-replay/v0alpha1",
+  "status": "pass"
+}

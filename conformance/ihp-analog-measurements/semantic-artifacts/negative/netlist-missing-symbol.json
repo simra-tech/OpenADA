@@ -1,0 +1,85 @@
+{
+  "artifacts": [
+    {
+      "bytes": 897,
+      "exists": true,
+      "kind": "spice-netlist",
+      "path": "/evidence/work/inverter-missing-symbol.cir",
+      "role": "output",
+      "sha256": "8b8d329228f07c193eebaf769ad88ebf37ebf53a572be234e3e869b990023ae3"
+    }
+  ],
+  "data": {
+    "missing_symbol_count": 1,
+    "missing_symbols": [
+      "*  x_openada_measurement_missing -  __openada_measurement_missing__  IS MISSING !!!!"
+    ],
+    "missing_symbols_truncated": false,
+    "stderr_tail": "",
+    "stdout_tail": ""
+  },
+  "diagnostics": [
+    {
+      "code": "xschem.missing_symbol",
+      "hint": "Select the project/PDK rcfile and verify its library search paths.",
+      "message": "The generated netlist contains 1 unresolved symbol(s).",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "fail",
+    "summary": "Xschem generated a netlist with unresolved symbols."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/xschem/bin/xschem",
+      "--rcfile",
+      "/evidence/sources/inverter.xschemrc",
+      "-n",
+      "-s",
+      "-q",
+      "-x",
+      "-o",
+      "/tmp/openada-xschem-llqj_oj6",
+      "/evidence/sources/inverter-missing-symbol.sch"
+    ],
+    "cwd": "/evidence/sources",
+    "duration_ms": 128,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 1725,
+      "exists": true,
+      "kind": "xschem-schematic",
+      "path": "/evidence/sources/inverter-missing-symbol.sch",
+      "role": "input",
+      "sha256": "2451beaa9c61f559a6e5ed0f3530bc93e4757ed513a8331b4773707c1f4f0c84"
+    },
+    {
+      "bytes": 130,
+      "exists": true,
+      "kind": "xschem-rcfile",
+      "path": "/evidence/sources/inverter.xschemrc",
+      "role": "configuration",
+      "sha256": "d743a01b4380622b67a130f5b07a94b84b7cfd387a3d442efa17be7a6fff71e3"
+    }
+  ],
+  "operation": "netlist",
+  "provenance": {
+    "created_at": "2026-07-16T00:51:04.177889Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "xschem",
+    "path": "/foss/tools/xschem/bin/xschem",
+    "version": "XSCHEM V3.4.8RC"
+  }
+}

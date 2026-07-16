@@ -1,0 +1,127 @@
+{
+  "schema": "openada.public-spice-portability-requests/v0alpha1",
+  "chain_id": "openada.chain/public-spice-portability/v1",
+  "simulations": [
+    {
+      "id": "ngspice-op",
+      "backend": "ngspice",
+      "analysis": "op",
+      "deck": "/evidence/work/inverter-op.spice",
+      "output_dir": "/evidence/sim/ngspice-op",
+      "arguments": ["--backend", "ngspice", "--analysis", "op"],
+      "selectors": [
+        {"native_name": "v(vin)", "output_name": "vin", "unit": "V", "component": "real"},
+        {"native_name": "v(vout)", "output_name": "vout", "unit": "V", "component": "real"}
+      ],
+      "conditions": [
+        {"name": "design", "value": "IHP-AnalogAcademy/inverter", "unit": "1"},
+        {"name": "corner", "value": "mos_tt", "unit": "1"},
+        {"name": "supply_voltage", "value": 1.2, "unit": "V"}
+      ]
+    },
+    {
+      "id": "ngspice-dc",
+      "backend": "ngspice",
+      "analysis": "dc",
+      "deck": "/evidence/work/inverter-dc.spice",
+      "output_dir": "/evidence/sim/ngspice-dc",
+      "arguments": ["--backend", "ngspice", "--analysis", "dc", "--source-name", "V1", "--source-unit", "V", "--start", "0", "--stop", "1.2", "--step", "0.1"],
+      "selectors": [
+        {"native_name": "v(vin)", "output_name": "vin", "unit": "V", "component": "real"},
+        {"native_name": "v(vout)", "output_name": "vout", "unit": "V", "component": "real"}
+      ],
+      "conditions": [
+        {"name": "design", "value": "IHP-AnalogAcademy/inverter", "unit": "1"},
+        {"name": "corner", "value": "mos_tt", "unit": "1"},
+        {"name": "supply_voltage", "value": 1.2, "unit": "V"}
+      ]
+    },
+    {
+      "id": "ngspice-ac",
+      "backend": "ngspice",
+      "analysis": "ac",
+      "deck": "/evidence/work/ota-ac.spice",
+      "output_dir": "/evidence/sim/ngspice-ac",
+      "arguments": ["--backend", "ngspice", "--analysis", "ac", "--sweep", "dec", "--points", "10", "--start-hz", "1", "--stop-hz", "100000"],
+      "selectors": [
+        {"native_name": "v(vout)", "output_name": "vout.real", "unit": "V", "component": "real"},
+        {"native_name": "v(vout)", "output_name": "vout.imaginary", "unit": "V", "component": "imaginary"}
+      ],
+      "conditions": [
+        {"name": "design", "value": "IHP-AnalogAcademy/two-stage-OTA", "unit": "1"},
+        {"name": "corner", "value": "mos_tt", "unit": "1"},
+        {"name": "supply_voltage", "value": 1.2, "unit": "V"}
+      ]
+    },
+    {
+      "id": "xyce-dc",
+      "backend": "xyce",
+      "analysis": "dc",
+      "deck": "/evidence/work/xyce-dc.cir",
+      "output_dir": "/evidence/sim/xyce-dc",
+      "arguments": ["--backend", "xyce", "--analysis", "dc", "--source-name", "V1", "--source-unit", "V", "--start", "0", "--stop", "10", "--step", "0.1"],
+      "selectors": [
+        {"native_name": "V(1)", "output_name": "v1", "unit": "V", "component": "real"}
+      ],
+      "conditions": [
+        {"name": "design", "value": "Xyce_Regression/dc-noprn", "unit": "1"},
+        {"name": "xyce_release", "value": "7.10.0", "unit": "1"}
+      ]
+    },
+    {
+      "id": "xyce-ac",
+      "backend": "xyce",
+      "analysis": "ac",
+      "deck": "/evidence/work/xyce-ac-derived.cir",
+      "output_dir": "/evidence/sim/xyce-ac",
+      "arguments": ["--backend", "xyce", "--analysis", "ac", "--sweep", "dec", "--points", "10", "--start-hz", "1", "--stop-hz", "100000"],
+      "selectors": [
+        {"native_name": "V(1)", "output_name": "v1.real", "unit": "V", "component": "real"},
+        {"native_name": "V(1)", "output_name": "v1.imaginary", "unit": "V", "component": "imaginary"}
+      ],
+      "conditions": [
+        {"name": "design", "value": "Xyce_Regression/RC_simple", "unit": "1"},
+        {"name": "derivation", "value": "remove-active-presentation-print", "unit": "1"},
+        {"name": "xyce_release", "value": "7.10.0", "unit": "1"}
+      ]
+    },
+    {
+      "id": "xyce-tran",
+      "backend": "xyce",
+      "analysis": "tran",
+      "deck": "/evidence/work/xyce-tran.cir",
+      "output_dir": "/evidence/sim/xyce-tran",
+      "arguments": ["--backend", "xyce", "--analysis", "tran", "--step-s", "1e-9", "--stop-s", "1e-8"],
+      "selectors": [
+        {"native_name": "V(1)", "output_name": "v1", "unit": "V", "component": "real"}
+      ],
+      "conditions": [
+        {"name": "design", "value": "Xyce_Regression/tran-raw-override-noprint", "unit": "1"},
+        {"name": "xyce_release", "value": "7.10.0", "unit": "1"}
+      ]
+    }
+  ],
+  "legacy_simulation": {
+    "id": "legacy-ngspice-op",
+    "deck": "/evidence/work/inverter-op.spice",
+    "output_dir": "/evidence/legacy/ngspice-op",
+    "arguments": []
+  },
+  "admin_commands": [
+    {"id": "capabilities", "arguments": ["capabilities"]},
+    {"id": "doctor", "arguments": ["doctor"]},
+    {"id": "profile-list", "arguments": ["profile", "list"]},
+    {"id": "profile-show", "arguments": ["profile", "show", "openada.operation/circuit.simulate/v1alpha2"]},
+    {"id": "provider-list", "arguments": ["provider", "list", "--manifest", "/openada/providers/ngspice-pdk-control/driver-manifest.json"]},
+    {"id": "provider-validate", "arguments": ["provider", "validate", "/openada/providers/ngspice-pdk-control/driver-manifest.json"]}
+  ],
+  "negative_commands": [
+    {"id": "xyce-ac-presentation-rejected", "kind": "simulate", "deck": "/evidence/work/xyce-ac-source.cir", "arguments": ["--backend", "xyce", "--analysis", "ac", "--sweep", "dec", "--points", "10", "--start-hz", "1", "--stop-hz", "100000"]},
+    {"id": "xyce-op-unsupported", "kind": "simulate", "deck": "/evidence/work/xyce-op-unsupported.cir", "arguments": ["--backend", "xyce", "--analysis", "op"]},
+    {"id": "ngspice-analysis-mismatch", "kind": "simulate", "deck": "/evidence/work/inverter-op.spice", "arguments": ["--backend", "ngspice", "--analysis", "dc", "--source-name", "V1", "--source-unit", "V", "--start", "0", "--stop", "1.2", "--step", "0.1"]},
+    {"id": "extract-missing-selector", "kind": "extract", "simulation": "xyce-dc"},
+    {"id": "admin-unknown-profile", "kind": "admin", "arguments": ["profile", "show", "openada.operation/not-real/v1alpha1"]},
+    {"id": "admin-invalid-provider", "kind": "admin", "arguments": ["provider", "validate", "/evidence/work/provider-invalid.json"]}
+  ],
+  "extensions": {}
+}

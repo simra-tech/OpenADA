@@ -1,0 +1,145 @@
+OpenADA bounded complete Netgen process transcript
+stdout: retained_utf8_bytes=5540 observed_bytes=5540 truncated=false
+--- stdout ---
+Netgen 1.5.321 compiled on Mon Jun 22 11:31:27 AM CEST 2026
+Warning: netgen command 'format' use fully-qualified name '::netgen::format'
+Warning: netgen command 'global' use fully-qualified name '::netgen::global'
+Generating JSON file result
+Reading netlist file /design/modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir for /design/modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir inverter
+Reading netlist file /design/modules/module_0_foundations/PEX_Demo/simulations/inverter.spice for /design/modules/module_0_foundations/PEX_Demo/simulations/inverter.spice inverter
+
+Reading setup file /foss/pdks/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl
+
+No property w found for device ntap1
+No property l found for device ntap1
+No property w found for device ntap1
+No property l found for device ntap1
+No property as found for device sg13_lv_pmos
+No property ad found for device sg13_lv_pmos
+No property ps found for device sg13_lv_pmos
+No property pd found for device sg13_lv_pmos
+No property as found for device sg13_lv_nmos
+No property ad found for device sg13_lv_nmos
+No property ps found for device sg13_lv_nmos
+No property pd found for device sg13_lv_nmos
+No property w found for device ptap1
+No property l found for device ptap1
+No property w found for device ptap1
+No property l found for device ptap1
+No such pin 1 in model ptap1
+No property w found for device ptap1
+No property l found for device ptap1
+No property l found for device ptap1
+No property w found for device ptap1
+No property l found for device ptap1
+No property w found for device ptap1
+No property b found for device ptap1
+No such pin 1 in model ptap1
+No property w found for device ptap1
+No property l found for device ptap1
+No property l found for device ptap1
+No property w found for device ptap1
+No property l found for device ptap1
+No property w found for device ptap1
+No property b found for device ptap1
+No such pin 1 in model ntap1
+No property w found for device ntap1
+No property l found for device ntap1
+No property l found for device ntap1
+No property w found for device ntap1
+No property l found for device ntap1
+No property w found for device ntap1
+No property b found for device ntap1
+No such pin 1 in model ntap1
+No property w found for device ntap1
+No property l found for device ntap1
+No property l found for device ntap1
+No property w found for device ntap1
+No property l found for device ntap1
+No property w found for device ntap1
+No property b found for device ntap1
+No such pin 1 in model sg13_lv_nmos
+No property ng found for device sg13_lv_nmos
+No property as found for device sg13_lv_nmos
+No property ad found for device sg13_lv_nmos
+No property pd found for device sg13_lv_nmos
+No property ps found for device sg13_lv_nmos
+No property trise found for device sg13_lv_nmos
+No property z1 found for device sg13_lv_nmos
+No property z2 found for device sg13_lv_nmos
+No property wmin found for device sg13_lv_nmos
+No property rfmode found for device sg13_lv_nmos
+No property pre_layout found for device sg13_lv_nmos
+No such pin 1 in model sg13_lv_nmos
+No property as found for device sg13_lv_nmos
+No property ad found for device sg13_lv_nmos
+No property pd found for device sg13_lv_nmos
+No property ps found for device sg13_lv_nmos
+No property trise found for device sg13_lv_nmos
+No property z1 found for device sg13_lv_nmos
+No property z2 found for device sg13_lv_nmos
+No property wmin found for device sg13_lv_nmos
+No property rfmode found for device sg13_lv_nmos
+No property pre_layout found for device sg13_lv_nmos
+No such pin 1 in model sg13_lv_pmos
+No property ng found for device sg13_lv_pmos
+No property as found for device sg13_lv_pmos
+No property ad found for device sg13_lv_pmos
+No property pd found for device sg13_lv_pmos
+No property ps found for device sg13_lv_pmos
+No property trise found for device sg13_lv_pmos
+No property z1 found for device sg13_lv_pmos
+No property z2 found for device sg13_lv_pmos
+No property wmin found for device sg13_lv_pmos
+No property rfmode found for device sg13_lv_pmos
+No property pre_layout found for device sg13_lv_pmos
+No such pin 1 in model sg13_lv_pmos
+No property as found for device sg13_lv_pmos
+No property ad found for device sg13_lv_pmos
+No property pd found for device sg13_lv_pmos
+No property ps found for device sg13_lv_pmos
+No property trise found for device sg13_lv_pmos
+No property z1 found for device sg13_lv_pmos
+No property z2 found for device sg13_lv_pmos
+No property wmin found for device sg13_lv_pmos
+No property rfmode found for device sg13_lv_pmos
+No property pre_layout found for device sg13_lv_pmos
+Comparison output logged to file /evidence/inverter.lvs.comp
+Logging to file "/evidence/inverter.lvs.comp" enabled
+
+Contents of circuit 1:  Circuit: 'inverter'
+Circuit inverter contains 4 device instances.
+  Class: ntap1                 instances:   1
+  Class: sg13_lv_pmos          instances:   1
+  Class: sg13_lv_nmos          instances:   1
+  Class: ptap1                 instances:   1
+Circuit contains 6 nets.
+Contents of circuit 2:  Circuit: 'inverter'
+Circuit inverter contains 4 device instances.
+  Class: ntap1                 instances:   1
+  Class: sg13_lv_pmos          instances:   1
+  Class: sg13_lv_nmos          instances:   1
+  Class: ptap1                 instances:   1
+Circuit contains 6 nets.
+
+Circuit 1 contains 4 devices, Circuit 2 contains 4 devices.
+Circuit 1 contains 6 nets,    Circuit 2 contains 6 nets.
+
+
+Final result: 
+Circuits match uniquely.
+.
+Logging to file "/evidence/inverter.lvs.comp" disabled
+LVS Done.
+
+stderr: retained_utf8_bytes=356 observed_bytes=356 truncated=false
+--- stderr ---
+Unable to permute model ptap1 pins 1, 2.
+Unable to permute model ptap1 pins 1, 2.
+Unable to permute model ntap1 pins 1, 2.
+Unable to permute model ntap1 pins 1, 2.
+Unable to permute model sg13_lv_nmos pins 1, 3.
+Unable to permute model sg13_lv_nmos pins 1, 3.
+Unable to permute model sg13_lv_pmos pins 1, 3.
+Unable to permute model sg13_lv_pmos pins 1, 3.
+

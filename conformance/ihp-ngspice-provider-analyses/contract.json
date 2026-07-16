@@ -1,0 +1,27 @@
+{
+  "schema": "openada.conformance-contract/ihp-ngspice-provider-analyses/v1",
+  "provider": {
+    "driver_id": "org.openada.driver.ngspice-pdk-control",
+    "driver_version": "0.5.0",
+    "transport_id": "local-json-stdio"
+  },
+  "design": {
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623"
+  },
+  "analyses": {
+    "op": {"type": "op", "extensions": {}},
+    "dc": {"type": "dc", "source_name": "V1", "source_unit": "V", "start": 0.0, "stop": 1.2, "step": 0.01, "extensions": {}},
+    "ac": {"type": "ac", "sweep": "dec", "points": 100, "start_hz": 1.0, "stop_hz": 10000000.0, "extensions": {}},
+    "tran": {"type": "tran", "step_s": 3.125e-8, "stop_s": 3.246875e-5, "start_s": 5e-7, "linearize": true, "extensions": {}}
+  },
+  "required_positive_status": "pass",
+  "required_negative_boundaries": [
+    "unsupported-control-command",
+    "request-analysis-mismatch",
+    "analysis-feature-mismatch",
+    "duplicate-control-command",
+    "native-ngspice-error"
+  ],
+  "extensions": {}
+}

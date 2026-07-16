@@ -1,0 +1,71 @@
+{
+  "artifacts": [
+    {
+      "bytes": 190,
+      "exists": true,
+      "kind": "yosys-script",
+      "path": "/evidence/positive/rtl-check.ys",
+      "role": "evidence",
+      "sha256": "4c61fff924adbfe0f9022d88309da79ee2c2951f441c912586157a7200e30137"
+    },
+    {
+      "bytes": 25451,
+      "exists": true,
+      "kind": "yosys-json",
+      "path": "/evidence/positive/sar_logic.json",
+      "role": "output",
+      "sha256": "7b1e3f7f8e256db0e29ace683d6c2b5c90fd1e173c436a8fe8726395782d752a"
+    }
+  ],
+  "data": {
+    "errors": [],
+    "errors_truncated": false,
+    "json_validation": "parsed",
+    "top": "sar_logic",
+    "warnings": [],
+    "warnings_truncated": false
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "Yosys elaborated the RTL and completed structural checks."
+  },
+  "execution": {
+    "command": [
+      "/openada/conformance/ihp-sar-rtl/yosys_wrapper.py",
+      "-q",
+      "-s",
+      "/evidence/positive/rtl-check.ys"
+    ],
+    "cwd": "/evidence/positive/.openada-yosys-ms700e17",
+    "duration_ms": 115,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 576,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v",
+      "role": "input",
+      "sha256": "b33c7b25215ac916b3b07e0dc385ae353294f6872eaa226f4c0126ecfd7063da"
+    }
+  ],
+  "operation": "rtl-check",
+  "provenance": {
+    "created_at": "2026-07-16T00:23:43.042910Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "yosys",
+    "path": "/openada/conformance/ihp-sar-rtl/yosys_wrapper.py",
+    "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+  }
+}

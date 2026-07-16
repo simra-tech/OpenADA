@@ -1,0 +1,76 @@
+{
+  "artifacts": [
+    {
+      "bytes": 198,
+      "exists": true,
+      "kind": "yosys-script",
+      "path": "/evidence/negative/rtl-check.ys",
+      "role": "evidence",
+      "sha256": "4855a5981b1d0b10525004bb90242f4d77bdb749a0ae57ecfc02ee6a1bba3b3b"
+    }
+  ],
+  "data": {
+    "errors": [
+      "ERROR: Module `missing_sar_logic' not found!"
+    ],
+    "errors_truncated": false,
+    "json_validation": "missing",
+    "top": "missing_sar_logic",
+    "warnings": [],
+    "warnings_truncated": false
+  },
+  "diagnostics": [
+    {
+      "code": "yosys.nonzero_exit",
+      "message": "Yosys exited with code 1.",
+      "severity": "error"
+    },
+    {
+      "code": "yosys.error",
+      "message": "ERROR: Module `missing_sar_logic' not found!",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "fail",
+    "summary": "Yosys reported an RTL elaboration or structural-check error."
+  },
+  "execution": {
+    "command": [
+      "/openada/conformance/ihp-sar-rtl/yosys_wrapper.py",
+      "-q",
+      "-s",
+      "/evidence/negative/rtl-check.ys"
+    ],
+    "cwd": "/evidence/negative/.openada-yosys-zb4bsjiy",
+    "duration_ms": 115,
+    "exit_code": 1,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 576,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v",
+      "role": "input",
+      "sha256": "b33c7b25215ac916b3b07e0dc385ae353294f6872eaa226f4c0126ecfd7063da"
+    }
+  ],
+  "operation": "rtl-check",
+  "provenance": {
+    "created_at": "2026-07-16T00:23:43.749117Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "yosys",
+    "path": "/openada/conformance/ihp-sar-rtl/yosys_wrapper.py",
+    "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+  }
+}

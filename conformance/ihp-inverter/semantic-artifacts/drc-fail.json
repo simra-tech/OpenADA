@@ -1,0 +1,497 @@
+{
+  "artifacts": [
+    {
+      "bytes": 123327,
+      "exists": true,
+      "kind": "klayout-lyrdb",
+      "path": "/evidence/lvs-tester.drc.lyrdb",
+      "role": "evidence",
+      "sha256": "205d85acb90e313a36565feb231953b9b33a96a471ff9ce3f4a12a9dd1840104"
+    },
+    {
+      "bytes": 12218,
+      "exists": true,
+      "kind": "klayout-transcript",
+      "path": "/evidence/lvs-tester.drc.lyrdb.openada.log",
+      "role": "evidence",
+      "sha256": "1c10b0ab38a133f76a143d55198fe6bff11cbb9cc53977579f6895437433da8e"
+    }
+  ],
+  "data": {
+    "ambient_environment_enumerated": false,
+    "changed_inputs": [],
+    "deck_trust": "caller-supplied executable Ruby; OpenADA does not sandbox the deck",
+    "deck_variables": [],
+    "drc_clean": false,
+    "environment": {
+      "KLAYOUT_HOME": null,
+      "KLAYOUT_PATH": null,
+      "PDK": null,
+      "PDK_ROOT": "/foss/pdks"
+    },
+    "inputs_stable": true,
+    "report": {
+      "category_count": 592,
+      "category_counts": [
+        {
+          "category": "M1.b",
+          "category_path": [
+            "M1.b"
+          ],
+          "violations": 6
+        },
+        {
+          "category": "Cnt.d",
+          "category_path": [
+            "Cnt.d"
+          ],
+          "violations": 1
+        },
+        {
+          "category": "Cnt.e",
+          "category_path": [
+            "Cnt.e"
+          ],
+          "violations": 1
+        }
+      ],
+      "category_counts_truncated": false,
+      "cell_count": 2,
+      "description": "Main DRC Run Report at",
+      "generator": "drc: script='/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc'",
+      "generator_script": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+      "item_count": 8,
+      "normalization": {
+        "geometry_values": 8,
+        "global_geometry_limit_reached": false,
+        "retained_coordinate_pairs": 32,
+        "retained_geometries": 8
+      },
+      "original_file": "",
+      "top_cell": "lvs_tester",
+      "total_violations": 8,
+      "validation": {
+        "bytes": 123327,
+        "reason": "lyrdb.valid",
+        "valid": true
+      },
+      "violations": [
+        {
+          "category": "Cnt.d",
+          "category_path": [
+            "Cnt.d"
+          ],
+          "cell": "lvs_tester",
+          "description": "5.14. Cnt.d Min. GatPoly enclosure of Cont is 0.07 um",
+          "geometries": [
+            {
+              "coordinates": [
+                [
+                  3.215,
+                  -0.065
+                ],
+                [
+                  3.055,
+                  -0.065
+                ],
+                [
+                  3.283,
+                  -0.08
+                ],
+                [
+                  2.987,
+                  -0.08
+                ]
+              ],
+              "coordinates_truncated": false,
+              "type": "edge-pair"
+            }
+          ],
+          "geometries_truncated": false,
+          "multiplicity": 1,
+          "tags": [],
+          "waived": false
+        },
+        {
+          "category": "Cnt.e",
+          "category_path": [
+            "Cnt.e"
+          ],
+          "cell": "lvs_tester",
+          "description": "5.14. Cnt.e Min. Cont on GatPoly space to Activ is 0.14 um",
+          "geometries": [
+            {
+              "coordinates": [
+                [
+                  3.055,
+                  0.095
+                ],
+                [
+                  3.215,
+                  0.095
+                ],
+                [
+                  3.355,
+                  0.1
+                ],
+                [
+                  2.915,
+                  0.1
+                ]
+              ],
+              "coordinates_truncated": false,
+              "type": "edge-pair"
+            }
+          ],
+          "geometries_truncated": false,
+          "multiplicity": 1,
+          "tags": [],
+          "waived": false
+        },
+        {
+          "category": "M1.b",
+          "category_path": [
+            "M1.b"
+          ],
+          "cell": "lvs_tester",
+          "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 \u03bcm.",
+          "geometries": [
+            {
+              "coordinates": [
+                [
+                  2.93,
+                  -0.065
+                ],
+                [
+                  2.93,
+                  0.095
+                ],
+                [
+                  2.79,
+                  0.208
+                ],
+                [
+                  2.79,
+                  -0.178
+                ]
+              ],
+              "coordinates_truncated": false,
+              "type": "edge-pair"
+            }
+          ],
+          "geometries_truncated": false,
+          "multiplicity": 1,
+          "tags": [],
+          "waived": false
+        },
+        {
+          "category": "M1.b",
+          "category_path": [
+            "M1.b"
+          ],
+          "cell": "lvs_tester",
+          "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 \u03bcm.",
+          "geometries": [
+            {
+              "coordinates": [
+                [
+                  3.46,
+                  -0.095
+                ],
+                [
+                  3.46,
+                  0.208
+                ],
+                [
+                  3.32,
+                  0.095
+                ],
+                [
+                  3.32,
+                  -0.065
+                ]
+              ],
+              "coordinates_truncated": false,
+              "type": "edge-pair"
+            }
+          ],
+          "geometries_truncated": false,
+          "multiplicity": 1,
+          "tags": [],
+          "waived": false
+        },
+        {
+          "category": "M1.b",
+          "category_path": [
+            "M1.b"
+          ],
+          "cell": "lvs_tester",
+          "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 \u03bcm.",
+          "geometries": [
+            {
+              "coordinates": [
+                [
+                  3.46,
+                  -0.095
+                ],
+                [
+                  3.46,
+                  0.1
+                ],
+                [
+                  3.32,
+                  0.095
+                ],
+                [
+                  3.32,
+                  -0.065
+                ]
+              ],
+              "coordinates_truncated": false,
+              "type": "edge-pair"
+            }
+          ],
+          "geometries_truncated": false,
+          "multiplicity": 1,
+          "tags": [],
+          "waived": false
+        },
+        {
+          "category": "M1.b",
+          "category_path": [
+            "M1.b"
+          ],
+          "cell": "lvs_tester",
+          "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 \u03bcm.",
+          "geometries": [
+            {
+              "coordinates": [
+                [
+                  2.93,
+                  -0.065
+                ],
+                [
+                  2.93,
+                  0.095
+                ],
+                [
+                  2.79,
+                  0.1
+                ],
+                [
+                  2.79,
+                  -0.178
+                ]
+              ],
+              "coordinates_truncated": false,
+              "type": "edge-pair"
+            }
+          ],
+          "geometries_truncated": false,
+          "multiplicity": 1,
+          "tags": [],
+          "waived": false
+        },
+        {
+          "category": "M1.b",
+          "category_path": [
+            "M1.b"
+          ],
+          "cell": "nmos$1",
+          "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 \u03bcm.",
+          "geometries": [
+            {
+              "coordinates": [
+                [
+                  0.37,
+                  -0.113
+                ],
+                [
+                  0.37,
+                  -0.005
+                ],
+                [
+                  0.23,
+                  0.108
+                ],
+                [
+                  0.23,
+                  0.0
+                ]
+              ],
+              "coordinates_truncated": false,
+              "type": "edge-pair"
+            }
+          ],
+          "geometries_truncated": false,
+          "multiplicity": 1,
+          "tags": [],
+          "waived": false
+        },
+        {
+          "category": "M1.b",
+          "category_path": [
+            "M1.b"
+          ],
+          "cell": "nmos$1",
+          "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 \u03bcm.",
+          "geometries": [
+            {
+              "coordinates": [
+                [
+                  0.76,
+                  -0.005
+                ],
+                [
+                  0.76,
+                  -0.113
+                ],
+                [
+                  0.9,
+                  0.0
+                ],
+                [
+                  0.9,
+                  0.108
+                ]
+              ],
+              "coordinates_truncated": false,
+              "type": "edge-pair"
+            }
+          ],
+          "geometries_truncated": false,
+          "multiplicity": 1,
+          "tags": [],
+          "waived": false
+        }
+      ],
+      "violations_truncated": false,
+      "waived_violations": 0
+    },
+    "report_output": {
+      "binding_variable": "report",
+      "capture": {
+        "bytes": 123327,
+        "origin": "deck",
+        "parent_anchored": true,
+        "path": "/evidence/lvs-tester.drc.lyrdb",
+        "sha256": "205d85acb90e313a36565feb231953b9b33a96a471ff9ce3f4a12a9dd1840104",
+        "status": "valid",
+        "validation": {
+          "bytes": 123327,
+          "reason": "lyrdb.valid",
+          "valid": true
+        }
+      },
+      "declared_path": "/evidence/lvs-tester.drc.lyrdb",
+      "fresh_required": true,
+      "ownership": "variable",
+      "parent_anchored": true,
+      "path": "/evidence/lvs-tester.drc.lyrdb"
+    },
+    "startup": {
+      "batch_flag": "-b",
+      "configuration_files": "disabled",
+      "database_only": true,
+      "implicit_macros": "disabled"
+    },
+    "top_cell": "lvs_tester",
+    "transcript": {
+      "bytes": 12218,
+      "capture_policy": "bounded process tails",
+      "limitation": "The artifact retains bounded stdout/stderr tails, not an unbounded native log.",
+      "origin": "openada",
+      "path": "/evidence/lvs-tester.drc.lyrdb.openada.log",
+      "sha256": "1c10b0ab38a133f76a143d55198fe6bff11cbb9cc53977579f6895437433da8e",
+      "status": "valid",
+      "stderr_observed_bytes": 0,
+      "stderr_retained_bytes": 0,
+      "stderr_tail": "",
+      "stderr_truncated": false,
+      "stdout_observed_bytes": 80913,
+      "stdout_retained_bytes": 12000,
+      "stdout_tail": "\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule nbulay_block_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule pwell_drw_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule pwell_pin_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule pwell_block_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule emwind_drw_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule emwind_opc_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule deepco_drw_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule mim_drw_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule substrate_drw_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule ic_drw_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule via3_drw_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule pldb_drw_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_drw_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_pin_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_mask_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_filler_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_nofill_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_slit_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_opc_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_noqrc_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_res_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_iprobe_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (446904K) : Executing rule metal4_diffprb_Acute\n2026-07-16 02:22:48 +0200: Memory Usage (44690 ... [truncated] ... 90\n2026-07-16 02:22:49 +0200: Memory Usage (446872K) : Executing rule topvia2_drw_Angle90\n2026-07-16 02:22:49 +0200: Memory Usage (446872K) : Executing rule gatpoly_drw_Angle45\n2026-07-16 02:22:49 +0200: Memory Usage (446844K) : Executing rule activ_drw_Angle45\n2026-07-16 02:22:49 +0200: Memory Usage (446812K) : Executing rule metal1_drw_Angle45\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule metal2_drw_Angle45\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule metal3_drw_Angle45\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule metal4_drw_Angle45\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule metal5_drw_Angle45\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule topmetal1_drw_Angle45\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule topmetal2_drw_Angle45\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Starting 3.2. FORBIDDEN table\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.biwind\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.pemwind\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.baspoly\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.deepco\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.pempoly\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.empoly\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.ldmos\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.pbiwind\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.nodrc\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.flash\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : Executing rule forbidden.colwind\n2026-07-16 02:22:49 +0200: Memory Usage (446784K) : KLayout DRC run for tables 'main' completed in 4.03 seconds\n",
+      "stdout_truncated": true
+    },
+    "transitive_rule_inputs_enumerated": false,
+    "waiver_database": {
+      "declared": false,
+      "path": "/evidence/lvs-tester.drc.lyrdb.w",
+      "policy": "disabled-by-absence",
+      "status": "absent"
+    },
+    "working_directory": "/evidence",
+    "working_directory_is_sandbox": false
+  },
+  "diagnostics": [
+    {
+      "code": "provenance.transitive_rules_unenumerated",
+      "message": "KLayout decks are executable Ruby. Only the main deck, declared provenance inputs, and optional waiver database are hashed by this operation.",
+      "severity": "warning"
+    }
+  ],
+  "engineering": {
+    "status": "fail",
+    "summary": "KLayout reported 8 DRC violation(s)."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/klayout/klayout",
+      "-b",
+      "-r",
+      "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+      "-rd",
+      "input=/design/modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+      "-rd",
+      "report=/evidence/lvs-tester.drc.lyrdb",
+      "-rd",
+      "topcell=lvs_tester"
+    ],
+    "cwd": "/evidence",
+    "duration_ms": 6537,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 3748,
+      "exists": true,
+      "kind": "gds",
+      "path": "/design/modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+      "role": "input",
+      "sha256": "c536ff737248e62cc209a6aec764a7f21750d0978e2e8351a4f0c2a6f144bc96"
+    },
+    {
+      "bytes": 18267,
+      "exists": true,
+      "kind": "klayout-drc-deck",
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+      "role": "rules",
+      "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961"
+    },
+    {
+      "bytes": 41,
+      "exists": true,
+      "kind": "klayout-rules-input",
+      "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+      "role": "rules-dependency",
+      "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+    }
+  ],
+  "operation": "drc",
+  "provenance": {
+    "created_at": "2026-07-16T00:22:49.564761Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "klayout",
+    "path": "/foss/tools/klayout/klayout",
+    "version": "KLayout 0.30.9"
+  }
+}

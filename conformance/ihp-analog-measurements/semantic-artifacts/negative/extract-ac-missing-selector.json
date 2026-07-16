@@ -1,0 +1,76 @@
+{
+  "artifacts": [],
+  "data": {
+    "extensions": {},
+    "extraction": {
+      "extensions": {},
+      "plot": null,
+      "request_sha256": "1af900f5f7c14b4cc120742f1deafea292478370ffbd7ab6580ed66a939f30d3",
+      "series": null,
+      "source": {
+        "analysis_type": "ac",
+        "artifact": {
+          "bytes": 1147866,
+          "exists": true,
+          "kind": "ngspice-raw",
+          "path": "/evidence/provider-ac/work/ota_ac.raw",
+          "role": "simulation.result",
+          "sha256": "c5e74d5f6845221b3344179bfe2711312cb045e799295539ac2eba4165d07415"
+        },
+        "backend": "ngspice",
+        "binding": "not-established",
+        "driver_id": "org.openada.driver.ngspice-pdk-control",
+        "driver_version": "0.5.0",
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "request_id": "24000000-0000-4000-8000-000000000001"
+      },
+      "status": "unknown"
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
+      "implementation_id": "org.openada.kernel.spice3-series",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/result.series.extract/v1alpha1",
+      "request_id": "21100000-0000-4000-8000-000000000001"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "series.selector.missing",
+      "message": "At least one exact native vector selector is absent or ambiguous.",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "unknown",
+    "summary": "The native simulation artifact did not yield a trustworthy normalized series."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 1147866,
+      "exists": true,
+      "kind": "ngspice-raw",
+      "path": "/evidence/provider-ac/work/ota_ac.raw",
+      "role": "simulation.result",
+      "sha256": "c5e74d5f6845221b3344179bfe2711312cb045e799295539ac2eba4165d07415"
+    }
+  ],
+  "operation": "result.series.extract",
+  "provenance": {
+    "created_at": "2026-07-16T00:51:24.583514Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}

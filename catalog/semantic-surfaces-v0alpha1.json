@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.semantic-surface-catalog/v0alpha1",
+  "policy": {
+    "coverage_levels": [
+      "unverified",
+      "contract-tested",
+      "native-replayed",
+      "workflow-validated",
+      "agent-ready"
+    ],
+    "required_levels": {
+      "semantic-execution": "agent-ready",
+      "transport-execution": "agent-ready",
+      "routing": "contract-tested",
+      "discovery": "contract-tested",
+      "administrative": "contract-tested"
+    },
+    "active_lifecycles": ["active"],
+    "extensions": {}
+  },
+  "profiles": [
+    {
+      "repository_path": "profiles/circuit.simulate-v1alpha1.json",
+      "lifecycle": "historical",
+      "dispatchable": false,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/circuit.simulate-v1alpha2.json",
+      "lifecycle": "active",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.measure-v1alpha1.json",
+      "lifecycle": "active",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.series.extract-v1alpha1.json",
+      "lifecycle": "active",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.spectral.measure-v1alpha1.json",
+      "lifecycle": "active",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.transfer.measure-v1alpha1.json",
+      "lifecycle": "active",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/specification.evaluate-v1alpha1.json",
+      "lifecycle": "active",
+      "dispatchable": true,
+      "extensions": {}
+    }
+  ],
+  "surfaces": [
+    {
+      "surface_id": "openada.surface/cli.capabilities/v1",
+      "command_path": ["capabilities"],
+      "classification": "discovery",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.doctor/v1",
+      "command_path": ["doctor"],
+      "classification": "discovery",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.drc/v1",
+      "command_path": ["drc"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.evaluate/v1",
+      "command_path": ["evaluate"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/specification.evaluate/v1alpha1"],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.extract/v1",
+      "command_path": ["extract"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/result.series.extract/v1alpha1"],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.lvs/v1",
+      "command_path": ["lvs"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.measure/v1",
+      "command_path": ["measure"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/result.measure/v1alpha1"],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.netlist/v1",
+      "command_path": ["netlist"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.profile-list/v1",
+      "command_path": ["profile", "list"],
+      "classification": "administrative",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.profile-show/v1",
+      "command_path": ["profile", "show"],
+      "classification": "administrative",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.provider-invoke/v1",
+      "command_path": ["provider", "invoke"],
+      "classification": "transport-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/circuit.simulate/v1alpha2"],
+      "variants": [
+        {
+          "variant_id": "explicit-local-provider",
+          "selector": {"provider_manifest": true},
+          "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+          "provider_id": null,
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.provider-list/v1",
+      "command_path": ["provider", "list"],
+      "classification": "administrative",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.provider-validate/v1",
+      "command_path": ["provider", "validate"],
+      "classification": "administrative",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.rtl-check/v1",
+      "command_path": ["rtl-check"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.simulate/v1",
+      "command_path": ["simulate"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/circuit.simulate/v1alpha2"],
+      "variants": [
+        {
+          "variant_id": "legacy-ngspice",
+          "selector": {"backend": null},
+          "operation_profile": null,
+          "provider_id": "org.openada.driver.ngspice",
+          "extensions": {}
+        },
+        {
+          "variant_id": "shared-ngspice",
+          "selector": {"backend": "ngspice"},
+          "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+          "provider_id": "org.openada.driver.ngspice",
+          "extensions": {}
+        },
+        {
+          "variant_id": "shared-xyce",
+          "selector": {"backend": "xyce"},
+          "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+          "provider_id": "org.openada.driver.xyce",
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.spectral/v1",
+      "command_path": ["spectral"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/result.spectral.measure/v1alpha1"],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.transfer/v1",
+      "command_path": ["transfer"],
+      "classification": "semantic-execution",
+      "lifecycle": "active",
+      "profile_bindings": ["openada.operation/result.transfer.measure/v1alpha1"],
+      "variants": [],
+      "extensions": {}
+    }
+  ],
+  "preflight_assertions": [
+    {
+      "assertion": "drc-clean",
+      "target_surface_id": "openada.surface/cli.drc/v1",
+      "target_operation": "drc",
+      "extensions": {}
+    },
+    {
+      "assertion": "lvs-match",
+      "target_surface_id": "openada.surface/cli.lvs/v1",
+      "target_operation": "lvs",
+      "extensions": {}
+    },
+    {
+      "assertion": "rtl-structural-check-passes",
+      "target_surface_id": "openada.surface/cli.rtl-check/v1",
+      "target_operation": "rtl-check",
+      "extensions": {}
+    },
+    {
+      "assertion": "schematic-netlist-generated",
+      "target_surface_id": "openada.surface/cli.netlist/v1",
+      "target_operation": "netlist",
+      "extensions": {}
+    },
+    {
+      "assertion": "spice-analysis-evidence-valid",
+      "target_surface_id": "openada.surface/cli.simulate/v1",
+      "target_operation": "simulate",
+      "extensions": {}
+    }
+  ],
+  "provider_mappings": [
+    {
+      "provider_id": "org.openada.driver.ngspice",
+      "provider_kind": "eda-driver",
+      "native_product": "ngspice",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/simulation.analysis.op/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
+        {"id": "openada.feature/simulation.analysis.dc/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
+        {"id": "openada.feature/simulation.analysis.ac/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
+        {"id": "openada.feature/simulation.analysis.tran/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.xyce",
+      "provider_kind": "eda-driver",
+      "native_product": "xyce",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/simulation.analysis.dc/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
+        {"id": "openada.feature/simulation.analysis.ac/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
+        {"id": "openada.feature/simulation.analysis.tran/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.kernel.spice3-series",
+      "provider_kind": "evidence-kernel",
+      "native_product": null,
+      "operation_profile": "openada.operation/result.series.extract/v1alpha1",
+      "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.kernel.typed-evidence",
+      "provider_kind": "evidence-kernel",
+      "native_product": null,
+      "operation_profile": "openada.operation/result.measure/v1alpha1",
+      "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/measurement.sample-at/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
+        {"id": "openada.feature/measurement.minimum/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
+        {"id": "openada.feature/measurement.maximum/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
+        {"id": "openada.feature/measurement.mean/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
+        {"id": "openada.feature/measurement.rms/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
+        {"id": "openada.feature/measurement.crossing/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
+        {"id": "openada.feature/measurement.rise-time/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
+        {"id": "openada.feature/measurement.fall-time/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
+        {"id": "openada.feature/measurement.settling-time/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.kernel.spectral-evidence",
+      "provider_kind": "evidence-kernel",
+      "native_product": null,
+      "operation_profile": "openada.operation/result.spectral.measure/v1alpha1",
+      "assertion_profile": "openada.assertion/spectral.measurement.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/spectral.snr/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
+        {"id": "openada.feature/spectral.sinad/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
+        {"id": "openada.feature/spectral.thd/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
+        {"id": "openada.feature/spectral.sfdr/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.kernel.transfer-evidence",
+      "provider_kind": "evidence-kernel",
+      "native_product": null,
+      "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+      "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/transfer.low-frequency-gain/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
+        {"id": "openada.feature/transfer.bandwidth-3db/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
+        {"id": "openada.feature/transfer.unity-gain-frequency/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
+        {"id": "openada.feature/transfer.phase-margin/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.kernel.typed-evidence",
+      "provider_kind": "evidence-kernel",
+      "native_product": null,
+      "operation_profile": "openada.operation/specification.evaluate/v1alpha1",
+      "assertion_profile": "openada.assertion/specification.satisfied/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/specification.bound-evaluation/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
+        {"id": "openada.feature/specification.condition-binding/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}}
+      ],
+      "extensions": {}
+    }
+  ],
+  "provider_manifests": [
+    {
+      "repository_path": "providers/ngspice-pdk-control/driver-manifest.json",
+      "lifecycle": "active",
+      "extensions": {}
+    }
+  ],
+  "extensions": {}
+}

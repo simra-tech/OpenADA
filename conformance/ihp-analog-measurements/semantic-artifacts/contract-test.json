@@ -1,0 +1,15 @@
+{
+  "checks": [
+    "semantic-chain manifest schema",
+    "result envelopes and exact operation protocol",
+    "provider 0.5.0 request/artifact binding",
+    "independent native Spice3 parsing",
+    "independent transfer and spectral recomputation",
+    "closed IEEE scope-only context"
+  ],
+  "extensions": {},
+  "manifest_sha256": "160e56972102681d6cf71b517896621928c395a14a95e56bb62cbc1bcdf30f98",
+  "requests_sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+  "schema": "openada.ihp-analog-contract-test/v0alpha1",
+  "status": "pass"
+}

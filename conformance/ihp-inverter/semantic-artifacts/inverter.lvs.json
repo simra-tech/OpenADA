@@ -1,0 +1,42 @@
+[
+  {
+   "name": [
+      "inverter",
+      "inverter"
+   ],
+   "devices": [
+       [
+         ["sg13_lv_nmos", 1],
+         ["sg13_lv_pmos", 1],
+         ["ntap1", 1],
+         ["ptap1", 1 ]
+       ], [
+         ["sg13_lv_nmos", 1 ],
+         ["sg13_lv_pmos", 1 ],
+         ["ntap1", 1 ],
+         ["ptap1", 1 ]
+       ]
+   ],
+   "nets": [
+    6,
+    6
+   ],
+   "badnets": [
+   ],
+   "badelements": [
+   ],
+   "pins": [
+      [
+        "Vout",
+        "Vin",
+        "Gnd",
+        "Vdd"
+      ], [
+        "Vout",
+        "Vin",
+        "Gnd",
+        "Vdd"
+      ]
+   ]
+  }
+]

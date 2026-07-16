@@ -1,0 +1,6 @@
+read_verilog -sv "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"
+hierarchy -check -top sar_logic
+proc
+opt
+check -assert
+write_json "netlist.json"

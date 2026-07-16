@@ -1,0 +1,70 @@
+{
+  "basis": [
+    "the pinned public source elaborated as exactly one sar_logic top module",
+    "the exact five-input and three-output interface is retained, including 8-bit B, BN, and D",
+    "B is structurally aliased to D; counter, BN, and D map to three state elements with widths 4, 8, and 8",
+    "Yosys check -assert completed with no warnings or errors and a parsed native JSON netlist",
+    "an independent parser bound the source, script, result, transcript, JSON structure, image, and tool",
+    "the real missing-top negative failed with the required native diagnostic",
+    "reconciled native-JSON port tampering was rejected by the independent structural oracle"
+  ],
+  "block_conditions": [
+    "any source, image, wrapper, tool, script, native artifact, or manifest digest differs",
+    "the independent oracle no longer finds the exact interface and reviewed state structure",
+    "native Yosys reports warnings, errors, black boxes, missing JSON, or nonzero exit"
+  ],
+  "chain_id": "openada.chain/ihp-sar-rtl/v1",
+  "decision": "proceed",
+  "evidence": {
+    "negative_replay": {
+      "bytes": 652,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/real-missing-top.json",
+      "sha256": "a36eb81e84bdc5989585a75b96a5d5b932e1fbe4b64818e0fd65a6e5e60982a6"
+    },
+    "normalized": {
+      "bytes": 5551,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-normalized.json",
+      "sha256": "21f65f69e0fd7b40caec5a53fdd515c3652048ffac0e01ff8b7af307c2a79de3"
+    },
+    "oracle": {
+      "bytes": 4506,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
+      "sha256": "233ed076624b3812b874ce3262c501790974d6935322879086f34d9dd936d5f3"
+    },
+    "tamper_replay": {
+      "bytes": 724,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/reconciled-json-port-removal.json",
+      "sha256": "3ba6347a01d6e7e464c0839a552f6f2ffbb3b0383733b632a36e22d8045f4d73"
+    }
+  },
+  "limitations": [
+    {
+      "id": "structural-elaboration-only",
+      "impact": "This proves pinned Yosys elaboration and check -assert structural checks; it does not prove cycle-accurate behavior, formal properties, or mixed-signal behavior."
+    },
+    {
+      "id": "no-timing-or-physical-closure",
+      "impact": "No synthesis constraints, static timing analysis, clock-domain analysis, place-and-route, power analysis, DRC, or LVS is part of this RTL chain."
+    },
+    {
+      "id": "implementation-specific-language-support",
+      "impact": "The source is parsed with Yosys read_verilog -sv. The chain records pinned Yosys behavior and is not a certification of complete IEEE 1800-2023 support."
+    },
+    {
+      "id": "real-negative-is-missing-top",
+      "impact": "The native negative replay proves an invalid top request is blocked; it is not a mutation of the reviewed SAR source and does not weaken its proceed decision."
+    },
+    {
+      "id": "dirty-checkout-recorded",
+      "impact": "The run binds the OpenADA checkout state before and after execution. A dirty but unchanged checkout is reproducible evidence, not a commit-exact release receipt."
+    }
+  ],
+  "next_checks": [
+    "run directed and randomized RTL simulation against SAR sequencing requirements",
+    "add formal assertions for reset, counter termination, and B/D/BN relationships",
+    "review reset and clock-domain behavior at the mixed-signal integration boundary",
+    "synthesize with target constraints and run static timing, lint, and implementation checks"
+  ],
+  "schema": "openada.rtl-engineering-decision/v0alpha1",
+  "scope": "continue to behavioral, formal, timing, and mixed-signal verification; not tapeout signoff"
+}

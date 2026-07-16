@@ -1,0 +1,108 @@
+{
+  "schema": "openada.conformance/v0alpha1",
+  "id": "ihp-sar-rtl-check",
+  "description": "Pinned structural RTL check of the public IHP AnalogAcademy 8-bit SAR controller, including a real missing-top negative replay.",
+  "design": {
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    }
+  },
+  "runtime": {
+    "image": {
+      "name": "hpretl/iic-osic-tools",
+      "tag": "2026.06",
+      "platform": "linux/amd64",
+      "manifest_digest": "sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+      "config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+      "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"
+    },
+    "tool": {
+      "name": "yosys",
+      "wrapper_path": "/openada/conformance/ihp-sar-rtl/yosys_wrapper.py",
+      "native_path": "/foss/tools/yosys/bin/yosys",
+      "version": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)"
+    }
+  },
+  "policy": {
+    "setup_network": "allowed for the pinned Git fetch and image pull only",
+    "eda_network": "none",
+    "openada_mount": "read-only",
+    "design_mount": "read-only",
+    "evidence_directory": "new and writable"
+  },
+  "source": {
+    "path": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v",
+    "repository_path": "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v",
+    "kind": "hdl-source",
+    "role": "input",
+    "bytes": 576,
+    "sha256": "b33c7b25215ac916b3b07e0dc385ae353294f6872eaa226f4c0126ecfd7063da"
+  },
+  "operations": {
+    "rtl_check": {
+      "top": "sar_logic",
+      "output_directory": "/evidence/positive",
+      "json_netlist": "/evidence/positive/sar_logic.json",
+      "result_filename": "positive/rtl-check.result.json",
+      "script": {
+        "path": "/evidence/positive/rtl-check.ys",
+        "filename": "positive/rtl-check.ys",
+        "kind": "yosys-script",
+        "role": "evidence"
+      },
+      "netlist": {
+        "path": "/evidence/positive/sar_logic.json",
+        "filename": "positive/sar_logic.json",
+        "kind": "yosys-json",
+        "role": "output"
+      },
+      "transcript": {
+        "path": "/evidence/positive/yosys.transcript.json",
+        "filename": "positive/yosys.transcript.json",
+        "kind": "yosys-native-transcript",
+        "role": "evidence"
+      },
+      "container_timeout_seconds": 180,
+      "tool_timeout_seconds": 120,
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "pass",
+        "summary": "Yosys elaborated the RTL and completed structural checks.",
+        "json_validation": "parsed"
+      }
+    },
+    "missing_top": {
+      "top": "missing_sar_logic",
+      "output_directory": "/evidence/negative",
+      "json_netlist": "/evidence/negative/missing_sar_logic.json",
+      "result_filename": "negative/rtl-check.result.json",
+      "script": {
+        "path": "/evidence/negative/rtl-check.ys",
+        "filename": "negative/rtl-check.ys",
+        "kind": "yosys-script",
+        "role": "evidence"
+      },
+      "transcript": {
+        "path": "/evidence/negative/yosys.transcript.json",
+        "filename": "negative/yosys.transcript.json",
+        "kind": "yosys-native-transcript",
+        "role": "evidence"
+      },
+      "container_timeout_seconds": 180,
+      "tool_timeout_seconds": 120,
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 1,
+        "engineering_status": "fail",
+        "summary": "Yosys reported an RTL elaboration or structural-check error.",
+        "diagnostic": "ERROR: Module `missing_sar_logic' not found!",
+        "json_validation": "missing"
+      }
+    }
+  }
+}

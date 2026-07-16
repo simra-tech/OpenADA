@@ -1,0 +1,313 @@
+{
+  "basis": [
+    "the pinned public source elaborated as exactly one sar_logic top module",
+    "the exact five-input and three-output interface is retained, including 8-bit B, BN, and D",
+    "B is structurally aliased to D; counter, BN, and D map to three state elements with widths 4, 8, and 8",
+    "Yosys check -assert completed with no warnings or errors and a parsed native JSON netlist",
+    "an independent parser bound the source, script, result, transcript, JSON structure, image, and tool",
+    "the real missing-top negative failed with the required native diagnostic",
+    "reconciled native-JSON port tampering was rejected by the independent structural oracle"
+  ],
+  "chain_id": "openada.chain/ihp-sar-rtl/v1",
+  "decision": "proceed",
+  "limitations": [
+    {
+      "id": "structural-elaboration-only",
+      "impact": "This proves pinned Yosys elaboration and check -assert structural checks; it does not prove cycle-accurate behavior, formal properties, or mixed-signal behavior."
+    },
+    {
+      "id": "no-timing-or-physical-closure",
+      "impact": "No synthesis constraints, static timing analysis, clock-domain analysis, place-and-route, power analysis, DRC, or LVS is part of this RTL chain."
+    },
+    {
+      "id": "implementation-specific-language-support",
+      "impact": "The source is parsed with Yosys read_verilog -sv. The chain records pinned Yosys behavior and is not a certification of complete IEEE 1800-2023 support."
+    },
+    {
+      "id": "real-negative-is-missing-top",
+      "impact": "The native negative replay proves an invalid top request is blocked; it is not a mutation of the reviewed SAR source and does not weaken its proceed decision."
+    },
+    {
+      "id": "dirty-checkout-recorded",
+      "impact": "The run binds the OpenADA checkout state before and after execution. A dirty but unchanged checkout is reproducible evidence, not a commit-exact release receipt."
+    }
+  ],
+  "next_checks": [
+    "run directed and randomized RTL simulation against SAR sequencing requirements",
+    "add formal assertions for reset, counter termination, and B/D/BN relationships",
+    "review reset and clock-domain behavior at the mixed-signal integration boundary",
+    "synthesize with target constraints and run static timing, lint, and implementation checks"
+  ],
+  "operations": {
+    "missing_top_negative": {
+      "decision": "block",
+      "diagnostic": "ERROR: Module `missing_sar_logic' not found!",
+      "engineering_status": "fail",
+      "exit_code": 1
+    },
+    "rtl_structural_check": {
+      "assertion": "rtl-structural-check-passes",
+      "engineering_status": "pass",
+      "evidence": {
+        "b_aliases_d": true,
+        "blackbox_cells": 0,
+        "cell_count": 18,
+        "cell_type_counts": {
+          "$add": 1,
+          "$and": 2,
+          "$eq": 1,
+          "$logic_and": 2,
+          "$neg": 1,
+          "$not": 2,
+          "$or": 2,
+          "$sdffe": 3,
+          "$shift": 3,
+          "$xor": 1
+        },
+        "counter_width": 4,
+        "creator": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)",
+        "module_names": [
+          "sar_logic"
+        ],
+        "ports": {
+          "B": {
+            "bits": [
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "direction": "output",
+            "width": 8
+          },
+          "BN": {
+            "bits": [
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "direction": "output",
+            "width": 8
+          },
+          "D": {
+            "bits": [
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "direction": "output",
+            "width": 8
+          },
+          "En": {
+            "bits": [
+              4
+            ],
+            "direction": "input",
+            "width": 1
+          },
+          "Om": {
+            "bits": [
+              5
+            ],
+            "direction": "input",
+            "width": 1
+          },
+          "Op": {
+            "bits": [
+              3
+            ],
+            "direction": "input",
+            "width": 1
+          },
+          "clk": {
+            "bits": [
+              2
+            ],
+            "direction": "input",
+            "width": 1
+          },
+          "rst": {
+            "bits": [
+              6
+            ],
+            "direction": "input",
+            "width": 1
+          }
+        },
+        "state_widths": [
+          4,
+          8,
+          8
+        ]
+      },
+      "execution_status": "completed",
+      "exit_code": 0,
+      "native_artifacts": [
+        {
+          "bytes": 1902,
+          "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
+          "sha256": "3269ee1e04e1123ecdfbc91574b29a5949cce5744bd68427d4dc39a0eb53dc74"
+        },
+        {
+          "bytes": 190,
+          "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.ys",
+          "sha256": "4c61fff924adbfe0f9022d88309da79ee2c2951f441c912586157a7200e30137"
+        },
+        {
+          "bytes": 25451,
+          "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/sar_logic.json",
+          "sha256": "7b1e3f7f8e256db0e29ace683d6c2b5c90fd1e173c436a8fe8726395782d752a"
+        },
+        {
+          "bytes": 507,
+          "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
+          "sha256": "f932bceca691f19a055211f28d518ef2e3757e987b6fcc13541bcf4e590f154b"
+        },
+        {
+          "bytes": 1985,
+          "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
+          "sha256": "eadb9206c02361b706bc6e15c61f3a00fef73ee4a15a85cb204645c9a24226a7"
+        },
+        {
+          "bytes": 198,
+          "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.ys",
+          "sha256": "4855a5981b1d0b10525004bb90242f4d77bdb749a0ae57ecfc02ee6a1bba3b3b"
+        },
+        {
+          "bytes": 568,
+          "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
+          "sha256": "17bc1d2f212aafe0235c67eb2f0ef12945b0025fdb9b5acf2f7da4c4c37055f6"
+        },
+        {
+          "bytes": 3019,
+          "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
+          "sha256": "313159ef47dd55194af9dc9cf5e053e0686c966669127d1dfb1e2cc5bad4e100"
+        }
+      ],
+      "summary": "Yosys elaborated the RTL and completed structural checks.",
+      "surface_id": "openada.surface/cli.rtl-check/v1"
+    }
+  },
+  "replays": {
+    "negative_replays": [
+      {
+        "covers": [
+          "surface|openada.surface/cli.rtl-check/v1",
+          "preflight|rtl-structural-check-passes"
+        ],
+        "engineering_status": "fail",
+        "execution_status": "completed",
+        "exit_code": 1,
+        "expected_status": "fail",
+        "fixture": "the pinned source with a real native Yosys request for missing_sar_logic",
+        "id": "real-missing-top",
+        "native_transcript_bound": true,
+        "observed_diagnostic": "ERROR: Module `missing_sar_logic' not found!",
+        "required_diagnostic": "ERROR: Module `missing_sar_logic' not found!",
+        "status": "observed"
+      }
+    ],
+    "tamper_replays": [
+      {
+        "covers": [
+          "surface|openada.surface/cli.rtl-check/v1",
+          "preflight|rtl-structural-check-passes"
+        ],
+        "expected_status": "unknown",
+        "id": "reconciled-json-port-removal",
+        "mutation": "removed the rst port from native Yosys JSON and reconciled both the OpenADA artifact digest and run-level artifact digests",
+        "observed_diagnostic": "positive Yosys JSON ports differ; expected=['B', 'BN', 'D', 'En', 'Om', 'Op', 'clk', 'rst'], got=['B', 'BN', 'D', 'En', 'Om', 'Op', 'clk']",
+        "required_diagnostic": "positive Yosys JSON ports",
+        "status": "rejected",
+        "verifier": "conformance/ihp-sar-rtl/verify.py"
+      }
+    ]
+  },
+  "schema": "openada.rtl-agent-evidence/v0alpha1",
+  "scope": "continue to behavioral, formal, timing, and mixed-signal verification; not tapeout signoff",
+  "standards": {
+    "hdl_language": {
+      "basis": "The driver invokes read_verilog -sv, while the evidence certifies only the pinned Yosys implementation behavior and not full language-standard compliance.",
+      "official_url": "https://standards.ieee.org/ieee/1800/7743/",
+      "standard": "IEEE 1800-2023",
+      "status": "context-only"
+    },
+    "ieee_measurement_standard": {
+      "basis": "This chain performs RTL elaboration and structural checks; it computes no electrical or signal-quality measurement such as SNR.",
+      "status": "not-applicable"
+    }
+  },
+  "trust_chain": {
+    "decision": {
+      "bytes": 3678,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-decision.json",
+      "sha256": "38ca8bc2a8bfbb58013d6a24be0eac6f5a67a9799a3023ef6c2c0868b4b7bd6f"
+    },
+    "native_artifacts": [
+      {
+        "bytes": 1902,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
+        "sha256": "3269ee1e04e1123ecdfbc91574b29a5949cce5744bd68427d4dc39a0eb53dc74"
+      },
+      {
+        "bytes": 190,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.ys",
+        "sha256": "4c61fff924adbfe0f9022d88309da79ee2c2951f441c912586157a7200e30137"
+      },
+      {
+        "bytes": 25451,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/sar_logic.json",
+        "sha256": "7b1e3f7f8e256db0e29ace683d6c2b5c90fd1e173c436a8fe8726395782d752a"
+      },
+      {
+        "bytes": 507,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
+        "sha256": "f932bceca691f19a055211f28d518ef2e3757e987b6fcc13541bcf4e590f154b"
+      },
+      {
+        "bytes": 1985,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
+        "sha256": "eadb9206c02361b706bc6e15c61f3a00fef73ee4a15a85cb204645c9a24226a7"
+      },
+      {
+        "bytes": 198,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.ys",
+        "sha256": "4855a5981b1d0b10525004bb90242f4d77bdb749a0ae57ecfc02ee6a1bba3b3b"
+      },
+      {
+        "bytes": 568,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
+        "sha256": "17bc1d2f212aafe0235c67eb2f0ef12945b0025fdb9b5acf2f7da4c4c37055f6"
+      },
+      {
+        "bytes": 3019,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
+        "sha256": "313159ef47dd55194af9dc9cf5e053e0686c966669127d1dfb1e2cc5bad4e100"
+      }
+    ],
+    "normalized": {
+      "bytes": 5551,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-normalized.json",
+      "sha256": "21f65f69e0fd7b40caec5a53fdd515c3652048ffac0e01ff8b7af307c2a79de3"
+    },
+    "oracle": {
+      "bytes": 4506,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
+      "sha256": "233ed076624b3812b874ce3262c501790974d6935322879086f34d9dd936d5f3"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "conditions": [
+    {
+      "name": "temperature",
+      "unit": "degC",
+      "value": 27.0
+    },
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    },
+    {
+      "name": "application",
+      "unit": "1",
+      "value": "digital-inverter-square-wave"
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "v(vout)",
+      "output_name": "v(vout)",
+      "unit": "V"
+    }
+  ]
+}

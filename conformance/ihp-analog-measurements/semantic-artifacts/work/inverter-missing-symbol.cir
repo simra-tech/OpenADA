@@ -1,0 +1,37 @@
+** sch_path: /evidence/sources/inverter-missing-symbol.sch
+**.subckt inverter-missing-symbol
+V1 Vin GND PULSE(0 1.2 0.5u 10n 10n 0.98u 2u)
+V2 Vdd GND 1.2
+x1 Vdd Vin Vout GND inverter
+*  x_openada_measurement_missing -  __openada_measurement_missing__  IS MISSING !!!!
+**** begin user architecture code
+
+
+.control
+save all
+tran 31.25n 32.46875u 0.5u
+linearize
+write inverter_spectral.raw
+.endc
+
+
+
+.lib cornerMOSlv.lib mos_tt
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  inverter.sym # of pins=4
+** sym_path: /design/modules/module_0_foundations/inverter/inverter.sym
+** sch_path: /design/modules/module_0_foundations/inverter/inverter.sch
+.subckt inverter Vdd Vin Vout Gnd
+*.iopin Vout
+*.iopin Vdd
+*.iopin Vin
+*.iopin Gnd
+XM1 Gnd Vin Vout Gnd sg13_lv_nmos w=1.0u l=0.45u ng=1 m=1 mm_ok=1
+XM2 Vout Vin Vdd Vdd sg13_lv_pmos w=2.0u l=0.45u ng=1 m=1 mm_ok=1
+.ends
+
+.GLOBAL GND
+.end

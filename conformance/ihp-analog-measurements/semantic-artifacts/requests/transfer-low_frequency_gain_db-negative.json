@@ -1,0 +1,28 @@
+{
+  "extensions": {},
+  "input": {
+    "imaginary": "vp.imag",
+    "real": "vp.real"
+  },
+  "interpretation": "forward",
+  "measurement_id": "ota.open-loop.low-frequency-gain-db",
+  "method": {
+    "bandwidth_drop_db": 3.0,
+    "bandwidth_reference": "first-simulated-frequency-magnitude",
+    "crossing_policy": "require-single-falling",
+    "first_phase_range": "[-180,180)",
+    "id": "openada.method/ac-complex-ratio-log-interpolation/v1alpha1",
+    "interpolation": "linear-value-over-log10-frequency",
+    "phase_margin_definition": "180deg-plus-unwrapped-loop-phase-at-unity",
+    "phase_unwrap": "first-principal-then-nearest-delta",
+    "ratio": "output-over-input"
+  },
+  "metric": {
+    "kind": "low_frequency_gain_db",
+    "unit": "Hz"
+  },
+  "output": {
+    "imaginary": "vout.imag",
+    "real": "vout.real"
+  }
+}

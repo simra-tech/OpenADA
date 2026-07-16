@@ -1,0 +1,590 @@
+{
+  "artifacts": [],
+  "data": {
+    "extensions": {},
+    "measurement": {
+      "algorithm": {
+        "id": "openada.algorithm/spectral.snr/v1alpha1",
+        "version": "1.0.0"
+      },
+      "extensions": {},
+      "kind": "snr",
+      "location": {
+        "unit": "Hz",
+        "value": 499999.9999999942
+      },
+      "measurement_id": "inverter.output.snr",
+      "request_sha256": "bf82abf07fc3514d6747fb06e1acb8c74fb34bf3ffa7c594263579c47b7c857f",
+      "sample_count": 1024,
+      "signal": "v(vout)",
+      "source": {
+        "artifact_role": "measurement.source",
+        "artifact_sha256": "0e7ec212289a7020656c8276381f87ca887208a23c0feb445e59b58e4ec0d9e1",
+        "conditions": [
+          {
+            "name": "temperature",
+            "unit": "degC",
+            "value": 27.0
+          },
+          {
+            "name": "corner",
+            "unit": "1",
+            "value": "mos_tt"
+          },
+          {
+            "name": "supply_voltage",
+            "unit": "V",
+            "value": 1.2
+          },
+          {
+            "name": "application",
+            "unit": "1",
+            "value": "digital-inverter-square-wave"
+          }
+        ],
+        "conditions_sha256": "b129933ebdb75e151f447ec515fee2c43b83d3bd27a2a95ac9d8632feaeab3a0",
+        "lineage": {
+          "artifact_role": "simulation.result",
+          "artifact_sha256": "d6964199a2cef20939d948d48680f96e12998af3189d1c1ea6990993798b4de8",
+          "binding": "unverified",
+          "operation": "circuit.simulate",
+          "request_id": "24000000-0000-4000-8000-000000000002"
+        },
+        "operation": "openada.operation/result.series.extract/v1alpha1",
+        "request_id": "21000000-0000-4000-8000-000000000002",
+        "series_sha256": "0e7ec212289a7020656c8276381f87ca887208a23c0feb445e59b58e4ec0d9e1"
+      },
+      "status": "measured",
+      "unit": "dB",
+      "value": 93.28584204310002
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/spectral.measurement.valid/v1alpha1",
+      "implementation_id": "org.openada.kernel.spectral-evidence",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/result.spectral.measure/v1alpha1",
+      "request_id": "23000000-0000-4000-8000-000000000001"
+    },
+    "spectral": {
+      "acquisition": {
+        "bin_width_hz": 31249.999999999636,
+        "clipping": "not_assessed",
+        "max_uniformity_relative_error": 9.571472303973483e-14,
+        "missing_samples": "rejected",
+        "nyquist_hz": 15999999.999999814,
+        "sample_count": 1024,
+        "sample_rate_hz": 31999999.999999627
+      },
+      "band": {
+        "lower_hz": 0.0,
+        "upper_hz": 15999999.0
+      },
+      "extensions": {},
+      "fundamental": {
+        "bin": 16,
+        "frequency_hz": 499999.9999999942,
+        "power": 0.2913359670485029,
+        "requested_frequency_hz": 500000.0
+      },
+      "harmonics": [
+        {
+          "bin": 32,
+          "folded_frequency_hz": 999999.9999999884,
+          "included": true,
+          "order": 2,
+          "power": 0.0006964963138682125,
+          "source_frequency_hz": 999999.9999999884
+        },
+        {
+          "bin": 48,
+          "folded_frequency_hz": 1499999.9999999825,
+          "included": true,
+          "order": 3,
+          "power": 0.031955062637044,
+          "source_frequency_hz": 1499999.9999999825
+        },
+        {
+          "bin": 64,
+          "folded_frequency_hz": 1999999.9999999767,
+          "included": true,
+          "order": 4,
+          "power": 0.0006964964693703666,
+          "source_frequency_hz": 1999999.9999999767
+        },
+        {
+          "bin": 80,
+          "folded_frequency_hz": 2499999.999999971,
+          "included": true,
+          "order": 5,
+          "power": 0.011206347897265451,
+          "source_frequency_hz": 2499999.999999971
+        },
+        {
+          "bin": 96,
+          "folded_frequency_hz": 2999999.999999965,
+          "included": true,
+          "order": 6,
+          "power": 0.0006964968729894533,
+          "source_frequency_hz": 2999999.999999965
+        },
+        {
+          "bin": 112,
+          "folded_frequency_hz": 3499999.999999959,
+          "included": true,
+          "order": 7,
+          "power": 0.00549214917227743,
+          "source_frequency_hz": 3499999.999999959
+        },
+        {
+          "bin": 128,
+          "folded_frequency_hz": 3999999.9999999534,
+          "included": true,
+          "order": 8,
+          "power": 0.0006964977071019306,
+          "source_frequency_hz": 3999999.9999999534
+        },
+        {
+          "bin": 144,
+          "folded_frequency_hz": 4499999.999999948,
+          "included": true,
+          "order": 9,
+          "power": 0.003143279217678349,
+          "source_frequency_hz": 4499999.999999948
+        },
+        {
+          "bin": 160,
+          "folded_frequency_hz": 4999999.999999942,
+          "included": true,
+          "order": 10,
+          "power": 0.0006964991742667553,
+          "source_frequency_hz": 4999999.999999942
+        },
+        {
+          "bin": 176,
+          "folded_frequency_hz": 5499999.999999936,
+          "included": true,
+          "order": 11,
+          "power": 0.001957247355484259,
+          "source_frequency_hz": 5499999.999999936
+        },
+        {
+          "bin": 192,
+          "folded_frequency_hz": 5999999.99999993,
+          "included": true,
+          "order": 12,
+          "power": 0.0006965014528003974,
+          "source_frequency_hz": 5999999.99999993
+        },
+        {
+          "bin": 208,
+          "folded_frequency_hz": 6499999.999999925,
+          "included": true,
+          "order": 13,
+          "power": 0.0012783642677108974,
+          "source_frequency_hz": 6499999.999999925
+        },
+        {
+          "bin": 224,
+          "folded_frequency_hz": 6999999.999999918,
+          "included": true,
+          "order": 14,
+          "power": 0.0006965046540860271,
+          "source_frequency_hz": 6999999.999999918
+        },
+        {
+          "bin": 240,
+          "folded_frequency_hz": 7499999.999999912,
+          "included": true,
+          "order": 15,
+          "power": 0.000856002878776761,
+          "source_frequency_hz": 7499999.999999912
+        },
+        {
+          "bin": 256,
+          "folded_frequency_hz": 7999999.999999907,
+          "included": true,
+          "order": 16,
+          "power": 0.0006965087879610064,
+          "source_frequency_hz": 7999999.999999907
+        },
+        {
+          "bin": 272,
+          "folded_frequency_hz": 8499999.999999901,
+          "included": true,
+          "order": 17,
+          "power": 0.0005776578671731496,
+          "source_frequency_hz": 8499999.999999901
+        },
+        {
+          "bin": 288,
+          "folded_frequency_hz": 8999999.999999896,
+          "included": true,
+          "order": 18,
+          "power": 0.0006965137420565416,
+          "source_frequency_hz": 8999999.999999896
+        },
+        {
+          "bin": 304,
+          "folded_frequency_hz": 9499999.99999989,
+          "included": true,
+          "order": 19,
+          "power": 0.0003868189234923962,
+          "source_frequency_hz": 9499999.99999989
+        },
+        {
+          "bin": 320,
+          "folded_frequency_hz": 9999999.999999885,
+          "included": true,
+          "order": 20,
+          "power": 0.0006965192789318821,
+          "source_frequency_hz": 9999999.999999885
+        },
+        {
+          "bin": 336,
+          "folded_frequency_hz": 10499999.999999877,
+          "included": true,
+          "order": 21,
+          "power": 0.0002526712019197542,
+          "source_frequency_hz": 10499999.999999877
+        },
+        {
+          "bin": 352,
+          "folded_frequency_hz": 10999999.999999871,
+          "included": true,
+          "order": 22,
+          "power": 0.0006965250521198834,
+          "source_frequency_hz": 10999999.999999871
+        },
+        {
+          "bin": 368,
+          "folded_frequency_hz": 11499999.999999866,
+          "included": true,
+          "order": 23,
+          "power": 0.0001573613634682329,
+          "source_frequency_hz": 11499999.999999866
+        },
+        {
+          "bin": 384,
+          "folded_frequency_hz": 11999999.99999986,
+          "included": true,
+          "order": 24,
+          "power": 0.0006965306391313267,
+          "source_frequency_hz": 11999999.99999986
+        },
+        {
+          "bin": 400,
+          "folded_frequency_hz": 12499999.999999855,
+          "included": true,
+          "order": 25,
+          "power": 9.009644628491676e-05,
+          "source_frequency_hz": 12499999.999999855
+        },
+        {
+          "bin": 416,
+          "folded_frequency_hz": 12999999.99999985,
+          "included": true,
+          "order": 26,
+          "power": 0.0006965355859678964,
+          "source_frequency_hz": 12999999.99999985
+        },
+        {
+          "bin": 432,
+          "folded_frequency_hz": 13499999.999999844,
+          "included": true,
+          "order": 27,
+          "power": 4.419868851284e-05,
+          "source_frequency_hz": 13499999.999999844
+        },
+        {
+          "bin": 448,
+          "folded_frequency_hz": 13999999.999999836,
+          "included": true,
+          "order": 28,
+          "power": 0.0006965394498516809,
+          "source_frequency_hz": 13999999.999999836
+        },
+        {
+          "bin": 464,
+          "folded_frequency_hz": 14499999.99999983,
+          "included": true,
+          "order": 29,
+          "power": 1.5555590668933726e-05,
+          "source_frequency_hz": 14499999.99999983
+        },
+        {
+          "bin": 480,
+          "folded_frequency_hz": 14999999.999999825,
+          "included": true,
+          "order": 30,
+          "power": 0.0006965417405332107,
+          "source_frequency_hz": 14999999.999999825
+        },
+        {
+          "bin": 496,
+          "folded_frequency_hz": 15499999.99999982,
+          "included": true,
+          "order": 31,
+          "power": 1.7831704472442974e-06,
+          "source_frequency_hz": 15499999.99999982
+        }
+      ],
+      "method": {
+        "averaging": "none",
+        "clipping": "not-assessed",
+        "coherent_bin_tolerance": 1e-09,
+        "coherent_sampling": "required",
+        "detrend": "mean",
+        "dft_length": 1024,
+        "id": "openada.method/coherent-single-tone-fft/v1alpha1",
+        "missing_samples": "reject",
+        "scaling": "mean-square-per-bin",
+        "sidedness": "one-sided",
+        "uniformity_relative_tolerance": 1e-09,
+        "window": "rectangular"
+      },
+      "partition": {
+        "band_bin_ranges": [
+          {
+            "start": 0,
+            "stop": 511
+          }
+        ],
+        "dc_bins": [
+          0
+        ],
+        "fundamental_bins": [
+          16
+        ],
+        "harmonic_bins": [
+          32,
+          48,
+          64,
+          80,
+          96,
+          112,
+          128,
+          144,
+          160,
+          176,
+          192,
+          208,
+          224,
+          240,
+          256,
+          272,
+          288,
+          304,
+          320,
+          336,
+          352,
+          368,
+          384,
+          400,
+          416,
+          432,
+          448,
+          464,
+          480,
+          496
+        ],
+        "noise_bin_count": 480,
+        "noise_bin_ranges": [
+          {
+            "start": 1,
+            "stop": 15
+          },
+          {
+            "start": 17,
+            "stop": 31
+          },
+          {
+            "start": 33,
+            "stop": 47
+          },
+          {
+            "start": 49,
+            "stop": 63
+          },
+          {
+            "start": 65,
+            "stop": 79
+          },
+          {
+            "start": 81,
+            "stop": 95
+          },
+          {
+            "start": 97,
+            "stop": 111
+          },
+          {
+            "start": 113,
+            "stop": 127
+          },
+          {
+            "start": 129,
+            "stop": 143
+          },
+          {
+            "start": 145,
+            "stop": 159
+          },
+          {
+            "start": 161,
+            "stop": 175
+          },
+          {
+            "start": 177,
+            "stop": 191
+          },
+          {
+            "start": 193,
+            "stop": 207
+          },
+          {
+            "start": 209,
+            "stop": 223
+          },
+          {
+            "start": 225,
+            "stop": 239
+          },
+          {
+            "start": 241,
+            "stop": 255
+          },
+          {
+            "start": 257,
+            "stop": 271
+          },
+          {
+            "start": 273,
+            "stop": 287
+          },
+          {
+            "start": 289,
+            "stop": 303
+          },
+          {
+            "start": 305,
+            "stop": 319
+          },
+          {
+            "start": 321,
+            "stop": 335
+          },
+          {
+            "start": 337,
+            "stop": 351
+          },
+          {
+            "start": 353,
+            "stop": 367
+          },
+          {
+            "start": 369,
+            "stop": 383
+          },
+          {
+            "start": 385,
+            "stop": 399
+          },
+          {
+            "start": 401,
+            "stop": 415
+          },
+          {
+            "start": 417,
+            "stop": 431
+          },
+          {
+            "start": 433,
+            "stop": 447
+          },
+          {
+            "start": 449,
+            "stop": 463
+          },
+          {
+            "start": 465,
+            "stop": 479
+          },
+          {
+            "start": 481,
+            "stop": 495
+          },
+          {
+            "start": 497,
+            "stop": 511
+          }
+        ],
+        "powers": {
+          "fundamental": 0.2913359670485029,
+          "harmonics": 0.06786230359924118,
+          "noise": 1.3671302714527042e-10,
+          "residual": 0.06786230373595421,
+          "winning_spur": 0.031955062637044
+        },
+        "residual_bin_count": 510,
+        "residual_bin_ranges": [
+          {
+            "start": 1,
+            "stop": 15
+          },
+          {
+            "start": 17,
+            "stop": 511
+          }
+        ],
+        "sfdr_candidate_bin_count": 510,
+        "sfdr_candidate_bin_ranges": [
+          {
+            "start": 1,
+            "stop": 15
+          },
+          {
+            "start": 17,
+            "stop": 511
+          }
+        ],
+        "sha256": "1c85f3e435b98c1cabca4c6a04b55ec7defb21a8be45c7e0341ae5ee41b95c07",
+        "winning_spur": {
+          "bin": 48,
+          "frequency_hz": 1499999.9999999825,
+          "power": 0.031955062637044
+        }
+      },
+      "request_sha256": "bf82abf07fc3514d6747fb06e1acb8c74fb34bf3ffa7c594263579c47b7c857f",
+      "standards_context": {
+        "alignment": "openada-definition",
+        "domain": "generic-sampled-waveform",
+        "reference": "none"
+      },
+      "status": "analyzed"
+    }
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "The declared coherent single-tone SNR measurement was derived."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [],
+  "operation": "result.spectral.measure",
+  "provenance": {
+    "created_at": "2026-07-16T00:51:47.217419Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}

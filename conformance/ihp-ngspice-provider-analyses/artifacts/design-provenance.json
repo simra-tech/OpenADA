@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "checkout_clean": true,
+  "extensions": {},
+  "inputs": [
+    {
+      "bytes": 1606,
+      "path": "modules/module_0_foundations/inverter/inverter_tb.sch",
+      "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
+    },
+    {
+      "bytes": 715,
+      "path": "modules/module_0_foundations/inverter/inverter.sch",
+      "sha256": "6a2e03f44df59976b8ba4fca385b104b80802d367789171790bd238f912ec771"
+    },
+    {
+      "bytes": 683,
+      "path": "modules/module_0_foundations/inverter/inverter.sym",
+      "sha256": "8658fa30ac994a0bedf511e59f064e6458e9b4a30d91382f6974a5117bd5c103"
+    },
+    {
+      "bytes": 5366,
+      "path": "modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch",
+      "sha256": "861a27e4fcfec15e267ed18816db791460aae1f94f1a7c83ca0c114d4379d4bc"
+    },
+    {
+      "bytes": 2954,
+      "path": "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sch",
+      "sha256": "4385e81ad81c229b81095fe2060153b2817376cfcfbb6d9adfc908d58d7e34a7"
+    },
+    {
+      "bytes": 881,
+      "path": "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sym",
+      "sha256": "d6cbae50c9f6a425bab127f0644c5959c98c13893442420b6b25531af0d64126"
+    }
+  ],
+  "license": {
+    "bytes": 11357,
+    "path": "LICENSE",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  "remote_url_verified": true,
+  "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+  "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+  "schema": "openada.design-provenance/v0alpha1",
+  "tree": "2a710fd503226e9642e4337a324e6c192a9d8a31"
+}

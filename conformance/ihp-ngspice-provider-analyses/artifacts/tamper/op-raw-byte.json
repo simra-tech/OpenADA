@@ -1,0 +1,13 @@
+{
+  "analysis": "op",
+  "expected_status": "invalid_request",
+  "extensions": {},
+  "id": "op-raw-byte",
+  "mutation": "raw-byte-substitution",
+  "observed_diagnostic": "evidence.binding.invalid",
+  "observed_status": "invalid_request",
+  "oracle_rejection": "does not bind raw bytes",
+  "rejected": true,
+  "required_diagnostic": "evidence.binding.invalid",
+  "schema": "openada.tamper-replay/ihp-ngspice-provider-analyses/v1"
+}

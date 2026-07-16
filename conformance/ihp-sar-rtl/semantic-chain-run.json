@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.semantic-chain-run/v0alpha1",
+  "chain_id": "openada.chain/ihp-sar-rtl/v1",
+  "chain_manifest_sha256": "a670cb7a2be83150a65e13f6c6cc35656a256d08e214675fa5edae741a2cfd91",
+  "semantic_subject_sha256": "984fb24414f7a351a88056b909472864915cd27b6dd9a563659bc89f870fa888",
+  "status": "pass",
+  "checks": {
+    "contract_test": true,
+    "pinned_real_design": true,
+    "native_run": true,
+    "independent_artifact_check": true,
+    "normalized_evidence": true,
+    "downstream_decision": true,
+    "negative_replay": true,
+    "tamper_replay": true,
+    "agent_visible_evidence": true
+  },
+  "artifacts": [
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-contract.json",
+      "bytes": 551,
+      "sha256": "37d83859e27fefe8c3c382fade7b95cfd87fcc7ef8f67c4a72ed192f4c0b86f2",
+      "role": "contract-test",
+      "source_step": "contract-tests",
+      "source_output": "contract-test-verdict",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
+      "bytes": 1902,
+      "sha256": "3269ee1e04e1123ecdfbc91574b29a5949cce5744bd68427d4dc39a0eb53dc74",
+      "role": "native-artifact",
+      "source_step": "rtl-structural-check",
+      "source_output": "positive-rtl-result",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.ys",
+      "bytes": 190,
+      "sha256": "4c61fff924adbfe0f9022d88309da79ee2c2951f441c912586157a7200e30137",
+      "role": "native-artifact",
+      "source_step": "rtl-structural-check",
+      "source_output": "positive-yosys-script",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/sar_logic.json",
+      "bytes": 25451,
+      "sha256": "7b1e3f7f8e256db0e29ace683d6c2b5c90fd1e173c436a8fe8726395782d752a",
+      "role": "native-artifact",
+      "source_step": "rtl-structural-check",
+      "source_output": "positive-yosys-json",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
+      "bytes": 507,
+      "sha256": "f932bceca691f19a055211f28d518ef2e3757e987b6fcc13541bcf4e590f154b",
+      "role": "native-artifact",
+      "source_step": "rtl-structural-check",
+      "source_output": "positive-yosys-transcript",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
+      "bytes": 3019,
+      "sha256": "313159ef47dd55194af9dc9cf5e053e0686c966669127d1dfb1e2cc5bad4e100",
+      "role": "native-artifact",
+      "source_step": "rtl-structural-check",
+      "source_output": "native-run-receipt",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
+      "bytes": 1985,
+      "sha256": "eadb9206c02361b706bc6e15c61f3a00fef73ee4a15a85cb204645c9a24226a7",
+      "role": "native-artifact",
+      "source_step": "missing-top-native",
+      "source_output": "negative-rtl-result",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.ys",
+      "bytes": 198,
+      "sha256": "4855a5981b1d0b10525004bb90242f4d77bdb749a0ae57ecfc02ee6a1bba3b3b",
+      "role": "native-artifact",
+      "source_step": "missing-top-native",
+      "source_output": "negative-yosys-script",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
+      "bytes": 568,
+      "sha256": "17bc1d2f212aafe0235c67eb2f0ef12945b0025fdb9b5acf2f7da4c4c37055f6",
+      "role": "native-artifact",
+      "source_step": "missing-top-native",
+      "source_output": "negative-yosys-transcript",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
+      "bytes": 4506,
+      "sha256": "233ed076624b3812b874ce3262c501790974d6935322879086f34d9dd936d5f3",
+      "role": "independent-oracle",
+      "source_step": "independent-verifier",
+      "source_output": "independent-oracle-verdict",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-normalized.json",
+      "bytes": 5551,
+      "sha256": "21f65f69e0fd7b40caec5a53fdd515c3652048ffac0e01ff8b7af307c2a79de3",
+      "role": "normalized-evidence",
+      "source_step": "normalize-rtl-evidence",
+      "source_output": "normalized-rtl-evidence",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-decision.json",
+      "bytes": 3678,
+      "sha256": "38ca8bc2a8bfbb58013d6a24be0eac6f5a67a9799a3023ef6c2c0868b4b7bd6f",
+      "role": "downstream-decision",
+      "source_step": "engineering-decision",
+      "source_output": "downstream-rtl-decision",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-evidence.json",
+      "bytes": 11526,
+      "sha256": "1eff3d3a052deea6de17c7131b73a2618b2108c8ee41c3fe1ad75af0649dc2d9",
+      "role": "agent-visible-evidence",
+      "source_step": "agent-evidence",
+      "source_output": "agent-visible-rtl-evidence",
+      "replay_id": null
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/real-missing-top.json",
+      "bytes": 652,
+      "sha256": "a36eb81e84bdc5989585a75b96a5d5b932e1fbe4b64818e0fd65a6e5e60982a6",
+      "role": "negative-replay",
+      "source_step": null,
+      "source_output": null,
+      "replay_id": "real-missing-top"
+    },
+    {
+      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/reconciled-json-port-removal.json",
+      "bytes": 724,
+      "sha256": "3ba6347a01d6e7e464c0839a552f6f2ffbb3b0383733b632a36e22d8045f4d73",
+      "role": "tamper-replay",
+      "source_step": null,
+      "source_output": null,
+      "replay_id": "reconciled-json-port-removal"
+    }
+  ],
+  "extensions": {
+    "org.openada.rtl": {
+      "publication": "provisional fresh replay",
+      "native_replay_created_at": "2026-07-16T00:23:43.860285Z",
+      "checkout_state_unchanged": true,
+      "checkout_commit_exact": false,
+      "source_freeze_replay_required": true
+    }
+  }
+}

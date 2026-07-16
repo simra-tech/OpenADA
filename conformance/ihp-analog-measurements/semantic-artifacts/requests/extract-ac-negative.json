@@ -1,0 +1,38 @@
+{
+  "conditions": [
+    {
+      "name": "temperature",
+      "unit": "degC",
+      "value": 27.0
+    },
+    {
+      "name": "corner",
+      "unit": "1",
+      "value": "mos_tt"
+    },
+    {
+      "name": "supply_voltage",
+      "unit": "V",
+      "value": 1.2
+    },
+    {
+      "name": "load_capacitance",
+      "unit": "F",
+      "value": 5e-13
+    },
+    {
+      "name": "bias_current",
+      "unit": "A",
+      "value": 8e-05
+    }
+  ],
+  "extensions": {},
+  "selectors": [
+    {
+      "component": "real",
+      "native_name": "v(__openada_measurement_missing__)",
+      "output_name": "missing.real",
+      "unit": "V"
+    }
+  ]
+}

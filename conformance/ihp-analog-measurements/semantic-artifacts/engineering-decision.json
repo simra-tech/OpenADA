@@ -1,0 +1,51 @@
+{
+  "design_pass": false,
+  "extensions": {},
+  "inverter": {
+    "conclusion": "high-harmonic-content-expected-for-square-wave",
+    "converter_quality_metric": false,
+    "decision": "Do not interpret SNR, SINAD, THD, or SFDR as ADC or DAC quality for this inverter waveform."
+  },
+  "normalized_evidence_sha256": "00d0d2dd3c6cdba8ab6c3d6b4e0d9b4cb305d3c7c8dfc6b7ff894df48cca51f1",
+  "ota": {
+    "conclusion": "nominal-tt-open-loop-response-measured",
+    "decision": "Do not claim a design pass; define requirements and review PVT and statistical coverage next.",
+    "monte_carlo_or_mismatch_performed": false,
+    "project_numeric_specification_present": false,
+    "pvt_sweep_performed": false
+  },
+  "schema": "openada.ihp-analog-engineering-decision/v0alpha1",
+  "signoff": false,
+  "standards": {
+    "conformance_claim": false,
+    "reason": "The spectral source is a continuous-time digital inverter square wave, not an ADC, DAC, or waveform recorder under test; generic OpenADA definitions apply. The OTA transfer metrics are not a transition-parameter conformance test.",
+    "references": [
+      {
+        "applicable": false,
+        "id": "IEEE 1241-2023",
+        "scope": "ADC terminology and test methods",
+        "url": "https://standards.ieee.org/ieee/1241/6797/"
+      },
+      {
+        "applicable": false,
+        "id": "IEEE 1658-2023",
+        "scope": "DAC terminology and test methods",
+        "url": "https://standards.ieee.org/ieee/1658/7350/"
+      },
+      {
+        "applicable": false,
+        "id": "IEEE 1057-2017",
+        "scope": "digitizing waveform recorder terminology and tests",
+        "url": "https://standards.ieee.org/ieee/1057/5945/"
+      },
+      {
+        "applicable": false,
+        "id": "IEEE 181-2025",
+        "scope": "transition, pulse, and waveform terminology",
+        "url": "https://standards.ieee.org/ieee/181/10551/"
+      }
+    ],
+    "review_level": "public lifecycle and scope only; no licensed clause-level review"
+  },
+  "status": "proceed-to-requirements-and-pvt-review"
+}

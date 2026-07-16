@@ -1,0 +1,34 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-physical/v1",
+  "extensions": {},
+  "replay": {
+    "covers": [
+      "surface|openada.surface/cli.lvs/v1",
+      "preflight|lvs-match"
+    ],
+    "evidence": [],
+    "expected_status": "fail",
+    "fixture": "synthetic-mismatch-injection-into-real-replay",
+    "id": "synthetic-native-lvs-mismatch",
+    "mutation": {
+      "bytes": 37,
+      "method": "replace with an explicit native mismatch terminal",
+      "sha256": "f2433fc8564bcccf3478d618bd48f9e96d02ec75fa3214d9f998ed835587be28",
+      "target": "inverter.lvs.comp"
+    },
+    "observed_diagnostic": "native LVS report contains mismatch evidence: ['Final result: Circuits do not match.']",
+    "observed_status": "rejected",
+    "required_diagnostic": "native LVS report contains mismatch evidence",
+    "verdict": "expected-rejection"
+  },
+  "replay_type": "negative-replay",
+  "schema": "openada.semantic-replay-verdict/v0alpha1",
+  "source_evidence": {
+    "conformance_manifest_sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+    "run": {
+      "bytes": 1337,
+      "filename": "run.json",
+      "sha256": "336f3f775b13f571e4bcc85261a1f6cf9e78a8f05117e66b1346efbb272ac841"
+    }
+  }
+}

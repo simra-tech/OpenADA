@@ -1,0 +1,84 @@
+{
+  "band": {
+    "lower": {
+      "unit": "Hz",
+      "value": 0.0
+    },
+    "upper": {
+      "unit": "Hz",
+      "value": 15999999.0
+    }
+  },
+  "extensions": {},
+  "fundamental": {
+    "frequency": {
+      "unit": "Hz",
+      "value": 500000.0
+    },
+    "integration_half_width_bins": 0,
+    "method": "declared-coherent-bin"
+  },
+  "harmonics": {
+    "aliasing": "fold-first-nyquist",
+    "collision": "reject",
+    "integration_half_width_bins": 0,
+    "orders": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "out_of_band": "exclude"
+  },
+  "measurement_id": "inverter.output.snr",
+  "method": {
+    "averaging": "none",
+    "clipping": "not-assessed",
+    "coherent_bin_tolerance": 1e-09,
+    "coherent_sampling": "required",
+    "detrend": "mean",
+    "dft_length": 1024,
+    "id": "openada.method/coherent-single-tone-fft/v1alpha1",
+    "missing_samples": "reject",
+    "scaling": "mean-square-per-bin",
+    "sidedness": "one-sided",
+    "uniformity_relative_tolerance": 1e-09,
+    "window": "rectangular"
+  },
+  "metric": {
+    "kind": "snr",
+    "unit": "dB"
+  },
+  "signal": "v(vout)",
+  "standards_context": {
+    "alignment": "openada-definition",
+    "domain": "generic-sampled-waveform",
+    "reference": "none"
+  }
+}

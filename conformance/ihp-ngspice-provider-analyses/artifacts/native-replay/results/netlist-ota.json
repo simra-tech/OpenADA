@@ -1,0 +1,76 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1952,
+      "exists": true,
+      "kind": "spice-netlist",
+      "path": "/evidence/generated/ota.spice",
+      "role": "output",
+      "sha256": "cecb5d089ad09f47176a8cb483a5ef150018f5a7d7f8052e0d98d29b85b17e95"
+    }
+  ],
+  "data": {
+    "missing_symbol_count": 0,
+    "missing_symbols": [],
+    "missing_symbols_truncated": false,
+    "stderr_tail": "",
+    "stdout_tail": ""
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "Xschem generated a SPICE netlist."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/xschem/bin/xschem",
+      "--rcfile",
+      "/ota-rc",
+      "-n",
+      "-s",
+      "-q",
+      "-x",
+      "-o",
+      "/tmp/openada-xschem-7pmnjcla",
+      "/design/modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch"
+    ],
+    "cwd": "/design/modules/module_1_bandgap_reference/part_1_OTA/testbenches",
+    "duration_ms": 117,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 5366,
+      "exists": true,
+      "kind": "xschem-schematic",
+      "path": "/design/modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch",
+      "role": "input",
+      "sha256": "861a27e4fcfec15e267ed18816db791460aae1f94f1a7c83ca0c114d4379d4bc"
+    },
+    {
+      "bytes": 154,
+      "exists": true,
+      "kind": "xschem-rcfile",
+      "path": "/ota-rc",
+      "role": "configuration",
+      "sha256": "b90bfea6744e25dcbe4321ad3dd7ddd109ab2820370c2e52550ef83230ec114d"
+    }
+  ],
+  "operation": "netlist",
+  "provenance": {
+    "created_at": "2026-07-16T00:34:01.634268Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "xschem",
+    "path": "/foss/tools/xschem/bin/xschem",
+    "version": "XSCHEM V3.4.8RC"
+  }
+}

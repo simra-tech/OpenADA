@@ -1,7 +1,7 @@
 {
   "schema": "openada.conformance/v0alpha1",
   "id": "ihp-inverter-drc-lvs",
-  "description": "Pinned IHP SG13G2 inverter DRC and LVS reference workflow.",
+  "description": "Pinned IHP SG13G2 clean and violating DRC plus inverter LVS reference workflow.",
   "design": {
     "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
     "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
@@ -96,6 +96,167 @@
         "engineering_status": "pass",
         "drc_clean": true,
         "total_violations": 0
+      }
+    },
+    "drc_fail": {
+      "tool": "klayout",
+      "tool_identity": {
+        "path": "/foss/tools/klayout/klayout",
+        "version": "KLayout 0.30.9"
+      },
+      "container_timeout_seconds": 240,
+      "arguments": {
+        "gds": "/design/modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+        "rules": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+        "report": "/evidence/lvs-tester.drc.lyrdb",
+        "top_cell": "lvs_tester",
+        "provenance_inputs": [
+          "/foss/pdks/ihp-sg13g2/COMMIT"
+        ],
+        "timeout_seconds": 180
+      },
+      "inputs": [
+        {
+          "path": "/design/modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+          "kind": "gds",
+          "role": "input",
+          "sha256": "c536ff737248e62cc209a6aec764a7f21750d0978e2e8351a4f0c2a6f144bc96"
+        },
+        {
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+          "kind": "klayout-drc-deck",
+          "role": "rules",
+          "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961"
+        },
+        {
+          "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+          "kind": "klayout-rules-input",
+          "role": "rules-dependency",
+          "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+        }
+      ],
+      "artifact": {
+        "path": "/evidence/lvs-tester.drc.lyrdb",
+        "filename": "lvs-tester.drc.lyrdb",
+        "kind": "klayout-lyrdb",
+        "role": "evidence"
+      },
+      "transcript_artifact": {
+        "path": "/evidence/lvs-tester.drc.lyrdb.openada.log",
+        "filename": "lvs-tester.drc.lyrdb.openada.log",
+        "kind": "klayout-transcript",
+        "role": "evidence"
+      },
+      "native_report": {
+        "generator": "drc: script='/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc'",
+        "top_cell": "lvs_tester",
+        "minimum_categories": 1,
+        "expected_item_count": 8,
+        "expected_total_violations": 8,
+        "expected_waived_violations": 0,
+        "expected_category_counts": [
+          {
+            "category": "M1.b",
+            "category_path": [
+              "M1.b"
+            ],
+            "violations": 6
+          },
+          {
+            "category": "Cnt.d",
+            "category_path": [
+              "Cnt.d"
+            ],
+            "violations": 1
+          },
+          {
+            "category": "Cnt.e",
+            "category_path": [
+              "Cnt.e"
+            ],
+            "violations": 1
+          }
+        ],
+        "expected_violations": [
+          {
+            "category_path": [
+              "Cnt.d"
+            ],
+            "cell": "lvs_tester",
+            "multiplicity": 1,
+            "waived": false
+          },
+          {
+            "category_path": [
+              "Cnt.e"
+            ],
+            "cell": "lvs_tester",
+            "multiplicity": 1,
+            "waived": false
+          },
+          {
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "lvs_tester",
+            "multiplicity": 1,
+            "waived": false
+          },
+          {
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "lvs_tester",
+            "multiplicity": 1,
+            "waived": false
+          },
+          {
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "lvs_tester",
+            "multiplicity": 1,
+            "waived": false
+          },
+          {
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "lvs_tester",
+            "multiplicity": 1,
+            "waived": false
+          },
+          {
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "nmos$1",
+            "multiplicity": 1,
+            "waived": false
+          },
+          {
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "nmos$1",
+            "multiplicity": 1,
+            "waived": false
+          }
+        ],
+        "expected_normalization": {
+          "geometry_values": 8,
+          "retained_geometries": 8,
+          "retained_coordinate_pairs": 32,
+          "global_geometry_limit_reached": false
+        }
+      },
+      "result_filename": "drc-fail.json",
+      "expect": {
+        "execution_status": "completed",
+        "exit_code": 0,
+        "engineering_status": "fail",
+        "drc_clean": false,
+        "total_violations": 8
       }
     },
     "lvs": {

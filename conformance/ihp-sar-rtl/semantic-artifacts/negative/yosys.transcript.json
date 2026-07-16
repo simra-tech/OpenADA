@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/foss/tools/yosys/bin/yosys",
+    "-q",
+    "-s",
+    "/evidence/negative/rtl-check.ys"
+  ],
+  "cwd": "/evidence/negative/.openada-yosys-zb4bsjiy",
+  "exit_code": 1,
+  "schema": "openada.yosys-native-transcript/v1",
+  "stderr": {
+    "base64": "RVJST1I6IE1vZHVsZSBgbWlzc2luZ19zYXJfbG9naWMnIG5vdCBmb3VuZCEK",
+    "bytes": 45,
+    "sha256": "00852151af753f4aa2ed71af67c6413707b24c342f7095a69d2f28117b7b769f"
+  },
+  "stdout": {
+    "base64": "",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

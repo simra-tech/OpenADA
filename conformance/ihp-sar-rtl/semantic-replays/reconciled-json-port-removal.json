@@ -1,0 +1,15 @@
+{
+  "chain_id": "openada.chain/ihp-sar-rtl/v1",
+  "covers": [
+    "surface|openada.surface/cli.rtl-check/v1",
+    "preflight|rtl-structural-check-passes"
+  ],
+  "expected_status": "unknown",
+  "id": "reconciled-json-port-removal",
+  "mutation": "removed the rst port from native Yosys JSON and reconciled both the OpenADA artifact digest and run-level artifact digests",
+  "observed_diagnostic": "positive Yosys JSON ports differ; expected=['B', 'BN', 'D', 'En', 'Om', 'Op', 'clk', 'rst'], got=['B', 'BN', 'D', 'En', 'Om', 'Op', 'clk']",
+  "required_diagnostic": "positive Yosys JSON ports",
+  "schema": "openada.semantic-replay-verdict/v0alpha1",
+  "status": "rejected",
+  "verifier": "conformance/ihp-sar-rtl/verify.py"
+}

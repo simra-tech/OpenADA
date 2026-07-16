@@ -1,0 +1,33 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-physical/v1",
+  "extensions": {},
+  "replay": {
+    "covers": [
+      "surface|openada.surface/cli.lvs/v1",
+      "preflight|lvs-match"
+    ],
+    "expected_status": "unknown",
+    "fixture": "tampered-copy-of-real-replay",
+    "id": "unbound-native-lvs-json",
+    "mutation": {
+      "bytes": 579,
+      "method": "append one unbound byte without changing the normalized artifact digest",
+      "sha256": "81ee321edbcb132fbd2cb7955ffbafdf3ffb6f3af4b1af0f939569545eb46c2b",
+      "target": "inverter.lvs.json"
+    },
+    "observed_diagnostic": "lvs.netgen-comparison-json.sha256: expected '81ee321edbcb132fbd2cb7955ffbafdf3ffb6f3af4b1af0f939569545eb46c2b', got 'd0fe4e41e1e70342dec83bd439eacdf6e49c0577334e9728f1147fe26b47390b'",
+    "observed_status": "rejected",
+    "required_diagnostic": "lvs.netgen-comparison-json.sha256",
+    "verdict": "expected-rejection"
+  },
+  "replay_type": "tamper-replay",
+  "schema": "openada.semantic-replay-verdict/v0alpha1",
+  "source_evidence": {
+    "conformance_manifest_sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+    "run": {
+      "bytes": 1337,
+      "filename": "run.json",
+      "sha256": "336f3f775b13f571e4bcc85261a1f6cf9e78a8f05117e66b1346efbb272ac841"
+    }
+  }
+}

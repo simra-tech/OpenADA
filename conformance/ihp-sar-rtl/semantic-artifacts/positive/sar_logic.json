@@ -1,0 +1,650 @@
+{
+  "creator": "Yosys 0.66 (git sha1 86f2ddebc-dirty, g++ 13.3.0-6ubuntu2~24.04.1 -fPIC -O3)",
+  "modules": {
+    "sar_logic": {
+      "attributes": {
+        "top": "00000000000000000000000000000001",
+        "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:1.1-26.10"
+      },
+      "ports": {
+        "clk": {
+          "direction": "input",
+          "bits": [ 2 ]
+        },
+        "Op": {
+          "direction": "input",
+          "bits": [ 3 ]
+        },
+        "En": {
+          "direction": "input",
+          "bits": [ 4 ]
+        },
+        "Om": {
+          "direction": "input",
+          "bits": [ 5 ]
+        },
+        "rst": {
+          "direction": "input",
+          "bits": [ 6 ]
+        },
+        "B": {
+          "direction": "output",
+          "bits": [ 7, 8, 9, 10, 11, 12, 13, 14 ]
+        },
+        "BN": {
+          "direction": "output",
+          "bits": [ 15, 16, 17, 18, 19, 20, 21, 22 ]
+        },
+        "D": {
+          "direction": "output",
+          "bits": [ 7, 8, 9, 10, 11, 12, 13, 14 ]
+        }
+      },
+      "cells": {
+        "$add$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:23$37": {
+          "hide_name": 1,
+          "type": "$add",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000100",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000100"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:23.18-23.32"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 23, 24, 25, 26 ],
+            "B": [ "1" ],
+            "Y": [ 27, 28, 29, 30 ]
+          }
+        },
+        "$and$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21$26": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000001000",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000001000",
+            "Y_WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21.7-21.28"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 7, 8, 9, 10, 11, 12, 13, 14 ],
+            "B": [ 31, 32, 33, 34, 35, 36, 37, 38 ],
+            "Y": [ 39, 40, 41, 42, 43, 44, 45, 46 ]
+          }
+        },
+        "$and$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22$33": {
+          "hide_name": 1,
+          "type": "$and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000001000",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000001000",
+            "Y_WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22.7-22.29"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 15, 16, 17, 18, 19, 20, 21, 22 ],
+            "B": [ 31, 32, 33, 34, 35, 36, 37, 38 ],
+            "Y": [ 47, 48, 49, 50, 51, 52, 53, 54 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$88": {
+          "hide_name": 1,
+          "type": "$sdffe",
+          "parameters": {
+            "CLK_POLARITY": "00000000000000000000000000000001",
+            "EN_POLARITY": "00000000000000000000000000000001",
+            "SRST_POLARITY": "00000000000000000000000000000001",
+            "SRST_VALUE": "0000",
+            "WIDTH": "00000000000000000000000000000100"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:15.3-25.6"
+          },
+          "port_directions": {
+            "CLK": "input",
+            "D": "input",
+            "EN": "input",
+            "Q": "output",
+            "SRST": "input"
+          },
+          "connections": {
+            "CLK": [ 2 ],
+            "D": [ 27, 28, 29, 30 ],
+            "EN": [ 55 ],
+            "Q": [ 23, 24, 25, 26 ],
+            "SRST": [ 6 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$91": {
+          "hide_name": 1,
+          "type": "$sdffe",
+          "parameters": {
+            "CLK_POLARITY": "00000000000000000000000000000001",
+            "EN_POLARITY": "00000000000000000000000000000001",
+            "SRST_POLARITY": "00000000000000000000000000000001",
+            "SRST_VALUE": "00000000",
+            "WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:15.3-25.6"
+          },
+          "port_directions": {
+            "CLK": "input",
+            "D": "input",
+            "EN": "input",
+            "Q": "output",
+            "SRST": "input"
+          },
+          "connections": {
+            "CLK": [ 2 ],
+            "D": [ 56, 57, 58, 59, 60, 61, 62, 63 ],
+            "EN": [ 55 ],
+            "Q": [ 15, 16, 17, 18, 19, 20, 21, 22 ],
+            "SRST": [ 6 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$92": {
+          "hide_name": 1,
+          "type": "$sdffe",
+          "parameters": {
+            "CLK_POLARITY": "00000000000000000000000000000001",
+            "EN_POLARITY": "00000000000000000000000000000001",
+            "SRST_POLARITY": "00000000000000000000000000000001",
+            "SRST_VALUE": "00000000",
+            "WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:15.3-25.6"
+          },
+          "port_directions": {
+            "CLK": "input",
+            "D": "input",
+            "EN": "input",
+            "Q": "output",
+            "SRST": "input"
+          },
+          "connections": {
+            "CLK": [ 2 ],
+            "D": [ 64, 65, 66, 67, 68, 69, 70, 71 ],
+            "EN": [ 55 ],
+            "Q": [ 7, 8, 9, 10, 11, 12, 13, 14 ],
+            "SRST": [ 6 ]
+          }
+        },
+        "$eq$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$16": {
+          "hide_name": 1,
+          "type": "$eq",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000100",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000100",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.39-20.49"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 23, 24, 25, 26 ],
+            "B": [ "0", "0", "0", "1" ],
+            "Y": [ 72 ]
+          }
+        },
+        "$logic_and$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$15": {
+          "hide_name": 1,
+          "type": "$logic_and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.18-20.33"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 4 ],
+            "B": [ 73 ],
+            "Y": [ 74 ]
+          }
+        },
+        "$logic_and$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$18": {
+          "hide_name": 1,
+          "type": "$logic_and",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.18-20.50"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 74 ],
+            "B": [ 75 ],
+            "Y": [ 55 ]
+          }
+        },
+        "$neg$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22$34": {
+          "hide_name": 1,
+          "type": "$neg",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000001",
+            "A_WIDTH": "00000000000000000000000000000100",
+            "Y_WIDTH": "00000000000000000000000000000100"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22.7-22.29"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 23, 24, 25, "0" ],
+            "Y": [ 76, 77, 78, 79 ]
+          }
+        },
+        "$not$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$17": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.37-20.50"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 72 ],
+            "Y": [ 75 ]
+          }
+        },
+        "$not$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22$32": {
+          "hide_name": 1,
+          "type": "$not",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000001000",
+            "Y_WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22.7-22.29"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 80, 81, 82, 83, 84, 85, 86, 87 ],
+            "Y": [ 31, 32, 33, 34, 35, 36, 37, 38 ]
+          }
+        },
+        "$or$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21$29": {
+          "hide_name": 1,
+          "type": "$or",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000001000",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000001000",
+            "Y_WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21.7-21.28"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 39, 40, 41, 42, 43, 44, 45, 46 ],
+            "B": [ 88, 89, 90, 91, 92, 93, 94, 95 ],
+            "Y": [ 64, 65, 66, 67, 68, 69, 70, 71 ]
+          }
+        },
+        "$or$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22$36": {
+          "hide_name": 1,
+          "type": "$or",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000001000",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000001000",
+            "Y_WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22.7-22.29"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 47, 48, 49, 50, 51, 52, 53, 54 ],
+            "B": [ 96, 97, 98, 99, 100, 101, 102, 103 ],
+            "Y": [ 56, 57, 58, 59, 60, 61, 62, 63 ]
+          }
+        },
+        "$shift$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21$28": {
+          "hide_name": 1,
+          "type": "$shift",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000001",
+            "B_WIDTH": "00000000000000000000000000000100",
+            "Y_WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21.7-21.28"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 3 ],
+            "B": [ 76, 77, 78, 79 ],
+            "Y": [ 88, 89, 90, 91, 92, 93, 94, 95 ]
+          }
+        },
+        "$shift$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22$31": {
+          "hide_name": 1,
+          "type": "$shift",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000001",
+            "B_WIDTH": "00000000000000000000000000000100",
+            "Y_WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22.7-22.29"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 76, 77, 78, 79 ],
+            "Y": [ 80, 81, 82, 83, 84, 85, 86, 87 ]
+          }
+        },
+        "$shift$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22$35": {
+          "hide_name": 1,
+          "type": "$shift",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000001",
+            "B_WIDTH": "00000000000000000000000000000100",
+            "Y_WIDTH": "00000000000000000000000000001000"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22.7-22.29"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 5 ],
+            "B": [ 76, 77, 78, 79 ],
+            "Y": [ 96, 97, 98, 99, 100, 101, 102, 103 ]
+          }
+        },
+        "$xor$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$14": {
+          "hide_name": 1,
+          "type": "$xor",
+          "parameters": {
+            "A_SIGNED": "00000000000000000000000000000000",
+            "A_WIDTH": "00000000000000000000000000000001",
+            "B_SIGNED": "00000000000000000000000000000000",
+            "B_WIDTH": "00000000000000000000000000000001",
+            "Y_WIDTH": "00000000000000000000000000000001"
+          },
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.25-20.32"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 3 ],
+            "B": [ 5 ],
+            "Y": [ 73 ]
+          }
+        }
+      },
+      "netnames": {
+        "$add$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:23$37_Y": {
+          "hide_name": 1,
+          "bits": [ 27, 28, 29, 30 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:23.18-23.32"
+          }
+        },
+        "$and$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21$26_Y": {
+          "hide_name": 1,
+          "bits": [ 39, 40, 41, 42, 43, 44, 45, 46 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21.7-21.28"
+          }
+        },
+        "$and$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22$33_Y": {
+          "hide_name": 1,
+          "bits": [ 47, 48, 49, 50, 51, 52, 53, 54 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22.7-22.29"
+          }
+        },
+        "$eq$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$16_Y": {
+          "hide_name": 1,
+          "bits": [ 72 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.39-20.49"
+          }
+        },
+        "$logic_and$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$15_Y": {
+          "hide_name": 1,
+          "bits": [ 74 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.18-20.33"
+          }
+        },
+        "$logic_and$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$18_Y": {
+          "hide_name": 1,
+          "bits": [ 55 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.18-20.50"
+          }
+        },
+        "$neg$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21$23_Y": {
+          "hide_name": 1,
+          "bits": [ 76, 77, 78, 79 ],
+          "signed": 1,
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21.7-21.28"
+          }
+        },
+        "$not$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$17_Y": {
+          "hide_name": 1,
+          "bits": [ 75 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.37-20.50"
+          }
+        },
+        "$not$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21$25_Y": {
+          "hide_name": 1,
+          "bits": [ 31, 32, 33, 34, 35, 36, 37, 38 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21.7-21.28"
+          }
+        },
+        "$or$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21$29_Y": {
+          "hide_name": 1,
+          "bits": [ 64, 65, 66, 67, 68, 69, 70, 71 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21.7-21.28"
+          }
+        },
+        "$or$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22$36_Y": {
+          "hide_name": 1,
+          "bits": [ 56, 57, 58, 59, 60, 61, 62, 63 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22.7-22.29"
+          }
+        },
+        "$shift$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21$24_Y": {
+          "hide_name": 1,
+          "bits": [ 80, 81, 82, 83, 84, 85, 86, 87 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21.7-21.28"
+          }
+        },
+        "$shift$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21$28_Y": {
+          "hide_name": 1,
+          "bits": [ 88, 89, 90, 91, 92, 93, 94, 95 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:21.7-21.28"
+          }
+        },
+        "$shift$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22$35_Y": {
+          "hide_name": 1,
+          "bits": [ 96, 97, 98, 99, 100, 101, 102, 103 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:22.7-22.29"
+          }
+        },
+        "$xor$/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20$14_Y": {
+          "hide_name": 1,
+          "bits": [ 73 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:20.25-20.32"
+          }
+        },
+        "B": {
+          "hide_name": 0,
+          "bits": [ 7, 8, 9, 10, 11, 12, 13, 14 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:7.23-7.24"
+          }
+        },
+        "BN": {
+          "hide_name": 0,
+          "bits": [ 15, 16, 17, 18, 19, 20, 21, 22 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:8.22-8.24"
+          }
+        },
+        "D": {
+          "hide_name": 0,
+          "bits": [ 7, 8, 9, 10, 11, 12, 13, 14 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:9.22-9.23"
+          }
+        },
+        "En": {
+          "hide_name": 0,
+          "bits": [ 4 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:4.16-4.18"
+          }
+        },
+        "Om": {
+          "hide_name": 0,
+          "bits": [ 5 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:5.16-5.18"
+          }
+        },
+        "Op": {
+          "hide_name": 0,
+          "bits": [ 3 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:3.16-3.18"
+          }
+        },
+        "clk": {
+          "hide_name": 0,
+          "bits": [ 2 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:2.16-2.19"
+          }
+        },
+        "counter": {
+          "hide_name": 0,
+          "bits": [ 23, 24, 25, 26 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:12.13-12.20"
+          }
+        },
+        "rst": {
+          "hide_name": 0,
+          "bits": [ 6 ],
+          "attributes": {
+            "src": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v:6.16-6.19"
+          }
+        }
+      }
+    }
+  }
+}

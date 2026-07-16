@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the pinned IHP inverter DRC and LVS workflow without network access."""
+"""Run pinned IHP clean/failing DRC and inverter LVS without network access."""
 
 from __future__ import annotations
 
@@ -32,11 +32,26 @@ from verify import verify_evidence
 
 HERE = Path(__file__).resolve().parent
 REPOSITORY_ROOT = HERE.parents[1]
+TOOLS_ROOT = REPOSITORY_ROOT / "tools"
+if str(TOOLS_ROOT) not in sys.path:
+    sys.path.insert(0, str(TOOLS_ROOT))
+
+from semantic_receipts import (  # noqa: E402
+    SemanticReceiptError,
+    design_provenance,
+    git_state as receipt_git_state,
+    semantic_subject,
+    source_attestation,
+    write_json as write_receipt_json,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run pinned IHP inverter DRC and LVS in network-disabled containers."
+        description=(
+            "Run pinned IHP clean/failing DRC and inverter LVS in "
+            "network-disabled containers."
+        )
     )
     parser.add_argument("--manifest", type=Path, default=HERE / "manifest.json")
     parser.add_argument("--cache-dir", type=Path, default=default_cache_dir())
@@ -47,6 +62,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--openada-root", type=Path, default=REPOSITORY_ROOT)
     parser.add_argument("--container-engine", default="docker")
+    parser.add_argument(
+        "--receipt-class",
+        choices=("provisional", "release"),
+        default="provisional",
+    )
     return parser
 
 
@@ -112,7 +132,7 @@ def _container_base(
 def _operation_argv(operation_name: str, operation: dict[str, Any]) -> list[str]:
     arguments = operation["arguments"]
     timeout = str(arguments["timeout_seconds"])
-    if operation_name == "drc":
+    if operation_name in {"drc", "drc_fail"}:
         command = [
             "drc",
             arguments["gds"],
@@ -192,6 +212,7 @@ def _run_operation(
     timeout: float,
     container_engine: str,
     container_name: str,
+    expected_returncode: int,
 ) -> None:
     try:
         completed = subprocess.run(
@@ -215,13 +236,14 @@ def _run_operation(
     except OSError as exc:
         raise ConformanceError(f"cannot execute {command[0]!r}: {exc}") from exc
     _write_result(result_path, completed.stdout, completed.stderr, completed.returncode)
-    if completed.returncode != 0:
+    if completed.returncode != expected_returncode:
         detail = completed.stderr.strip()
         if len(detail) > 4000:
             detail = detail[-4000:]
         suffix = f"; stderr={detail!r}" if detail else ""
         raise ConformanceError(
-            f"OpenADA container exited with code {completed.returncode}{suffix}"
+            "OpenADA container exited with code "
+            f"{completed.returncode}; expected {expected_returncode}{suffix}"
         )
 
 
@@ -326,6 +348,7 @@ def _write_run_metadata(
     image_record: dict[str, Any],
     checkout_before: dict[str, Any],
     checkout_after: dict[str, Any],
+    source_receipt: dict[str, Any],
 ) -> None:
     metadata = {
         "schema": "openada.conformance-run/v0alpha1",
@@ -341,6 +364,7 @@ def _write_run_metadata(
         },
         "openada_checkout": _checkout_record(checkout_before, checkout_after),
         "network": "none during EDA execution",
+        "source_attestation": source_receipt,
     }
     (evidence / "run.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -374,10 +398,11 @@ def main(argv: list[str] | None = None) -> int:
         require_mount_safe_path(openada_root)
         require_mount_safe_path(design_dir)
         checkout_before = _git_state(openada_root)
+        receipt_before = receipt_git_state(openada_root)
 
         evidence = _create_evidence(requested_evidence)
         require_mount_safe_path(evidence)
-        for operation_name in ("drc", "lvs"):
+        for operation_name in ("drc", "drc_fail", "lvs"):
             operation = manifest["operations"][operation_name]
             print(f"Running pinned {operation_name.upper()} with network disabled ...", flush=True)
             container_name = (
@@ -398,10 +423,33 @@ def main(argv: list[str] | None = None) -> int:
                 timeout=operation["container_timeout_seconds"],
                 container_engine=args.container_engine,
                 container_name=container_name,
+                expected_returncode=(
+                    0 if operation["expect"]["engineering_status"] == "pass" else 1
+                ),
             )
 
         verify_design_checkout(design_dir, manifest)
         checkout_after = _git_state(openada_root)
+        receipt_after = receipt_git_state(openada_root)
+        subject = semantic_subject(
+            openada_root,
+            openada_root / "catalog/semantic-surfaces-v0alpha1.json",
+        )
+        source_receipt = source_attestation(
+            receipt_before,
+            receipt_after,
+            semantic_subject_sha256=subject,
+            receipt_class=args.receipt_class,
+        )
+        semantic_chain = json.loads(
+            (openada_root / "conformance/ihp-inverter/semantic-chain.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        write_receipt_json(
+            evidence / "design-provenance.json",
+            design_provenance(design_dir, semantic_chain["design"]),
+        )
         _write_run_metadata(
             evidence,
             manifest_path,
@@ -409,9 +457,10 @@ def main(argv: list[str] | None = None) -> int:
             image_record,
             checkout_before,
             checkout_after,
+            source_receipt,
         )
         verify_evidence(manifest, evidence, manifest_sha256=sha256_file(manifest_path))
-    except ConformanceError as exc:
+    except (ConformanceError, SemanticReceiptError) as exc:
         print(f"conformance run failed: {exc}", file=sys.stderr)
         if evidence is not None:
             print(f"incomplete evidence retained at: {evidence}", file=sys.stderr)

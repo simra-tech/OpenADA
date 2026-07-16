@@ -1,0 +1,9 @@
+{
+  "expected": "independent verifier rejection",
+  "extensions": {},
+  "id": "source-contract-hash",
+  "mutation": "retained public-source identity",
+  "observed": "source record does not bind ota upstream",
+  "schema": "openada.ihp-analog-tamper-replay/v0alpha1",
+  "status": "pass"
+}

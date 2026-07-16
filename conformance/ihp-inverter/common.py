@@ -14,7 +14,8 @@ from typing import Any, Iterable
 MANIFEST_SCHEMA = "openada.conformance/v0alpha1"
 RESULT_SCHEMA = "openada.result/v0alpha1"
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
-EXPECTED_OPERATION_NAMES = {"drc", "lvs"}
+DRC_OPERATION_NAMES = {"drc", "drc_fail"}
+EXPECTED_OPERATION_NAMES = {*DRC_OPERATION_NAMES, "lvs"}
 PINNED_LICENSE_SHA256 = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
 PINNED_OPERATION_RECORDS = {
     "drc": {
@@ -69,6 +70,117 @@ PINNED_OPERATION_RECORDS = {
             "minimum_categories": 1,
         },
         "result_filename": "drc.json",
+    },
+    "drc_fail": {
+        "tool_identity": {
+            "path": "/foss/tools/klayout/klayout",
+            "version": "KLayout 0.30.9",
+        },
+        "container_timeout_seconds": 240,
+        "arguments": {
+            "gds": "/design/modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+            "rules": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+            "report": "/evidence/lvs-tester.drc.lyrdb",
+            "top_cell": "lvs_tester",
+            "provenance_inputs": ["/foss/pdks/ihp-sg13g2/COMMIT"],
+            "timeout_seconds": 180,
+        },
+        "inputs": [
+            {
+                "path": "/design/modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+                "kind": "gds",
+                "role": "input",
+                "sha256": "c536ff737248e62cc209a6aec764a7f21750d0978e2e8351a4f0c2a6f144bc96",
+            },
+            {
+                "path": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+                "kind": "klayout-drc-deck",
+                "role": "rules",
+                "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961",
+            },
+            {
+                "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+                "kind": "klayout-rules-input",
+                "role": "rules-dependency",
+                "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5",
+            },
+        ],
+        "artifact": {
+            "path": "/evidence/lvs-tester.drc.lyrdb",
+            "filename": "lvs-tester.drc.lyrdb",
+            "kind": "klayout-lyrdb",
+            "role": "evidence",
+        },
+        "transcript_artifact": {
+            "path": "/evidence/lvs-tester.drc.lyrdb.openada.log",
+            "filename": "lvs-tester.drc.lyrdb.openada.log",
+            "kind": "klayout-transcript",
+            "role": "evidence",
+        },
+        "native_report": {
+            "generator": "drc: script='/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc'",
+            "top_cell": "lvs_tester",
+            "minimum_categories": 1,
+            "expected_item_count": 8,
+            "expected_total_violations": 8,
+            "expected_waived_violations": 0,
+            "expected_category_counts": [
+                {
+                    "category": "M1.b",
+                    "category_path": ["M1.b"],
+                    "violations": 6,
+                },
+                {
+                    "category": "Cnt.d",
+                    "category_path": ["Cnt.d"],
+                    "violations": 1,
+                },
+                {
+                    "category": "Cnt.e",
+                    "category_path": ["Cnt.e"],
+                    "violations": 1,
+                },
+            ],
+            "expected_violations": [
+                {
+                    "category_path": ["Cnt.d"],
+                    "cell": "lvs_tester",
+                    "multiplicity": 1,
+                    "waived": False,
+                },
+                {
+                    "category_path": ["Cnt.e"],
+                    "cell": "lvs_tester",
+                    "multiplicity": 1,
+                    "waived": False,
+                },
+                *[
+                    {
+                        "category_path": ["M1.b"],
+                        "cell": "lvs_tester",
+                        "multiplicity": 1,
+                        "waived": False,
+                    }
+                    for _ in range(4)
+                ],
+                *[
+                    {
+                        "category_path": ["M1.b"],
+                        "cell": "nmos$1",
+                        "multiplicity": 1,
+                        "waived": False,
+                    }
+                    for _ in range(2)
+                ],
+            ],
+            "expected_normalization": {
+                "geometry_values": 8,
+                "retained_geometries": 8,
+                "retained_coordinate_pairs": 32,
+                "global_geometry_limit_reached": False,
+            },
+        },
+        "result_filename": "drc-fail.json",
     },
     "lvs": {
         "tool_identity": {
@@ -248,7 +360,7 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         errors.append("operations must be an object")
         operations = {}
     if set(operations) != EXPECTED_OPERATION_NAMES:
-        errors.append("operations must contain exactly drc and lvs")
+        errors.append("operations must contain exactly drc, drc_fail, and lvs")
 
     required_expectations = {
         "drc": {
@@ -258,6 +370,13 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
             "drc_clean": True,
             "total_violations": 0,
         },
+        "drc_fail": {
+            "execution_status": "completed",
+            "exit_code": 0,
+            "engineering_status": "fail",
+            "drc_clean": False,
+            "total_violations": 8,
+        },
         "lvs": {
             "execution_status": "completed",
             "exit_code": 0,
@@ -266,7 +385,7 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
             "mismatch_count": 0,
         },
     }
-    required_tools = {"drc": "klayout", "lvs": "netgen"}
+    required_tools = {"drc": "klayout", "drc_fail": "klayout", "lvs": "netgen"}
     seen_result_names: set[str] = set()
     seen_artifact_names: set[str] = set()
     for name in sorted(EXPECTED_OPERATION_NAMES):
@@ -294,7 +413,7 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
             errors.append(
                 f"{location}.transcript_artifact differs from the reviewed transcript record"
             )
-        if name == "drc":
+        if name in DRC_OPERATION_NAMES:
             if operation.get("native_report") != pinned["native_report"]:
                 errors.append(
                     f"{location}.native_report differs from the reviewed LYRDB identity"

@@ -22,6 +22,27 @@ openada simulate fixtures/smoke/smoke_ngspice.cir \
   --output-dir /tmp/openada-smoke
 ```
 
+Audit the complete semantic surface before changing a CLI command, profile,
+feature, provider mapping, or preflight assertion:
+
+```bash
+python tools/verify_semantic_coverage.py --mode audit
+```
+
+Audit mode reports known gaps without making ordinary development fail, but it
+returns exit 2 for any inventory drift. `--fail-on-gaps`, `--mode agent-ready`,
+and `--mode release` return exit 1 until every active row reaches its required
+evidence level. Read [Semantic coverage and release gating](docs/SEMANTIC_COVERAGE.md)
+before exposing a new semantic surface. Implementation maturity does not itself
+promote coverage.
+
+Shipped `providers/*/driver-manifest.json` files are part of that closed
+inventory. A provider conformance record is evidence-backed only when a fully
+validated semantic-chain index entry registers its record ID and the record's
+`evidence.sha256` exactly matches the indexed run JSON. The chain must still
+cover the corresponding provider row; a matching digest alone cannot promote
+coverage.
+
 The first cross-driver profile is
 `openada.operation/circuit.simulate/v1alpha2`. Its shared ngspice/Xyce alpha
 subset is one self-contained OP, DC, AC, or transient analysis with no
@@ -194,6 +215,12 @@ The driver must:
 
 Do not promote a driver based only on `--help`, a zero exit code, or a mocked unit
 test.
+
+The separately computed coverage levels are `unverified`, `contract-tested`,
+`native-replayed`, `workflow-validated`, and `agent-ready`. Only the last level
+proves the complete pinned-design, native-artifact, independent-oracle,
+normalized-evidence, downstream-decision, negative, tamper, and agent-visible
+evidence chain. See [the coverage ledger](docs/SEMANTIC_COVERAGE.md).
 
 ## Contributing engineering skills
 

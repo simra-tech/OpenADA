@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/semantic-surface-catalog-v0alpha1.schema.json",
+  "title": "OpenADA semantic surface catalog v0alpha1",
+  "description": "Closed repository inventory of CLI leaves, packaged profiles, preflight routes, exposed provider mappings, and coverage policy. Implementation maturity is recorded independently from derived coverage level.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "policy",
+    "profiles",
+    "surfaces",
+    "preflight_assertions",
+    "provider_mappings",
+    "provider_manifests",
+    "extensions"
+  ],
+  "properties": {
+    "$schema": {"const": "https://json-schema.org/draft/2020-12/schema"},
+    "schema": {"const": "openada.semantic-surface-catalog/v0alpha1"},
+    "policy": {"$ref": "#/$defs/policy"},
+    "profiles": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/profile"}
+    },
+    "surfaces": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/surface"}
+    },
+    "preflight_assertions": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/preflight"}
+    },
+    "provider_mappings": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {"$ref": "#/$defs/providerMapping"}
+    },
+    "provider_manifests": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/providerManifest"}
+    },
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "extensions": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"},
+      "additionalProperties": {"type": "object"}
+    },
+    "boundedString": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    },
+    "operationId": {
+      "type": "string",
+      "pattern": "^openada\\.operation/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:alpha[1-9][0-9]*)?$",
+      "maxLength": 256
+    },
+    "assertionId": {
+      "type": "string",
+      "pattern": "^openada\\.assertion/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:alpha[1-9][0-9]*)?$",
+      "maxLength": 256
+    },
+    "featureId": {
+      "type": "string",
+      "pattern": "^openada\\.feature/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+(?:alpha[1-9][0-9]*)?$",
+      "maxLength": 256
+    },
+    "surfaceId": {
+      "type": "string",
+      "pattern": "^openada\\.surface/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+$",
+      "maxLength": 256
+    },
+    "classification": {
+      "enum": [
+        "semantic-execution",
+        "transport-execution",
+        "routing",
+        "discovery",
+        "administrative"
+      ]
+    },
+    "coverageLevel": {
+      "enum": [
+        "unverified",
+        "contract-tested",
+        "native-replayed",
+        "workflow-validated",
+        "agent-ready"
+      ]
+    },
+    "lifecycle": {"enum": ["active", "historical", "experimental-hidden"]},
+    "policy": {
+      "type": "object",
+      "required": ["coverage_levels", "required_levels", "active_lifecycles", "extensions"],
+      "properties": {
+        "coverage_levels": {
+          "const": [
+            "unverified",
+            "contract-tested",
+            "native-replayed",
+            "workflow-validated",
+            "agent-ready"
+          ]
+        },
+        "required_levels": {
+          "type": "object",
+          "required": [
+            "semantic-execution",
+            "transport-execution",
+            "routing",
+            "discovery",
+            "administrative"
+          ],
+          "properties": {
+            "semantic-execution": {"const": "agent-ready"},
+            "transport-execution": {"const": "agent-ready"},
+            "routing": {"const": "contract-tested"},
+            "discovery": {"const": "contract-tested"},
+            "administrative": {"const": "contract-tested"}
+          },
+          "additionalProperties": false
+        },
+        "active_lifecycles": {"const": ["active"]},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "profile": {
+      "type": "object",
+      "required": ["repository_path", "lifecycle", "dispatchable", "extensions"],
+      "properties": {
+        "repository_path": {"$ref": "#/$defs/repositoryPath"},
+        "lifecycle": {"$ref": "#/$defs/lifecycle"},
+        "dispatchable": {"type": "boolean"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "selectorValue": {
+      "oneOf": [
+        {"type": "string", "maxLength": 256},
+        {"type": "boolean"},
+        {"type": "number"},
+        {"type": "null"}
+      ]
+    },
+    "variant": {
+      "type": "object",
+      "required": [
+        "variant_id",
+        "selector",
+        "operation_profile",
+        "provider_id",
+        "extensions"
+      ],
+      "properties": {
+        "variant_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 128},
+        "selector": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 16,
+          "propertyNames": {"pattern": "^[a-z][a-z0-9_]*$"},
+          "additionalProperties": {"$ref": "#/$defs/selectorValue"}
+        },
+        "operation_profile": {
+          "oneOf": [{"$ref": "#/$defs/operationId"}, {"type": "null"}]
+        },
+        "provider_id": {
+          "oneOf": [{"$ref": "#/$defs/boundedString"}, {"type": "null"}]
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "surface": {
+      "type": "object",
+      "required": [
+        "surface_id",
+        "command_path",
+        "classification",
+        "lifecycle",
+        "profile_bindings",
+        "variants",
+        "extensions"
+      ],
+      "properties": {
+        "surface_id": {"$ref": "#/$defs/surfaceId"},
+        "command_path": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 64}
+        },
+        "classification": {"$ref": "#/$defs/classification"},
+        "lifecycle": {"$ref": "#/$defs/lifecycle"},
+        "profile_bindings": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/operationId"}
+        },
+        "variants": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/variant"}
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "preflight": {
+      "type": "object",
+      "required": ["assertion", "target_surface_id", "target_operation", "extensions"],
+      "properties": {
+        "assertion": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 128},
+        "target_surface_id": {"$ref": "#/$defs/surfaceId"},
+        "target_operation": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 64},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "implementationMaturity": {
+      "enum": ["discovered", "structured", "workflow-validated"]
+    },
+    "providerFeature": {
+      "type": "object",
+      "required": ["id", "implementation_maturity", "conformance_ids", "extensions"],
+      "properties": {
+        "id": {"$ref": "#/$defs/featureId"},
+        "implementation_maturity": {"$ref": "#/$defs/implementationMaturity"},
+        "conformance_ids": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 256}
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "providerMapping": {
+      "type": "object",
+      "required": [
+        "provider_id",
+        "provider_kind",
+        "native_product",
+        "operation_profile",
+        "assertion_profile",
+        "operation_maturity",
+        "features",
+        "extensions"
+      ],
+      "properties": {
+        "provider_id": {"$ref": "#/$defs/boundedString"},
+        "provider_kind": {"enum": ["eda-driver", "evidence-kernel"]},
+        "native_product": {
+          "oneOf": [{"$ref": "#/$defs/boundedString"}, {"type": "null"}]
+        },
+        "operation_profile": {"$ref": "#/$defs/operationId"},
+        "assertion_profile": {"$ref": "#/$defs/assertionId"},
+        "operation_maturity": {
+          "oneOf": [{"$ref": "#/$defs/implementationMaturity"}, {"type": "null"}]
+        },
+        "features": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {"$ref": "#/$defs/providerFeature"}
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "providerManifest": {
+      "type": "object",
+      "required": ["repository_path", "lifecycle", "extensions"],
+      "properties": {
+        "repository_path": {"$ref": "#/$defs/repositoryPath"},
+        "lifecycle": {"$ref": "#/$defs/lifecycle"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

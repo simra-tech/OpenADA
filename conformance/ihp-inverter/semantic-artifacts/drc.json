@@ -1,0 +1,186 @@
+{
+  "artifacts": [
+    {
+      "bytes": 120878,
+      "exists": true,
+      "kind": "klayout-lyrdb",
+      "path": "/evidence/inverter.drc.lyrdb",
+      "role": "evidence",
+      "sha256": "52d617caa4d63a49ca8adb94f13b56e8a195d4acf94de79d40c5297914baa6a3"
+    },
+    {
+      "bytes": 12218,
+      "exists": true,
+      "kind": "klayout-transcript",
+      "path": "/evidence/inverter.drc.lyrdb.openada.log",
+      "role": "evidence",
+      "sha256": "67c17ef4431c7a09e74e4294dacb8d88ff3bbffeb77af7be24b78c4af257f9ef"
+    }
+  ],
+  "data": {
+    "ambient_environment_enumerated": false,
+    "changed_inputs": [],
+    "deck_trust": "caller-supplied executable Ruby; OpenADA does not sandbox the deck",
+    "deck_variables": [],
+    "drc_clean": true,
+    "environment": {
+      "KLAYOUT_HOME": null,
+      "KLAYOUT_PATH": null,
+      "PDK": null,
+      "PDK_ROOT": "/foss/pdks"
+    },
+    "inputs_stable": true,
+    "report": {
+      "category_count": 592,
+      "category_counts": [],
+      "category_counts_truncated": false,
+      "cell_count": 1,
+      "description": "Main DRC Run Report at",
+      "generator": "drc: script='/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc'",
+      "generator_script": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+      "item_count": 0,
+      "normalization": {
+        "geometry_values": 0,
+        "global_geometry_limit_reached": false,
+        "retained_coordinate_pairs": 0,
+        "retained_geometries": 0
+      },
+      "original_file": "",
+      "top_cell": "inverter",
+      "total_violations": 0,
+      "validation": {
+        "bytes": 120878,
+        "reason": "lyrdb.valid",
+        "valid": true
+      },
+      "violations": [],
+      "violations_truncated": false,
+      "waived_violations": 0
+    },
+    "report_output": {
+      "binding_variable": "report",
+      "capture": {
+        "bytes": 120878,
+        "origin": "deck",
+        "parent_anchored": true,
+        "path": "/evidence/inverter.drc.lyrdb",
+        "sha256": "52d617caa4d63a49ca8adb94f13b56e8a195d4acf94de79d40c5297914baa6a3",
+        "status": "valid",
+        "validation": {
+          "bytes": 120878,
+          "reason": "lyrdb.valid",
+          "valid": true
+        }
+      },
+      "declared_path": "/evidence/inverter.drc.lyrdb",
+      "fresh_required": true,
+      "ownership": "variable",
+      "parent_anchored": true,
+      "path": "/evidence/inverter.drc.lyrdb"
+    },
+    "startup": {
+      "batch_flag": "-b",
+      "configuration_files": "disabled",
+      "database_only": true,
+      "implicit_macros": "disabled"
+    },
+    "top_cell": "inverter",
+    "transcript": {
+      "bytes": 12218,
+      "capture_policy": "bounded process tails",
+      "limitation": "The artifact retains bounded stdout/stderr tails, not an unbounded native log.",
+      "origin": "openada",
+      "path": "/evidence/inverter.drc.lyrdb.openada.log",
+      "sha256": "67c17ef4431c7a09e74e4294dacb8d88ff3bbffeb77af7be24b78c4af257f9ef",
+      "status": "valid",
+      "stderr_observed_bytes": 0,
+      "stderr_retained_bytes": 0,
+      "stderr_tail": "",
+      "stderr_truncated": false,
+      "stdout_observed_bytes": 80904,
+      "stdout_retained_bytes": 12000,
+      "stdout_tail": "\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule nbulay_block_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule pwell_drw_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule pwell_pin_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule pwell_block_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule emwind_drw_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule emwind_opc_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule deepco_drw_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule mim_drw_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule substrate_drw_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule ic_drw_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule via3_drw_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule pldb_drw_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_drw_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_pin_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_mask_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_filler_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_nofill_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_slit_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_opc_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_noqrc_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_res_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_iprobe_Acute\n2026-07-16 02:22:39 +0200: Memory Usage (444880K) : Executing rule metal4_diffprb_Acute\n2026-07-16 02:22:40 +0200: Memory Usage (44488 ... [truncated] ... 90\n2026-07-16 02:22:40 +0200: Memory Usage (444848K) : Executing rule topvia2_drw_Angle90\n2026-07-16 02:22:40 +0200: Memory Usage (444848K) : Executing rule gatpoly_drw_Angle45\n2026-07-16 02:22:40 +0200: Memory Usage (444876K) : Executing rule activ_drw_Angle45\n2026-07-16 02:22:41 +0200: Memory Usage (444848K) : Executing rule metal1_drw_Angle45\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule metal2_drw_Angle45\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule metal3_drw_Angle45\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule metal4_drw_Angle45\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule metal5_drw_Angle45\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule topmetal1_drw_Angle45\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule topmetal2_drw_Angle45\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Starting 3.2. FORBIDDEN table\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.biwind\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.pemwind\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.baspoly\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.deepco\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.pempoly\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.empoly\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.ldmos\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.pbiwind\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.nodrc\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.flash\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : Executing rule forbidden.colwind\n2026-07-16 02:22:41 +0200: Memory Usage (444816K) : KLayout DRC run for tables 'main' completed in 4.94 seconds\n",
+      "stdout_truncated": true
+    },
+    "transitive_rule_inputs_enumerated": false,
+    "waiver_database": {
+      "declared": false,
+      "path": "/evidence/inverter.drc.lyrdb.w",
+      "policy": "disabled-by-absence",
+      "status": "absent"
+    },
+    "working_directory": "/evidence",
+    "working_directory_is_sandbox": false
+  },
+  "diagnostics": [
+    {
+      "code": "provenance.transitive_rules_unenumerated",
+      "message": "KLayout decks are executable Ruby. Only the main deck, declared provenance inputs, and optional waiver database are hashed by this operation.",
+      "severity": "warning"
+    }
+  ],
+  "engineering": {
+    "status": "pass",
+    "summary": "KLayout reported zero DRC violations."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/klayout/klayout",
+      "-b",
+      "-r",
+      "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+      "-rd",
+      "input=/design/modules/module_0_foundations/PEX_Demo/layout/inverter.gds",
+      "-rd",
+      "report=/evidence/inverter.drc.lyrdb",
+      "-rd",
+      "topcell=inverter"
+    ],
+    "cwd": "/evidence",
+    "duration_ms": 7643,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 7338,
+      "exists": true,
+      "kind": "gds",
+      "path": "/design/modules/module_0_foundations/PEX_Demo/layout/inverter.gds",
+      "role": "input",
+      "sha256": "9ed664d54d8c1b82a86a0d02e59a21c7593c94d1a3ca1bcc6aec614726007cd1"
+    },
+    {
+      "bytes": 18267,
+      "exists": true,
+      "kind": "klayout-drc-deck",
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+      "role": "rules",
+      "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961"
+    },
+    {
+      "bytes": 41,
+      "exists": true,
+      "kind": "klayout-rules-input",
+      "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+      "role": "rules-dependency",
+      "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+    }
+  ],
+  "operation": "drc",
+  "provenance": {
+    "created_at": "2026-07-16T00:22:41.563092Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "klayout",
+    "path": "/foss/tools/klayout/klayout",
+    "version": "KLayout 0.30.9"
+  }
+}

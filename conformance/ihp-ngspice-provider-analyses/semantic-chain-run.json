@@ -1,0 +1,397 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "artifacts": [
+    {
+      "bytes": 1715,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/design-provenance.json",
+      "role": "design-provenance",
+      "sha256": "e5bde8fa9c5875f53169166440d1cdb568b7458c4132253c8ae54923078e3256",
+      "source_output": "design-provenance",
+      "source_step": "materialize-pinned-sources"
+    },
+    {
+      "bytes": 732,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/decks/op.spice",
+      "role": "native-artifact",
+      "sha256": "efbdfc741202de50ba7cf04b62d15cc55719f0ba2a86ea6b1d0976e0cb3f8fee",
+      "source_output": "op-deck",
+      "source_step": "provider-op"
+    },
+    {
+      "bytes": 2272,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/requests/op.json",
+      "role": "native-artifact",
+      "sha256": "b7d11ec99692cdbc17555e989dab55e68cc610d7b6277bd2a40b788a9bf28b57",
+      "source_output": "op-request",
+      "source_step": "provider-op"
+    },
+    {
+      "bytes": 11143,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/op.json",
+      "role": "native-artifact",
+      "sha256": "cb3718f0165372d6a4d771d86d3b9aa0609579966ba2f5e3cc88d84f94a11798",
+      "source_output": "op-result",
+      "source_step": "provider-op"
+    },
+    {
+      "bytes": 669,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/op/work/op.raw",
+      "role": "native-artifact",
+      "sha256": "376bcc1acfc8bcc38ccdd488e51c4579da5973ce4e77327370d40f5c7e8d0e24",
+      "source_output": "op-raw",
+      "source_step": "provider-op"
+    },
+    {
+      "bytes": 853,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/op/simulation/op.log",
+      "role": "native-artifact",
+      "sha256": "4466b9688c9c63c6d76892805e8b540eb23187ec4e0cadd927c28af67b78efbb",
+      "source_output": "op-log",
+      "source_step": "provider-op"
+    },
+    {
+      "bytes": 132,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/op/simulation/op.openada-control.sp",
+      "role": "native-artifact",
+      "sha256": "5f87082dc1e47f94e189b60c546f12d0f9beaf37daeca8382b52ec69d84ad9c6",
+      "source_output": "op-launcher",
+      "source_step": "provider-op"
+    },
+    {
+      "bytes": 746,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/decks/dc.spice",
+      "role": "native-artifact",
+      "sha256": "6fef2dd9842b863a540aac74099d18899f117f5e28ebf986ed806ada944696d7",
+      "source_output": "dc-deck",
+      "source_step": "provider-dc"
+    },
+    {
+      "bytes": 2384,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/requests/dc.json",
+      "role": "native-artifact",
+      "sha256": "37cb067a6befca8beb97cecd9f5e7c044476ef7ccd3b47b146d1ba0e6440efb9",
+      "source_output": "dc-request",
+      "source_step": "provider-dc"
+    },
+    {
+      "bytes": 11335,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/dc.json",
+      "role": "native-artifact",
+      "sha256": "bc876222dfa72cd7bf8b4181cf1827f150cb19c9bfc90922c0bb8125b2a32532",
+      "source_output": "dc-result",
+      "source_step": "provider-dc"
+    },
+    {
+      "bytes": 12233,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/dc/work/dc.raw",
+      "role": "native-artifact",
+      "sha256": "1c5de0d3b280213acc2b599219593c8e15ade35e09e47f6394988d5fd9ee851d",
+      "source_output": "dc-raw",
+      "source_step": "provider-dc"
+    },
+    {
+      "bytes": 855,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/dc/simulation/dc.log",
+      "role": "native-artifact",
+      "sha256": "c0fb2c5e708e89bd616642a1a57eb15845544115388479dd07717429d218c892",
+      "source_output": "dc-log",
+      "source_step": "provider-dc"
+    },
+    {
+      "bytes": 132,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/dc/simulation/dc.openada-control.sp",
+      "role": "native-artifact",
+      "sha256": "7f4f49b763d705aa3db93365aa5e88944bada3595fa4802e3afffe9f75f25f31",
+      "source_output": "dc-launcher",
+      "source_step": "provider-dc"
+    },
+    {
+      "bytes": 1754,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/decks/ac.spice",
+      "role": "native-artifact",
+      "sha256": "073f05e1032fdcf8c936da81679d16ba8ee711b2d143fc23c9f7620557904863",
+      "source_output": "ac-deck",
+      "source_step": "provider-ac"
+    },
+    {
+      "bytes": 2367,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/requests/ac.json",
+      "role": "native-artifact",
+      "sha256": "5507e2072bb4cd7856db1e5304087764ba22fa9ba1e7938565ff699078d655ca",
+      "source_output": "ac-request",
+      "source_step": "provider-ac"
+    },
+    {
+      "bytes": 11435,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/ac.json",
+      "role": "native-artifact",
+      "sha256": "1a940444816524898f85e2bcfdf146b8ac9a11b0a66061811bdd34ee6c601d43",
+      "source_output": "ac-result",
+      "source_step": "provider-ac"
+    },
+    {
+      "bytes": 1147921,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/ac/work/ac.raw",
+      "role": "native-artifact",
+      "sha256": "cb6762efd30b6efcfaf9e0f9e683290e8892b9722380764c1ed726663d0e1836",
+      "source_output": "ac-raw",
+      "source_step": "provider-ac"
+    },
+    {
+      "bytes": 962,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/ac/simulation/ac.log",
+      "role": "native-artifact",
+      "sha256": "3582be1267b994da36d89cbcb506bb4ee22983fbc8024e4d70b6419318f76326",
+      "source_output": "ac-log",
+      "source_step": "provider-ac"
+    },
+    {
+      "bytes": 132,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/ac/simulation/ac.openada-control.sp",
+      "role": "native-artifact",
+      "sha256": "43767ad51ff9af6519a7c06be11721baf8bca75563a5a14f17cc45a316af9eda",
+      "source_output": "ac-launcher",
+      "source_step": "provider-ac"
+    },
+    {
+      "bytes": 769,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/decks/tran.spice",
+      "role": "native-artifact",
+      "sha256": "de1be4d17d9c169a210f78d128e4f7281c79ffeba6dc552efb39fcc7ead33066",
+      "source_output": "tran-deck",
+      "source_step": "provider-tran"
+    },
+    {
+      "bytes": 2361,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/requests/tran.json",
+      "role": "native-artifact",
+      "sha256": "f44c13186a879401c2b6432d990fecea0f34b4ccfb560968993216c59c151beb",
+      "source_output": "tran-request",
+      "source_step": "provider-tran"
+    },
+    {
+      "bytes": 11769,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/tran.json",
+      "role": "native-artifact",
+      "sha256": "e3dd7aa424ba39aab25e16942aa20f63749a417f5c3de958615a89288bb1924f",
+      "source_output": "tran-result",
+      "source_step": "provider-tran"
+    },
+    {
+      "bytes": 98918,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/tran/work/tran.raw",
+      "role": "native-artifact",
+      "sha256": "bfb7b835f0e10f06a285625aa8a21979e4f0a1f0e451598e180628e84a951f6c",
+      "source_output": "tran-raw",
+      "source_step": "provider-tran"
+    },
+    {
+      "bytes": 1244,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/tran/simulation/tran.log",
+      "role": "native-artifact",
+      "sha256": "6193cf7f5998a39a1e0fcd75220c8040f9288a502c4ab8744483ee7b755c0213",
+      "source_output": "tran-log",
+      "source_step": "provider-tran"
+    },
+    {
+      "bytes": 134,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/tran/simulation/tran.openada-control.sp",
+      "role": "native-artifact",
+      "sha256": "fb8b51950752a511c15ab43ec524d7249be0bc0dce45334f6d831b7540cd3495",
+      "source_output": "tran-launcher",
+      "source_step": "provider-tran"
+    },
+    {
+      "bytes": 11984,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/oracle.json",
+      "role": "independent-oracle",
+      "sha256": "c79d9d90a02286512440b9d76aab5b303efa628e218d2892a4c29656cb28a2fc",
+      "source_output": "independent-oracle",
+      "source_step": "independent-native-oracle"
+    },
+    {
+      "bytes": 3832,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/normalized.json",
+      "role": "normalized-evidence",
+      "sha256": "648a7276bfc29e989b9e06338dde8e3495a996cb3cb2d5dc0b5b714588fc632b",
+      "source_output": "normalized-evidence",
+      "source_step": "normalize-evidence"
+    },
+    {
+      "bytes": 3737,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/decision.json",
+      "role": "downstream-decision",
+      "sha256": "8ab93254480e983fedfe9a5f301d531a6bc6e1fce153462b441efa26c7043b16",
+      "source_output": "downstream-decision",
+      "source_step": "publish-scoped-decision"
+    },
+    {
+      "bytes": 8673,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/agent-evidence.json",
+      "role": "agent-visible-evidence",
+      "sha256": "d3a8d9014ea0423a85a52f27e04b1a062f6ea63a009ddb404798b1ea1966e073",
+      "source_output": "agent-visible-evidence",
+      "source_step": "agent-decision"
+    },
+    {
+      "bytes": 447,
+      "replay_id": null,
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/contract-tests.json",
+      "role": "contract-test",
+      "sha256": "3ffb3bfe19059431a30861fe11ed800f4a4aec185482e62ef7092951301fc458",
+      "source_output": "contract-test-report",
+      "source_step": "contract-tests"
+    },
+    {
+      "bytes": 3165,
+      "replay_id": "op-unsafe-command",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/op-unsafe-command.json",
+      "role": "negative-replay",
+      "sha256": "b8395cfab18c6541a9648994ec3d3ae152c64c3342de816ee6710d0d2c2bd003",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 3263,
+      "replay_id": "dc-parameter-mismatch",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/dc-parameter-mismatch.json",
+      "role": "negative-replay",
+      "sha256": "5f738190d2a1d1cb32b479b8f68f376e97234e97d13f9420c2d84811abe4f9ef",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 3379,
+      "replay_id": "ac-feature-mismatch",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/ac-feature-mismatch.json",
+      "role": "negative-replay",
+      "sha256": "19c60268adb7e15a39debe207cc001313647d836b02edbfa3509c754aa345cee",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 3273,
+      "replay_id": "tran-duplicate-write",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/tran-duplicate-write.json",
+      "role": "negative-replay",
+      "sha256": "3d804b99813ce8a7ebef42880750ca2db42d600bf9d7fea5129c5bbbceed94d0",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 11264,
+      "replay_id": "tran-native-error",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/tran-native-error.json",
+      "role": "negative-replay",
+      "sha256": "645e7d37e23607b2ef29cfc230e80f5a27e4cba781b3ffc9f22f787af702c526",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 430,
+      "replay_id": "op-raw-byte",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/tamper/op-raw-byte.json",
+      "role": "tamper-replay",
+      "sha256": "51fc926559924e3a0c95503f67cb3ae15984843d436bb25998f754df2be87fbd",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 450,
+      "replay_id": "dc-request-feature",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/tamper/dc-request-feature.json",
+      "role": "tamper-replay",
+      "sha256": "6d91a13583a895785ebc6fe8f47175fbb71b339962a3fd8929ed8580012221a3",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 449,
+      "replay_id": "ac-result-digest",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/tamper/ac-result-digest.json",
+      "role": "tamper-replay",
+      "sha256": "d62f2ae6ca8d268b9726a0932b825ac3e0fdd49fabb40336c30056b1dde93bf4",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 431,
+      "replay_id": "tran-raw-header",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/tamper/tran-raw-header.json",
+      "role": "tamper-replay",
+      "sha256": "78f15938e8b5ea15ae38bb635bc64ab67b714e9746d2970303bc3dd5d78f0620",
+      "source_output": null,
+      "source_step": null
+    },
+    {
+      "bytes": 452,
+      "replay_id": "provider-version",
+      "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/tamper/provider-version.json",
+      "role": "tamper-replay",
+      "sha256": "3383f596c48fc03691a594004f5e34e7edef3d4a99f75b43292f91f7ebcf554f",
+      "source_output": null,
+      "source_step": null
+    }
+  ],
+  "chain_id": "openada.chain/ihp-ngspice-provider-analyses/v1",
+  "chain_manifest_sha256": "f71411a5adc2692ddd80104b80a7fb4fecd9474a04898975d3bda50c0d38e31e",
+  "checks": {
+    "agent_visible_evidence": true,
+    "contract_test": true,
+    "downstream_decision": true,
+    "independent_artifact_check": true,
+    "native_run": true,
+    "negative_replay": true,
+    "normalized_evidence": true,
+    "pinned_real_design": true,
+    "tamper_replay": true
+  },
+  "extensions": {
+    "org.openada": {
+      "publication_verifier": "conformance/ihp-ngspice-provider-analyses/verify.py",
+      "receipt_status": "provisional"
+    }
+  },
+  "schema": "openada.semantic-chain-run/v0alpha1",
+  "semantic_subject_sha256": "dd5aca9dc85dcabcda0b48f064de4ba16037bb226d4002ca625a1f17f65ff44e",
+  "source_attestation": {
+    "clean_after": false,
+    "clean_before": false,
+    "extensions": {},
+    "receipt_class": "provisional",
+    "repository_revision": "d1c31972e70538511afd6197f47ba3d7072ed45e",
+    "repository_tree": "492d1ee159487059752ead2aade3e17c154e6386",
+    "semantic_subject_sha256": "dd5aca9dc85dcabcda0b48f064de4ba16037bb226d4002ca625a1f17f65ff44e",
+    "state_unchanged": true
+  },
+  "status": "pass"
+}

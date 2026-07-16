@@ -1,0 +1,131 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-physical/v1",
+  "decisions": {
+    "gallery": {
+      "basis": [
+        {
+          "assertion": "drc-clean",
+          "classes": [
+            {
+              "category": "M1.b",
+              "category_path": [
+                "M1.b"
+              ],
+              "violations": 6
+            },
+            {
+              "category": "Cnt.d",
+              "category_path": [
+                "Cnt.d"
+              ],
+              "violations": 1
+            },
+            {
+              "category": "Cnt.e",
+              "category_path": [
+                "Cnt.e"
+              ],
+              "violations": 1
+            }
+          ],
+          "outcome": false,
+          "unwaived_violations": 8
+        }
+      ],
+      "decision": "block",
+      "evidence_paths": [
+        "/operations/drc_fail/evidence/violations"
+      ],
+      "next_action": "inspect and remediate the six M1.b, one Cnt.d, and one Cnt.e geometries",
+      "scope": "do not treat the gallery fixture as DRC-clean"
+    },
+    "inverter": {
+      "basis": [
+        {
+          "assertion": "drc-clean",
+          "outcome": true,
+          "unwaived_violations": 0
+        },
+        {
+          "assertion": "lvs-match",
+          "match": "unique",
+          "mismatch_count": 0,
+          "outcome": true
+        }
+      ],
+      "decision": "proceed",
+      "evidence_paths": [
+        "/operations/drc_clean/evidence",
+        "/operations/lvs_match/evidence"
+      ],
+      "next_action": "advance to the next engineering workflow stage with limitations attached",
+      "scope": "continue the inverter workflow; this is not tapeout signoff"
+    }
+  },
+  "extensions": {},
+  "inputs": {
+    "independent_oracle": {
+      "bytes": 5089,
+      "repository_path": "conformance/ihp-inverter/semantic-oracle.json",
+      "sha256": "413a7d78ecc0be66078658fe06c1b4ee5ab3fe4bb70490dda11e22c6e2f13dee"
+    },
+    "normalized_evidence": {
+      "bytes": 30163,
+      "repository_path": "conformance/ihp-inverter/semantic-normalized.json",
+      "sha256": "345878233eef2a6ab3c01cdda58e0bbcee1808ccd4a01eba6c594125c76ac3fe"
+    }
+  },
+  "limitations": [
+    {
+      "id": "klayout-transitive-rules",
+      "impact": "The executable Ruby deck may read transitive inputs; the reviewed main deck, declared provenance inputs, and optional waiver database boundary are hashed, but undeclared transitive reads are not enumerated."
+    },
+    {
+      "id": "bounded-klayout-transcript",
+      "impact": "KLayout stdout and stderr are retained as bounded tails, not unbounded logs."
+    },
+    {
+      "id": "netgen-transitive-setup",
+      "impact": "The executable Netgen setup Tcl may read transitive files or ambient environment state that the operation cannot infer."
+    },
+    {
+      "id": "bounded-netgen-transcript",
+      "impact": "The Netgen decision requires complete streams within the capture bound; the retained transcript is not an unbounded native log."
+    },
+    {
+      "id": "pre-extracted-layout-netlist",
+      "impact": "LVS compares the pinned pre-extracted layout netlist with the pinned schematic netlist; this chain does not extract an LVS netlist from GDS."
+    },
+    {
+      "id": "reference-flow-not-signoff",
+      "impact": "This open-source reference flow supports an engineering proceed/block decision; it is not foundry tapeout signoff."
+    },
+    {
+      "id": "separate-negative-fixture",
+      "impact": "The gallery DRC failure is a separate real design fixture and does not change the clean inverter's proceed decision."
+    },
+    {
+      "id": "checkout-state-recorded",
+      "impact": "The replay records the OpenADA checkout before and after execution; a dirty or changing checkout makes publication provisional until a source freeze."
+    }
+  ],
+  "schema": "openada.physical-decision-verdict/v0alpha1",
+  "standards": {
+    "governing_sources": [
+      {
+        "kind": "ihp-foundry-drc-deck",
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+        "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961"
+      },
+      {
+        "kind": "ihp-netgen-setup",
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl",
+        "sha256": "9981101e0bbe9d8f6af656f03475d0d00fb7507559645e85e4d9d5f704b3878e"
+      }
+    ],
+    "ieee_measurement_standard": {
+      "reason": "These assertions classify foundry-deck geometry and structural netlist equivalence; they are not signal measurements such as SNR.",
+      "status": "not-applicable"
+    }
+  }
+}

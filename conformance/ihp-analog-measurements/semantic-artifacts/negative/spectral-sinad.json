@@ -1,0 +1,108 @@
+{
+  "artifacts": [],
+  "data": {
+    "extensions": {},
+    "measurement": {
+      "algorithm": {
+        "id": "openada.method/coherent-single-tone-fft/v1alpha1",
+        "version": "1.0.0"
+      },
+      "extensions": {},
+      "kind": null,
+      "location": null,
+      "measurement_id": null,
+      "request_sha256": null,
+      "sample_count": 0,
+      "signal": null,
+      "source": {
+        "artifact_role": "measurement.source",
+        "artifact_sha256": "0e7ec212289a7020656c8276381f87ca887208a23c0feb445e59b58e4ec0d9e1",
+        "conditions": [
+          {
+            "name": "temperature",
+            "unit": "degC",
+            "value": 27.0
+          },
+          {
+            "name": "corner",
+            "unit": "1",
+            "value": "mos_tt"
+          },
+          {
+            "name": "supply_voltage",
+            "unit": "V",
+            "value": 1.2
+          },
+          {
+            "name": "application",
+            "unit": "1",
+            "value": "digital-inverter-square-wave"
+          }
+        ],
+        "conditions_sha256": "b129933ebdb75e151f447ec515fee2c43b83d3bd27a2a95ac9d8632feaeab3a0",
+        "lineage": {
+          "artifact_role": "simulation.result",
+          "artifact_sha256": "d6964199a2cef20939d948d48680f96e12998af3189d1c1ea6990993798b4de8",
+          "binding": "unverified",
+          "operation": "circuit.simulate",
+          "request_id": "24000000-0000-4000-8000-000000000002"
+        },
+        "operation": "openada.operation/result.series.extract/v1alpha1",
+        "request_id": "21000000-0000-4000-8000-000000000002",
+        "series_sha256": "0e7ec212289a7020656c8276381f87ca887208a23c0feb445e59b58e4ec0d9e1"
+      },
+      "status": "unknown",
+      "unit": null,
+      "value": null
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/spectral.measurement.valid/v1alpha1",
+      "implementation_id": "org.openada.kernel.spectral-evidence",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/result.spectral.measure/v1alpha1",
+      "request_id": "26000000-0000-4000-8000-000000000002"
+    },
+    "spectral": {
+      "acquisition": null,
+      "band": null,
+      "extensions": {},
+      "fundamental": null,
+      "harmonics": [],
+      "method": null,
+      "partition": null,
+      "request_sha256": null,
+      "standards_context": null,
+      "status": "unknown"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "spectral.method.record_length_mismatch",
+      "message": "spectral.method.dft_length must equal the exact source record length.",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "unknown",
+    "summary": "The spectral measurement could not be established."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": null,
+    "status": "invalid_request"
+  },
+  "inputs": [],
+  "operation": "result.spectral.measure",
+  "provenance": {
+    "created_at": "2026-07-16T00:51:53.382173Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}

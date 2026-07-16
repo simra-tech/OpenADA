@@ -1,0 +1,443 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.semantic-chain/v0alpha1",
+  "id": "openada.chain/ihp-inverter-physical/v1",
+  "design": {
+    "class": "public-design",
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "tree": "2a710fd503226e9642e4337a324e6c192a9d8a31",
+    "subtree": "modules/module_0_foundations",
+    "license": {
+      "spdx": "Apache-2.0",
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "inputs": [
+      {
+        "path": "modules/module_0_foundations/PEX_Demo/layout/inverter.gds",
+        "sha256": "9ed664d54d8c1b82a86a0d02e59a21c7593c94d1a3ca1bcc6aec614726007cd1"
+      },
+      {
+        "path": "modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+        "sha256": "c536ff737248e62cc209a6aec764a7f21750d0978e2e8351a4f0c2a6f144bc96"
+      },
+      {
+        "path": "modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir",
+        "sha256": "ea05ff8402661fdb09978f2210b3d985ad6b679c1b69b0e564d047b135bc14a9"
+      },
+      {
+        "path": "modules/module_0_foundations/PEX_Demo/simulations/inverter.spice",
+        "sha256": "d6e54b972bbd3140498081f79b1bfa06f6da29f6528ebda1065d47499dc5f8f9"
+      }
+    ],
+    "extensions": {}
+  },
+  "runtime": {
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "platform": "linux/amd64",
+    "pdk_revision": "144f811cdffda49b71d28f64e8a92b697b61cf06",
+    "tools": [
+      {
+        "id": "klayout",
+        "path": "/foss/tools/klayout/klayout",
+        "version": "KLayout 0.30.9"
+      },
+      {
+        "id": "netgen",
+        "path": "/foss/tools/netgen/bin/netgen",
+        "version": "Netgen 1.5.321 compiled on Mon Jun 22 11:31:27 AM CEST 2026"
+      }
+    ],
+    "extensions": {
+      "org.openada.physical": {
+        "pdk_commit_file": {
+          "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+          "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+        }
+      }
+    }
+  },
+  "contracts": [
+    {
+      "repository_path": "schemas/semantic-chain-manifest-v0alpha1.schema.json",
+      "sha256": "dfe687c78b361b91600dcb1889f14d52301b4c1c8f200b7dacb6c96126f3f600",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/semantic-chain-run-v0alpha1.schema.json",
+      "sha256": "c4916d3b4d3e63337d47da46a2e4aa94ea15fb41b755207f04a41907cc993613",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/design-provenance-v0alpha1.schema.json",
+      "sha256": "0e3e3ba2c6fdce6f22e93f23a26bb8b3e286cacdf109dc25d8d51aefa418e745",
+      "extensions": {}
+    },
+    {
+      "repository_path": "tools/semantic_receipts.py",
+      "sha256": "983637e95cc33c8259142dd80c96e005364dd49c6cc729e4a7f0d2d7cbcb13f0",
+      "extensions": {}
+    },
+    {
+      "repository_path": "schemas/result-v0alpha1.schema.json",
+      "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter/run.schema.json",
+      "sha256": "b772ad27b8c516ce876dba638d29a5f8af75df443c362263adfebde8bbea26fe",
+      "extensions": {}
+    },
+    {
+      "repository_path": "catalog/semantic-surfaces-v0alpha1.json",
+      "sha256": "4d8568674fd4dfc5c5d27b4b70e1dd8bd67884058ce40d8f124dc8ea30ef1b97",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter/manifest.json",
+      "sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter/common.py",
+      "sha256": "068f6f84a6e94c7267474eb3f8f908144d610ba74f3e6b3c073651b1c2069cdd",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter/run.py",
+      "sha256": "fbf4ddd67150e536d51dde0135ccb51694013d6849b6483f4b2cc3a382c11786",
+      "extensions": {}
+    },
+    {
+      "repository_path": "conformance/ihp-inverter/setup.py",
+      "sha256": "9dbce777d6e991acb6adc9f2adc6e823fc2fa05567d953948d81344270cdb269",
+      "extensions": {}
+    },
+    {
+      "repository_path": "tests/test_conformance.py",
+      "sha256": "608f5363d4001708c688114f7d4c4f1af27af72777151ba2b992971b9321c51d",
+      "extensions": {}
+    }
+  ],
+  "covers": [
+    "surface|openada.surface/cli.drc/v1",
+    "surface|openada.surface/cli.lvs/v1",
+    "preflight|drc-clean",
+    "preflight|lvs-match"
+  ],
+  "steps": [
+    {
+      "id": "materialize-pinned-sources",
+      "kind": "source-materialize",
+      "native_execution": false,
+      "covers": [],
+      "consumes": [],
+      "produces": [
+        "pinned-clean-gds",
+        "pinned-gallery-gds",
+        "pinned-lvs-layout-netlist",
+        "pinned-lvs-schematic-netlist",
+        "pinned-drc-deck",
+        "pinned-netgen-setup",
+        "pinned-pdk-revision",
+        "contract-test-suite",
+        "design-provenance"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "drc-clean",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter/manifest.json",
+        "sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.drc/v1",
+        "preflight|drc-clean"
+      ],
+      "consumes": ["pinned-clean-gds", "pinned-drc-deck", "pinned-pdk-revision"],
+      "produces": ["clean-drc-result", "clean-drc-lyrdb", "clean-drc-transcript", "native-run-receipt"],
+      "extensions": {}
+    },
+    {
+      "id": "drc-fail",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter/manifest.json",
+        "sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.drc/v1"
+      ],
+      "consumes": ["pinned-gallery-gds", "pinned-drc-deck", "pinned-pdk-revision"],
+      "produces": ["failing-drc-result", "failing-drc-lyrdb", "failing-drc-transcript"],
+      "extensions": {}
+    },
+    {
+      "id": "lvs-match",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter/manifest.json",
+        "sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+        "extensions": {}
+      },
+      "native_execution": true,
+      "covers": [
+        "surface|openada.surface/cli.lvs/v1",
+        "preflight|lvs-match"
+      ],
+      "consumes": [
+        "pinned-lvs-layout-netlist",
+        "pinned-lvs-schematic-netlist",
+        "pinned-netgen-setup",
+        "pinned-pdk-revision"
+      ],
+      "produces": [
+        "lvs-result",
+        "lvs-comparison-report",
+        "lvs-native-json",
+        "lvs-transcript"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "independent-verifier",
+      "kind": "independent-oracle",
+      "implementation": {
+        "repository_path": "conformance/ihp-inverter/verify.py",
+        "sha256": "87495ed1efcba4d2ddad9d0803ba100e9606d13dbc6cca7d8b3997b9cefe2b88",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "clean-drc-result",
+        "clean-drc-lyrdb",
+        "clean-drc-transcript",
+        "failing-drc-result",
+        "failing-drc-lyrdb",
+        "failing-drc-transcript",
+        "lvs-result",
+        "lvs-comparison-report",
+        "lvs-native-json",
+        "lvs-transcript"
+      ],
+      "produces": ["independent-oracle-verdict"],
+      "extensions": {}
+    },
+    {
+      "id": "normalize-physical-evidence",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter/manifest.json",
+        "sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-inverter/semantic.py",
+        "sha256": "fa10786b0802ca82968dc666b9a48559ca5ffa1aa0d665d6874337dea0fd34b5",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.drc/v1",
+        "surface|openada.surface/cli.lvs/v1",
+        "preflight|drc-clean",
+        "preflight|lvs-match"
+      ],
+      "consumes": [
+        "clean-drc-result",
+        "failing-drc-result",
+        "lvs-result",
+        "independent-oracle-verdict"
+      ],
+      "produces": ["normalized-physical-evidence"],
+      "extensions": {}
+    },
+    {
+      "id": "adversarial-replays",
+      "kind": "independent-oracle",
+      "implementation": {
+        "repository_path": "conformance/ihp-inverter/semantic.py",
+        "sha256": "fa10786b0802ca82968dc666b9a48559ca5ffa1aa0d665d6874337dea0fd34b5",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "failing-drc-result",
+        "failing-drc-lyrdb",
+        "lvs-result",
+        "lvs-comparison-report",
+        "lvs-native-json",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "negative-real-gallery-drc-fail",
+        "negative-synthetic-native-lvs-mismatch",
+        "tamper-reconciled-seven-item-drc",
+        "tamper-unbound-native-lvs-json"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "engineering-decision",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter/manifest.json",
+        "sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-inverter/semantic.py",
+        "sha256": "fa10786b0802ca82968dc666b9a48559ca5ffa1aa0d665d6874337dea0fd34b5",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.drc/v1",
+        "surface|openada.surface/cli.lvs/v1",
+        "preflight|drc-clean",
+        "preflight|lvs-match"
+      ],
+      "consumes": [
+        "normalized-physical-evidence",
+        "independent-oracle-verdict",
+        "negative-real-gallery-drc-fail",
+        "negative-synthetic-native-lvs-mismatch",
+        "tamper-reconciled-seven-item-drc",
+        "tamper-unbound-native-lvs-json"
+      ],
+      "produces": ["downstream-physical-decision"],
+      "extensions": {}
+    },
+    {
+      "id": "agent-evidence",
+      "kind": "independent-decision",
+      "implementation": {
+        "repository_path": "conformance/ihp-inverter/semantic.py",
+        "sha256": "fa10786b0802ca82968dc666b9a48559ca5ffa1aa0d665d6874337dea0fd34b5",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": [
+        "normalized-physical-evidence",
+        "independent-oracle-verdict",
+        "downstream-physical-decision",
+        "negative-real-gallery-drc-fail",
+        "negative-synthetic-native-lvs-mismatch",
+        "tamper-reconciled-seven-item-drc",
+        "tamper-unbound-native-lvs-json"
+      ],
+      "produces": ["agent-visible-physical-evidence"],
+      "extensions": {}
+    },
+    {
+      "id": "contract-tests",
+      "kind": "independent-oracle",
+      "implementation": {
+        "repository_path": "tests/test_conformance.py",
+        "sha256": "608f5363d4001708c688114f7d4c4f1af27af72777151ba2b992971b9321c51d",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [],
+      "consumes": ["contract-test-suite", "agent-visible-physical-evidence"],
+      "produces": ["contract-test-verdict"],
+      "extensions": {}
+    }
+  ],
+  "negative_replays": [
+    {
+      "id": "real-gallery-drc-fail",
+      "covers": [
+        "surface|openada.surface/cli.drc/v1",
+        "preflight|drc-clean"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "KLayout reported 8 DRC violation(s).",
+      "extensions": {}
+    },
+    {
+      "id": "synthetic-native-lvs-mismatch",
+      "covers": [
+        "surface|openada.surface/cli.lvs/v1",
+        "preflight|lvs-match"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "native LVS report contains mismatch evidence",
+      "extensions": {}
+    }
+  ],
+  "tamper_replays": [
+    {
+      "id": "reconciled-seven-item-drc",
+      "covers": [
+        "surface|openada.surface/cli.drc/v1",
+        "preflight|drc-clean"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "native DRC item count",
+      "extensions": {}
+    },
+    {
+      "id": "unbound-native-lvs-json",
+      "covers": [
+        "surface|openada.surface/cli.lvs/v1",
+        "preflight|lvs-match"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "lvs.netgen-comparison-json.sha256",
+      "extensions": {}
+    }
+  ],
+  "agent_evidence": {
+    "result_step": "agent-evidence",
+    "required_json_pointers": [
+      "/decisions/inverter/decision",
+      "/decisions/inverter/basis",
+      "/decisions/gallery/decision",
+      "/decisions/gallery/basis/0/classes",
+      "/operations/drc_clean/evidence/drc_clean",
+      "/operations/drc_fail/evidence/total_violations",
+      "/operations/drc_fail/evidence/category_counts",
+      "/operations/drc_fail/evidence/violations",
+      "/operations/drc_fail/evidence/normalization/retained_geometries",
+      "/operations/drc_fail/evidence/normalization/retained_coordinate_pairs",
+      "/operations/lvs_match/evidence/lvs_match",
+      "/operations/lvs_match/evidence/mismatch_count",
+      "/operations/lvs_match/evidence/evidence_agrees",
+      "/operations/lvs_match/evidence/report/final_match",
+      "/replays/negative_replays",
+      "/replays/tamper_replays",
+      "/trust_chain",
+      "/limitations",
+      "/standards/ieee_measurement_standard/status"
+    ],
+    "extensions": {}
+  },
+  "release_verification": {
+    "implementation": {
+      "repository_path": "conformance/ihp-inverter/semantic.py",
+      "sha256": "fa10786b0802ca82968dc666b9a48559ca5ffa1aa0d665d6874337dea0fd34b5",
+      "extensions": {}
+    },
+    "arguments": [],
+    "timeout_seconds": 120,
+    "extensions": {}
+  },
+  "extensions": {
+    "org.openada.physical": {
+      "coverage_scope": "exact catalog rows only; no variants or native mappings are claimed",
+      "decision_scope": "engineering proceed/block with limitations, not tapeout signoff"
+    }
+  }
+}

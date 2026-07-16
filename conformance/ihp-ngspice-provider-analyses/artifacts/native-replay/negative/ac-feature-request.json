@@ -1,0 +1,89 @@
+{
+  "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+  "configuration": [
+    {
+      "extensions": {},
+      "locator": {
+        "extensions": {},
+        "path": "/evidence/generated/provider-config.json",
+        "sha256": "51794a232531fc6364eea3f66253b6f8e55d8d18131260b63107799661fb17b8",
+        "type": "filesystem"
+      },
+      "required": true,
+      "role": "simulator-configuration"
+    },
+    {
+      "extensions": {},
+      "locator": {
+        "extensions": {},
+        "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+        "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5",
+        "type": "filesystem"
+      },
+      "required": true,
+      "role": "pdk"
+    }
+  ],
+  "driver_selector": {
+    "driver_id": "org.openada.driver.ngspice-pdk-control",
+    "driver_version": "0.5.0",
+    "extensions": {},
+    "required_features": [
+      "openada.feature/simulation.analysis.tran/v1alpha1"
+    ],
+    "transport_id": "local-json-stdio"
+  },
+  "evidence_destination": {
+    "collision_policy": "fail-if-present",
+    "extensions": {},
+    "locator": {
+      "extensions": {},
+      "path": "/evidence/negative/native-ac-feature",
+      "type": "filesystem"
+    }
+  },
+  "evidence_policy": {
+    "extensions": {},
+    "identity_requirement": "content-digest",
+    "provenance": "bounded",
+    "required_artifact_roles": [
+      "simulation.result",
+      "simulation.log"
+    ],
+    "retain_native_artifacts": true,
+    "retain_native_logs": true
+  },
+  "execution_constraints": {
+    "completion": "wait",
+    "extensions": {},
+    "max_artifact_bytes": 268435456,
+    "max_log_bytes": 16777216,
+    "side_effects": "evidence-only",
+    "timeout_ms": 180000
+  },
+  "extensions": {},
+  "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+  "parameters": {
+    "analysis": {
+      "extensions": {},
+      "points": 100,
+      "start_hz": 1.0,
+      "stop_hz": 10000000.0,
+      "sweep": "dec",
+      "type": "ac"
+    },
+    "extensions": {}
+  },
+  "request_id": "22000000-0000-4000-8000-000000000003",
+  "schema": "openada.request/v0alpha1",
+  "target": {
+    "extensions": {},
+    "kind": "testbench",
+    "locator": {
+      "extensions": {},
+      "path": "/evidence/decks/ac.spice",
+      "sha256": "073f05e1032fdcf8c936da81679d16ba8ee711b2d143fc23c9f7620557904863",
+      "type": "filesystem"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "inverter": {
+    "derived": {
+      "bytes": 1635,
+      "path": "/evidence/sources/inverter-spectral.sch",
+      "sha256": "7b9ec3475c19c4895554a7c9d5efdc2e0827b521a2a2d2b9981ec98a0a49f629"
+    },
+    "rcfile": {
+      "bytes": 130,
+      "path": "/evidence/sources/inverter.xschemrc",
+      "sha256": "d743a01b4380622b67a130f5b07a94b84b7cfd387a3d442efa17be7a6fff71e3"
+    },
+    "upstream": {
+      "bytes": 1606,
+      "path": "/evidence/sources/inverter-upstream.sch",
+      "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
+    }
+  },
+  "ota": {
+    "derived": {
+      "bytes": 5174,
+      "path": "/evidence/sources/ota-ac.sch",
+      "sha256": "28e085425fe0927d9aaa55b354fc3ba089aeca252906c27465ceac1be024b253"
+    },
+    "rcfile": {
+      "bytes": 148,
+      "path": "/evidence/sources/ota.xschemrc",
+      "sha256": "cbc13483f3fed0189c0f228ee9cf1dcba0fbbb188ac8f7598c24b034a393f7ba"
+    },
+    "upstream": {
+      "bytes": 5366,
+      "path": "/evidence/sources/ota-upstream.sch",
+      "sha256": "861a27e4fcfec15e267ed18816db791460aae1f94f1a7c83ca0c114d4379d4bc"
+    }
+  }
+}

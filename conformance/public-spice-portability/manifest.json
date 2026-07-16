@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.semantic-chain/v0alpha1",
+  "id": "openada.chain/public-spice-portability/v1",
+  "design": {
+    "class": "public-design",
+    "repository": "https://github.com/Xyce/Xyce_Regression.git",
+    "revision": "d6e278e371ec2f3df1325dcff4552e585bc7ecc1",
+    "tree": "bf4e9753365af33c82814e4c44aeb7a687490b96",
+    "subtree": "Netlists",
+    "license": {
+      "spdx": "GPL-3.0-or-later",
+      "path": "README.md",
+      "sha256": "82ff6df7bddcdf639483d261949a02a5f43da85d579f1242b05c3aa0c430f7cb"
+    },
+    "inputs": [
+      {"path": "Netlists/Output/DC/dc-noprn.cir", "sha256": "8cc7ba1548a9591c33bef458865b3f89cd6ceeae9dd84843e2a96b069e0f87d3"},
+      {"path": "Netlists/Output/TRAN/tran-raw-override-noprint.cir", "sha256": "484561fd3d74d6835f8570465f619e0ed138078214156fb3e5ff911d561fcf20"},
+      {"path": "Netlists/ACtests/RC_simple.cir", "sha256": "e992eced2155febdb8b79922f0579a4798838385b7aa573dff5440719d9d7df9"}
+    ],
+    "extensions": {
+      "org.openada": {
+        "tag": "Release-7.10.0",
+        "tag_object": "2a339ec3845af0aef99a7e6cc488a41acf64f6ed",
+        "secondary_design": {
+          "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+          "revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+          "tree": "2a710fd503226e9642e4337a324e6c192a9d8a31",
+          "license": {"spdx": "Apache-2.0", "path": "LICENSE", "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"},
+          "inputs": [
+            {"path": "modules/module_0_foundations/inverter/inverter_tb.sch", "sha256": "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"},
+            {"path": "modules/module_0_foundations/inverter/inverter.sym", "sha256": "8658fa30ac994a0bedf511e59f064e6458e9b4a30d91382f6974a5117bd5c103"},
+            {"path": "modules/module_0_foundations/inverter/inverter.sch", "sha256": "6a2e03f44df59976b8ba4fca385b104b80802d367789171790bd238f912ec771"},
+            {"path": "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench.sch", "sha256": "81577b238bdd926731d3ef54ba29e35e7f94c51aea91b0e8dd6dfbd8c4fc60c6"},
+            {"path": "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.sym", "sha256": "d6cbae50c9f6a425bab127f0644c5959c98c13893442420b6b25531af0d64126"},
+            {"path": "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.sch", "sha256": "2bfae18e0f02cbf7a2919bd8d219ea2d1edbb32457830365ae4d4965f6a2e232"}
+          ]
+        }
+      }
+    }
+  },
+  "runtime": {
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "platform": "linux/amd64",
+    "pdk_revision": "144f811cdffda49b71d28f64e8a92b697b61cf06",
+    "tools": [
+      {"id": "xschem", "path": "/foss/tools/xschem/bin/xschem", "version": "XSCHEM V3.4.8RC"},
+      {"id": "ngspice", "path": "/foss/tools/ngspice/bin/ngspice", "version": "** ngspice-46 : Circuit level simulation program"},
+      {"id": "xyce", "path": "/foss/tools/xyce/bin/Xyce", "version": "Xyce Release 7.10-opensource"}
+    ],
+    "extensions": {
+      "org.openada": {
+        "tool_sha256": {
+          "xschem": "c960e786685939e03fb76619bad6aed886190b0d5d1eed2941b745565eb95c22",
+          "ngspice": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b",
+          "xyce": "9a0645fd78a26b9bf42f2dc6fceb1a044ede6c7f7f420edacca97fb1d44473f2"
+        },
+        "pdk": {
+          "commit_file": {"path": "/foss/pdks/ihp-sg13g2/COMMIT", "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"},
+          "xschem_rcfile": {"path": "/foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc", "sha256": "d6d8fa5157ad2072e6d1ce63bda5f5d593ef4eb84631f23eed5e9ae3886f18b5"},
+          "model_files": {
+            "corner_moslv": {"path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/cornerMOSlv.lib", "sha256": "03d505847c880d233b341be115a1e5460edf4d8e9b3e8a7df791a52fa4455d67"},
+            "moslv_modules": {"path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mod.lib", "sha256": "84ec57080b9dd4666417f05db6f7b34c8dd3f12118929f9b308018613bece16e"},
+            "moslv_parameters": {"path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_parm.lib", "sha256": "cbf10b8453a18bb70b8ad0d6e40faa0937338e699b5460947a94900db6c92a6e"}
+          },
+          "psp103_osdi": {"path": "/foss/pdks/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi", "sha256": "6538578a272040e70cf4542884e86d1aecd3c6936eee9e43564db49d2d05d5ab"}
+        }
+      }
+    }
+  },
+  "contracts": [
+    {"repository_path": "schemas/semantic-chain-manifest-v0alpha1.schema.json", "sha256": "dfe687c78b361b91600dcb1889f14d52301b4c1c8f200b7dacb6c96126f3f600", "extensions": {}},
+    {"repository_path": "schemas/semantic-chain-run-v0alpha1.schema.json", "sha256": "c4916d3b4d3e63337d47da46a2e4aa94ea15fb41b755207f04a41907cc993613", "extensions": {}},
+    {"repository_path": "schemas/design-provenance-v0alpha1.schema.json", "sha256": "0e3e3ba2c6fdce6f22e93f23a26bb8b3e286cacdf109dc25d8d51aefa418e745", "extensions": {}},
+    {"repository_path": "tools/semantic_receipts.py", "sha256": "983637e95cc33c8259142dd80c96e005364dd49c6cc729e4a7f0d2d7cbcb13f0", "extensions": {}},
+    {"repository_path": "tools/verify_semantic_coverage.py", "sha256": "09bc68c3c444f228c29aec78a84742c3c7ad7663795ab2db51c88cace67b58b1", "extensions": {}},
+    {"repository_path": "schemas/result-v0alpha1.schema.json", "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15", "extensions": {}},
+    {"repository_path": "schemas/driver-manifest-v0alpha1.schema.json", "sha256": "6d4a7945d7c1abe053071c440639f68f54a86f7a204ac4bf159f323e0d9a57ec", "extensions": {}},
+    {"repository_path": "profiles/circuit.simulate-v1alpha2.json", "sha256": "498c6e6c42f441f22fa881885623a5bd4358a40130828f942fff50f7c61bfdfc", "extensions": {}},
+    {"repository_path": "profiles/result.series.extract-v1alpha1.json", "sha256": "6d2baf44313e97b5070b8e68afe529abfafec8b6ab0e7808941078a0dd201164", "extensions": {}},
+    {"repository_path": "catalog/semantic-surfaces-v0alpha1.json", "sha256": "4d8568674fd4dfc5c5d27b4b70e1dd8bd67884058ce40d8f124dc8ea30ef1b97", "extensions": {}},
+    {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}},
+    {"repository_path": "conformance/public-spice-portability/common.py", "sha256": "13a3375722d5542d20cf0b48a6713fe14dfbe683bb292fc86490c0807a7b35c8", "extensions": {}},
+    {"repository_path": "conformance/ihp-inverter/common.py", "sha256": "068f6f84a6e94c7267474eb3f8f908144d610ba74f3e6b3c073651b1c2069cdd", "extensions": {}},
+    {"repository_path": "conformance/public-spice-portability/inside.py", "sha256": "7831358cf2d0e0cd0f20693acd053408d6fa0930b8babe68081d05faa3079dec", "extensions": {}},
+    {"repository_path": "conformance/public-spice-portability/run.py", "sha256": "ced3210979d9a951dd682e5535a434261f74ce1fffaceab17e6609299f4ef9bb", "extensions": {}},
+    {"repository_path": "conformance/public-spice-portability/setup.py", "sha256": "f8b0ae35a9087100ba09712177f0b5e9b83d5e342311adf847ac2b1751265f9b", "extensions": {}},
+    {"repository_path": "conformance/public-spice-portability/test_portability_chain.py", "sha256": "fdce9c055a5a0f211774a416d84a604da64d32d64c7fe06f62fda618c3b31822", "extensions": {}},
+    {"repository_path": "conformance/public-spice-portability/verify.py", "sha256": "826d66d060b906b6e2fccdfbc0b38dbaff160cad2215dac8d834a733d4243338", "extensions": {}}
+  ],
+  "covers": [
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1",
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1",
+    "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+    "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:op",
+    "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:dc",
+    "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:ac",
+    "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:dc",
+    "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:ac",
+    "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:tran",
+    "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:op",
+    "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:dc",
+    "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac",
+    "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:dc",
+    "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:ac",
+    "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:tran",
+    "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1",
+    "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1",
+    "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+    "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1",
+    "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1",
+    "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1",
+    "surface-variant|openada.surface/cli.simulate/v1|legacy-ngspice",
+    "surface-variant|openada.surface/cli.simulate/v1|shared-xyce",
+    "surface|openada.surface/cli.capabilities/v1",
+    "surface|openada.surface/cli.doctor/v1",
+    "surface|openada.surface/cli.profile-list/v1",
+    "surface|openada.surface/cli.profile-show/v1",
+    "surface|openada.surface/cli.provider-list/v1",
+    "surface|openada.surface/cli.provider-validate/v1"
+  ],
+  "steps": [
+    {"id": "materialize-pinned-sources", "kind": "source-materialize", "native_execution": false, "covers": [], "consumes": [], "produces": ["request-contract", "pinned-xyce-fixtures", "pinned-ihp-schematics", "pinned-pdk-models", "inverter-op-deck", "inverter-dc-deck", "ota-ac-deck", "derivation-records", "xyce-dc-source", "xyce-ac-approved-derived-deck", "xyce-tran-source", "frozen-openada-source", "frozen-runtime", "installed-profiles", "circuit-simulate-profile", "ngspice-provider-manifest", "design-provenance", "secondary-design-provenance", "contract-test-suite"], "extensions": {}},
+    {"id": "simulate-ngspice-op", "kind": "semantic-command", "native_execution": true, "covers": ["feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:op", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["inverter-op-deck"], "produces": ["ngspice-op-result", "ngspice-op-raw"], "extensions": {}},
+    {"id": "simulate-ngspice-dc", "kind": "semantic-command", "native_execution": true, "covers": ["feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:dc", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["inverter-dc-deck"], "produces": ["ngspice-dc-result", "ngspice-dc-raw"], "extensions": {}},
+    {"id": "simulate-ngspice-ac", "kind": "semantic-command", "native_execution": true, "covers": ["feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:ac", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["ota-ac-deck"], "produces": ["ngspice-ac-result", "ngspice-ac-raw"], "extensions": {}},
+    {"id": "simulate-xyce-dc", "kind": "semantic-command", "native_execution": true, "covers": ["native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:dc", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "surface-variant|openada.surface/cli.simulate/v1|shared-xyce"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["xyce-dc-source"], "produces": ["xyce-dc-result", "xyce-dc-raw"], "extensions": {}},
+    {"id": "simulate-xyce-ac", "kind": "semantic-command", "native_execution": true, "covers": ["native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:ac", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["xyce-ac-approved-derived-deck"], "produces": ["xyce-ac-result", "xyce-ac-raw"], "extensions": {}},
+    {"id": "simulate-xyce-tran", "kind": "semantic-command", "native_execution": true, "covers": ["native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:tran", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["xyce-tran-source"], "produces": ["xyce-tran-result", "xyce-tran-raw"], "extensions": {}},
+    {"id": "simulate-legacy-ngspice", "kind": "semantic-command", "native_execution": true, "covers": ["surface-variant|openada.surface/cli.simulate/v1|legacy-ngspice"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["inverter-op-deck"], "produces": ["legacy-ngspice-result", "legacy-ngspice-raw"], "extensions": {}},
+    {"id": "extract-ngspice-op", "kind": "semantic-command", "native_execution": false, "covers": ["native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:op"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["ngspice-op-result", "ngspice-op-raw"], "produces": ["ngspice-op-series"], "extensions": {}},
+    {"id": "extract-ngspice-dc", "kind": "semantic-command", "native_execution": false, "covers": ["native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:dc"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["ngspice-dc-result", "ngspice-dc-raw"], "produces": ["ngspice-dc-series"], "extensions": {}},
+    {"id": "extract-ngspice-ac", "kind": "semantic-command", "native_execution": false, "covers": ["native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["ngspice-ac-result", "ngspice-ac-raw"], "produces": ["ngspice-ac-series"], "extensions": {}},
+    {"id": "extract-xyce-dc", "kind": "semantic-command", "native_execution": false, "covers": ["native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:dc"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["xyce-dc-result", "xyce-dc-raw"], "produces": ["xyce-dc-series"], "extensions": {}},
+    {"id": "extract-xyce-ac", "kind": "semantic-command", "native_execution": false, "covers": ["native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:ac"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["xyce-ac-result", "xyce-ac-raw"], "produces": ["xyce-ac-series"], "extensions": {}},
+    {"id": "extract-xyce-tran", "kind": "semantic-command", "native_execution": false, "covers": ["native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:tran"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["xyce-tran-result", "xyce-tran-raw"], "produces": ["xyce-tran-series"], "extensions": {}},
+    {"id": "capabilities", "kind": "semantic-command", "native_execution": false, "covers": ["surface|openada.surface/cli.capabilities/v1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["frozen-openada-source"], "produces": ["capabilities-result"], "extensions": {}},
+    {"id": "doctor", "kind": "semantic-command", "native_execution": false, "covers": ["surface|openada.surface/cli.doctor/v1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["frozen-runtime"], "produces": ["doctor-result"], "extensions": {}},
+    {"id": "profile-list", "kind": "semantic-command", "native_execution": false, "covers": ["surface|openada.surface/cli.profile-list/v1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["installed-profiles"], "produces": ["profile-list-result"], "extensions": {}},
+    {"id": "profile-show", "kind": "semantic-command", "native_execution": false, "covers": ["surface|openada.surface/cli.profile-show/v1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["circuit-simulate-profile"], "produces": ["profile-show-result"], "extensions": {}},
+    {"id": "provider-list", "kind": "semantic-command", "native_execution": false, "covers": ["surface|openada.surface/cli.provider-list/v1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["ngspice-provider-manifest"], "produces": ["provider-list-result"], "extensions": {}},
+    {"id": "provider-validate", "kind": "semantic-command", "native_execution": false, "covers": ["surface|openada.surface/cli.provider-validate/v1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["ngspice-provider-manifest"], "produces": ["provider-validation-decision"], "extensions": {}},
+    {"id": "independent-verifier", "kind": "independent-oracle", "native_execution": false, "covers": [], "implementation": {"repository_path": "conformance/public-spice-portability/verify.py", "sha256": "826d66d060b906b6e2fccdfbc0b38dbaff160cad2215dac8d834a733d4243338", "extensions": {}}, "consumes": ["derivation-records", "ngspice-op-result", "ngspice-op-raw", "ngspice-dc-result", "ngspice-dc-raw", "ngspice-ac-result", "ngspice-ac-raw", "xyce-dc-result", "xyce-dc-raw", "xyce-ac-result", "xyce-ac-raw", "xyce-tran-result", "xyce-tran-raw", "legacy-ngspice-result", "legacy-ngspice-raw", "ngspice-op-series", "ngspice-dc-series", "ngspice-ac-series", "xyce-dc-series", "xyce-ac-series", "xyce-tran-series", "capabilities-result", "doctor-result", "profile-list-result", "profile-show-result", "provider-list-result", "provider-validation-decision"], "produces": ["independent-portability-verdict"], "extensions": {}},
+    {"id": "agent-decision", "kind": "independent-decision", "native_execution": false, "covers": [], "implementation": {"repository_path": "conformance/public-spice-portability/verify.py", "sha256": "826d66d060b906b6e2fccdfbc0b38dbaff160cad2215dac8d834a733d4243338", "extensions": {}}, "consumes": ["independent-portability-verdict", "ngspice-op-series", "ngspice-dc-series", "ngspice-ac-series", "xyce-dc-series", "xyce-ac-series", "xyce-tran-series", "capabilities-result", "doctor-result", "profile-list-result", "profile-show-result", "provider-list-result", "provider-validation-decision"], "produces": ["agent-portability-evidence"], "extensions": {}},
+    {"id": "contract-tests", "kind": "independent-oracle", "native_execution": false, "covers": [], "implementation": {"repository_path": "conformance/public-spice-portability/test_portability_chain.py", "sha256": "fdce9c055a5a0f211774a416d84a604da64d32d64c7fe06f62fda618c3b31822", "extensions": {}}, "consumes": ["contract-test-suite", "agent-portability-evidence"], "produces": ["contract-test-verdict"], "extensions": {}}
+  ],
+  "negative_replays": [
+    {"id": "xyce-ac-presentation-rejected", "covers": ["feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:ac", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "surface-variant|openada.surface/cli.simulate/v1|shared-xyce"], "expected_status": "unknown", "required_diagnostic": "simulation.request.invalid", "extensions": {}},
+    {"id": "xyce-op-unsupported", "covers": ["native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:dc", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:tran", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1", "surface-variant|openada.surface/cli.simulate/v1|shared-xyce"], "expected_status": "unknown", "required_diagnostic": "simulation.analysis.unsupported", "extensions": {}},
+    {"id": "ngspice-analysis-mismatch", "covers": ["feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1", "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:op", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:dc", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:ac", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "surface-variant|openada.surface/cli.simulate/v1|legacy-ngspice"], "expected_status": "unknown", "required_diagnostic": "simulation.request.invalid", "extensions": {}},
+    {"id": "extract-missing-selector", "covers": ["native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:op", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:dc", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:dc", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:ac", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:tran"], "expected_status": "unknown", "required_diagnostic": "series.selector.missing", "extensions": {}},
+    {"id": "admin-unknown-profile", "covers": ["surface|openada.surface/cli.capabilities/v1", "surface|openada.surface/cli.doctor/v1", "surface|openada.surface/cli.profile-list/v1", "surface|openada.surface/cli.profile-show/v1"], "expected_status": "unknown", "required_diagnostic": "profile.not_found", "extensions": {}},
+    {"id": "admin-invalid-provider", "covers": ["surface|openada.surface/cli.provider-list/v1", "surface|openada.surface/cli.provider-validate/v1"], "expected_status": "unknown", "required_diagnostic": "provider.manifest.invalid", "extensions": {}}
+  ],
+  "tamper_replays": [
+    {"id": "request-contract-byte", "covers": ["feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1", "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1"], "expected_status": "unknown", "required_diagnostic": "conformance.contract.tampered", "extensions": {}},
+    {"id": "public-source-byte", "covers": ["native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:op", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:dc", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:ac", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:dc", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:ac", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:tran"], "expected_status": "unknown", "required_diagnostic": "conformance.source.tampered", "extensions": {}},
+    {"id": "derived-deck-byte", "covers": ["surface-variant|openada.surface/cli.simulate/v1|legacy-ngspice", "surface-variant|openada.surface/cli.simulate/v1|shared-xyce"], "expected_status": "unknown", "required_diagnostic": "conformance.derivation.tampered", "extensions": {}},
+    {"id": "native-raw-byte", "covers": ["native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:op", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:dc", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:dc", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:ac", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:tran"], "expected_status": "unknown", "required_diagnostic": "conformance.native.tampered", "extensions": {}},
+    {"id": "simulation-analysis-type", "covers": ["provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1"], "expected_status": "unknown", "required_diagnostic": "conformance.analysis.tampered", "extensions": {}},
+    {"id": "simulation-backend-id", "covers": ["surface-variant|openada.surface/cli.simulate/v1|legacy-ngspice", "surface-variant|openada.surface/cli.simulate/v1|shared-xyce"], "expected_status": "unknown", "required_diagnostic": "conformance.backend.tampered", "extensions": {}},
+    {"id": "extraction-series-digest", "covers": ["native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:op", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:dc", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:dc", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:ac", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:tran"], "expected_status": "unknown", "required_diagnostic": "conformance.lineage.tampered", "extensions": {}},
+    {"id": "admin-result-byte", "covers": ["surface|openada.surface/cli.capabilities/v1", "surface|openada.surface/cli.doctor/v1", "surface|openada.surface/cli.profile-list/v1", "surface|openada.surface/cli.profile-show/v1", "surface|openada.surface/cli.provider-list/v1", "surface|openada.surface/cli.provider-validate/v1"], "expected_status": "unknown", "required_diagnostic": "conformance.admin.tampered", "extensions": {}},
+    {"id": "agent-decision-byte", "covers": ["feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1", "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:op", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:dc", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.ngspice|org.ngspice.simulator|analysis:ac", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:dc", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:ac", "native-mapping|openada.operation/circuit.simulate/v1alpha2|org.openada.driver.xyce|gov.sandia.xyce|analysis:tran", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:op", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:dc", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:ac", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:dc", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:ac", "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.xyce-raw|analysis:tran", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "provider|org.openada.driver.ngspice|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.dc/v1alpha1", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.ac/v1alpha1", "provider|org.openada.driver.xyce|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.tran/v1alpha1", "surface-variant|openada.surface/cli.simulate/v1|legacy-ngspice", "surface-variant|openada.surface/cli.simulate/v1|shared-xyce", "surface|openada.surface/cli.capabilities/v1", "surface|openada.surface/cli.doctor/v1", "surface|openada.surface/cli.profile-list/v1", "surface|openada.surface/cli.profile-show/v1", "surface|openada.surface/cli.provider-list/v1", "surface|openada.surface/cli.provider-validate/v1"], "expected_status": "unknown", "required_diagnostic": "conformance.decision.tampered", "extensions": {}}
+  ],
+  "agent_evidence": {
+    "result_step": "agent-decision",
+    "required_json_pointers": ["/chain_id", "/conclusion", "/matrix", "/admin", "/negative_replays", "/source_derivations", "/limitations"],
+    "extensions": {}
+  },
+  "release_verification": {
+    "implementation": {
+      "repository_path": "conformance/public-spice-portability/verify.py",
+      "sha256": "826d66d060b906b6e2fccdfbc0b38dbaff160cad2215dac8d834a733d4243338",
+      "extensions": {}
+    },
+    "arguments": [
+      "conformance/public-spice-portability/evidence",
+      "--run-tamper-probes"
+    ],
+    "timeout_seconds": 300,
+    "extensions": {}
+  },
+  "extensions": {
+    "org.openada": {
+      "analysis_matrix": ["ngspice:op", "ngspice:dc", "ngspice:ac", "xyce:dc", "xyce:ac", "xyce:tran"],
+      "ac_derivation": {
+        "source": "Netlists/ACtests/RC_simple.cir",
+        "operation": "remove exactly one active presentation directive",
+        "removed_line": ".print ac v(1)",
+        "source_sha256": "e992eced2155febdb8b79922f0579a4798838385b7aa573dff5440719d9d7df9",
+        "derived_sha256": "5e1258932db2b737a94e9b1c61bfa7e6c37ef5da086ad68e22a452351f014cf0"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "analysis": "tran",
+  "expected_status": "invalid_request",
+  "extensions": {},
+  "id": "tran-raw-header",
+  "mutation": "raw-header-analysis-substitution",
+  "observed_diagnostic": "evidence.binding.invalid",
+  "observed_status": "invalid_request",
+  "oracle_rejection": "plot is",
+  "rejected": true,
+  "required_diagnostic": "evidence.binding.invalid",
+  "schema": "openada.tamper-replay/ihp-ngspice-provider-analyses/v1"
+}

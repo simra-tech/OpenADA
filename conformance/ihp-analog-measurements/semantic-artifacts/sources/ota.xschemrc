@@ -1,0 +1,2 @@
+source /foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc
+append XSCHEM_LIBRARY_PATH :/design/modules/module_1_bandgap_reference/part_1_OTA/schematic/

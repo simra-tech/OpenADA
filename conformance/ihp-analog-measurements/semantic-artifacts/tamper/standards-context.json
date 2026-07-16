@@ -1,0 +1,9 @@
+{
+  "expected": "independent verifier rejection",
+  "extensions": {},
+  "id": "standards-context",
+  "mutation": "generic inverter context relabeled as ADC candidate",
+  "observed": "spectral snr standards context is not generic OpenADA",
+  "schema": "openada.ihp-analog-tamper-replay/v0alpha1",
+  "status": "pass"
+}

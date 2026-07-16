@@ -1,0 +1,9 @@
+{
+  "expected": "independent verifier rejection",
+  "extensions": {},
+  "id": "engineering-decision",
+  "mutation": "design_pass false changed to true",
+  "observed": "engineering decision is not the reviewed bounded conclusion",
+  "schema": "openada.ihp-analog-tamper-replay/v0alpha1",
+  "status": "pass"
+}

@@ -1,0 +1,1001 @@
+{
+  "chain_id": "openada.chain/ihp-inverter-physical/v1",
+  "decisions": {
+    "gallery": {
+      "basis": [
+        {
+          "assertion": "drc-clean",
+          "classes": [
+            {
+              "category": "M1.b",
+              "category_path": [
+                "M1.b"
+              ],
+              "violations": 6
+            },
+            {
+              "category": "Cnt.d",
+              "category_path": [
+                "Cnt.d"
+              ],
+              "violations": 1
+            },
+            {
+              "category": "Cnt.e",
+              "category_path": [
+                "Cnt.e"
+              ],
+              "violations": 1
+            }
+          ],
+          "outcome": false,
+          "unwaived_violations": 8
+        }
+      ],
+      "decision": "block",
+      "evidence_paths": [
+        "/operations/drc_fail/evidence/violations"
+      ],
+      "next_action": "inspect and remediate the six M1.b, one Cnt.d, and one Cnt.e geometries",
+      "scope": "do not treat the gallery fixture as DRC-clean"
+    },
+    "inverter": {
+      "basis": [
+        {
+          "assertion": "drc-clean",
+          "outcome": true,
+          "unwaived_violations": 0
+        },
+        {
+          "assertion": "lvs-match",
+          "match": "unique",
+          "mismatch_count": 0,
+          "outcome": true
+        }
+      ],
+      "decision": "proceed",
+      "evidence_paths": [
+        "/operations/drc_clean/evidence",
+        "/operations/lvs_match/evidence"
+      ],
+      "next_action": "advance to the next engineering workflow stage with limitations attached",
+      "scope": "continue the inverter workflow; this is not tapeout signoff"
+    }
+  },
+  "extensions": {},
+  "independent_oracle": {
+    "claim": "Every normalized result, retained native artifact, exact reviewed outcome, and replay metadata record passed independent verification.",
+    "implementation": {
+      "bytes": 85085,
+      "repository_path": "conformance/ihp-inverter/verify.py",
+      "sha256": "5944fa1d92c410aeb3c1d6d09131354e39cf602dc82bcd282a259acfa7d01fe0"
+    },
+    "status": "pass"
+  },
+  "limitations": [
+    {
+      "id": "klayout-transitive-rules",
+      "impact": "The executable Ruby deck may read transitive inputs; the reviewed main deck, declared provenance inputs, and optional waiver database boundary are hashed, but undeclared transitive reads are not enumerated."
+    },
+    {
+      "id": "bounded-klayout-transcript",
+      "impact": "KLayout stdout and stderr are retained as bounded tails, not unbounded logs."
+    },
+    {
+      "id": "netgen-transitive-setup",
+      "impact": "The executable Netgen setup Tcl may read transitive files or ambient environment state that the operation cannot infer."
+    },
+    {
+      "id": "bounded-netgen-transcript",
+      "impact": "The Netgen decision requires complete streams within the capture bound; the retained transcript is not an unbounded native log."
+    },
+    {
+      "id": "pre-extracted-layout-netlist",
+      "impact": "LVS compares the pinned pre-extracted layout netlist with the pinned schematic netlist; this chain does not extract an LVS netlist from GDS."
+    },
+    {
+      "id": "reference-flow-not-signoff",
+      "impact": "This open-source reference flow supports an engineering proceed/block decision; it is not foundry tapeout signoff."
+    },
+    {
+      "id": "separate-negative-fixture",
+      "impact": "The gallery DRC failure is a separate real design fixture and does not change the clean inverter's proceed decision."
+    },
+    {
+      "id": "checkout-state-recorded",
+      "impact": "The replay records the OpenADA checkout before and after execution; a dirty or changing checkout makes publication provisional until a source freeze."
+    }
+  ],
+  "operations": {
+    "drc_clean": {
+      "assertion": "drc-clean",
+      "engineering_status": "pass",
+      "evidence": {
+        "category_count": 592,
+        "category_counts": [],
+        "category_counts_truncated": false,
+        "cell_count": 1,
+        "drc_clean": true,
+        "item_count": 0,
+        "normalization": {
+          "geometry_values": 0,
+          "global_geometry_limit_reached": false,
+          "retained_coordinate_pairs": 0,
+          "retained_geometries": 0
+        },
+        "top_cell": "inverter",
+        "total_violations": 0,
+        "violations": [],
+        "violations_truncated": false,
+        "waived_violations": 0
+      },
+      "execution": {
+        "command": [
+          "/foss/tools/klayout/klayout",
+          "-b",
+          "-r",
+          "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+          "-rd",
+          "input=/design/modules/module_0_foundations/PEX_Demo/layout/inverter.gds",
+          "-rd",
+          "report=/evidence/inverter.drc.lyrdb",
+          "-rd",
+          "topcell=inverter"
+        ],
+        "exit_code": 0,
+        "status": "completed"
+      },
+      "retained_artifacts": [
+        {
+          "bytes": 9670,
+          "filename": "drc.json",
+          "kind": "openada-result",
+          "path": "/evidence/drc.json",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/drc.json",
+          "role": "normalized-evidence",
+          "sha256": "f6ddf537905f30146ffe1795d96d5faac005c9564493b9f99fbb9bb5a8280a3e"
+        },
+        {
+          "bytes": 120878,
+          "filename": "inverter.drc.lyrdb",
+          "kind": "klayout-lyrdb",
+          "path": "/evidence/inverter.drc.lyrdb",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.drc.lyrdb",
+          "role": "native-evidence",
+          "sha256": "52d617caa4d63a49ca8adb94f13b56e8a195d4acf94de79d40c5297914baa6a3"
+        },
+        {
+          "bytes": 12218,
+          "filename": "inverter.drc.lyrdb.openada.log",
+          "kind": "klayout-transcript",
+          "path": "/evidence/inverter.drc.lyrdb.openada.log",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.drc.lyrdb.openada.log",
+          "role": "native-evidence",
+          "sha256": "67c17ef4431c7a09e74e4294dacb8d88ff3bbffeb77af7be24b78c4af257f9ef"
+        }
+      ],
+      "source_inputs": [
+        {
+          "kind": "gds",
+          "path": "/design/modules/module_0_foundations/PEX_Demo/layout/inverter.gds",
+          "role": "input",
+          "sha256": "9ed664d54d8c1b82a86a0d02e59a21c7593c94d1a3ca1bcc6aec614726007cd1"
+        },
+        {
+          "kind": "klayout-drc-deck",
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+          "role": "rules",
+          "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961"
+        },
+        {
+          "kind": "klayout-rules-input",
+          "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+          "role": "rules-dependency",
+          "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+        }
+      ],
+      "summary": "KLayout reported zero DRC violations.",
+      "surface_id": "openada.surface/cli.drc/v1"
+    },
+    "drc_fail": {
+      "assertion": "drc-clean",
+      "engineering_status": "fail",
+      "evidence": {
+        "category_count": 592,
+        "category_counts": [
+          {
+            "category": "M1.b",
+            "category_path": [
+              "M1.b"
+            ],
+            "violations": 6
+          },
+          {
+            "category": "Cnt.d",
+            "category_path": [
+              "Cnt.d"
+            ],
+            "violations": 1
+          },
+          {
+            "category": "Cnt.e",
+            "category_path": [
+              "Cnt.e"
+            ],
+            "violations": 1
+          }
+        ],
+        "category_counts_truncated": false,
+        "cell_count": 2,
+        "drc_clean": false,
+        "item_count": 8,
+        "normalization": {
+          "geometry_values": 8,
+          "global_geometry_limit_reached": false,
+          "retained_coordinate_pairs": 32,
+          "retained_geometries": 8
+        },
+        "top_cell": "lvs_tester",
+        "total_violations": 8,
+        "violations": [
+          {
+            "category": "Cnt.d",
+            "category_path": [
+              "Cnt.d"
+            ],
+            "cell": "lvs_tester",
+            "description": "5.14. Cnt.d Min. GatPoly enclosure of Cont is 0.07 um",
+            "geometries": [
+              {
+                "coordinates": [
+                  [
+                    3.215,
+                    -0.065
+                  ],
+                  [
+                    3.055,
+                    -0.065
+                  ],
+                  [
+                    3.283,
+                    -0.08
+                  ],
+                  [
+                    2.987,
+                    -0.08
+                  ]
+                ],
+                "coordinates_truncated": false,
+                "type": "edge-pair"
+              }
+            ],
+            "geometries_truncated": false,
+            "multiplicity": 1,
+            "tags": [],
+            "waived": false
+          },
+          {
+            "category": "Cnt.e",
+            "category_path": [
+              "Cnt.e"
+            ],
+            "cell": "lvs_tester",
+            "description": "5.14. Cnt.e Min. Cont on GatPoly space to Activ is 0.14 um",
+            "geometries": [
+              {
+                "coordinates": [
+                  [
+                    3.055,
+                    0.095
+                  ],
+                  [
+                    3.215,
+                    0.095
+                  ],
+                  [
+                    3.355,
+                    0.1
+                  ],
+                  [
+                    2.915,
+                    0.1
+                  ]
+                ],
+                "coordinates_truncated": false,
+                "type": "edge-pair"
+              }
+            ],
+            "geometries_truncated": false,
+            "multiplicity": 1,
+            "tags": [],
+            "waived": false
+          },
+          {
+            "category": "M1.b",
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "lvs_tester",
+            "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 μm.",
+            "geometries": [
+              {
+                "coordinates": [
+                  [
+                    2.93,
+                    -0.065
+                  ],
+                  [
+                    2.93,
+                    0.095
+                  ],
+                  [
+                    2.79,
+                    0.208
+                  ],
+                  [
+                    2.79,
+                    -0.178
+                  ]
+                ],
+                "coordinates_truncated": false,
+                "type": "edge-pair"
+              }
+            ],
+            "geometries_truncated": false,
+            "multiplicity": 1,
+            "tags": [],
+            "waived": false
+          },
+          {
+            "category": "M1.b",
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "lvs_tester",
+            "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 μm.",
+            "geometries": [
+              {
+                "coordinates": [
+                  [
+                    3.46,
+                    -0.095
+                  ],
+                  [
+                    3.46,
+                    0.208
+                  ],
+                  [
+                    3.32,
+                    0.095
+                  ],
+                  [
+                    3.32,
+                    -0.065
+                  ]
+                ],
+                "coordinates_truncated": false,
+                "type": "edge-pair"
+              }
+            ],
+            "geometries_truncated": false,
+            "multiplicity": 1,
+            "tags": [],
+            "waived": false
+          },
+          {
+            "category": "M1.b",
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "lvs_tester",
+            "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 μm.",
+            "geometries": [
+              {
+                "coordinates": [
+                  [
+                    3.46,
+                    -0.095
+                  ],
+                  [
+                    3.46,
+                    0.1
+                  ],
+                  [
+                    3.32,
+                    0.095
+                  ],
+                  [
+                    3.32,
+                    -0.065
+                  ]
+                ],
+                "coordinates_truncated": false,
+                "type": "edge-pair"
+              }
+            ],
+            "geometries_truncated": false,
+            "multiplicity": 1,
+            "tags": [],
+            "waived": false
+          },
+          {
+            "category": "M1.b",
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "lvs_tester",
+            "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 μm.",
+            "geometries": [
+              {
+                "coordinates": [
+                  [
+                    2.93,
+                    -0.065
+                  ],
+                  [
+                    2.93,
+                    0.095
+                  ],
+                  [
+                    2.79,
+                    0.1
+                  ],
+                  [
+                    2.79,
+                    -0.178
+                  ]
+                ],
+                "coordinates_truncated": false,
+                "type": "edge-pair"
+              }
+            ],
+            "geometries_truncated": false,
+            "multiplicity": 1,
+            "tags": [],
+            "waived": false
+          },
+          {
+            "category": "M1.b",
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "nmos$1",
+            "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 μm.",
+            "geometries": [
+              {
+                "coordinates": [
+                  [
+                    0.37,
+                    -0.113
+                  ],
+                  [
+                    0.37,
+                    -0.005
+                  ],
+                  [
+                    0.23,
+                    0.108
+                  ],
+                  [
+                    0.23,
+                    0.0
+                  ]
+                ],
+                "coordinates_truncated": false,
+                "type": "edge-pair"
+              }
+            ],
+            "geometries_truncated": false,
+            "multiplicity": 1,
+            "tags": [],
+            "waived": false
+          },
+          {
+            "category": "M1.b",
+            "category_path": [
+              "M1.b"
+            ],
+            "cell": "nmos$1",
+            "description": "5.16. M1.b: Min. Metal1 (drawing + filler) space or notch: 0.18 μm.",
+            "geometries": [
+              {
+                "coordinates": [
+                  [
+                    0.76,
+                    -0.005
+                  ],
+                  [
+                    0.76,
+                    -0.113
+                  ],
+                  [
+                    0.9,
+                    0.0
+                  ],
+                  [
+                    0.9,
+                    0.108
+                  ]
+                ],
+                "coordinates_truncated": false,
+                "type": "edge-pair"
+              }
+            ],
+            "geometries_truncated": false,
+            "multiplicity": 1,
+            "tags": [],
+            "waived": false
+          }
+        ],
+        "violations_truncated": false,
+        "waived_violations": 0
+      },
+      "execution": {
+        "command": [
+          "/foss/tools/klayout/klayout",
+          "-b",
+          "-r",
+          "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+          "-rd",
+          "input=/design/modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+          "-rd",
+          "report=/evidence/lvs-tester.drc.lyrdb",
+          "-rd",
+          "topcell=lvs_tester"
+        ],
+        "exit_code": 0,
+        "status": "completed"
+      },
+      "retained_artifacts": [
+        {
+          "bytes": 17266,
+          "filename": "drc-fail.json",
+          "kind": "openada-result",
+          "path": "/evidence/drc-fail.json",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/drc-fail.json",
+          "role": "normalized-evidence",
+          "sha256": "4ad534042c61bdbcae6d2d8e6b4cd9f874c01bd9fefee34b5ecc4ba10bd546d1"
+        },
+        {
+          "bytes": 123327,
+          "filename": "lvs-tester.drc.lyrdb",
+          "kind": "klayout-lyrdb",
+          "path": "/evidence/lvs-tester.drc.lyrdb",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/lvs-tester.drc.lyrdb",
+          "role": "native-evidence",
+          "sha256": "205d85acb90e313a36565feb231953b9b33a96a471ff9ce3f4a12a9dd1840104"
+        },
+        {
+          "bytes": 12218,
+          "filename": "lvs-tester.drc.lyrdb.openada.log",
+          "kind": "klayout-transcript",
+          "path": "/evidence/lvs-tester.drc.lyrdb.openada.log",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/lvs-tester.drc.lyrdb.openada.log",
+          "role": "native-evidence",
+          "sha256": "1c10b0ab38a133f76a143d55198fe6bff11cbb9cc53977579f6895437433da8e"
+        }
+      ],
+      "source_inputs": [
+        {
+          "kind": "gds",
+          "path": "/design/modules/module_0_foundations/lvs_tester/GDS/gallery.gds",
+          "role": "input",
+          "sha256": "c536ff737248e62cc209a6aec764a7f21750d0978e2e8351a4f0c2a6f144bc96"
+        },
+        {
+          "kind": "klayout-drc-deck",
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+          "role": "rules",
+          "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961"
+        },
+        {
+          "kind": "klayout-rules-input",
+          "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+          "role": "rules-dependency",
+          "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+        }
+      ],
+      "summary": "KLayout reported 8 DRC violation(s).",
+      "surface_id": "openada.surface/cli.drc/v1"
+    },
+    "lvs_match": {
+      "assertion": "lvs-match",
+      "engineering_status": "pass",
+      "evidence": {
+        "comparison_count": 1,
+        "device_counts": [
+          [
+            [
+              "ntap1",
+              1
+            ],
+            [
+              "ptap1",
+              1
+            ],
+            [
+              "sg13_lv_nmos",
+              1
+            ],
+            [
+              "sg13_lv_pmos",
+              1
+            ]
+          ],
+          [
+            [
+              "ntap1",
+              1
+            ],
+            [
+              "ptap1",
+              1
+            ],
+            [
+              "sg13_lv_nmos",
+              1
+            ],
+            [
+              "sg13_lv_pmos",
+              1
+            ]
+          ]
+        ],
+        "evidence_agrees": true,
+        "json_outcome": "pass",
+        "lvs_match": true,
+        "mismatch_count": 0,
+        "node_counts": [
+          6,
+          6
+        ],
+        "outcome": "pass",
+        "outcomes_agree": true,
+        "pin_counts": [
+          4,
+          4
+        ],
+        "report": {
+          "comparison_count": 1,
+          "device_counts": [
+            4,
+            4
+          ],
+          "final_match": true,
+          "mismatch_count": 0,
+          "node_counts": [
+            6,
+            6
+          ],
+          "outcome": "pass",
+          "pin_lists_equivalent": true,
+          "structure_complete": true,
+          "terminal_conflict": false,
+          "terminal_outcome": "pass",
+          "terminal_style": "final-result",
+          "top_cell": "inverter",
+          "top_comparison_count": 1,
+          "unique_match_markers": true
+        },
+        "report_outcome": "pass",
+        "structural_counts_agree": true,
+        "top_cell": "inverter",
+        "top_comparison_count": 1
+      },
+      "execution": {
+        "command": [
+          "/foss/tools/netgen/bin/netgen",
+          "-batch",
+          "lvs",
+          "/design/modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir inverter",
+          "/design/modules/module_0_foundations/PEX_Demo/simulations/inverter.spice inverter",
+          "/foss/pdks/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl",
+          "/evidence/inverter.lvs.comp",
+          "-json"
+        ],
+        "exit_code": 0,
+        "status": "completed"
+      },
+      "retained_artifacts": [
+        {
+          "bytes": 12824,
+          "filename": "lvs.json",
+          "kind": "openada-result",
+          "path": "/evidence/lvs.json",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/lvs.json",
+          "role": "normalized-evidence",
+          "sha256": "a1e88a2f94cafa0819752b224575924d797a81585f3ccf77a576f130c0c8deea"
+        },
+        {
+          "bytes": 1598,
+          "filename": "inverter.lvs.comp",
+          "kind": "netgen-comparison",
+          "path": "/evidence/inverter.lvs.comp",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.lvs.comp",
+          "role": "native-evidence",
+          "sha256": "6df6dab97e8ee40587f4a37f10cd82364e3088b6a8b33b80b691cf214380e906"
+        },
+        {
+          "bytes": 578,
+          "filename": "inverter.lvs.json",
+          "kind": "netgen-comparison-json",
+          "path": "/evidence/inverter.lvs.json",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.lvs.json",
+          "role": "native-evidence",
+          "sha256": "d0fe4e41e1e70342dec83bd439eacdf6e49c0577334e9728f1147fe26b47390b"
+        },
+        {
+          "bytes": 6115,
+          "filename": "inverter.lvs.comp.openada.log",
+          "kind": "netgen-transcript",
+          "path": "/evidence/inverter.lvs.comp.openada.log",
+          "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.lvs.comp.openada.log",
+          "role": "native-evidence",
+          "sha256": "fdd3b097f9debc0c6c8d3327da28d52031397cffed4a4be9f14cce4ef3c7bddd"
+        }
+      ],
+      "source_inputs": [
+        {
+          "kind": "layout-netlist",
+          "path": "/design/modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir",
+          "role": "input",
+          "sha256": "ea05ff8402661fdb09978f2210b3d985ad6b679c1b69b0e564d047b135bc14a9"
+        },
+        {
+          "kind": "schematic-netlist",
+          "path": "/design/modules/module_0_foundations/PEX_Demo/simulations/inverter.spice",
+          "role": "reference",
+          "sha256": "d6e54b972bbd3140498081f79b1bfa06f6da29f6528ebda1065d47499dc5f8f9"
+        },
+        {
+          "kind": "netgen-setup",
+          "path": "/foss/pdks/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl",
+          "role": "rules",
+          "sha256": "9981101e0bbe9d8f6af656f03475d0d00fb7507559645e85e4d9d5f704b3878e"
+        },
+        {
+          "kind": "netgen-rules-input",
+          "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+          "role": "rules-dependency",
+          "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+        }
+      ],
+      "summary": "Netgen produced clean, agreeing native evidence for a unique LVS match.",
+      "surface_id": "openada.surface/cli.lvs/v1"
+    }
+  },
+  "replay": {
+    "created_at": "2026-07-16T00:22:50.278528Z",
+    "openada_checkout": {
+      "after": {
+        "commit": "d1c31972e70538511afd6197f47ba3d7072ed45e",
+        "status_entry_count": 102,
+        "status_sha256": "d0f4d061a28536eca65ee848a7e9afc832f7645dfae1a004e82a86992ec072db",
+        "tracked_files_modified": true,
+        "untracked_files_present": true,
+        "working_tree_modified": true
+      },
+      "before": {
+        "commit": "d1c31972e70538511afd6197f47ba3d7072ed45e",
+        "status_entry_count": 102,
+        "status_sha256": "d0f4d061a28536eca65ee848a7e9afc832f7645dfae1a004e82a86992ec072db",
+        "tracked_files_modified": true,
+        "untracked_files_present": true,
+        "working_tree_modified": true
+      },
+      "commit_exact": false,
+      "state_unchanged": true
+    },
+    "retained_run_artifact": {
+      "bytes": 1337,
+      "filename": "run.json",
+      "kind": "conformance-run",
+      "path": "/evidence/run.json",
+      "repository_path": "conformance/ihp-inverter/semantic-artifacts/run.json",
+      "role": "native-run-metadata",
+      "sha256": "336f3f775b13f571e4bcc85261a1f6cf9e78a8f05117e66b1346efbb272ac841"
+    }
+  },
+  "replays": {
+    "negative_replays": [
+      {
+        "covers": [
+          "surface|openada.surface/cli.drc/v1",
+          "preflight|drc-clean"
+        ],
+        "evidence": [
+          {
+            "bytes": 17266,
+            "filename": "drc-fail.json",
+            "sha256": "4ad534042c61bdbcae6d2d8e6b4cd9f874c01bd9fefee34b5ecc4ba10bd546d1"
+          },
+          {
+            "bytes": 123327,
+            "filename": "lvs-tester.drc.lyrdb",
+            "sha256": "205d85acb90e313a36565feb231953b9b33a96a471ff9ce3f4a12a9dd1840104"
+          }
+        ],
+        "expected_status": "fail",
+        "fixture": "public-design-native-run",
+        "id": "real-gallery-drc-fail",
+        "mutation": null,
+        "observed_diagnostic": "KLayout reported 8 DRC violation(s).",
+        "observed_status": "fail",
+        "required_diagnostic": "KLayout reported 8 DRC violation(s).",
+        "verdict": "accepted-negative-outcome"
+      },
+      {
+        "covers": [
+          "surface|openada.surface/cli.lvs/v1",
+          "preflight|lvs-match"
+        ],
+        "evidence": [],
+        "expected_status": "fail",
+        "fixture": "synthetic-mismatch-injection-into-real-replay",
+        "id": "synthetic-native-lvs-mismatch",
+        "mutation": {
+          "bytes": 37,
+          "method": "replace with an explicit native mismatch terminal",
+          "sha256": "f2433fc8564bcccf3478d618bd48f9e96d02ec75fa3214d9f998ed835587be28",
+          "target": "inverter.lvs.comp"
+        },
+        "observed_diagnostic": "native LVS report contains mismatch evidence: ['Final result: Circuits do not match.']",
+        "observed_status": "rejected",
+        "required_diagnostic": "native LVS report contains mismatch evidence",
+        "verdict": "expected-rejection"
+      }
+    ],
+    "report": {
+      "bytes": 3804,
+      "repository_path": "conformance/ihp-inverter/semantic-probes.json",
+      "sha256": "e860515b8a97e0a9863910c9a5f8743bb329a9c2737e05e8f13a749fcb8515e4"
+    },
+    "summary": {
+      "all_required_diagnostics_observed": true,
+      "probe_count": 4,
+      "status": "pass"
+    },
+    "tamper_replays": [
+      {
+        "covers": [
+          "surface|openada.surface/cli.drc/v1",
+          "preflight|drc-clean"
+        ],
+        "expected_status": "unknown",
+        "fixture": "tampered-copy-of-real-replay",
+        "id": "reconciled-seven-item-drc",
+        "mutation": {
+          "bytes": 123059,
+          "method": "remove one item and reconcile the normalized count and digest",
+          "sha256": "456fd75e5f9dc78b3baf8eaf9b9bf2fe460c3431dfa0918644d16f91c5ea5458",
+          "target": "lvs-tester.drc.lyrdb"
+        },
+        "observed_diagnostic": "native DRC item count: expected 8, got 7",
+        "observed_status": "rejected",
+        "required_diagnostic": "native DRC item count",
+        "verdict": "expected-rejection"
+      },
+      {
+        "covers": [
+          "surface|openada.surface/cli.lvs/v1",
+          "preflight|lvs-match"
+        ],
+        "expected_status": "unknown",
+        "fixture": "tampered-copy-of-real-replay",
+        "id": "unbound-native-lvs-json",
+        "mutation": {
+          "bytes": 579,
+          "method": "append one unbound byte without changing the normalized artifact digest",
+          "sha256": "81ee321edbcb132fbd2cb7955ffbafdf3ffb6f3af4b1af0f939569545eb46c2b",
+          "target": "inverter.lvs.json"
+        },
+        "observed_diagnostic": "lvs.netgen-comparison-json.sha256: expected '81ee321edbcb132fbd2cb7955ffbafdf3ffb6f3af4b1af0f939569545eb46c2b', got 'd0fe4e41e1e70342dec83bd439eacdf6e49c0577334e9728f1147fe26b47390b'",
+        "observed_status": "rejected",
+        "required_diagnostic": "lvs.netgen-comparison-json.sha256",
+        "verdict": "expected-rejection"
+      }
+    ],
+    "verdict_artifacts": [
+      {
+        "bytes": 1266,
+        "replay_id": "real-gallery-drc-fail",
+        "replay_type": "negative-replay",
+        "repository_path": "conformance/ihp-inverter/semantic-replays/real-gallery-drc-fail.json",
+        "sha256": "51e2170a150dacc76bb0761d4fe09b4cbe47aaa36d6cdd1b740eaa11c496ceed"
+      },
+      {
+        "bytes": 1133,
+        "replay_id": "reconciled-seven-item-drc",
+        "replay_type": "tamper-replay",
+        "repository_path": "conformance/ihp-inverter/semantic-replays/reconciled-seven-item-drc.json",
+        "sha256": "74cdf77734ca8b371f14a38e0755de2d05871bbd310ce083c6a7db6bbd1f368b"
+      },
+      {
+        "bytes": 1223,
+        "replay_id": "synthetic-native-lvs-mismatch",
+        "replay_type": "negative-replay",
+        "repository_path": "conformance/ihp-inverter/semantic-replays/synthetic-native-lvs-mismatch.json",
+        "sha256": "f3fb8d88c5e46f9ae4fb2e34da9b4dc8c53a9acb8d966e8190d69eb8c54636f2"
+      },
+      {
+        "bytes": 1289,
+        "replay_id": "unbound-native-lvs-json",
+        "replay_type": "tamper-replay",
+        "repository_path": "conformance/ihp-inverter/semantic-replays/unbound-native-lvs-json.json",
+        "sha256": "f0431427aa3df912e0bafa0479c175f15b009f168072dab207e70a1dc9255be4"
+      }
+    ]
+  },
+  "runtime": {
+    "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "network": "none during EDA execution",
+    "pdk": {
+      "name": "ihp-sg13g2",
+      "revision": "144f811cdffda49b71d28f64e8a92b697b61cf06",
+      "revision_file": "/foss/pdks/ihp-sg13g2/COMMIT",
+      "revision_file_sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5",
+      "source": "bundled in the pinned runtime image"
+    },
+    "platform": "linux/amd64",
+    "tools": [
+      {
+        "id": "klayout",
+        "path": "/foss/tools/klayout/klayout",
+        "version": "KLayout 0.30.9"
+      },
+      {
+        "id": "netgen",
+        "path": "/foss/tools/netgen/bin/netgen",
+        "version": "Netgen 1.5.321 compiled on Mon Jun 22 11:31:27 AM CEST 2026"
+      }
+    ]
+  },
+  "schema": "openada.physical-decision/v0alpha1",
+  "source": {
+    "conformance_id": "ihp-inverter-drc-lvs",
+    "conformance_manifest_sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+    "license": {
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "spdx": "Apache-2.0"
+    },
+    "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
+    "revision": "133ecf657572e021b5921b5a1b7693abfb209623"
+  },
+  "standards": {
+    "governing_sources": [
+      {
+        "kind": "ihp-foundry-drc-deck",
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+        "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961"
+      },
+      {
+        "kind": "ihp-netgen-setup",
+        "path": "/foss/pdks/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl",
+        "sha256": "9981101e0bbe9d8f6af656f03475d0d00fb7507559645e85e4d9d5f704b3878e"
+      }
+    ],
+    "ieee_measurement_standard": {
+      "reason": "These assertions classify foundry-deck geometry and structural netlist equivalence; they are not signal measurements such as SNR.",
+      "status": "not-applicable"
+    }
+  },
+  "trust_chain": {
+    "downstream_decision": {
+      "bytes": 4593,
+      "repository_path": "conformance/ihp-inverter/semantic-decision.json",
+      "sha256": "04f60b2cc1ddd7b08e09e51d7da50a77b4284e0c01d7c2bd6ed9487ea3100565"
+    },
+    "independent_oracle": {
+      "bytes": 5089,
+      "repository_path": "conformance/ihp-inverter/semantic-oracle.json",
+      "sha256": "413a7d78ecc0be66078658fe06c1b4ee5ab3fe4bb70490dda11e22c6e2f13dee"
+    },
+    "normalized_evidence": {
+      "bytes": 30163,
+      "repository_path": "conformance/ihp-inverter/semantic-normalized.json",
+      "sha256": "345878233eef2a6ab3c01cdda58e0bbcee1808ccd4a01eba6c594125c76ac3fe"
+    }
+  }
+}

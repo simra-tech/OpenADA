@@ -1,0 +1,9 @@
+{
+  "expected": "independent verifier rejection",
+  "extensions": {},
+  "id": "native-raw-byte",
+  "mutation": "one retained linearized-raw payload byte",
+  "observed": "provider tran result does not bind native raw bytes",
+  "schema": "openada.ihp-analog-tamper-replay/v0alpha1",
+  "status": "pass"
+}

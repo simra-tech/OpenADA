@@ -1,0 +1,118 @@
+{
+  "artifacts": [],
+  "data": {
+    "extensions": {},
+    "measurement": {
+      "algorithm": {
+        "id": "openada.method/ac-complex-ratio-log-interpolation/v1alpha1",
+        "version": "1.0.0"
+      },
+      "extensions": {},
+      "kind": null,
+      "location": null,
+      "measurement_id": null,
+      "request_sha256": null,
+      "sample_count": 0,
+      "signal": null,
+      "source": {
+        "artifact_role": "measurement.source",
+        "artifact_sha256": "333c3dbe406b4da56a0a4ee45dfc6b38e888e8afa713f0136336ca1f909d6bf5",
+        "conditions": [
+          {
+            "name": "temperature",
+            "unit": "degC",
+            "value": 27.0
+          },
+          {
+            "name": "corner",
+            "unit": "1",
+            "value": "mos_tt"
+          },
+          {
+            "name": "supply_voltage",
+            "unit": "V",
+            "value": 1.2
+          },
+          {
+            "name": "load_capacitance",
+            "unit": "F",
+            "value": 5e-13
+          },
+          {
+            "name": "bias_current",
+            "unit": "A",
+            "value": 8e-05
+          }
+        ],
+        "conditions_sha256": "ae4b756f3269ff33ac915c2eb84f294f55f724c35e647531ebc77470921cdcea",
+        "lineage": {
+          "artifact_role": "simulation.result",
+          "artifact_sha256": "c5e74d5f6845221b3344179bfe2711312cb045e799295539ac2eba4165d07415",
+          "binding": "unverified",
+          "operation": "circuit.simulate",
+          "request_id": "24000000-0000-4000-8000-000000000001"
+        },
+        "operation": "openada.operation/result.series.extract/v1alpha1",
+        "request_id": "21000000-0000-4000-8000-000000000001",
+        "series_sha256": "333c3dbe406b4da56a0a4ee45dfc6b38e888e8afa713f0136336ca1f909d6bf5"
+      },
+      "status": "unknown",
+      "unit": null,
+      "value": null
+    },
+    "protocol": {
+      "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
+      "implementation_id": "org.openada.kernel.transfer-evidence",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+      "request_id": "25000000-0000-4000-8000-000000000001"
+    },
+    "transfer": {
+      "crossings": null,
+      "excluded_metrics": [
+        {
+          "metric": "gain_margin",
+          "reason": "v1alpha1 does not infer a phase crossing or gain margin."
+        }
+      ],
+      "extensions": {},
+      "interpretation": null,
+      "method": null,
+      "reference": null,
+      "request_sha256": null,
+      "signals": null,
+      "status": "unknown",
+      "trace": null
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "transfer.unit.mismatch",
+      "message": "transfer.metric.unit must be exactly 'dB' for 'low_frequency_gain_db'.",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "unknown",
+    "summary": "The AC transfer measurement could not be established."
+  },
+  "execution": {
+    "command": [],
+    "duration_ms": 0,
+    "exit_code": null,
+    "status": "invalid_request"
+  },
+  "inputs": [],
+  "operation": "result.transfer.measure",
+  "provenance": {
+    "created_at": "2026-07-16T00:51:30.534145Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": null
+}

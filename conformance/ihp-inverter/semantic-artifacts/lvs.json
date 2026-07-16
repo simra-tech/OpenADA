@@ -1,0 +1,299 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1598,
+      "exists": true,
+      "kind": "netgen-comparison",
+      "path": "/evidence/inverter.lvs.comp",
+      "role": "evidence",
+      "sha256": "6df6dab97e8ee40587f4a37f10cd82364e3088b6a8b33b80b691cf214380e906"
+    },
+    {
+      "bytes": 578,
+      "exists": true,
+      "kind": "netgen-comparison-json",
+      "path": "/evidence/inverter.lvs.json",
+      "role": "evidence",
+      "sha256": "d0fe4e41e1e70342dec83bd439eacdf6e49c0577334e9728f1147fe26b47390b"
+    },
+    {
+      "bytes": 6115,
+      "exists": true,
+      "kind": "netgen-transcript",
+      "path": "/evidence/inverter.lvs.comp.openada.log",
+      "role": "evidence",
+      "sha256": "fdd3b097f9debc0c6c8d3327da28d52031397cffed4a4be9f14cce4ef3c7bddd"
+    }
+  ],
+  "data": {
+    "ambient_environment_enumerated": false,
+    "changed_inputs": [],
+    "comparison": {
+      "comparison_count": 1,
+      "device_counts": [
+        [
+          [
+            "ntap1",
+            1
+          ],
+          [
+            "ptap1",
+            1
+          ],
+          [
+            "sg13_lv_nmos",
+            1
+          ],
+          [
+            "sg13_lv_pmos",
+            1
+          ]
+        ],
+        [
+          [
+            "ntap1",
+            1
+          ],
+          [
+            "ptap1",
+            1
+          ],
+          [
+            "sg13_lv_nmos",
+            1
+          ],
+          [
+            "sg13_lv_pmos",
+            1
+          ]
+        ]
+      ],
+      "evidence_agrees": true,
+      "json_outcome": "pass",
+      "lvs_match": true,
+      "mismatch_count": 0,
+      "mismatches": [],
+      "mismatches_truncated": false,
+      "node_counts": [
+        6,
+        6
+      ],
+      "outcome": "pass",
+      "outcomes_agree": true,
+      "pin_counts": [
+        4,
+        4
+      ],
+      "report": {
+        "comparison_count": 1,
+        "device_classes_binding": [
+          "inverter",
+          "inverter"
+        ],
+        "device_counts": [
+          4,
+          4
+        ],
+        "final_match": true,
+        "legacy_terminal_match": false,
+        "mismatch_count": 0,
+        "mismatches": [],
+        "mismatches_truncated": false,
+        "node_counts": [
+          6,
+          6
+        ],
+        "outcome": "pass",
+        "pin_lists_equivalent": true,
+        "pins_binding": [
+          "inverter",
+          "inverter"
+        ],
+        "structure_complete": true,
+        "summary_binding": [
+          "inverter",
+          "inverter"
+        ],
+        "terminal_conflict": false,
+        "terminal_outcome": "pass",
+        "terminal_style": "final-result",
+        "top_cell": "inverter",
+        "top_comparison_count": 1,
+        "unique_match_markers": true,
+        "validation": {
+          "bytes": 1598,
+          "reason": "report.valid",
+          "valid": true
+        }
+      },
+      "report_outcome": "pass",
+      "structural_counts_agree": true,
+      "top_cell": "inverter",
+      "top_comparison_count": 1,
+      "validation": {
+        "bytes": 578,
+        "reason": "json.valid",
+        "valid": true
+      }
+    },
+    "inputs_stable": true,
+    "json_output": {
+      "capture": {
+        "bytes": 578,
+        "origin": "netgen",
+        "parent_anchored": true,
+        "path": "/evidence/inverter.lvs.json",
+        "sha256": "d0fe4e41e1e70342dec83bd439eacdf6e49c0577334e9728f1147fe26b47390b",
+        "status": "valid",
+        "validation": {
+          "bytes": 578,
+          "reason": "json.valid",
+          "valid": true
+        }
+      },
+      "fresh_required": true,
+      "ownership": "native-netgen-json",
+      "parent_anchored": true,
+      "path": "/evidence/inverter.lvs.json"
+    },
+    "lvs_match": true,
+    "report_output": {
+      "capture": {
+        "bytes": 1598,
+        "origin": "netgen",
+        "parent_anchored": true,
+        "path": "/evidence/inverter.lvs.comp",
+        "sha256": "6df6dab97e8ee40587f4a37f10cd82364e3088b6a8b33b80b691cf214380e906",
+        "status": "valid",
+        "validation": {
+          "bytes": 1598,
+          "reason": "report.valid",
+          "valid": true
+        }
+      },
+      "fresh_required": true,
+      "native_json_path": "/evidence/inverter.lvs.json",
+      "ownership": "native",
+      "parent_anchored": true,
+      "path": "/evidence/inverter.lvs.comp"
+    },
+    "setup_trust": "caller-supplied executable Tcl; OpenADA does not sandbox the setup",
+    "transcript": {
+      "assessment": {
+        "clean": true,
+        "complete": true,
+        "lvs_done": true,
+        "setup_error": false,
+        "setup_read": true,
+        "stderr_accepted": true,
+        "stderr_empty": false,
+        "stderr_line_count": 8,
+        "stderr_policy": "empty-or-reviewed-netgen-permute-warning",
+        "stderr_reviewed_warning_count": 8,
+        "stderr_unrecognized_count": 0,
+        "stdout_error": false,
+        "utf8_valid": true
+      },
+      "bytes": 6115,
+      "capture_policy": "bounded complete-or-unknown process streams",
+      "limitation": "Pass or fail requires both native streams to fit the complete capture bound; the artifact is not an unbounded native log.",
+      "origin": "openada",
+      "path": "/evidence/inverter.lvs.comp.openada.log",
+      "sha256": "fdd3b097f9debc0c6c8d3327da28d52031397cffed4a4be9f14cce4ef3c7bddd",
+      "status": "valid",
+      "stderr_observed_bytes": 356,
+      "stderr_retained_bytes": 356,
+      "stderr_tail": "Unable to permute model ptap1 pins 1, 2.\nUnable to permute model ptap1 pins 1, 2.\nUnable to permute model ntap1 pins 1, 2.\nUnable to permute model ntap1 pins 1, 2.\nUnable to permute model sg13_lv_nmos pins 1, 3.\nUnable to permute model sg13_lv_nmos pins 1, 3.\nUnable to permute model sg13_lv_pmos pins 1, 3.\nUnable to permute model sg13_lv_pmos pins 1, 3.\n",
+      "stderr_truncated": false,
+      "stdout_observed_bytes": 5540,
+      "stdout_retained_bytes": 5540,
+      "stdout_tail": "d for device ptap1\nNo property w found for device ptap1\nNo property b found for device ptap1\nNo such pin 1 in model ptap1\nNo property w found for device ptap1\nNo property l found for device ptap1\nNo property l found for device ptap1\nNo property w found for device ptap1\nNo property l found for device ptap1\nNo property w found for device ptap1\nNo property b found for device ptap1\nNo such pin 1 in model ntap1\nNo property w found for device ntap1\nNo property l found for device ntap1\nNo property l found for device ntap1\nNo property w found for device ntap1\nNo property l found for device ntap1\nNo property w found for device ntap1\nNo property b found for device ntap1\nNo such pin 1 in model ntap1\nNo property w found for device ntap1\nNo property l found for device ntap1\nNo property l found for device ntap1\nNo property w found for device ntap1\nNo property l found for device ntap1\nNo property w found for device ntap1\nNo property b found for device ntap1\nNo such pin 1 in model sg13_lv_nmos\nNo property ng found for device sg13_lv_nmos\nNo property as found for device sg13_lv_nmos\nNo property ad found for device sg13_lv_nmos\nNo property pd found for device sg13_lv_nmos\nNo property ps found for device sg13_lv_nmos\nNo property trise found for device sg13_lv_nmos\nNo property z1 found for device sg13_lv_nmos\nNo property z2 found for device sg13_lv_nmos\nNo property wmin found for device sg13_lv_nmos\nNo property rfmode found for device sg13_lv_nmos\nNo property pre_layout found for device sg13_lv_nmos\nNo such pin 1 in model sg13_lv_nmos\nNo property as found for device sg13_lv_nmos\nNo property ad found for device sg13_lv_nmos\nNo property pd found for device sg13_lv_nmos\nNo property ps found for device sg13_lv_nmos\nNo property trise found for device sg13_lv_nmos\nNo property z1 found for device sg13_lv_nmos\nNo property z2 found for device sg13_lv_nmos\nNo property wmin found for device sg13_lv_nmos\nNo property rfmode found for device sg13_lv_nmos\nNo property pre_layout found for device sg13_lv_nmos\nNo such pin 1 in model sg13_lv_pmos\nNo property ng found for device sg13_lv_pmos\nNo property as found for device sg13_lv_pmos\nNo property ad found for device sg13_lv_pmos\nNo property pd found for device sg13_lv_pmos\nNo property ps found for device sg13_lv_pmos\nNo property trise found for device sg13_lv_pmos\nNo property z1 found for device sg13_lv_pmos\nNo property z2 found for device sg13_lv_pmos\nNo property wmin found for device sg13_lv_pmos\nNo property rfmode found for device sg13_lv_pmos\nNo property pre_layout found for device sg13_lv_pmos\nNo such pin 1 in model sg13_lv_pmos\nNo property as found for device sg13_lv_pmos\nNo property ad found for device sg13_lv_pmos\nNo property pd found for device sg13_lv_pmos\nNo property ps found for device sg13_lv_pmos\nNo property trise found for device sg13_lv_pmos\nNo property z1 found for device sg13_lv_pmos\nNo property z2 found for device sg13_lv_pmos\nNo property wmin found for device sg13_lv_pmos\nNo property rfmode found for device sg13_lv_pmos\nNo property pre_layout found for device sg13_lv_pmos\nComparison output logged to file /evidence/inverter.lvs.comp\nLogging to file \"/evidence/inverter.lvs.comp\" enabled\n\nContents of circuit 1:  Circuit: 'inverter'\nCircuit inverter contains 4 device instances.\n  Class: ntap1                 instances:   1\n  Class: sg13_lv_pmos          instances:   1\n  Class: sg13_lv_nmos          instances:   1\n  Class: ptap1                 instances:   1\nCircuit contains 6 nets.\nContents of circuit 2:  Circuit: 'inverter'\nCircuit inverter contains 4 device instances.\n  Class: ntap1                 instances:   1\n  Class: sg13_lv_pmos          instances:   1\n  Class: sg13_lv_nmos          instances:   1\n  Class: ptap1                 instances:   1\nCircuit contains 6 nets.\n\nCircuit 1 contains 4 devices, Circuit 2 contains 4 devices.\nCircuit 1 contains 6 nets,    Circuit 2 contains 6 nets.\n\n\nFinal result: \nCircuits match uniquely.\n.\nLogging to file \"/evidence/inverter.lvs.comp\" disabled\nLVS Done.\n",
+      "stdout_truncated": false
+    },
+    "transitive_setup_inputs_enumerated": false,
+    "working_directory": "/evidence",
+    "working_directory_is_sandbox": false
+  },
+  "diagnostics": [
+    {
+      "code": "netgen.provenance_incomplete",
+      "message": "The executable setup Tcl may read transitive files or ambient environment state that OpenADA cannot infer.",
+      "severity": "warning"
+    },
+    {
+      "code": "netgen.stderr_reviewed_warning",
+      "message": "Netgen emitted 8 reviewed 'Unable to permute model ... pins ...' warning line(s).",
+      "severity": "warning"
+    }
+  ],
+  "engineering": {
+    "status": "pass",
+    "summary": "Netgen produced clean, agreeing native evidence for a unique LVS match."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/netgen/bin/netgen",
+      "-batch",
+      "lvs",
+      "/design/modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir inverter",
+      "/design/modules/module_0_foundations/PEX_Demo/simulations/inverter.spice inverter",
+      "/foss/pdks/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl",
+      "/evidence/inverter.lvs.comp",
+      "-json"
+    ],
+    "cwd": "/evidence",
+    "duration_ms": 33,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 360,
+      "exists": true,
+      "kind": "layout-netlist",
+      "path": "/design/modules/module_0_foundations/PEX_Demo/layout/inverter_extracted.cir",
+      "role": "input",
+      "sha256": "ea05ff8402661fdb09978f2210b3d985ad6b679c1b69b0e564d047b135bc14a9"
+    },
+    {
+      "bytes": 336,
+      "exists": true,
+      "kind": "schematic-netlist",
+      "path": "/design/modules/module_0_foundations/PEX_Demo/simulations/inverter.spice",
+      "role": "reference",
+      "sha256": "d6e54b972bbd3140498081f79b1bfa06f6da29f6528ebda1065d47499dc5f8f9"
+    },
+    {
+      "bytes": 12103,
+      "exists": true,
+      "kind": "netgen-setup",
+      "path": "/foss/pdks/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl",
+      "role": "rules",
+      "sha256": "9981101e0bbe9d8f6af656f03475d0d00fb7507559645e85e4d9d5f704b3878e"
+    },
+    {
+      "bytes": 41,
+      "exists": true,
+      "kind": "netgen-rules-input",
+      "path": "/foss/pdks/ihp-sg13g2/COMMIT",
+      "role": "rules-dependency",
+      "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+    }
+  ],
+  "operation": "lvs",
+  "provenance": {
+    "created_at": "2026-07-16T00:22:50.150146Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "netgen",
+    "path": "/foss/tools/netgen/bin/netgen",
+    "version": "Netgen 1.5.321 compiled on Mon Jun 22 11:31:27 AM CEST 2026"
+  }
+}

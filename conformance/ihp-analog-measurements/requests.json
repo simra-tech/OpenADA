@@ -1,0 +1,155 @@
+{
+  "schema": "openada.ihp-analog-measurement-requests/v0alpha1",
+  "source_transforms": {
+    "ota": {
+      "source": "modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch",
+      "derived": "sources/ota-ac.sch",
+      "old_control": "value=\"\n.control\nop\nsave all\nwrite tb_OTA_op.raw\n.endc\n\n.control\nop\nac dec 100 1 10e6 \nsave all\nlet Av = db(v(vout))\nlet PSRR_linear = v(vout2)/v(VDDac)\nlet CMRR = db((v(vout)/v(vp))/(v(vout1)/v(vp)))\nlet phase = 180*cph(vout)/pi\nwrite output_file.raw \n.endc\n\"",
+      "new_control": "value=\"\n.control\nsave all\nac dec 100 1 10e6\nwrite ota_ac.raw\n.endc\n\"",
+      "rcfile": "sources/ota.xschemrc",
+      "rcfile_text": "source /foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc\nappend XSCHEM_LIBRARY_PATH :/design/modules/module_1_bandgap_reference/part_1_OTA/schematic/\n"
+    },
+    "inverter": {
+      "source": "modules/module_0_foundations/inverter/inverter_tb.sch",
+      "derived": "sources/inverter-spectral.sch",
+      "old_pulse": "PULSE(0 1.2 0.5u 10n 10n 1u 2u 1)",
+      "new_pulse": "PULSE(0 1.2 0.5u 10n 10n 0.98u 2u)",
+      "old_control": "tran 50n 2u \nwrite test_inverter.raw",
+      "new_control": "tran 31.25n 32.46875u 0.5u\nlinearize\nwrite inverter_spectral.raw",
+      "rcfile": "sources/inverter.xschemrc",
+      "rcfile_text": "source /foss/pdks/ihp-sg13g2/libs.tech/xschem/xschemrc\nappend XSCHEM_LIBRARY_PATH :/design/modules/module_0_foundations/inverter/\n"
+    }
+  },
+  "native_analyses": {
+    "ota_ac": {
+      "analysis": {
+        "type": "ac",
+        "sweep": "dec",
+        "points": 100,
+        "start_hz": 1.0,
+        "stop_hz": 10000000.0,
+        "extensions": {}
+      },
+      "required_feature": "openada.feature/simulation.analysis.ac/v1alpha1",
+      "raw_name": "ota_ac.raw"
+    },
+    "inverter_tran": {
+      "analysis": {
+        "type": "tran",
+        "step_s": 3.125e-8,
+        "stop_s": 3.246875e-5,
+        "start_s": 5e-7,
+        "extensions": {}
+      },
+      "required_feature": "openada.feature/simulation.analysis.tran/v1alpha1",
+      "raw_name": "inverter_spectral.raw"
+    }
+  },
+  "extraction": {
+    "ota_ac": {
+      "request_id": "21000000-0000-4000-8000-000000000001",
+      "selectors": [
+        {"native_name": "v(vp)", "output_name": "vp.real", "unit": "V", "component": "real"},
+        {"native_name": "v(vp)", "output_name": "vp.imag", "unit": "V", "component": "imaginary"},
+        {"native_name": "v(vout)", "output_name": "vout.real", "unit": "V", "component": "real"},
+        {"native_name": "v(vout)", "output_name": "vout.imag", "unit": "V", "component": "imaginary"}
+      ],
+      "conditions": [
+        {"name": "temperature", "value": 27.0, "unit": "degC"},
+        {"name": "corner", "value": "mos_tt", "unit": "1"},
+        {"name": "supply_voltage", "value": 1.2, "unit": "V"},
+        {"name": "load_capacitance", "value": 5e-13, "unit": "F"},
+        {"name": "bias_current", "value": 8e-5, "unit": "A"}
+      ]
+    },
+    "inverter_tran": {
+      "request_id": "21000000-0000-4000-8000-000000000002",
+      "selectors": [
+        {"native_name": "v(vout)", "output_name": "v(vout)", "unit": "V", "component": "real"}
+      ],
+      "conditions": [
+        {"name": "temperature", "value": 27.0, "unit": "degC"},
+        {"name": "corner", "value": "mos_tt", "unit": "1"},
+        {"name": "supply_voltage", "value": 1.2, "unit": "V"},
+        {"name": "application", "value": "digital-inverter-square-wave", "unit": "1"}
+      ]
+    }
+  },
+  "transfer": {
+    "input": {"real": "vp.real", "imaginary": "vp.imag"},
+    "output": {"real": "vout.real", "imaginary": "vout.imag"},
+    "method": {
+      "id": "openada.method/ac-complex-ratio-log-interpolation/v1alpha1",
+      "ratio": "output-over-input",
+      "phase_unwrap": "first-principal-then-nearest-delta",
+      "first_phase_range": "[-180,180)",
+      "interpolation": "linear-value-over-log10-frequency",
+      "crossing_policy": "require-single-falling",
+      "bandwidth_reference": "first-simulated-frequency-magnitude",
+      "bandwidth_drop_db": 3.0,
+      "phase_margin_definition": "180deg-plus-unwrapped-loop-phase-at-unity"
+    },
+    "metrics": [
+      {"kind": "low_frequency_gain_db", "unit": "dB", "request_id": "22000000-0000-4000-8000-000000000001", "expected": 70.1197413867, "absolute_tolerance": 1e-8},
+      {"kind": "bandwidth_3db", "unit": "Hz", "request_id": "22000000-0000-4000-8000-000000000002", "expected": 1332.304385, "absolute_tolerance": 0.001},
+      {"kind": "unity_gain_frequency", "unit": "Hz", "request_id": "22000000-0000-4000-8000-000000000003", "expected": 4157414.557, "absolute_tolerance": 0.01},
+      {"kind": "phase_margin", "unit": "deg", "request_id": "22000000-0000-4000-8000-000000000004", "expected": 61.4230915, "absolute_tolerance": 1e-6}
+    ]
+  },
+  "spectral": {
+    "signal": "v(vout)",
+    "method": {
+      "id": "openada.method/coherent-single-tone-fft/v1alpha1",
+      "dft_length": 1024,
+      "uniformity_relative_tolerance": 1e-9,
+      "coherent_bin_tolerance": 1e-9,
+      "coherent_sampling": "required",
+      "window": "rectangular",
+      "detrend": "mean",
+      "sidedness": "one-sided",
+      "scaling": "mean-square-per-bin",
+      "averaging": "none",
+      "missing_samples": "reject",
+      "clipping": "not-assessed"
+    },
+    "band": {
+      "lower": {"value": 0.0, "unit": "Hz"},
+      "upper": {"value": 15999999.0, "unit": "Hz"}
+    },
+    "fundamental": {
+      "method": "declared-coherent-bin",
+      "frequency": {"value": 500000.0, "unit": "Hz"},
+      "integration_half_width_bins": 0
+    },
+    "harmonics": {
+      "orders": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+      "aliasing": "fold-first-nyquist",
+      "collision": "reject",
+      "out_of_band": "exclude",
+      "integration_half_width_bins": 0
+    },
+    "standards_context": {
+      "domain": "generic-sampled-waveform",
+      "reference": "none",
+      "alignment": "openada-definition"
+    },
+    "metrics": [
+      {"kind": "snr", "request_id": "23000000-0000-4000-8000-000000000001", "expected": 93.285842, "absolute_tolerance": 1e-6},
+      {"kind": "sinad", "request_id": "23000000-0000-4000-8000-000000000002", "expected": 6.327655, "absolute_tolerance": 1e-6},
+      {"kind": "thd", "request_id": "23000000-0000-4000-8000-000000000003", "expected": -6.327655, "absolute_tolerance": 1e-6},
+      {"kind": "sfdr", "request_id": "23000000-0000-4000-8000-000000000004", "expected": 9.598544, "absolute_tolerance": 1e-6}
+    ]
+  },
+  "standards": {
+    "review_level": "public lifecycle and scope only; no licensed clause-level review",
+    "conformance_claim": false,
+    "references": [
+      {"id": "IEEE 1241-2023", "scope": "ADC terminology and test methods", "url": "https://standards.ieee.org/ieee/1241/6797/", "applicable": false},
+      {"id": "IEEE 1658-2023", "scope": "DAC terminology and test methods", "url": "https://standards.ieee.org/ieee/1658/7350/", "applicable": false},
+      {"id": "IEEE 1057-2017", "scope": "digitizing waveform recorder terminology and tests", "url": "https://standards.ieee.org/ieee/1057/5945/", "applicable": false},
+      {"id": "IEEE 181-2025", "scope": "transition, pulse, and waveform terminology", "url": "https://standards.ieee.org/ieee/181/10551/", "applicable": false}
+    ],
+    "reason": "The spectral source is a continuous-time digital inverter square wave, not an ADC, DAC, or waveform recorder under test; generic OpenADA definitions apply. The OTA transfer metrics are not a transition-parameter conformance test."
+  },
+  "extensions": {}
+}

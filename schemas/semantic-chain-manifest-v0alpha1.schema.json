@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/semantic-chain-manifest-v0alpha1.schema.json",
+  "title": "OpenADA semantic chain manifest v0alpha1",
+  "description": "A pinned real-design workflow declaration covering semantic rows from native execution through independently checked evidence and an agent-visible decision.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "id",
+    "design",
+    "runtime",
+    "contracts",
+    "covers",
+    "steps",
+    "negative_replays",
+    "tamper_replays",
+    "agent_evidence",
+    "release_verification",
+    "extensions"
+  ],
+  "properties": {
+    "$schema": {"const": "https://json-schema.org/draft/2020-12/schema"},
+    "schema": {"const": "openada.semantic-chain/v0alpha1"},
+    "id": {"type": "string", "pattern": "^openada\\.chain/[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*/v[0-9]+$", "maxLength": 256},
+    "design": {"$ref": "#/$defs/design"},
+    "runtime": {"$ref": "#/$defs/runtime"},
+    "contracts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/fileRef"}
+    },
+    "covers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2048,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 512,
+      "items": {"$ref": "#/$defs/step"}
+    },
+    "negative_replays": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/replay"}
+    },
+    "tamper_replays": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "items": {"$ref": "#/$defs/replay"}
+    },
+    "agent_evidence": {"$ref": "#/$defs/agentEvidence"},
+    "release_verification": {"$ref": "#/$defs/releaseVerification"},
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "extensions": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"},
+      "additionalProperties": {"type": "object"}
+    },
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$"
+    },
+    "fileRef": {
+      "type": "object",
+      "required": ["repository_path", "sha256", "extensions"],
+      "properties": {
+        "repository_path": {"$ref": "#/$defs/repositoryPath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "design": {
+      "type": "object",
+      "required": ["class", "repository", "revision", "tree", "subtree", "license", "inputs", "extensions"],
+      "properties": {
+        "class": {"enum": ["public-design", "public-tapeout", "synthetic"]},
+        "repository": {"type": "string", "format": "uri", "maxLength": 4096},
+        "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "subtree": {"$ref": "#/$defs/repositoryPath"},
+        "license": {
+          "type": "object",
+          "required": ["spdx", "path", "sha256"],
+          "properties": {
+            "spdx": {"type": "string", "minLength": 1, "maxLength": 128},
+            "path": {"$ref": "#/$defs/repositoryPath"},
+            "sha256": {"$ref": "#/$defs/sha256"}
+          },
+          "additionalProperties": false
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "items": {
+            "type": "object",
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": {"$ref": "#/$defs/repositoryPath"},
+              "sha256": {"$ref": "#/$defs/sha256"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["image_reference", "image_config_digest", "platform", "pdk_revision", "tools", "extensions"],
+      "properties": {
+        "image_reference": {"type": "string", "pattern": "^.+@sha256:[0-9a-f]{64}$", "maxLength": 4096},
+        "image_config_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "platform": {"type": "string", "pattern": "^[a-z0-9]+/[a-z0-9_]+$", "maxLength": 64},
+        "pdk_revision": {
+          "oneOf": [
+            {"type": "string", "minLength": 1, "maxLength": 256},
+            {"type": "null"}
+          ]
+        },
+        "tools": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": ["id", "path", "version"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1, "maxLength": 256},
+              "path": {"type": "string", "pattern": "^/", "maxLength": 4096},
+              "version": {"type": "string", "minLength": 1, "maxLength": 512}
+            },
+            "additionalProperties": false
+          }
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "kind", "native_execution", "covers", "consumes", "produces", "extensions"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 128},
+        "kind": {"enum": ["source-materialize", "semantic-command", "independent-oracle", "independent-decision"]},
+        "native_execution": {"type": "boolean"},
+        "covers": {
+          "type": "array",
+          "maxItems": 2048,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+        },
+        "request": {"$ref": "#/$defs/fileRef"},
+        "implementation": {"$ref": "#/$defs/fileRef"},
+        "consumes": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 256}
+        },
+        "produces": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 256}
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"kind": {"const": "semantic-command"}}, "required": ["kind"]},
+          "then": {
+            "required": ["request"],
+            "properties": {"covers": {"minItems": 1}}
+          },
+          "else": {"properties": {"covers": {"maxItems": 0}}}
+        },
+        {
+          "if": {"properties": {"kind": {"enum": ["independent-oracle", "independent-decision"]}}, "required": ["kind"]},
+          "then": {
+            "required": ["implementation"],
+            "properties": {"native_execution": {"const": false}}
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "replay": {
+      "type": "object",
+      "required": ["id", "covers", "expected_status", "required_diagnostic", "extensions"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 128},
+        "covers": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+        },
+        "expected_status": {"enum": ["fail", "unknown", "invalid_request"]},
+        "required_diagnostic": {"type": "string", "minLength": 1, "maxLength": 256},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "agentEvidence": {
+      "type": "object",
+      "required": ["result_step", "required_json_pointers", "extensions"],
+      "properties": {
+        "result_step": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 128},
+        "required_json_pointers": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^/", "maxLength": 1024}
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "releaseVerification": {
+      "type": "object",
+      "required": ["implementation", "arguments", "timeout_seconds", "extensions"],
+      "properties": {
+        "implementation": {"$ref": "#/$defs/fileRef"},
+        "arguments": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "pattern": "^[A-Za-z0-9._/=-]+$"
+          }
+        },
+        "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 600},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "chain_id": "openada.chain/ihp-sar-rtl/v1",
+  "negative_replays": [
+    {
+      "covers": [
+        "surface|openada.surface/cli.rtl-check/v1",
+        "preflight|rtl-structural-check-passes"
+      ],
+      "engineering_status": "fail",
+      "execution_status": "completed",
+      "exit_code": 1,
+      "expected_status": "fail",
+      "fixture": "the pinned source with a real native Yosys request for missing_sar_logic",
+      "id": "real-missing-top",
+      "native_transcript_bound": true,
+      "observed_diagnostic": "ERROR: Module `missing_sar_logic' not found!",
+      "required_diagnostic": "ERROR: Module `missing_sar_logic' not found!",
+      "status": "observed"
+    }
+  ],
+  "schema": "openada.semantic-chain-probes/v0alpha1",
+  "status": "pass",
+  "tamper_replays": [
+    {
+      "covers": [
+        "surface|openada.surface/cli.rtl-check/v1",
+        "preflight|rtl-structural-check-passes"
+      ],
+      "expected_status": "unknown",
+      "id": "reconciled-json-port-removal",
+      "mutation": "removed the rst port from native Yosys JSON and reconciled both the OpenADA artifact digest and run-level artifact digests",
+      "observed_diagnostic": "positive Yosys JSON ports differ; expected=['B', 'BN', 'D', 'En', 'Om', 'Op', 'clk', 'rst'], got=['B', 'BN', 'D', 'En', 'Om', 'Op', 'clk']",
+      "required_diagnostic": "positive Yosys JSON ports",
+      "status": "rejected",
+      "verifier": "conformance/ihp-sar-rtl/verify.py"
+    }
+  ]
+}

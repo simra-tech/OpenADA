@@ -1,0 +1,34 @@
+{
+  "conformance_id": "ihp-inverter-drc-lvs",
+  "conformance_manifest_sha256": "1159520a46ad2c360503316f41790df48686e73ab7eebfd168125837aaceb8b9",
+  "created_at": "2026-07-16T00:22:50.278528Z",
+  "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
+  "image": {
+    "architecture": "amd64",
+    "id": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+    "os": "linux",
+    "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"
+  },
+  "network": "none during EDA execution",
+  "openada_checkout": {
+    "after": {
+      "commit": "d1c31972e70538511afd6197f47ba3d7072ed45e",
+      "status_entry_count": 102,
+      "status_sha256": "d0f4d061a28536eca65ee848a7e9afc832f7645dfae1a004e82a86992ec072db",
+      "tracked_files_modified": true,
+      "untracked_files_present": true,
+      "working_tree_modified": true
+    },
+    "before": {
+      "commit": "d1c31972e70538511afd6197f47ba3d7072ed45e",
+      "status_entry_count": 102,
+      "status_sha256": "d0f4d061a28536eca65ee848a7e9afc832f7645dfae1a004e82a86992ec072db",
+      "tracked_files_modified": true,
+      "untracked_files_present": true,
+      "working_tree_modified": true
+    },
+    "commit_exact": false,
+    "state_unchanged": true
+  },
+  "schema": "openada.conformance-run/v0alpha1"
+}
