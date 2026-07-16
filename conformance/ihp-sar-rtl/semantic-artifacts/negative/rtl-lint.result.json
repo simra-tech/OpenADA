@@ -1,0 +1,119 @@
+{
+  "artifacts": [
+    {
+      "bytes": 354,
+      "exists": true,
+      "kind": "verilator-log",
+      "path": "/evidence/negative/rtl-lint.log",
+      "role": "rtl.lint.log",
+      "sha256": "46ace7e173c5e26feeed9c397437613be8facdf146cf656eb151d99a4cc6f875"
+    }
+  ],
+  "data": {
+    "changed_inputs": [],
+    "changed_inputs_truncated": false,
+    "dependency_closure_stable": true,
+    "diagnostic_count": 2,
+    "diagnostics": [
+      {
+        "classification": "design-finding",
+        "code": "UNCLASSIFIED",
+        "message": "Specified --top-module 'missing_sar_logic' was not found in design.",
+        "severity": "error"
+      },
+      {
+        "classification": "design-finding",
+        "code": "UNCLASSIFIED",
+        "message": "Exiting due to 1 error(s)",
+        "severity": "error"
+      }
+    ],
+    "diagnostics_truncated": false,
+    "environment_policy": "closed-verilator-runtime-v1",
+    "error_count": 2,
+    "include_dependencies": [],
+    "inputs_stable": true,
+    "language": "1800-2017",
+    "ordered_sources": [
+      "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"
+    ],
+    "protocol": {
+      "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+      "implementation_id": "org.openada.driver.verilator",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/rtl.lint/v1alpha1"
+    },
+    "tool_identity_stable": true,
+    "top": "missing_sar_logic",
+    "unclassified_diagnostic_count": 0,
+    "unresolved_literal_includes": [],
+    "unresolved_literal_includes_truncated": false,
+    "warning_count": 0,
+    "warning_policy": "strict"
+  },
+  "diagnostics": [
+    {
+      "code": "verilator.native-error",
+      "message": "Specified --top-module 'missing_sar_logic' was not found in design.",
+      "severity": "error"
+    },
+    {
+      "code": "verilator.native-error",
+      "message": "Exiting due to 1 error(s)",
+      "severity": "error"
+    }
+  ],
+  "engineering": {
+    "status": "fail",
+    "summary": "Verilator reported RTL lint warnings or errors under the strict policy."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/verilator/bin/verilator_bin",
+      "--lint-only",
+      "--timing",
+      "--Wall",
+      "-Wno-fatal",
+      "--relative-includes",
+      "--default-language",
+      "1800-2017",
+      "--top-module",
+      "missing_sar_logic",
+      "+1800-2017ext+v",
+      "+1800-2017ext+sv",
+      "+1800-2017ext+vh",
+      "+1800-2017ext+svh",
+      "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"
+    ],
+    "cwd": "/evidence/negative/.openada-verilator-_345rckj",
+    "duration_ms": 16,
+    "exit_code": 1,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 576,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v",
+      "role": "rtl.source",
+      "sha256": "b33c7b25215ac916b3b07e0dc385ae353294f6872eaa226f4c0126ecfd7063da"
+    }
+  ],
+  "operation": "rtl-lint",
+  "provenance": {
+    "created_at": "2026-07-16T15:20:52.985796Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "verilator",
+    "path": "/foss/tools/verilator/bin/verilator_bin",
+    "version": "Verilator 5.048 2026-04-26 rev v5.048"
+  }
+}

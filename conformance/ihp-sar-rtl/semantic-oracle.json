@@ -1,6 +1,6 @@
 {
   "bindings": {
-    "manifest_sha256": "3f929ba9f755773e97905e61cf4c9c6a03e68d3f9db351b74820d30cd445f6aa",
+    "manifest_sha256": "22700761a3c96d50836f69d625403d381a9b94c5bd921bd210cb9ebc07952d47",
     "native_artifacts": [
       {
         "bytes": 749,
@@ -10,7 +10,7 @@
       {
         "bytes": 1902,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
-        "sha256": "c8c6aefe09f7522ecacd56705f96f0570b33a8bcb29918e08682ad70e4a6b7f1"
+        "sha256": "134c9c5371c07f01b9b60a2ad0b03c41d1edd777fa1df3b9c9b00017c2bca68a"
       },
       {
         "bytes": 190,
@@ -25,12 +25,12 @@
       {
         "bytes": 507,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
-        "sha256": "7a10ebbcfa4d604d311f17911ab46ccf749e8b7be190fd49b8a3bb5598f16586"
+        "sha256": "e03af22ac22451f762c691721e29bba6b92b64cf40138189e9fff11393f605fc"
       },
       {
         "bytes": 1985,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
-        "sha256": "d815b542637351dacb44c12344e37717318e18e56a89cefd7dc8d43887262248"
+        "sha256": "d7489f9b6717157df1af520b635374c5cacaaa7136a4e46b7024bc237b4eda45"
       },
       {
         "bytes": 198,
@@ -40,19 +40,60 @@
       {
         "bytes": 568,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
-        "sha256": "cc138c7e2325baf373fddbc405a900d5904329a2c4c41af381998263764250b2"
+        "sha256": "84905ae52706b37bc4a103a7b801f507f44d11464733fac2f4f0476dd7ecb2b6"
       },
       {
-        "bytes": 3421,
+        "bytes": 2787,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.result.json",
+        "sha256": "1b4be1f3cef3008be57b58a6adb1ee8bb701bdf0020fb6492598b19e1946aaf1"
+      },
+      {
+        "bytes": 432,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.log",
+        "sha256": "edbdd56f237f2a58ec801d9ded21a4d5bf02a7a1d3f36740f0a4ea4a34132dd2"
+      },
+      {
+        "bytes": 2797,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive-2023/rtl-lint.result.json",
+        "sha256": "cc44d3d50e63b4265b94f9b6c6cd33ed89c90bec4effcb3a51ce12a33f905a6b"
+      },
+      {
+        "bytes": 432,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive-2023/rtl-lint.log",
+        "sha256": "5d51f7a7c4d87a3d101d78d899ff6e2f8ffe853ad4c1797123134db7f7356466"
+      },
+      {
+        "bytes": 3489,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-lint.result.json",
+        "sha256": "da281673bd95541bb25229b029f65fd99deb478e5aced7dd8a0266b022cce7cd"
+      },
+      {
+        "bytes": 354,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-lint.log",
+        "sha256": "46ace7e173c5e26feeed9c397437613be8facdf146cf656eb151d99a4cc6f875"
+      },
+      {
+        "bytes": 4592,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
-        "sha256": "879b9ea719ae1ea6b3f3489a5ac99fb438b0d8467a52524de76668f0a304132c"
+        "sha256": "61a7a2d9475642edc3e54808a44d117cc6e9025cbeeaa63f99ddc7380ba7886b"
       }
     ],
-    "run_sha256": "879b9ea719ae1ea6b3f3489a5ac99fb438b0d8467a52524de76668f0a304132c"
+    "run_sha256": "61a7a2d9475642edc3e54808a44d117cc6e9025cbeeaa63f99ddc7380ba7886b"
   },
   "chain_id": "openada.chain/ihp-sar-rtl/v1",
+  "lint_tamper_facts": {
+    "diagnostic": "native Verilator transcript diagnostics: expected [], got ['injected reconciled native finding']",
+    "id": "reconciled-lint-log-finding-injection",
+    "status": "rejected"
+  },
   "negative_facts": {
     "diagnostic": "ERROR: Module `missing_sar_logic' not found!",
+    "engineering_status": "fail",
+    "exit_code": 1,
+    "top": "missing_sar_logic"
+  },
+  "negative_lint_facts": {
+    "diagnostic": "Specified --top-module 'missing_sar_logic' was not found in design.",
     "engineering_status": "fail",
     "exit_code": 1,
     "top": "missing_sar_logic"
@@ -163,6 +204,26 @@
       8
     ]
   },
+  "positive_lint_2023_facts": {
+    "diagnostic_count": 0,
+    "engineering_status": "pass",
+    "environment_policy": "closed-verilator-runtime-v1",
+    "error_count": 0,
+    "language": "1800-2023",
+    "top": "sar_logic",
+    "warning_count": 0,
+    "warning_policy": "strict"
+  },
+  "positive_lint_facts": {
+    "diagnostic_count": 0,
+    "engineering_status": "pass",
+    "environment_policy": "closed-verilator-runtime-v1",
+    "error_count": 0,
+    "language": "1800-2017",
+    "top": "sar_logic",
+    "warning_count": 0,
+    "warning_policy": "strict"
+  },
   "schema": "openada.rtl-independent-oracle/v0alpha1",
   "tamper_facts": {
     "diagnostic": "positive Yosys JSON ports differ; expected=['B', 'BN', 'D', 'En', 'Om', 'Op', 'clk', 'rst'], got=['B', 'BN', 'D', 'En', 'Om', 'Op', 'clk']",
@@ -173,6 +234,6 @@
   "verifier": {
     "imports_openada": false,
     "repository_path": "conformance/ihp-sar-rtl/verify.py",
-    "sha256": "f3b99c7cd6d7065f62ce5dd57f7408e346849863221e3dbbe4d89101ec76051f"
+    "sha256": "3524775ba426137ee8f74e7306f7e214ad5c4bbc105809d9c9de485d857d08af"
   }
 }

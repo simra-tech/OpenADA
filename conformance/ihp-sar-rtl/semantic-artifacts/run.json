@@ -1,7 +1,7 @@
 {
   "conformance_id": "ihp-sar-rtl-check",
-  "conformance_manifest_sha256": "3f929ba9f755773e97905e61cf4c9c6a03e68d3f9db351b74820d30cd445f6aa",
-  "created_at": "2026-07-16T08:19:13.303190Z",
+  "conformance_manifest_sha256": "22700761a3c96d50836f69d625403d381a9b94c5bd921bd210cb9ebc07952d47",
+  "created_at": "2026-07-16T15:20:53.136354Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "image": {
     "architecture": "amd64",
@@ -9,11 +9,16 @@
     "os": "linux",
     "reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0"
   },
+  "lint_tool": {
+    "native_path": "/foss/tools/verilator/bin/verilator_bin",
+    "requested_path": "/foss/tools/verilator/bin/verilator_bin",
+    "version": "Verilator 5.048 2026-04-26 rev v5.048"
+  },
   "native_artifacts": [
     {
       "bytes": 1902,
       "path": "positive/rtl-check.result.json",
-      "sha256": "c8c6aefe09f7522ecacd56705f96f0570b33a8bcb29918e08682ad70e4a6b7f1"
+      "sha256": "134c9c5371c07f01b9b60a2ad0b03c41d1edd777fa1df3b9c9b00017c2bca68a"
     },
     {
       "bytes": 190,
@@ -28,12 +33,12 @@
     {
       "bytes": 507,
       "path": "positive/yosys.transcript.json",
-      "sha256": "7a10ebbcfa4d604d311f17911ab46ccf749e8b7be190fd49b8a3bb5598f16586"
+      "sha256": "e03af22ac22451f762c691721e29bba6b92b64cf40138189e9fff11393f605fc"
     },
     {
       "bytes": 1985,
       "path": "negative/rtl-check.result.json",
-      "sha256": "d815b542637351dacb44c12344e37717318e18e56a89cefd7dc8d43887262248"
+      "sha256": "d7489f9b6717157df1af520b635374c5cacaaa7136a4e46b7024bc237b4eda45"
     },
     {
       "bytes": 198,
@@ -43,13 +48,43 @@
     {
       "bytes": 568,
       "path": "negative/yosys.transcript.json",
-      "sha256": "cc138c7e2325baf373fddbc405a900d5904329a2c4c41af381998263764250b2"
+      "sha256": "84905ae52706b37bc4a103a7b801f507f44d11464733fac2f4f0476dd7ecb2b6"
+    },
+    {
+      "bytes": 2787,
+      "path": "positive/rtl-lint.result.json",
+      "sha256": "1b4be1f3cef3008be57b58a6adb1ee8bb701bdf0020fb6492598b19e1946aaf1"
+    },
+    {
+      "bytes": 432,
+      "path": "positive/rtl-lint.log",
+      "sha256": "edbdd56f237f2a58ec801d9ded21a4d5bf02a7a1d3f36740f0a4ea4a34132dd2"
+    },
+    {
+      "bytes": 2797,
+      "path": "positive-2023/rtl-lint.result.json",
+      "sha256": "cc44d3d50e63b4265b94f9b6c6cd33ed89c90bec4effcb3a51ce12a33f905a6b"
+    },
+    {
+      "bytes": 432,
+      "path": "positive-2023/rtl-lint.log",
+      "sha256": "5d51f7a7c4d87a3d101d78d899ff6e2f8ffe853ad4c1797123134db7f7356466"
+    },
+    {
+      "bytes": 3489,
+      "path": "negative/rtl-lint.result.json",
+      "sha256": "da281673bd95541bb25229b029f65fd99deb478e5aced7dd8a0266b022cce7cd"
+    },
+    {
+      "bytes": 354,
+      "path": "negative/rtl-lint.log",
+      "sha256": "46ace7e173c5e26feeed9c397437613be8facdf146cf656eb151d99a4cc6f875"
     }
   ],
   "network": "none during EDA execution",
   "openada_checkout": {
     "after": {
-      "commit": "77405c6ee1ee86e23de38c8cfd7b994187baf8ec",
+      "commit": "a3c40c1844674813fe3438fbd37935a1ea92e3b7",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -57,7 +92,7 @@
       "working_tree_modified": false
     },
     "before": {
-      "commit": "77405c6ee1ee86e23de38c8cfd7b994187baf8ec",
+      "commit": "a3c40c1844674813fe3438fbd37935a1ea92e3b7",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -78,9 +113,9 @@
     "clean_before": true,
     "extensions": {},
     "receipt_class": "release",
-    "repository_revision": "77405c6ee1ee86e23de38c8cfd7b994187baf8ec",
-    "repository_tree": "7903bc4a08b9b5f65b846571a54cdb3c2e55a9fa",
-    "semantic_subject_sha256": "dd5aca9dc85dcabcda0b48f064de4ba16037bb226d4002ca625a1f17f65ff44e",
+    "repository_revision": "a3c40c1844674813fe3438fbd37935a1ea92e3b7",
+    "repository_tree": "38a5e012a7d4fb65eff9ea3001ca651c9a78aba3",
+    "semantic_subject_sha256": "1338756109b4ae767eb871c381aed905b41dee542bd622cf07f50f605044e0c1",
     "state_unchanged": true
   },
   "tool": {

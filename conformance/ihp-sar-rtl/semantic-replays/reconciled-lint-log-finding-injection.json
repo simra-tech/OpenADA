@@ -1,0 +1,20 @@
+{
+  "chain_id": "openada.chain/ihp-sar-rtl/v1",
+  "covers": [
+    "surface|openada.surface/cli.rtl-lint/v1",
+    "preflight|rtl-lint-clean",
+    "profile|openada.operation/rtl.lint/v1alpha1",
+    "assertion|openada.operation/rtl.lint/v1alpha1|openada.assertion/rtl.lint.clean/v1alpha1",
+    "feature|openada.operation/rtl.lint/v1alpha1|openada.feature/rtl.lint.systemverilog/v1alpha1",
+    "native-mapping|openada.operation/rtl.lint/v1alpha1|org.openada.driver.verilator|org.verilator.verilator|openada.feature/rtl.lint.systemverilog/v1alpha1",
+    "provider|org.openada.driver.verilator|openada.operation/rtl.lint/v1alpha1|openada.feature/rtl.lint.systemverilog/v1alpha1"
+  ],
+  "expected_status": "unknown",
+  "id": "reconciled-lint-log-finding-injection",
+  "mutation": "injected a native Verilator latch warning into the clean lint transcript and reconciled both the OpenADA artifact digest and run-level artifact digests",
+  "observed_diagnostic": "native Verilator transcript diagnostics: expected [], got ['injected reconciled native finding']",
+  "required_diagnostic": "native Verilator transcript diagnostics",
+  "schema": "openada.semantic-replay-verdict/v0alpha1",
+  "status": "rejected",
+  "verifier": "conformance/ihp-sar-rtl/verify.py"
+}

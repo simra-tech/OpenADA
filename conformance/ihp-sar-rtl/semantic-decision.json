@@ -4,32 +4,44 @@
     "the exact five-input and three-output interface is retained, including 8-bit B, BN, and D",
     "B is structurally aliased to D; counter, BN, and D map to three state elements with widths 4, 8, and 8",
     "Yosys check -assert completed with no warnings or errors and a parsed native JSON netlist",
+    "strict Verilator lint completed with zero warnings and zero errors on the same pinned source and top under both 1800-2017 and 1800-2023 selectors",
     "an independent parser bound the source, script, result, transcript, JSON structure, image, and tool",
-    "the real missing-top negative failed with the required native diagnostic",
-    "reconciled native-JSON port tampering was rejected by the independent structural oracle"
+    "real Yosys and Verilator missing-top requests failed with the required native diagnostics",
+    "reconciled native-JSON port tampering and native lint-log finding injection were rejected by the independent oracle"
   ],
   "block_conditions": [
     "any source, image, wrapper, tool, script, native artifact, or manifest digest differs",
     "the independent oracle no longer finds the exact interface and reviewed state structure",
-    "native Yosys reports warnings, errors, black boxes, missing JSON, or nonzero exit"
+    "native Yosys reports warnings, errors, black boxes, missing JSON, or nonzero exit",
+    "strict Verilator lint under either reviewed language selector reports any warning or error, or either bounded transcript is incomplete"
   ],
   "chain_id": "openada.chain/ihp-sar-rtl/v1",
   "decision": "proceed",
   "evidence": {
+    "lint_negative_replay": {
+      "bytes": 1371,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/real-verilator-missing-top.json",
+      "sha256": "371e839628737e3f2f14050433d9d2244dd1672b265c16f28d72738770f99614"
+    },
+    "lint_tamper_replay": {
+      "bytes": 1253,
+      "repository_path": "conformance/ihp-sar-rtl/semantic-replays/reconciled-lint-log-finding-injection.json",
+      "sha256": "ce8f797859ef057af9691943abf1c154a3374cd82e29d41469a072452aada315"
+    },
     "negative_replay": {
       "bytes": 652,
       "repository_path": "conformance/ihp-sar-rtl/semantic-replays/real-missing-top.json",
       "sha256": "a36eb81e84bdc5989585a75b96a5d5b932e1fbe4b64818e0fd65a6e5e60982a6"
     },
     "normalized": {
-      "bytes": 5770,
+      "bytes": 11933,
       "repository_path": "conformance/ihp-sar-rtl/semantic-normalized.json",
-      "sha256": "08207e9ab4cecd6026c29ef1f65b668355e6fc9170c5925f1e0796bd4ebabf3b"
+      "sha256": "515825c43d171d2ab4cdef9314e001797ccff90044da9eb0929029a34492ccc9"
     },
     "oracle": {
-      "bytes": 4726,
+      "bytes": 7072,
       "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
-      "sha256": "55eef5ac9dbdd331df7d9582ae255fc409d36dd567c03df95604bac923525134"
+      "sha256": "37be58f6ae902ff8235b49a84a43d72be2ad2b77f6160adbedbdac096e8f11ec"
     },
     "tamper_replay": {
       "bytes": 724,
@@ -43,12 +55,16 @@
       "impact": "This proves pinned Yosys elaboration and check -assert structural checks; it does not prove cycle-accurate behavior, formal properties, or mixed-signal behavior."
     },
     {
+      "id": "strict-lint-only",
+      "impact": "Strict Verilator lint under the pinned 1800-2017 and 1800-2023 selectors proves only that those requests emitted no warning or error. It is not proof of functional correctness, CDC safety, timing closure, or physical correctness."
+    },
+    {
       "id": "no-timing-or-physical-closure",
       "impact": "No synthesis constraints, static timing analysis, clock-domain analysis, place-and-route, power analysis, DRC, or LVS is part of this RTL chain."
     },
     {
       "id": "implementation-specific-language-support",
-      "impact": "The source is parsed with Yosys read_verilog -sv. The chain records pinned Yosys behavior and is not a certification of complete IEEE 1800-2023 support."
+      "impact": "The source is parsed with Yosys read_verilog -sv and linted with pinned Verilator selectors for 1800-2017 and 1800-2023. The chain records those implementation behaviors and is not a certification of complete IEEE 1800-2023 support."
     },
     {
       "id": "real-negative-is-missing-top",
@@ -63,7 +79,7 @@
     "run directed and randomized RTL simulation against SAR sequencing requirements",
     "add formal assertions for reset, counter termination, and B/D/BN relationships",
     "review reset and clock-domain behavior at the mixed-signal integration boundary",
-    "synthesize with target constraints and run static timing, lint, and implementation checks"
+    "synthesize with target constraints and run static timing and implementation checks"
   ],
   "schema": "openada.rtl-engineering-decision/v0alpha1",
   "scope": "continue to behavioral, formal, timing, and mixed-signal verification; not tapeout signoff"

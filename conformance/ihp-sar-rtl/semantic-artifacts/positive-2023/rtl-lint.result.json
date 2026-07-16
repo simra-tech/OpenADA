@@ -1,0 +1,95 @@
+{
+  "artifacts": [
+    {
+      "bytes": 432,
+      "exists": true,
+      "kind": "verilator-log",
+      "path": "/evidence/positive-2023/rtl-lint.log",
+      "role": "rtl.lint.log",
+      "sha256": "5d51f7a7c4d87a3d101d78d899ff6e2f8ffe853ad4c1797123134db7f7356466"
+    }
+  ],
+  "data": {
+    "changed_inputs": [],
+    "changed_inputs_truncated": false,
+    "dependency_closure_stable": true,
+    "diagnostic_count": 0,
+    "diagnostics": [],
+    "diagnostics_truncated": false,
+    "environment_policy": "closed-verilator-runtime-v1",
+    "error_count": 0,
+    "include_dependencies": [],
+    "inputs_stable": true,
+    "language": "1800-2023",
+    "ordered_sources": [
+      "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"
+    ],
+    "protocol": {
+      "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+      "implementation_id": "org.openada.driver.verilator",
+      "implementation_version": "1.0.0",
+      "operation_profile": "openada.operation/rtl.lint/v1alpha1"
+    },
+    "tool_identity_stable": true,
+    "top": "sar_logic",
+    "unclassified_diagnostic_count": 0,
+    "unresolved_literal_includes": [],
+    "unresolved_literal_includes_truncated": false,
+    "warning_count": 0,
+    "warning_policy": "strict"
+  },
+  "diagnostics": [],
+  "engineering": {
+    "status": "pass",
+    "summary": "Verilator completed strict RTL lint with no warnings or errors."
+  },
+  "execution": {
+    "command": [
+      "/foss/tools/verilator/bin/verilator_bin",
+      "--lint-only",
+      "--timing",
+      "--Wall",
+      "-Wno-fatal",
+      "--relative-includes",
+      "--default-language",
+      "1800-2023",
+      "--top-module",
+      "sar_logic",
+      "+1800-2023ext+v",
+      "+1800-2023ext+sv",
+      "+1800-2023ext+vh",
+      "+1800-2023ext+svh",
+      "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"
+    ],
+    "cwd": "/evidence/positive-2023/.openada-verilator-f1c9c0pg",
+    "duration_ms": 17,
+    "exit_code": 0,
+    "status": "completed"
+  },
+  "inputs": [
+    {
+      "bytes": 576,
+      "exists": true,
+      "kind": "hdl-source",
+      "path": "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v",
+      "role": "rtl.source",
+      "sha256": "b33c7b25215ac916b3b07e0dc385ae353294f6872eaa226f4c0126ecfd7063da"
+    }
+  ],
+  "operation": "rtl-lint",
+  "provenance": {
+    "created_at": "2026-07-16T15:20:51.706837Z",
+    "host": {
+      "machine": "x86_64",
+      "python": "3.12.3",
+      "system": "Linux"
+    },
+    "openada_version": "0.4.0"
+  },
+  "schema": "openada.result/v0alpha1",
+  "tool": {
+    "name": "verilator",
+    "path": "/foss/tools/verilator/bin/verilator_bin",
+    "version": "Verilator 5.048 2026-04-26 rev v5.048"
+  }
+}

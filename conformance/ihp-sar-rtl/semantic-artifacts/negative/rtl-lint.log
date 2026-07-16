@@ -1,0 +1,12 @@
+status: completed
+exit_code: 1
+stdout_bytes: 0
+stderr_bytes: 210
+stdout_truncated: false
+stderr_truncated: false
+--- stdout ---
+
+--- stderr ---
+%Error: Specified --top-module 'missing_sar_logic' was not found in design.
+        ... See the manual at https://verilator.org/verilator_doc.html?v=5.048 for more assistance.
+%Error: Exiting due to 1 error(s)

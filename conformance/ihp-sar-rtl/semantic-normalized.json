@@ -2,7 +2,14 @@
   "chain_id": "openada.chain/ihp-sar-rtl/v1",
   "coverage": [
     "surface|openada.surface/cli.rtl-check/v1",
-    "preflight|rtl-structural-check-passes"
+    "preflight|rtl-structural-check-passes",
+    "surface|openada.surface/cli.rtl-lint/v1",
+    "preflight|rtl-lint-clean",
+    "profile|openada.operation/rtl.lint/v1alpha1",
+    "assertion|openada.operation/rtl.lint/v1alpha1|openada.assertion/rtl.lint.clean/v1alpha1",
+    "feature|openada.operation/rtl.lint/v1alpha1|openada.feature/rtl.lint.systemverilog/v1alpha1",
+    "native-mapping|openada.operation/rtl.lint/v1alpha1|org.openada.driver.verilator|org.verilator.verilator|openada.feature/rtl.lint.systemverilog/v1alpha1",
+    "provider|org.openada.driver.verilator|openada.operation/rtl.lint/v1alpha1|openada.feature/rtl.lint.systemverilog/v1alpha1"
   ],
   "design": {
     "repository": "https://github.com/IHP-GmbH/IHP-AnalogAcademy.git",
@@ -15,9 +22,111 @@
     }
   },
   "independent_oracle": {
-    "bytes": 4726,
+    "bytes": 7072,
     "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
-    "sha256": "55eef5ac9dbdd331df7d9582ae255fc409d36dd567c03df95604bac923525134"
+    "sha256": "37be58f6ae902ff8235b49a84a43d72be2ad2b77f6160adbedbdac096e8f11ec"
+  },
+  "lint_2023_operation": {
+    "assertion": "rtl-lint-clean",
+    "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+    "engineering_status": "pass",
+    "evidence": {
+      "changed_inputs": [],
+      "changed_inputs_truncated": false,
+      "dependency_closure_stable": true,
+      "diagnostic_count": 0,
+      "diagnostics": [],
+      "diagnostics_truncated": false,
+      "environment_policy": "closed-verilator-runtime-v1",
+      "error_count": 0,
+      "include_dependencies": [],
+      "inputs_stable": true,
+      "language": "1800-2023",
+      "ordered_sources": [
+        "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"
+      ],
+      "protocol": {
+        "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+        "implementation_id": "org.openada.driver.verilator",
+        "implementation_version": "1.0.0",
+        "operation_profile": "openada.operation/rtl.lint/v1alpha1"
+      },
+      "tool_identity_stable": true,
+      "top": "sar_logic",
+      "unclassified_diagnostic_count": 0,
+      "unresolved_literal_includes": [],
+      "unresolved_literal_includes_truncated": false,
+      "warning_count": 0,
+      "warning_policy": "strict"
+    },
+    "execution_status": "completed",
+    "exit_code": 0,
+    "native_artifacts": [
+      {
+        "bytes": 2797,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive-2023/rtl-lint.result.json",
+        "sha256": "cc44d3d50e63b4265b94f9b6c6cd33ed89c90bec4effcb3a51ce12a33f905a6b"
+      },
+      {
+        "bytes": 432,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive-2023/rtl-lint.log",
+        "sha256": "5d51f7a7c4d87a3d101d78d899ff6e2f8ffe853ad4c1797123134db7f7356466"
+      }
+    ],
+    "operation_profile": "openada.operation/rtl.lint/v1alpha1",
+    "summary": "Verilator completed strict RTL lint with no warnings or errors.",
+    "surface_id": "openada.surface/cli.rtl-lint/v1"
+  },
+  "lint_operation": {
+    "assertion": "rtl-lint-clean",
+    "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+    "engineering_status": "pass",
+    "evidence": {
+      "changed_inputs": [],
+      "changed_inputs_truncated": false,
+      "dependency_closure_stable": true,
+      "diagnostic_count": 0,
+      "diagnostics": [],
+      "diagnostics_truncated": false,
+      "environment_policy": "closed-verilator-runtime-v1",
+      "error_count": 0,
+      "include_dependencies": [],
+      "inputs_stable": true,
+      "language": "1800-2017",
+      "ordered_sources": [
+        "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"
+      ],
+      "protocol": {
+        "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+        "implementation_id": "org.openada.driver.verilator",
+        "implementation_version": "1.0.0",
+        "operation_profile": "openada.operation/rtl.lint/v1alpha1"
+      },
+      "tool_identity_stable": true,
+      "top": "sar_logic",
+      "unclassified_diagnostic_count": 0,
+      "unresolved_literal_includes": [],
+      "unresolved_literal_includes_truncated": false,
+      "warning_count": 0,
+      "warning_policy": "strict"
+    },
+    "execution_status": "completed",
+    "exit_code": 0,
+    "native_artifacts": [
+      {
+        "bytes": 2787,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.result.json",
+        "sha256": "1b4be1f3cef3008be57b58a6adb1ee8bb701bdf0020fb6492598b19e1946aaf1"
+      },
+      {
+        "bytes": 432,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.log",
+        "sha256": "edbdd56f237f2a58ec801d9ded21a4d5bf02a7a1d3f36740f0a4ea4a34132dd2"
+      }
+    ],
+    "operation_profile": "openada.operation/rtl.lint/v1alpha1",
+    "summary": "Verilator completed strict RTL lint with no warnings or errors.",
+    "surface_id": "openada.surface/cli.rtl-lint/v1"
   },
   "operation": {
     "assertion": "rtl-structural-check-passes",
@@ -139,7 +248,7 @@
       {
         "bytes": 1902,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
-        "sha256": "c8c6aefe09f7522ecacd56705f96f0570b33a8bcb29918e08682ad70e4a6b7f1"
+        "sha256": "134c9c5371c07f01b9b60a2ad0b03c41d1edd777fa1df3b9c9b00017c2bca68a"
       },
       {
         "bytes": 190,
@@ -154,12 +263,12 @@
       {
         "bytes": 507,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
-        "sha256": "7a10ebbcfa4d604d311f17911ab46ccf749e8b7be190fd49b8a3bb5598f16586"
+        "sha256": "e03af22ac22451f762c691721e29bba6b92b64cf40138189e9fff11393f605fc"
       },
       {
         "bytes": 1985,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
-        "sha256": "d815b542637351dacb44c12344e37717318e18e56a89cefd7dc8d43887262248"
+        "sha256": "d7489f9b6717157df1af520b635374c5cacaaa7136a4e46b7024bc237b4eda45"
       },
       {
         "bytes": 198,
@@ -169,12 +278,42 @@
       {
         "bytes": 568,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
-        "sha256": "cc138c7e2325baf373fddbc405a900d5904329a2c4c41af381998263764250b2"
+        "sha256": "84905ae52706b37bc4a103a7b801f507f44d11464733fac2f4f0476dd7ecb2b6"
       },
       {
-        "bytes": 3421,
+        "bytes": 2787,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.result.json",
+        "sha256": "1b4be1f3cef3008be57b58a6adb1ee8bb701bdf0020fb6492598b19e1946aaf1"
+      },
+      {
+        "bytes": 432,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.log",
+        "sha256": "edbdd56f237f2a58ec801d9ded21a4d5bf02a7a1d3f36740f0a4ea4a34132dd2"
+      },
+      {
+        "bytes": 2797,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive-2023/rtl-lint.result.json",
+        "sha256": "cc44d3d50e63b4265b94f9b6c6cd33ed89c90bec4effcb3a51ce12a33f905a6b"
+      },
+      {
+        "bytes": 432,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive-2023/rtl-lint.log",
+        "sha256": "5d51f7a7c4d87a3d101d78d899ff6e2f8ffe853ad4c1797123134db7f7356466"
+      },
+      {
+        "bytes": 3489,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-lint.result.json",
+        "sha256": "da281673bd95541bb25229b029f65fd99deb478e5aced7dd8a0266b022cce7cd"
+      },
+      {
+        "bytes": 354,
+        "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-lint.log",
+        "sha256": "46ace7e173c5e26feeed9c397437613be8facdf146cf656eb151d99a4cc6f875"
+      },
+      {
+        "bytes": 4592,
         "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
-        "sha256": "879b9ea719ae1ea6b3f3489a5ac99fb438b0d8467a52524de76668f0a304132c"
+        "sha256": "61a7a2d9475642edc3e54808a44d117cc6e9025cbeeaa63f99ddc7380ba7886b"
       }
     ],
     "summary": "Yosys elaborated the RTL and completed structural checks.",
@@ -183,12 +322,18 @@
   "run": {
     "checkout_commit_exact": true,
     "checkout_state_unchanged": true,
-    "created_at": "2026-07-16T08:19:13.303190Z"
+    "created_at": "2026-07-16T15:20:53.136354Z"
   },
   "runtime": {
     "eda_network": "none",
     "image_config_digest": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
     "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+    "lint_tool": {
+      "name": "verilator",
+      "native_path": "/foss/tools/verilator/bin/verilator_bin",
+      "requested_path": "/foss/tools/verilator/bin/verilator_bin",
+      "version": "Verilator 5.048 2026-04-26 rev v5.048"
+    },
     "tool": {
       "name": "yosys",
       "native_path": "/foss/tools/yosys/bin/yosys",

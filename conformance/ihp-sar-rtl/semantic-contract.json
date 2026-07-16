@@ -1,7 +1,10 @@
 {
   "chain_id": "openada.chain/ihp-sar-rtl/v1",
   "native_replay": {
+    "clean_lint_2023": "pass",
     "independent_verifier": "pass",
+    "lint_tamper_probe": "pass",
+    "real_lint_negative": "pass",
     "real_negative": "pass",
     "tamper_probe": "pass"
   },
@@ -10,8 +13,8 @@
   "tests": {
     "execution": "fresh pytest exit status zero",
     "failed": 0,
-    "passed": 16,
+    "passed": 18,
     "suite": "tests/test_ihp_sar_rtl_conformance.py",
-    "suite_sha256": "aada024a0ecc21aa81d92dbd3db7b74af4f7eba01069c181dc59d63d181f16c6"
+    "suite_sha256": "ef7a6ad4a276fe3ac454c897e3b4a25fe0be32368828b43df8273571e257d584"
   }
 }
