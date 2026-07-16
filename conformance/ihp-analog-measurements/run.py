@@ -151,7 +151,9 @@ def _run_native(
         "--env",
         "PATH=/openada/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
         "--tmpfs",
-        "/tmp:rw,nosuid,nodev,size=512m",
+        # Provider invocation executes its digest-bound private launcher
+        # snapshot; Docker otherwise forces noexec on a tmpfs mount.
+        "/tmp:rw,nosuid,nodev,exec,size=512m",
         "--workdir",
         "/evidence",
         "--mount",

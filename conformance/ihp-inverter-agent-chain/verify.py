@@ -527,7 +527,7 @@ def _verify_container_command(command: Any, manifest: dict[str, Any]) -> None:
         "--pids-limit", "512", "--user", command[18],
         "--env", "HOME=/tmp/openada-home", "--env", "TMPDIR=/tmp",
         "--env", "PATH=/openada/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-        "--tmpfs", "/tmp:rw,nosuid,nodev,size=512m", "--workdir", "/evidence",
+        "--tmpfs", "/tmp:rw,nosuid,nodev,exec,size=512m", "--workdir", "/evidence",
         "--mount", mounts[0], "--mount", mounts[1], "--mount", mounts[2],
         "--entrypoint", "/usr/bin/python3", manifest["runtime"]["image_reference"],
         "/openada/conformance/ihp-inverter-agent-chain/inside.py",
