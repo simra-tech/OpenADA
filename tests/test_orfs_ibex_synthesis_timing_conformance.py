@@ -309,15 +309,12 @@ def test_semantic_chain_run_binds_distinct_complete_trust_artifacts() -> None:
     assert list(validator.iter_errors(run)) == []
     assert run["status"] == "pass"
     assert all(run["checks"].values())
-    trust_roles = {
-        "independent-oracle",
-        "normalized-evidence",
-        "downstream-decision",
-        "agent-visible-evidence",
-    }
-    hashes = [item["sha256"] for item in run["artifacts"] if item["role"] in trust_roles]
-    assert len(hashes) == len(trust_roles)
+    hashes = [item["sha256"] for item in run["artifacts"]]
     assert len(set(hashes)) == len(hashes)
+    decision = json.loads((HERE / "semantic-decision.json").read_text(encoding="utf-8"))
+    negative_replays = decision["evidence"]["negative_replays"]
+    assert len(negative_replays) == 2
+    assert len({item["repository_path"] for item in negative_replays}) == 2
 
 
 def test_contract_report_counts_the_complete_chain_suite() -> None:

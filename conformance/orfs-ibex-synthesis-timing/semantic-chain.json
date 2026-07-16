@@ -91,7 +91,7 @@
     {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
     {"repository_path": "conformance/orfs-ibex-synthesis-timing/common.py", "sha256": "ec134819214db5c49d73131abe3f91e95b755702eadd8c7123c3843ddb856a17", "extensions": {}},
     {"repository_path": "conformance/orfs-ibex-synthesis-timing/abc.constr", "sha256": "51bf1a4f73a383e038c95dc3eba81fdd33811736285d77e7aaeabf9bd83c69a1", "extensions": {}},
-    {"repository_path": "tests/test_orfs_ibex_synthesis_timing_conformance.py", "sha256": "0dd5e12b71b91a68a84f54337aeb225b3c285cd200cb61e7bd9f5f5b7eda7d0b", "extensions": {}}
+    {"repository_path": "tests/test_orfs_ibex_synthesis_timing_conformance.py", "sha256": "69771c891368e8762f6a0cec68dc586edeb4949eaaf67ba62de584924f9ca8da", "extensions": {}}
   ],
   "covers": [
     "surface|openada.surface/cli.synthesize/v1",
@@ -205,7 +205,7 @@
       "id": "normalize-digital-evidence",
       "kind": "semantic-command",
       "request": {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
-      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "972ec62a111678c742cb962ad691cdc6e12b1a768b7e5a075be10a42215f3f18", "extensions": {}},
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.synthesize/v1", "preflight|asic-netlist-synthesized",
@@ -223,7 +223,7 @@
     {
       "id": "adversarial-replays",
       "kind": "independent-oracle",
-      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "972ec62a111678c742cb962ad691cdc6e12b1a768b7e5a075be10a42215f3f18", "extensions": {}},
       "native_execution": false,
       "covers": [],
       "consumes": ["synthesis-mapped-stats-json", "timing-setup-paths-json", "negative-synthesize-result-json", "timing-timing-analyze-result-json", "independent-oracle-verdict"],
@@ -234,7 +234,7 @@
       "id": "engineering-decision",
       "kind": "semantic-command",
       "request": {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
-      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "972ec62a111678c742cb962ad691cdc6e12b1a768b7e5a075be10a42215f3f18", "extensions": {}},
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.synthesize/v1", "preflight|asic-netlist-synthesized",
@@ -252,7 +252,7 @@
     {
       "id": "agent-evidence",
       "kind": "independent-decision",
-      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+      "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "972ec62a111678c742cb962ad691cdc6e12b1a768b7e5a075be10a42215f3f18", "extensions": {}},
       "native_execution": false,
       "covers": [],
       "consumes": ["normalized-digital-evidence", "independent-oracle-verdict", "downstream-digital-decision", "negative-real-synthesis-missing-top", "negative-real-setup-timing-violation", "tamper-reconciled-mapped-stat-count-change", "tamper-reconciled-setup-path-slack-change"],
@@ -262,7 +262,7 @@
     {
       "id": "contract-tests",
       "kind": "independent-oracle",
-      "implementation": {"repository_path": "tests/test_orfs_ibex_synthesis_timing_conformance.py", "sha256": "0dd5e12b71b91a68a84f54337aeb225b3c285cd200cb61e7bd9f5f5b7eda7d0b", "extensions": {}},
+      "implementation": {"repository_path": "tests/test_orfs_ibex_synthesis_timing_conformance.py", "sha256": "69771c891368e8762f6a0cec68dc586edeb4949eaaf67ba62de584924f9ca8da", "extensions": {}},
       "native_execution": false,
       "covers": [],
       "consumes": ["contract-test-suite", "agent-visible-digital-evidence"],
@@ -344,7 +344,7 @@
     "extensions": {}
   },
   "release_verification": {
-    "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "64a27382d2ba27ed861007548d749fe0ff3b3eac268451b83ae6656a10fa49d0", "extensions": {}},
+    "implementation": {"repository_path": "conformance/orfs-ibex-synthesis-timing/semantic.py", "sha256": "972ec62a111678c742cb962ad691cdc6e12b1a768b7e5a075be10a42215f3f18", "extensions": {}},
     "arguments": [],
     "timeout_seconds": 180,
     "extensions": {}

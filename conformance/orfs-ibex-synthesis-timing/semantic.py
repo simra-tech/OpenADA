@@ -477,13 +477,15 @@ def _chain_artifact_definitions() -> list[tuple[Path, str, str | None, str | Non
     definitions: list[tuple[Path, str, str | None, str | None, str | None]] = [
         (CONTRACT_PATH, "contract-test", "contract-tests", "contract-test-verdict", None),
     ]
-    # A valid OpenSTA constraint check is intentionally zero bytes. It remains
-    # bound by the normalized result and run receipt, but semantic-chain artifact
-    # records require nonempty files, so it is not duplicated here.
+    # A valid OpenSTA constraint check is intentionally zero bytes. The negative
+    # synthesis replay also has a byte-identical RTL dependency closure because
+    # only the requested top changes. Both remain bound by the normalized result
+    # and run receipt, but the release trust index binds each distinct payload
+    # once and semantic-chain artifact records require nonempty files.
     definitions.extend(
         _native_definition(relative)
         for relative in NATIVE_FILES
-        if relative != "timing/check-setup.txt"
+        if relative not in {"timing/check-setup.txt", "negative/rtl-inputs.json"}
     )
     definitions.extend(
         (
