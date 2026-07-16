@@ -130,4 +130,3 @@ def test_real_replay(tmp_path: Path) -> None:
         timeout=300,
     )
     assert independent.returncode == 0, independent.stdout + independent.stderr
-

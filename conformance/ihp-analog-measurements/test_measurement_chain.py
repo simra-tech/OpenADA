@@ -138,4 +138,3 @@ def test_real_replay(tmp_path: Path) -> None:
     result = json.loads(replay.stdout)
     assert result["status"] == "pass"
     assert result["spectral"]["snr"] == pytest.approx(93.2858420431)
-

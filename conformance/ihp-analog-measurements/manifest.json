@@ -191,7 +191,7 @@
     },
     {
       "repository_path": "conformance/ihp-analog-measurements/test_measurement_chain.py",
-      "sha256": "2e70b9ce415201ed87b4cf660a1c38dd4bfcd8567a92f21998c81d475001e9cd",
+      "sha256": "71ca97c70590641a05823179b094e8ee5f16ae17f5abf947050277ba886096a2",
       "extensions": {}
     }
   ],
