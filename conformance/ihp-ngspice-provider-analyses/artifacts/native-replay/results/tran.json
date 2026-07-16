@@ -22,7 +22,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/native/tran/work/tran.raw",
       "role": "simulation.result",
-      "sha256": "bfb7b835f0e10f06a285625aa8a21979e4f0a1f0e451598e180628e84a951f6c"
+      "sha256": "382b9b47a3490682bf19591d93a72933cac1dc1263a21e3947f62d2cb89a50d2"
     }
   ],
   "data": {
@@ -45,8 +45,8 @@
       "freshness": "fresh",
       "provenance": "bounded",
       "provenance_limitations": [
-        "The target deck, provider configuration, explicit ngspice startup files, PDK revision identity, selected executable, and retained native evidence are content-bound.",
-        "Model files reached transitively through the pinned PDK startup search path are bounded by the recorded PDK revision but are not enumerated file by file.",
+        "The target deck, provider configuration, explicit ngspice startup files, provider-owned native executable and its private launch snapshot, PDK revision label, and retained native evidence are content-bound.",
+        "Model files reached transitively through the PDK startup search path are not enumerated or proven clean; the recorded COMMIT file is an identity label, not a complete PDK tree attestation.",
         "Native shared libraries, kernel state, and container runtime remain bounded rather than complete provenance."
       ],
       "request_binding": "exact",
@@ -97,16 +97,16 @@
               "TZ"
             ],
             "effective_variables": {
-              "HOME": "/tmp/openada-provider-environment-ckp3p1vc/tmp/openada-ngspice-90ucr13k/home",
+              "HOME": "/tmp/openada-provider-environment-rnd9p00q/tmp/openada-ngspice-1gsg8ing/home",
               "LANG": "C",
               "LC_ALL": "C",
               "PATH": "/usr/local/bin:/usr/bin:/bin",
               "PDK": "ihp-sg13g2",
               "PDK_ROOT": "/foss/pdks",
               "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts",
-              "TEMP": "/tmp/openada-provider-environment-ckp3p1vc/tmp/openada-ngspice-90ucr13k/tmp",
-              "TMP": "/tmp/openada-provider-environment-ckp3p1vc/tmp/openada-ngspice-90ucr13k/tmp",
-              "TMPDIR": "/tmp/openada-provider-environment-ckp3p1vc/tmp/openada-ngspice-90ucr13k/tmp",
+              "TEMP": "/tmp/openada-provider-environment-rnd9p00q/tmp/openada-ngspice-1gsg8ing/tmp",
+              "TMP": "/tmp/openada-provider-environment-rnd9p00q/tmp/openada-ngspice-1gsg8ing/tmp",
+              "TMPDIR": "/tmp/openada-provider-environment-rnd9p00q/tmp/openada-ngspice-1gsg8ing/tmp",
               "TZ": "UTC"
             },
             "mode": "sanitized"
@@ -149,7 +149,7 @@
               "origin": "deck",
               "parent_anchored": true,
               "path": "/evidence/native/tran/work/tran.raw",
-              "sha256": "bfb7b835f0e10f06a285625aa8a21979e4f0a1f0e451598e180628e84a951f6c",
+              "sha256": "382b9b47a3490682bf19591d93a72933cac1dc1263a21e3947f62d2cb89a50d2",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -223,15 +223,15 @@
   },
   "execution": {
     "command": [
-      "/foss/tools/ngspice/bin/ngspice",
+      "/evidence/native/tran/work/openada-native-ngspice",
       "-i",
       "-n",
       "-o",
-      "/tmp/openada-provider-environment-ckp3p1vc/tmp/openada-ngspice-90ucr13k/simulation.log",
+      "/tmp/openada-provider-environment-rnd9p00q/tmp/openada-ngspice-1gsg8ing/simulation.log",
       "/evidence/native/tran/simulation/tran.openada-control.sp"
     ],
     "cwd": "/evidence/native/tran/work",
-    "duration_ms": 1305,
+    "duration_ms": 566,
     "exit_code": 0,
     "status": "completed"
   },
@@ -261,12 +261,12 @@
       "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
     },
     {
-      "bytes": 656,
+      "bytes": 500,
       "exists": true,
       "kind": "openada-ngspice-provider-config",
       "path": "/evidence/generated/provider-config.json",
       "role": "configuration",
-      "sha256": "51794a232531fc6364eea3f66253b6f8e55d8d18131260b63107799661fb17b8"
+      "sha256": "b171dc2ad16f88a69f64fa1e4e51d6560cbe6d80ae45d12c4906b46f6e9f34fd"
     },
     {
       "bytes": 8067696,
@@ -283,11 +283,19 @@
       "path": "/foss/pdks/ihp-sg13g2/COMMIT",
       "role": "configuration",
       "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+    },
+    {
+      "bytes": 8067696,
+      "exists": true,
+      "kind": "eda-executable-snapshot",
+      "path": "/evidence/native/tran/work/openada-native-ngspice",
+      "role": "configuration",
+      "sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
     }
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-16T00:34:29.321432Z",
+    "created_at": "2026-07-16T08:22:40.166012Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
@@ -298,7 +306,7 @@
   "schema": "openada.result/v0alpha1",
   "tool": {
     "name": "ngspice",
-    "path": "/foss/tools/ngspice/bin/ngspice",
+    "path": "/evidence/native/tran/work/openada-native-ngspice",
     "version": "** ngspice-46 : Circuit level simulation program"
   }
 }

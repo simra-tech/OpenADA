@@ -110,12 +110,12 @@
           "sha256": "073f05e1032fdcf8c936da81679d16ba8ee711b2d143fc23c9f7620557904863"
         },
         {
-          "bytes": 656,
+          "bytes": 500,
           "exists": true,
           "kind": "simulator-configuration",
           "path": "/evidence/generated/provider-config.json",
           "role": "configuration",
-          "sha256": "51794a232531fc6364eea3f66253b6f8e55d8d18131260b63107799661fb17b8"
+          "sha256": "b171dc2ad16f88a69f64fa1e4e51d6560cbe6d80ae45d12c4906b46f6e9f34fd"
         },
         {
           "bytes": 41,
@@ -128,7 +128,7 @@
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-16T00:34:48.112237Z",
+        "created_at": "2026-07-16T08:22:51.675787Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",
@@ -228,12 +228,12 @@
           "sha256": "6fef2dd9842b863a540aac74099d18899f117f5e28ebf986ed806ada944696d7"
         },
         {
-          "bytes": 656,
+          "bytes": 500,
           "exists": true,
           "kind": "simulator-configuration",
           "path": "/evidence/generated/provider-config.json",
           "role": "configuration",
-          "sha256": "51794a232531fc6364eea3f66253b6f8e55d8d18131260b63107799661fb17b8"
+          "sha256": "b171dc2ad16f88a69f64fa1e4e51d6560cbe6d80ae45d12c4906b46f6e9f34fd"
         },
         {
           "bytes": 41,
@@ -246,7 +246,7 @@
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-16T00:34:41.581779Z",
+        "created_at": "2026-07-16T08:22:47.966878Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",
@@ -341,12 +341,12 @@
           "sha256": "6e24169b96ac53d10924a180daf27eb00324211305ed4685ce7425a630c9da9e"
         },
         {
-          "bytes": 656,
+          "bytes": 500,
           "exists": true,
           "kind": "simulator-configuration",
           "path": "/evidence/generated/provider-config.json",
           "role": "configuration",
-          "sha256": "51794a232531fc6364eea3f66253b6f8e55d8d18131260b63107799661fb17b8"
+          "sha256": "b171dc2ad16f88a69f64fa1e4e51d6560cbe6d80ae45d12c4906b46f6e9f34fd"
         },
         {
           "bytes": 41,
@@ -359,7 +359,7 @@
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-16T00:34:35.368988Z",
+        "created_at": "2026-07-16T08:22:44.225226Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",
@@ -457,12 +457,12 @@
           "sha256": "1ae0ce01207c1c83fd82c2a2b1f23346c2798d368c4ed75fa3525186692175f1"
         },
         {
-          "bytes": 656,
+          "bytes": 500,
           "exists": true,
           "kind": "simulator-configuration",
           "path": "/evidence/generated/provider-config.json",
           "role": "configuration",
-          "sha256": "51794a232531fc6364eea3f66253b6f8e55d8d18131260b63107799661fb17b8"
+          "sha256": "b171dc2ad16f88a69f64fa1e4e51d6560cbe6d80ae45d12c4906b46f6e9f34fd"
         },
         {
           "bytes": 41,
@@ -475,7 +475,7 @@
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-16T00:34:54.444084Z",
+        "created_at": "2026-07-16T08:22:55.388741Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",
@@ -528,8 +528,8 @@
           "freshness": "fresh",
           "provenance": "bounded",
           "provenance_limitations": [
-            "The target deck, provider configuration, explicit ngspice startup files, PDK revision identity, selected executable, and retained native evidence are content-bound.",
-            "Model files reached transitively through the pinned PDK startup search path are bounded by the recorded PDK revision but are not enumerated file by file.",
+            "The target deck, provider configuration, explicit ngspice startup files, provider-owned native executable and its private launch snapshot, PDK revision label, and retained native evidence are content-bound.",
+            "Model files reached transitively through the PDK startup search path are not enumerated or proven clean; the recorded COMMIT file is an identity label, not a complete PDK tree attestation.",
             "Native shared libraries, kernel state, and container runtime remain bounded rather than complete provenance."
           ],
           "request_binding": "not-established",
@@ -580,16 +580,16 @@
                   "TZ"
                 ],
                 "effective_variables": {
-                  "HOME": "/tmp/openada-provider-environment-n4bus_z9/tmp/openada-ngspice-h2_6z6ui/home",
+                  "HOME": "/tmp/openada-provider-environment-lsu3fdlv/tmp/openada-ngspice-f4keyzbo/home",
                   "LANG": "C",
                   "LC_ALL": "C",
                   "PATH": "/usr/local/bin:/usr/bin:/bin",
                   "PDK": "ihp-sg13g2",
                   "PDK_ROOT": "/foss/pdks",
                   "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts",
-                  "TEMP": "/tmp/openada-provider-environment-n4bus_z9/tmp/openada-ngspice-h2_6z6ui/tmp",
-                  "TMP": "/tmp/openada-provider-environment-n4bus_z9/tmp/openada-ngspice-h2_6z6ui/tmp",
-                  "TMPDIR": "/tmp/openada-provider-environment-n4bus_z9/tmp/openada-ngspice-h2_6z6ui/tmp",
+                  "TEMP": "/tmp/openada-provider-environment-lsu3fdlv/tmp/openada-ngspice-f4keyzbo/tmp",
+                  "TMP": "/tmp/openada-provider-environment-lsu3fdlv/tmp/openada-ngspice-f4keyzbo/tmp",
+                  "TMPDIR": "/tmp/openada-provider-environment-lsu3fdlv/tmp/openada-ngspice-f4keyzbo/tmp",
                   "TZ": "UTC"
                 },
                 "mode": "sanitized"
@@ -706,15 +706,15 @@
       },
       "execution": {
         "command": [
-          "/foss/tools/ngspice/bin/ngspice",
+          "/evidence/negative/native-tran-error/work/openada-native-ngspice",
           "-i",
           "-n",
           "-o",
-          "/tmp/openada-provider-environment-n4bus_z9/tmp/openada-ngspice-h2_6z6ui/simulation.log",
+          "/tmp/openada-provider-environment-lsu3fdlv/tmp/openada-ngspice-f4keyzbo/simulation.log",
           "/evidence/negative/native-tran-error/simulation/tran-native-error.openada-control.sp"
         ],
         "cwd": "/evidence/negative/native-tran-error/work",
-        "duration_ms": 219,
+        "duration_ms": 115,
         "exit_code": 0,
         "status": "completed"
       },
@@ -744,12 +744,12 @@
           "sha256": "b088c11a27e21ceadb14abbf9dff877105177bd025ca37750877d71e7f6f87af"
         },
         {
-          "bytes": 656,
+          "bytes": 500,
           "exists": true,
           "kind": "openada-ngspice-provider-config",
           "path": "/evidence/generated/provider-config.json",
           "role": "configuration",
-          "sha256": "51794a232531fc6364eea3f66253b6f8e55d8d18131260b63107799661fb17b8"
+          "sha256": "b171dc2ad16f88a69f64fa1e4e51d6560cbe6d80ae45d12c4906b46f6e9f34fd"
         },
         {
           "bytes": 8067696,
@@ -766,11 +766,19 @@
           "path": "/foss/pdks/ihp-sg13g2/COMMIT",
           "role": "configuration",
           "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
+        },
+        {
+          "bytes": 8067696,
+          "exists": true,
+          "kind": "eda-executable-snapshot",
+          "path": "/evidence/negative/native-tran-error/work/openada-native-ngspice",
+          "role": "configuration",
+          "sha256": "6aacaca88f656e5e19074ac070fb410bf6cc437df1de88ec28d50a24c6239a1b"
         }
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-16T00:35:00.983421Z",
+        "created_at": "2026-07-16T08:22:59.275244Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",
@@ -781,7 +789,7 @@
       "schema": "openada.result/v0alpha1",
       "tool": {
         "name": "ngspice",
-        "path": "/foss/tools/ngspice/bin/ngspice",
+        "path": "/evidence/negative/native-tran-error/work/openada-native-ngspice",
         "version": "** ngspice-46 : Circuit level simulation program"
       }
     }
