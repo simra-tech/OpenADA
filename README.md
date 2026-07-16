@@ -225,6 +225,35 @@ See [Engineering skills above OpenADA](docs/ENGINEERING_SKILLS.md) for the
 layering rule, plugin structure, initial catalog, maturity model, and
 contribution gate.
 
+## Evidence-backed semantic release
+
+Every active semantic command, feature, provider mapping, and preflight route
+is derived into a closed coverage row. The `0.4.0` source has 126 active rows,
+and release CI requires every one to reach `agent-ready` through one of six
+pinned public-design chains: physical DRC/LVS, analog measurements, the full
+inverter agent workflow, all four ngspice-provider analyses, SAR RTL, and
+ngspice/Xyce portability.
+
+A release row needs a real native run, independently parsed native artifacts,
+normalized evidence, an engineering decision, a trustworthy negative, a
+tamper rejection, and an agent-visible result. Every receipt also binds the
+exact semantic source and the clean Git tree used during replay. The generated
+six-record index is therefore a release ledger, not a maturity label or a list
+of demonstrations.
+
+Run the offline release checks with:
+
+```bash
+python tools/semantic_refresh_manifests.py
+python tools/semantic_publish_index.py
+python tools/verify_semantic_coverage.py --mode release
+```
+
+See [Semantic coverage and release gating](docs/SEMANTIC_COVERAGE.md) for the
+receipt model and the exact contribution sequence. A newly exposed row blocks
+release until its complete chain exists; it cannot borrow evidence from an
+adjacent command or be waived through prose.
+
 ## What exists and what comes next
 
 | Contract layer | Current checkout | Protocol target |
@@ -316,12 +345,19 @@ is:
 > artifact paths and hashes, and any provenance limitation. Do not substitute
 > a generic PDK, model library, DRC deck, LVS setup, or top cell to get a pass.
 
-To install the Python entry point from the repository:
+To install the Python entry point from the current checkout:
 
 ```bash
-python -m pip install 'git+https://github.com/simra-tech/OpenADA.git@v0.4.0'
+python -m pip install .
 openada doctor
 ```
+
+Until the `v0.4.0` release tag is published, a remote source install can track
+the reviewed default branch with
+`python -m pip install 'git+https://github.com/simra-tech/OpenADA.git@main'`.
+For a reproducible deployment, replace `main` with a reviewed 40-character
+commit and use the matching plugin ref. Do not request the not-yet-published
+`v0.4.0` tag.
 
 ## Add the agent skills
 
@@ -341,10 +377,15 @@ validation uses `provider.validation.unavailable`).
 Inside Claude Code:
 
 ```text
-/plugin marketplace add https://github.com/simra-tech/OpenADA.git#v0.4.0
+/plugin marketplace add https://github.com/simra-tech/OpenADA.git
 /plugin install openada@openada
 /reload-plugins
 ```
+
+While `v0.4.0` is unreleased, the command above follows the repository's
+default branch; replace it with a reviewed commit when the client supports a
+Git ref suffix. Start a new conversation after installation so the bundled
+skills are loaded.
 
 Restart Claude Code instead if the plugin is not visible after reloading.
 
@@ -363,9 +404,13 @@ claude --plugin-dir .
 Add the Git marketplace:
 
 ```bash
-codex plugin marketplace add simra-tech/OpenADA --ref v0.4.0
+codex plugin marketplace add simra-tech/OpenADA --ref main
 codex plugin add openada@openada
 ```
+
+Replace `main` with a reviewed commit or published release tag when pinning a
+deployment, then start a new Codex session. `/plugins` shows the configured
+marketplace and installed plugin in the CLI.
 
 Invoke the plugin skills as `$openada:openada`,
 `$openada:characterize-analog-block`, or another shipped

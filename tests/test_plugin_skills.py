@@ -80,6 +80,33 @@ def test_codex_manifest_discovers_the_shared_skills_directory():
 
     assert manifest["skills"] == "./skills/"
     assert "engineering skills" in manifest["description"]
+    assert manifest["name"] == "openada"
+    assert len(manifest["interface"]["defaultPrompt"]) <= 3
+    assert all(
+        len(prompt) <= 128 for prompt in manifest["interface"]["defaultPrompt"]
+    )
+
+
+def test_repo_marketplace_exposes_the_root_plugin_with_explicit_policy():
+    marketplace = json.loads(
+        (ROOT / ".agents" / "plugins" / "marketplace.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert marketplace["name"] == "openada"
+    assert marketplace["interface"] == {"displayName": "OpenADA"}
+    assert marketplace["plugins"] == [
+        {
+            "name": "openada",
+            "source": {"source": "local", "path": "./"},
+            "policy": {
+                "installation": "AVAILABLE",
+                "authentication": "ON_INSTALL",
+            },
+            "category": "Developer Tools",
+        }
+    ]
 
 
 def test_package_runtime_and_plugin_release_versions_match():
@@ -119,6 +146,9 @@ def test_public_install_docs_use_plugin_namespaces_and_standard_user_skill_path(
     assert "/openada:<skill-name>" in readme
     assert "~/.agents/skills" in readme
     assert "~/.codex/skills" not in readme
+    assert "codex plugin marketplace add simra-tech/OpenADA --ref main" in readme
+    assert "--ref v0.4.0" not in readme
+    assert "OpenADA.git#v0.4.0" not in readme
 
 
 def test_analog_skills_preserve_the_full_contract_ladder():

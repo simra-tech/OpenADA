@@ -45,6 +45,24 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   and 512 MiB aggregate bounds; post-run mutation or replacement invalidates
   the evidence. It does not discover, install, rank, or trust providers;
   v0alpha1 does not digest-bind the complete request.
+- A hash-bound ngspice PDK-control reference provider with a closed ordered
+  `save all` → OP/DC/AC/TRAN → optional TRAN-only `linearize` → safe `write`
+  grammar, exact analysis-feature matching, and sanitized native execution.
+  Its pinned public-IHP chain retains real ngspice 46 evidence for all four
+  analyses, independently reconstructs engineering facts and scoped agent
+  decisions, and exercises request, native-error, and tamper boundaries. Its
+  provider conformance claim is bound to the exact source-frozen chain receipt.
+- A closed semantic-surface catalog and non-waivable release ledger covering
+  all 126 active rows through six pinned public-design chains. Each accepted
+  row now carries contract tests, a real native EDA run, independent artifact
+  verification, normalized evidence, a downstream engineering decision,
+  negative and tamper replays, agent-visible evidence, and clean-source
+  attestation. CI mechanically checks manifest hashes, the six-record index,
+  provider receipt registration, offline verifiers, and zero release gaps.
+- Public real-design chains for IHP DRC/LVS, IHP analog measurement and full
+  agent workflows, IHP SAR RTL, and ngspice/Xyce analysis portability. Native
+  artifacts and public-design provenance are retained in the source
+  distribution so downstream reviewers can rerun every offline oracle.
 - `profile list` and `profile show` for cwd-independent inspection of all
   packaged operation, assertion, feature, parameter, and normalized-result
   schemas.

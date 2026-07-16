@@ -8,6 +8,38 @@ permissions:
   contents: read
 
 jobs:
+  semantic-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      - name: Install release-gate dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e '.[dev]'
+      - name: Confirm static chain manifests are current
+        run: python tools/semantic_refresh_manifests.py
+      - name: Confirm the six-receipt index is mechanically current
+        run: python tools/semantic_publish_index.py
+      - name: Enforce release semantic coverage
+        run: python tools/verify_semantic_coverage.py --mode release --compact > semantic-coverage.json
+      - name: Confirm exact release closure
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("semantic-coverage.json").read_text())
+          assert report["status"] == "pass", report
+          assert report["issues"] == [], report["issues"]
+          assert report["summary"]["row_count"] == 134, report["summary"]
+          assert report["summary"]["active_row_count"] == 126, report["summary"]
+          assert report["summary"]["gap_count"] == 0, report["summary"]
+          assert report["gaps"] == [], report["gaps"]
+          PY
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -24,7 +56,7 @@ jobs:
       - name: Install development dependencies
         run: python -m pip install --upgrade pip && python -m pip install -e '.[dev]'
       - name: Compile Python sources
-        run: python -m compileall -q src tests conformance evaluation
+        run: python -m compileall -q src tests conformance evaluation tools
       - name: Run tests
         run: python -m pytest -q
 
@@ -42,6 +74,7 @@ jobs:
       - name: Check wheel contents
         run: |
           python - <<'PY'
+          import json
           from pathlib import Path
           import tarfile
           import zipfile
@@ -55,11 +88,21 @@ jobs:
               for name in names
           ), sorted(names)
           for packaged_contract in {
+              "share/openada/schemas/design-provenance-v0alpha1.schema.json",
               "share/openada/schemas/operation-profile-v0alpha2.schema.json",
+              "share/openada/schemas/semantic-chain-manifest-v0alpha1.schema.json",
+              "share/openada/schemas/semantic-chain-run-v0alpha1.schema.json",
+              "share/openada/schemas/semantic-surface-catalog-v0alpha1.schema.json",
+              "share/openada/catalog/semantic-surfaces-v0alpha1.json",
               "share/openada/profiles/circuit.simulate-v1alpha1.json",
               "share/openada/profiles/circuit.simulate-v1alpha2.json",
               "share/openada/profiles/result.measure-v1alpha1.json",
+              "share/openada/profiles/result.series.extract-v1alpha1.json",
+              "share/openada/profiles/result.spectral.measure-v1alpha1.json",
+              "share/openada/profiles/result.transfer.measure-v1alpha1.json",
               "share/openada/profiles/specification.evaluate-v1alpha1.json",
+              "share/openada/providers/ngspice-pdk-control/driver-manifest.json",
+              "share/openada/providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
           }:
               assert any(name.endswith("/" + packaged_contract) for name in names), (
                   packaged_contract,
@@ -72,6 +115,7 @@ jobs:
               source_names = set(archive.getnames())
           required_source_paths = {
               "bin/openada",
+              "bin/openada-provider-ngspice",
               "conformance/ihp-inverter/README.md",
               "conformance/ihp-inverter/manifest.json",
               "conformance/ihp-inverter/run.schema.json",
@@ -136,7 +180,12 @@ jobs:
               "profiles/circuit.simulate-v1alpha2.json",
               "profiles/result.measure-v1alpha1.json",
               "profiles/specification.evaluate-v1alpha1.json",
+              "providers/ngspice-pdk-control/README.md",
+              "providers/ngspice-pdk-control/driver-manifest.json",
+              "providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
               "schemas/operation-profile-v0alpha2.schema.json",
+              "src/openada/providers/__init__.py",
+              "src/openada/providers/ngspice_pdk_control.py",
               "skills/openada/SKILL.md",
               "skills/characterize-analog-block/SKILL.md",
               "skills/characterize-analog-block/references/application-recipes.md",
@@ -146,6 +195,109 @@ jobs:
           }
           for required in required_source_paths:
               assert any(name.endswith("/" + required) for name in source_names), required
+          release_chains = (
+              (
+                  "conformance/ihp-inverter/README.md",
+                  "conformance/ihp-inverter/semantic-chain.json",
+                  "conformance/ihp-inverter/semantic-chain-run.json",
+                  "conformance/ihp-inverter/semantic.py",
+                  "conformance/ihp-inverter/verify.py",
+              ),
+              (
+                  "conformance/ihp-analog-measurements/README.md",
+                  "conformance/ihp-analog-measurements/manifest.json",
+                  "conformance/ihp-analog-measurements/semantic-chain-run.json",
+                  "conformance/ihp-analog-measurements/run.py",
+                  "conformance/ihp-analog-measurements/verify.py",
+              ),
+              (
+                  "conformance/ihp-inverter-agent-chain/README.md",
+                  "conformance/ihp-inverter-agent-chain/manifest.json",
+                  "conformance/ihp-inverter-agent-chain/evidence/chain-run.json",
+                  "conformance/ihp-inverter-agent-chain/run.py",
+                  "conformance/ihp-inverter-agent-chain/verify.py",
+              ),
+              (
+                  "conformance/ihp-ngspice-provider-analyses/README.md",
+                  "conformance/ihp-ngspice-provider-analyses/manifest.json",
+                  "conformance/ihp-ngspice-provider-analyses/semantic-chain-run.json",
+                  "conformance/ihp-ngspice-provider-analyses/replay.py",
+                  "conformance/ihp-ngspice-provider-analyses/verify.py",
+              ),
+              (
+                  "conformance/ihp-sar-rtl/README.md",
+                  "conformance/ihp-sar-rtl/semantic-chain.json",
+                  "conformance/ihp-sar-rtl/semantic-chain-run.json",
+                  "conformance/ihp-sar-rtl/semantic.py",
+                  "conformance/ihp-sar-rtl/verify.py",
+              ),
+              (
+                  "conformance/public-spice-portability/README.md",
+                  "conformance/public-spice-portability/manifest.json",
+                  "conformance/public-spice-portability/evidence/chain-run.json",
+                  "conformance/public-spice-portability/run.py",
+                  "conformance/public-spice-portability/verify.py",
+              ),
+          )
+
+          with tarfile.open(sdists[0]) as archive:
+              def member_name(relative):
+                  matches = [
+                      name for name in source_names
+                      if name.endswith("/" + relative)
+                  ]
+                  assert len(matches) == 1, (relative, matches)
+                  return matches[0]
+
+              def source_document(relative):
+                  extracted = archive.extractfile(member_name(relative))
+                  assert extracted is not None, relative
+                  with extracted:
+                      return json.load(extracted)
+
+              for readme, manifest_path, run_path, publisher, verifier in release_chains:
+                  for required in (readme, manifest_path, run_path, publisher, verifier):
+                      member_name(required)
+                  manifest = source_document(manifest_path)
+                  run = source_document(run_path)
+                  assert run["chain_id"] == manifest["id"], run_path
+                  assert run["source_attestation"]["receipt_class"] == "release", run_path
+                  member_name(
+                      manifest["release_verification"]["implementation"]["repository_path"]
+                  )
+                  for contract in manifest["contracts"]:
+                      member_name(contract["repository_path"])
+                  for artifact in run["artifacts"]:
+                      member_name(artifact["repository_path"])
+
+          expected_skills = {
+              "openada",
+              "review-circuit-simulation",
+              "characterize-analog-block",
+              "analyze-feedback-stability",
+              "analyze-spectral-linearity",
+              "assess-pvt-and-yield",
+          }
+          observed_skills = {
+              name.split("/skills/", 1)[1].split("/", 1)[0]
+              for name in source_names
+              if "/skills/" in name and name.endswith("/SKILL.md")
+          }
+          assert observed_skills == expected_skills, observed_skills
+          for skill in expected_skills:
+              assert any(
+                  name.endswith(f"/skills/{skill}/agents/openai.yaml")
+                  for name in source_names
+              ), skill
+          for plugin_file in {
+              ".codex-plugin/plugin.json",
+              ".agents/plugins/marketplace.json",
+              ".claude-plugin/plugin.json",
+              ".claude-plugin/marketplace.json",
+          }:
+              assert any(name.endswith("/" + plugin_file) for name in source_names), plugin_file
+          assert not any("/__pycache__/" in name for name in source_names)
+          assert not any(name.endswith((".pyc", ".pyo")) for name in source_names)
           assert not any("/fixtures/evidence/" in name for name in source_names)
           PY
       - name: Test the installed wheel contract
@@ -154,12 +306,39 @@ jobs:
           /tmp/openada-wheel-test/bin/python -m pip install dist/openada-*.whl
           /tmp/openada-wheel-test/bin/openada --version
           /tmp/openada-wheel-test/bin/python - <<'PY'
+          from importlib.metadata import distribution
           import json
+          from pathlib import Path
           import subprocess
+          import sys
 
+          from jsonschema import Draft202012Validator
           from openada.conformance import result_schema_path
+          from openada.provider_runtime import provider_manifest_issues
 
           assert result_schema_path().is_file()
+          console_scripts = {
+              entry.name: entry.value
+              for entry in distribution("openada").entry_points
+              if entry.group == "console_scripts"
+          }
+          assert console_scripts["openada-provider-ngspice"] == (
+              "openada.providers.ngspice_pdk_control:main"
+          )
+
+          provider_root = (
+              Path(sys.prefix) / "share/openada/providers/ngspice-pdk-control"
+          )
+          manifest_path = provider_root / "driver-manifest.json"
+          config_schema_path = (
+              provider_root / "provider-config-v0alpha1.schema.json"
+          )
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          config_schema = json.loads(
+              config_schema_path.read_text(encoding="utf-8")
+          )
+          assert provider_manifest_issues(manifest) == ()
+          Draft202012Validator.check_schema(config_schema)
 
           completed = subprocess.run(
               ["/tmp/openada-wheel-test/bin/openada", "simulate"],
@@ -173,4 +352,16 @@ jobs:
           assert completed.stderr == ""
           assert payload["execution"]["status"] == "invalid_request"
           assert payload["engineering"]["status"] == "unknown"
+
+          provider = subprocess.run(
+              ["/tmp/openada-wheel-test/bin/openada-provider-ngspice"],
+              input="{}\n",
+              check=False,
+              text=True,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+          )
+          assert provider.returncode == 2
+          assert provider.stdout == ""
+          assert provider.stderr.startswith("simulation.request.invalid:")
           PY

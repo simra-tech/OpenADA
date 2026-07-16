@@ -31,9 +31,9 @@
     ],
     "websiteURL": "https://www.simratech.com/openada/",
     "defaultPrompt": [
-      "Inspect this EDA workspace and report available tools and PDKs.",
+      "Plan this analog block's characterization and execute the next supported intent.",
       "Review this circuit simulation and recommend the next engineering step.",
-      "Run the applicable DRC or LVS check and summarize the evidence."
+      "Inspect this EDA workspace and report available tools, PDKs, and contract gaps."
     ]
   }
 }
