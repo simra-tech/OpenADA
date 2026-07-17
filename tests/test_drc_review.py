@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from openada.cli import main
 from openada.discovery import DiscoveryManager
 from openada.operations.drc_review import review_drc
@@ -60,13 +62,20 @@ summary = {{
     path.chmod(0o755)
 
 
-def _report(path: Path, deck: Path, *, geometry: str = "box: (1,2;1.2,2.3)") -> None:
+def _report(
+    path: Path,
+    deck: Path,
+    *,
+    geometry: str = "box: (1,2;1.2,2.3)",
+    category: str = "WIDTH",
+    description: str = "width",
+) -> None:
     path.write_text(
         f"""<report-database><description>test</description>
 <original-file></original-file><generator>drc: script='{deck}'</generator><top-cell>TOP</top-cell>
-<categories><category><name>M1</name><categories><category><name>WIDTH</name><description>width</description></category></categories></category></categories>
+<categories><category><name>M1</name><categories><category><name>{category}</name><description>{description}</description></category></categories></category></categories>
 <cells><cell><name>TOP</name></cell><cell><name>LEAF</name></cell></cells>
-<items><item><tags/><category>'M1'.WIDTH</category><cell>LEAF</cell><multiplicity>4</multiplicity>
+<items><item><tags/><category>'M1'.{category}</category><cell>LEAF</cell><multiplicity>4</multiplicity>
 <values><value>{geometry}</value></values></item></items></report-database>""",
         encoding="utf-8",
     )
@@ -95,6 +104,8 @@ def test_review_generates_bounded_overview_and_cluster_artifacts(tmp_path: Path)
     assert payload["tool"] == {"name": "klayout", "path": str(binary), "version": "KLayout 0.30.9"}
     assert payload["data"]["source_report"]["total_violations"] == 4
     assert payload["data"]["review"]["expanded_physical_markers"] == 4
+    assert payload["data"]["diagnosis"]["rule_family_counts"] == {"minimum-width": 1}
+    assert payload["data"]["diagnosis"]["markers"][0]["diagnosis"]["observations"]["width_um"] == pytest.approx(0.2)
     assert [view["kind"] for view in payload["data"]["review"]["views"]] == ["overview", "cluster"]
     images = [item for item in payload["artifacts"] if item["kind"] == "drc-review-png"]
     assert len(images) == 2
@@ -122,6 +133,29 @@ def test_review_deduplicates_equivalent_native_cell_variants(tmp_path: Path) -> 
     assert len(config["markers"]) == 1
     assert config["markers"][0]["cell"] == "LEAF"
     assert config["markers"][0]["source_cells"] == ["LEAF:m0", "LEAF:r0"]
+
+
+def test_review_measures_declared_grid_offsets_without_claiming_a_fix(tmp_path: Path) -> None:
+    gds, report, _, discovery = _inputs(tmp_path)
+    _report(
+        report,
+        tmp_path / "rules.drc",
+        geometry="box: (0.866,18.957;0.866,18.957)",
+        category="metal1_pin_Offgrid",
+        description="metal1_pin layer is Offgrid (drawing grid of 5 nm)",
+    )
+
+    payload = review_drc(
+        gds, report, tmp_path / "review", discovery=discovery, width=320, height=256
+    )
+
+    diagnosis = payload["data"]["diagnosis"]["markers"][0]["diagnosis"]
+    assert diagnosis["rule_family"] == "off-grid"
+    assert diagnosis["declared_length_constraints"] == [
+        {"value": 5.0, "unit": "nm", "value_um": 0.005, "source": "native-rule-description"}
+    ]
+    assert diagnosis["observations"]["grid"]["maximum_offset_um"] == pytest.approx(0.002)
+    assert "not a reconstructed rule measurement" in diagnosis["limitations"][0]
 
 
 def test_review_refuses_nonfresh_output_directory(tmp_path: Path) -> None:

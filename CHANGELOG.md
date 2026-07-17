@@ -16,6 +16,10 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   and renderer summaries are checked before the operation passes. The images
   remain representative diagnostic evidence, not a replacement for the native
   report, rule deck, or foundry signoff.
+  Review results now also classify common rule families from native rule text,
+  retain declared length constraints, measure marker bounds, and calculate
+  coordinate-to-grid offsets for off-grid findings while explicitly avoiding
+  automated-fix or reconstructed-rule claims.
 
 - An experimental `bootstrap-asic-project` skill for blank open-ASIC
   workspaces. It defines core/full-chip/submission finish lines, selects one

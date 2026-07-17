@@ -342,6 +342,14 @@ GDS hierarchy. It writes one full-layout PNG and ranked occurrence-level
 cluster PNGs, then checks their native PNG headers, exact requested dimensions,
 paths, sizes, hashes, renderer summary, and unchanged inputs.
 
+The result's `data.diagnosis` section gives future agents deterministic,
+bounded facts alongside the images: lexical rule-family classification,
+declared length values parsed from native rule descriptions, marker dimensions
+and centers, and—for off-grid rules—the distance from each retained coordinate
+to the nearest declared grid line. These are triage observations rather than
+repair instructions; marker geometry is not treated as a reconstructed deck
+measurement.
+
 This operation proves that the declared review artifacts were generated and
 validated. It does not establish DRC cleanliness, execute a rule deck, infer
 unreported markers, or turn representative bounded examples into exhaustive

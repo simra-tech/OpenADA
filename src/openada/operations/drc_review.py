@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import stat
 import struct
 from typing import Any
@@ -29,6 +30,20 @@ MAX_VIEWS = 12
 MAX_IMAGE_DIMENSION = 4_096
 MIN_IMAGE_DIMENSION = 256
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+_RULE_FAMILIES = (
+    ("off-grid", ("offgrid", "off-grid", "grid")),
+    ("enclosure", ("enclosure", "enclose", "extension")),
+    ("spacing", ("spacing", "space", "separation")),
+    ("minimum-width", ("width", "minimum width", "minwidth")),
+    ("minimum-area", ("area", "minimum area", "minarea")),
+    ("overlap", ("overlap", "overlapping")),
+    ("density", ("density",)),
+    ("antenna", ("antenna",)),
+)
+_LENGTH_RE = re.compile(
+    r"(?<![A-Za-z0-9_.])(?P<value>[0-9]+(?:\.[0-9]+)?)\s*(?P<unit>nm|um|µm)\b",
+    re.IGNORECASE,
+)
 
 
 def _invalid(message: str, *, code: str = "drc_review.request.invalid") -> dict:
@@ -80,6 +95,78 @@ def _geometry_box(geometry: dict[str, Any]) -> list[float] | None:
     return None
 
 
+def _rule_family(category: str, description: str) -> tuple[str, str]:
+    text = f"{category} {description}".lower().replace("_", " ")
+    for family, tokens in _RULE_FAMILIES:
+        if any(token in text for token in tokens):
+            return family, "rule-text-match"
+    return "unclassified", "none"
+
+
+def _length_constraints(description: str) -> list[dict[str, Any]]:
+    constraints: list[dict[str, Any]] = []
+    for match in _LENGTH_RE.finditer(description):
+        value = float(match.group("value"))
+        unit = match.group("unit").lower()
+        value_um = value / 1000.0 if unit == "nm" else value
+        constraints.append(
+            {
+                "value": value,
+                "unit": match.group("unit"),
+                "value_um": value_um,
+                "source": "native-rule-description",
+            }
+        )
+    return constraints
+
+
+def _grid_observation(box: list[float], constraints: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not constraints or constraints[0]["value_um"] <= 0:
+        return None
+    grid = constraints[0]["value_um"]
+    coordinates = {"left": box[0], "bottom": box[1], "right": box[2], "top": box[3]}
+    offsets = {
+        name: min(value % grid, grid - (value % grid))
+        for name, value in coordinates.items()
+    }
+    return {
+        "declared_grid_um": grid,
+        "coordinate_offsets_um": offsets,
+        "maximum_offset_um": max(offsets.values()),
+        "interpretation": "distance from each retained marker-box coordinate to the nearest declared grid line",
+    }
+
+
+def _diagnose_marker(marker: dict[str, Any]) -> dict[str, Any]:
+    box = marker["box_um"]
+    description = marker.get("description", "")
+    family, basis = _rule_family(marker["category"], description)
+    constraints = _length_constraints(description)
+    observations: dict[str, Any] = {
+        "box_um": box,
+        "center_um": [(box[0] + box[2]) / 2.0, (box[1] + box[3]) / 2.0],
+        "width_um": box[2] - box[0],
+        "height_um": box[3] - box[1],
+        "geometry_types": marker.get("geometry_types", []),
+        "multiplicity": marker["multiplicity"],
+    }
+    if family == "off-grid":
+        grid = _grid_observation(box, constraints)
+        if grid is not None:
+            observations["grid"] = grid
+    return {
+        "rule_family": family,
+        "classification_basis": basis,
+        "rule_description": description,
+        "declared_length_constraints": constraints,
+        "observations": observations,
+        "limitations": [
+            "Marker bounds are native report geometry, not a reconstructed rule measurement.",
+            "Rule-family classification is lexical and does not identify the layout edit that will satisfy the deck.",
+        ],
+    }
+
+
 def _marker_examples(parsed: dict[str, Any]) -> list[dict[str, Any]]:
     unique: dict[tuple[str, str, tuple[float, ...], bool], dict[str, Any]] = {}
     for violation in parsed.get("violations", []):
@@ -105,8 +192,13 @@ def _marker_examples(parsed: dict[str, Any]) -> list[dict[str, Any]]:
                     "multiplicity": 0,
                     "waived": waived,
                     "box_um": box,
+                    "description": str(violation.get("description", "")),
+                    "geometry_types": [],
                 },
             )
+            geometry_type = str(geometry.get("type", ""))
+            if geometry_type and geometry_type not in marker["geometry_types"]:
+                marker["geometry_types"].append(geometry_type)
             if source_cell not in marker["source_cells"]:
                 marker["source_cells"].append(source_cell)
             marker["multiplicity"] = max(
@@ -116,7 +208,34 @@ def _marker_examples(parsed: dict[str, Any]) -> list[dict[str, Any]]:
     for index, marker in enumerate(markers):
         marker["id"] = f"m{index}"
         marker["source_cells"].sort()
+        marker["geometry_types"].sort()
+        marker["diagnosis"] = _diagnose_marker(marker)
     return markers
+
+
+def _diagnosis_payload(markers: list[dict[str, Any]]) -> dict[str, Any]:
+    family_counts: dict[str, int] = {}
+    records: list[dict[str, Any]] = []
+    for marker in markers:
+        family = marker["diagnosis"]["rule_family"]
+        family_counts[family] = family_counts.get(family, 0) + 1
+        records.append(
+            {
+                "marker_id": marker["id"],
+                "category": marker["category"],
+                "cell": marker["cell"],
+                "source_cells": marker["source_cells"],
+                "waived": marker["waived"],
+                "diagnosis": marker["diagnosis"],
+            }
+        )
+    return {
+        "schema": "openada.drc-review-diagnosis/v1alpha1",
+        "marker_count": len(records),
+        "rule_family_counts": dict(sorted(family_counts.items())),
+        "markers": records,
+        "interpretation": "Observed marker geometry and conservative lexical rule classification; not an automated repair prescription.",
+    }
 
 
 def _renderer_source(config_path: Path) -> str:
@@ -464,6 +583,7 @@ def review_drc(
                 "violations_truncated": parsed["violations_truncated"],
             },
             "review": render_summary,
+            "diagnosis": _diagnosis_payload(markers),
             "limitations": limitations,
         },
     )
