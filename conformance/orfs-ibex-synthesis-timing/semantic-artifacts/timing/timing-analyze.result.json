@@ -129,7 +129,7 @@
       "-exit",
       "/evidence/timing/timing-analyze.tcl"
     ],
-    "cwd": "/evidence/timing/.openada-sta-ld1da_d1",
+    "cwd": "/evidence/timing/.openada-sta-irqjrb58",
     "duration_ms": 1118,
     "exit_code": 0,
     "status": "completed"
@@ -162,7 +162,7 @@
   ],
   "operation": "timing-analyze",
   "provenance": {
-    "created_at": "2026-07-16T15:28:52.255558Z",
+    "created_at": "2026-07-17T09:55:13.463410Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
