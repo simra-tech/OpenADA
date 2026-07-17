@@ -67,12 +67,12 @@
     "independent_oracle": {
       "bytes": 5089,
       "repository_path": "conformance/ihp-inverter/semantic-oracle.json",
-      "sha256": "ed9573dd49f43fb845bdbc8e55885b9982ee2976d24499b17f7c8576ebacca2d"
+      "sha256": "11a3cde77267b84336ffb115f9806b7a7fe3d0bb4fa3c8450189e3b5e891064f"
     },
     "normalized_evidence": {
       "bytes": 30164,
       "repository_path": "conformance/ihp-inverter/semantic-normalized.json",
-      "sha256": "f9e380c0d235642de552b27ea2e19f324a6f3bbade91ffb885843ae2c1bfa578"
+      "sha256": "7f342e8ac174c72ac5c221be7c245c72d5606395341e2176bd72e83c3d167d07"
     }
   },
   "limitations": [
