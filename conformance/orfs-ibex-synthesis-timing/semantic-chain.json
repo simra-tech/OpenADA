@@ -86,7 +86,7 @@
     {"repository_path": "profiles/logic.synthesize-v1alpha1.json", "sha256": "88adadc5a7f8246915e6352bb3c49af26e542f2c51bfeb28b54317892e56f808", "extensions": {}},
     {"repository_path": "profiles/timing.analyze-v1alpha1.json", "sha256": "c3821a1b32f0929dc5e8f31ad370dfdd522118d78beb8c219bc9445a6f30edb0", "extensions": {}},
     {"repository_path": "tools/semantic_receipts.py", "sha256": "983637e95cc33c8259142dd80c96e005364dd49c6cc729e4a7f0d2d7cbcb13f0", "extensions": {}},
-    {"repository_path": "catalog/semantic-surfaces-v0alpha1.json", "sha256": "021446bf16881c7530e9336f630bd759e1333876c3480978e756e793a324a3d0", "extensions": {}},
+    {"repository_path": "catalog/semantic-surfaces-v0alpha1.json", "sha256": "1cecb5e1458e45643b5aa56f1d96dcf4062072e89a1f07c8a6bc1b3ea505db88", "extensions": {}},
     {"repository_path": "conformance/orfs-ibex-synthesis-timing/run.schema.json", "sha256": "884fecd6a97d1a733f4a3bb0fb9806d9b6e9883fa6c3f04ab4ad49a03cd8699d", "extensions": {}},
     {"repository_path": "conformance/orfs-ibex-synthesis-timing/manifest.json", "sha256": "1d331bb7f94daef803461164bf31bf0fa9baa81098ba47f7127dd45b00ddbc5b", "extensions": {}},
     {"repository_path": "conformance/orfs-ibex-synthesis-timing/common.py", "sha256": "ec134819214db5c49d73131abe3f91e95b755702eadd8c7123c3843ddb856a17", "extensions": {}},
