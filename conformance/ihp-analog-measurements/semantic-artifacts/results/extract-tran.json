@@ -13,7 +13,7 @@
         "plotname": "Transient Analysis (linearized)",
         "point_count": 1024
       },
-      "request_sha256": "01289b860344862fde6ec48c0b64dd49ab229326c52b1213d95bf2b3c0c92497",
+      "request_sha256": "b4bd09ac554816e9092084b00c08aa8fc1a305cc375dd905b59dc54c84bedaff",
       "series": {
         "axis": {
           "name": "time",
@@ -2105,7 +2105,7 @@
           "artifact_sha256": "0e7ec212289a7020656c8276381f87ca887208a23c0feb445e59b58e4ec0d9e1",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "3e82b4cc0ae53a69138cf9f68ef7213e2e5a5cd290081ace5328feb644db9a34",
+            "artifact_sha256": "50d204bf9ddad8a94cc443cf08e44f0d1ca15bcbe56bf07bb75ff1883279ec5a",
             "binding": "unverified",
             "operation": "circuit.simulate",
             "request_id": "24000000-0000-4000-8000-000000000002"
@@ -2122,7 +2122,7 @@
           "kind": "ngspice-raw",
           "path": "/evidence/provider-tran/work/inverter_spectral.raw",
           "role": "simulation.result",
-          "sha256": "3e82b4cc0ae53a69138cf9f68ef7213e2e5a5cd290081ace5328feb644db9a34"
+          "sha256": "50d204bf9ddad8a94cc443cf08e44f0d1ca15bcbe56bf07bb75ff1883279ec5a"
         },
         "backend": "ngspice",
         "binding": "verified",
@@ -2159,12 +2159,12 @@
       "kind": "ngspice-raw",
       "path": "/evidence/provider-tran/work/inverter_spectral.raw",
       "role": "simulation.result",
-      "sha256": "3e82b4cc0ae53a69138cf9f68ef7213e2e5a5cd290081ace5328feb644db9a34"
+      "sha256": "50d204bf9ddad8a94cc443cf08e44f0d1ca15bcbe56bf07bb75ff1883279ec5a"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-16T15:17:50.983838Z",
+    "created_at": "2026-07-17T09:47:29.162907Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

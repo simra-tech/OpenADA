@@ -35,12 +35,12 @@
     "inverter_raw": {
       "bytes": 98906,
       "path": "/evidence/provider-tran/work/inverter_spectral.raw",
-      "sha256": "3e82b4cc0ae53a69138cf9f68ef7213e2e5a5cd290081ace5328feb644db9a34"
+      "sha256": "50d204bf9ddad8a94cc443cf08e44f0d1ca15bcbe56bf07bb75ff1883279ec5a"
     },
     "ota_raw": {
       "bytes": 1147866,
       "path": "/evidence/provider-ac/work/ota_ac.raw",
-      "sha256": "bd28b1ba2cd418e994ccfbf0db03a429858a9cf7b0d65eb8f0c229f90d1ba003"
+      "sha256": "1d4cba505a44120189d3939b934f136a0724eb5321c2db939a0c0ed723798194"
     }
   },
   "network": "none",
