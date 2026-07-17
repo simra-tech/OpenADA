@@ -12,7 +12,7 @@
       "phase_margin_deg": 61.42309151169668,
       "plotname": "AC Analysis",
       "point_count": 701,
-      "raw_sha256": "bc092110a37e8e9ee49b50d6779cd2cdda01f59f6354de896f0da816cd18bcd1",
+      "raw_sha256": "4cacd97e721138df5b6a055e169202728af3790bc11b6337104a9d6b9abd7b21",
       "request_id": "11000000-0000-4000-8000-000000000003",
       "unity_crossing_in_band": true,
       "unity_gain_frequency_hz": 4157414.5570058143
@@ -29,7 +29,7 @@
       "log_sha256": "c0fb2c5e708e89bd616642a1a57eb15845544115388479dd07717429d218c892",
       "plotname": "DC transfer characteristic",
       "point_count": 121,
-      "raw_sha256": "9725f1da66646f3f56f020f6866b3ef94e054c7768c800ab3d9dfa045afd4ef1",
+      "raw_sha256": "30cfdb8c9d45f24fe5bb991eb7643edc9b5deec640cf8f9f855b311d72ceb0b4",
       "request_id": "11000000-0000-4000-8000-000000000002"
     },
     "op": {
@@ -40,7 +40,7 @@
       "log_sha256": "4466b9688c9c63c6d76892805e8b540eb23187ec4e0cadd927c28af67b78efbb",
       "plotname": "Operating Point",
       "point_count": 1,
-      "raw_sha256": "7d5c7b3254a6743b413af939a5af3ca37172f22add9e51e648719109eae8a5bc",
+      "raw_sha256": "96a077fcfd4ae67a3b697e0a9a326744b56a6ea21954a301b9476654fb78c08e",
       "request_id": "11000000-0000-4000-8000-000000000001",
       "vout_v": 1.1999991371378251
     },
@@ -52,7 +52,7 @@
       "log_sha256": "6193cf7f5998a39a1e0fcd75220c8040f9288a502c4ab8744483ee7b755c0213",
       "plotname": "Transient Analysis (linearized)",
       "point_count": 1024,
-      "raw_sha256": "c911194da805e7237d6d3c7cd43ea996e9d5c2ffbb93788d7f9749868ad11d24",
+      "raw_sha256": "45f03bffae7414bdc01cfc85324a09df0ba12d513cdea37d8b78705c0c167188",
       "request_id": "11000000-0000-4000-8000-000000000004",
       "time_first_s": 5e-07,
       "time_last_s": 3.246875000000037e-05,
@@ -88,7 +88,7 @@
         "log_sha256": "c0fb2c5e708e89bd616642a1a57eb15845544115388479dd07717429d218c892",
         "plotname": "DC transfer characteristic",
         "point_count": 121,
-        "raw_sha256": "9725f1da66646f3f56f020f6866b3ef94e054c7768c800ab3d9dfa045afd4ef1",
+        "raw_sha256": "30cfdb8c9d45f24fe5bb991eb7643edc9b5deec640cf8f9f855b311d72ceb0b4",
         "request_id": "11000000-0000-4000-8000-000000000002"
       },
       "scope": "0 V to 1.2 V V1 sweep at nominal mos_tt only"
@@ -117,7 +117,7 @@
         "log_sha256": "6193cf7f5998a39a1e0fcd75220c8040f9288a502c4ab8744483ee7b755c0213",
         "plotname": "Transient Analysis (linearized)",
         "point_count": 1024,
-        "raw_sha256": "c911194da805e7237d6d3c7cd43ea996e9d5c2ffbb93788d7f9749868ad11d24",
+        "raw_sha256": "45f03bffae7414bdc01cfc85324a09df0ba12d513cdea37d8b78705c0c167188",
         "request_id": "11000000-0000-4000-8000-000000000004",
         "time_first_s": 5e-07,
         "time_last_s": 3.246875000000037e-05,
