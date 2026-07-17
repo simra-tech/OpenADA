@@ -24,7 +24,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
       "role": "native-artifact",
-      "sha256": "6c79e230e65b79c4100d9b8881d12d7a96a756562f3db3bbfa0bcbd65ee244de",
+      "sha256": "2cc545c4649b9b5e7895ba534f8f48b56992f1107710035253f58f37dbc4d30b",
       "source_output": "positive-rtl-result",
       "source_step": "rtl-structural-check"
     },
@@ -51,7 +51,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
       "role": "native-artifact",
-      "sha256": "7244c454d56c212eacbe9cfa9463f21f746dbe62f93cb35e2dc7c7b187dd1555",
+      "sha256": "1e68d49773b676d6b23c80f6e95208d995bc6824533f8920b818f067ec4c6b10",
       "source_output": "positive-yosys-transcript",
       "source_step": "rtl-structural-check"
     },
@@ -60,7 +60,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
       "role": "native-artifact",
-      "sha256": "6e75d990bc9e59a06f0650d75cb28a8f11a43b12c8a1d3e6434584ad6533d599",
+      "sha256": "3e7a47d8574c4adf656fde2a4e60c2b802174ba19ac280e4b53f28bbe71fba25",
       "source_output": "negative-rtl-result",
       "source_step": "missing-top-native"
     },
@@ -78,16 +78,16 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
       "role": "native-artifact",
-      "sha256": "db38f88e0ffa144eda3a785631958dfca7616ec4d3e4517aa0bb089d6ad35407",
+      "sha256": "39cf3c386c4de7db96023cd27570045daaa1554b3247a7bb459fe72e112b579f",
       "source_output": "negative-yosys-transcript",
       "source_step": "missing-top-native"
     },
     {
-      "bytes": 2787,
+      "bytes": 2788,
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.result.json",
       "role": "native-artifact",
-      "sha256": "94859447f26bdfd05ce30cf0c91d1edf63bdec03cd706e0d6779002c4186b9f1",
+      "sha256": "0e894d71df94dba059c4e3c1c96c44e6d9b30be2ff26bfc83f229f53835b46cf",
       "source_output": "positive-lint-result",
       "source_step": "rtl-lint-clean"
     },
@@ -96,7 +96,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.log",
       "role": "native-artifact",
-      "sha256": "0a6adc6729437058c36b8fe1022a13f074ccafaea14378d6cad70f78b92aeb18",
+      "sha256": "567e6bebf11598c9eed876351ec7360c36c9990f6665a8bb2699c9bbaef7eec1",
       "source_output": "positive-verilator-transcript",
       "source_step": "rtl-lint-clean"
     },
@@ -105,7 +105,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive-2023/rtl-lint.result.json",
       "role": "native-artifact",
-      "sha256": "e3e0deaa0cf818936c1b7183ed09213733c743df5355470b352f123a9f01a228",
+      "sha256": "f7d2f6c8c94c21a990ca5972ae05a9a8c4f1a980d8f3a7c765c4e72f871ab9c6",
       "source_output": "positive-lint-2023-result",
       "source_step": "rtl-lint-clean-2023"
     },
@@ -123,7 +123,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-lint.result.json",
       "role": "native-artifact",
-      "sha256": "883609aea0f4c484b39f5120b6218cebde0e0be1a6f9b8673beb5ba0b25c30b7",
+      "sha256": "7f6173d749c096d1e1fdbed2f3396fb411483c4e152c3cd02e8601f46f2b5ecf",
       "source_output": "negative-lint-result",
       "source_step": "lint-missing-top-native"
     },
@@ -141,7 +141,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
       "role": "native-artifact",
-      "sha256": "3d9d922d6082c07d5af85c996b21e5c9d1433b6a00298879b44a3821613add95",
+      "sha256": "49c07e8ece2539e4d35e2f052fba04ae3449ccbc0a39620a71389483959b3685",
       "source_output": "native-run-receipt",
       "source_step": "rtl-structural-check"
     },
@@ -150,7 +150,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
       "role": "independent-oracle",
-      "sha256": "0e0afb0d1c76a222a5962a3640d9d18fc26feb3ccf554701c6b640ee842b3903",
+      "sha256": "9098b874fde9beb80473b2a0c80b6f8cfc6d165d69b4d70e0257a2164f163f52",
       "source_output": "independent-oracle-verdict",
       "source_step": "independent-verifier"
     },
@@ -159,7 +159,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-normalized.json",
       "role": "normalized-evidence",
-      "sha256": "4cceacd5b44f5cfcb1501219e7485361aa414494400c3d146a0a46a19bbbde2e",
+      "sha256": "c4324cff1b7d2fd566f716a13504334c493ebc37cc59f39599888b2e2b2bb5b6",
       "source_output": "normalized-rtl-evidence",
       "source_step": "normalize-rtl-evidence"
     },
@@ -168,7 +168,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-decision.json",
       "role": "downstream-decision",
-      "sha256": "d255986e5032876431c6cfdbded4582e5de59955021fdb1a168de780c3da1965",
+      "sha256": "d9a5ebc7cead6a0325e4d20f4f973853ab5ab907a5e879624b0351cce68feff6",
       "source_output": "downstream-rtl-decision",
       "source_step": "engineering-decision"
     },
@@ -177,7 +177,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-evidence.json",
       "role": "agent-visible-evidence",
-      "sha256": "31bd88d5806b24255b007f94d7cda88f872d8d4aa5fcdf8dc96ef4c992a63af2",
+      "sha256": "738e5590619b5ab2a12b655c6aa15a3e254892d563ed78d9c1ba820e9736f143",
       "source_output": "agent-visible-rtl-evidence",
       "source_step": "agent-evidence"
     },
@@ -238,15 +238,15 @@
     }
   },
   "schema": "openada.semantic-chain-run/v0alpha1",
-  "semantic_subject_sha256": "d3bc93e67a0d7c81f31f16eebea5d4fd1a3081a3fc9c040b592a2f08e3a6fc00",
+  "semantic_subject_sha256": "eefa662ac543bc587b4b4598c11a87aa6ccef43069acaef4bc58ec43a43ae964",
   "source_attestation": {
     "clean_after": true,
     "clean_before": true,
     "extensions": {},
     "receipt_class": "release",
-    "repository_revision": "2407aa4bc22950fd8f9437915959fcae02b59446",
-    "repository_tree": "2f6e484ae873b6b1e02fe98112576102eda97246",
-    "semantic_subject_sha256": "d3bc93e67a0d7c81f31f16eebea5d4fd1a3081a3fc9c040b592a2f08e3a6fc00",
+    "repository_revision": "1689c47df81d372853069deee34b3b7f9d561ec9",
+    "repository_tree": "8e19c4e5a960f91fd6d8c78e3c6987321fdf841e",
+    "semantic_subject_sha256": "eefa662ac543bc587b4b4598c11a87aa6ccef43069acaef4bc58ec43a43ae964",
     "state_unchanged": true
   },
   "status": "pass"
