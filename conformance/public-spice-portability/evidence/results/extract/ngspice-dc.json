@@ -13,7 +13,7 @@
         "plotname": "DC transfer characteristic",
         "point_count": 13
       },
-      "request_sha256": "9748c8e7ed5e32ca9b226543a7bcf0ee2027aa0c8f50a86185d47966ff5f9486",
+      "request_sha256": "f7ee32f28e9ac28e8983392bf33a8a289f2a264ea3d6cf151980531b2ad47c0f",
       "series": {
         "axis": {
           "name": "V1",
@@ -97,10 +97,10 @@
           "artifact_sha256": "ea5c4cce0704d76b20d3ba015077026dded6d32be26d166162d295a7550b06ec",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "17235f17c08d7e450f2522b61b520e2b197f5285babf83993d6e972766105176",
+            "artifact_sha256": "ef6cab59c9791a44f68fe5248ec4a9267e78155f727de36b7424413c424b862c",
             "binding": "unverified",
             "operation": "circuit.simulate",
-            "request_id": "11e68c9b-5ea4-432e-b248-010592c86a2a"
+            "request_id": "2630a838-b613-4a6e-a492-f6d01331a377"
           },
           "operation": "openada.operation/result.series.extract/v1alpha1",
           "request_id": "21000000-0000-4000-8000-000000000002"
@@ -114,14 +114,14 @@
           "kind": "ngspice-raw",
           "path": "/evidence/sim/ngspice-dc/inverter-dc.raw",
           "role": "simulation.result",
-          "sha256": "17235f17c08d7e450f2522b61b520e2b197f5285babf83993d6e972766105176"
+          "sha256": "ef6cab59c9791a44f68fe5248ec4a9267e78155f727de36b7424413c424b862c"
         },
         "backend": "ngspice",
         "binding": "verified",
         "driver_id": "org.openada.driver.ngspice",
         "driver_version": "0.4.0",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-        "request_id": "11e68c9b-5ea4-432e-b248-010592c86a2a"
+        "request_id": "2630a838-b613-4a6e-a492-f6d01331a377"
       },
       "status": "extracted"
     },
@@ -151,12 +151,12 @@
       "kind": "ngspice-raw",
       "path": "/evidence/sim/ngspice-dc/inverter-dc.raw",
       "role": "simulation.result",
-      "sha256": "17235f17c08d7e450f2522b61b520e2b197f5285babf83993d6e972766105176"
+      "sha256": "ef6cab59c9791a44f68fe5248ec4a9267e78155f727de36b7424413c424b862c"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-17T10:20:02.470094Z",
+    "created_at": "2026-07-17T12:26:43.389655Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -6,7 +6,7 @@
       "kind": "simulation-log",
       "path": "/evidence/legacy/ngspice-op/inverter-op.log",
       "role": "evidence",
-      "sha256": "ac04883617b8ba21709f1c39f734ed630d58ce83304a2d8c5e2a040121500219"
+      "sha256": "123ec7fbb97567a80f9ef18909f3b03f1d7b00fe30286cdbf172a46efbf7a428"
     },
     {
       "bytes": 668,
@@ -14,7 +14,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/legacy/ngspice-op/inverter-op.raw",
       "role": "output",
-      "sha256": "9b71dd6d4c07892a0401cd91273585f9f0d206026e291dcd10a14629a3a07f31"
+      "sha256": "5a3f09268bfb4447d3f0898fb3c2569dc6dda015fdea6b21b3b8385ac37cc6c3"
     }
   ],
   "data": {
@@ -54,10 +54,10 @@
     "log_capture": {
       "bytes": 685,
       "path": "/evidence/legacy/ngspice-op/inverter-op.log",
-      "sha256": "ac04883617b8ba21709f1c39f734ed630d58ce83304a2d8c5e2a040121500219",
+      "sha256": "123ec7fbb97567a80f9ef18909f3b03f1d7b00fe30286cdbf172a46efbf7a428",
       "status": "valid"
     },
-    "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-b8ud389u/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 11  \n\nNo. of Data Rows : 1\n\nTotal analysis time (seconds) = 0.00188917\n\nTotal elapsed time (seconds) = 0.017 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 10558.910 MB.\nMaximum ngspice program size =  531.711 MB.\nCurrent ngspice program size =   14.828 MB.\n\nShared ngspice pages =   11.531 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.195 MB.\n\n",
+    "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-2tuirlgx/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 11  \n\nNo. of Data Rows : 1\n\nTotal analysis time (seconds) = 0.00195281\n\nTotal elapsed time (seconds) = 0.018 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 11978.102 MB.\nMaximum ngspice program size =  531.711 MB.\nCurrent ngspice program size =   14.742 MB.\n\nShared ngspice pages =   11.445 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.195 MB.\n\n",
     "measurement_section_count": 0,
     "measurements": [],
     "measurements_truncated": false,
@@ -68,7 +68,7 @@
         "kind": "raw",
         "origin": "wrapper",
         "path": "/evidence/legacy/ngspice-op/inverter-op.raw",
-        "sha256": "9b71dd6d4c07892a0401cd91273585f9f0d206026e291dcd10a14629a3a07f31",
+        "sha256": "5a3f09268bfb4447d3f0898fb3c2569dc6dda015fdea6b21b3b8385ac37cc6c3",
         "status": "valid",
         "validation": {
           "metadata": {
@@ -121,9 +121,9 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-b8ud389u/simulation.raw",
+      "/tmp/openada-ngspice-2tuirlgx/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-b8ud389u/simulation.log",
+      "/tmp/openada-ngspice-2tuirlgx/simulation.log",
       "/evidence/work/inverter-op.spice"
     ],
     "cwd": "/evidence",
@@ -143,7 +143,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-17T10:20:01.865573Z",
+    "created_at": "2026-07-17T12:26:42.813212Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -6,7 +6,7 @@
       "kind": "simulation-log",
       "path": "/evidence/sim/ngspice-dc/inverter-dc.log",
       "role": "simulation.log",
-      "sha256": "2e4ef387b8a3306249c5b130c7d77579152b0382a9cc57202f34fc1f7f98071a"
+      "sha256": "34d206968284bef69721bbd5385425478d07a861256d26144d0fc4a81151f964"
     },
     {
       "bytes": 1862,
@@ -14,7 +14,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/sim/ngspice-dc/inverter-dc.raw",
       "role": "simulation.result",
-      "sha256": "17235f17c08d7e450f2522b61b520e2b197f5285babf83993d6e972766105176"
+      "sha256": "ef6cab59c9791a44f68fe5248ec4a9267e78155f727de36b7424413c424b862c"
     }
   ],
   "data": {
@@ -81,10 +81,10 @@
           "log_capture": {
             "bytes": 686,
             "path": "/evidence/sim/ngspice-dc/inverter-dc.log",
-            "sha256": "2e4ef387b8a3306249c5b130c7d77579152b0382a9cc57202f34fc1f7f98071a",
+            "sha256": "34d206968284bef69721bbd5385425478d07a861256d26144d0fc4a81151f964",
             "status": "valid"
           },
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-pf0szr9_/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nNo. of Data Rows : 13\n\nTotal analysis time (seconds) = 0.00711543\n\nTotal elapsed time (seconds) = 0.023 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 10582.477 MB.\nMaximum ngspice program size =  531.711 MB.\nCurrent ngspice program size =   14.684 MB.\n\nShared ngspice pages =   11.387 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.195 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-72bu0dr4/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nNo. of Data Rows : 13\n\nTotal analysis time (seconds) = 0.00678134\n\nTotal elapsed time (seconds) = 0.028 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 12128.258 MB.\nMaximum ngspice program size =  531.711 MB.\nCurrent ngspice program size =   14.520 MB.\n\nShared ngspice pages =   11.223 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.195 MB.\n\n",
           "measurement_section_count": 0,
           "measurements": [],
           "measurements_truncated": false,
@@ -95,7 +95,7 @@
               "kind": "raw",
               "origin": "wrapper",
               "path": "/evidence/sim/ngspice-dc/inverter-dc.raw",
-              "sha256": "17235f17c08d7e450f2522b61b520e2b197f5285babf83993d6e972766105176",
+              "sha256": "ef6cab59c9791a44f68fe5248ec4a9267e78155f727de36b7424413c424b862c",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -158,7 +158,7 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "11e68c9b-5ea4-432e-b248-010592c86a2a"
+      "request_id": "2630a838-b613-4a6e-a492-f6d01331a377"
     }
   },
   "diagnostics": [],
@@ -171,13 +171,13 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-pf0szr9_/simulation.raw",
+      "/tmp/openada-ngspice-72bu0dr4/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-pf0szr9_/simulation.log",
+      "/tmp/openada-ngspice-72bu0dr4/simulation.log",
       "/evidence/work/inverter-dc.spice"
     ],
     "cwd": "/evidence",
-    "duration_ms": 33,
+    "duration_ms": 65,
     "exit_code": 0,
     "status": "completed"
   },
@@ -193,7 +193,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-17T10:19:57.848674Z",
+    "created_at": "2026-07-17T12:26:38.170217Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
