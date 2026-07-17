@@ -282,6 +282,59 @@ def test_hierarchical_report_selects_requested_top_without_mixing_child_counts(
     assert payload["data"]["comparison"]["structural_counts_agree"] is True
 
 
+def test_unnamed_equivalent_pin_record_does_not_obscure_unique_top(
+    tmp_path: Path,
+) -> None:
+    binary = tmp_path / "netgen"
+    document = json.loads(_pass_json())
+    document.insert(0, {"pins": [["VDD", "VSS"], ["VDD", "VSS"]]})
+    _fake_netgen(binary, json_body=json.dumps(document).encode())
+
+    payload = _invoke(tmp_path, binary)
+
+    comparison = payload["data"]["comparison"]
+    assert payload["engineering"]["status"] == "pass"
+    assert comparison["json_outcome"] == "pass"
+    assert comparison["validation"]["valid"] is True
+    assert comparison["comparison_count"] == 2
+    assert comparison["top_comparison_count"] == 1
+    assert comparison["device_counts"] == [[["nmos", 1]], [["nmos", 1]]]
+    assert comparison["node_counts"] == [2, 2]
+    assert comparison["mismatch_count"] == 0
+
+
+@pytest.mark.parametrize(
+    ("auxiliary", "detail"),
+    [
+        (
+            {"pins": [["VDD", "VSS"], ["VDD", "VSSA"]]},
+            "unnamed pin comparison is not equivalent",
+        ),
+        (
+            {"pins": [["VDD", "VSS"], ["VDD", "VSS"]], "goodnets": []},
+            "lacks two cell names",
+        ),
+    ],
+    ids=["unequal-pins", "partial-known-shape"],
+)
+def test_ambiguous_unnamed_pin_record_forces_unknown(
+    tmp_path: Path,
+    auxiliary: dict[str, object],
+    detail: str,
+) -> None:
+    binary = tmp_path / "netgen"
+    document = json.loads(_pass_json())
+    document.insert(0, auxiliary)
+    _fake_netgen(binary, json_body=json.dumps(document).encode())
+
+    payload = _invoke(tmp_path, binary)
+
+    validation = payload["data"]["json_output"]["capture"]["validation"]
+    assert payload["engineering"]["status"] == "unknown"
+    assert validation["reason"] == "json.invalid"
+    assert detail in validation["detail"]
+
+
 def test_duplicate_requested_top_report_sections_force_unknown(tmp_path: Path) -> None:
     binary = tmp_path / "netgen"
     _fake_netgen(

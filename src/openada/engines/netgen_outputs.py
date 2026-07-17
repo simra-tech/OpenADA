@@ -513,6 +513,13 @@ def parse_netgen_json_stream(
         for index, comparison in enumerate(payload):
             if not isinstance(comparison, dict) or set(comparison) - known_keys:
                 raise ValueError("native JSON comparison has an unknown shape")
+            # Placeholder-cell checks may be emitted as unnamed pin-only records.
+            # Only their closed, equivalent form is safe to ignore as auxiliary data.
+            if set(comparison) == {"pins"}:
+                pins_left, pins_right = _paired_strings(comparison["pins"])
+                if pins_left != pins_right:
+                    raise ValueError("native JSON unnamed pin comparison is not equivalent")
+                continue
             names = comparison.get("name")
             if (
                 not isinstance(names, list)
