@@ -1,5 +1,5 @@
 {
-  "decision_sha256": "a5e6225730e9d6e4a517773ebd741b3c432ccd2389c04fec2469db32e42765ee",
+  "decision_sha256": "563e97a5c72305aac4d0e8031ce1aed8a6a305c0c4f7d3d591a6ac089587b3f7",
   "extensions": {},
   "native_bindings": {
     "ac": {
@@ -14,7 +14,7 @@
       "plotname": "AC Analysis",
       "point_count": 701,
       "raw_bytes": 1147866,
-      "raw_sha256": "1d4cba505a44120189d3939b934f136a0724eb5321c2db939a0c0ed723798194",
+      "raw_sha256": "c22a349c7186039bd93803527be846cf61e7b6d92f7fc7ba1941b45f9ffd09fd",
       "request_id": "24000000-0000-4000-8000-000000000001",
       "retained": {
         "simulation.launcher": {
@@ -38,7 +38,7 @@
       "plotname": "Transient Analysis (linearized)",
       "point_count": 1024,
       "raw_bytes": 98906,
-      "raw_sha256": "50d204bf9ddad8a94cc443cf08e44f0d1ca15bcbe56bf07bb75ff1883279ec5a",
+      "raw_sha256": "fe5f8420f3c2b23ebb2ecb8c54143391487860a8c0ce191e50bd2b4035e1dfce",
       "request_id": "24000000-0000-4000-8000-000000000002",
       "retained": {
         "simulation.launcher": {
@@ -57,79 +57,79 @@
       "diagnostic": "series.selector.missing",
       "engineering_status": "unknown",
       "execution_status": "completed",
-      "result_sha256": "34253a6fe5e74d3cb24f366f7a1297fea9168591d64af6886770796d7da8002e"
+      "result_sha256": "f7a93166987440cd83e0d6a144da20c0f29dda4f06767ee209f3c675ca3a6d6d"
     },
     "extract-tran-missing-selector": {
       "diagnostic": "series.selector.missing",
       "engineering_status": "unknown",
       "execution_status": "completed",
-      "result_sha256": "49bdc56246276da25510d1b6e8ae6a6b5708204b37d8ba9e94768d34ed140695"
+      "result_sha256": "7e6c675cd56299e822f1b833ab05c9a39f00eda87b6637fcfe0ca3341816f364"
     },
     "netlist-missing-symbol": {
       "diagnostic": "xschem.missing_symbol",
       "engineering_status": "fail",
       "execution_status": "completed",
-      "result_sha256": "82cfd2b6ac39778c0332f1ea33e8e9e03085883585e2124ddd08de5a6304a1db"
+      "result_sha256": "5a56f5beb7e8fbd1794d65ec2c90d2b6cabdaf08077fa0ccbe6ec95178d5456a"
     },
     "provider-ac-parameter-mismatch": {
       "diagnostic": "simulation.request.invalid",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "cee19ba1cfac082cb54efad732d60b0515ebcb15107517032a1d195625af9cb4"
+      "result_sha256": "e49da62042bfb449e0a1d21112dd707f1877e6b18175011cc7aa169555c083cc"
     },
     "provider-tran-parameter-mismatch": {
       "diagnostic": "simulation.request.invalid",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "bbda9b33192e24fc791d297d1c060b977b52b333f72a711e8e0a4c9943dd399a"
+      "result_sha256": "0cc2fa5099e824b17ff8952cf2f7231daaf19b64acbce3aec1468f7777281693"
     },
     "spectral-sfdr-invalid-standard-context": {
       "diagnostic": "spectral.standard_context.invalid",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "90b0e489dada647ce667679a5b34f5053134d4e702d38292f8347ba2011eff61"
+      "result_sha256": "f15820ae49ccf54f922d747654f05486cda7bc3c94c87e726063ee62c445625a"
     },
     "spectral-sinad-record-length": {
       "diagnostic": "spectral.method.record_length_mismatch",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "27bc6172dc9ff29bdfe32ffbeacf4c09f189688247c63ab75e1761b44e3e28fb"
+      "result_sha256": "b2098db39b37f4833c512c5425afb34ad3bcbd18e403d3fb30b26cf55f430b8d"
     },
     "spectral-snr-noncoherent": {
       "diagnostic": "spectral.coherence.not_established",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "aeb4dff437adec0879f8986e1deb9e9ac2e062a280c476864dc5764c9362d00b"
+      "result_sha256": "d9e8dc53cbb0d02ee7994d7fbde010c22a1b197af8509480aa707660ef6033b9"
     },
     "spectral-thd-unsupported-window": {
       "diagnostic": "spectral.method.unsupported",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "faceb18f32cd8251effe6dfcca00f390584582005bea336b18d35b3f65ad68af"
+      "result_sha256": "8ff064edc3f7425107b0df72bf32541ce735623bef4727329cc70d8fed69e92f"
     },
     "transfer-bandwidth-unsupported-drop": {
       "diagnostic": "transfer.method.unsupported",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "ecc07972d61f795f757e606a654d51021d4acfd0a3ab1026f8470d9ee4e6ec89"
+      "result_sha256": "5a5b5b88d7428d2377b9d2ae7f1118b771b741b4b0576c37cc736b65b15647f1"
     },
     "transfer-low-frequency-gain-invalid-unit": {
       "diagnostic": "transfer.unit.mismatch",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "9a1bf1566aa75f43103ca3177c216c161d96c18d9f49bb03c5a77849093a74dc"
+      "result_sha256": "ce877a37a1ef154c797a249fa054cede01e2155c20312f4a5d6688c585250160"
     },
     "transfer-phase-margin-invalid-context": {
       "diagnostic": "transfer.phase_margin.invalid_context",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "a8a8d025ca88f803546210298fe788453d10167b0d37da58e3cc3c41866f8430"
+      "result_sha256": "e3390e45178e8f0ce0b0d4b61d5f3f43f0b0f9138e728b4ac2509e832fd12d80"
     },
     "transfer-unity-unsupported-policy": {
       "diagnostic": "transfer.method.unsupported",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "2a7eff9f8ece2b30b13d959aff82bc6e38886787c77e6a8866a5906a65c9d072"
+      "result_sha256": "7004ffa76b97e6d949fc13cca598ae6de1257a1ef7f303766828ab2bc271e898"
     }
   },
   "schema": "openada.ihp-analog-independent-oracle/v0alpha1",

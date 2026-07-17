@@ -1,9 +1,9 @@
 {
-  "chain_manifest_sha256": "211a501f2f7f66ebb55f9de9a65c2ab148d42ab85b616280ab16988917b63332",
+  "chain_manifest_sha256": "8a0842473049fa1f420cd2274945ec181fd515c319536238fe756e758b0f632c",
   "checkout_before": {
     "clean": true,
-    "repository_revision": "752840eeaf4fc32fa6eee78f36947b40f88bc5f3",
-    "repository_tree": "7c905ec2e78ca63f93b4bed0c9accb91088eeb8a",
+    "repository_revision": "3ea587f8464c558e0e125ba2d58ebf4a6666bd63",
+    "repository_tree": "1f6d750700bd9ae41ce2ece66417e5ae73ed7257",
     "status_entry_count": 0,
     "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -12,7 +12,7 @@
     "run",
     "--rm",
     "--name",
-    "openada-ihp-analog-measurements-3842256",
+    "openada-ihp-analog-measurements-3868420",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -46,17 +46,17 @@
     "--mount",
     "type=bind,source=/home/specialpedrito/.cache/openada/conformance/ihp-inverter/IHP-AnalogAcademy,target=/design,readonly",
     "--mount",
-    "type=bind,source=/tmp/openada-republish-ihp-measurements,target=/evidence",
+    "type=bind,source=/tmp/openada-final-ihp-measurements,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
     "/openada/conformance/ihp-analog-measurements/inside.py"
   ],
-  "created_at": "2026-07-17T09:47:58.212697Z",
+  "created_at": "2026-07-17T10:16:00.152729Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "extensions": {},
   "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
   "network": "none during all EDA execution",
   "schema": "openada.ihp-analog-measurement-run/v0alpha1",
-  "semantic_subject_before": "6c2569f51b7f495bb668bc9ae522dbbcb5f65b44a604aa180461e455f3122ec4"
+  "semantic_subject_before": "d3bc93e67a0d7c81f31f16eebea5d4fd1a3081a3fc9c040b592a2f08e3a6fc00"
 }

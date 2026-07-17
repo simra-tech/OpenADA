@@ -8,7 +8,7 @@
     "closed IEEE scope-only context"
   ],
   "extensions": {},
-  "manifest_sha256": "211a501f2f7f66ebb55f9de9a65c2ab148d42ab85b616280ab16988917b63332",
+  "manifest_sha256": "8a0842473049fa1f420cd2274945ec181fd515c319536238fe756e758b0f632c",
   "requests_sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
   "schema": "openada.ihp-analog-contract-test/v0alpha1",
   "status": "pass"
