@@ -71,7 +71,10 @@ skills/
 ├── assess-pvt-and-yield/           # campaign accounting workflow
 ├── review-rtl-architecture/        # RTL evidence and architecture review
 ├── assess-synthesis-and-inference/ # mapped-netlist and inference review
-└── assess-asic-timing/             # constraint-bound timing review
+├── assess-asic-timing/             # constraint-bound timing review
+└── bootstrap-asic-project/         # PDK/runtime/full-chip coordinator
+    ├── scripts/bootstrap_manifest.py
+    └── references/
 ```
 
 Every workflow directory contains `SKILL.md` and `agents/openai.yaml`;
@@ -102,6 +105,10 @@ create the plugin namespace.
 
 ## Initial catalog and maturity
 
+The catalog contains eight capability-gated engineering workflows plus one
+separately governed onboarding coordinator. The latter is not a portable
+semantic-operation substitute.
+
 | Skill | Kind | Status | Contract dependency |
 |---|---|---|---|
 | `openada` | Execution and evidence adapter | preview | Current CLI and result contract |
@@ -113,6 +120,7 @@ create the plugin namespace.
 | `review-rtl-architecture` | RTL evidence and architecture-review workflow | experimental | Strict `rtl.lint/v1alpha1` plus the existing separate structural-check assertion; unsupported CDC, formal, simulation, and equivalence claims remain not evaluated |
 | `assess-synthesis-and-inference` | ASIC mapping and inferred-hardware review | experimental | `logic.synthesize/v1alpha1` → validated Liberty-mapped netlist, dependency lineage, mapping completeness, and bounded structural statistics |
 | `assess-asic-timing` | Synthesis-stage setup/hold review | experimental | Passing mapped-netlist lineage → `timing.analyze/v1alpha1` with exact Liberty and SDC; ideal-interconnect evidence is never promoted to routed or signoff timing |
+| `bootstrap-asic-project` | Open-PDK project and full-chip flow coordinator | experimental | Frozen skill-owned PDK/runtime/flow manifest → supported OpenADA RTL/synthesis/timing assertions; missing implementation, padframe, extraction, routed timing, and handoff operations remain explicit gaps |
 
 These digital skills stay within the current envelope boundary:
 
@@ -152,6 +160,15 @@ phase margin requires an explicitly reviewed negative-feedback loop-gain
 interpretation, and gain margin or multi-crossing selection remains not
 evaluated rather than inferred from the trace.
 
+The bootstrap coordinator is a deliberate exploratory exception to a purely
+semantic workflow. It defaults every missing operation to `not evaluated` and
+may run a reviewed native project flow only when the user explicitly requests
+an end-to-end exploration and authorizes that gap work. It records exact native
+identity and artifacts separately, never wraps them in `openada.result`, never
+promotes driver maturity, and never calls public open-PDK checks foundry
+signoff. Its deterministic helper owns only bootstrap coordination state; it is
+not a new protocol schema.
+
 Good next candidates, after their required semantic profiles exist, are:
 
 - diagnose a DRC result without confusing rule-deck output with signoff;
@@ -168,7 +185,9 @@ and stop conditions can be reviewed independently.
 A proposed engineering skill is ready to ship when:
 
 1. its trigger description names concrete engineering tasks;
-2. the workflow uses OpenADA semantic operations rather than native tool CLIs;
+2. the workflow uses OpenADA semantic operations rather than native tool CLIs,
+   except for an explicitly labeled exploratory coordinator with a default
+   `not evaluated` boundary and separate native evidence;
 3. pass, fail, unknown, invalid, and unavailable paths are explicit;
 4. at least one realistic success case and one uncertainty or failure case
    have been forward-tested;

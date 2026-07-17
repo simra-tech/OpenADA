@@ -238,6 +238,15 @@ metrics not evaluated. Fresh-agent forward tests exercise routing discipline;
 they do not establish native conformance, engineering signoff, or stable skill
 maturity.
 
+An onboarding coordinator is a narrower exception, not a precedent for adding
+raw backend tutorials to engineering skills. It may provision or invoke a
+reviewed project flow only for an explicitly requested end-to-end exploration,
+after capability absence is recorded and the user authorizes native gap work.
+It must keep exact native identity and artifacts outside `openada.result`,
+default missing operations to not evaluated, and never promote driver maturity
+or foundry signoff. The current experimental example is
+`bootstrap-asic-project`.
+
 Put each skill in:
 
 ```text
@@ -253,7 +262,8 @@ the skill.
 A contribution should:
 
 1. name a concrete engineering decision and its trigger cases;
-2. use OpenADA operation/assertion semantics rather than raw tool commands;
+2. use OpenADA operation/assertion semantics rather than raw tool commands,
+   except for the narrowly gated onboarding-coordinator case above;
 3. make execution, evidence validity, measurement, specification, and signoff
    boundaries explicit where relevant;
 4. route `pass`, `fail`, `unknown`, invalid requests, and unavailable backends;

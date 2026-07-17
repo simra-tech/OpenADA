@@ -8,6 +8,22 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Added
 
+- An experimental `bootstrap-asic-project` skill for blank open-ASIC
+  workspaces. It defines core/full-chip/submission finish lines, selects one
+  coherent PDK/flow/runtime stack, starts full chips from maintainer-owned
+  padframe templates, and stage-gates RTL, function, synthesis, physical
+  implementation, routed timing, DRC, LVS, and handoff. Its bounded standard
+  library helper maintains a draft/frozen identity ledger for canonical
+  project/collateral/tool paths and SHA-256 values, with deliverable-dependent
+  requirements, explicit replacement/thaw, retained gap resolution, and
+  machine-readable freeze-readiness/missing-requirement diagnostics. Pre-run
+  assembly roles bind immutable generators such as `seal-ring.config`, not
+  generated signoff outputs. Its
+  successful freeze is structural/hash consistency only, not compatibility or
+  engineering evidence. Missing OpenADA operations default to not evaluated;
+  explicitly authorized native gap runs stay outside OpenADA result envelopes
+  and foundry signoff is never inferred.
+
 - `result.series.extract/v1alpha1` and the `extract` CLI bridge. It consumes a
   complete passing `circuit.simulate/v1alpha2` envelope plus that result's exact
   retained raw artifact, rechecks canonical path/bytes/SHA-256 and file
@@ -100,6 +116,14 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   dependency-free discovery commands still run and schema-backed commands emit
   a structured missing-dependency diagnostic. Plugin setup now states clearly
   that agent marketplaces install skills but not the Python runtime dependency.
+
+### Fixed
+
+- Accepted Netgen 1.5.321 hierarchical JSON's exact, equivalent pin-only
+  auxiliary records without obscuring the unique requested top-cell LVS
+  comparison. Unequal pin lists, partial known-key records, duplicate requested
+  tops, and other ambiguous shapes remain invalid and produce engineering
+  `unknown`.
 
 ### Limitations
 

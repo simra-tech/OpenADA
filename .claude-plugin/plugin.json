@@ -16,6 +16,10 @@
     "verilator",
     "yosys",
     "opensta",
+    "openroad",
+    "librelane",
+    "asic",
+    "pdk",
     "engineering-workflows"
   ]
 }

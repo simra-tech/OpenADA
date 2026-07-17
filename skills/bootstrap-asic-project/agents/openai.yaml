@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bootstrap ASIC Project"
+  short_description: "Provision and stage-gate an open ASIC flow"
+  default_prompt: "Use $openada:bootstrap-asic-project to choose and provision an open PDK/toolchain and take this design to an evidence-backed tapeout candidate."

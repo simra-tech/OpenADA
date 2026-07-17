@@ -1,0 +1,14 @@
+{
+  "format": "openada.skill/oci-runtime-identity/v0alpha1",
+  "image_id": "sha256:28573cfe204f66872c2aa7eb050692f7788ff0104eb733d950b790c72c253ceb",
+  "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
+  "equivalent_repo_digest": "hpretl/iic-osic-tools@sha256:7371bae55da486f492cc270ea6137c4fcf3b11971de7a4506a74f62be143537a",
+  "platform": "linux/amd64",
+  "network_during_eda": "none",
+  "project_mount": "/work:rw",
+  "pdk_mount": "/foss/pdks:ro",
+  "temporary_home": "/tmp/librelane-home",
+  "observed_flow": "LibreLane v3.1.0.dev1",
+  "template_locked_flow": "LibreLane 3.0.0 / 69b2067bd2b5eb89b84649b76e9edaa9e51e6735",
+  "compatibility_scope": "candidate-specific retained run evidence only"
+}

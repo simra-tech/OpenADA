@@ -19,6 +19,10 @@
     "verilator",
     "yosys",
     "opensta",
+    "openroad",
+    "librelane",
+    "asic",
+    "pdk",
     "engineering-workflows",
     "klayout"
   ],
@@ -36,7 +40,7 @@
     "defaultPrompt": [
       "Plan this analog block's characterization and execute the next supported intent.",
       "Review this circuit simulation and recommend the next engineering step.",
-      "Review this ASIC RTL, then assess its synthesis and timing evidence."
+      "Bootstrap an open-PDK ASIC project and stage-gate it toward an honest full-chip tapeout candidate."
     ]
   }
 }

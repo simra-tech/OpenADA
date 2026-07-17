@@ -212,8 +212,12 @@ The plugin has two deliberately separate layers:
   `assess-pvt-and-yield`, plus `review-rtl-architecture`,
   `assess-synthesis-and-inference`, and `assess-asic-timing`. They preserve the
   execution/evidence/measurement/specification boundary and inspect advertised
-  operations and feature IDs before planning work. An unavailable primitive is
-  reported as not evaluated; a skill does not fall through to native syntax.
+  operations and feature IDs before planning work.
+- One separate experimental onboarding coordinator,
+  `bootstrap-asic-project`, freezes PDK, runtime, flow, project intent, and
+  full-chip collateral. An unavailable primitive is reported as not evaluated
+  by default; exploratory native gap work requires explicit authorization and
+  remains labeled outside OpenADA result envelopes.
 
 Skills are plugin content, not protocol objects. They may compose several
 OpenADA operations and evolve faster than the semantic ABI, but they cannot
@@ -263,7 +267,7 @@ adjacent command or be waived through prose.
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
 | Drivers | Eight open-source EDA drivers; circuit simulation, strict RTL lint, mapped synthesis, and synthesis-stage timing expose typed evidence at feature-specific maturity | Capability manifests and independently installable drivers |
 | Portability proof | Analysis-specific `circuit.simulate` requests have pinned native ngspice/Xyce success replay with independently parsed artifacts; the expanded replay does not yet cover every maturity outcome | More operations, open-source backends, runtime environments, and complete outcome corpora |
-| Engineering skills | One execution skill plus eight experimental capability-gated engineering skills across analog and digital review | Contributed workflows that compose stable operations across backends |
+| Engineering skills | One execution skill plus eight experimental capability-gated engineering skills across analog and digital review; one separate experimental ASIC onboarding coordinator | Contributed workflows that compose stable operations across backends |
 | Workflow composition | Simulation → verified native series extraction → scalar, coherent spectral, or closed AC transfer measurement → explicit specification evaluation, with digest lineage and the verified extraction envelope retained separately | Integrated noise, corners, statistical campaigns, and richer standard-reviewed methods |
 | Design mutation | Deliberately outside the current preview | Preconditioned, transactional change sets with declared writes, native diffs, rollback evidence, and source-revision identity |
 
@@ -349,6 +353,17 @@ is:
 > artifact paths and hashes, and any provenance limitation. Do not substitute
 > a generic PDK, model library, DRC deck, LVS setup, or top cell to get a pass.
 
+For a blank ASIC workspace where the PDK or compatible runtime is not already
+frozen, start with the dedicated coordinator instead:
+
+> Use `$openada:bootstrap-asic-project` to define whether this is a core or a
+> full-chip candidate, inspect bounded configured resources, choose one coherent
+> open-PDK/toolchain stack, and freeze `.openada/bootstrap-manifest.json` before
+> an expensive run. Prefer an already-present pinned runtime over downloading
+> unrelated tools. Stage-gate RTL, function, synthesis, implementation, timing,
+> padframe, DRC, LVS, and handoff; keep unsupported native work and foundry
+> acceptance outside OpenADA claims.
+
 To install the Python entry point from the current checkout:
 
 ```bash
@@ -394,7 +409,7 @@ skills are loaded.
 Restart Claude Code instead if the plugin is not visible after reloading.
 
 Invoke the plugin skills as `/openada:openada`,
-`/openada:characterize-analog-block`, or another shipped
+`/openada:bootstrap-asic-project`, `/openada:characterize-analog-block`, or another shipped
 `/openada:<skill-name>` command.
 
 For local development without installation:
@@ -417,7 +432,7 @@ deployment, then start a new Codex session. `/plugins` shows the configured
 marketplace and installed plugin in the CLI.
 
 Invoke the plugin skills as `$openada:openada`,
-`$openada:characterize-analog-block`, or another shipped
+`$openada:bootstrap-asic-project`, `$openada:characterize-analog-block`, or another shipped
 `$openada:<skill-name>` skill.
 
 For a skill-only Codex CLI setup, first install the `openada` Python entry point

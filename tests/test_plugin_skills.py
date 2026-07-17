@@ -29,6 +29,7 @@ DIGITAL_SKILLS = {
     "assess-synthesis-and-inference",
     "assess-asic-timing",
 }
+COORDINATOR_SKILLS = {"bootstrap-asic-project"}
 DIGITAL_CONTRACT_IDS = {
     "review-rtl-architecture": {
         "openada.operation/rtl.lint/v1alpha1",
@@ -70,7 +71,7 @@ def test_all_plugin_skills_have_minimal_valid_metadata():
     assert {path.name for path in skill_directories} >= {
         "openada",
         "review-circuit-simulation",
-    } | ANALOG_SKILLS | DIGITAL_SKILLS
+    } | ANALOG_SKILLS | DIGITAL_SKILLS | COORDINATOR_SKILLS
 
     for skill_directory in skill_directories:
         fields, body = _frontmatter(skill_directory / "SKILL.md")
@@ -276,6 +277,20 @@ def test_digital_skills_stay_within_the_current_result_and_workflow_boundary():
     assert "neither violating-path" in timing
     assert "one `critical_path` summary per analysis" in timing
     assert "does not expose multiple ranked paths" in timing_compact
+
+
+def test_bootstrap_coordinator_preserves_native_gap_and_signoff_boundaries():
+    directory = SKILLS_ROOT / "bootstrap-asic-project"
+    text = (directory / "SKILL.md").read_text(encoding="utf-8")
+
+    assert "$openada:openada" in text
+    assert "not evaluated — capability unavailable" in text
+    assert "explicitly requests an exploratory end-to-end run" in text
+    assert "Never place native output inside an `openada.result` envelope" in text
+    assert "signoff: not claimed" in text
+    assert (directory / "scripts" / "bootstrap_manifest.py").is_file()
+    assert (directory / "references" / "project-manifest.md").is_file()
+    assert (directory / "references" / "ihp-sg13g2-full-chip.md").is_file()
 
 
 def test_spectral_skill_uses_the_closed_method_and_standards_reference():

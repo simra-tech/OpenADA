@@ -1,0 +1,83 @@
+{
+  "format": "openada-evaluation/candidate-overlay/v1",
+  "base": {
+    "repository": "https://github.com/IHP-GmbH/ihp-sg13g2-librelane-template.git",
+    "revision": "0418301723d86133de686ef743cfd668bb3d11d4",
+    "librelane_lock": {
+      "reference": "3.0.0",
+      "revision": "69b2067bd2b5eb89b84649b76e9edaa9e51e6735"
+    }
+  },
+  "pdk": {
+    "family": "ihp-sg13g2",
+    "repository": "https://github.com/IHP-GmbH/IHP-Open-PDK.git",
+    "revision": "3b5a704ba6738aa686b08706187830e6284d2a10"
+  },
+  "replace_count": 15,
+  "replace": [
+    {
+      "path": "Makefile",
+      "sha256": "699b78d3d4e41c262554b57fcfc6886b475d51fe24627c02facb354d90eb2b2c"
+    },
+    {
+      "path": "src/chip_core.sv",
+      "sha256": "e113f5a52682ca2ba32177d4c833afa8b4c001f18c09bb5ed067ed3a2212c4d4"
+    },
+    {
+      "path": "librelane/config.yaml",
+      "sha256": "73eaf96ab83b438e42053461e7052c2435bffa78e09997d4500e9424345a7fc8"
+    },
+    {
+      "path": "cocotb/chip_top_tb.py",
+      "sha256": "a8689a772e82d79f2b90c4f65be4db088899b4de08bf45876c7794f94eba7e17"
+    },
+    {
+      "path": "cocotb/chip_top_gl_tb.py",
+      "sha256": "afb42d3b7f4d84ca0362757eab86698fb359a060fda9d48ef3b6520e82a17808"
+    },
+    {
+      "path": "cocotb/chip_top_gl_wrapper.sv",
+      "sha256": "95f4d2fa9de9df63bbbb77cc5922f00cc361caed86a66ab7e869caf7ac96bd18"
+    },
+    {
+      "path": "cocotb/requirements.txt",
+      "sha256": "c6fd77ee5cf032699e5705ac69745bbf92633b7d5cf3b79a9f61cd431ae5e072"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "16785b7cd791b5d24187da5190f58c1b31af9f6ca13a1a93d1fbe44025a86547"
+    },
+    {
+      "path": "PROJECT_SPEC.md",
+      "sha256": "f0c09d23f194855787dcef66d96c72b6f9dbc71cca7671c2c8903083f3bb2970"
+    },
+    {
+      "path": "PINOUT.md",
+      "sha256": "0ea46c3723c43ccac31b9d82df01633ca77dee6fb53c0fe1cbc21d717d441bfb"
+    },
+    {
+      "path": "PACKAGE_PLAN.md",
+      "sha256": "7e6278f9fb3235ffe70f623a849264cdd1e522d1b271ffacadf44cac437b4aad"
+    },
+    {
+      "path": "LICENSE_MANIFEST.md",
+      "sha256": "79e9ecc19a16c532fe2670bf90863a89e9f059a6c94ef6bf23ef6e0aa1588071"
+    },
+    {
+      "path": "OCI_RUNTIME.json",
+      "sha256": "69f549912d0e7740ce7ca4350b595a8ddc6cb820654c79c4b322141424f69bfb"
+    },
+    {
+      "path": "SOURCE_MANIFEST.sha256",
+      "sha256": "753b7a103950dc6c62b7c1f9ea8cf29c4986466af1ed4a5e5c132a739293c059"
+    },
+    {
+      "path": "SOURCE_PROVENANCE.md",
+      "sha256": "7a9127a67493c660bee0626341bbfe7941ef12f1147a6c91efc6ae82781b7f69"
+    }
+  ],
+  "delete_count": 1,
+  "delete": [
+    "librelane/pdn_cfg.tcl"
+  ]
+}

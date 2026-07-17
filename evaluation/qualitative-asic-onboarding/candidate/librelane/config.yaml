@@ -1,0 +1,162 @@
+meta:
+  version: 3
+  flow: Chip
+  substituting_steps:
+
+    # Magic reports some overlaps which can be ignored
+    Checker.IllegalOverlap: null
+
+    # Disable KLayout DRC
+    #KLayout.DRC: null
+    #Checker.KLayoutDRC: null
+
+    # Disable magic DRC
+    #Magic.DRC: null
+    #Checker.MagicDRC: null
+
+    # Disable KLayout antenna check
+    #KLayout.Antenna: null
+    #Checker.KLayoutAntenna: null
+
+    # Disable KLayout density check
+    #KLayout.Density: null
+    #Checker.KLayoutDensity: null
+
+    # Save time
+    #OpenROAD.IRDropReport: null
+    #KLayout.XOR: null
+    #Netgen.LVS: null
+    #Checker.LVS: null
+
+    # Use Magic.Filler instead of KLayout.Filler
+    # This can help in some cases where the target
+    # density cannot be met using KLayout.
+    #KLayout.Filler: Magic.Filler
+
+DESIGN_NAME: chip_top
+VERILOG_FILES:
+- dir::../src/chip_top.sv
+- dir::../src/chip_core.sv
+
+VERILOG_DEFINES: [FUNCTIONAL]
+
+# Enable plugin for better SystemVerilog support
+# USE_SLANG: True
+# SLANG_ARGUMENTS: ['--keep-hierarchy']
+
+# Slightly smaller file sizes
+PRIMARY_GDSII_STREAMOUT_TOOL: klayout
+
+# Specify the pad instances for the padring
+PAD_SOUTH: [
+    clk_pad,
+    rst_n_pad,
+
+    "bidirs\\[0\\].bidir_pad",
+    "bidirs\\[1\\].bidir_pad",
+    "bidirs\\[2\\].bidir_pad",
+    "bidirs\\[3\\].bidir_pad",
+    "bidirs\\[4\\].bidir_pad",
+    "bidirs\\[5\\].bidir_pad",
+    "bidirs\\[6\\].bidir_pad",
+    "bidirs\\[7\\].bidir_pad"
+]
+
+PAD_EAST: [
+    "analogs\\[0\\].analog_pad",
+    "analogs\\[1\\].analog_pad",
+    "analogs\\[2\\].analog_pad",
+    "analogs\\[3\\].analog_pad",
+    "analogs\\[4\\].analog_pad",
+    "analogs\\[5\\].analog_pad",
+    "analogs\\[6\\].analog_pad",
+    "analogs\\[7\\].analog_pad",
+
+    "vdd_pads\\[0\\].vdd_pad",
+    "vss_pads\\[0\\].vss_pad"
+]
+
+PAD_NORTH: [
+    "outputs\\[7\\].output_pad",
+    "outputs\\[6\\].output_pad",
+    "outputs\\[5\\].output_pad",
+    "outputs\\[4\\].output_pad",
+    "outputs\\[3\\].output_pad",
+    "outputs\\[2\\].output_pad",
+    "outputs\\[1\\].output_pad",
+    "outputs\\[0\\].output_pad",
+
+    "iovdd_pads\\[0\\].iovdd_pad",
+    "iovss_pads\\[0\\].iovss_pad"
+]
+
+PAD_WEST: [
+    "inputs\\[9\\].input_pad",
+    "inputs\\[8\\].input_pad",
+    "inputs\\[7\\].input_pad",
+    "inputs\\[6\\].input_pad",
+    "inputs\\[5\\].input_pad",
+    "inputs\\[4\\].input_pad",
+    "inputs\\[3\\].input_pad",
+    "inputs\\[2\\].input_pad",
+    "inputs\\[1\\].input_pad",
+    "inputs\\[0\\].input_pad"
+]
+
+# SDC files
+PNR_SDC_FILE: dir::chip_top.sdc
+SIGNOFF_SDC_FILE: dir::chip_top.sdc
+FALLBACK_SDC: dir::chip_top.sdc
+
+# Power / ground nets
+VDD_NETS:
+- VDD
+GND_NETS:
+- VSS
+
+# Clock
+CLOCK_PORT: clk_PAD
+CLOCK_NET: clk_pad/p2c
+
+CLOCK_PERIOD: 20
+
+# Floorplanning
+FP_SIZING: absolute
+# 3880umx5070um including 26um
+# for the sealring on all sides
+DIE_AREA: [0, 0, 1600, 1600]
+CORE_AREA: [365, 365, 1235, 1235]
+
+# Increase for more logic
+# on your die
+PL_TARGET_DENSITY_PCT: 10
+GRT_ALLOW_CONGESTION: true
+
+# PDN
+PDN_CORE_RING: True
+
+# Override bondpad name
+PAD_BONDPAD_NAME: bondpad_70x70_novias
+
+# Bondpad is not yet included in the PDK
+EXTRA_GDS:
+- dir::../ip/bondpad_70x70_novias/gds/bondpad_70x70_novias.gds
+
+EXTRA_LEFS:
+- dir::../ip/bondpad_70x70_novias/lef/bondpad_70x70_novias.lef
+
+IGNORE_DISCONNECTED_MODULES:
+- bondpad_70x70_novias
+
+# Maximum metal width without slotting: 30um
+PDN_CORE_RING_VWIDTH: 15
+PDN_CORE_RING_HWIDTH: 15
+# Ensure minimum spacing for long metals
+PDN_CORE_RING_VSPACING: 5
+PDN_CORE_RING_HSPACING: 5
+
+PDN_CORE_RING_CONNECT_TO_PADS: True
+PDN_ENABLE_PINS: False
+
+# Because we have multiple power pads for one power domain
+MAGIC_EXT_UNIQUE: notopports

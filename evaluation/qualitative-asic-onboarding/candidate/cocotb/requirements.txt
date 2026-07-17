@@ -1,0 +1,4 @@
+# SPDX-FileCopyrightText: 2026 OpenADA Vibe CPU Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+cocotb>=1.9,<2

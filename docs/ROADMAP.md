@@ -45,9 +45,11 @@ ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN success paths through pinned native
 replay; the new OP/DC/AC rows remain structured until broader outcome cases are
 published. The same native formats now feed verified normalized series and a
 closed spectral and AC transfer kernels. Milestone D has eight experimental
-tool-independent engineering skills above the execution adapter; the analog coordinator now
-uses an immutable intent ledger and implemented-primitive routing. Fresh-agent
-forward tests and external engineering review still gate promotion.
+tool-independent engineering skills above the execution adapter; the analog
+coordinator now uses an immutable intent ledger and implemented-primitive
+routing. One separate experimental onboarding coordinator freezes a fresh ASIC
+project context and contains explicitly authorized native capability-gap work.
+Fresh-agent forward tests and external engineering review still gate promotion.
 
 ### A. Publish the semantic boundary
 
@@ -116,6 +118,9 @@ workflow outcome required for workflow-validated maturity.
   PVT/yield skills capability-gated: unsupported measurements or campaign
   primitives remain not evaluated rather than becoming native-command
   fallbacks.
+- Keep the ASIC onboarding coordinator separate: default missing operations to
+  not evaluated, require explicit authorization for exploratory native gap
+  work, and retain that evidence outside OpenADA result envelopes.
 - Track skill maturity separately from driver maturity and contract versioning.
 
 **Gate:** one contributed engineering skill composes a versioned operation on
