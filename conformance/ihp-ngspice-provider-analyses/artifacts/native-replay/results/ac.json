@@ -22,7 +22,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/native/ac/work/ac.raw",
       "role": "simulation.result",
-      "sha256": "4cacd97e721138df5b6a055e169202728af3790bc11b6337104a9d6b9abd7b21"
+      "sha256": "fd18e235570475fc23d845884bb3d16108806ea050365ffadb1ff3a0ddb5d4dd"
     }
   ],
   "data": {
@@ -97,16 +97,16 @@
               "TZ"
             ],
             "effective_variables": {
-              "HOME": "/tmp/openada-provider-environment-rv3s8_q4/tmp/openada-ngspice-nhk7o54p/home",
+              "HOME": "/tmp/openada-provider-environment-m4arviz_/tmp/openada-ngspice-kshyfqo_/home",
               "LANG": "C",
               "LC_ALL": "C",
               "PATH": "/usr/local/bin:/usr/bin:/bin",
               "PDK": "ihp-sg13g2",
               "PDK_ROOT": "/foss/pdks",
               "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts",
-              "TEMP": "/tmp/openada-provider-environment-rv3s8_q4/tmp/openada-ngspice-nhk7o54p/tmp",
-              "TMP": "/tmp/openada-provider-environment-rv3s8_q4/tmp/openada-ngspice-nhk7o54p/tmp",
-              "TMPDIR": "/tmp/openada-provider-environment-rv3s8_q4/tmp/openada-ngspice-nhk7o54p/tmp",
+              "TEMP": "/tmp/openada-provider-environment-m4arviz_/tmp/openada-ngspice-kshyfqo_/tmp",
+              "TMP": "/tmp/openada-provider-environment-m4arviz_/tmp/openada-ngspice-kshyfqo_/tmp",
+              "TMPDIR": "/tmp/openada-provider-environment-m4arviz_/tmp/openada-ngspice-kshyfqo_/tmp",
               "TZ": "UTC"
             },
             "mode": "sanitized"
@@ -149,7 +149,7 @@
               "origin": "deck",
               "parent_anchored": true,
               "path": "/evidence/native/ac/work/ac.raw",
-              "sha256": "4cacd97e721138df5b6a055e169202728af3790bc11b6337104a9d6b9abd7b21",
+              "sha256": "fd18e235570475fc23d845884bb3d16108806ea050365ffadb1ff3a0ddb5d4dd",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -228,7 +228,7 @@
       "-i",
       "-n",
       "-o",
-      "/tmp/openada-provider-environment-rv3s8_q4/tmp/openada-ngspice-nhk7o54p/simulation.log",
+      "/tmp/openada-provider-environment-m4arviz_/tmp/openada-ngspice-kshyfqo_/simulation.log",
       "/evidence/native/ac/simulation/ac.openada-control.sp"
     ],
     "cwd": "/evidence/native/ac/work",
@@ -296,7 +296,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-17T09:51:28.574410Z",
+    "created_at": "2026-07-17T10:16:36.375457Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

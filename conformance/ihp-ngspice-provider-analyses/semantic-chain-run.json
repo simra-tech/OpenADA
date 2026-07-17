@@ -33,7 +33,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/op.json",
       "role": "native-artifact",
-      "sha256": "464e4e121f955a075af408d58fe38d1eac0d3f0915e4747bb5d68ea45748bde8",
+      "sha256": "499b5d95579fde7a3ddee5ad55e30b230a44d23c5e1a5e3e3efc00ce1ed8444f",
       "source_output": "op-result",
       "source_step": "provider-op"
     },
@@ -42,7 +42,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/op/work/op.raw",
       "role": "native-artifact",
-      "sha256": "96a077fcfd4ae67a3b697e0a9a326744b56a6ea21954a301b9476654fb78c08e",
+      "sha256": "fe225c1d02204a23a9e0deb23b42af37dbdcb8ecd92e9b7b3601a88f6d9ff9d3",
       "source_output": "op-raw",
       "source_step": "provider-op"
     },
@@ -87,7 +87,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/dc.json",
       "role": "native-artifact",
-      "sha256": "71efbbebc87352d77dc6946fe9fbd53bc07642a39a37ef2fba1bc22b9713a471",
+      "sha256": "a33f3433f6868c4765be9137c1129a5f7133a33c84f386b5be941912e0f547c9",
       "source_output": "dc-result",
       "source_step": "provider-dc"
     },
@@ -96,7 +96,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/dc/work/dc.raw",
       "role": "native-artifact",
-      "sha256": "30cfdb8c9d45f24fe5bb991eb7643edc9b5deec640cf8f9f855b311d72ceb0b4",
+      "sha256": "31e6ce5eb85ae3e9662065cf85b6feeb2c97817c15360b6eb958bd040970dd92",
       "source_output": "dc-raw",
       "source_step": "provider-dc"
     },
@@ -141,7 +141,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/ac.json",
       "role": "native-artifact",
-      "sha256": "324115c4ed1800fa85f7c32511dc5f87ad9b2f3f948927da700e84bbf3daed3d",
+      "sha256": "3b85dee2b17e8f44d82c10de10ff8c4ede0b92be3f153857d179f03b6d002ca6",
       "source_output": "ac-result",
       "source_step": "provider-ac"
     },
@@ -150,7 +150,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/ac/work/ac.raw",
       "role": "native-artifact",
-      "sha256": "4cacd97e721138df5b6a055e169202728af3790bc11b6337104a9d6b9abd7b21",
+      "sha256": "fd18e235570475fc23d845884bb3d16108806ea050365ffadb1ff3a0ddb5d4dd",
       "source_output": "ac-raw",
       "source_step": "provider-ac"
     },
@@ -195,7 +195,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/tran.json",
       "role": "native-artifact",
-      "sha256": "bfe98edb5e27b0c8d80a7d945a3dd2d6e828ec16894ad56ae91479b27d01c9d7",
+      "sha256": "62736255c2d8bf1fdb931268e9dfe04cf353b6c2f98e3ee23d3db475c31f504c",
       "source_output": "tran-result",
       "source_step": "provider-tran"
     },
@@ -204,7 +204,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/tran/work/tran.raw",
       "role": "native-artifact",
-      "sha256": "45f03bffae7414bdc01cfc85324a09df0ba12d513cdea37d8b78705c0c167188",
+      "sha256": "2c9a37a4b5a1bbd6c4ceef56819f23ecc8726033428e0e680c500adaa5d002c9",
       "source_output": "tran-raw",
       "source_step": "provider-tran"
     },
@@ -231,7 +231,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/oracle.json",
       "role": "independent-oracle",
-      "sha256": "c99bf84c9d6582ce70c2190fce2709d2c685c487fed0e70dcab5cfa5385e6485",
+      "sha256": "947098d282b94825007db527da847435956ab854cd7bd7b9ccdaffda98f3826a",
       "source_output": "independent-oracle",
       "source_step": "independent-native-oracle"
     },
@@ -240,7 +240,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/normalized.json",
       "role": "normalized-evidence",
-      "sha256": "950012953ef3517de861b67cb79c290afaba11a342cd052937570fdcd5646ba2",
+      "sha256": "abcd0974dbf6e5dc34af8e0c4c2d747f231ca1402a0fb69f25fb9ea77baad4c0",
       "source_output": "normalized-evidence",
       "source_step": "normalize-evidence"
     },
@@ -249,7 +249,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/decision.json",
       "role": "downstream-decision",
-      "sha256": "5a5d22b5d1ab89f7248374cd1abeab43ed8437430fda8405d5a0c095622ae129",
+      "sha256": "2977734bd4e6c806084c92d84247188d1123210dd9e7a3f468e0da3e5b609ce9",
       "source_output": "downstream-decision",
       "source_step": "publish-scoped-decision"
     },
@@ -258,7 +258,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/agent-evidence.json",
       "role": "agent-visible-evidence",
-      "sha256": "f80975b43c4ceaf945dcc26aa28f5952a879183998fbb36dc518b68c034a2e8c",
+      "sha256": "223773894676cf27e8532f3da3ee710b7c4ab2fa4b0af93ffb8a8fba1a6df8aa",
       "source_output": "agent-visible-evidence",
       "source_step": "agent-decision"
     },
@@ -276,7 +276,7 @@
       "replay_id": "op-unsafe-command",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/op-unsafe-command.json",
       "role": "negative-replay",
-      "sha256": "507cfe658c440981b630d27a05b4772d157332d91776366cf8c31cc430500b81",
+      "sha256": "53271dacc2e2aa5bc1bfa13a583d91a5a22770caeca750a9ad0dda1bb4bb57a7",
       "source_output": null,
       "source_step": null
     },
@@ -285,7 +285,7 @@
       "replay_id": "dc-parameter-mismatch",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/dc-parameter-mismatch.json",
       "role": "negative-replay",
-      "sha256": "c28cf0af4a664b795995d0c8229bc2b118ca2e8894aa7f18d55a6d09bab96796",
+      "sha256": "e5acf9e979d4e49d45c0050875ad7423965527163a4e513376ed921a6317705a",
       "source_output": null,
       "source_step": null
     },
@@ -294,7 +294,7 @@
       "replay_id": "ac-feature-mismatch",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/ac-feature-mismatch.json",
       "role": "negative-replay",
-      "sha256": "72ab4639d57e33a5cf77f9ab369249c9c4af5991b96685fd0ccdf8b6480fa377",
+      "sha256": "07c587bfb369e4bbd57a046905a7c00f0bee21cb164cabe64da26e6a8016e404",
       "source_output": null,
       "source_step": null
     },
@@ -303,7 +303,7 @@
       "replay_id": "tran-duplicate-write",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/tran-duplicate-write.json",
       "role": "negative-replay",
-      "sha256": "5cfc4c80293d1481fd2b567fdfec8846087c619d482d0b2408f09331b712e47d",
+      "sha256": "299bb0a2c4ed33f5a98103dfa919b45beb7483eba0f34ea47937cb96eb841ba8",
       "source_output": null,
       "source_step": null
     },
@@ -312,7 +312,7 @@
       "replay_id": "tran-native-error",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/tran-native-error.json",
       "role": "negative-replay",
-      "sha256": "954cfdac6654a8d368d7818b5a0461b43067bd7642d6e94dfba52135ba41d15f",
+      "sha256": "34656865ea2b2ce787187cfc45d1b1620aec610d0319caf15aa90585cca1dd9c",
       "source_output": null,
       "source_step": null
     },
@@ -382,15 +382,15 @@
     }
   },
   "schema": "openada.semantic-chain-run/v0alpha1",
-  "semantic_subject_sha256": "6c2569f51b7f495bb668bc9ae522dbbcb5f65b44a604aa180461e455f3122ec4",
+  "semantic_subject_sha256": "d3bc93e67a0d7c81f31f16eebea5d4fd1a3081a3fc9c040b592a2f08e3a6fc00",
   "source_attestation": {
     "clean_after": true,
     "clean_before": true,
     "extensions": {},
     "receipt_class": "release",
-    "repository_revision": "7de8587ecbcfde19363928140514ecf8a7db4c43",
-    "repository_tree": "f8103879ebad6fa2672ee5d7986e17c905a4c729",
-    "semantic_subject_sha256": "6c2569f51b7f495bb668bc9ae522dbbcb5f65b44a604aa180461e455f3122ec4",
+    "repository_revision": "9926358e0dd26c477c5593342d156c6b5530961a",
+    "repository_tree": "af5e1b0b1a9736bc99173554399b64ea536dd144",
+    "semantic_subject_sha256": "d3bc93e67a0d7c81f31f16eebea5d4fd1a3081a3fc9c040b592a2f08e3a6fc00",
     "state_unchanged": true
   },
   "status": "pass"
