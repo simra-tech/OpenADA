@@ -5,7 +5,7 @@
     "-s",
     "/evidence/negative/rtl-check.ys"
   ],
-  "cwd": "/evidence/negative/.openada-yosys-l5xd90cj",
+  "cwd": "/evidence/negative/.openada-yosys-n8ltk7zr",
   "exit_code": 1,
   "schema": "openada.yosys-native-transcript/v1",
   "stderr": {
