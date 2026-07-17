@@ -6,7 +6,7 @@
     "run",
     "--rm",
     "--name",
-    "openada-ihp-agent-3843464-fc888a33",
+    "openada-ihp-agent-3851805-81880f59",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -36,7 +36,7 @@
     "--mount",
     "type=bind,source=/home/specialpedrito/.cache/openada/conformance/ihp-inverter/IHP-AnalogAcademy,target=/design,readonly",
     "--mount",
-    "type=bind,source=/tmp/openada-republish-ihp-agent-chain,target=/evidence",
+    "type=bind,source=/tmp/openada-republish-ihp-agent-chain-final,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
@@ -46,7 +46,7 @@
     "--evidence",
     "/evidence"
   ],
-  "created_at": "2026-07-17T09:49:53.300701Z",
+  "created_at": "2026-07-17T09:59:53.959264Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "image": {
     "architecture": "amd64",
@@ -57,7 +57,7 @@
   "network": "none during EDA execution",
   "openada_checkout": {
     "after": {
-      "commit": "27ce442cc106b1b8e5dbf91696eb46f6344d95e5",
+      "commit": "4619149190de337448abd155e41d2f17c3c7c728",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -65,7 +65,7 @@
       "working_tree_modified": false
     },
     "before": {
-      "commit": "27ce442cc106b1b8e5dbf91696eb46f6344d95e5",
+      "commit": "4619149190de337448abd155e41d2f17c3c7c728",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -1005,7 +1005,7 @@
       "provider_manifest": {
         "bytes": 3480,
         "path": "/openada/providers/ngspice-pdk-control/driver-manifest.json",
-        "sha256": "3eaaa9d2199bb6202c75a1366712903f13bde332be965e6987a2bddab2cfcf7a"
+        "sha256": "bed369b67ac82e16ca61bbc39bec675452a485e0f2fff0adfde2fa2840aae882"
       },
       "psp103_osdi": {
         "bytes": 843184,
