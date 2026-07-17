@@ -40,12 +40,13 @@ deck = pathlib.Path(sys.argv[sys.argv.index('-r') + 1]).resolve()
 def variable(name):
     value = next(item for item in sys.argv if item.startswith(name + '='))
     return value.split('=', 1)[1]
-def write_report(path, *, top='TOP', multiplicity=None, generator=None, description='width', tags=''):
+def write_report(path, *, top='TOP', multiplicity=None, generator=None, description='width', tags='', category_declarations=None):
     item = '' if multiplicity is None else f\"<item><tags>{{tags}}</tags><category>'M1.W'</category><cell>{{top}}</cell><multiplicity>{{multiplicity}}</multiplicity><values><value>box: (0,0;1,1)</value></values></item>\"
     generator = generator or f\"drc: script='{{deck}}'\"
+    category_declarations = category_declarations or f\"<category><name>M1.W</name><description>{{description}}</description></category>\"
     pathlib.Path(path).write_text(f\"\"\"<report-database>
 <description>test</description><generator>{{generator}}</generator><top-cell>{{top}}</top-cell>
-<categories><category><name>M1.W</name><description>{{description}}</description></category></categories>
+<categories>{{category_declarations}}</categories>
 <cells><cell><name>{{top}}</name></cell></cells><items>{{item}}</items>
 </report-database>\"\"\", encoding='utf-8')
 {textwrap.dedent(action)}
@@ -112,6 +113,32 @@ def test_multiplicity_is_the_engineering_violation_count(tmp_path: Path) -> None
     assert payload["data"]["report"]["item_count"] == 1
     assert payload["data"]["report"]["total_violations"] == 37
     assert payload["data"]["report"]["violations"][0]["multiplicity"] == 37
+
+
+def test_duplicate_native_categories_preserve_engineering_violation_count(
+    tmp_path: Path,
+) -> None:
+    categories = (
+        "<category><name>M1.W</name><description>width</description></category>"
+        "<category><name>M1.W</name><description>width</description></category>"
+        "<category><name>unused</name><description>first check</description></category>"
+        "<category><name>unused</name><description>second check</description></category>"
+    )
+    binary, gds, deck = _inputs(
+        tmp_path,
+        _fake_body(
+            f"write_report(variable('report'), multiplicity=18, "
+            f"category_declarations={categories!r})"
+        ),
+    )
+
+    payload = KLayoutDriver(str(binary)).drc(gds, deck, tmp_path / "result.lyrdb")
+
+    assert payload["execution"]["status"] == "completed"
+    assert payload["engineering"]["status"] == "fail"
+    assert payload["data"]["report"]["category_count"] == 2
+    assert payload["data"]["report"]["item_count"] == 1
+    assert payload["data"]["report"]["total_violations"] == 18
 
 
 def test_waived_markers_remain_engineering_violations(tmp_path: Path) -> None:
@@ -767,6 +794,51 @@ def test_parser_preserves_hierarchical_categories_and_native_tags(tmp_path: Path
     assert parsed["total_violations"] == 7
     assert parsed["waived_violations"] == 7
     assert parsed["violations"][0]["category_path"] == ["1/0", "A"]
+
+
+def test_parser_rejects_item_referencing_conflicting_duplicate_category(
+    tmp_path: Path,
+) -> None:
+    deck = tmp_path / "deck.drc"
+    deck.write_text("# deck\n", encoding="utf-8")
+    report = tmp_path / "report.lyrdb"
+    report.write_text(
+        f"""<report-database><generator>drc: script='{deck}'</generator><top-cell>TOP</top-cell>
+<categories>
+ <category><name>A</name><description>first check</description></category>
+ <category><name>A</name><description>second check</description></category>
+</categories><cells><cell><name>TOP</name></cell></cells>
+<items><item><tags/><category>A</category><cell>TOP</cell><multiplicity>1</multiplicity>
+</item></items></report-database>""",
+        encoding="utf-8",
+    )
+
+    parsed = KLayoutDriver.parse_lyrdb(report)
+
+    assert parsed["validation"]["valid"] is False
+    assert parsed["validation"]["reason"] == "report.item_category_ambiguous"
+    assert "category path 'A'" in parsed["error"]
+
+
+def test_duplicate_category_declarations_remain_bounded(tmp_path: Path) -> None:
+    deck = tmp_path / "deck.drc"
+    deck.write_text("# deck\n", encoding="utf-8")
+    report = tmp_path / "report.lyrdb"
+    declarations = "".join(
+        "<category><name>A</name><description>same</description></category>"
+        for _ in range(4_097)
+    )
+    report.write_text(
+        f"<report-database><generator>drc: script='{deck}'</generator><top-cell>TOP"
+        f"</top-cell><categories>{declarations}</categories>"
+        "<cells><cell><name>TOP</name></cell></cells><items/></report-database>",
+        encoding="utf-8",
+    )
+
+    parsed = KLayoutDriver.parse_lyrdb(report)
+
+    assert parsed["validation"]["valid"] is False
+    assert parsed["validation"]["reason"] == "report.too_many_categories"
 
 
 def test_parser_accepts_cell_variants_and_global_dummy_cell(tmp_path: Path) -> None:

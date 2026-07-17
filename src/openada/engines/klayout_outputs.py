@@ -9,6 +9,7 @@ of its engineering contents.
 from __future__ import annotations
 
 from collections import defaultdict
+import hashlib
 import math
 import os
 from pathlib import Path
@@ -353,6 +354,9 @@ def parse_lyrdb_stream(
     """Validate and summarize a stable, already-open LYRDB stream."""
 
     categories: dict[tuple[str, ...], str] = {}
+    category_description_identities: dict[tuple[str, ...], tuple[int, bytes]] = {}
+    conflicting_category_descriptions: set[tuple[str, ...]] = set()
+    category_declarations = 0
     declared_cells: set[str] = set()
     declared_base_cells: set[str] = set()
     category_counts: dict[tuple[str, ...], int] = defaultdict(int)
@@ -530,23 +534,28 @@ def parse_lyrdb_stream(
                             "report.category_invalid",
                             "A KLayout category path exceeds the normalized path limit.",
                         )
-                    if path in categories:
-                        raise _InvalidReport(
-                            "report.category_duplicate",
-                            (
-                                "The KLayout report declares category path "
-                                f"{_category_label(path)!r} more than once."
-                            ),
-                        )
-                    if len(categories) >= MAX_CATEGORIES:
+                    if category_declarations >= MAX_CATEGORIES:
                         raise _InvalidReport(
                             "report.too_many_categories",
                             f"The KLayout report exceeds the {MAX_CATEGORIES}-category limit.",
                         )
-                    categories[path] = _bounded(
-                        _child_text(element, "description"),
-                        MAX_DESCRIPTION_CHARS,
+                    category_declarations += 1
+                    raw_description = (
+                        _child_text(element, "description") or ""
+                    ).strip()
+                    description_identity = (
+                        len(raw_description),
+                        hashlib.sha256(raw_description.encode("utf-8")).digest(),
                     )
+                    if path in categories:
+                        if category_description_identities[path] != description_identity:
+                            conflicting_category_descriptions.add(path)
+                    else:
+                        categories[path] = _bounded(
+                            raw_description,
+                            MAX_DESCRIPTION_CHARS,
+                        )
+                        category_description_identities[path] = description_identity
             elif tag == "cell":
                 if in_item:
                     if parent != "item" or len(tags) != 4 or tags[1:3] != ["items", "item"]:
@@ -709,6 +718,15 @@ def parse_lyrdb_stream(
                     raise _InvalidReport(
                         "report.item_category_unknown",
                         "A KLayout report item references an undeclared category.",
+                    )
+                if item_category in conflicting_category_descriptions:
+                    raise _InvalidReport(
+                        "report.item_category_ambiguous",
+                        (
+                            "A KLayout report item references category path "
+                            f"{_category_label(item_category)!r}, which has conflicting "
+                            "descriptions."
+                        ),
                     )
                 if item_cell not in declared_cells:
                     raise _InvalidReport(
