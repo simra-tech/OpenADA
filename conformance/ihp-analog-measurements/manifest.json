@@ -116,7 +116,7 @@
     },
     {
       "repository_path": "tools/verify_semantic_coverage.py",
-      "sha256": "22b6577cd2f9ee6d03c606001f98271b02767f619b345fd17fe03b589e17b5ef",
+      "sha256": "4ef59ae1ec6c64b5874ec78ad62a462b825dd3a2ef652782e1af791c7197ff57",
       "extensions": {}
     },
     {
