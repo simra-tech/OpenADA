@@ -118,7 +118,7 @@
   "inputs": [],
   "operation": "profile.list",
   "provenance": {
-    "created_at": "2026-07-17T09:53:22.939676Z",
+    "created_at": "2026-07-17T10:20:09.222630Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -50,7 +50,7 @@
       "driver_id": "org.openada.driver.xyce",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "147dc066-d6e6-4a05-a060-c36592c7b745"
+      "request_id": "815a26a4-380a-46a0-952b-9c8eef3f1d9f"
     }
   },
   "diagnostics": [
@@ -82,7 +82,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-17T09:53:28.803081Z",
+    "created_at": "2026-07-17T10:20:14.988903Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

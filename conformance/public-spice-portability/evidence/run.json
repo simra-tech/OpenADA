@@ -1,12 +1,12 @@
 {
   "chain_id": "openada.chain/public-spice-portability/v1",
-  "chain_manifest_sha256": "c85df705cc7f12d6c88ee8c178a18ac33d78646a2ce0d1ba230c4ccd28b67a02",
+  "chain_manifest_sha256": "b5c842bc4172fcb3930792f126a4a16c8e8fca965a43285af7bd18fe6b9a8b37",
   "container_command": [
     "docker",
     "run",
     "--rm",
     "--name",
-    "openada-portability-3847618-1185106d",
+    "openada-portability-3871975-e33dcf60",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -38,7 +38,7 @@
     "--mount",
     "type=bind,source=/home/specialpedrito/.cache/openada/conformance/public-spice-portability/IHP-AnalogAcademy,target=/ihp,readonly",
     "--mount",
-    "type=bind,source=/tmp/openada-republish-spice-portability,target=/evidence",
+    "type=bind,source=/tmp/openada-final-portability,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
@@ -48,7 +48,7 @@
     "--evidence",
     "/evidence"
   ],
-  "created_at": "2026-07-17T09:53:32.492991Z",
+  "created_at": "2026-07-17T10:20:18.530978Z",
   "execution_policy": {
     "container_root": "read-only",
     "evidence_mount": "writable",
@@ -858,7 +858,7 @@
     },
     "openada": {
       "after": {
-        "commit": "c6a496d108222fdb9034def8d592c65d6e0d372d",
+        "commit": "15dc23c3bca48c24c77c7e548824a28ea6d16cbd",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,
@@ -866,7 +866,7 @@
         "working_tree_modified": false
       },
       "before": {
-        "commit": "c6a496d108222fdb9034def8d592c65d6e0d372d",
+        "commit": "15dc23c3bca48c24c77c7e548824a28ea6d16cbd",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,

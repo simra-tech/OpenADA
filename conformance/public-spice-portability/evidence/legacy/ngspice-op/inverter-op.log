@@ -4,7 +4,7 @@ Note: No compatibility mode selected!
 
 Circuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch
 
-binary raw file "/tmp/openada-ngspice-wxha02d3/simulation.raw"
+binary raw file "/tmp/openada-ngspice-b8ud389u/simulation.raw"
 Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
 
 Using SPARSE 1.3 as Direct Linear Solver
@@ -12,17 +12,17 @@ No. of Data Columns : 11
 
 No. of Data Rows : 1
 
-Total analysis time (seconds) = 0.00264577
+Total analysis time (seconds) = 0.00188917
 
 Total elapsed time (seconds) = 0.017 
 
 Total DRAM available = 32106.207 MB.
-DRAM currently available = 12812.695 MB.
-Maximum ngspice program size =  531.715 MB.
-Current ngspice program size =   15.262 MB.
+DRAM currently available = 10558.910 MB.
+Maximum ngspice program size =  531.711 MB.
+Current ngspice program size =   14.828 MB.
 
-Shared ngspice pages =   11.770 MB.
+Shared ngspice pages =   11.531 MB.
 Text (code) pages =    5.875 MB.
 Stack = 0 bytes.
-Library pages =   60.199 MB.
+Library pages =   60.195 MB.
 
