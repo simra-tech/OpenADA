@@ -22,7 +22,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/provider-ac/work/ota_ac.raw",
       "role": "simulation.result",
-      "sha256": "c22a349c7186039bd93803527be846cf61e7b6d92f7fc7ba1941b45f9ffd09fd"
+      "sha256": "2e8f6e7790b6518ba8317d61b222611bd5492b677f7bb69af62afcff0340c225"
     }
   ],
   "data": {
@@ -97,16 +97,16 @@
               "TZ"
             ],
             "effective_variables": {
-              "HOME": "/tmp/openada-provider-environment-go8_5k10/tmp/openada-ngspice-uvuctwxo/home",
+              "HOME": "/tmp/openada-provider-environment-j9hwf392/tmp/openada-ngspice-6vl18vii/home",
               "LANG": "C",
               "LC_ALL": "C",
               "PATH": "/usr/local/bin:/usr/bin:/bin",
               "PDK": "ihp-sg13g2",
               "PDK_ROOT": "/foss/pdks",
               "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts",
-              "TEMP": "/tmp/openada-provider-environment-go8_5k10/tmp/openada-ngspice-uvuctwxo/tmp",
-              "TMP": "/tmp/openada-provider-environment-go8_5k10/tmp/openada-ngspice-uvuctwxo/tmp",
-              "TMPDIR": "/tmp/openada-provider-environment-go8_5k10/tmp/openada-ngspice-uvuctwxo/tmp",
+              "TEMP": "/tmp/openada-provider-environment-j9hwf392/tmp/openada-ngspice-6vl18vii/tmp",
+              "TMP": "/tmp/openada-provider-environment-j9hwf392/tmp/openada-ngspice-6vl18vii/tmp",
+              "TMPDIR": "/tmp/openada-provider-environment-j9hwf392/tmp/openada-ngspice-6vl18vii/tmp",
               "TZ": "UTC"
             },
             "mode": "sanitized"
@@ -149,7 +149,7 @@
               "origin": "deck",
               "parent_anchored": true,
               "path": "/evidence/provider-ac/work/ota_ac.raw",
-              "sha256": "c22a349c7186039bd93803527be846cf61e7b6d92f7fc7ba1941b45f9ffd09fd",
+              "sha256": "2e8f6e7790b6518ba8317d61b222611bd5492b677f7bb69af62afcff0340c225",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -228,7 +228,7 @@
       "-i",
       "-n",
       "-o",
-      "/tmp/openada-provider-environment-go8_5k10/tmp/openada-ngspice-uvuctwxo/simulation.log",
+      "/tmp/openada-provider-environment-j9hwf392/tmp/openada-ngspice-6vl18vii/simulation.log",
       "/evidence/provider-ac/simulation/ota.openada-control.sp"
     ],
     "cwd": "/evidence/provider-ac/work",
@@ -296,7 +296,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-17T10:15:18.249458Z",
+    "created_at": "2026-07-17T12:21:14.741070Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
