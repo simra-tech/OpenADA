@@ -1,0 +1,4 @@
+interface:
+  display_name: "Close Layout Incrementally"
+  short_description: "Visually close layout one increment at a time"
+  default_prompt: "Use $openada:close-layout-incrementally to add and verify the next smallest layout increment with visual, DRC, LVS, and parasitic evidence."

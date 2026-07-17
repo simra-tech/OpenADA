@@ -30,6 +30,7 @@ DIGITAL_SKILLS = {
     "assess-asic-timing",
 }
 COORDINATOR_SKILLS = {"bootstrap-asic-project"}
+LAYOUT_SKILLS = {"close-layout-incrementally"}
 DIGITAL_CONTRACT_IDS = {
     "review-rtl-architecture": {
         "openada.operation/rtl.lint/v1alpha1",
@@ -71,7 +72,7 @@ def test_all_plugin_skills_have_minimal_valid_metadata():
     assert {path.name for path in skill_directories} >= {
         "openada",
         "review-circuit-simulation",
-    } | ANALOG_SKILLS | DIGITAL_SKILLS | COORDINATOR_SKILLS
+    } | ANALOG_SKILLS | DIGITAL_SKILLS | LAYOUT_SKILLS | COORDINATOR_SKILLS
 
     for skill_directory in skill_directories:
         fields, body = _frontmatter(skill_directory / "SKILL.md")
@@ -291,6 +292,18 @@ def test_bootstrap_coordinator_preserves_native_gap_and_signoff_boundaries():
     assert (directory / "scripts" / "bootstrap_manifest.py").is_file()
     assert (directory / "references" / "project-manifest.md").is_file()
     assert (directory / "references" / "ihp-sg13g2-full-chip.md").is_file()
+
+
+def test_incremental_layout_skill_requires_visual_and_verification_gates():
+    directory = SKILLS_ROOT / "close-layout-incrementally"
+    text = (directory / "SKILL.md").read_text(encoding="utf-8")
+
+    assert "$openada:openada" in text
+    assert "Do not place or connect the whole block at once" in text
+    assert "Visual reasoning proposes and localizes a diagnosis" in text
+    assert "A DRC pass does not prove connectivity" in text
+    assert "signoff: not claimed" in text
+    assert (directory / "scripts" / "render_layout.rb").is_file()
 
 
 def test_spectral_skill_uses_the_closed_method_and_standards_reference():

@@ -206,13 +206,15 @@ The plugin has two deliberately separate layers:
 
 - `skills/openada` is the thin execution and evidence adapter. It selects a
   semantic operation, invokes OpenADA, and interprets the versioned result.
-- Eight experimental engineering skills sit above it:
+- Nine experimental engineering skills sit above it:
   `review-circuit-simulation`, `characterize-analog-block`,
   `analyze-feedback-stability`, `analyze-spectral-linearity`, and
   `assess-pvt-and-yield`, plus `review-rtl-architecture`,
-  `assess-synthesis-and-inference`, and `assess-asic-timing`. They preserve the
-  execution/evidence/measurement/specification boundary and inspect advertised
-  operations and feature IDs before planning work.
+  `assess-synthesis-and-inference`, `assess-asic-timing`, and
+  `close-layout-incrementally`. They preserve the
+  execution/evidence/measurement/specification boundary, use visual review as
+  a layout diagnostic rather than proof, and inspect advertised operations and
+  feature IDs before planning work.
 - One separate experimental onboarding coordinator,
   `bootstrap-asic-project`, freezes PDK, runtime, flow, project intent, and
   full-chip collateral. An unavailable primitive is reported as not evaluated

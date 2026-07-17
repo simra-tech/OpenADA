@@ -72,6 +72,7 @@ skills/
 ├── review-rtl-architecture/        # RTL evidence and architecture review
 ├── assess-synthesis-and-inference/ # mapped-netlist and inference review
 ├── assess-asic-timing/             # constraint-bound timing review
+├── close-layout-incrementally/     # visually guided custom-layout closure
 └── bootstrap-asic-project/         # PDK/runtime/full-chip coordinator
     ├── scripts/bootstrap_manifest.py
     └── references/
@@ -105,7 +106,7 @@ create the plugin namespace.
 
 ## Initial catalog and maturity
 
-The catalog contains eight capability-gated engineering workflows plus one
+The catalog contains nine engineering workflows plus one
 separately governed onboarding coordinator. The latter is not a portable
 semantic-operation substitute.
 
@@ -120,6 +121,7 @@ semantic-operation substitute.
 | `review-rtl-architecture` | RTL evidence and architecture-review workflow | experimental | Strict `rtl.lint/v1alpha1` plus the existing separate structural-check assertion; unsupported CDC, formal, simulation, and equivalence claims remain not evaluated |
 | `assess-synthesis-and-inference` | ASIC mapping and inferred-hardware review | experimental | `logic.synthesize/v1alpha1` → validated Liberty-mapped netlist, dependency lineage, mapping completeness, and bounded structural statistics |
 | `assess-asic-timing` | Synthesis-stage setup/hold review | experimental | Passing mapped-netlist lineage → `timing.analyze/v1alpha1` with exact Liberty and SDC; ideal-interconnect evidence is never promoted to routed or signoff timing |
+| `close-layout-incrementally` | Visually guided custom-layout closure workflow | experimental | Small immutable layout increments → fixed-view visual diagnosis → authoritative DRC/LVS → critical-path PEX and performance evidence; visual review never substitutes for verification |
 | `bootstrap-asic-project` | Open-PDK project and full-chip flow coordinator | experimental | Frozen skill-owned PDK/runtime/flow manifest → supported OpenADA RTL/synthesis/timing assertions; missing implementation, padframe, extraction, routed timing, and handoff operations remain explicit gaps |
 
 These digital skills stay within the current envelope boundary:

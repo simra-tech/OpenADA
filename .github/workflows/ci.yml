@@ -235,6 +235,8 @@ jobs:
               "skills/review-rtl-architecture/SKILL.md",
               "skills/assess-synthesis-and-inference/SKILL.md",
               "skills/assess-asic-timing/SKILL.md",
+              "skills/close-layout-incrementally/SKILL.md",
+              "skills/close-layout-incrementally/scripts/render_layout.rb",
           }
           for required in required_source_paths:
               assert any(name.endswith("/" + required) for name in source_names), required
@@ -330,6 +332,7 @@ jobs:
               "review-rtl-architecture",
               "assess-synthesis-and-inference",
               "assess-asic-timing",
+              "close-layout-incrementally",
           }
           observed_skills = {
               name.split("/skills/", 1)[1].split("/", 1)[0]
