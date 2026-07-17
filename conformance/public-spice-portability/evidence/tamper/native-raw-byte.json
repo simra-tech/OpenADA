@@ -6,5 +6,5 @@
   "required_diagnostic": "conformance.native.tampered",
   "schema": "openada.tamper-replay/v0alpha1",
   "status": "unknown",
-  "verifier_message": "native artifact sha256 differs: expected 'f4097f9fa2a11e49c9a4a570126750f5d0f7a6abc1f2f47209c8ecd9242f3d22', observed 'bbdafaa628bbc95ed2dbec4bb555f8e1ba14aac1d7d36151cbd75a2ff1076869'"
+  "verifier_message": "native artifact sha256 differs: expected '57b9cc7ffc3c65e47e1d421eccb292dd14b2daa56f734db8702628a3f431d240', observed 'f8f9060ade70b9716c431a775c10b7418b7c901a4b2cd8e0ae356eaac91b3f2b'"
 }

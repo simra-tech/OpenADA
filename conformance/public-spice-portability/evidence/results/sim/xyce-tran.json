@@ -1,12 +1,12 @@
 {
   "artifacts": [
     {
-      "bytes": 5946,
+      "bytes": 5945,
       "exists": true,
       "kind": "xyce-log",
       "path": "/evidence/sim/xyce-tran/xyce-tran.xyce.log",
       "role": "simulation.log",
-      "sha256": "a72d111ceeca83cb99b057384fb464f3abab96a12ed418296bb09c1b018e1ee3"
+      "sha256": "99b62c8adc2d931aa0fac3f96a4d7200181b2e5dc7c1fd442a41687cdd6f0f17"
     },
     {
       "bytes": 1151,
@@ -14,7 +14,7 @@
       "kind": "xyce-raw",
       "path": "/evidence/sim/xyce-tran/xyce-tran.xyce.raw",
       "role": "simulation.result",
-      "sha256": "87db8af6f5e7d0d30e72b29423ccc7011760229ece9b6388f5c714d9f0178a69"
+      "sha256": "418cd4a453915e0c303d950679bf8d2470e6fb187fc4dd0c4fd7ecab613a705c"
     }
   ],
   "data": {
@@ -73,19 +73,19 @@
           },
           "inputs_stable": true,
           "log_capture": {
-            "bytes": 5946,
+            "bytes": 5945,
             "path": "/evidence/sim/xyce-tran/xyce-tran.xyce.log",
-            "sha256": "a72d111ceeca83cb99b057384fb464f3abab96a12ed418296bb09c1b018e1ee3",
+            "sha256": "99b62c8adc2d931aa0fac3f96a4d7200181b2e5dc7c1fd442a41687cdd6f0f17",
             "status": "valid"
           },
-          "log_tail": "6 17:21:50 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 67.5 %\n***** Current system time: Thu Jul 16 17:21:50 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 75.5 %\n***** Current system time: Thu Jul 16 17:21:50 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 83.5 %\n***** Current system time: Thu Jul 16 17:21:50 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 91.5 %\n***** Current system time: Thu Jul 16 17:21:50 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 99.5 %\n***** Current system time: Thu Jul 16 17:21:50 2026\n***** Estimated time to completion:  0 sec.\n\n***** Problem read in and set up time: 0.0036459 seconds\n ***** DCOP time: 0.000987053 seconds.  Breakdown follows:\n\tNumber Successful Steps Taken:\t\t1\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t1\n\tNumber Linear Solves:\t\t\t1\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t3\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t3.91006e-05 seconds\n\tTotal Jacobian Load Time:\t\t9.05991e-06 seconds\n\tTotal Linear Solution Time:\t\t0.000108957 seconds\n\n ***** Transient Stepping time: 0.000892878 seconds.  Breakdown follows:\n\tNumber Successful Steps Taken:\t\t17\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t17\n\tNumber Linear Solves:\t\t\t17\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t34\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t0.000107288 seconds\n\tTotal Jacobian Load Time:\t\t3.88622e-05 seconds\n\tTotal Linear Solution Time:\t\t7.65324e-05 seconds\n\n\n***** Solution Summary *****\n\tNumber Successful Steps Taken:\t\t18\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t18\n\tNumber Linear Solves:\t\t\t18\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t37\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t0.000146389 seconds\n\tTotal Jacobian Load Time:\t\t4.79221e-05 seconds\n\tTotal Linear Solution Time:\t\t0.00018549 seconds\n\n\n***** Total Simulation Solvers Run Time: 0.00208902 seconds\n***** Total Elapsed Run Time:            0.00570989 seconds\n*****\n***** End of Xyce(TM) Simulation\n*****\n\nTiming summary of 1 processor\n                 Stats                   Count       CPU Time              Wall Time\n---------------------------------------- ----- --------------------- ---------------------\nXyce                                         1        0.021 (100.0%)        0.290 (100.0%)\n  Analysis                                   1        0.002 ( 9.84%)        0.002 ( 0.71%)\n    Transient                                1        0.002 ( 9.72%)        0.002 ( 0.70%)\n      Nonlinear Solve                       18        0.001 ( 5.23%)        0.001 ( 0.38%)\n        Residual                            37        0.000 ( 0.99%)        0.000 ( 0.07%)\n        Jacobian                            18        0.000 ( 0.32%)        0.000 ( 0.02%)\n        Linear Solve                        18        0.000 ( 0.97%)        0.000 ( 0.07%)\n      Successful DCOP Steps                  1        0.000 ( 1.37%)        0.000 ( 0.10%)\n      Successful Step                       17        0.000 ( 0.81%)        0.000 ( 0.06%)\n  Netlist Import                             1        0.001 ( 6.63%)        0.002 ( 0.56%)\n    Parse Context                            1        0.000 ( 0.33%)        0.000 ( 0.07%)\n    Distribute Devices                       1        0.000 ( 1.48%)        0.000 ( 0.11%)\n    Verify Devices                           1        0.000 ( 0.05%)        0.000 (<0.01%)\n    Instantiate                              1        0.000 ( 0.55%)        0.000 ( 0.04%)\n  Late Initialization                        1        0.001 ( 4.23%)        0.001 ( 0.30%)\n    Global Indices                           1        0.000 ( 0.22%)        0.000 ( 0.02%)\n  Setup Matrix Structure                     1        0.000 ( 1.11%)        0.000 ( 0.08%)\n\n",
+          "log_tail": "17 11:53:13 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 67.5 %\n***** Current system time: Fri Jul 17 11:53:13 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 75.5 %\n***** Current system time: Fri Jul 17 11:53:13 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 83.5 %\n***** Current system time: Fri Jul 17 11:53:13 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 91.5 %\n***** Current system time: Fri Jul 17 11:53:13 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 99.5 %\n***** Current system time: Fri Jul 17 11:53:13 2026\n***** Estimated time to completion:  0 sec.\n\n***** Problem read in and set up time: 0.00367999 seconds\n ***** DCOP time: 0.00275302 seconds.  Breakdown follows:\n\tNumber Successful Steps Taken:\t\t1\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t1\n\tNumber Linear Solves:\t\t\t1\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t3\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t8.67844e-05 seconds\n\tTotal Jacobian Load Time:\t\t1.50204e-05 seconds\n\tTotal Linear Solution Time:\t\t0.000134945 seconds\n\n ***** Transient Stepping time: 0.000869989 seconds.  Breakdown follows:\n\tNumber Successful Steps Taken:\t\t17\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t17\n\tNumber Linear Solves:\t\t\t17\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t34\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t8.89301e-05 seconds\n\tTotal Jacobian Load Time:\t\t4.45843e-05 seconds\n\tTotal Linear Solution Time:\t\t6.41346e-05 seconds\n\n\n***** Solution Summary *****\n\tNumber Successful Steps Taken:\t\t18\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t18\n\tNumber Linear Solves:\t\t\t18\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t37\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t0.000175714 seconds\n\tTotal Jacobian Load Time:\t\t5.96046e-05 seconds\n\tTotal Linear Solution Time:\t\t0.00019908 seconds\n\n\n***** Total Simulation Solvers Run Time: 0.00379086 seconds\n***** Total Elapsed Run Time:            0.0074451 seconds\n*****\n***** End of Xyce(TM) Simulation\n*****\n\nTiming summary of 1 processor\n                 Stats                   Count       CPU Time              Wall Time\n---------------------------------------- ----- --------------------- ---------------------\nXyce                                         1        0.015 (100.0%)        0.297 (100.0%)\n  Analysis                                   1        0.000 ( 0.00%)        0.004 ( 1.26%)\n    Transient                                1        0.000 ( 0.00%)        0.004 ( 1.25%)\n      Nonlinear Solve                       18        0.000 ( 0.00%)        0.001 ( 0.48%)\n        Residual                            37        0.000 ( 0.00%)        0.000 ( 0.07%)\n        Jacobian                            18        0.000 ( 0.00%)        0.000 ( 0.03%)\n        Linear Solve                        18        0.000 ( 0.00%)        0.000 ( 0.07%)\n      Successful DCOP Steps                  1        0.000 ( 0.00%)        0.000 ( 0.13%)\n      Successful Step                       17        0.000 ( 0.00%)        0.000 ( 0.06%)\n  Netlist Import                             1        0.000 ( 0.00%)        0.002 ( 0.55%)\n    Parse Context                            1        0.000 ( 0.00%)        0.000 ( 0.08%)\n    Distribute Devices                       1        0.000 ( 0.00%)        0.000 ( 0.10%)\n    Verify Devices                           1        0.000 ( 0.00%)        0.000 (<0.01%)\n    Instantiate                              1        0.000 ( 0.00%)        0.000 ( 0.04%)\n  Late Initialization                        1        0.000 ( 0.00%)        0.001 ( 0.28%)\n    Global Indices                           1        0.000 ( 0.00%)        0.000 ( 0.01%)\n  Setup Matrix Structure                     1        0.000 ( 0.00%)        0.000 ( 0.08%)\n\n",
           "output_captures": [
             {
               "bytes": 1151,
               "kind": "raw",
               "origin": "wrapper",
               "path": "/evidence/sim/xyce-tran/xyce-tran.xyce.raw",
-              "sha256": "87db8af6f5e7d0d30e72b29423ccc7011760229ece9b6388f5c714d9f0178a69",
+              "sha256": "418cd4a453915e0c303d950679bf8d2470e6fb187fc4dd0c4fd7ecab613a705c",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -140,7 +140,7 @@
       "driver_id": "org.openada.driver.xyce",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "9337e6df-dfeb-4757-9bfd-fe3801fb2214"
+      "request_id": "916113b9-eb27-4d30-899a-c97ec165d7a9"
     }
   },
   "diagnostics": [],
@@ -152,14 +152,14 @@
     "command": [
       "/foss/tools/xyce/bin/Xyce",
       "-l",
-      "/tmp/openada-xyce-lexednuf/simulation.log",
+      "/tmp/openada-xyce-d9oq273b/simulation.log",
       "-r",
-      "/tmp/openada-xyce-lexednuf/simulation.raw",
+      "/tmp/openada-xyce-d9oq273b/simulation.raw",
       "-a",
       "/evidence/work/xyce-tran.cir"
     ],
     "cwd": "/evidence",
-    "duration_ms": 415,
+    "duration_ms": 416,
     "exit_code": 0,
     "status": "completed"
   },
@@ -175,7 +175,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-16T15:21:50.412524Z",
+    "created_at": "2026-07-17T09:53:14.076374Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

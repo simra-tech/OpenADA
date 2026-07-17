@@ -7,7 +7,7 @@
       "result": {
         "bytes": 18690,
         "path": "/evidence/results/admin/capabilities.json",
-        "sha256": "254c972aa8de78eb5097dc0dc7f585443c4efcf8bfecb2304d2750634f5b4197"
+        "sha256": "c8e20a1b59a205b2ec3bf8d062bd6846c8731d644ee3579b286e9c65ad66b4cd"
       }
     },
     {
@@ -17,7 +17,7 @@
       "result": {
         "bytes": 18690,
         "path": "/evidence/results/admin/doctor.json",
-        "sha256": "6c7e1b4e8e59d22e1b5502f11385e1b1910a63ff10359f8a222f248764912997"
+        "sha256": "87070dbb2d25a3e9d092b781b160eb9b2ce5c2d8a78febd1aa2f190a147b09ef"
       }
     },
     {
@@ -27,7 +27,7 @@
       "result": {
         "bytes": 5085,
         "path": "/evidence/results/admin/profile-list.json",
-        "sha256": "5758c9f103df751a06fa98fb47da7822b8eb0f8ac8b3f8fc3174e8b5def28a12"
+        "sha256": "18fe855e690e675ca24d5c0c57eb5d74dedf46b78ac7ba785f1c9297a5b203de"
       }
     },
     {
@@ -37,7 +37,7 @@
       "result": {
         "bytes": 46205,
         "path": "/evidence/results/admin/profile-show.json",
-        "sha256": "697dbf507842c7a67f888cc27b753275762ee0f106d41d3a58d01cd0759023b9"
+        "sha256": "0ee4029b11a54e4f86a7e16fe5eeb50a977a7a806bf976d000d2a90d4a9f7a6e"
       }
     },
     {
@@ -47,7 +47,7 @@
       "result": {
         "bytes": 2452,
         "path": "/evidence/results/admin/provider-list.json",
-        "sha256": "b5abf084b858d5ebb2ecca598a49edfed2f238a7a826d196d8f4ea62a1d9b62e"
+        "sha256": "9dbc3f6879460761899ac86f652b38eef43830f3295a6422cf61d770cb67e30a"
       }
     },
     {
@@ -57,7 +57,7 @@
       "result": {
         "bytes": 2478,
         "path": "/evidence/results/admin/provider-validate.json",
-        "sha256": "f26800f418aef67b6eb31d2a88511edafee911f6e790632b4a4655b311458c4a"
+        "sha256": "5d6ed87f5cc19f36bd32497236a769fb16990c2bf750ad655f3d9cc011a84343"
       }
     }
   ],
@@ -89,14 +89,14 @@
       "extraction_result": {
         "bytes": 3848,
         "path": "/evidence/results/extract/ngspice-op.json",
-        "sha256": "7735db05d41d4dd5aed20f69fe26ddc67635bd9934494c84a23d29ebf390e568"
+        "sha256": "7487110db83eaaf3a93a51dfc80fa4afaa2491ca9e9ed2547306bf4b39813a40"
       },
       "finite_value_count": 11,
       "id": "ngspice-op",
       "native_artifact": {
         "bytes": 668,
         "path": "/evidence/sim/ngspice-op/inverter-op.raw",
-        "sha256": "edf7a21a998cea0a7cd1046e99218add4d0bac77e42fc2ccdb24bae2b1b04725"
+        "sha256": "a6ea687b351b585de82c59c9d313b65f4f4985d716defa7fe42bf43218bac119"
       },
       "point_count": 1,
       "selected_series": [
@@ -106,7 +106,7 @@
       "simulation_result": {
         "bytes": 7184,
         "path": "/evidence/results/sim/ngspice-op.json",
-        "sha256": "98d1dfc47cffddb8600e66ca283b1feda968e2fc3f37d4a04b857fc40cf9e03b"
+        "sha256": "6b3ba5104460848dadd7806f5917e2f890ce5f80e0fd2acde08215e7f079448b"
       }
     },
     {
@@ -119,14 +119,14 @@
       "extraction_result": {
         "bytes": 4881,
         "path": "/evidence/results/extract/ngspice-dc.json",
-        "sha256": "91e5366ee568748f1f899d85d7c83925bd88f78923de4ac02729384bb8be3668"
+        "sha256": "b4919f6d57e5310003e84735194e62961a389bc131e7a26ec7220b520e2c026a"
       },
       "finite_value_count": 143,
       "id": "ngspice-dc",
       "native_artifact": {
         "bytes": 1862,
         "path": "/evidence/sim/ngspice-dc/inverter-dc.raw",
-        "sha256": "bdebfb0ccabfcdd4a2a14013c42a96003def7332b281314eeb86c035a24aa9ab"
+        "sha256": "84a53f0a49685756ef11e69b7892c8877f67c3fded9df6afe571d2d905200924"
       },
       "point_count": 13,
       "selected_series": [
@@ -134,9 +134,9 @@
         "vout"
       ],
       "simulation_result": {
-        "bytes": 7348,
+        "bytes": 7349,
         "path": "/evidence/results/sim/ngspice-dc.json",
-        "sha256": "cfdb6e65e6416894c63647b0ccdc830f64b925ad3a9daa80f05c4fa4aa11be6e"
+        "sha256": "3bc296b03148457bf7581b04860258289fdc92f4038f136c59df82f66fd39ed1"
       }
     },
     {
@@ -149,14 +149,14 @@
       "extraction_result": {
         "bytes": 8943,
         "path": "/evidence/results/extract/ngspice-ac.json",
-        "sha256": "4ad703329462f93e5130757169d8ecddb80004dcce3995d8d9eff9fb32c9f87b"
+        "sha256": "98445a3e212bd2622c3b83d3c8acbce9df2c25ce27a5eadd10d147c8e2efd8c1"
       },
       "finite_value_count": 2856,
       "id": "ngspice-ac",
       "native_artifact": {
         "bytes": 24869,
         "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
-        "sha256": "81a836c63d98faeb146fcf8949789e3a55d9762a818da1518bf0031e23c5fc5b"
+        "sha256": "193a3c5d9abade19581d71b46e33dee7ac28f503a87e5c5f841083e372ae13e3"
       },
       "point_count": 51,
       "selected_series": [
@@ -164,9 +164,9 @@
         "vout.imaginary"
       ],
       "simulation_result": {
-        "bytes": 7391,
+        "bytes": 7390,
         "path": "/evidence/results/sim/ngspice-ac.json",
-        "sha256": "2db92091c6999a77af62150a4e0cb9c3b72fdfc82f7a4d7781c48d06c4903bb9"
+        "sha256": "93e603e535a3b217059b81c939a740323b1c753b787a2a6fb49f2f8580832179"
       }
     },
     {
@@ -179,14 +179,14 @@
       "extraction_result": {
         "bytes": 7247,
         "path": "/evidence/results/extract/xyce-dc.json",
-        "sha256": "629b37a59b0d1d8cdece5023e687e2ac74c9f44bc416818560c53ac82ff7e30f"
+        "sha256": "fe7e3608e8c9fefbf2452ef01b4d5bf1e9e1cf723d1179c1497c3428a5434558"
       },
       "finite_value_count": 202,
       "id": "xyce-dc",
       "native_artifact": {
         "bytes": 5535,
         "path": "/evidence/sim/xyce-dc/xyce-dc.xyce.raw",
-        "sha256": "bbdafaa628bbc95ed2dbec4bb555f8e1ba14aac1d7d36151cbd75a2ff1076869"
+        "sha256": "f8f9060ade70b9716c431a775c10b7418b7c901a4b2cd8e0ae356eaac91b3f2b"
       },
       "point_count": 101,
       "selected_series": [
@@ -195,7 +195,7 @@
       "simulation_result": {
         "bytes": 8975,
         "path": "/evidence/results/sim/xyce-dc.json",
-        "sha256": "ca41bdc108cd46082d17dd3b79801a2a89e12d3cae561d924b479172f9212293"
+        "sha256": "82ba85c9a6abef575902eaed01549c55d2f49298ffd4da756f99a644570cf650"
       }
     },
     {
@@ -208,14 +208,14 @@
       "extraction_result": {
         "bytes": 7767,
         "path": "/evidence/results/extract/xyce-ac.json",
-        "sha256": "7a220248738c8498b7d91065ff2173304071e5feb9a2be551feab8a22f96e98c"
+        "sha256": "6599514b88fd54032cb734b73ba3a8e1738d037de6993efcb0f16400d1a36817"
       },
       "finite_value_count": 102,
       "id": "xyce-ac",
       "native_artifact": {
         "bytes": 3657,
         "path": "/evidence/sim/xyce-ac/xyce-ac-derived.xyce.raw",
-        "sha256": "6c4aa7c6cfbf43e1938562df950628c2f3fbd851fe24cc326eeb1cdca7256bc3"
+        "sha256": "024ce7c73657fcefc47a8b77013a902f163c31ef6db99216186eab92551f18b8"
       },
       "point_count": 51,
       "selected_series": [
@@ -223,9 +223,9 @@
         "v1.imaginary"
       ],
       "simulation_result": {
-        "bytes": 9063,
+        "bytes": 9064,
         "path": "/evidence/results/sim/xyce-ac.json",
-        "sha256": "dc49faf9fbb95d4a837fb448be26e22c36a4b4ba0aac716a1535cdf2376e15e9"
+        "sha256": "a3ce764ea8327c3b0981bc4d408337e2cefb1f4d4b3fed9bf5ce10c05e56285d"
       }
     },
     {
@@ -238,14 +238,14 @@
       "extraction_result": {
         "bytes": 4417,
         "path": "/evidence/results/extract/xyce-tran.json",
-        "sha256": "6cdb370dcd750827604fe250b88b2d08ad670604e4446a11307b9c40887f97b4"
+        "sha256": "05dec93a46692e32565b5759b5bb577ca32fbca67958e059801dca6aac5daa25"
       },
       "finite_value_count": 36,
       "id": "xyce-tran",
       "native_artifact": {
         "bytes": 1151,
         "path": "/evidence/sim/xyce-tran/xyce-tran.xyce.raw",
-        "sha256": "87db8af6f5e7d0d30e72b29423ccc7011760229ece9b6388f5c714d9f0178a69"
+        "sha256": "418cd4a453915e0c303d950679bf8d2470e6fb187fc4dd0c4fd7ecab613a705c"
       },
       "point_count": 18,
       "selected_series": [
@@ -254,7 +254,7 @@
       "simulation_result": {
         "bytes": 9972,
         "path": "/evidence/results/sim/xyce-tran.json",
-        "sha256": "30ad8657e4873eb618da5d228aaf4b756a43f21561eaa6d129e45a215895b987"
+        "sha256": "4e58e9d7973c2d6d57c6e71d4529566c6ef0d16aff66e2f222aaaf5e1e575e08"
       }
     }
   ],
@@ -269,7 +269,7 @@
       "result": {
         "bytes": 2859,
         "path": "/evidence/results/negative/xyce-ac-presentation-rejected.json",
-        "sha256": "8e5f334005a10861fdc1f43441192305070ea0f312d11864f8f7883c4ecb5291"
+        "sha256": "cfafc20a2ad377fc53e3839f1f3b7dc0e314a5b82f0cd32d7f1abb3d3bd6c52e"
       }
     },
     {
@@ -282,7 +282,7 @@
       "result": {
         "bytes": 2706,
         "path": "/evidence/results/negative/xyce-op-unsupported.json",
-        "sha256": "3b3a6cf4acf9eb52a870c7e457959f1d0c0c61b5cd5850059fb561e9cdd52add"
+        "sha256": "bf3d78301b16563085903a698afb404b29707df471d0d4d73dbf5f7c61ebdcd4"
       }
     },
     {
@@ -295,7 +295,7 @@
       "result": {
         "bytes": 2869,
         "path": "/evidence/results/negative/ngspice-analysis-mismatch.json",
-        "sha256": "994a46d61699dd087922311c324f5796176dc87924bf0f0e79618b916d1eae75"
+        "sha256": "e019d9152bd16114e85954649ca8b648f432fe984897639247d1cb6a4b398058"
       }
     },
     {
@@ -308,7 +308,7 @@
       "result": {
         "bytes": 2274,
         "path": "/evidence/results/negative/extract-missing-selector.json",
-        "sha256": "d2f179b6f0b6a4e0bc23db6ab0e3ccdac369a95b6b10ec779702a2c8de144b6f"
+        "sha256": "dee860c295871b09b4c328e44fc95597e260c018a0fbb9676732d12f3efec5e0"
       }
     },
     {
@@ -321,7 +321,7 @@
       "result": {
         "bytes": 859,
         "path": "/evidence/results/negative/admin-unknown-profile.json",
-        "sha256": "4408cc8ef767e7b95da3e5dfd1ea7fd8dd94a8e38293c1ea007cacd9abb525b9"
+        "sha256": "e490de8b163b1d5b9bc35f5f2503e37e6d065fb45b0c0e10197bddfd0d0125ae"
       }
     },
     {
@@ -334,7 +334,7 @@
       "result": {
         "bytes": 938,
         "path": "/evidence/results/negative/admin-invalid-provider.json",
-        "sha256": "c441fb8bc9a98df904f56c14f7ef41b014fa591055550a70d579d060701fd414"
+        "sha256": "5fff1e386a80b8384336ec7c3f2f40796ec3eb919a7dd9c2a8e93f69d7d16cea"
       }
     }
   ],
