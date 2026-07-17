@@ -4,7 +4,7 @@ Note: No compatibility mode selected!
 
 Circuit: ** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch
 
-binary raw file "/tmp/openada-ngspice-7lfu5z9k/simulation.raw"
+binary raw file "/tmp/openada-ngspice-x_26c0h5/simulation.raw"
 Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
 
 Using SPARSE 1.3 as Direct Linear Solver
@@ -35,17 +35,17 @@ doAnalyses: TRAN:  Timestep too small; time = 0.0001045, timestep = 1.25e-18: tr
 
 run simulation(s) aborted
 
-Total analysis time (seconds) = 0.485289
+Total analysis time (seconds) = 0.543226
 
-Total elapsed time (seconds) = 0.500 
+Total elapsed time (seconds) = 0.558 
 
 Total DRAM available = 32106.207 MB.
-DRAM currently available = 10548.051 MB.
-Maximum ngspice program size =  531.711 MB.
-Current ngspice program size =   14.453 MB.
+DRAM currently available = 12118.133 MB.
+Maximum ngspice program size =  531.707 MB.
+Current ngspice program size =   14.703 MB.
 
-Shared ngspice pages =   11.152 MB.
+Shared ngspice pages =   11.406 MB.
 Text (code) pages =    5.875 MB.
 Stack = 0 bytes.
-Library pages =   60.195 MB.
+Library pages =   60.191 MB.
 
