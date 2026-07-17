@@ -31,7 +31,7 @@
       "-q",
       "-x",
       "-o",
-      "/tmp/openada-xschem-1z5ypry2",
+      "/tmp/openada-xschem-x4gq7dms",
       "/design/modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch"
     ],
     "cwd": "/design/modules/module_1_bandgap_reference/part_1_OTA/testbenches",
@@ -59,7 +59,7 @@
   ],
   "operation": "netlist",
   "provenance": {
-    "created_at": "2026-07-17T10:16:24.090802Z",
+    "created_at": "2026-07-17T12:23:38.448659Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

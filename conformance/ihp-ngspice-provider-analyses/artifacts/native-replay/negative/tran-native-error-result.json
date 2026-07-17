@@ -88,16 +88,16 @@
               "TZ"
             ],
             "effective_variables": {
-              "HOME": "/tmp/openada-provider-environment-it3owovg/tmp/openada-ngspice-01qd6677/home",
+              "HOME": "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/home",
               "LANG": "C",
               "LC_ALL": "C",
               "PATH": "/usr/local/bin:/usr/bin:/bin",
               "PDK": "ihp-sg13g2",
               "PDK_ROOT": "/foss/pdks",
               "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts",
-              "TEMP": "/tmp/openada-provider-environment-it3owovg/tmp/openada-ngspice-01qd6677/tmp",
-              "TMP": "/tmp/openada-provider-environment-it3owovg/tmp/openada-ngspice-01qd6677/tmp",
-              "TMPDIR": "/tmp/openada-provider-environment-it3owovg/tmp/openada-ngspice-01qd6677/tmp",
+              "TEMP": "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/tmp",
+              "TMP": "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/tmp",
+              "TMPDIR": "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/tmp",
               "TZ": "UTC"
             },
             "mode": "sanitized"
@@ -218,7 +218,7 @@
       "-i",
       "-n",
       "-o",
-      "/tmp/openada-provider-environment-it3owovg/tmp/openada-ngspice-01qd6677/simulation.log",
+      "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/simulation.log",
       "/evidence/negative/native-tran-error/simulation/tran-native-error.openada-control.sp"
     ],
     "cwd": "/evidence/negative/native-tran-error/work",
@@ -286,7 +286,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-17T10:17:00.089387Z",
+    "created_at": "2026-07-17T12:24:16.027261Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
