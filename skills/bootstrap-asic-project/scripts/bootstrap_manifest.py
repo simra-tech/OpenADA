@@ -290,7 +290,11 @@ def _bounded_string(value: Any, label: str, *, maximum: int = 512) -> str:
 def _safe_id(value: Any, label: str) -> str:
     text = _bounded_string(value, label, maximum=128)
     if SAFE_ID.fullmatch(text) is None:
-        raise ManifestError(f"{label} is not a lowercase stable identifier")
+        diagnostic = f"{label} is not a lowercase stable identifier"
+        lowercase = text.lower()
+        if lowercase != text and SAFE_ID.fullmatch(lowercase) is not None:
+            diagnostic += f"; use {lowercase!r}"
+        raise ManifestError(diagnostic)
     return text
 
 
@@ -1077,7 +1081,11 @@ def _parser() -> argparse.ArgumentParser:
     init.add_argument("--project-spec", required=True)
     init.add_argument("--source-manifest", required=True)
     _add_template_arguments(init)
-    init.add_argument("--pdk-id", required=True)
+    init.add_argument(
+        "--pdk-id",
+        required=True,
+        help="Lowercase stable ledger ID; for example, sky130a for native name sky130A.",
+    )
     init.add_argument("--pdk-root", required=True)
     _add_revision_arguments(init, "pdk")
     _add_runtime_arguments(init)
@@ -1159,7 +1167,11 @@ def _parser() -> argparse.ArgumentParser:
         "set-pdk", help="Replace PDK identity and clear PDK-dependent collateral."
     )
     set_pdk.add_argument("manifest", type=Path)
-    set_pdk.add_argument("--id", required=True)
+    set_pdk.add_argument(
+        "--id",
+        required=True,
+        help="Lowercase stable ledger ID; for example, sky130a for native name sky130A.",
+    )
     set_pdk.add_argument("--root", required=True)
     set_pdk.add_argument("--revision-scheme", choices=REVISION_SCHEMES, required=True)
     set_pdk.add_argument("--revision", required=True)

@@ -67,6 +67,11 @@ Revisions are tagged as `git-sha1`, `git-sha256`, or `content-sha256`; their
 values must match the selected immutable form. OCI references must use a
 manifest digest and an explicit `linux/amd64` or `linux/arm64` platform.
 
+`target.pdk_id` is a lowercase stable ledger key, distinct from a PDK's native
+display name and path. For example, native name `sky130A` uses stable ID
+`sky130a`; retain the native spelling in project/runtime context and bind its
+exact location through `target.pdk_root`.
+
 Collateral entries have stable IDs independent of their closed roles. Repeat a
 role with different IDs for corners and transitive inputs.
 

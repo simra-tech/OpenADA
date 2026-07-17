@@ -489,6 +489,56 @@ def test_manifest_reader_rejects_symlink_and_oversized_input(tmp_path: Path) -> 
     assert "symbolic link" in str(_payload(linked)["diagnostic"])
 
 
+def test_pdk_stable_id_help_and_lowercase_suggestion(tmp_path: Path) -> None:
+    for command, option in (("init", "--pdk-id"), ("set-pdk", "--id")):
+        help_result = _run(command, "--help")
+        assert help_result.returncode == 0
+        assert option in help_result.stdout
+        normalized_help = " ".join(help_result.stdout.split())
+        assert "sky130a for native name sky130A" in normalized_help
+
+    spec = importlib.util.spec_from_file_location("bootstrap_manifest", SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    with pytest.raises(
+        module.ManifestError,
+        match=r"target\.pdk_id is not a lowercase stable identifier; use 'sky130a'",
+    ):
+        module._safe_id("sky130A", "target.pdk_id")
+
+    manifest, files = _initialize(tmp_path, "synthesized-core")
+    before = manifest.read_bytes()
+    rejected = _run(
+        "set-pdk",
+        str(manifest),
+        "--id",
+        "sky130A",
+        "--root",
+        str(tmp_path / "pdk"),
+        "--revision-scheme",
+        "git-sha1",
+        "--revision",
+        "4" * 40,
+        "--flow-name",
+        "librelane",
+        "--flow-tool",
+        "librelane",
+        "--flow-revision-scheme",
+        "content-sha256",
+        "--flow-revision",
+        "5" * 64,
+        "--flow-config",
+        str(files["config"]),
+    )
+    assert rejected.returncode == 2
+    assert _payload(rejected)["diagnostic"] == (
+        "target.pdk_id is not a lowercase stable identifier; use 'sky130a'"
+    )
+    assert manifest.read_bytes() == before
+
+
 def test_encoder_refuses_to_create_an_unreadable_oversized_ledger() -> None:
     spec = importlib.util.spec_from_file_location("bootstrap_manifest", SCRIPT)
     assert spec is not None and spec.loader is not None

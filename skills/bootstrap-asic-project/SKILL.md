@@ -73,6 +73,10 @@ the bundled identity-ledger helper rather than inventing a project-wide ambient
 profile. First write a project specification covering the finish-line choices
 above and a hash-ordered source/firmware manifest:
 
+Use a lowercase stable ledger key for `--pdk-id`, not necessarily the PDK's
+native display name. For example, use `sky130a` for native name `sky130A`, while
+retaining the native spelling and exact path in project/runtime context.
+
 ```bash
 python3 /path/to/skill/scripts/bootstrap_manifest.py init \
   --output /absolute/project/.openada/bootstrap-manifest.json \
