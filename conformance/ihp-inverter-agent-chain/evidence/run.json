@@ -1,12 +1,12 @@
 {
   "chain_id": "openada.chain/ihp-inverter-agent-chain/v1",
-  "chain_manifest_sha256": "98a5d434244eb88565e804900d074c9df0bcd4bf5d9d45a7dc7e6c6808933812",
+  "chain_manifest_sha256": "57f09e1f2154d3c86af3921814684492a824b1cb7dab63391a01de2d9e422ea6",
   "container_command": [
     "docker",
     "run",
     "--rm",
     "--name",
-    "openada-ihp-agent-3345031-8b37a03d",
+    "openada-ihp-agent-3843464-fc888a33",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -36,7 +36,7 @@
     "--mount",
     "type=bind,source=/home/specialpedrito/.cache/openada/conformance/ihp-inverter/IHP-AnalogAcademy,target=/design,readonly",
     "--mount",
-    "type=bind,source=/tmp/openada-release-agent-20260716,target=/evidence",
+    "type=bind,source=/tmp/openada-republish-ihp-agent-chain,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
@@ -46,7 +46,7 @@
     "--evidence",
     "/evidence"
   ],
-  "created_at": "2026-07-16T15:20:10.686473Z",
+  "created_at": "2026-07-17T09:49:53.300701Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "image": {
     "architecture": "amd64",
@@ -57,7 +57,7 @@
   "network": "none during EDA execution",
   "openada_checkout": {
     "after": {
-      "commit": "30efea61b7c0f876fbeef16f1f3ab5ec40fff1a1",
+      "commit": "27ce442cc106b1b8e5dbf91696eb46f6344d95e5",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -65,7 +65,7 @@
       "working_tree_modified": false
     },
     "before": {
-      "commit": "30efea61b7c0f876fbeef16f1f3ab5ec40fff1a1",
+      "commit": "27ce442cc106b1b8e5dbf91696eb46f6344d95e5",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
