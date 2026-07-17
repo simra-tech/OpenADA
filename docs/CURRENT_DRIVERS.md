@@ -355,6 +355,36 @@ validated. It does not establish DRC cleanliness, execute a rule deck, infer
 unreported markers, or turn representative bounded examples into exhaustive
 signoff evidence. The original LYRDB and its deck remain authoritative.
 
+### DRC evidence comparison
+
+Compare a changed layout against its baseline:
+
+```bash
+./bin/openada drc-compare before.gds \
+  --baseline-report before.lyrdb \
+  --candidate-gds after.gds \
+  --candidate-report after.lyrdb \
+  --mode revision
+```
+
+`revision` mode requires different GDS hashes and reports exact persistent,
+resolved, and introduced bounded marker examples alongside the native weighted
+violation-count delta. This gives an agent a deterministic regression summary,
+but a resolved marker is not by itself proof of DRC cleanliness or preserved
+connectivity; use separately validated DRC and LVS assertions for those claims.
+Optionally pass paired `--baseline-lvs-result` and `--candidate-lvs-result`
+files. OpenADA then requires both retained LVS results to pass against the same
+reference netlist and Netgen setup and reports their layout-netlist identities.
+This establishes consistency of the retained extracted-netlist comparisons;
+it does not prove that either extraction came from the declared GDS.
+
+For deck discrepancies, use `--mode deck` with two reports over hash-identical
+GDS content. The reports must name different generator scripts. OpenADA reports
+exact matches and proximity-based same-cell correlations even when rule names
+differ. This helps an agent identify likely deck-coverage disagreement without
+claiming that either deck is correct or that spatially close rules are
+semantically equivalent.
+
 ## Netgen LVS
 
 Netgen LVS also uses explicit, fresh evidence. Give it the project's executable

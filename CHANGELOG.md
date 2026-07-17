@@ -8,6 +8,15 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Added
 
+- An experimental `drc-compare` operation with explicit `revision` and `deck`
+  modes. Revision mode requires different GDS content and reports persistent,
+  resolved, and introduced bounded native markers. Deck mode requires the same
+  GDS content and different generator scripts, then adds proximity-based
+  cross-category correlations. Both modes recheck input stability and preserve
+  explicit non-signoff limitations. Revision mode can additionally bind paired
+  passing OpenADA LVS results that use the same reference netlist and setup,
+  without claiming an unproven extraction-to-GDS relationship.
+
 - A diagnostic `drc-review` CLI operation that consumes an existing validated
   KLayout LYRDB plus its exact GDS, deduplicates equivalent native cell
   variants, expands retained leaf-cell markers through the physical hierarchy,

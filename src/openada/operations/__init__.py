@@ -13,6 +13,7 @@ from .circuit_simulate import (
     simulate_circuit_profile,
 )
 from .drc_review import review_drc
+from .drc_compare import compare_drc
 from .result_measure import MEASUREMENT_KINDS, measure_result, normalized_series_sha256
 from .result_series_extract import extract_result_series
 from .result_spectral_measure import SPECTRAL_METRIC_KINDS, measure_spectrum
@@ -41,4 +42,5 @@ __all__ = [
     "simulate_circuit_profile",
     "evaluate_specification",
     "review_drc",
+    "compare_drc",
 ]

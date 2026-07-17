@@ -37,6 +37,7 @@ from .operations import (
     measure_result,
     measure_spectrum,
     measure_transfer,
+    compare_drc,
     review_drc,
     simulate_circuit_profile,
 )
@@ -82,6 +83,7 @@ _COMMAND_OPERATIONS = {
     "evaluate": "specification.evaluate",
     "provider": "provider",
     "drc": "drc",
+    "drc-compare": "drc.compare",
     "drc-review": "drc.review",
     "lvs": "lvs",
     "rtl-check": "rtl-check",
@@ -616,6 +618,19 @@ def build_parser() -> argparse.ArgumentParser:
     drc_review.add_argument("--height", type=int, default=1200)
     drc_review.add_argument("--timeout", type=_positive_float, default=180.0)
     _common_tool_argument(drc_review, "klayout")
+
+    drc_compare = commands.add_parser(
+        "drc-compare",
+        help="Compare bounded native DRC evidence across revisions or decks.",
+    )
+    drc_compare.add_argument("baseline_gds")
+    drc_compare.add_argument("--baseline-report", required=True)
+    drc_compare.add_argument("--candidate-gds", required=True)
+    drc_compare.add_argument("--candidate-report", required=True)
+    drc_compare.add_argument("--mode", choices=("revision", "deck"), default="revision")
+    drc_compare.add_argument("--spatial-tolerance-um", type=float, default=0.001)
+    drc_compare.add_argument("--baseline-lvs-result")
+    drc_compare.add_argument("--candidate-lvs-result")
 
     lvs = commands.add_parser("lvs", help="Compare layout and schematic netlists with Netgen.")
     lvs.add_argument("layout_netlist")
@@ -1844,6 +1859,17 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             width=args.width,
             height=args.height,
             timeout=args.timeout,
+        )
+    if args.command == "drc-compare":
+        return compare_drc(
+            args.baseline_gds,
+            args.baseline_report,
+            args.candidate_gds,
+            args.candidate_report,
+            mode=args.mode,
+            spatial_tolerance_um=args.spatial_tolerance_um,
+            baseline_lvs_result=args.baseline_lvs_result,
+            candidate_lvs_result=args.candidate_lvs_result,
         )
     if args.command == "lvs":
         layout = Path(args.layout_netlist).expanduser().resolve()
