@@ -489,6 +489,7 @@ same reviewed commit rather than mixing runtime and skill revisions.
 | `profile list/show` | installed contracts | preview | List packaged operation/assertion/feature IDs or emit one complete schema-bearing operation profile from any working directory |
 | `provider validate/list/invoke` | external local CLI | structured runtime boundary | Validate one explicit v0alpha1 manifest/request and invoke one active `circuit.simulate/v1alpha2` JSON-stdio wait capability; snapshot canonical request inputs within fixed target/configuration/aggregate bounds, and enforce status/evidence truth, artifact identity, zero transport exit, and descendant cleanup |
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
+| `drc-review` | KLayout | diagnostic preview | Render hashed full-layout and ranked hierarchical cluster PNGs from one validated existing `.lyrdb` and its exact GDS; does not re-run or replace DRC |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |
 | `rtl-lint` | Verilator | workflow-validated | Apply a strict no-warning/no-error SystemVerilog lint assertion with hashed source/include evidence |

@@ -37,6 +37,7 @@ from .operations import (
     measure_result,
     measure_spectrum,
     measure_transfer,
+    review_drc,
     simulate_circuit_profile,
 )
 from .preflight import PREFLIGHT_SPECS
@@ -81,6 +82,7 @@ _COMMAND_OPERATIONS = {
     "evaluate": "specification.evaluate",
     "provider": "provider",
     "drc": "drc",
+    "drc-review": "drc.review",
     "lvs": "lvs",
     "rtl-check": "rtl-check",
     "rtl-lint": "rtl-lint",
@@ -600,6 +602,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     drc.add_argument("--timeout", type=_positive_float, default=180.0)
     _common_tool_argument(drc, "klayout")
+
+    drc_review = commands.add_parser(
+        "drc-review",
+        help="Render bounded overview and cluster images from a native KLayout DRC report.",
+    )
+    drc_review.add_argument("gds_file")
+    drc_review.add_argument("--report", required=True)
+    drc_review.add_argument("--output-dir", required=True)
+    drc_review.add_argument("--layer-properties")
+    drc_review.add_argument("--max-cluster-views", type=int, default=6)
+    drc_review.add_argument("--width", type=int, default=1600)
+    drc_review.add_argument("--height", type=int, default=1200)
+    drc_review.add_argument("--timeout", type=_positive_float, default=180.0)
+    _common_tool_argument(drc_review, "klayout")
 
     lvs = commands.add_parser("lvs", help="Compare layout and schematic netlists with Netgen.")
     lvs.add_argument("layout_netlist")
@@ -1815,6 +1831,18 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             deck_variables=args.deck_var,
             provenance_inputs=args.provenance_input,
             waiver_file=args.waiver_file,
+            timeout=args.timeout,
+        )
+    if args.command == "drc-review":
+        return review_drc(
+            args.gds_file,
+            args.report,
+            args.output_dir,
+            discovery=discovery,
+            layer_properties=args.layer_properties,
+            max_cluster_views=args.max_cluster_views,
+            width=args.width,
+            height=args.height,
             timeout=args.timeout,
         )
     if args.command == "lvs":

@@ -8,6 +8,15 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Added
 
+- A diagnostic `drc-review` CLI operation that consumes an existing validated
+  KLayout LYRDB plus its exact GDS, deduplicates equivalent native cell
+  variants, expands retained leaf-cell markers through the physical hierarchy,
+  and emits hashed full-layout and ranked occurrence-level PNG views. Fresh
+  output, input stability, bounded geometry, native PNG structure, dimensions,
+  and renderer summaries are checked before the operation passes. The images
+  remain representative diagnostic evidence, not a replacement for the native
+  report, rule deck, or foundry signoff.
+
 - An experimental `bootstrap-asic-project` skill for blank open-ASIC
   workspaces. It defines core/full-chip/submission finish lines, selects one
   coherent PDK/flow/runtime stack, starts full chips from maintainer-owned

@@ -110,6 +110,15 @@
       "extensions": {}
     },
     {
+      "surface_id": "openada.surface/cli.drc-review/v1",
+      "command_path": ["drc-review"],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
       "surface_id": "openada.surface/cli.evaluate/v1",
       "command_path": ["evaluate"],
       "classification": "semantic-execution",

@@ -99,7 +99,7 @@
         "agent-ready"
       ]
     },
-    "lifecycle": {"enum": ["active", "historical", "experimental-hidden"]},
+    "lifecycle": {"enum": ["active", "historical", "experimental", "experimental-hidden"]},
     "policy": {
       "type": "object",
       "required": ["coverage_levels", "required_levels", "active_lifecycles", "extensions"],

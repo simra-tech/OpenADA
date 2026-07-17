@@ -323,6 +323,30 @@ names against the anchored filesystem, and keeps an explicitly declared waiver
 database open by descriptor so even an identical-content inode replacement
 invalidates the result.
 
+### Diagnostic DRC views
+
+After retaining a native KLayout report, generate AI- and human-reviewable
+views without re-running the rule deck:
+
+```bash
+./bin/openada drc-review project/layout.gds \
+  --report /tmp/drc-evidence/layout.lyrdb \
+  --layer-properties /path/to/pdk/layers.lyp \
+  --output-dir /tmp/drc-review
+```
+
+The output directory must be fresh and empty. `drc-review` validates the native
+LYRDB, retains only its bounded geometry examples, deduplicates equivalent
+KLayout cell variants, and asks KLayout to expand leaf-cell markers through the
+GDS hierarchy. It writes one full-layout PNG and ranked occurrence-level
+cluster PNGs, then checks their native PNG headers, exact requested dimensions,
+paths, sizes, hashes, renderer summary, and unchanged inputs.
+
+This operation proves that the declared review artifacts were generated and
+validated. It does not establish DRC cleanliness, execute a rule deck, infer
+unreported markers, or turn representative bounded examples into exhaustive
+signoff evidence. The original LYRDB and its deck remain authoritative.
+
 ## Netgen LVS
 
 Netgen LVS also uses explicit, fresh evidence. Give it the project's executable
