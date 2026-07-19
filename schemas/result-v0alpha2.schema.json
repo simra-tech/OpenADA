@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/result-v0alpha2.schema.json",
+  "title": "OpenADA multi-step result v0alpha2",
+  "type": "object",
+  "required": ["schema", "request_id", "request_sha256", "profile", "mapping", "capability_id", "steps", "overall", "artifacts", "diagnostics", "extensions"],
+  "properties": {
+    "schema": {"const": "openada.result/v0alpha2"},
+    "request_id": {"type": "string", "format": "uuid"},
+    "request_sha256": {"$ref": "#/$defs/digest"},
+    "profile": {"$ref": "#/$defs/exactResource"},
+    "mapping": {"$ref": "#/$defs/exactResource"},
+    "capability_id": {"$ref": "#/$defs/reverseDns"},
+    "steps": {"type": "array", "maxItems": 128, "items": {"$ref": "#/$defs/step"}},
+    "overall": {"$ref": "#/$defs/dimensions"},
+    "artifacts": {"type": "array", "maxItems": 1024, "items": {"$ref": "#/$defs/artifact"}},
+    "diagnostics": {"type": "array", "maxItems": 512, "items": {"type": "string", "maxLength": 4000}},
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "reverseDns": {"type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$", "maxLength": 240},
+    "version": {"type": "string", "pattern": "^v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$", "maxLength": 32},
+    "exactResource": {
+      "type": "object",
+      "required": ["identity", "revision", "sha256", "extensions"],
+      "properties": {"identity": {"type": "string", "minLength": 1, "maxLength": 240}, "revision": {"$ref": "#/$defs/version"}, "sha256": {"$ref": "#/$defs/digest"}, "extensions": {"$ref": "#/$defs/extensions"}},
+      "additionalProperties": false
+    },
+    "dimensions": {
+      "type": "object",
+      "required": ["dependency_readiness", "execution_state", "artifact_readiness", "engineering_conclusion", "workflow_review", "signoff_approval", "extensions"],
+      "properties": {
+        "dependency_readiness": {"enum": ["ready", "unready", "unknown", "not-applicable"]},
+        "execution_state": {"enum": ["not-started", "queued", "running", "completed", "failed", "timed-out", "cancelled", "unknown"]},
+        "artifact_readiness": {"enum": ["ready", "missing", "stale", "invalid", "partial", "unknown", "not-applicable"]},
+        "engineering_conclusion": {"enum": ["pass", "fail", "inconclusive", "not-evaluated"]},
+        "workflow_review": {"enum": ["unreviewed", "reviewed", "rejected"]},
+        "signoff_approval": {"enum": ["not-requested", "pending", "approved", "rejected"]},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "role", "depends_on", "capability_id", "mapping_sha256", "transport_identity", "action_identity", "bounds", "termination", "inputs", "outputs", "parser_identity", "validator_identity", "dimensions", "diagnostics", "extensions"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,119}$"},
+        "role": {"type": "string", "maxLength": 120},
+        "depends_on": {"type": "array", "maxItems": 127, "uniqueItems": true, "items": {"type": "string", "maxLength": 120}},
+        "capability_id": {"$ref": "#/$defs/reverseDns"},
+        "mapping_sha256": {"$ref": "#/$defs/digest"},
+        "transport_identity": {"$ref": "#/$defs/reverseDns"},
+        "action_identity": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$", "maxLength": 120},
+        "bounds": {"type": "object", "maxProperties": 64},
+        "termination": {"enum": ["completed", "failed", "timed-out", "cancelled", "not-started", "unknown"]},
+        "inputs": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/digest"}},
+        "outputs": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/digest"}},
+        "parser_identity": {"oneOf": [{"$ref": "#/$defs/reverseDns"}, {"type": "null"}]},
+        "validator_identity": {"$ref": "#/$defs/reverseDns"},
+        "dimensions": {"$ref": "#/$defs/dimensions"},
+        "diagnostics": {"type": "array", "maxItems": 256, "items": {"type": "string", "maxLength": 4000}},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["role", "sha256", "bytes", "freshness", "extensions"],
+      "properties": {"role": {"type": "string", "maxLength": 120}, "sha256": {"$ref": "#/$defs/digest"}, "bytes": {"type": "integer", "minimum": 0}, "freshness": {"enum": ["fresh", "immutable-input", "stale", "unknown"]}, "extensions": {"$ref": "#/$defs/extensions"}},
+      "additionalProperties": false
+    },
+    "extensions": {"type": "object", "maxProperties": 64, "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"}, "additionalProperties": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

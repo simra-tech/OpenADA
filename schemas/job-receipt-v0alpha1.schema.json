@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/job-receipt-v0alpha1.schema.json",
+  "title": "OpenADA remote-job receipt v0alpha1",
+  "type": "object",
+  "required": ["schema", "job_id", "scheduler_identity", "payload_sha256", "idempotency_key", "state", "poll_count", "artifacts", "cancellation", "orphan_state", "cleanup", "extensions"],
+  "properties": {
+    "schema": {"const": "openada.job-receipt/v0alpha1"},
+    "job_id": {"type": "string", "format": "uuid"},
+    "scheduler_identity": {"type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$", "maxLength": 240},
+    "payload_sha256": {"$ref": "#/$defs/digest"},
+    "idempotency_key": {"$ref": "#/$defs/digest"},
+    "state": {"enum": ["queued", "running", "held", "completed", "failed", "cancelled", "unknown"]},
+    "poll_count": {"type": "integer", "minimum": 0},
+    "artifacts": {
+      "type": "object",
+      "required": ["ingress_sha256", "egress_sha256", "contained", "extensions"],
+      "properties": {
+        "ingress_sha256": {"$ref": "#/$defs/digest"},
+        "egress_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+        "contained": {"enum": ["yes", "no", "unknown"]},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "cancellation": {"enum": ["not-requested", "requested", "acknowledged", "rejected", "unknown"]},
+    "orphan_state": {"enum": ["not-orphaned", "orphaned", "unknown"]},
+    "cleanup": {"enum": ["not-started", "pending", "complete", "failed", "unknown"]},
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "extensions": {"type": "object", "maxProperties": 64, "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"}, "additionalProperties": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/invocation-context-v0alpha1.schema.json",
+  "title": "OpenADA host-authorized invocation context v0alpha1",
+  "type": "object",
+  "required": ["schema", "context_name", "provider_id", "filtered_environment", "secret_handles", "setup_identity", "authorization_identity", "extensions"],
+  "properties": {
+    "schema": {"const": "openada.invocation-context/v0alpha1"},
+    "context_name": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,119}$"},
+    "provider_id": {"$ref": "#/$defs/reverseDns"},
+    "filtered_environment": {
+      "type": "object",
+      "maxProperties": 128,
+      "propertyNames": {"pattern": "^[A-Z][A-Z0-9_]{0,127}$"},
+      "additionalProperties": {"type": "string", "maxLength": 4096}
+    },
+    "secret_handles": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,119}$"}},
+    "setup_identity": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+    "authorization_identity": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "reverseDns": {"type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$", "maxLength": 240},
+    "extensions": {"type": "object", "maxProperties": 64, "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"}, "additionalProperties": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

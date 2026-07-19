@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/readiness-v0alpha1.schema.json",
+  "title": "OpenADA readiness report v0alpha1",
+  "type": "object",
+  "required": ["schema", "request_sha256", "driver", "binary_version", "site_setup", "authorization", "session_endpoint", "target", "artifacts", "extensions"],
+  "properties": {
+    "schema": {"const": "openada.readiness/v0alpha1"},
+    "request_sha256": {"$ref": "#/$defs/digest"},
+    "driver": {"$ref": "#/$defs/readiness"},
+    "binary_version": {"$ref": "#/$defs/readiness"},
+    "site_setup": {"$ref": "#/$defs/readiness"},
+    "authorization": {"$ref": "#/$defs/readiness"},
+    "session_endpoint": {"$ref": "#/$defs/readiness"},
+    "target": {"$ref": "#/$defs/readiness"},
+    "artifacts": {"$ref": "#/$defs/readiness"},
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "readiness": {
+      "type": "object",
+      "required": ["state", "observed_identity", "reason", "extensions"],
+      "properties": {
+        "state": {"enum": ["ready", "unready", "unknown", "not-applicable"]},
+        "observed_identity": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 512}, {"type": "null"}]},
+        "reason": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 2000}, {"type": "null"}]},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "extensions": {"type": "object", "maxProperties": 64, "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"}, "additionalProperties": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

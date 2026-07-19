@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/session-receipt-v0alpha1.schema.json",
+  "title": "OpenADA agent-owned session receipt v0alpha1",
+  "type": "object",
+  "required": ["schema", "session_id", "owner_id", "nonce_sha256", "ownership_token_sha256", "state", "backend_revision", "last_heartbeat_sequence", "cleanup", "extensions"],
+  "properties": {
+    "schema": {"const": "openada.session-receipt/v0alpha1"},
+    "session_id": {"type": "string", "format": "uuid"},
+    "owner_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,119}$"},
+    "nonce_sha256": {"$ref": "#/$defs/digest"},
+    "ownership_token_sha256": {"$ref": "#/$defs/digest"},
+    "state": {"enum": ["starting", "ready", "busy", "lost-heartbeat", "cancelled", "closed", "failed"]},
+    "backend_revision": {"type": "string", "minLength": 1, "maxLength": 240},
+    "last_heartbeat_sequence": {"type": "integer", "minimum": 0},
+    "cleanup": {"enum": ["not-started", "pending", "complete", "failed", "unknown"]},
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "extensions": {"type": "object", "maxProperties": 64, "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"}, "additionalProperties": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

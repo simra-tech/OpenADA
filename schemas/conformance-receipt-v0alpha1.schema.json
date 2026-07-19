@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/conformance-receipt-v0alpha1.schema.json",
+  "title": "OpenADA generic semantic conformance receipt v0alpha1",
+  "type": "object",
+  "required": ["schema", "id", "profile", "mapping", "capability_id", "cases", "readiness", "self_attestation", "limitations", "extensions"],
+  "properties": {
+    "schema": {"const": "openada.conformance-receipt/v0alpha1"},
+    "id": {"$ref": "#/$defs/reverseDns"},
+    "profile": {"$ref": "#/$defs/exactResource"},
+    "mapping": {"$ref": "#/$defs/exactResource"},
+    "capability_id": {"$ref": "#/$defs/reverseDns"},
+    "cases": {"type": "array", "minItems": 1, "maxItems": 1024, "items": {"$ref": "#/$defs/case"}},
+    "readiness": {
+      "type": "object",
+      "required": ["protocol", "artifact", "semantic", "transport", "review", "extensions"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/readiness"},
+        "artifact": {"$ref": "#/$defs/readiness"},
+        "semantic": {"$ref": "#/$defs/readiness"},
+        "transport": {"$ref": "#/$defs/readiness"},
+        "review": {"$ref": "#/$defs/readiness"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "self_attestation": {"type": "boolean"},
+    "limitations": {"type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 4000}},
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "reverseDns": {"type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$", "maxLength": 240},
+    "version": {"type": "string", "pattern": "^v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$", "maxLength": 32},
+    "exactResource": {"type": "object", "required": ["identity", "revision", "sha256", "extensions"], "properties": {"identity": {"type": "string", "minLength": 1, "maxLength": 240}, "revision": {"$ref": "#/$defs/version"}, "sha256": {"$ref": "#/$defs/digest"}, "extensions": {"$ref": "#/$defs/extensions"}}, "additionalProperties": false},
+    "case": {
+      "type": "object",
+      "required": ["id", "category", "expected", "observed", "request_sha256", "result_sha256", "extensions"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,119}$"},
+        "category": {"enum": ["positive", "engineering-negative", "semantic-rejection", "dependency", "process", "artifact", "correlation", "tamper", "containment", "bounds", "cancellation", "isolation", "redaction", "ownership", "restart", "cleanup", "replay"]},
+        "expected": {"enum": ["pass", "fail", "inconclusive", "reject"]},
+        "observed": {"enum": ["pass", "fail", "inconclusive", "reject"]},
+        "request_sha256": {"$ref": "#/$defs/digest"},
+        "result_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "readiness": {"enum": ["ready", "unready", "unknown", "not-reviewed"]},
+    "extensions": {"type": "object", "maxProperties": 64, "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"}, "additionalProperties": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

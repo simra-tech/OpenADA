@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/locator-v0alpha1.schema.json",
+  "title": "OpenADA locator v0alpha1",
+  "type": "object",
+  "required": ["schema", "kind", "intent", "root_id", "value", "identity", "mutation", "extensions"],
+  "properties": {
+    "schema": {"const": "openada.locator/v0alpha1"},
+    "kind": {"enum": ["regular-file", "directory-tree", "workspace", "artifact-reference", "session", "native-object", "approved-uri"]},
+    "intent": {"enum": ["read", "mutate"]},
+    "root_id": {"oneOf": [{"type": "string", "pattern": "^[a-z][a-z0-9-]{0,119}$"}, {"type": "null"}]},
+    "value": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "identity": {
+      "type": "object",
+      "required": ["kind", "value", "extensions"],
+      "properties": {
+        "kind": {"enum": ["sha256", "native-revision", "snapshot", "opaque"]},
+        "value": {"type": "string", "minLength": 1, "maxLength": 512},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "mutation": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["precondition", "postcondition", "extensions"],
+          "properties": {
+            "precondition": {"type": "string", "minLength": 1, "maxLength": 512},
+            "postcondition": {"type": "string", "minLength": 1, "maxLength": 512},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "allOf": [
+    {"if": {"properties": {"intent": {"const": "read"}}}, "then": {"properties": {"mutation": {"type": "null"}}}},
+    {"if": {"properties": {"intent": {"const": "mutate"}}}, "then": {"properties": {"mutation": {"type": "object"}}}}
+  ],
+  "$defs": {
+    "extensions": {"type": "object", "maxProperties": 64, "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"}, "additionalProperties": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

@@ -35,6 +35,7 @@ Issues = "https://github.com/simra-tech/OpenADA/issues"
 
 [project.scripts]
 openada = "openada.cli:main"
+openada-ecosystem = "openada.ecosystem.cli:main"
 openada-provider-ngspice = "openada.providers.ngspice_pdk_control:main"
 
 [project.optional-dependencies]
@@ -55,15 +56,26 @@ where = ["src"]
 
 [tool.setuptools.data-files]
 "share/openada/schemas" = [
+  "schemas/capability-manifest-v0alpha1.schema.json",
+  "schemas/conformance-receipt-v0alpha1.schema.json",
+  "schemas/driver-mapping-v0alpha1.schema.json",
   "schemas/driver-manifest-v0alpha1.schema.json",
+  "schemas/invocation-context-v0alpha1.schema.json",
+  "schemas/job-receipt-v0alpha1.schema.json",
+  "schemas/locator-v0alpha1.schema.json",
   "schemas/operation-profile-v0alpha1.schema.json",
   "schemas/operation-profile-v0alpha2.schema.json",
+  "schemas/provider-bundle-v0alpha1.schema.json",
+  "schemas/readiness-v0alpha1.schema.json",
   "schemas/request-v0alpha1.schema.json",
+  "schemas/request-v0alpha2.schema.json",
   "schemas/result-v0alpha1.schema.json",
+  "schemas/result-v0alpha2.schema.json",
   "schemas/design-provenance-v0alpha1.schema.json",
   "schemas/semantic-chain-manifest-v0alpha1.schema.json",
   "schemas/semantic-chain-run-v0alpha1.schema.json",
   "schemas/semantic-surface-catalog-v0alpha1.schema.json",
+  "schemas/session-receipt-v0alpha1.schema.json",
 ]
 "share/openada/catalog" = [
   "catalog/semantic-surfaces-v0alpha1.json",

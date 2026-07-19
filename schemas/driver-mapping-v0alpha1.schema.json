@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/driver-mapping-v0alpha1.schema.json",
+  "title": "OpenADA driver mapping v0alpha1",
+  "type": "object",
+  "required": ["schema", "id", "revision", "profile", "provider_id", "driver_id", "native_family", "capability_id", "features", "locator_kinds", "transport_kinds", "steps", "artifact_roles", "compatible_contract_revisions", "version_policy", "conformance_requirements", "extensions"],
+  "properties": {
+    "schema": {"const": "openada.driver-mapping/v0alpha1"},
+    "id": {"$ref": "#/$defs/reverseDns"},
+    "revision": {"$ref": "#/$defs/version"},
+    "profile": {"$ref": "#/$defs/exactResource"},
+    "provider_id": {"$ref": "#/$defs/reverseDns"},
+    "driver_id": {"$ref": "#/$defs/reverseDns"},
+    "native_family": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$", "maxLength": 120},
+    "capability_id": {"$ref": "#/$defs/reverseDns"},
+    "features": {"type": "array", "minItems": 1, "maxItems": 256, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 240}},
+    "locator_kinds": {"type": "array", "minItems": 1, "maxItems": 7, "uniqueItems": true, "items": {"$ref": "#/$defs/locatorKind"}},
+    "transport_kinds": {"type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": {"enum": ["local", "agent-session", "remote-job", "fake"]}},
+    "steps": {"type": "array", "minItems": 1, "maxItems": 128, "items": {"$ref": "#/$defs/step"}},
+    "artifact_roles": {"type": "array", "maxItems": 128, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$", "maxLength": 120}},
+    "compatible_contract_revisions": {"type": "array", "minItems": 1, "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 120}},
+    "version_policy": {
+      "type": "object",
+      "required": ["kind", "constraint", "extensions"],
+      "properties": {
+        "kind": {"enum": ["exact", "range", "runtime-probe"]},
+        "constraint": {"type": "string", "minLength": 1, "maxLength": 256},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "conformance_requirements": {"type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true, "items": {"$ref": "#/$defs/reverseDns"}},
+    "extensions": {"$ref": "#/$defs/extensions"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "reverseDns": {"type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$", "maxLength": 240},
+    "version": {"type": "string", "pattern": "^v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$", "maxLength": 32},
+    "locatorKind": {"enum": ["regular-file", "directory-tree", "workspace", "artifact-reference", "session", "native-object", "approved-uri"]},
+    "exactResource": {
+      "type": "object",
+      "required": ["identity", "revision", "sha256", "extensions"],
+      "properties": {
+        "identity": {"type": "string", "minLength": 1, "maxLength": 240},
+        "revision": {"$ref": "#/$defs/version"},
+        "sha256": {"$ref": "#/$defs/digest"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "role", "depends_on", "action_id", "input_roles", "output_roles", "extensions"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,119}$"},
+        "role": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$", "maxLength": 120},
+        "depends_on": {"type": "array", "maxItems": 127, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,119}$"}},
+        "action_id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$", "maxLength": 120},
+        "input_roles": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "maxLength": 120}},
+        "output_roles": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "maxLength": 120}},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "additionalProperties": false
+    },
+    "extensions": {"type": "object", "maxProperties": 64, "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"}, "additionalProperties": {"type": "object"}}
+  },
+  "additionalProperties": false
+}
