@@ -15,6 +15,15 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   engineering, review, and signoff dimensions independent and ship as
   `experimental-hidden`, non-dispatchable profiles with deterministic
   `org.example.*` conformance mappings only.
+- An additive experimental provider-ecosystem SDK and schema family for
+  immutable trusted bundles, exact driver mappings, feature-level capability
+  negotiation, executable validator registries, canonical request identity,
+  opaque host context, independent readiness/result dimensions, revisioned
+  locators, agent-owned sessions, remote jobs, and generic conformance
+  receipts. The `openada-ecosystem` command exposes schema discovery,
+  validation, request binding, transport discovery, and an executable
+  `org.example.*` offline fixture matrix. Session/job implementations are typed
+  deterministic host models, not advertised external-tool availability.
 
 - An experimental `drc-compare` operation with explicit `revision` and `deck`
   modes. Revision mode requires different GDS content and reports persistent,

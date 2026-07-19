@@ -42,6 +42,15 @@ external-provider runtime for the active circuit-simulation profile. That
 runtime is intentionally not automatic discovery, a marketplace, or an MCP
 binding.
 
+An additive experimental `openada.ecosystem` SDK defines the next provider
+boundary without enabling those hidden profiles: immutable trusted bundles,
+exact mapping/capability/validator registries, canonical request identity,
+opaque host context, revisioned locators, independent multi-step evidence, and
+typed offline session/job models. `openada-ecosystem fake-conformance` executes
+only deterministic `org.example.*` fixtures; self-attestation is not an
+external availability, workflow-review, or signoff claim. See the
+[provider ecosystem contracts](docs/provider-ecosystem-profiles.md).
+
 > **Early preview**
 >
 > Interfaces and result schemas may change, and driver maturity varies by tool.
