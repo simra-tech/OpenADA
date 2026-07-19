@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/digital.hdl.simulate/v1alpha1",
+    "title": "Digital HDL build and simulation",
+    "summary": "Run a bounded compile, elaborate, execute, and collect workflow for an exact HDL source set while retaining independent step and self-check evidence.",
+    "side_effect_mode": "evidence-only",
+    "target_kinds": ["hdl-source-set"],
+    "locator_types": ["filesystem", "artifact", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/digital.hdl.self-check.valid/v1alpha1",
+    "statement": "The exact declared HDL source set built and executed under the selected language rules, and fresh request-bound evidence proves the required deterministic self-check conclusion.",
+    "non_goals": [
+      "Compilation or elaboration success alone does not establish design functionality.",
+      "A zero native exit status without the required self-check evidence is inconclusive.",
+      "This assertion does not establish synthesis, timing, physical, verification-closure, review, or signoff approval.",
+      "The operation does not mutate the authoritative HDL source set."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "Every required step completed in dependency order, required artifacts are fresh and bound to the exact sources, and the declared self-check conclusively passed.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "Source and optional file-list SHA-256 identities match the canonical request.",
+          "Library preparation, compilation, elaboration, execution, and collection step records are complete and dependency-consistent.",
+          "The required assertion or deterministic self-check marker has fresh bounded evidence with status pass.",
+          "The executable and log lineage are fresh, contained, stable, and retained."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Fresh request-bound diagnostics conclusively prove an HDL syntax, elaboration, assertion, or runtime design failure under the selected closed policy.",
+        "allowed_execution_statuses": ["completed", "failed"],
+        "required_evidence": [
+          "The failing step and its dependencies are identified without projecting later steps as successful.",
+          "Bounded diagnostics classify the failure as syntax, elaboration, assertion, or deterministic runtime failure.",
+          "The source lineage and relevant step log remain exact, fresh, and stable."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The workflow cannot justify pass or fail because it was unavailable, rejected, timed out, cancelled, ambiguous, stale, incomplete, over limit, or missing required self-check evidence.",
+        "allowed_execution_statuses": ["completed", "timed_out", "not_available", "invalid_request", "failed"],
+        "required_evidence": [
+          "The last truthful step state and bounded diagnostic reason are retained.",
+          "Missing, stale, partial, ambiguous, cancelled, or over-limit evidence is not promoted to pass or fail."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {
+        "role": "hdl.source-set",
+        "required": true,
+        "locator_types": ["filesystem", "artifact", "workspace"],
+        "identity_requirement": "content-digest",
+        "description": "An ordered source manifest whose regular-file members and order are bound by SHA-256.",
+        "extensions": {}
+      },
+      {
+        "role": "hdl.file-list",
+        "required": false,
+        "locator_types": ["filesystem", "artifact"],
+        "identity_requirement": "content-digest",
+        "description": "An optional declarative file list whose exact bytes and resolved source order are both bound.",
+        "extensions": {}
+      }
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/profiles/digital.hdl.simulate-v1alpha1.parameters.schema.json",
+      "title": "Digital HDL build and simulation parameters v1alpha1",
+      "type": "object",
+      "required": ["language", "standard", "top", "compile_options", "self_check", "step_timeout_ms", "extensions"],
+      "properties": {
+        "language": {"enum": ["verilog", "systemverilog", "vhdl"]},
+        "standard": {"enum": ["1364-2005", "1800-2017", "1800-2023", "1076-2008", "1076-2019"]},
+        "top": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]{0,199}$"},
+        "compile_options": {
+          "type": "object",
+          "required": ["optimization", "warning_policy", "defines", "extensions"],
+          "properties": {
+            "optimization": {"enum": ["none", "basic"]},
+            "warning_policy": {"enum": ["default", "strict"]},
+            "defines": {
+              "type": "array",
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:=[A-Za-z0-9_.+-]{1,128})?$", "maxLength": 256}
+            },
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "self_check": {
+          "type": "object",
+          "required": ["policy", "identity", "extensions"],
+          "properties": {
+            "policy": {"enum": ["assertion-required", "deterministic-marker"]},
+            "identity": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.:-]{0,199}$"},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "step_timeout_ms": {"type": "integer", "minimum": 1, "maximum": 3600000},
+        "emit_waveform": {"type": "boolean", "default": false},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "allOf": [
+        {"if": {"properties": {"language": {"const": "verilog"}}}, "then": {"properties": {"standard": {"const": "1364-2005"}}}},
+        {"if": {"properties": {"language": {"const": "systemverilog"}}}, "then": {"properties": {"standard": {"enum": ["1800-2017", "1800-2023"]}}}},
+        {"if": {"properties": {"language": {"const": "vhdl"}}}, "then": {"properties": {"standard": {"enum": ["1076-2008", "1076-2019"]}}}}
+      ],
+      "$defs": {
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "The source manifest is non-empty, ordered, contains only approved regular files, and binds each file's exact SHA-256 before any step starts.",
+      "An optional file list is declarative data only; includes, paths, and source order are resolved inside approved roots without shell or command text.",
+      "The declared top resolves to exactly one design unit; missing, duplicate, or ambiguous tops are rejected before compilation.",
+      "Only the closed compile-option vocabulary is accepted and requests cannot inject native arguments or actions.",
+      "Every step uses direct argv or a typed transport, inherits only host-approved context, and has independent timeout and cancellation handling."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/profiles/digital.hdl.simulate-v1alpha1.data.schema.json",
+      "title": "Digital HDL build and simulation normalized data v1alpha1",
+      "type": "object",
+      "required": ["language", "standard", "top", "steps", "self_check", "lineage", "overall", "extensions"],
+      "properties": {
+        "language": {"enum": ["verilog", "systemverilog", "vhdl"]},
+        "standard": {"enum": ["1364-2005", "1800-2017", "1800-2023", "1076-2008", "1076-2019"]},
+        "top": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]{0,199}$"},
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {"$ref": "#/$defs/step"}
+        },
+        "self_check": {
+          "type": "object",
+          "required": ["policy", "identity", "status", "evidence_sha256", "extensions"],
+          "properties": {
+            "policy": {"enum": ["assertion-required", "deterministic-marker"]},
+            "identity": {"type": "string", "maxLength": 200},
+            "status": {"enum": ["pass", "fail", "inconclusive"]},
+            "evidence_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "lineage": {
+          "type": "object",
+          "required": ["source_digests", "file_list_sha256", "executable_sha256", "log_sha256", "waveform_sha256", "extensions"],
+          "properties": {
+            "source_digests": {"type": "array", "maxItems": 4096, "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}},
+            "file_list_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "executable_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "log_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "waveform_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "overall": {"$ref": "#/$defs/dimensions"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "step": {
+          "type": "object",
+          "required": ["role", "depends_on", "execution_state", "artifact_readiness", "diagnostics", "extensions"],
+          "properties": {
+            "role": {"enum": ["library-preparation", "compilation", "elaboration", "execution", "artifact-collection"]},
+            "depends_on": {"type": "array", "maxItems": 4, "uniqueItems": true, "items": {"enum": ["library-preparation", "compilation", "elaboration", "execution", "artifact-collection"]}},
+            "execution_state": {"enum": ["not-started", "completed", "failed", "timed-out", "cancelled", "skipped"]},
+            "artifact_readiness": {"enum": ["ready", "missing", "stale", "invalid", "not-applicable", "unknown"]},
+            "diagnostics": {"type": "array", "maxItems": 256, "items": {"type": "string", "maxLength": 2000}},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "dimensions": {
+          "type": "object",
+          "required": ["dependency_readiness", "execution_state", "artifact_readiness", "engineering_conclusion", "workflow_review", "signoff_approval", "extensions"],
+          "properties": {
+            "dependency_readiness": {"enum": ["ready", "unready", "unknown"]},
+            "execution_state": {"enum": ["completed", "failed", "timed-out", "cancelled", "not-started"]},
+            "artifact_readiness": {"enum": ["ready", "missing", "stale", "invalid", "unknown"]},
+            "engineering_conclusion": {"enum": ["pass", "fail", "inconclusive", "not-evaluated"]},
+            "workflow_review": {"enum": ["unreviewed", "reviewed"]},
+            "signoff_approval": {"enum": ["not-requested", "pending", "approved", "rejected"]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.steps", "type": "array", "required_for": ["pass", "fail", "unknown"], "description": "Ordered bounded step records with explicit dependencies and independent execution and artifact states.", "bounds": "At most five closed step records and 256 bounded diagnostic strings per step.", "extensions": {}},
+      {"path": "data.self_check", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "The selected deterministic self-check policy, identity, conclusion, and evidence digest.", "extensions": {}},
+      {"path": "data.lineage", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Exact source, file-list, executable, log, and optional waveform SHA-256 lineage.", "extensions": {}},
+      {"path": "data.overall", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Independent readiness, execution, artifact, engineering, review, and signoff dimensions.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {"role": "hdl.source-manifest", "kind": "manifest", "required_for": ["pass", "fail", "unknown"], "freshness": "immutable-input", "integrity": ["Exact regular-file identities, ordering, sizes, and SHA-256 digests are stable through invocation."], "native_authority": "The host-owned snapshot is authoritative for the attempted workflow.", "extensions": {}},
+      {"role": "hdl.executable", "kind": "executable", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["The output is created in a fresh contained destination and hashed after stable close."], "native_authority": "The selected implementation identifies the executable produced by elaboration.", "extensions": {}},
+      {"role": "hdl.log", "kind": "log", "required_for": ["pass", "fail", "unknown"], "freshness": "fresh-per-invocation", "integrity": ["Bounded stdout and stderr retain step identity, truncation state, and SHA-256 digest."], "native_authority": "The typed step transport identifies the native diagnostic stream.", "extensions": {}},
+      {"role": "hdl.self-check", "kind": "report", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["The self-check record is request-bound and cannot be inferred solely from process exit status."], "native_authority": "The declared assertion or marker policy is the only authority for the self-check conclusion.", "extensions": {}},
+      {"role": "hdl.waveform", "kind": "waveform", "required_for": [], "freshness": "fresh-per-invocation", "integrity": ["An advertised waveform is bounded, contained, stable, and SHA-256 identified."], "native_authority": "The execution step identifies the optional native waveform output.", "extensions": {}}
+    ],
+    "integrity_rules": [
+      "Inputs are opened as regular files without following links and remain identity-stable through every dependent step.",
+      "Step outputs are fresh, contained, bounded, and hashed only after stable close.",
+      "Cancellation or timeout terminates only request-owned processes and retains truthful partial step records.",
+      "A zero exit status cannot substitute for the declared self-check evidence."
+    ],
+    "provenance_limitations": [
+      "This profile binds direct source and generated-artifact lineage but does not prove semantic equivalence to another HDL implementation.",
+      "Workflow review and signoff remain explicit human-controlled dimensions."
+    ],
+    "limits": {"max_log_bytes": 1048576, "max_artifact_bytes": 268435456, "max_artifact_count": 32, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {"id": "openada.feature/digital.hdl.language.verilog/v1alpha1", "parameter_path": "language", "parameter_values": ["verilog"], "request_effect": "Select the closed IEEE 1364-2005 language surface.", "conformance_case": "Compile and self-check a bounded Verilog fixture and reject mismatched standards.", "extensions": {}},
+    {"id": "openada.feature/digital.hdl.language.systemverilog/v1alpha1", "parameter_path": "language", "parameter_values": ["systemverilog"], "request_effect": "Select the closed IEEE 1800-2017 or 1800-2023 language surface.", "conformance_case": "Compile assertions and reject unsupported SystemVerilog features deterministically.", "extensions": {}},
+    {"id": "openada.feature/digital.hdl.language.vhdl/v1alpha1", "parameter_path": "language", "parameter_values": ["vhdl"], "request_effect": "Select the closed IEEE 1076-2008 or 1076-2019 language surface.", "conformance_case": "Compile and self-check a bounded VHDL fixture and reject mismatched standards.", "extensions": {}},
+    {"id": "openada.feature/digital.hdl.self-check.assertion/v1alpha1", "parameter_path": "self_check.policy", "parameter_values": ["assertion-required"], "request_effect": "Require fresh assertion evidence independent of process exit status.", "conformance_case": "Distinguish assertion pass, assertion failure, and zero-exit missing evidence.", "extensions": {}},
+    {"id": "openada.feature/digital.hdl.waveform/v1alpha1", "parameter_path": "emit_waveform", "parameter_values": [true], "request_effect": "Request one optional bounded waveform artifact with exact lineage.", "conformance_case": "Retain a fresh contained waveform and reject stale, linked, or oversized output.", "extensions": {}}
+  ],
+  "diagnostics": [
+    {"code": "hdl.request.invalid", "severity": "error", "condition": "The language, standard, top, option vocabulary, self-check, or source identity is invalid or ambiguous.", "next_action": "Correct the typed request; do not pass native options or command text.", "extensions": {}},
+    {"code": "hdl.compile.failed", "severity": "error", "condition": "Fresh diagnostics conclusively identify a syntax or language-rule failure.", "next_action": "Review the exact bound source and selected language revision.", "extensions": {}},
+    {"code": "hdl.elaboration.failed", "severity": "error", "condition": "The declared top cannot be elaborated or resolves ambiguously.", "next_action": "Correct the explicit top or source manifest without guessing another top.", "extensions": {}},
+    {"code": "hdl.assertion.failed", "severity": "error", "condition": "Fresh assertion evidence conclusively reports a design failure.", "next_action": "Inspect the bound assertion and waveform or log evidence.", "extensions": {}},
+    {"code": "hdl.self-check.missing", "severity": "warning", "condition": "Execution completed without the required self-check evidence.", "next_action": "Report inconclusive and retain the execution evidence; never infer pass from exit status.", "extensions": {}},
+    {"code": "hdl.workflow.incomplete", "severity": "warning", "condition": "A step timed out, was cancelled, was skipped, or has missing or stale artifacts.", "next_action": "Retain truthful partial records and clean up only request-owned processes and outputs.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.example.driver.hdl-alpha",
+      "native_product_id": "org.example.product.hdl-alpha",
+      "backend_name": "Deterministic fake HDL alpha pipeline",
+      "supported_features": [
+        "openada.feature/digital.hdl.language.verilog/v1alpha1",
+        "openada.feature/digital.hdl.language.systemverilog/v1alpha1",
+        "openada.feature/digital.hdl.self-check.assertion/v1alpha1",
+        "openada.feature/digital.hdl.waveform/v1alpha1"
+      ],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/digital.hdl.language.verilog/v1alpha1", "implementation": "Validate the exact source manifest, select only the Verilog standard pair, and execute the typed five-role fake pipeline.", "output_fact_paths": ["data.steps", "data.lineage", "data.overall"], "extensions": {}},
+        {"feature_id": "openada.feature/digital.hdl.language.systemverilog/v1alpha1", "implementation": "Validate the exact source manifest, select only a declared SystemVerilog standard, and execute the typed five-role fake pipeline.", "output_fact_paths": ["data.steps", "data.lineage", "data.overall"], "extensions": {}},
+        {"feature_id": "openada.feature/digital.hdl.self-check.assertion/v1alpha1", "implementation": "Emit a deterministic request-bound assertion record independently from the process exit status.", "output_fact_paths": ["data.self_check", "data.overall"], "extensions": {}},
+        {"feature_id": "openada.feature/digital.hdl.waveform/v1alpha1", "implementation": "Create one fresh bounded fake waveform in the request-owned output root and bind its SHA-256 lineage.", "output_fact_paths": ["data.lineage", "data.overall"], "extensions": {}}
+      ],
+      "native_actions": ["Resolve and snapshot the declared sources.", "Prepare, compile, elaborate, execute, and collect through typed bounded steps.", "Validate self-check and output lineage independently from native exit status."],
+      "artifact_bindings": [
+        {"native_kind": "Fake source snapshot", "canonical_role": "hdl.source-manifest", "extensions": {}},
+        {"native_kind": "Fake elaborated executable", "canonical_role": "hdl.executable", "extensions": {}},
+        {"native_kind": "Fake bounded step transcript", "canonical_role": "hdl.log", "extensions": {}},
+        {"native_kind": "Fake self-check report", "canonical_role": "hdl.self-check", "extensions": {}},
+        {"native_kind": "Fake waveform", "canonical_role": "hdl.waveform", "extensions": {}}
+      ],
+      "limitations": ["This invented backend is a deterministic public conformance fixture and does not advertise native availability."],
+      "extensions": {}
+    },
+    {
+      "driver_id": "org.example.driver.hdl-beta",
+      "native_product_id": "org.example.product.hdl-beta",
+      "backend_name": "Deterministic fake HDL beta pipeline",
+      "supported_features": [
+        "openada.feature/digital.hdl.language.vhdl/v1alpha1",
+        "openada.feature/digital.hdl.self-check.assertion/v1alpha1"
+      ],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/digital.hdl.language.vhdl/v1alpha1", "implementation": "Validate the exact source manifest, select only a declared VHDL standard, and execute an unrelated typed fake pipeline with the same normalized step roles.", "output_fact_paths": ["data.steps", "data.lineage", "data.overall"], "extensions": {}},
+        {"feature_id": "openada.feature/digital.hdl.self-check.assertion/v1alpha1", "implementation": "Emit an independently implemented deterministic request-bound assertion record.", "output_fact_paths": ["data.self_check", "data.overall"], "extensions": {}}
+      ],
+      "native_actions": ["Resolve and snapshot the declared VHDL sources.", "Prepare, analyze, elaborate, execute, and collect through typed bounded steps.", "Validate assertion evidence and artifact lineage."],
+      "artifact_bindings": [
+        {"native_kind": "Fake VHDL source snapshot", "canonical_role": "hdl.source-manifest", "extensions": {}},
+        {"native_kind": "Fake VHDL executable", "canonical_role": "hdl.executable", "extensions": {}},
+        {"native_kind": "Fake VHDL transcript", "canonical_role": "hdl.log", "extensions": {}},
+        {"native_kind": "Fake VHDL assertion report", "canonical_role": "hdl.self-check", "extensions": {}}
+      ],
+      "limitations": ["This invented backend is a deterministic public conformance fixture and does not advertise native availability.", "The beta fixture does not implement optional waveform collection."],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["exact source and optional file-list identity", "language and standard pairing", "closed compile options and explicit top", "ordered step and dependency semantics", "self-check truth table", "independent readiness, execution, artifact, engineering, review, and signoff dimensions", "fresh executable, log, self-check, and optional waveform lineage"],
+    "change_policy": "Any change to accepted languages, standard pairing, option vocabulary, step roles, self-check semantics, result dimensions, evidence limits, or status meaning requires a new profile identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

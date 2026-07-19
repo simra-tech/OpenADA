@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/artifact.transform/v1alpha1",
+    "title": "Artifact transform",
+    "summary": "Compile or convert one exact immutable input into one fresh contained output under a revisioned typed transform while leaving design, performance, and equivalence status not evaluated.",
+    "side_effect_mode": "evidence-only",
+    "target_kinds": ["transform-input"],
+    "locator_types": ["filesystem", "artifact", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/artifact.transform.valid/v1alpha1",
+    "statement": "The declared transform consumed the exact input and produced one fresh, contained, structurally valid output in the declared format and revision.",
+    "non_goals": [
+      "A compiled or converted artifact is not automatically a design functionality or performance pass.",
+      "Transform success does not prove semantic, behavioral, geometric, or numerical equivalence to the input.",
+      "The request cannot supply native command, script, plugin, or arbitrary option text.",
+      "Review and signoff approval remain independent and are never inferred from output creation."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "The exact input was consumed by the negotiated transform, and one fresh bounded output satisfies the declared format, containment, identity, and lineage rules.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "The held-open input SHA-256 matches the request and remains stable through transformation.",
+          "Transform and input/output format revisions match the exact negotiated mapping.",
+          "The output destination was absent before invocation and the stable regular output is fresh, contained, bounded, and SHA-256 identified.",
+          "Engineering and equivalence evaluations are explicitly not-evaluated."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Stable request-bound evidence conclusively proves the exact input is structurally invalid for the selected transform or the produced output violates the declared format.",
+        "allowed_execution_statuses": ["completed", "failed"],
+        "required_evidence": [
+          "The exact input identity and selected transform remain unambiguous.",
+          "A bounded structural diagnostic identifies the rejected input or invalid output rule.",
+          "No timeout, cancellation, mutation, containment failure, or resource limit undermines the classification."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The transform cannot justify pass or structural fail because inputs, mapping, backend identity, execution, output freshness, containment, format validation, bounds, or cleanup are unavailable, ambiguous, stale, timed out, cancelled, or incomplete.",
+        "allowed_execution_statuses": ["completed", "timed_out", "not_available", "invalid_request", "failed"],
+        "required_evidence": [
+          "The last truthful transform, output, and cleanup state plus a bounded reason are retained.",
+          "A process exit status or readable output alone is never promoted to pass."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {"role": "transform.input", "required": true, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "One exact immutable bounded input artifact or closed workspace snapshot.", "extensions": {}},
+      {"role": "transform.output-root", "required": true, "locator_types": ["filesystem", "workspace"], "identity_requirement": "snapshot", "description": "One approved output root in which the declared relative destination must not already exist.", "extensions": {}}
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/profiles/artifact.transform-v1alpha1.parameters.schema.json",
+      "title": "Artifact transform parameters v1alpha1",
+      "type": "object",
+      "required": ["input_sha256", "transform", "input_format", "output_format", "output_role", "output_relative_path", "maximum_output_bytes", "options", "extensions"],
+      "properties": {
+        "input_sha256": {"$ref": "#/$defs/digest"},
+        "transform": {"$ref": "#/$defs/revisionedIdentity"},
+        "input_format": {"$ref": "#/$defs/revisionedIdentity"},
+        "output_format": {"$ref": "#/$defs/revisionedIdentity"},
+        "output_role": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$", "maxLength": 120},
+        "output_relative_path": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]{1,512}$"},
+        "maximum_output_bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+        "options": {
+          "type": "object",
+          "required": ["normalization", "diagnostic_policy", "extensions"],
+          "properties": {
+            "normalization": {"enum": ["none", "deterministic"]},
+            "diagnostic_policy": {"enum": ["errors-only", "warnings-and-errors"]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "revisionedIdentity": {
+          "type": "object",
+          "required": ["id", "revision", "extensions"],
+          "properties": {
+            "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$", "maxLength": 120},
+            "revision": {"type": "string", "pattern": "^v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$", "maxLength": 32},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "The input is opened without following links, hashed and transformed from the same held-open regular file or immutable workspace snapshot, and remains stable.",
+      "The output path resolves inside the approved root without links and must be absent before invocation; existing output is rejected rather than overwritten.",
+      "The exact trusted mapping, not the request, selects all native actions and direct arguments for transform and format revisions.",
+      "The output is collected only after stable close, checked against maximum_output_bytes, structurally validated, and hashed.",
+      "Timeout or cancellation terminates only request-owned work and leaves the authoritative input unchanged.",
+      "Engineering, performance, and equivalence evaluations are always not-evaluated in this revision."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/profiles/artifact.transform-v1alpha1.data.schema.json",
+      "title": "Artifact transform normalized data v1alpha1",
+      "type": "object",
+      "required": ["input", "transform", "output", "freshness", "containment", "format_validation", "engineering_evaluation", "equivalence_evaluation", "dimensions", "extensions"],
+      "properties": {
+        "input": {"oneOf": [{"$ref": "#/$defs/artifactIdentity"}, {"type": "null"}]},
+        "transform": {"$ref": "#/$defs/revisionedIdentity"},
+        "output": {"oneOf": [{"$ref": "#/$defs/artifactIdentity"}, {"type": "null"}]},
+        "freshness": {"enum": ["fresh", "preexisting", "stale", "unknown"]},
+        "containment": {"enum": ["contained", "escaped", "ambiguous", "unknown"]},
+        "format_validation": {"enum": ["valid", "invalid", "not-run", "inconclusive"]},
+        "engineering_evaluation": {"const": "not-evaluated"},
+        "equivalence_evaluation": {"const": "not-evaluated"},
+        "dimensions": {"$ref": "#/$defs/dimensions"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "revisionedIdentity": {
+          "type": "object",
+          "required": ["id", "revision", "extensions"],
+          "properties": {
+            "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$", "maxLength": 120},
+            "revision": {"type": "string", "pattern": "^v[0-9]+(?:(?:alpha|beta|rc)[1-9][0-9]*)?$", "maxLength": 32},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "artifactIdentity": {
+          "type": "object",
+          "required": ["role", "format", "bytes", "sha256", "extensions"],
+          "properties": {
+            "role": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$", "maxLength": 120},
+            "format": {"$ref": "#/$defs/revisionedIdentity"},
+            "bytes": {"type": "integer", "minimum": 0, "maximum": 1073741824},
+            "sha256": {"$ref": "#/$defs/digest"},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "dimensions": {
+          "type": "object",
+          "required": ["dependency_readiness", "execution_state", "artifact_readiness", "engineering_conclusion", "workflow_review", "signoff_approval", "extensions"],
+          "properties": {
+            "dependency_readiness": {"enum": ["ready", "unready", "unknown"]},
+            "execution_state": {"enum": ["completed", "failed", "timed-out", "cancelled", "not-started"]},
+            "artifact_readiness": {"enum": ["ready", "missing", "stale", "invalid", "unknown"]},
+            "engineering_conclusion": {"const": "not-evaluated"},
+            "workflow_review": {"enum": ["unreviewed", "reviewed"]},
+            "signoff_approval": {"enum": ["not-requested", "pending", "approved", "rejected"]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.input", "type": ["object", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Exact input role, format revision, size, and SHA-256 identity when available.", "extensions": {}},
+      {"path": "data.transform", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Exact trusted transform identity and revision.", "extensions": {}},
+      {"path": "data.output", "type": ["object", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Declared output role, format revision, size, and stable SHA-256 identity when available.", "extensions": {}},
+      {"path": "data.freshness", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Independent output freshness conclusion.", "extensions": {}},
+      {"path": "data.containment", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Independent output containment conclusion.", "extensions": {}},
+      {"path": "data.format_validation", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Independent structural output-format validation conclusion.", "extensions": {}},
+      {"path": "data.engineering_evaluation", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Always not-evaluated; transform success never becomes an engineering pass.", "extensions": {}},
+      {"path": "data.equivalence_evaluation", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "Always not-evaluated; transform success never proves equivalence.", "extensions": {}},
+      {"path": "data.dimensions", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Independent readiness, execution, artifact, engineering, review, and signoff dimensions.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {"role": "transform.input", "kind": "artifact", "required_for": ["pass", "fail", "unknown"], "freshness": "immutable-input", "integrity": ["The input is held open without following links, bounded, hashed, consumed from the same identity, and checked stable after transformation."], "native_authority": "The exact immutable input bytes are authoritative for the transform attempt only.", "extensions": {}},
+      {"role": "transform.output", "kind": "artifact", "required_for": ["pass", "fail", "unknown"], "freshness": "fresh-per-invocation", "integrity": ["The output destination was absent, remains inside the approved root, is a stable bounded regular file, passes declared format validation, and is SHA-256 identified."], "native_authority": "The selected transform mapping identifies the native output; OpenADA owns freshness and containment checks.", "extensions": {}},
+      {"role": "transform.manifest", "kind": "manifest", "required_for": ["pass", "fail", "unknown"], "freshness": "fresh-per-invocation", "integrity": ["The manifest binds request, mapping, input, output, format revisions, backend identity, bounds, and cleanup."], "native_authority": "The host-owned manifest is authoritative for transform lineage.", "extensions": {}},
+      {"role": "transform.log", "kind": "log", "required_for": ["pass", "fail", "unknown"], "freshness": "fresh-per-invocation", "integrity": ["Bounded diagnostics retain backend identity, exit, timeout, truncation, and structural validation state."], "native_authority": "The selected implementation owns native diagnostics but not engineering, equivalence, review, or signoff conclusions.", "extensions": {}}
+    ],
+    "integrity_rules": [
+      "Inputs remain immutable, outputs are fail-if-present and contained, and no links or special files are accepted.",
+      "Only the trusted exact mapping selects direct native arguments or typed transport actions.",
+      "Output freshness, containment, structural format validation, and cleanup are verified independently from process completion.",
+      "Engineering, performance, equivalence, workflow review, and signoff are never inferred from transformation success."
+    ],
+    "provenance_limitations": [
+      "This profile records direct transform lineage but does not establish semantic or engineering equivalence.",
+      "The correctness of upstream input generation and downstream artifact use remains outside this profile."
+    ],
+    "limits": {"max_log_bytes": 1048576, "max_artifact_bytes": 1073741824, "max_artifact_count": 4, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {"id": "openada.feature/artifact.transform.compilation/v1alpha1", "parameter_path": "transform.id", "parameter_values": ["compile"], "request_effect": "Select a trusted revisioned compiler mapping for one declared input and output format pair.", "conformance_case": "Cover success, structural input failure, stale output, timeout, cancellation, containment, limits, and cleanup.", "extensions": {}},
+    {"id": "openada.feature/artifact.transform.conversion/v1alpha1", "parameter_path": "transform.id", "parameter_values": ["convert"], "request_effect": "Select a trusted revisioned format-conversion mapping for one declared input and output format pair.", "conformance_case": "Cover success, unsupported revision, invalid output, stale output, containment, limits, and deterministic replay.", "extensions": {}}
+  ],
+  "diagnostics": [
+    {"code": "transform.request.invalid", "severity": "error", "condition": "The transform, format, input identity, output role, relative path, option, or bound is invalid or unsupported.", "next_action": "Correct the closed typed request; do not provide native command or option text.", "extensions": {}},
+    {"code": "transform.input.changed", "severity": "error", "condition": "The input path, held-open identity, size, or SHA-256 changed during transformation.", "next_action": "Reject the result and retry only with one immutable approved input.", "extensions": {}},
+    {"code": "transform.output.preexisting", "severity": "error", "condition": "The declared output destination already exists.", "next_action": "Choose a fresh request-owned destination; never overwrite or reuse output.", "extensions": {}},
+    {"code": "transform.output.invalid", "severity": "error", "condition": "The output is missing, linked, outside containment, unstable, over limit, or invalid for the declared format revision.", "next_action": "Reject the transform conclusion and retain bounded diagnostics.", "extensions": {}},
+    {"code": "transform.execution.incomplete", "severity": "warning", "condition": "Execution timed out, was cancelled, failed generically, or cleanup remains unknown.", "next_action": "Report inconclusive, preserve truthful partial evidence, and clean only request-owned work.", "extensions": {}},
+    {"code": "transform.engineering.not-evaluated", "severity": "info", "condition": "A fresh structurally valid transformed artifact was created.", "next_action": "Run a separate semantic or engineering profile before making functionality, performance, equivalence, review, or signoff claims.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.example.driver.artifact-compiler",
+      "native_product_id": "org.example.product.artifact-compiler",
+      "backend_name": "Deterministic fake artifact compiler",
+      "supported_features": ["openada.feature/artifact.transform.compilation/v1alpha1"],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/artifact.transform.compilation/v1alpha1", "implementation": "Validate the closed compile transform and format pair, consume the exact held-open input, and create one fresh deterministic fake compiled artifact.", "output_fact_paths": ["data.input", "data.transform", "data.output", "data.freshness", "data.containment", "data.format_validation", "data.engineering_evaluation", "data.equivalence_evaluation", "data.dimensions"], "extensions": {}}
+      ],
+      "native_actions": ["Resolve, bound, and hash the immutable input.", "Invoke the typed fake compiler selected by the exact trusted mapping.", "Validate, bound, hash, and manifest the fresh contained output."],
+      "artifact_bindings": [
+        {"native_kind": "Fake compiler input", "canonical_role": "transform.input", "extensions": {}},
+        {"native_kind": "Fake compiled output", "canonical_role": "transform.output", "extensions": {}},
+        {"native_kind": "Fake compilation manifest", "canonical_role": "transform.manifest", "extensions": {}},
+        {"native_kind": "Fake compiler transcript", "canonical_role": "transform.log", "extensions": {}}
+      ],
+      "limitations": ["This invented backend is a deterministic public conformance fixture and does not advertise native availability.", "No semantic or engineering equivalence is evaluated."],
+      "extensions": {}
+    },
+    {
+      "driver_id": "org.example.driver.artifact-converter",
+      "native_product_id": "org.example.product.artifact-converter",
+      "backend_name": "Deterministic fake artifact converter",
+      "supported_features": ["openada.feature/artifact.transform.conversion/v1alpha1"],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/artifact.transform.conversion/v1alpha1", "implementation": "Validate the closed conversion and format pair, consume the exact held-open input, and create one fresh deterministic fake converted artifact.", "output_fact_paths": ["data.input", "data.transform", "data.output", "data.freshness", "data.containment", "data.format_validation", "data.engineering_evaluation", "data.equivalence_evaluation", "data.dimensions"], "extensions": {}}
+      ],
+      "native_actions": ["Resolve, bound, and hash the immutable input.", "Invoke the typed fake converter selected by the exact trusted mapping.", "Validate, bound, hash, and manifest the fresh contained output."],
+      "artifact_bindings": [
+        {"native_kind": "Fake converter input", "canonical_role": "transform.input", "extensions": {}},
+        {"native_kind": "Fake converted output", "canonical_role": "transform.output", "extensions": {}},
+        {"native_kind": "Fake conversion manifest", "canonical_role": "transform.manifest", "extensions": {}},
+        {"native_kind": "Fake converter transcript", "canonical_role": "transform.log", "extensions": {}}
+      ],
+      "limitations": ["This invented backend is a deterministic public conformance fixture and does not advertise native availability.", "No semantic or engineering equivalence is evaluated."],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["exact input identity", "trusted transform and format revisions", "closed options", "fresh fail-if-present output", "containment and stable SHA-256 identity", "structural output validation", "bounded diagnostics and cleanup", "engineering and equivalence not-evaluated semantics", "independent readiness, execution, artifact, review, and signoff dimensions"],
+    "change_policy": "Any change to transform selection, format revision, option vocabulary, output freshness, containment, validation, evidence limits, engineering/equivalence semantics, or status meaning requires a new profile identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

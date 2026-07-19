@@ -1,0 +1,286 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/network.parameters.extract/v1alpha1",
+    "title": "Network-parameter series extraction",
+    "summary": "Extract selected complex two-port network-parameter series from one immutable bounded ASCII interchange artifact without depending on a simulation result envelope.",
+    "side_effect_mode": "read-only",
+    "target_kinds": ["network-parameter-artifact"],
+    "locator_types": ["filesystem", "artifact"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/network.parameters.structurally-valid/v1alpha1",
+    "statement": "The digest-bound source is a structurally valid supported two-port network-parameter artifact and the selected series were normalized exactly and reproducibly.",
+    "non_goals": [
+      "Structural extraction does not prove that any circuit, electromagnetic, device, or specification objective passed.",
+      "This assertion does not claim that the source artifact was produced by a simulation or by a particular product.",
+      "This assertion does not perform interpolation, extrapolation, renormalization, de-embedding, or port remapping.",
+      "Workflow review and signoff approval remain independent and are not inferred from parse success."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "The exact bounded two-port ASCII artifact satisfies the declared revision, encoding, ordering, numeric, impedance, and containment rules, and an independent parser agrees on the normalized digest.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "The held-open regular-file identity and SHA-256 match the request before and after bounded parsing.",
+          "The parameter family is S, the port count is exactly two, and every selected matrix element has one value per strictly increasing frequency.",
+          "All frequencies normalize exactly to finite hertz and all values normalize to finite Cartesian components.",
+          "An independent parser comparison reports agree for the exact normalized-series digest."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Stable request-bound bytes conclusively violate the supported format, family, port, frequency, impedance, record, numeric, or selected-series rules.",
+        "allowed_execution_statuses": ["completed", "failed"],
+        "required_evidence": [
+          "The source SHA-256 and held-open identity remain stable through classification.",
+          "A bounded diagnostic identifies the exact structural rule that the artifact violates.",
+          "No path mutation, truncation, resource limit, or parser disagreement undermines the conclusion."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The source or result cannot justify structural pass or fail because it is unavailable, linked outside containment, mutated, over limit, unsupported, incomplete due to resource failure, or disputed by the independent parser.",
+        "allowed_execution_statuses": ["completed", "timed_out", "not_available", "invalid_request", "failed"],
+        "required_evidence": [
+          "The exact refusal, mutation, limit, unsupported revision, or parser-disagreement reason is retained.",
+          "No partial or unverified series is promoted to structurally valid."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {
+        "role": "network.source",
+        "required": true,
+        "locator_types": ["filesystem", "artifact"],
+        "identity_requirement": "content-digest",
+        "description": "One approved regular-file network-parameter artifact whose exact bytes are bound by SHA-256.",
+        "extensions": {}
+      }
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/profiles/network.parameters.extract-v1alpha1.parameters.schema.json",
+      "title": "Network-parameter series extraction parameters v1alpha1",
+      "type": "object",
+      "required": ["source_sha256", "format", "parameter_family", "source_encoding", "source_frequency_unit", "ports", "matrix_elements", "max_points", "extensions"],
+      "properties": {
+        "source_sha256": {"$ref": "#/$defs/digest"},
+        "format": {
+          "type": "object",
+          "required": ["family", "revision", "extensions"],
+          "properties": {
+            "family": {"const": "two-port-ascii-interchange"},
+            "revision": {"const": "1.0"},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "parameter_family": {"const": "S"},
+        "source_encoding": {"enum": ["real-imaginary", "magnitude-angle", "decibel-angle"]},
+        "source_frequency_unit": {"enum": ["Hz", "kHz", "MHz", "GHz"]},
+        "ports": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,119}$"}
+        },
+        "matrix_elements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {"enum": ["S11", "S12", "S21", "S22"]}
+        },
+        "max_points": {"type": "integer", "minimum": 1, "maximum": 1000000},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "The host resolves the source inside an approved root, rejects symlinks and non-regular files, and parses through the same held-open descriptor that is hashed.",
+      "Comments and continued records are accepted only according to the declared 1.0 grammar; empty, incomplete, or excess-token records are rejected.",
+      "The source option record must agree with the requested S family, two-port count, encoding, frequency unit, and one finite strictly positive reference impedance.",
+      "Frequency values must be finite, strictly increasing after exact unit scaling, non-duplicated, and within max_points.",
+      "Magnitude, angle, decibel, real, and imaginary tokens must be finite and must not overflow during Cartesian normalization.",
+      "Every requested matrix element retains its response-port and stimulus-port identity and exactly one value per frequency.",
+      "The normalized-series digest is computed from one published canonical JSON representation and independently reproduced before pass."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/profiles/network.parameters.extract-v1alpha1.data.schema.json",
+      "title": "Network-parameter series extraction normalized data v1alpha1",
+      "type": "object",
+      "required": ["format_revision", "source_sha256", "parameter_family", "source_encoding", "ports", "reference_impedance_ohm", "frequency_hz", "series", "normalized_series_sha256", "comparison", "dimensions", "extensions"],
+      "properties": {
+        "format_revision": {"const": "two-port-ascii-interchange/1.0"},
+        "source_sha256": {"$ref": "#/$defs/digest"},
+        "parameter_family": {"const": "S"},
+        "source_encoding": {"enum": ["real-imaginary", "magnitude-angle", "decibel-angle"]},
+        "ports": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"type": "string", "maxLength": 120}},
+        "reference_impedance_ohm": {"oneOf": [{"type": "number", "exclusiveMinimum": 0, "maximum": 1e15}, {"type": "null"}]},
+        "frequency_hz": {"type": "array", "maxItems": 1000000, "uniqueItems": true, "items": {"type": "number", "minimum": 0, "maximum": 1e30}},
+        "series": {"type": "array", "maxItems": 4, "items": {"$ref": "#/$defs/series"}},
+        "normalized_series_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+        "comparison": {
+          "type": "object",
+          "required": ["parser_identity", "status", "normalized_series_sha256", "extensions"],
+          "properties": {
+            "parser_identity": {"type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$", "maxLength": 200},
+            "status": {"enum": ["agree", "disagree", "not-run"]},
+            "normalized_series_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "dimensions": {"$ref": "#/$defs/dimensions"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "cartesian": {
+          "type": "object",
+          "required": ["real", "imaginary", "extensions"],
+          "properties": {
+            "real": {"type": "number", "minimum": -1e300, "maximum": 1e300},
+            "imaginary": {"type": "number", "minimum": -1e300, "maximum": 1e300},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "series": {
+          "type": "object",
+          "required": ["matrix_element", "response_port", "stimulus_port", "values", "extensions"],
+          "properties": {
+            "matrix_element": {"enum": ["S11", "S12", "S21", "S22"]},
+            "response_port": {"type": "string", "maxLength": 120},
+            "stimulus_port": {"type": "string", "maxLength": 120},
+            "values": {"type": "array", "minItems": 1, "maxItems": 1000000, "items": {"$ref": "#/$defs/cartesian"}},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "dimensions": {
+          "type": "object",
+          "required": ["dependency_readiness", "execution_state", "artifact_readiness", "engineering_conclusion", "workflow_review", "signoff_approval", "extensions"],
+          "properties": {
+            "dependency_readiness": {"enum": ["ready", "unready", "unknown"]},
+            "execution_state": {"enum": ["completed", "failed", "timed-out", "cancelled", "not-started"]},
+            "artifact_readiness": {"enum": ["ready", "missing", "stale", "invalid", "unknown"]},
+            "engineering_conclusion": {"enum": ["structurally-valid", "structurally-invalid", "inconclusive", "not-evaluated"]},
+            "workflow_review": {"enum": ["unreviewed", "reviewed"]},
+            "signoff_approval": {"enum": ["not-requested", "pending", "approved", "rejected"]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.source_sha256", "type": "string", "required_for": ["pass", "fail", "unknown"], "description": "The exact held-open source artifact digest.", "extensions": {}},
+      {"path": "data.frequency_hz", "type": "array", "unit": "Hz", "required_for": ["pass"], "description": "The strictly increasing ordered frequency grid normalized to hertz.", "bounds": "Between one and one million finite nonnegative points.", "extensions": {}},
+      {"path": "data.series", "type": "array", "required_for": ["pass"], "description": "Selected matrix elements with explicit response/stimulus port identity and Cartesian values.", "bounds": "At most four series; each has exactly one value per frequency.", "extensions": {}},
+      {"path": "data.normalized_series_sha256", "type": ["string", "null"], "required_for": ["pass"], "description": "SHA-256 of the canonical normalized frequency, port, impedance, and Cartesian series representation.", "extensions": {}},
+      {"path": "data.comparison", "type": "object", "required_for": ["pass", "unknown"], "description": "Independent parser identity and normalized-digest agreement state.", "extensions": {}},
+      {"path": "data.dimensions", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Independent readiness, execution, artifact, structural, review, and signoff dimensions.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {"role": "network.source", "kind": "network-parameter", "required_for": ["pass", "fail", "unknown"], "freshness": "immutable-input", "integrity": ["The approved regular file is opened without following links, bounded, hashed, parsed from the same descriptor, and identity-checked after parsing."], "native_authority": "The exact source bytes are authoritative for structural extraction only.", "extensions": {}},
+      {"role": "network.normalized", "kind": "normalized-series", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["Canonical JSON bytes bind revision, source digest, ports, impedance, frequency grid, Cartesian series, and limits."], "native_authority": "The published normalization algorithm defines the canonical series digest.", "extensions": {}},
+      {"role": "network.parser-report", "kind": "report", "required_for": ["pass", "fail", "unknown"], "freshness": "fresh-per-invocation", "integrity": ["The report is bounded and binds parser identity, request, source digest, record counts, and diagnostics."], "native_authority": "The selected registered parser owns its structural classification.", "extensions": {}},
+      {"role": "network.comparison", "kind": "report", "required_for": ["pass", "unknown"], "freshness": "fresh-per-invocation", "integrity": ["An independent implementation reports its parser identity and normalized digest for the same source bytes."], "native_authority": "Agreement is authoritative only for reproducibility, not engineering performance.", "extensions": {}}
+    ],
+    "integrity_rules": [
+      "No path is reopened by name after hashing; parsing and hashing use the same held-open regular-file descriptor.",
+      "The source and normalized artifacts remain within explicit byte, point, record, token, and diagnostic limits.",
+      "Canonical normalization rejects nonfinite or overflowing intermediate and final values.",
+      "Parser disagreement makes the result inconclusive and never falls back to one preferred value."
+    ],
+    "provenance_limitations": [
+      "The source artifact's upstream creation process is outside this extraction profile unless separately bound by provenance.",
+      "Structural validity does not imply simulation, electromagnetic, device, specification, review, or signoff status."
+    ],
+    "limits": {"max_log_bytes": 524288, "max_artifact_bytes": 268435456, "max_artifact_count": 4, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {"id": "openada.feature/network.encoding.real-imaginary/v1alpha1", "parameter_path": "source_encoding", "parameter_values": ["real-imaginary"], "request_effect": "Normalize source real and imaginary pairs directly to Cartesian components.", "conformance_case": "Cover continued records, comments, scaling, finite bounds, and independent digest agreement.", "extensions": {}},
+    {"id": "openada.feature/network.encoding.magnitude-angle/v1alpha1", "parameter_path": "source_encoding", "parameter_values": ["magnitude-angle"], "request_effect": "Normalize linear magnitude and degree angle pairs to Cartesian components.", "conformance_case": "Cover signed angles, zero magnitude, overflow prevention, and independent digest agreement.", "extensions": {}},
+    {"id": "openada.feature/network.encoding.decibel-angle/v1alpha1", "parameter_path": "source_encoding", "parameter_values": ["decibel-angle"], "request_effect": "Normalize decibel magnitude and degree angle pairs to Cartesian components.", "conformance_case": "Cover bounded decibel conversion, overflow rejection, and independent digest agreement.", "extensions": {}}
+  ],
+  "diagnostics": [
+    {"code": "network.source.unavailable", "severity": "error", "condition": "The source is missing, not a regular file, linked, outside the approved root, unreadable, or changed.", "next_action": "Provide one stable approved regular-file artifact and its exact SHA-256.", "extensions": {}},
+    {"code": "network.format.unsupported", "severity": "error", "condition": "The source declares an unsupported family, revision, port count, or representation.", "next_action": "Use the declared strict two-port ASCII interchange revision and encoding.", "extensions": {}},
+    {"code": "network.record.incomplete", "severity": "error", "condition": "A data or continued record is empty, incomplete, duplicated, or has excess tokens.", "next_action": "Correct the immutable source artifact; do not guess missing values.", "extensions": {}},
+    {"code": "network.frequency.invalid", "severity": "error", "condition": "A normalized frequency is nonfinite, negative, duplicated, decreasing, overflowing, or over the point limit.", "next_action": "Correct the ordered source frequency grid or reduce it within bounds.", "extensions": {}},
+    {"code": "network.numeric.invalid", "severity": "error", "condition": "A numeric token, impedance, or Cartesian conversion is nonfinite, invalid, or overflowing.", "next_action": "Correct the exact source numeric record without coercion or clipping.", "extensions": {}},
+    {"code": "network.comparison.disagrees", "severity": "warning", "condition": "The independent parser produces a different normalized digest or cannot complete.", "next_action": "Report inconclusive and reconcile parser semantics before trusting extracted series.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.example.driver.network-alpha",
+      "native_product_id": "org.example.product.network-alpha",
+      "backend_name": "Deterministic fake network parser alpha",
+      "supported_features": ["openada.feature/network.encoding.real-imaginary/v1alpha1", "openada.feature/network.encoding.magnitude-angle/v1alpha1"],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/network.encoding.real-imaginary/v1alpha1", "implementation": "Parse bounded strict records and normalize finite source pairs directly to canonical Cartesian values.", "output_fact_paths": ["data.frequency_hz", "data.series", "data.normalized_series_sha256", "data.dimensions"], "extensions": {}},
+        {"feature_id": "openada.feature/network.encoding.magnitude-angle/v1alpha1", "implementation": "Parse bounded strict records and convert finite linear magnitude and degree angle pairs to canonical Cartesian values.", "output_fact_paths": ["data.frequency_hz", "data.series", "data.normalized_series_sha256", "data.dimensions"], "extensions": {}}
+      ],
+      "native_actions": ["Open, bound, and hash the approved source without following links.", "Parse the strict two-port grammar and normalize selected series.", "Emit canonical bytes, digest, and bounded structural diagnostics."],
+      "artifact_bindings": [
+        {"native_kind": "Fake strict two-port ASCII source", "canonical_role": "network.source", "extensions": {}},
+        {"native_kind": "Fake canonical series JSON", "canonical_role": "network.normalized", "extensions": {}},
+        {"native_kind": "Fake alpha parser report", "canonical_role": "network.parser-report", "extensions": {}}
+      ],
+      "limitations": ["This invented parser is a deterministic public conformance fixture and does not advertise native availability.", "Only the declared strict two-port revision is supported."],
+      "extensions": {}
+    },
+    {
+      "driver_id": "org.example.driver.network-beta",
+      "native_product_id": "org.example.product.network-beta",
+      "backend_name": "Deterministic fake network parser beta",
+      "supported_features": ["openada.feature/network.encoding.real-imaginary/v1alpha1", "openada.feature/network.encoding.decibel-angle/v1alpha1"],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/network.encoding.real-imaginary/v1alpha1", "implementation": "Independently tokenize strict records and reproduce the canonical Cartesian series digest.", "output_fact_paths": ["data.comparison", "data.normalized_series_sha256", "data.dimensions"], "extensions": {}},
+        {"feature_id": "openada.feature/network.encoding.decibel-angle/v1alpha1", "implementation": "Independently parse bounded decibel and degree records, reject overflow, and reproduce canonical Cartesian series.", "output_fact_paths": ["data.frequency_hz", "data.series", "data.comparison", "data.normalized_series_sha256", "data.dimensions"], "extensions": {}}
+      ],
+      "native_actions": ["Open and hash the same approved bytes independently.", "Parse the strict two-port grammar with an unrelated deterministic implementation.", "Report the canonical normalized digest for comparison."],
+      "artifact_bindings": [
+        {"native_kind": "Fake strict two-port ASCII source", "canonical_role": "network.source", "extensions": {}},
+        {"native_kind": "Fake beta parser report", "canonical_role": "network.comparison", "extensions": {}}
+      ],
+      "limitations": ["This invented parser is a deterministic public conformance fixture and does not advertise native availability.", "The beta fixture exists for independent normalization comparison and supports only declared encodings."],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["held-open source identity and SHA-256", "strict two-port ASCII interchange revision", "S-parameter and port-direction identity", "frequency-unit normalization and strict ordering", "Cartesian normalization for three encodings", "reference impedance semantics", "canonical normalized-series digest", "independent parser comparison", "independent structural, review, and signoff dimensions"],
+    "change_policy": "Any change to the accepted grammar, record continuation, comments, units, parameter family, port order, encodings, numeric bounds, canonicalization, comparison rule, evidence limits, or structural status meaning requires a new profile identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

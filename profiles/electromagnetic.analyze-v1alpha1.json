@@ -1,0 +1,388 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/electromagnetic.analyze/v1alpha1",
+    "title": "Electromagnetic analysis",
+    "summary": "Run one bounded vendor-neutral planar or three-dimensional electromagnetic analysis with explicit geometry, materials, ports, boundaries, mesh, sweep, solver, and convergence identities.",
+    "side_effect_mode": "evidence-only",
+    "target_kinds": ["electromagnetic-model"],
+    "locator_types": ["filesystem", "artifact", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/electromagnetic.evidence.valid/v1alpha1",
+    "statement": "The exact declared electromagnetic model completed the selected analysis and produced fresh, structurally valid, converged field or network evidence bound to every declared identity.",
+    "non_goals": [
+      "A valid converged analysis does not prove that any design or performance specification passed.",
+      "Reference comparison facts remain separate from solver convergence and are never inferred from process completion.",
+      "The profile does not encode a product-specific project, database, material library, or meshing vocabulary.",
+      "The assertion does not establish manufacturing, safety, compliance, review, or signoff approval."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "The requested model completed with stable exact inputs, fresh bounded artifacts, an unambiguous backend identity, and convergence evidence satisfying the declared policy.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "Geometry, materials, ports, boundaries, mesh, sweep, solver, and convergence identities exactly match the request.",
+          "The requested planar or three-dimensional feature and every emitted artifact role were explicitly negotiated.",
+          "The solver report proves the declared convergence metric met its threshold within the pass limit.",
+          "Frequency grid and port identities agree across normalized facts and fresh field or network artifacts."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Fresh request-bound solver evidence conclusively proves non-convergence or a required reference comparison failure under the exact declared policy.",
+        "allowed_execution_statuses": ["completed", "failed"],
+        "required_evidence": [
+          "The exact input and backend identities remain stable and every diagnostic is bounded.",
+          "The convergence report proves the pass limit was reached without meeting the threshold, or the required reference comparison proves mismatch.",
+          "A generic native error or nonzero exit alone is not classified as engineering fail."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The analysis cannot justify pass or fail because dependencies, authorization, features, inputs, convergence evidence, artifacts, identity, bounds, or comparisons are missing, ambiguous, stale, unsupported, timed out, or cancelled.",
+        "allowed_execution_statuses": ["completed", "timed_out", "not_available", "invalid_request", "failed"],
+        "required_evidence": [
+          "The exact unavailable, unsupported, ambiguous, partial, stale, timeout, cancellation, or limit reason is retained.",
+          "Process completion without convergence and artifact evidence remains inconclusive."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {"role": "electromagnetic.geometry", "required": true, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "Vendor-neutral bounded geometry input with exact content identity.", "extensions": {}},
+      {"role": "electromagnetic.materials", "required": true, "locator_types": ["filesystem", "artifact"], "identity_requirement": "content-digest", "description": "Vendor-neutral bounded material definitions with exact content identity.", "extensions": {}},
+      {"role": "electromagnetic.analysis-config", "required": true, "locator_types": ["filesystem", "artifact"], "identity_requirement": "content-digest", "description": "Closed declarative port, boundary, mesh, sweep, solver, and convergence configuration.", "extensions": {}}
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/profiles/electromagnetic.analyze-v1alpha1.parameters.schema.json",
+      "title": "Electromagnetic analysis parameters v1alpha1",
+      "type": "object",
+      "required": ["analysis_model", "geometry_id", "material_model_id", "ports", "boundary_id", "mesh_id", "sweep", "solver_id", "convergence", "reference_comparison", "extensions"],
+      "properties": {
+        "analysis_model": {"enum": ["planar", "three-dimensional"]},
+        "geometry_id": {"$ref": "#/$defs/identity"},
+        "material_model_id": {"$ref": "#/$defs/identity"},
+        "ports": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "direction", "reference_id", "extensions"],
+            "properties": {
+              "id": {"$ref": "#/$defs/identity"},
+              "kind": {"enum": ["lumped", "wave", "modal"]},
+              "direction": {"enum": ["positive", "negative", "bidirectional"]},
+              "reference_id": {"$ref": "#/$defs/identity"},
+              "extensions": {"$ref": "#/$defs/extensions"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "boundary_id": {"$ref": "#/$defs/identity"},
+        "mesh_id": {"$ref": "#/$defs/identity"},
+        "sweep": {
+          "type": "object",
+          "required": ["id", "start_hz", "stop_hz", "points", "spacing", "extensions"],
+          "properties": {
+            "id": {"$ref": "#/$defs/identity"},
+            "start_hz": {"type": "number", "exclusiveMinimum": 0, "maximum": 1e30},
+            "stop_hz": {"type": "number", "exclusiveMinimum": 0, "maximum": 1e30},
+            "points": {"type": "integer", "minimum": 1, "maximum": 1000000},
+            "spacing": {"enum": ["linear", "logarithmic", "explicit"]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "solver_id": {"$ref": "#/$defs/identity"},
+        "convergence": {
+          "type": "object",
+          "required": ["id", "metric", "threshold", "maximum_passes", "extensions"],
+          "properties": {
+            "id": {"$ref": "#/$defs/identity"},
+            "metric": {"enum": ["energy-residual", "network-delta", "field-residual"]},
+            "threshold": {"type": "number", "exclusiveMinimum": 0, "maximum": 1e12},
+            "maximum_passes": {"type": "integer", "minimum": 1, "maximum": 10000},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "reference_comparison": {
+          "type": "object",
+          "required": ["policy", "reference_sha256", "tolerance", "extensions"],
+          "properties": {
+            "policy": {"enum": ["not-requested", "required"]},
+            "reference_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "tolerance": {"oneOf": [{"type": "number", "minimum": 0, "maximum": 1e12}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "allOf": [
+            {"if": {"properties": {"policy": {"const": "required"}}}, "then": {"properties": {"reference_sha256": {"$ref": "#/$defs/digest"}, "tolerance": {"type": "number", "minimum": 0, "maximum": 1e12}}}},
+            {"if": {"properties": {"policy": {"const": "not-requested"}}}, "then": {"properties": {"reference_sha256": {"type": "null"}, "tolerance": {"type": "null"}}}}
+          ],
+          "additionalProperties": false
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "identity": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,199}$"},
+        "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "Geometry, materials, and declarative analysis configuration are resolved inside approved roots, hashed from held-open regular files, and remain stable through collection.",
+      "Port identifiers are unique, every port reference resolves exactly once, and result port ordering is identical to request ordering.",
+      "Sweep stop_hz is greater than start_hz and explicit spacing binds an exact strictly increasing grid through configuration identity.",
+      "The provider must advertise the selected planar or three-dimensional feature independently and cannot silently substitute one model for the other.",
+      "Every native action is selected by a trusted exact mapping; the request cannot supply command, script, project, or database text.",
+      "Convergence, artifact integrity, reference comparison, workflow review, and signoff approval remain independent conclusions."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/profiles/electromagnetic.analyze-v1alpha1.data.schema.json",
+      "title": "Electromagnetic analysis normalized data v1alpha1",
+      "type": "object",
+      "required": ["analysis_model", "identities", "ports", "frequency_hz", "mesh", "solver", "convergence", "artifacts", "reference_comparison", "dimensions", "extensions"],
+      "properties": {
+        "analysis_model": {"enum": ["planar", "three-dimensional"]},
+        "identities": {
+          "type": "object",
+          "required": ["geometry", "materials", "boundary", "mesh", "sweep", "solver", "convergence", "extensions"],
+          "properties": {
+            "geometry": {"$ref": "#/$defs/identity"},
+            "materials": {"$ref": "#/$defs/identity"},
+            "boundary": {"$ref": "#/$defs/identity"},
+            "mesh": {"$ref": "#/$defs/identity"},
+            "sweep": {"$ref": "#/$defs/identity"},
+            "solver": {"$ref": "#/$defs/identity"},
+            "convergence": {"$ref": "#/$defs/identity"},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "ports": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "direction", "reference_id", "extensions"],
+            "properties": {
+              "id": {"$ref": "#/$defs/identity"},
+              "kind": {"enum": ["lumped", "wave", "modal"]},
+              "direction": {"enum": ["positive", "negative", "bidirectional"]},
+              "reference_id": {"$ref": "#/$defs/identity"},
+              "extensions": {"$ref": "#/$defs/extensions"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "frequency_hz": {"type": "array", "maxItems": 1000000, "uniqueItems": true, "items": {"type": "number", "exclusiveMinimum": 0, "maximum": 1e30}},
+        "mesh": {"oneOf": [{"$ref": "#/$defs/meshSummary"}, {"type": "null"}]},
+        "solver": {
+          "type": "object",
+          "required": ["backend_identity", "version", "iterations", "termination", "extensions"],
+          "properties": {
+            "backend_identity": {"oneOf": [{"type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*){2,}$", "maxLength": 200}, {"type": "null"}]},
+            "version": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 200}, {"type": "null"}]},
+            "iterations": {"type": "integer", "minimum": 0, "maximum": 1000000000},
+            "termination": {"enum": ["completed", "failed", "timed-out", "cancelled", "unknown"]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "convergence": {
+          "type": "object",
+          "required": ["metric", "threshold", "achieved", "status", "extensions"],
+          "properties": {
+            "metric": {"enum": ["energy-residual", "network-delta", "field-residual"]},
+            "threshold": {"type": "number", "exclusiveMinimum": 0, "maximum": 1e12},
+            "achieved": {"oneOf": [{"type": "number", "minimum": 0, "maximum": 1e12}, {"type": "null"}]},
+            "status": {"enum": ["converged", "not-converged", "inconclusive"]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "artifacts": {
+          "type": "object",
+          "required": ["network_sha256", "field_sha256", "mesh_report_sha256", "solver_log_sha256", "extensions"],
+          "properties": {
+            "network_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "field_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "mesh_report_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "solver_log_sha256": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "reference_comparison": {
+          "type": "object",
+          "required": ["policy", "status", "maximum_error", "tolerance", "extensions"],
+          "properties": {
+            "policy": {"enum": ["not-requested", "required"]},
+            "status": {"enum": ["not-evaluated", "pass", "fail", "inconclusive"]},
+            "maximum_error": {"oneOf": [{"type": "number", "minimum": 0, "maximum": 1e12}, {"type": "null"}]},
+            "tolerance": {"oneOf": [{"type": "number", "minimum": 0, "maximum": 1e12}, {"type": "null"}]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "dimensions": {"$ref": "#/$defs/dimensions"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "identity": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,199}$"},
+        "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "meshSummary": {
+          "type": "object",
+          "required": ["element_count", "minimum_quality", "passes", "extensions"],
+          "properties": {
+            "element_count": {"type": "integer", "minimum": 1, "maximum": 1000000000000},
+            "minimum_quality": {"type": "number", "minimum": 0, "maximum": 1},
+            "passes": {"type": "integer", "minimum": 1, "maximum": 10000},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "dimensions": {
+          "type": "object",
+          "required": ["dependency_readiness", "execution_state", "artifact_readiness", "engineering_conclusion", "workflow_review", "signoff_approval", "extensions"],
+          "properties": {
+            "dependency_readiness": {"enum": ["ready", "unready", "unknown"]},
+            "execution_state": {"enum": ["completed", "failed", "timed-out", "cancelled", "not-started"]},
+            "artifact_readiness": {"enum": ["ready", "missing", "stale", "invalid", "unknown"]},
+            "engineering_conclusion": {"enum": ["pass", "fail", "inconclusive", "not-evaluated"]},
+            "workflow_review": {"enum": ["unreviewed", "reviewed"]},
+            "signoff_approval": {"enum": ["not-requested", "pending", "approved", "rejected"]},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.identities", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Exact geometry, materials, boundary, mesh, sweep, solver, and convergence identities.", "extensions": {}},
+      {"path": "data.ports", "type": "array", "required_for": ["pass", "fail", "unknown"], "description": "Ordered port identities, kinds, directions, and references.", "bounds": "Between one and 256 closed port records.", "extensions": {}},
+      {"path": "data.frequency_hz", "type": "array", "unit": "Hz", "required_for": ["pass"], "description": "Strictly increasing finite frequency grid bound to every frequency-dependent artifact.", "extensions": {}},
+      {"path": "data.mesh", "type": ["object", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Bounded normalized mesh summary when available.", "extensions": {}},
+      {"path": "data.solver", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Observed backend identity, version, iteration count, and truthful termination.", "extensions": {}},
+      {"path": "data.convergence", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Declared convergence metric, threshold, achieved value, and independent status.", "extensions": {}},
+      {"path": "data.artifacts", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Fresh network, field, mesh-report, and solver-log artifact identities.", "extensions": {}},
+      {"path": "data.reference_comparison", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Optional comparison policy and facts independent of convergence.", "extensions": {}},
+      {"path": "data.dimensions", "type": "object", "required_for": ["pass", "fail", "unknown"], "description": "Independent readiness, execution, artifact, engineering, review, and signoff dimensions.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {"role": "electromagnetic.input-snapshot", "kind": "manifest", "required_for": ["pass", "fail", "unknown"], "freshness": "immutable-input", "integrity": ["Geometry, material, and configuration bytes are bounded, stable, and SHA-256 identified."], "native_authority": "The host-owned immutable snapshot defines the analyzed model.", "extensions": {}},
+      {"role": "electromagnetic.network", "kind": "network-parameter", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["The artifact is fresh, contained, bounded, stable, hashed, and agrees with normalized frequency and port identities."], "native_authority": "The selected solver mapping identifies its native network result.", "extensions": {}},
+      {"role": "electromagnetic.field", "kind": "field-data", "required_for": [], "freshness": "fresh-per-invocation", "integrity": ["An advertised field artifact is fresh, contained, bounded, stable, and bound to model, mesh, frequency, and port identities."], "native_authority": "The selected solver mapping identifies its native field result.", "extensions": {}},
+      {"role": "electromagnetic.mesh-report", "kind": "report", "required_for": ["pass", "fail", "unknown"], "freshness": "fresh-per-invocation", "integrity": ["The mesh summary and report bind the exact mesh policy and final mesh identity."], "native_authority": "The selected mesh implementation owns the element and quality summary.", "extensions": {}},
+      {"role": "electromagnetic.solver-log", "kind": "log", "required_for": ["pass", "fail", "unknown"], "freshness": "fresh-per-invocation", "integrity": ["Bounded diagnostics bind backend identity, version, request, termination, convergence records, and truncation state."], "native_authority": "The selected solver mapping owns native diagnostics but not review or signoff.", "extensions": {}},
+      {"role": "electromagnetic.convergence", "kind": "report", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Metric, threshold, achieved values, pass count, and status bind the exact convergence policy."], "native_authority": "The declared convergence policy defines solver convergence only.", "extensions": {}},
+      {"role": "electromagnetic.reference-comparison", "kind": "report", "required_for": [], "freshness": "fresh-per-invocation", "integrity": ["Comparison facts bind the exact reference digest, tolerance, metric, and result artifact."], "native_authority": "The declared comparison policy defines only the bounded comparison conclusion.", "extensions": {}}
+    ],
+    "integrity_rules": [
+      "Inputs remain identity-stable, output destinations are fresh and contained, and streams and artifacts are bounded.",
+      "The observed backend identity and version are recorded and ambiguity fails closed.",
+      "Planar and three-dimensional support, field and network output, convergence, and comparison are separately negotiated features.",
+      "Process completion never implies artifact readiness, convergence, engineering pass, review, or signoff."
+    ],
+    "provenance_limitations": [
+      "Material and geometry physical accuracy depend on upstream source provenance outside this profile.",
+      "A converged numerical solution is not automatically a specification, correlation, compliance, or signoff pass."
+    ],
+    "limits": {"max_log_bytes": 4194304, "max_artifact_bytes": 1073741824, "max_artifact_count": 64, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {"id": "openada.feature/electromagnetic.model.planar/v1alpha1", "parameter_path": "analysis_model", "parameter_values": ["planar"], "request_effect": "Select an explicitly advertised planar electromagnetic model.", "conformance_case": "Run converged, non-converged, timeout, cancellation, and unsupported-planar fake cases.", "extensions": {}},
+    {"id": "openada.feature/electromagnetic.model.three-dimensional/v1alpha1", "parameter_path": "analysis_model", "parameter_values": ["three-dimensional"], "request_effect": "Select an explicitly advertised three-dimensional electromagnetic model.", "conformance_case": "Run converged, non-converged, timeout, cancellation, and unsupported-3D fake cases.", "extensions": {}},
+    {"id": "openada.feature/electromagnetic.artifact.network/v1alpha1", "parameter_path": "analysis_model", "parameter_values": ["planar", "three-dimensional"], "request_effect": "Require a fresh bounded network-parameter artifact.", "conformance_case": "Check frequency, port, request, containment, freshness, and digest lineage.", "extensions": {}},
+    {"id": "openada.feature/electromagnetic.artifact.field/v1alpha1", "parameter_path": "analysis_model", "parameter_values": ["three-dimensional"], "request_effect": "Permit a separately negotiated bounded field artifact.", "conformance_case": "Check model, mesh, frequency, containment, freshness, and digest lineage.", "extensions": {}},
+    {"id": "openada.feature/electromagnetic.convergence/v1alpha1", "parameter_path": "convergence.metric", "parameter_values": ["energy-residual", "network-delta", "field-residual"], "request_effect": "Select one closed convergence metric and exact threshold policy.", "conformance_case": "Distinguish convergence, conclusive non-convergence, missing evidence, and process-only completion.", "extensions": {}},
+    {"id": "openada.feature/electromagnetic.reference-comparison/v1alpha1", "parameter_path": "reference_comparison.policy", "parameter_values": ["required"], "request_effect": "Require a digest-bound bounded reference comparison separate from convergence.", "conformance_case": "Cover match, mismatch, missing reference, stale result, and tolerance-boundary cases.", "extensions": {}}
+  ],
+  "diagnostics": [
+    {"code": "electromagnetic.request.invalid", "severity": "error", "condition": "A geometry, material, port, boundary, mesh, sweep, solver, convergence, or comparison identity is invalid or inconsistent.", "next_action": "Correct the closed declarative request without supplying native project or command text.", "extensions": {}},
+    {"code": "electromagnetic.feature.unsupported", "severity": "error", "condition": "The selected provider has not advertised the exact model or artifact feature.", "next_action": "Select only an evidenced capability; do not fall back between planar and three-dimensional models.", "extensions": {}},
+    {"code": "electromagnetic.convergence.missing", "severity": "warning", "condition": "Process completion lacks complete request-bound convergence evidence.", "next_action": "Report inconclusive and retain the solver and mesh evidence.", "extensions": {}},
+    {"code": "electromagnetic.convergence.failed", "severity": "error", "condition": "Fresh evidence proves the maximum passes were reached without meeting the threshold.", "next_action": "Treat only the declared convergence assertion as failed; do not infer a specification result.", "extensions": {}},
+    {"code": "electromagnetic.artifact.invalid", "severity": "error", "condition": "A required output is missing, stale, linked, outside containment, malformed, oversized, or inconsistent with normalized identities.", "next_action": "Reject the analysis conclusion and regenerate a fresh bounded artifact.", "extensions": {}},
+    {"code": "electromagnetic.reference.failed", "severity": "error", "condition": "A required fresh comparison exceeds its exact declared tolerance.", "next_action": "Inspect the bound result and reference facts without conflating comparison with solver convergence.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.example.driver.em-planar",
+      "native_product_id": "org.example.product.em-planar",
+      "backend_name": "Deterministic fake planar electromagnetic backend",
+      "supported_features": ["openada.feature/electromagnetic.model.planar/v1alpha1", "openada.feature/electromagnetic.artifact.network/v1alpha1", "openada.feature/electromagnetic.convergence/v1alpha1", "openada.feature/electromagnetic.reference-comparison/v1alpha1"],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/electromagnetic.model.planar/v1alpha1", "implementation": "Validate exact model identities and run a deterministic bounded planar fake solve.", "output_fact_paths": ["data.identities", "data.ports", "data.mesh", "data.solver", "data.dimensions"], "extensions": {}},
+        {"feature_id": "openada.feature/electromagnetic.artifact.network/v1alpha1", "implementation": "Emit a fresh deterministic network artifact bound to frequency and port identities.", "output_fact_paths": ["data.frequency_hz", "data.ports", "data.artifacts", "data.dimensions"], "extensions": {}},
+        {"feature_id": "openada.feature/electromagnetic.convergence/v1alpha1", "implementation": "Evaluate the declared convergence metric and threshold independently from process status.", "output_fact_paths": ["data.convergence", "data.solver", "data.dimensions"], "extensions": {}},
+        {"feature_id": "openada.feature/electromagnetic.reference-comparison/v1alpha1", "implementation": "Compare the canonical fake network result against an exact reference under the declared tolerance.", "output_fact_paths": ["data.reference_comparison", "data.dimensions"], "extensions": {}}
+      ],
+      "native_actions": ["Validate and snapshot the vendor-neutral model inputs.", "Run the typed bounded planar fake solver.", "Collect network, mesh, convergence, diagnostics, and optional comparison artifacts."],
+      "artifact_bindings": [
+        {"native_kind": "Fake planar model snapshot", "canonical_role": "electromagnetic.input-snapshot", "extensions": {}},
+        {"native_kind": "Fake planar network result", "canonical_role": "electromagnetic.network", "extensions": {}},
+        {"native_kind": "Fake planar mesh report", "canonical_role": "electromagnetic.mesh-report", "extensions": {}},
+        {"native_kind": "Fake planar solver log", "canonical_role": "electromagnetic.solver-log", "extensions": {}},
+        {"native_kind": "Fake planar convergence report", "canonical_role": "electromagnetic.convergence", "extensions": {}},
+        {"native_kind": "Fake planar comparison report", "canonical_role": "electromagnetic.reference-comparison", "extensions": {}}
+      ],
+      "limitations": ["This invented backend is a deterministic public conformance fixture and does not advertise native availability.", "It does not implement the three-dimensional or field-artifact features."],
+      "extensions": {}
+    },
+    {
+      "driver_id": "org.example.driver.em-three-dimensional",
+      "native_product_id": "org.example.product.em-three-dimensional",
+      "backend_name": "Deterministic fake three-dimensional electromagnetic backend",
+      "supported_features": ["openada.feature/electromagnetic.model.three-dimensional/v1alpha1", "openada.feature/electromagnetic.artifact.network/v1alpha1", "openada.feature/electromagnetic.artifact.field/v1alpha1", "openada.feature/electromagnetic.convergence/v1alpha1"],
+      "semantic_bindings": [
+        {"feature_id": "openada.feature/electromagnetic.model.three-dimensional/v1alpha1", "implementation": "Validate exact model identities and run an unrelated deterministic bounded three-dimensional fake solve.", "output_fact_paths": ["data.identities", "data.ports", "data.mesh", "data.solver", "data.dimensions"], "extensions": {}},
+        {"feature_id": "openada.feature/electromagnetic.artifact.network/v1alpha1", "implementation": "Emit a fresh deterministic network artifact bound to frequency and port identities.", "output_fact_paths": ["data.frequency_hz", "data.ports", "data.artifacts", "data.dimensions"], "extensions": {}},
+        {"feature_id": "openada.feature/electromagnetic.artifact.field/v1alpha1", "implementation": "Emit one separately bounded field artifact bound to model, mesh, frequency, and port identities.", "output_fact_paths": ["data.frequency_hz", "data.mesh", "data.artifacts", "data.dimensions"], "extensions": {}},
+        {"feature_id": "openada.feature/electromagnetic.convergence/v1alpha1", "implementation": "Evaluate the declared convergence metric and threshold independently from process status.", "output_fact_paths": ["data.convergence", "data.solver", "data.dimensions"], "extensions": {}}
+      ],
+      "native_actions": ["Validate and snapshot the vendor-neutral model inputs.", "Run the typed bounded three-dimensional fake solver.", "Collect network, field, mesh, convergence, and diagnostic artifacts."],
+      "artifact_bindings": [
+        {"native_kind": "Fake three-dimensional model snapshot", "canonical_role": "electromagnetic.input-snapshot", "extensions": {}},
+        {"native_kind": "Fake three-dimensional network result", "canonical_role": "electromagnetic.network", "extensions": {}},
+        {"native_kind": "Fake three-dimensional field result", "canonical_role": "electromagnetic.field", "extensions": {}},
+        {"native_kind": "Fake three-dimensional mesh report", "canonical_role": "electromagnetic.mesh-report", "extensions": {}},
+        {"native_kind": "Fake three-dimensional solver log", "canonical_role": "electromagnetic.solver-log", "extensions": {}},
+        {"native_kind": "Fake three-dimensional convergence report", "canonical_role": "electromagnetic.convergence", "extensions": {}}
+      ],
+      "limitations": ["This invented backend is a deterministic public conformance fixture and does not advertise native availability.", "It does not implement the optional reference-comparison feature."],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["exact geometry, material, port, boundary, mesh, sweep, solver, and convergence identities", "independent planar and three-dimensional feature negotiation", "frequency and port identity", "mesh and solver summaries", "convergence truth table", "field and network artifact integrity", "reference comparison facts", "independent readiness, execution, artifact, engineering, review, and signoff dimensions"],
+    "change_policy": "Any change to accepted model kinds, identities, port semantics, sweep, mesh, solver, convergence, artifact roles, comparison, evidence limits, or status meaning requires a new profile identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}
