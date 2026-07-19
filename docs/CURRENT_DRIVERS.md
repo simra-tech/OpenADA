@@ -443,6 +443,9 @@ one technology/mapping context for synthesis and timing:
 ./bin/openada rtl-lint rtl/package.sv rtl/top.sv --top top \
   --include-dir rtl/include --output-dir /tmp/openada-lint
 
+./bin/openada rtl-test rtl/dut.sv verif/dut_tb.sv --top dut_tb \
+  --backend iverilog --output-dir /tmp/openada-rtl-test
+
 ./bin/openada synthesize rtl/package.sv rtl/top.sv --top top \
   --frontend slang --include-dir rtl/include \
   --liberty platform/typical.lib --techmap platform/cells_latch.v \
@@ -454,6 +457,8 @@ one technology/mapping context for synthesis and timing:
   --output-dir /tmp/openada-timing
 ```
 
+`rtl-test` interprets exit zero only for a caller-declared self-checking top;
+it does not infer test adequacy, coverage, or general functional correctness.
 `rtl-lint` uses a strict warning policy. `synthesize` retains both generic
 inference and mapped statistics and passes only when every mapped cell belongs
 to the exact Liberty. It also binds the external ABC executable by exact path,

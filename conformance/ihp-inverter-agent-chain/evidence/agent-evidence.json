@@ -10,7 +10,7 @@
         "kind": "ngspice-raw",
         "path": "/evidence/builtin/simulation/inverter_shared.raw",
         "role": "simulation.result",
-        "sha256": "dc5f872e290d5ed05a09e20d1dab9bedf028d56e4297f3b45c321181f4b06e60"
+        "sha256": "448f1b82eecbc4c367e26223afe401191cd4bfc90dde65c72bdb40de4e79ffdd"
       }
     },
     "terminal_nonconvergence": {
@@ -25,7 +25,7 @@
         "kind": "ngspice-raw",
         "path": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
         "role": "simulation.result",
-        "sha256": "f8acd286a20854195ed36774b80c7db05d290b9cbac6a1cb45ac48897e4c27e7"
+        "sha256": "4e70a166c80855608ea3a9e4a39f342a59c5fe727dfca01a6057439dd08eda03"
       }
     }
   },
@@ -51,7 +51,7 @@
         "value": 3e-07
       },
       "measurement_request_sha256": "68863a7595ac3c45410aaa0aa7ea3c61fc410f4fd59d08f5e75cddc1450919bd",
-      "result_sha256": "a50d68ceae55821439430430433879febd8c56e4a71a434b5f2394f8d35cabca",
+      "result_sha256": "115eb0b23deaac5a374443a17a75b23d53a15920affc903bdc7b6de3ad247e18",
       "signal": "v(vout)",
       "status": "measured",
       "unit": "V",
@@ -70,7 +70,7 @@
         "value": 5.09586868812166e-07
       },
       "measurement_request_sha256": "1bc1fa48e4c9316ffc5fbc9f2f9f14c3d29528395596c8d29ce613e050df8285",
-      "result_sha256": "07e96fd86a65a1c64a3eb469b8eb026e141053fa81193b31b3857639d75c43fe",
+      "result_sha256": "5c97b519cf640a69b56e855622990c4bb30789f90ac5d19ca97c668124681176",
       "signal": "v(vout)",
       "status": "measured",
       "unit": "V",
@@ -89,7 +89,7 @@
         "value": 5.009999999999999e-07
       },
       "measurement_request_sha256": "cf96b6feede153e6f6326fce6fa938faee65d3efd5f28e34729b1ff163758373",
-      "result_sha256": "f83898c856077d99f39161f9c2d7b734fb02ec4aa45e5ab765bd87294f54f988",
+      "result_sha256": "f1b10f8cb2b17f031d4c1ae107bc22f92b7659839bc12ab4df328c2bd2f292b9",
       "signal": "v(vout)",
       "status": "measured",
       "unit": "V",
@@ -105,7 +105,7 @@
       "kind": "mean",
       "location": null,
       "measurement_request_sha256": "395a369e48408cc2ffacc92a0bcb21032567f922a204eda6563140836b78b2a2",
-      "result_sha256": "4a8abc54417d24d5903672b1168721dfa3a6f79a0ba22082cc263367d4b1a700",
+      "result_sha256": "997505e552293103b955606453ee64091f14342a1dda39a263d435e23f950d20",
       "signal": "v(vout)",
       "status": "measured",
       "unit": "V",
@@ -121,7 +121,7 @@
       "kind": "rms",
       "location": null,
       "measurement_request_sha256": "0df0be7a5581829aa92a4b1dd3aa5b7579db216e88e70d7855849114cd06fafe",
-      "result_sha256": "8eb25ef9e49faf9ee0409c3a2258bb6180ecd1fb8760b29f8ffd5b788dde067d",
+      "result_sha256": "00e5f0aebc37bb8a1ca425b8fd7b6e936e6c565a06a7ad86f11f942928013260",
       "signal": "v(vout)",
       "status": "measured",
       "unit": "V",
@@ -140,7 +140,7 @@
         "value": 5.049999999999999e-07
       },
       "measurement_request_sha256": "696468177cd6340375d9ce882bcd3ca6fcfd6e9feb3831043579b27cfc0376ce",
-      "result_sha256": "a30b5eb6b5cb4a1e2ec6885a8838fab44a07a083a01d49bfa2d86835065eb260",
+      "result_sha256": "16bc81abb9652461b549ba3872fc182c3b84f842c55306e4875c9684b949c63e",
       "signal": "v(vin)",
       "status": "measured",
       "unit": "s",
@@ -159,7 +159,7 @@
         "value": 1.5164561641794755e-06
       },
       "measurement_request_sha256": "6bfd67f653b188f92ffd0862be0e9a7c5deadac3f520127eb123d5a017f511c2",
-      "result_sha256": "260d7a9fd62dbe7ef4a73ed651f450b4fa17d6b60d7e436d479526d8b2563497",
+      "result_sha256": "1419a7cd31b621951b8545b79a91ac8d168244bf076f5a7a62001ffbef4fe927",
       "signal": "v(vout)",
       "status": "measured",
       "unit": "s",
@@ -178,7 +178,7 @@
         "value": 5.061748407684754e-07
       },
       "measurement_request_sha256": "6c8762c35a451b111c4fd278dd14e5e1329e254f85c42311dde199f1ddb8dee9",
-      "result_sha256": "a416bf2c7b80e3586ba3ab318edd54ece22eba40a2c5c196743faa5d5578c07d",
+      "result_sha256": "f95aa28ede0e56caa15f9e99d74c699acb9404121a902305d72c61132b2a7479",
       "signal": "v(vout)",
       "status": "measured",
       "unit": "s",
@@ -197,7 +197,7 @@
         "value": 1.5180305338366638e-06
       },
       "measurement_request_sha256": "44f6921aea1799db6c0fbe5b123ec2acac6c38ca1058234f7f80f42f3497bd54",
-      "result_sha256": "831029964919e1b0abd28f3e6f293b8ce61b1672a6f91d6b45eb5b7e30805c80",
+      "result_sha256": "ea829938774954990d6173884ef8593a72a131d7fc99414d2236919167ed025a",
       "signal": "v(vout)",
       "status": "measured",
       "unit": "s",
@@ -209,7 +209,7 @@
     "kind": "ngspice-raw",
     "path": "/evidence/provider/work/test_inverter.raw",
     "role": "simulation.result",
-    "sha256": "798b9f1eff2c5a0fcdbb58209233d17e1b34b2c646b96a917de9071fbea3e2b5"
+    "sha256": "96d3cb80a6e27a9470c58ac6f8bbc279fb586b136c80b7ad3462bb1727800f1c"
   },
   "negative_replays": [
     {
@@ -866,7 +866,7 @@
     "native_artifact": {
       "bytes": 17498,
       "path": "/evidence/provider-fail/work/test_inverter_fail.raw",
-      "sha256": "833ee18320c8b537ca72946976cc066fdc93e844034d27091bf6e0baf356d8a7"
+      "sha256": "261d204b97e78992d0114c119c05e35f9eba738499de2f1dc17d7a73566d7ef8"
     },
     "purpose": "Deliberate engine-boundary injection isolated from the inverter DUT; it does not assert that the DUT is unstable."
   }

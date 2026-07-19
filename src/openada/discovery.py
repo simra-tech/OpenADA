@@ -91,13 +91,20 @@ TOOL_SPECS: dict[str, ToolSpec] = {
         r"v?\d+(?:\.\d+)+(?:[-+][a-z0-9._-]+)?\b",
     ),
     "openroad": ToolSpec("openroad", ("openroad",), (("-version",), ("--version",)), "discovered"),
-    "iverilog": ToolSpec("iverilog", ("iverilog",), (("-V",),), "discovered"),
+    "iverilog": ToolSpec(
+        "iverilog", ("iverilog",), (("-V",),), "structured", ("rtl-test",),
+        r"(?i)^icarus verilog version[ \t]+v?\d+(?:\.\d+)*\b",
+    ),
+    "vvp": ToolSpec(
+        "vvp", ("vvp",), (("-V",),), "structured", ("rtl-test",),
+        r"(?i)^icarus verilog runtime version[ \t]+v?\d+(?:\.\d+)*\b",
+    ),
     "verilator": ToolSpec(
         "verilator",
         ("verilator_bin", "verilator"),
         (("--version",),),
         "workflow-validated",
-        ("rtl-lint",),
+        ("rtl-lint", "rtl-test"),
         r"(?i)^verilator[ \t]+v?\d+(?:\.\d+)*(?:[a-z][a-z0-9]*)?\b",
     ),
     "sta": ToolSpec(

@@ -388,6 +388,7 @@ not a list of accepted profile identifiers or a claim of current CLI support.
 | Extraction | `layout.pex` | Was a parasitic representation generated and bound to the declared source layout/setup? | Not yet implemented as a shared operation. |
 | Digital | `rtl.check` | Did the declared RTL elaborate and pass the defined structural checks? | `rtl-check` through Yosys. |
 | Digital | `rtl.lint` | Is the declared SystemVerilog context free of recognized warnings and errors under the strict policy? | `rtl-lint` through Verilator. |
+| Digital | `rtl.test` | Did one declared self-checking HDL top compile, elaborate, and exit zero? | `rtl-test` through fixed Icarus/vvp or Verilator binary mappings; test adequacy remains outside the assertion. |
 | Digital | `logic.synthesize` | Did the declared RTL produce a complete validated netlist mapped only to the declared Liberty? | `synthesize` through Yosys/ABC. |
 | Digital | `timing.analyze` | Does one constraint-complete declared corner have nonnegative setup and hold slack? | `timing-analyze` through OpenSTA, explicitly ideal-interconnect and non-signoff. |
 

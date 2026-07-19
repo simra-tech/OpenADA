@@ -69,6 +69,12 @@
       "extensions": {}
     },
     {
+      "repository_path": "profiles/rtl.test-v1alpha1.json",
+      "lifecycle": "experimental",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
       "repository_path": "profiles/specification.evaluate-v1alpha1.json",
       "lifecycle": "active",
       "dispatchable": true,
@@ -244,6 +250,18 @@
       "extensions": {}
     },
     {
+      "surface_id": "openada.surface/cli.rtl-test/v1",
+      "command_path": ["rtl-test"],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": ["openada.operation/rtl.test/v1alpha1"],
+      "variants": [
+        {"variant_id": "iverilog", "selector": {"backend": "iverilog"}, "operation_profile": "openada.operation/rtl.test/v1alpha1", "provider_id": "org.openada.driver.iverilog.rtl-test", "extensions": {}},
+        {"variant_id": "verilator", "selector": {"backend": "verilator"}, "operation_profile": "openada.operation/rtl.test/v1alpha1", "provider_id": "org.openada.driver.verilator.rtl-test", "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
       "surface_id": "openada.surface/cli.simulate/v1",
       "command_path": ["simulate"],
       "classification": "semantic-execution",
@@ -383,6 +401,30 @@
       "operation_maturity": null,
       "features": [
         {"id": "openada.feature/rtl.lint.systemverilog/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["ihp-sar-rtl-check"], "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.iverilog.rtl-test",
+      "provider_kind": "eda-driver",
+      "native_product": "iverilog",
+      "operation_profile": "openada.operation/rtl.test/v1alpha1",
+      "assertion_profile": "openada.assertion/rtl.self-test.passes/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/rtl.test.backend/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}}
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.verilator.rtl-test",
+      "provider_kind": "eda-driver",
+      "native_product": "verilator",
+      "operation_profile": "openada.operation/rtl.test/v1alpha1",
+      "assertion_profile": "openada.assertion/rtl.self-test.passes/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {"id": "openada.feature/rtl.test.backend/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}}
       ],
       "extensions": {}
     },

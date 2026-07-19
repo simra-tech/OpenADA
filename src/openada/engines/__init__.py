@@ -7,6 +7,7 @@ from .spice import NgspiceDriver, NgspiceOutput
 from .xschem import XschemDriver
 from .xyce import XyceDriver
 from .verilator import VerilatorDriver
+from .rtl_test import RTLTestDriver
 from .yosys import YosysDriver
 
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "XschemDriver",
     "XyceDriver",
     "VerilatorDriver",
+    "RTLTestDriver",
     "YosysDriver",
 ]

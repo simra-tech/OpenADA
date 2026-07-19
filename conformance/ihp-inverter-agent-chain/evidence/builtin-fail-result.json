@@ -6,7 +6,7 @@
       "kind": "simulation-log",
       "path": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log",
       "role": "simulation.log",
-      "sha256": "a7ab028c52b092e6bdbab220e33cf99988c303fcc2b4dd9de3ad216fb4aa8fc1"
+      "sha256": "1410b85c93bf6b093d5b442ed3279adff1d74782c59a1c5f937b79d07c63f6aa"
     },
     {
       "bytes": 17493,
@@ -14,7 +14,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
       "role": "simulation.result",
-      "sha256": "f8acd286a20854195ed36774b80c7db05d290b9cbac6a1cb45ac48897e4c27e7"
+      "sha256": "4e70a166c80855608ea3a9e4a39f342a59c5fe727dfca01a6057439dd08eda03"
     }
   ],
   "data": {
@@ -81,10 +81,10 @@
           "log_capture": {
             "bytes": 1484,
             "path": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log",
-            "sha256": "a7ab028c52b092e6bdbab220e33cf99988c303fcc2b4dd9de3ad216fb4aa8fc1",
+            "sha256": "1410b85c93bf6b093d5b442ed3279adff1d74782c59a1c5f937b79d07c63f6aa",
             "status": "valid"
           },
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-x_26c0h5/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 13  \nNote: Starting dynamic gmin stepping\nWarning: Dynamic gmin stepping failed\nNote: Starting true gmin stepping\nWarning: True gmin stepping failed\nNote: Starting source stepping\nNote: Source stepping completed\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvin                                          0\nvdd                                        1.2\nvout                                       1.2\n__openada_fail                        -10.0002\nv2#branch                         -3.10217e-10\nv1#branch                          8.18116e-11\n\n\nNo. of Data Rows : 162\ndoAnalyses: TRAN:  Timestep too small; time = 0.0001045, timestep = 1.25e-18: trouble with node \"__openada_fail\"\n\n\nrun simulation(s) aborted\n\nTotal analysis time (seconds) = 0.543226\n\nTotal elapsed time (seconds) = 0.558 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 12118.133 MB.\nMaximum ngspice program size =  531.707 MB.\nCurrent ngspice program size =   14.703 MB.\n\nShared ngspice pages =   11.406 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.191 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-61ceai91/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 13  \nNote: Starting dynamic gmin stepping\nWarning: Dynamic gmin stepping failed\nNote: Starting true gmin stepping\nWarning: True gmin stepping failed\nNote: Starting source stepping\nNote: Source stepping completed\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvin                                          0\nvdd                                        1.2\nvout                                       1.2\n__openada_fail                        -10.0002\nv2#branch                         -3.10217e-10\nv1#branch                          8.18116e-11\n\n\nNo. of Data Rows : 162\ndoAnalyses: TRAN:  Timestep too small; time = 0.0001045, timestep = 1.25e-18: trouble with node \"__openada_fail\"\n\n\nrun simulation(s) aborted\n\nTotal analysis time (seconds) = 0.467567\n\nTotal elapsed time (seconds) = 0.482 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 10485.371 MB.\nMaximum ngspice program size =  531.711 MB.\nCurrent ngspice program size =   14.770 MB.\n\nShared ngspice pages =   11.469 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.195 MB.\n\n",
           "measurement_section_count": 0,
           "measurements": [],
           "measurements_truncated": false,
@@ -95,7 +95,7 @@
               "kind": "raw",
               "origin": "wrapper",
               "path": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
-              "sha256": "f8acd286a20854195ed36774b80c7db05d290b9cbac6a1cb45ac48897e4c27e7",
+              "sha256": "4e70a166c80855608ea3a9e4a39f342a59c5fe727dfca01a6057439dd08eda03",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -166,7 +166,7 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "55763c7b-1a05-4a9f-8249-9f7479953a9b"
+      "request_id": "f59b3514-4273-4456-980f-71c3226a14a7"
     }
   },
   "diagnostics": [
@@ -190,13 +190,13 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-x_26c0h5/simulation.raw",
+      "/tmp/openada-ngspice-61ceai91/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-x_26c0h5/simulation.log",
+      "/tmp/openada-ngspice-61ceai91/simulation.log",
       "/evidence/work/inverter_shared_terminal_nonconvergence.spice"
     ],
     "cwd": "/evidence/builtin-fail/work",
-    "duration_ms": 616,
+    "duration_ms": 516,
     "exit_code": 1,
     "status": "completed"
   },
@@ -212,7 +212,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-17T12:24:58.357704Z",
+    "created_at": "2026-07-19T11:40:12.844668Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

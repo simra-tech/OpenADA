@@ -32,6 +32,30 @@
     },
     "semantic_capabilities": [
       {
+        "assertion_profile": "openada.assertion/rtl.self-test.passes/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/rtl.test.backend/v1alpha1",
+            "maturity": "structured"
+          }
+        ],
+        "locator_types": [
+          "filesystem"
+        ],
+        "native_product": "iverilog",
+        "operation_profile": "openada.operation/rtl.test/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.driver.iverilog.rtl-test",
+        "provider_kind": "eda-driver",
+        "provider_version": "0.4.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli"
+        ]
+      },
+      {
         "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
         "availability": "available",
         "features": [
@@ -71,6 +95,30 @@
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
         "operation_profile_schema": "openada.operation-profile/v0alpha1",
         "provider_id": "org.openada.driver.ngspice",
+        "provider_kind": "eda-driver",
+        "provider_version": "0.4.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli"
+        ]
+      },
+      {
+        "assertion_profile": "openada.assertion/rtl.self-test.passes/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/rtl.test.backend/v1alpha1",
+            "maturity": "structured"
+          }
+        ],
+        "locator_types": [
+          "filesystem"
+        ],
+        "native_product": "verilator",
+        "operation_profile": "openada.operation/rtl.test/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.driver.verilator.rtl-test",
         "provider_kind": "eda-driver",
         "provider_version": "0.4.0",
         "result_schema": "openada.result/v0alpha1",
@@ -433,8 +481,10 @@
       },
       "iverilog": {
         "binary": "/foss/tools/iverilog/bin/iverilog",
-        "maturity": "discovered",
-        "operations": [],
+        "maturity": "structured",
+        "operations": [
+          "rtl-test"
+        ],
         "status": "available",
         "version": "Icarus Verilog version 14.0 (devel) (s20260301-217-g8c7f8f3f-dirty)"
       },
@@ -527,10 +577,20 @@
         "binary": "/foss/tools/verilator/bin/verilator_bin",
         "maturity": "workflow-validated",
         "operations": [
-          "rtl-lint"
+          "rtl-lint",
+          "rtl-test"
         ],
         "status": "available",
         "version": "Verilator 5.048 2026-04-26 rev v5.048"
+      },
+      "vvp": {
+        "binary": "/foss/tools/iverilog/bin/vvp",
+        "maturity": "structured",
+        "operations": [
+          "rtl-test"
+        ],
+        "status": "unusable",
+        "version": null
       },
       "xschem": {
         "binary": "/foss/tools/xschem/bin/xschem",
@@ -565,7 +625,7 @@
   "diagnostics": [],
   "engineering": {
     "status": "not_applicable",
-    "summary": "Discovered 17 of 18 inspected tool(s)."
+    "summary": "Discovered 17 of 19 inspected tool(s)."
   },
   "execution": {
     "command": [],
@@ -576,7 +636,7 @@
   "inputs": [],
   "operation": "doctor",
   "provenance": {
-    "created_at": "2026-07-17T12:26:49.209432Z",
+    "created_at": "2026-07-19T11:37:25.651830Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

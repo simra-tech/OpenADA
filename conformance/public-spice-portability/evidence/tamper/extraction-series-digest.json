@@ -6,5 +6,5 @@
   "required_diagnostic": "conformance.lineage.tampered",
   "schema": "openada.tamper-replay/v0alpha1",
   "status": "unknown",
-  "verifier_message": "ngspice-dc.extract.lineage differs: expected 'ef6cab59c9791a44f68fe5248ec4a9267e78155f727de36b7424413c424b862c', observed '0000000000000000000000000000000000000000000000000000000000000000'"
+  "verifier_message": "ngspice-dc.extract.lineage differs: expected 'f0dff4c8e847aaf9849c7e3fc5cf3bc9a3734883eab4003f882e4ba7365bb9d1', observed '0000000000000000000000000000000000000000000000000000000000000000'"
 }

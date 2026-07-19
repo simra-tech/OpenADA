@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/rtl.test/v1alpha1",
+    "title": "Self-checking RTL test",
+    "summary": "Compile, elaborate, and run one explicitly declared self-checking HDL testbench with bounded evidence.",
+    "side_effect_mode": "evidence-only",
+    "target_kinds": ["rtl-source-set"],
+    "locator_types": ["filesystem", "artifact", "workspace"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/rtl.self-test.passes/v1alpha1",
+    "statement": "The exact ordered HDL source set compiles and elaborates for the declared top, and that self-checking test executable exits zero.",
+    "non_goals": [
+      "A passing declared test does not establish exhaustive functional correctness, synthesis correctness, formal proof, coverage closure, timing, CDC safety, or specification closure.",
+      "Exit zero is meaningful only because the caller declares the top to be self-checking; OpenADA does not infer that assertions or stimulus are adequate.",
+      "This profile does not run cocotb, UVM, arbitrary shell commands, vendor libraries, VPI modules, waveform post-processing, or user-selected native flags."
+    ],
+    "truth_table": {
+      "pass": {"meaning": "Both bounded stages completed with exit code zero, complete logs, stable inputs, stable dependency closure, and stable tool identities.", "allowed_execution_statuses": ["completed"], "required_evidence": ["Compile and run stage records, fresh complete transcripts, executable artifact, bound HDL inputs, and tool identities are retained."], "extensions": {}},
+      "fail": {"meaning": "A trustworthy compile/elaboration stage or self-checking run completed nonzero.", "allowed_execution_statuses": ["completed"], "required_evidence": ["The failed stage, native exit code, complete transcript, stable inputs, and stable tool identities are retained."], "extensions": {}},
+      "unknown": {"meaning": "The request, tools, execution, capture, artifact, or stability evidence is insufficient for pass or fail.", "allowed_execution_statuses": ["completed", "timed_out", "not_available", "invalid_request", "failed"], "required_evidence": ["A bounded diagnostic identifies the missing, unsafe, incomplete, unstable, or unavailable evidence."], "extensions": {}}
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {"role": "rtl-source-set", "required": true, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "content-digest", "description": "Ordered HDL design and self-checking testbench sources.", "extensions": {}},
+      {"role": "rtl-include-tree", "required": false, "locator_types": ["filesystem", "artifact", "workspace"], "identity_requirement": "snapshot", "description": "Optional include roots whose resolved literal dependencies are hashed.", "extensions": {}}
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": ["top", "backend", "defines", "pass_policy", "extensions"],
+      "properties": {
+        "top": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$", "maxLength": 256},
+        "backend": {"enum": ["iverilog", "verilator"]},
+        "defines": {"type": "array", "maxItems": 256, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 1024}},
+        "pass_policy": {"const": "self-checking-exit-zero"},
+        "extensions": {"type": "object", "maxProperties": 0, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "Source order, top, include roots, and defines are explicit; no arbitrary native flag or shell fragment is accepted.",
+      "Icarus uses the fixed -g2012 frontend and vvp runtime; Verilator uses fixed --binary --timing compilation.",
+      "Compile and run each receive the declared finite timeout and four-mebibyte per-stream capture bound.",
+      "Fresh transcripts and executable outputs must not overwrite inputs."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": ["protocol", "backend", "top", "pass_policy", "environment_policy", "ordered_sources", "include_dependencies", "unresolved_literal_includes", "unresolved_literal_includes_truncated", "inputs_stable", "dependency_closure_stable", "tool_identity_stable", "runtime_tool", "stages"],
+      "properties": {
+        "protocol": {
+          "type": "object",
+          "required": ["operation_profile", "assertion_profile", "implementation_id", "implementation_version"],
+          "properties": {
+            "operation_profile": {"const": "openada.operation/rtl.test/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/rtl.self-test.passes/v1alpha1"},
+            "implementation_id": {"enum": ["org.openada.driver.iverilog.rtl-test", "org.openada.driver.verilator.rtl-test"]},
+            "implementation_version": {"type": "string", "minLength": 1, "maxLength": 100}
+          },
+          "additionalProperties": false
+        },
+        "backend": {"enum": ["iverilog", "verilator", null]},
+        "top": {"type": ["string", "null"], "maxLength": 256},
+        "pass_policy": {"const": "self-checking-exit-zero"},
+        "environment_policy": {"const": "closed-rtl-test-runtime-v1"},
+        "ordered_sources": {"type": "array", "maxItems": 4096, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "include_dependencies": {"type": "array", "maxItems": 100000, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "unresolved_literal_includes": {"type": "array", "maxItems": 100, "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+        "unresolved_literal_includes_truncated": {"type": "boolean"},
+        "inputs_stable": {"type": ["boolean", "null"]},
+        "dependency_closure_stable": {"type": ["boolean", "null"]},
+        "tool_identity_stable": {"type": ["boolean", "null"]},
+        "runtime_tool": {"type": ["object", "null"]},
+        "stages": {"type": "array", "maxItems": 2, "items": {"type": "object", "required": ["status", "exit_code", "duration_ms", "command", "stdout_bytes", "stderr_bytes", "capture_complete"], "properties": {"status": {"enum": ["completed", "timed_out", "not_available", "failed"]}, "exit_code": {"type": ["integer", "null"]}, "duration_ms": {"type": "integer", "minimum": 0}, "command": {"type": "array", "items": {"type": "string"}}, "stdout_bytes": {"type": "integer", "minimum": 0}, "stderr_bytes": {"type": "integer", "minimum": 0}, "capture_complete": {"type": "boolean"}}, "additionalProperties": false}}
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {"path": "data.stages", "type": "array", "required_for": ["pass", "fail"], "description": "Ordered compile and optional run stage commands, statuses, exits, durations, and capture completeness.", "extensions": {}},
+      {"path": "data.pass_policy", "type": "string", "required_for": ["pass", "fail"], "description": "The fixed self-checking-exit-zero interpretation boundary.", "extensions": {}},
+      {"path": "data.inputs_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Whether every captured HDL input retained its digest.", "extensions": {}},
+      {"path": "data.tool_identity_stable", "type": ["boolean", "null"], "required_for": ["pass", "fail", "unknown"], "description": "Whether compiler and separate runtime identities remained stable.", "extensions": {}}
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {"role": "rtl.test.compile.log", "kind": "rtl-test-log", "required_for": ["pass", "fail"], "freshness": "fresh-per-invocation", "integrity": ["Exclusive creation from complete bounded compiler output."], "native_authority": "Authoritative compiler and elaborator output.", "extensions": {}},
+      {"role": "rtl.test.run.log", "kind": "rtl-test-log", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["Exclusive creation from complete bounded test output."], "native_authority": "Authoritative self-checking runtime output and exit evidence.", "extensions": {}},
+      {"role": "rtl.test.executable", "kind": "rtl-test-executable", "required_for": ["pass"], "freshness": "fresh-per-invocation", "integrity": ["Produced in the isolated output tree and retained by digest."], "native_authority": "The exact generated test executable passed to the runtime.", "extensions": {}}
+    ],
+    "integrity_rules": ["Hash HDL inputs before execution and rehash plus rescan the dependency closure afterward.", "Bind compiler and runtime executable identities across version probes and execution.", "Reject truncated, invalid UTF-8, missing, stale, oversized, or changed evidence as unknown."],
+    "provenance_limitations": ["The Verilator mapping transitively invokes its installed build toolchain, which v1alpha1 does not enumerate or hash.", "Literal include scanning cannot attest macro-computed include selection.", "A self-checking exit code does not measure test adequacy or coverage."],
+    "limits": {"max_log_bytes": 4198400, "max_artifact_bytes": 33554432, "max_artifact_count": 3, "extensions": {}},
+    "extensions": {}
+  },
+  "features": [
+    {"id": "openada.feature/rtl.test.backend/v1alpha1", "parameter_path": "backend", "parameter_values": ["iverilog", "verilator"], "request_effect": "Select one fixed compile/elaborate/run mapping without accepting arbitrary native flags.", "conformance_case": "Replay the same public self-checking HDL test to pass and controlled compile and assertion failures on both pinned backends.", "extensions": {}}
+  ],
+  "diagnostics": [
+    {"code": "input.invalid", "severity": "error", "condition": "A required source, top, define, backend, timeout, or fresh output binding is invalid.", "next_action": "Correct the explicit bounded request and rerun.", "extensions": {}},
+    {"code": "tool.unusable", "severity": "error", "condition": "A compiler or required runtime is missing or fails product/version validation.", "next_action": "Select a pinned identity-validated runtime.", "extensions": {}},
+    {"code": "evidence.incomplete", "severity": "error", "condition": "A stage timed out, failed to launch, truncated output, or emitted invalid UTF-8.", "next_action": "Repair the runtime or choose a justified bound and rerun.", "extensions": {}},
+    {"code": "artifact.uncaptured", "severity": "error", "condition": "A required log or executable is absent, changed, or outside bounds.", "next_action": "Use a protected fresh output directory and rerun.", "extensions": {}},
+    {"code": "input.changed", "severity": "error", "condition": "A bound HDL input changed during execution.", "next_action": "Freeze the source tree and rerun.", "extensions": {}},
+    {"code": "tool.changed", "severity": "error", "condition": "A bound compiler or runtime identity changed during execution.", "next_action": "Freeze the tool installation and rerun.", "extensions": {}}
+  ],
+  "native_mappings": [
+    {"driver_id": "org.openada.driver.iverilog.rtl-test", "native_product_id": "org.icarus.iverilog", "backend_name": "Icarus Verilog and vvp", "supported_features": ["openada.feature/rtl.test.backend/v1alpha1"], "semantic_bindings": [{"feature_id": "openada.feature/rtl.test.backend/v1alpha1", "implementation": "Compile in fixed Icarus -g2012 mode and execute the result with identity-validated vvp.", "output_fact_paths": ["data.stages", "data.pass_policy", "data.inputs_stable", "data.tool_identity_stable"], "extensions": {}}], "native_actions": ["Compile and elaborate with fixed -g2012, explicit top, includes, defines, and ordered sources.", "Run the generated vvp program with the identity-validated vvp runtime."], "artifact_bindings": [{"native_kind": "compiler transcript", "canonical_role": "rtl.test.compile.log", "extensions": {}}, {"native_kind": "runtime transcript", "canonical_role": "rtl.test.run.log", "extensions": {}}], "limitations": ["Only the fixed Icarus SystemVerilog 2012 mode is exposed.", "VPI modules and arbitrary native flags are unsupported."], "extensions": {}},
+    {"driver_id": "org.openada.driver.verilator.rtl-test", "native_product_id": "org.verilator.verilator", "backend_name": "Verilator binary testbench", "supported_features": ["openada.feature/rtl.test.backend/v1alpha1"], "semantic_bindings": [{"feature_id": "openada.feature/rtl.test.backend/v1alpha1", "implementation": "Compile with fixed Verilator --binary --timing options and execute the generated native binary.", "output_fact_paths": ["data.stages", "data.pass_policy", "data.inputs_stable", "data.tool_identity_stable"], "extensions": {}}], "native_actions": ["Compile and elaborate with fixed --binary --timing, explicit top, includes, defines, and ordered sources.", "Run the generated native test executable directly."], "artifact_bindings": [{"native_kind": "compiler transcript", "canonical_role": "rtl.test.compile.log", "extensions": {}}, {"native_kind": "runtime transcript", "canonical_role": "rtl.test.run.log", "extensions": {}}], "limitations": ["The transitive native compiler and make toolchain are not individually enumerated in v1alpha1.", "Arbitrary native flags are unsupported."], "extensions": {}}
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": ["operation and assertion truth table", "ordered HDL inputs and declared self-checking top", "fixed backend command mappings and exit-zero policy", "bounded fresh compile, run, and executable evidence"],
+    "change_policy": "Any change to pass meaning, backend commands, input semantics, environment, evidence bounds, or normalized facts requires a new profile identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

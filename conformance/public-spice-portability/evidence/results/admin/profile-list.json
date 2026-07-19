@@ -86,6 +86,14 @@
         "schema": "openada.operation-profile/v0alpha2"
       },
       {
+        "assertion_profile": "openada.assertion/rtl.self-test.passes/v1alpha1",
+        "feature_ids": [
+          "openada.feature/rtl.test.backend/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/rtl.test/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
         "assertion_profile": "openada.assertion/specification.satisfied/v1alpha1",
         "feature_ids": [
           "openada.feature/specification.bound-evaluation/v1alpha1",
@@ -107,7 +115,7 @@
   "diagnostics": [],
   "engineering": {
     "status": "pass",
-    "summary": "Listed 10 packaged operation profiles."
+    "summary": "Listed 11 packaged operation profiles."
   },
   "execution": {
     "command": [],
@@ -118,7 +126,7 @@
   "inputs": [],
   "operation": "profile.list",
   "provenance": {
-    "created_at": "2026-07-17T12:26:51.403759Z",
+    "created_at": "2026-07-19T11:37:27.964801Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -22,6 +22,7 @@ from .engines import (
     NgspiceDriver,
     NgspiceOutput,
     OpenSTADriver,
+    RTLTestDriver,
     VerilatorDriver,
     XschemDriver,
     YosysDriver,
@@ -88,6 +89,7 @@ _COMMAND_OPERATIONS = {
     "lvs": "lvs",
     "rtl-check": "rtl-check",
     "rtl-lint": "rtl-lint",
+    "rtl-test": "rtl-test",
     "synthesize": "synthesize",
     "timing-analyze": "timing-analyze",
 }
@@ -669,6 +671,17 @@ def build_parser() -> argparse.ArgumentParser:
     lint.add_argument("--timeout", type=_positive_float, default=120.0)
     _common_tool_argument(lint, "verilator")
 
+    rtl_test = commands.add_parser(
+        "rtl-test", help="Compile and run a declared self-checking HDL testbench."
+    )
+    rtl_test.add_argument("sources", nargs="+")
+    rtl_test.add_argument("--top", required=True)
+    rtl_test.add_argument("--backend", choices=["iverilog", "verilator"], default="iverilog")
+    rtl_test.add_argument("--include-dir", action="append", default=[])
+    rtl_test.add_argument("--define", action="append", default=[])
+    rtl_test.add_argument("--output-dir")
+    rtl_test.add_argument("--timeout", type=_positive_float, default=120.0)
+
     synth = commands.add_parser(
         "synthesize", help="Produce and validate a flattened Liberty-mapped ASIC netlist."
     )
@@ -726,7 +739,11 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                 "availability": tool["status"] if tool is not None else "not-inspected",
                 "native_product": driver.native_tool,
                 "operation_profile": driver.operation_profile,
-                "operation_profile_schema": "openada.operation-profile/v0alpha1",
+                "operation_profile_schema": (
+                    "openada.operation-profile/v0alpha2"
+                    if driver.operation_profile == "openada.operation/rtl.test/v1alpha1"
+                    else "openada.operation-profile/v0alpha1"
+                ),
                 "assertion_profile": driver.assertion_profile,
                 "result_schema": "openada.result/v0alpha1",
                 "transports": ["local-cli"],
@@ -739,7 +756,11 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                             if feature == TRANSIENT_FEATURE
                             else "structured"
                         ),
-                        "conformance_ids": [conformance_id],
+                        "conformance_ids": (
+                            []
+                            if feature == "openada.feature/rtl.test.backend/v1alpha1"
+                            else [conformance_id]
+                        ),
                     }
                     for feature in driver.features
                 ],
@@ -1913,6 +1934,21 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             include_dirs=args.include_dir,
             defines=args.define,
             language=args.language,
+            timeout=args.timeout,
+        )
+    if args.command == "rtl-test":
+        output_dir = (
+            Path(args.output_dir).expanduser().resolve()
+            if args.output_dir
+            else Path.cwd() / "openada-out" / "rtl-test"
+        )
+        return RTLTestDriver(discovery=discovery).rtl_test(
+            args.sources,
+            output_dir,
+            top=args.top,
+            backend=args.backend,
+            include_dirs=args.include_dir,
+            defines=args.define,
             timeout=args.timeout,
         )
     if args.command == "synthesize":

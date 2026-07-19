@@ -1,12 +1,12 @@
 {
   "chain_id": "openada.chain/public-spice-portability/v1",
-  "chain_manifest_sha256": "b5c842bc4172fcb3930792f126a4a16c8e8fca965a43285af7bd18fe6b9a8b37",
+  "chain_manifest_sha256": "50a0fc058ac5da10e34bb16e6444224179cec4e9557c3e61aea21952384316c1",
   "container_command": [
     "docker",
     "run",
     "--rm",
     "--name",
-    "openada-portability-3994685-99dd09d6",
+    "openada-portability-1044039-56885ba2",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -32,13 +32,13 @@
     "--workdir",
     "/evidence",
     "--mount",
-    "type=bind,source=/home/specialpedrito/simra/openada,target=/openada,readonly",
+    "type=bind,source=/home/specialpedrito/.codex/worktrees/d3e74bfb-7242-4055-9e5a-182ec885c4c2/openada,target=/openada,readonly",
     "--mount",
     "type=bind,source=/home/specialpedrito/.cache/openada/conformance/public-spice-portability/Xyce_Regression,target=/xyce,readonly",
     "--mount",
     "type=bind,source=/home/specialpedrito/.cache/openada/conformance/public-spice-portability/IHP-AnalogAcademy,target=/ihp,readonly",
     "--mount",
-    "type=bind,source=/home/specialpedrito/simra/evaluations/openfasoc-temp-sense-20260717/semantic-release/portability-e20d1a7,target=/evidence",
+    "type=bind,source=/tmp/openada-portability-release.ZheDmz/release,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
@@ -48,7 +48,7 @@
     "--evidence",
     "/evidence"
   ],
-  "created_at": "2026-07-17T12:27:01.021095Z",
+  "created_at": "2026-07-19T11:37:37.574845Z",
   "execution_policy": {
     "container_root": "read-only",
     "evidence_mount": "writable",
@@ -858,7 +858,7 @@
     },
     "openada": {
       "after": {
-        "commit": "2546005b07821ed6d7cc4df3c9a5828dc8219feb",
+        "commit": "415dbbe2adcb052725b2e43f946c96aad649516f",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,
@@ -866,7 +866,7 @@
         "working_tree_modified": false
       },
       "before": {
-        "commit": "2546005b07821ed6d7cc4df3c9a5828dc8219feb",
+        "commit": "415dbbe2adcb052725b2e43f946c96aad649516f",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,

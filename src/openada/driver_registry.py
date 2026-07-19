@@ -7,7 +7,7 @@ from typing import Callable
 
 from . import __version__
 from .discovery import DiscoveryManager
-from .engines import NgspiceDriver, XyceDriver
+from .engines import NgspiceDriver, RTLTestDriver, XyceDriver
 
 
 CIRCUIT_SIMULATE_PROFILE = "openada.operation/circuit.simulate/v1alpha2"
@@ -24,6 +24,9 @@ ANALYSIS_FEATURES = {
     "ac": AC_SWEEP_FEATURE,
     "tran": TRANSIENT_FEATURE,
 }
+RTL_TEST_PROFILE = "openada.operation/rtl.test/v1alpha1"
+RTL_TEST_ASSERTION = "openada.assertion/rtl.self-test.passes/v1alpha1"
+RTL_TEST_BACKEND_FEATURE = "openada.feature/rtl.test.backend/v1alpha1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,6 +66,26 @@ BUILTIN_DRIVERS: dict[str, BuiltinDriver] = {
         assertion_profile=SIMULATION_EVIDENCE_ASSERTION,
         features=(DC_SWEEP_FEATURE, AC_SWEEP_FEATURE, TRANSIENT_FEATURE),
         factory=lambda discovery: XyceDriver(discovery=discovery),
+    ),
+    "iverilog-rtl-test": BuiltinDriver(
+        alias="iverilog-rtl-test",
+        driver_id="org.openada.driver.iverilog.rtl-test",
+        version=__version__,
+        native_tool="iverilog",
+        operation_profile=RTL_TEST_PROFILE,
+        assertion_profile=RTL_TEST_ASSERTION,
+        features=(RTL_TEST_BACKEND_FEATURE,),
+        factory=lambda discovery: RTLTestDriver(discovery=discovery),
+    ),
+    "verilator-rtl-test": BuiltinDriver(
+        alias="verilator-rtl-test",
+        driver_id="org.openada.driver.verilator.rtl-test",
+        version=__version__,
+        native_tool="verilator",
+        operation_profile=RTL_TEST_PROFILE,
+        assertion_profile=RTL_TEST_ASSERTION,
+        features=(RTL_TEST_BACKEND_FEATURE,),
+        factory=lambda discovery: RTLTestDriver(discovery=discovery),
     ),
 }
 

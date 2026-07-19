@@ -496,10 +496,11 @@ same reviewed commit rather than mixing runtime and skill revisions.
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |
 | `rtl-lint` | Verilator | workflow-validated | Apply a strict no-warning/no-error SystemVerilog lint assertion with hashed source/include evidence |
+| `rtl-test` | Icarus Verilog or Verilator | structured alpha | Compile, elaborate, and run one declared self-checking HDL top with bounded stage and artifact evidence |
 | `synthesize` | Yosys + ABC | workflow-validated | Bind the external ABC executable by version and digest, retain generic inference facts, and validate a complete flattened Liberty-mapped ASIC netlist |
 | `timing-analyze` | OpenSTA | workflow-validated | Validate constraints and report one-corner setup/hold WNS, TNS, and bounded critical paths in seconds |
 
-Magic, OpenROAD, Icarus Verilog, Surelog, standalone slang, OpenVAF,
+Magic, OpenROAD, Surelog, standalone slang, OpenVAF,
 Qucs-S, GTKWave, and LibreLane are currently discoverable but do not yet have a
 stable structured operation in the preview contract.
 

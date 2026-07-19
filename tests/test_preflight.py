@@ -106,9 +106,9 @@ def test_preflight_probes_exactly_one_mapped_tool(
         banner = (
             "Netgen 2.0 compiled on test date"
             if tool == "netgen"
-            else "OpenSTA 1.0"
-            if tool == "sta"
-            else f"{tool} 1.0"
+                else "OpenSTA 1.0"
+                if tool == "sta"
+                else f"{tool} 1.0"
         )
         _write_executable(
             executable,

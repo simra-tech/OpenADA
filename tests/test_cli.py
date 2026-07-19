@@ -269,6 +269,20 @@ def test_digital_commands_dispatch_every_declared_semantic_option(
                 summary="fake lint",
             )
 
+    class FakeRTLTest:
+        def __init__(self, *, discovery):
+            assert discovery is not None
+
+        def rtl_test(self, *args, **kwargs):
+            calls["rtl-test"] = (args, kwargs)
+            return result(
+                "rtl-test",
+                tool=None,
+                execution=static_execution(),
+                engineering_status="pass",
+                summary="fake RTL test",
+            )
+
     class FakeYosys:
         def __init__(self, *, discovery):
             assert discovery is not None
@@ -298,6 +312,7 @@ def test_digital_commands_dispatch_every_declared_semantic_option(
             )
 
     monkeypatch.setattr(cli, "VerilatorDriver", FakeVerilator)
+    monkeypatch.setattr(cli, "RTLTestDriver", FakeRTLTest)
     monkeypatch.setattr(cli, "YosysDriver", FakeYosys)
     monkeypatch.setattr(cli, "OpenSTADriver", FakeOpenSTA)
     source = tmp_path / "top.sv"
@@ -328,6 +343,26 @@ def test_digital_commands_dispatch_every_declared_semantic_option(
         ]
     ) == 0
     assert json.loads(capsys.readouterr().out)["operation"] == "rtl-lint"
+    assert main(
+        [
+            "--compact",
+            "rtl-test",
+            str(source),
+            "--top",
+            "tb",
+            "--backend",
+            "verilator",
+            "--include-dir",
+            str(include),
+            "--define",
+            "TEST=1",
+            "--output-dir",
+            str(tmp_path / "rtl-test"),
+            "--timeout",
+            "19",
+        ]
+    ) == 0
+    assert json.loads(capsys.readouterr().out)["operation"] == "rtl-test"
     assert main(
         [
             "--compact",
@@ -387,6 +422,16 @@ def test_digital_commands_dispatch_every_declared_semantic_option(
             "defines": ["ASIC=1"],
             "language": "1800-2023",
             "timeout": 17.0,
+        },
+    )
+    assert calls["rtl-test"] == (
+        ([str(source)], (tmp_path / "rtl-test").resolve()),
+        {
+            "top": "tb",
+            "backend": "verilator",
+            "include_dirs": [str(include)],
+            "defines": ["TEST=1"],
+            "timeout": 19.0,
         },
     )
     assert calls["synthesize"] == (

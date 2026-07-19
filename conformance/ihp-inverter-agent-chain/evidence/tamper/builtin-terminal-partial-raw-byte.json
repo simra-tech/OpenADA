@@ -2,11 +2,11 @@
   "diagnostic": "conformance.evidence.tampered",
   "independent_rejection": {
     "exception": "ConformanceError",
-    "message": "file[/tampered-evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw].sha256: expected '485737993ab5c997c911ed821e06a3adae050267484dfa1fad860b33af9cd6db', got 'f8acd286a20854195ed36774b80c7db05d290b9cbac6a1cb45ac48897e4c27e7'"
+    "message": "file[/tampered-evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw].sha256: expected '22f4c32b5ef9efc5d0e40268cafd62a67587d6df20522408f8fb0c2a144c41ee', got '4e70a166c80855608ea3a9e4a39f342a59c5fe727dfca01a6057439dd08eda03'"
   },
   "mutation": {
-    "baseline_sha256": "f8acd286a20854195ed36774b80c7db05d290b9cbac6a1cb45ac48897e4c27e7",
-    "mutated_sha256": "485737993ab5c997c911ed821e06a3adae050267484dfa1fad860b33af9cd6db",
+    "baseline_sha256": "4e70a166c80855608ea3a9e4a39f342a59c5fe727dfca01a6057439dd08eda03",
+    "mutated_sha256": "22f4c32b5ef9efc5d0e40268cafd62a67587d6df20522408f8fb0c2a144c41ee",
     "target": "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw"
   },
   "replay_id": "builtin-terminal-partial-raw-byte",

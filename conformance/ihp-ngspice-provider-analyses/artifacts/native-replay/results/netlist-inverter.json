@@ -31,11 +31,11 @@
       "-q",
       "-x",
       "-o",
-      "/tmp/openada-xschem-1i6317vs",
+      "/tmp/openada-xschem-hmf08quz",
       "/evidence/generated/inverter-source/inverter_tb.sch"
     ],
     "cwd": "/evidence/generated/inverter-source",
-    "duration_ms": 115,
+    "duration_ms": 65,
     "exit_code": 0,
     "status": "completed"
   },
@@ -59,7 +59,7 @@
   ],
   "operation": "netlist",
   "provenance": {
-    "created_at": "2026-07-17T12:23:38.910668Z",
+    "created_at": "2026-07-19T11:35:30.396891Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

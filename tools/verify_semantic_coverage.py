@@ -137,6 +137,7 @@ SURFACE_CLASSIFICATIONS: dict[tuple[str, ...], str] = {
     ("provider", "validate"): "administrative",
     ("rtl-check",): "semantic-execution",
     ("rtl-lint",): "semantic-execution",
+    ("rtl-test",): "semantic-execution",
     ("simulate",): "semantic-execution",
     ("synthesize",): "semantic-execution",
     ("timing-analyze",): "semantic-execution",
@@ -151,6 +152,7 @@ NATIVE_EDA_SURFACES = frozenset(
         "provider-invoke",
         "rtl-check",
         "rtl-lint",
+        "rtl-test",
         "simulate",
         "synthesize",
         "timing-analyze",
@@ -165,6 +167,7 @@ NATIVE_EDA_OPERATIONS = frozenset(
         "openada.operation/circuit.simulate/v1alpha2",
         "openada.operation/logic.synthesize/v1alpha1",
         "openada.operation/rtl.lint/v1alpha1",
+        "openada.operation/rtl.test/v1alpha1",
         "openada.operation/timing.analyze/v1alpha1",
     }
 )

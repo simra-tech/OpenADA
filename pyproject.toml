@@ -77,6 +77,7 @@ where = ["src"]
   "profiles/result.spectral.measure-v1alpha1.json",
   "profiles/result.transfer.measure-v1alpha1.json",
   "profiles/rtl.lint-v1alpha1.json",
+  "profiles/rtl.test-v1alpha1.json",
   "profiles/specification.evaluate-v1alpha1.json",
   "profiles/timing.analyze-v1alpha1.json",
 ]

@@ -124,7 +124,9 @@ def test_public_conformance_maturity_is_machine_readable():
     assert TOOL_SPECS["abc"].operations == ("synthesize",)
     assert TOOL_SPECS["verilator"].maturity == "workflow-validated"
     assert TOOL_SPECS["verilator"].binaries == ("verilator_bin", "verilator")
-    assert TOOL_SPECS["verilator"].operations == ("rtl-lint",)
+    assert TOOL_SPECS["verilator"].operations == ("rtl-lint", "rtl-test")
+    assert TOOL_SPECS["iverilog"].operations == ("rtl-test",)
+    assert TOOL_SPECS["vvp"].operations == ("rtl-test",)
     assert TOOL_SPECS["sta"].maturity == "workflow-validated"
     assert TOOL_SPECS["sta"].operations == ("timing-analyze",)
 

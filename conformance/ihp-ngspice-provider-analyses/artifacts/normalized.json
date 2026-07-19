@@ -12,7 +12,7 @@
       "phase_margin_deg": 61.42309151169668,
       "plotname": "AC Analysis",
       "point_count": 701,
-      "raw_sha256": "ac9f97530937f1c5c53c152849ee9a7cb498580cad774fb69c87e9413c15d83d",
+      "raw_sha256": "de418d14b0c41c4f44653d43007964c8db3edc1ff81b092217e5b9b36d8b5dd9",
       "request_id": "11000000-0000-4000-8000-000000000003",
       "unity_crossing_in_band": true,
       "unity_gain_frequency_hz": 4157414.5570058143
@@ -29,7 +29,7 @@
       "log_sha256": "c0fb2c5e708e89bd616642a1a57eb15845544115388479dd07717429d218c892",
       "plotname": "DC transfer characteristic",
       "point_count": 121,
-      "raw_sha256": "bb36a481dc14c2aa48eb9361ee17ff8e6767a722ea029374ae5f8a8ab1b585cf",
+      "raw_sha256": "7676c6afff1d9b37ff4740dfb0cb40181c47887f8afed2c4305c510d5b3f3371",
       "request_id": "11000000-0000-4000-8000-000000000002"
     },
     "op": {
@@ -40,7 +40,7 @@
       "log_sha256": "4466b9688c9c63c6d76892805e8b540eb23187ec4e0cadd927c28af67b78efbb",
       "plotname": "Operating Point",
       "point_count": 1,
-      "raw_sha256": "794d15d883bcf8fc390e177e9f4ab938d6c48b269de4e82e4c13e4dcade47ef1",
+      "raw_sha256": "022899a4f58ad780c6974396181e151f5235b2bcbef60cb86b121561cf5c7958",
       "request_id": "11000000-0000-4000-8000-000000000001",
       "vout_v": 1.1999991371378251
     },
@@ -52,7 +52,7 @@
       "log_sha256": "6193cf7f5998a39a1e0fcd75220c8040f9288a502c4ab8744483ee7b755c0213",
       "plotname": "Transient Analysis (linearized)",
       "point_count": 1024,
-      "raw_sha256": "8d8244da7e7c44db23849f67815a96927bb8a6eb5257b01a4641674d683903dd",
+      "raw_sha256": "6e5525958d8f3c30a68d708f3e5e8718f30958d971cfb7d38ad6b81f3dff00f6",
       "request_id": "11000000-0000-4000-8000-000000000004",
       "time_first_s": 5e-07,
       "time_last_s": 3.246875000000037e-05,

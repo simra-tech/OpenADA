@@ -31,7 +31,7 @@
       "-q",
       "-x",
       "-o",
-      "/tmp/openada-xschem-n66lyc65",
+      "/tmp/openada-xschem-v2ae_1fa",
       "/design/modules/module_0_foundations/inverter/inverter_tb.sch"
     ],
     "cwd": "/design/modules/module_0_foundations/inverter",
@@ -59,7 +59,7 @@
   ],
   "operation": "netlist",
   "provenance": {
-    "created_at": "2026-07-17T12:24:47.941986Z",
+    "created_at": "2026-07-19T11:40:02.629331Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
