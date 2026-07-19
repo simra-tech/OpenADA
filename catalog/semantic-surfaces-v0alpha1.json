@@ -21,6 +21,12 @@
   },
   "profiles": [
     {
+      "repository_path": "profiles/artifact.transform-v1alpha1.json",
+      "lifecycle": "experimental-hidden",
+      "dispatchable": false,
+      "extensions": {}
+    },
+    {
       "repository_path": "profiles/circuit.simulate-v1alpha1.json",
       "lifecycle": "historical",
       "dispatchable": false,
@@ -33,9 +39,27 @@
       "extensions": {}
     },
     {
+      "repository_path": "profiles/digital.hdl.simulate-v1alpha1.json",
+      "lifecycle": "experimental-hidden",
+      "dispatchable": false,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/electromagnetic.analyze-v1alpha1.json",
+      "lifecycle": "experimental-hidden",
+      "dispatchable": false,
+      "extensions": {}
+    },
+    {
       "repository_path": "profiles/logic.synthesize-v1alpha1.json",
       "lifecycle": "active",
       "dispatchable": true,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/network.parameters.extract-v1alpha1.json",
+      "lifecycle": "experimental-hidden",
+      "dispatchable": false,
       "extensions": {}
     },
     {

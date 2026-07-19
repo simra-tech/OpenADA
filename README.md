@@ -33,7 +33,11 @@ agent skills. It closes the first native-artifact-to-specification chain with
 verified ngspice/Xyce series extraction and deterministic coherent single-tone
 SNR, SINAD, THD, and SFDR measurements, plus closed AC gain, bandwidth,
 unity-frequency, and phase-margin evidence. Packaged profiles are inspectable
-through the CLI. It also adds a hardened explicit-manifest, local JSON-stdio
+through the CLI. Four additional vendor-neutral provider-ecosystem contracts
+for digital HDL simulation, network-parameter extraction, electromagnetic
+analysis, and artifact transforms ship hidden and non-dispatchable pending
+trusted providers and conformance evidence. It also adds a hardened
+explicit-manifest, local JSON-stdio
 external-provider runtime for the active circuit-simulation profile. That
 runtime is intentionally not automatic discovery, a marketplace, or an MCP
 binding.

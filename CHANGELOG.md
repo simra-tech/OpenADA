@@ -8,6 +8,14 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Added
 
+- Four additive vendor-neutral provider-ecosystem contracts: bounded multi-step
+  digital HDL build/simulation, read-only two-port network-parameter series
+  extraction, planar/three-dimensional electromagnetic analysis, and generic
+  artifact compilation/conversion. They keep readiness, execution, artifact,
+  engineering, review, and signoff dimensions independent and ship as
+  `experimental-hidden`, non-dispatchable profiles with deterministic
+  `org.example.*` conformance mappings only.
+
 - An experimental `drc-compare` operation with explicit `revision` and `deck`
   modes. Revision mode requires different GDS content and reports persistent,
   resolved, and introduced bounded native markers. Deck mode requires the same

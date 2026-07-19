@@ -213,8 +213,10 @@ Inspect the complete packaged ontology without guessing IDs:
 ```
 
 The catalog contains nine active profiles plus the immutable historical
-`circuit.simulate/v1alpha1` profile. Catalog presence is not an
-external-provider capability.
+`circuit.simulate/v1alpha1` profile, and four non-dispatchable
+`experimental-hidden` provider-ecosystem contracts. Catalog presence is not an
+external-provider capability; the hidden contracts do not advertise native
+availability.
 
 ## Explicit external-provider runtime
 

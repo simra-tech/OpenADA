@@ -53,6 +53,13 @@ The digital set adds:
   single-corner setup/hold timing evidence.
 
 Those are nine active profiles plus the immutable historical circuit profile.
+Four additional contracts are packaged as `experimental-hidden` and
+non-dispatchable: [`digital.hdl.simulate/v1alpha1`](../profiles/digital.hdl.simulate-v1alpha1.json),
+[`network.parameters.extract/v1alpha1`](../profiles/network.parameters.extract-v1alpha1.json),
+[`electromagnetic.analyze/v1alpha1`](../profiles/electromagnetic.analyze-v1alpha1.json),
+and [`artifact.transform/v1alpha1`](../profiles/artifact.transform-v1alpha1.json).
+Their `org.example.*` mappings are deterministic conformance fixtures, not
+native availability claims. See [provider ecosystem profile contracts](provider-ecosystem-profiles.md).
 `openada profile list` returns their installed identities and
 `openada profile show OPERATION-PROFILE-ID` returns one complete validated
 document. Profile inspection is not external-provider discovery.

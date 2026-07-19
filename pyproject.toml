@@ -69,9 +69,13 @@ where = ["src"]
   "catalog/semantic-surfaces-v0alpha1.json",
 ]
 "share/openada/profiles" = [
+  "profiles/artifact.transform-v1alpha1.json",
   "profiles/circuit.simulate-v1alpha1.json",
   "profiles/circuit.simulate-v1alpha2.json",
+  "profiles/digital.hdl.simulate-v1alpha1.json",
+  "profiles/electromagnetic.analyze-v1alpha1.json",
   "profiles/logic.synthesize-v1alpha1.json",
+  "profiles/network.parameters.extract-v1alpha1.json",
   "profiles/result.measure-v1alpha1.json",
   "profiles/result.series.extract-v1alpha1.json",
   "profiles/result.spectral.measure-v1alpha1.json",

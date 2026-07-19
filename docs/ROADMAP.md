@@ -37,6 +37,7 @@ Current status: milestone A is published in this repository. Milestone B now
 includes executable request and driver-manifest v0alpha1 validation, immutable
 operation-profile schemas v0alpha1 and v0alpha2, valid contributor templates,
 nine active implemented typed profiles, one historical simulation profile,
+four non-dispatchable experimental provider-ecosystem contracts,
 cwd-independent profile inspection, and an explicit-manifest local JSON-stdio
 wait resolver registered for active circuit simulation. Automatic discovery,
 session/remote transports, and
