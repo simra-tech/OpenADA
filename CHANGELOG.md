@@ -158,6 +158,10 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Fixed
 
+- Preferred the active Python installation's provider entry point over the
+  source-checkout fallback, so the closed local transport cannot accidentally
+  select an unsupported system `python3` for an `/usr/bin/env` launcher. The
+  ambient caller `PATH` remains excluded.
 - Accepted Netgen 1.5.321 hierarchical JSON's exact, equivalent pin-only
   auxiliary records without obscuring the unique requested top-cell LVS
   comparison. Unequal pin lists, partial known-key records, duplicate requested

@@ -79,7 +79,7 @@
     {"repository_path": "schemas/driver-manifest-v0alpha1.schema.json", "sha256": "6d4a7945d7c1abe053071c440639f68f54a86f7a204ac4bf159f323e0d9a57ec", "extensions": {}},
     {"repository_path": "profiles/circuit.simulate-v1alpha2.json", "sha256": "498c6e6c42f441f22fa881885623a5bd4358a40130828f942fff50f7c61bfdfc", "extensions": {}},
     {"repository_path": "profiles/result.series.extract-v1alpha1.json", "sha256": "6d2baf44313e97b5070b8e68afe529abfafec8b6ab0e7808941078a0dd201164", "extensions": {}},
-    {"repository_path": "catalog/semantic-surfaces-v0alpha1.json", "sha256": "1cecb5e1458e45643b5aa56f1d96dcf4062072e89a1f07c8a6bc1b3ea505db88", "extensions": {}},
+    {"repository_path": "catalog/semantic-surfaces-v0alpha1.json", "sha256": "63e325b47cd62354a428b1ab37780e6affba19e48569b0606f2e255c530d1277", "extensions": {}},
     {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}},
     {"repository_path": "conformance/public-spice-portability/common.py", "sha256": "13a3375722d5542d20cf0b48a6713fe14dfbe683bb292fc86490c0807a7b35c8", "extensions": {}},
     {"repository_path": "conformance/ihp-inverter/common.py", "sha256": "068f6f84a6e94c7267474eb3f8f908144d610ba74f3e6b3c073651b1c2069cdd", "extensions": {}},

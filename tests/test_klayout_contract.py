@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import sys
 import textwrap
 
 import pytest
@@ -14,7 +15,7 @@ from openada.engines.klayout_engine import KLayoutDriver
 
 def _write_executable(path: Path, body: str) -> None:
     path.write_text(
-        "#!/usr/bin/env python3\n" + textwrap.dedent(body),
+        f"#!{sys.executable}\n" + textwrap.dedent(body),
         encoding="utf-8",
     )
     path.chmod(0o755)

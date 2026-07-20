@@ -37,11 +37,14 @@ normalized result records the environment mode and complete effective child
 mapping.
 
 The generic local-provider transport is closed before this provider starts as
-well. Bare entrypoints resolve only from the authorized working directory's
-`bin`, the current Python installation's scripts directory, and fixed system
-locations—not caller `PATH`. Every provider entrypoint or standalone code/data
-argv file is copied to a fresh private launch snapshot before `Popen`, and the
-original and snapshot identities are rechecked afterward. The launcher
+well. Bare entrypoints resolve only from the current Python installation's
+scripts directory, the authorized working directory's `bin`, and fixed system
+locations—not caller `PATH`. Preferring the active installation ensures a
+supported interpreter executes an installed entry point while the working-tree
+launcher remains a bounded source-checkout fallback. Every provider entrypoint
+or standalone code/data argv file is copied to a fresh private launch snapshot
+before `Popen`, and the original and snapshot identities are rechecked
+afterward. The launcher
 receives a fixed locale, timezone,
 and `/usr/bin:/bin` path plus private home/temp directories; ambient Python,
 loader, PDK, home, and temporary-directory variables are absent. This also

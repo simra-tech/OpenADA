@@ -3,12 +3,18 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import sys
+import sysconfig
 
 from jsonschema import Draft202012Validator
 import pytest
 
 from openada.contract import diagnostic, file_record, result, static_execution, tool_record
-from openada.provider_runtime import invoke_local_provider, provider_manifest_issues
+from openada.provider_runtime import (
+    invoke_local_provider,
+    provider_manifest_issues,
+    resolve_local_provider,
+)
 from openada.providers import ngspice_pdk_control as provider
 
 
@@ -60,6 +66,61 @@ _ANALYSIS_CASES = {
 
 def _digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _write_provider_subprocess_fixture(path: Path, native_executable: Path) -> None:
+    body = '''from pathlib import Path
+import sys
+
+from openada.contract import file_record, result, tool_record
+from openada.providers import ngspice_pdk_control as provider
+
+provider.NATIVE_NGSPICE_CANDIDATES = (__NATIVE_EXECUTABLE__,)
+
+
+def fake_simulate(self, spice_file, output_dir, **kwargs):
+    output = Path(output_dir)
+    output.mkdir(parents=True)
+    raw = output / "result.raw"
+    log = output / "ngspice.log"
+    raw.write_bytes(b"deterministic provider raw fixture\\n")
+    log.write_bytes(b"deterministic provider log fixture\\n")
+    return result(
+        "simulate",
+        tool=tool_record("ngspice", path=self.binary, version="fixture"),
+        execution={
+            "status": "completed",
+            "exit_code": 0,
+            "duration_ms": 1,
+            "command": [self.binary, "fixture"],
+            "cwd": str(output),
+        },
+        engineering_status="pass",
+        summary="Deterministic subprocess fixture produced bounded evidence.",
+        inputs=[file_record(spice_file, kind="spice-netlist", role="input")],
+        artifacts=[
+            file_record(raw, kind="ngspice-raw", role="simulation.result"),
+            file_record(log, kind="ngspice-log", role="simulation.log"),
+        ],
+        data={
+            "inputs_stable": True,
+            "analysis_evidence": {
+                "point_count": 3,
+                "dependent_variable_count": 1,
+                "finite_value_count": 3,
+            },
+        },
+    )
+
+
+provider.NgspiceDriver.simulate = fake_simulate
+raise SystemExit(provider.main())
+'''.replace("__NATIVE_EXECUTABLE__", repr(str(native_executable)))
+    path.write_text(
+        f"#!{sys.executable}\n" + body,
+        encoding="utf-8",
+    )
+    path.chmod(0o755)
 
 
 @pytest.fixture(autouse=True)
@@ -340,6 +401,13 @@ def test_reference_provider_closes_the_generic_transport_boundary(
             encoding="utf-8"
         )
     )
+    scripts = Path(sysconfig.get_path("scripts")).resolve()
+    resolved = resolve_local_provider(manifest, request, cwd=ROOT)
+    assert Path(resolved.executable) == scripts / "openada-provider-ngspice"
+
+    fixture = tmp_path / "openada-provider-fixture"
+    _write_provider_subprocess_fixture(fixture, paths["executable"])
+    manifest["transports"][0]["argv"] = [str(fixture)]
     monkeypatch.setenv("PATH", str(tmp_path / "hostile-bin"))
     monkeypatch.setenv("PYTHONPATH", str(tmp_path / "hostile-python"))
     monkeypatch.setenv("HOME", str(tmp_path / "hostile-home"))

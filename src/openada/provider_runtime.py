@@ -927,10 +927,11 @@ def _resolve_executable(argv0: str, *, cwd: Path) -> str:
         # Bare provider entrypoints are resolved only from paths derived from
         # the authorized working directory/current Python installation plus
         # fixed system locations.  Ambient PATH must not select provider code.
-        search_entries = [str(cwd / "bin")]
+        search_entries: list[str] = []
         scripts = sysconfig.get_path("scripts")
         if scripts:
             search_entries.append(scripts)
+        search_entries.append(str(cwd / "bin"))
         search_entries.extend(LOCAL_PROVIDER_SANITIZED_PATH.split(os.pathsep))
         search_path = os.pathsep.join(dict.fromkeys(search_entries))
         found = shutil.which(argv0, path=search_path)
