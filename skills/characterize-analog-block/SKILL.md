@@ -1,6 +1,6 @@
 ---
 name: characterize-analog-block
-description: Plan and review backend-independent analog-block characterization through OpenADA semantic intents. Use when defining a characterization matrix for an amplifier, regulator, comparator, reference, oscillator, data converter, or other analog block; choosing the next analysis from application, topology, technology, specifications, and available evidence; coordinating stability, spectral-linearity, or PVT workflows; or separating simulation evidence from measurements, specification results, and signoff.
+description: Analyze, plan, and review backend-independent analog-block behavior and characterization through OpenADA semantic intents. Use for qualitative schematic or topology reasoning, transient-phase and scaling analysis, device-sizing tradeoffs, defining a characterization matrix for an amplifier, regulator, comparator, reference, oscillator, data converter, or other analog block, choosing the next justified analysis, coordinating specialist workflows, or separating simulation evidence from measurements, specification results, and signoff.
 ---
 
 # Characterize an Analog Block
@@ -49,6 +49,29 @@ Create or update a compact context ledger before selecting analyses:
 
 Do not fill missing values with conventional numbers or substitute collateral.
 Ask one narrow blocking question when multiple authoritative choices remain.
+
+## Resolve the engineering question before selecting a tool
+
+Read [references/qualitative-reasoning.md](references/qualitative-reasoning.md)
+when the question depends on a schematic, switched phases, parameter scaling,
+or a device-sizing tradeoff. Use its topology, interval, dependency, and
+limiting-case checks to produce one explicit qualitative claim before planning
+an analysis.
+
+Classify the claim as one of:
+
+- **source-derived:** follows from the supplied topology, stated assumptions,
+  and symbolic device relationships;
+- **evidence-testable:** an authoritative target, models, conditions, and a
+  supported OpenADA operation can test the same claim;
+- **not evaluable:** missing topology, state, model, condition, or semantic
+  capability could change the conclusion.
+
+Do not create a netlist, choose device parameters, or invoke a simulator only
+to make a qualitative question executable. If the claim is source-derived but
+not evidence-testable, answer at that level and identify the missing evidence
+boundary. Do not describe algebra, visual inspection, or a hypothetical
+testbench as OpenADA evidence.
 
 ## Inspect capabilities before planning execution
 
@@ -172,13 +195,15 @@ skip the metric.
 
 Return:
 
-1. the frozen context and unresolved assumptions;
-2. the ordered characterization matrix and coverage by contract layer;
-3. per-run backend identity, exact profile/feature, result status, diagnostics,
+1. the immediate engineering claim, its assumptions, and whether it is
+   source-derived, evidence-testable, or not evaluable;
+2. the frozen context and unresolved assumptions;
+3. the ordered characterization matrix and coverage by contract layer;
+4. per-run backend identity, exact profile/feature, result status, diagnostics,
    and artifact lineage;
-4. measurements and specification results without collapsing their statuses;
-5. application-specific open risks and unsupported primitives;
-6. one smallest next experiment that can change the decision.
+5. measurements and specification results without collapsing their statuses;
+6. application-specific open risks and unsupported primitives;
+7. one smallest next experiment that can change the decision.
 
 End with `signoff: not claimed` unless an external, explicitly qualified
 signoff process has been supplied and reviewed. OpenADA evidence can support

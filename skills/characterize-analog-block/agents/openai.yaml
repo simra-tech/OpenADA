@@ -1,4 +1,4 @@
 interface:
   display_name: "Characterize Analog Block"
-  short_description: "Plan evidence-driven analog characterization"
-  default_prompt: "Use $openada:characterize-analog-block to characterize this analog block and execute the next supported semantic intent."
+  short_description: "Reason about and characterize analog blocks"
+  default_prompt: "Use $openada:characterize-analog-block to resolve the immediate analog behavior, then execute only the next justified semantic intent."

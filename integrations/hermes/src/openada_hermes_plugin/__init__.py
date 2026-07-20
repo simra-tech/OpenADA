@@ -67,10 +67,17 @@ def register(ctx: Any) -> None:
     """Advertise every shipped OpenADA skill without registering model tools."""
     for skill_file in _skill_files():
         name, description = _skill_metadata(skill_file)
-        ctx.register_skill(
-            name,
-            skill_file,
-            description,
-            advertise=True,
-            category="openada",
-        )
+        try:
+            ctx.register_skill(
+                name,
+                skill_file,
+                description,
+                advertise=True,
+                category="openada",
+            )
+        except TypeError as exc:
+            # Hermes <= 0.18 exposes the same namespaced, read-only skill
+            # contract without the newer discovery metadata keywords.
+            if "unexpected keyword argument" not in str(exc):
+                raise
+            ctx.register_skill(name, skill_file, description)
