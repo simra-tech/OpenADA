@@ -128,7 +128,7 @@
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-17T12:24:07.955925Z",
+        "created_at": "2026-07-21T18:52:55.617810Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",
@@ -246,7 +246,7 @@
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-17T12:24:03.566489Z",
+        "created_at": "2026-07-21T18:52:52.779501Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",
@@ -359,7 +359,7 @@
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-17T12:23:59.580611Z",
+        "created_at": "2026-07-21T18:52:49.915009Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",
@@ -475,7 +475,7 @@
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-17T12:24:11.911463Z",
+        "created_at": "2026-07-21T18:52:58.465861Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",
@@ -580,16 +580,16 @@
                   "TZ"
                 ],
                 "effective_variables": {
-                  "HOME": "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/home",
+                  "HOME": "/tmp/openada-provider-environment-f8c119bz/tmp/openada-ngspice-yq_fwtd0/home",
                   "LANG": "C",
                   "LC_ALL": "C",
                   "PATH": "/usr/local/bin:/usr/bin:/bin",
                   "PDK": "ihp-sg13g2",
                   "PDK_ROOT": "/foss/pdks",
                   "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts",
-                  "TEMP": "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/tmp",
-                  "TMP": "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/tmp",
-                  "TMPDIR": "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/tmp",
+                  "TEMP": "/tmp/openada-provider-environment-f8c119bz/tmp/openada-ngspice-yq_fwtd0/tmp",
+                  "TMP": "/tmp/openada-provider-environment-f8c119bz/tmp/openada-ngspice-yq_fwtd0/tmp",
+                  "TMPDIR": "/tmp/openada-provider-environment-f8c119bz/tmp/openada-ngspice-yq_fwtd0/tmp",
                   "TZ": "UTC"
                 },
                 "mode": "sanitized"
@@ -710,7 +710,7 @@
           "-i",
           "-n",
           "-o",
-          "/tmp/openada-provider-environment-di_hj5j1/tmp/openada-ngspice-z41qqg48/simulation.log",
+          "/tmp/openada-provider-environment-f8c119bz/tmp/openada-ngspice-yq_fwtd0/simulation.log",
           "/evidence/negative/native-tran-error/simulation/tran-native-error.openada-control.sp"
         ],
         "cwd": "/evidence/negative/native-tran-error/work",
@@ -778,7 +778,7 @@
       ],
       "operation": "simulate",
       "provenance": {
-        "created_at": "2026-07-17T12:24:16.027261Z",
+        "created_at": "2026-07-21T18:53:01.512682Z",
         "host": {
           "machine": "x86_64",
           "python": "3.12.3",

@@ -8,7 +8,7 @@
       "log_sha256": "3582be1267b994da36d89cbcb506bb4ee22983fbc8024e4d70b6419318f76326",
       "plotname": "AC Analysis",
       "point_count": 701,
-      "raw_sha256": "ac9f97530937f1c5c53c152849ee9a7cb498580cad774fb69c87e9413c15d83d",
+      "raw_sha256": "f37a325ce55b62aeaa19900ea41f07224d28d81435b994358f518506228ddc5f",
       "request_id": "11000000-0000-4000-8000-000000000003"
     },
     "dc": {
@@ -19,7 +19,7 @@
       "log_sha256": "c0fb2c5e708e89bd616642a1a57eb15845544115388479dd07717429d218c892",
       "plotname": "DC transfer characteristic",
       "point_count": 121,
-      "raw_sha256": "bb36a481dc14c2aa48eb9361ee17ff8e6767a722ea029374ae5f8a8ab1b585cf",
+      "raw_sha256": "94353d4a4dae57d1b7f7654bc7fecd967fee7626f3b0c8fbc28031624f906663",
       "request_id": "11000000-0000-4000-8000-000000000002"
     },
     "op": {
@@ -30,7 +30,7 @@
       "log_sha256": "4466b9688c9c63c6d76892805e8b540eb23187ec4e0cadd927c28af67b78efbb",
       "plotname": "Operating Point",
       "point_count": 1,
-      "raw_sha256": "794d15d883bcf8fc390e177e9f4ab938d6c48b269de4e82e4c13e4dcade47ef1",
+      "raw_sha256": "55e55296aac182ad835ef9cd3b818f15ef5c6f05b5f339abeab62e6f20d7bdf3",
       "request_id": "11000000-0000-4000-8000-000000000001"
     },
     "tran": {
@@ -41,7 +41,7 @@
       "log_sha256": "6193cf7f5998a39a1e0fcd75220c8040f9288a502c4ab8744483ee7b755c0213",
       "plotname": "Transient Analysis (linearized)",
       "point_count": 1024,
-      "raw_sha256": "8d8244da7e7c44db23849f67815a96927bb8a6eb5257b01a4641674d683903dd",
+      "raw_sha256": "fd86054e2eec33d30ce79451e3b8a7b6ced45b3d5c640be5a142aa8d80db4af5",
       "request_id": "11000000-0000-4000-8000-000000000004"
     }
   },
@@ -120,7 +120,7 @@
     {
       "bytes": 1147921,
       "path": "native/ac/work/ac.raw",
-      "sha256": "ac9f97530937f1c5c53c152849ee9a7cb498580cad774fb69c87e9413c15d83d"
+      "sha256": "f37a325ce55b62aeaa19900ea41f07224d28d81435b994358f518506228ddc5f"
     },
     {
       "bytes": 8067696,
@@ -140,7 +140,7 @@
     {
       "bytes": 12233,
       "path": "native/dc/work/dc.raw",
-      "sha256": "bb36a481dc14c2aa48eb9361ee17ff8e6767a722ea029374ae5f8a8ab1b585cf"
+      "sha256": "94353d4a4dae57d1b7f7654bc7fecd967fee7626f3b0c8fbc28031624f906663"
     },
     {
       "bytes": 8067696,
@@ -160,7 +160,7 @@
     {
       "bytes": 669,
       "path": "native/op/work/op.raw",
-      "sha256": "794d15d883bcf8fc390e177e9f4ab938d6c48b269de4e82e4c13e4dcade47ef1"
+      "sha256": "55e55296aac182ad835ef9cd3b818f15ef5c6f05b5f339abeab62e6f20d7bdf3"
     },
     {
       "bytes": 8067696,
@@ -185,7 +185,7 @@
     {
       "bytes": 98918,
       "path": "native/tran/work/tran.raw",
-      "sha256": "8d8244da7e7c44db23849f67815a96927bb8a6eb5257b01a4641674d683903dd"
+      "sha256": "fd86054e2eec33d30ce79451e3b8a7b6ced45b3d5c640be5a142aa8d80db4af5"
     },
     {
       "bytes": 2386,
@@ -195,7 +195,7 @@
     {
       "bytes": 3379,
       "path": "negative/ac-feature-result.json",
-      "sha256": "95db68235b8555a2fd4d528f4fe1e9534392a86b8648f5c430db583e45cb6fad"
+      "sha256": "254c1b3fd0fd5983b71db0328b293e6446b8cd3bfa9098048e77b378e4cee7e1"
     },
     {
       "bytes": 2402,
@@ -205,7 +205,7 @@
     {
       "bytes": 3263,
       "path": "negative/dc-mismatch-result.json",
-      "sha256": "b1c02fdf697668cf6a1595bfee2f03cc8b6daa2e2546fec9bf32ab40a2c49c3d"
+      "sha256": "760ae3b9d23695c86c5f160d6f8ba5fa4aaf7c7b15ed27c808726e1c12e0a84b"
     },
     {
       "bytes": 892,
@@ -230,7 +230,7 @@
     {
       "bytes": 3165,
       "path": "negative/op-unsafe-result.json",
-      "sha256": "6cdabcf861738cf5bb61b97c25c33eaa359be65e183f47b935880bb05291c745"
+      "sha256": "abe10ab51de36c18a6f4cdfedbaef5ab3d1e148919b77090f347d00e1035a42f"
     },
     {
       "bytes": 753,
@@ -245,7 +245,7 @@
     {
       "bytes": 3273,
       "path": "negative/tran-duplicate-result.json",
-      "sha256": "b4d06d045ee729308dfa9f82119778e4d32d8e123a4ee6de50aae4010d02270d"
+      "sha256": "fec1ee0087b2dfec2d9948ec567c82e119f52a2fa584c7e8080c664b36f2fb32"
     },
     {
       "bytes": 789,
@@ -260,7 +260,7 @@
     {
       "bytes": 11703,
       "path": "negative/tran-native-error-result.json",
-      "sha256": "92d2e451fb660539e55879ae1094e80e4d1f481cf2b1522e32031a4711d4e529"
+      "sha256": "9959361322db0e564f1d768008fa08b9e7a2ffc115750dc449914522d2bae632"
     },
     {
       "bytes": 816,
@@ -270,7 +270,7 @@
     {
       "bytes": 28930,
       "path": "observation.json",
-      "sha256": "11b923da37ac511a2c2113e10de117586ae26e9105dfa4b9b67f71749a65929e"
+      "sha256": "84ff4e7c0f2118c9248831c4293f752b69797131e98e383d565e8ec10100ebed"
     },
     {
       "bytes": 2367,
@@ -295,35 +295,35 @@
     {
       "bytes": 11823,
       "path": "results/ac.json",
-      "sha256": "d3748980114a9e076edcabced23691a1ce3c116f1c9f125342c4cf8b3f64d707"
+      "sha256": "798cb467d1b94b6ff82844a3766a316ca3de51a0a4e6f2243e94a62033f7e043"
     },
     {
       "bytes": 11723,
       "path": "results/dc.json",
-      "sha256": "b0b1fe6457621f635fa34ad4838c7026821145733bcc15bbaad259e9e179f380"
+      "sha256": "be495731258a4c2362aa4f3f339c6b2168be4b14b85e90b1fcc4728ddbbe225f"
     },
     {
       "bytes": 1846,
       "path": "results/netlist-inverter.json",
-      "sha256": "14334888329eb0cc18dc23422e07e38c1769c961acfef4b7fc680b062cc4dd17"
+      "sha256": "647c93dd8c59070cfbdfe393e4903d3988aedb2d3faf7ac5407f3a79b3bdaa5d"
     },
     {
-      "bytes": 1926,
+      "bytes": 1927,
       "path": "results/netlist-ota.json",
-      "sha256": "a97c6c5021a8384346c62d3094433b48ed2ba6e93deed5d3118d52e27213d63d"
+      "sha256": "63bf81b790c924b10056edf20d801439c98cc2408515ba5e7cb5056cad5a6831"
     },
     {
       "bytes": 11531,
       "path": "results/op.json",
-      "sha256": "9b2aa6d4aec3326855bf65e26e4075c4dae31d160a8047258552ab0a3089b3bc"
+      "sha256": "7cfe4371548121ca086b3bb69ffd164c803632c6ac258309c16fd08af0527ecd"
     },
     {
       "bytes": 12162,
       "path": "results/tran.json",
-      "sha256": "18aa10745b4590ba1bd9e8ab80de77ff6a7dcbfca3e7483a7bf682e89e337e56"
+      "sha256": "7366f49274c16cbf6608e1d3f0f12631472afbc62bc5546c960c4434382fbb33"
     }
   ],
-  "native_tree_sha256": "0fbf6728120fdb5f5e72472ecf3f8add786b59936bdad26726da81ea620c0f62",
+  "native_tree_sha256": "5107799957972c1a06998ffc5e775895ab7d696e7d2cde74dbaaaccedf798d29",
   "negative_replays": {
     "ac-feature-mismatch": {
       "diagnostic_codes": [

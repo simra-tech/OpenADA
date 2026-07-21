@@ -5,7 +5,7 @@
   "suites": [
     {
       "repository_path": "tests/test_ngspice_provider.py",
-      "sha256": "bbe4dae8c3475dd45f7a900b58dbf601bfdea57c3aa62c8239b35aab827caed4"
+      "sha256": "b294aea2ab2af904066f93ab1e0ffdf0d1642c48ccfec83fac0f62acc5841d8d"
     },
     {
       "repository_path": "tests/test_ngspice_outputs.py",
