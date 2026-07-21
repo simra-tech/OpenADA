@@ -82,7 +82,7 @@
           "path": "/evidence/drc.json",
           "repository_path": "conformance/ihp-inverter/semantic-artifacts/drc.json",
           "role": "normalized-evidence",
-          "sha256": "e87f7248dcf2fa97d9d753486c6499a4138a60f07b1f4da21a4e43b5bf8d5d91"
+          "sha256": "85ef11341866c0e2d81decd67b8e4d68a0f40557fe09c5f38d6969f715dfec32"
         },
         {
           "bytes": 120878,
@@ -100,7 +100,7 @@
           "path": "/evidence/inverter.drc.lyrdb.openada.log",
           "repository_path": "conformance/ihp-inverter/semantic-artifacts/inverter.drc.lyrdb.openada.log",
           "role": "native-evidence",
-          "sha256": "e8c394866842951f298369c197dd50e4374c67c3acea02f4f7f849674f75b0d1"
+          "sha256": "ca2275f0b47427a853d39d09656d878a477134077b5a57cbcb7d557fca006a91"
         }
       ],
       "source_inputs": [
@@ -483,7 +483,7 @@
           "path": "/evidence/drc-fail.json",
           "repository_path": "conformance/ihp-inverter/semantic-artifacts/drc-fail.json",
           "role": "normalized-evidence",
-          "sha256": "488386e11acedee52a9046593c30eedcc4df01125eef6a7480b894dcdb3aacdd"
+          "sha256": "b09735c2715984a33c1bc92a17913f60c119d17ca72887fe6cefdbdd9b2de3a1"
         },
         {
           "bytes": 123327,
@@ -501,7 +501,7 @@
           "path": "/evidence/lvs-tester.drc.lyrdb.openada.log",
           "repository_path": "conformance/ihp-inverter/semantic-artifacts/lvs-tester.drc.lyrdb.openada.log",
           "role": "native-evidence",
-          "sha256": "fee7cad13d8c29ef896bb6f4d3e60672fc2b613653a1730847380a43bf1f82f6"
+          "sha256": "e2b7f41bc0e0fa5c7e89c5249e058482dc7911e576004b9b7a57c323d7517d2f"
         }
       ],
       "source_inputs": [
@@ -633,7 +633,7 @@
           "path": "/evidence/lvs.json",
           "repository_path": "conformance/ihp-inverter/semantic-artifacts/lvs.json",
           "role": "normalized-evidence",
-          "sha256": "7a79a5bee3af1e6b8d60c791852026c61687d38bcc1f5e5068e22f44785f2597"
+          "sha256": "41792182a23a7372a67ac9c7834d3e22b6e7804370aef0f328b654c79c7832ea"
         },
         {
           "bytes": 1598,
@@ -694,10 +694,10 @@
     }
   },
   "replay": {
-    "created_at": "2026-07-21T18:47:23.148504Z",
+    "created_at": "2026-07-21T18:58:29.066354Z",
     "openada_checkout": {
       "after": {
-        "commit": "ceef4abc97751070a6fbcb59145bc02b35f74cb3",
+        "commit": "415987fbbebbce37758e27cf421b6085ab9b4e43",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,
@@ -705,7 +705,7 @@
         "working_tree_modified": false
       },
       "before": {
-        "commit": "ceef4abc97751070a6fbcb59145bc02b35f74cb3",
+        "commit": "415987fbbebbce37758e27cf421b6085ab9b4e43",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,
@@ -722,7 +722,7 @@
       "path": "/evidence/run.json",
       "repository_path": "conformance/ihp-inverter/semantic-artifacts/run.json",
       "role": "native-run-metadata",
-      "sha256": "2922259a321f0ddcdbf6262d8027d1c315484ca7b3a6befacee713c59e60a469"
+      "sha256": "0caa69547f02d821a1b4cb1224fc8701b396c613ee8215a8ce6c41ac66398091"
     }
   },
   "replays": {
@@ -736,7 +736,7 @@
           {
             "bytes": 17266,
             "filename": "drc-fail.json",
-            "sha256": "488386e11acedee52a9046593c30eedcc4df01125eef6a7480b894dcdb3aacdd"
+            "sha256": "b09735c2715984a33c1bc92a17913f60c119d17ca72887fe6cefdbdd9b2de3a1"
           },
           {
             "bytes": 123327,
@@ -777,7 +777,7 @@
     "report": {
       "bytes": 3804,
       "repository_path": "conformance/ihp-inverter/semantic-probes.json",
-      "sha256": "0d7e3d91fb2e71865289f1a1fa0470d79169f52e338f5f96adb310be636c1903"
+      "sha256": "46f03cb1b95530a8ae40cc42930302357d7a42b96303daa38b5dd96bba0f8c1c"
     },
     "summary": {
       "all_required_diagnostics_observed": true,
@@ -830,28 +830,28 @@
         "replay_id": "real-gallery-drc-fail",
         "replay_type": "negative-replay",
         "repository_path": "conformance/ihp-inverter/semantic-replays/real-gallery-drc-fail.json",
-        "sha256": "24bce9883d060147f0f53c6a012a9fa68a48585635cf4530f92ba27d101c8f7b"
+        "sha256": "d920c58d53040a08edd1dca28e2e4904cb69b60551c78d1841ba74bb0fef3eea"
       },
       {
         "bytes": 1133,
         "replay_id": "reconciled-seven-item-drc",
         "replay_type": "tamper-replay",
         "repository_path": "conformance/ihp-inverter/semantic-replays/reconciled-seven-item-drc.json",
-        "sha256": "25520e2f607ad0322a2cdc66b847f90fbb45869e0013ea70cd71bd7548902b4b"
+        "sha256": "e02b21701816506e1b55f54e6e8f5956e911f73c8d081726b5295af855e7ff41"
       },
       {
         "bytes": 1223,
         "replay_id": "synthetic-native-lvs-mismatch",
         "replay_type": "negative-replay",
         "repository_path": "conformance/ihp-inverter/semantic-replays/synthetic-native-lvs-mismatch.json",
-        "sha256": "648b06b24442aa3073669d80cd9397d2e7a66601f0e3f109bffefa75e8a26702"
+        "sha256": "a70439fe3e030b973dcfe48bd16d28ce96e92d686a24302781ad60b508d757b9"
       },
       {
         "bytes": 1289,
         "replay_id": "unbound-native-lvs-json",
         "replay_type": "tamper-replay",
         "repository_path": "conformance/ihp-inverter/semantic-replays/unbound-native-lvs-json.json",
-        "sha256": "3895f8dfceb6ba1c8aee32fe973ef492e7e63178deec3521818a91c45da0bce5"
+        "sha256": "b3962883893a04c20c841d6d716b9bcc279abb6251036e9d00ba03db9b59d46f"
       }
     ]
   },
