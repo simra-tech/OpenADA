@@ -85,7 +85,7 @@
       "+1800-2017ext+svh",
       "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"
     ],
-    "cwd": "/evidence/negative/.openada-verilator-tpue4u6p",
+    "cwd": "/evidence/negative/.openada-verilator-zdnyyiph",
     "duration_ms": 65,
     "exit_code": 1,
     "status": "completed"
@@ -102,7 +102,7 @@
   ],
   "operation": "rtl-lint",
   "provenance": {
-    "created_at": "2026-07-21T18:54:06.832358Z",
+    "created_at": "2026-07-21T19:05:23.836416Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
