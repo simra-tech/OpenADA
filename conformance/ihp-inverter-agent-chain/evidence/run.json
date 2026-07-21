@@ -1,12 +1,12 @@
 {
   "chain_id": "openada.chain/ihp-inverter-agent-chain/v1",
-  "chain_manifest_sha256": "2a250c415345b3edc4da863cf98b238c6557b423eff040cae7e6a352423a1e87",
+  "chain_manifest_sha256": "763ba260a52482e5ce2a3b93f5051408f483294db015b73deb765abbff07018a",
   "container_command": [
-    "docker",
+    "podman",
     "run",
     "--rm",
     "--name",
-    "openada-ihp-agent-3992763-e1f352b5",
+    "openada-ihp-agent-1701110-6220c238",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -20,7 +20,7 @@
     "--pids-limit",
     "512",
     "--user",
-    "1001:1002",
+    "0:0",
     "--env",
     "HOME=/tmp/openada-home",
     "--env",
@@ -32,11 +32,11 @@
     "--workdir",
     "/evidence",
     "--mount",
-    "type=bind,source=/home/specialpedrito/simra/openada,target=/openada,readonly",
+    "type=bind,source=/tmp/openada-release-prep.TL5hFS/openada,target=/openada,readonly",
     "--mount",
-    "type=bind,source=/home/specialpedrito/.cache/openada/conformance/ihp-inverter/IHP-AnalogAcademy,target=/design,readonly",
+    "type=bind,source=/home/amirmabhout/.cache/openada/conformance/ihp-inverter/IHP-AnalogAcademy,target=/design,readonly",
     "--mount",
-    "type=bind,source=/home/specialpedrito/simra/evaluations/openfasoc-temp-sense-20260717/semantic-release/ihp-agent-e20d1a7,target=/evidence",
+    "type=bind,source=/tmp/openada-release-ceef4ab-03-ihp-inverter-agent,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
@@ -46,7 +46,7 @@
     "--evidence",
     "/evidence"
   ],
-  "created_at": "2026-07-17T12:26:03.928557Z",
+  "created_at": "2026-07-21T18:51:53.151076Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "image": {
     "architecture": "amd64",
@@ -57,7 +57,7 @@
   "network": "none during EDA execution",
   "openada_checkout": {
     "after": {
-      "commit": "49f05a03a89a1f0632c1b0c62185849058775b0e",
+      "commit": "90b9e913dcd1ac0b5229fe1e976c884281e64494",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -65,7 +65,7 @@
       "working_tree_modified": false
     },
     "before": {
-      "commit": "49f05a03a89a1f0632c1b0c62185849058775b0e",
+      "commit": "90b9e913dcd1ac0b5229fe1e976c884281e64494",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
