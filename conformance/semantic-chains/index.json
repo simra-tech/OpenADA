@@ -41,7 +41,7 @@
       },
       "run": {
         "repository_path": "conformance/ihp-inverter-agent-chain/evidence/chain-run.json",
-        "sha256": "8e3b87ef36056381ed75c209d20f3462ef90c915da93c1fdab814191679450cc",
+        "sha256": "26c520035b9eaa3050f930c1877eb537b6e9c6ba4c665818e86044d8298de435",
         "extensions": {}
       },
       "extensions": {}

@@ -64,19 +64,19 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
         "builtin_provider_mapping_count": 10,
         "cli_leaf_count": 22,
         "preflight_assertion_count": 8,
-        "profile_count": 10,
-        "profile_feature_count": 30,
+        "profile_count": 14,
+        "profile_feature_count": 46,
         "provider_mapping_count": 11,
         "shipped_provider_capability_count": 1,
         "shipped_provider_manifest_count": 1,
         "surface_count": 22,
     }
-    assert payload["summary"]["row_count"] == 157
+    assert payload["summary"]["row_count"] == 201
     assert payload["summary"]["active_row_count"] == 147
     assert payload["summary"]["gap_count"] == 0
     assert payload["summary"]["rows_by_coverage_level"] == {
         "agent-ready": 147,
-        "unverified": 10,
+        "unverified": 54,
     }
     assert payload["gaps"] == []
 
