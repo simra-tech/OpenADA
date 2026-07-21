@@ -24,7 +24,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-check.result.json",
       "role": "native-artifact",
-      "sha256": "2cc545c4649b9b5e7895ba534f8f48b56992f1107710035253f58f37dbc4d30b",
+      "sha256": "1f300a42f0e0671e755d5f5eb6f6af6ce53041b73c4919ad244e6f7208b692c4",
       "source_output": "positive-rtl-result",
       "source_step": "rtl-structural-check"
     },
@@ -51,7 +51,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/yosys.transcript.json",
       "role": "native-artifact",
-      "sha256": "1e68d49773b676d6b23c80f6e95208d995bc6824533f8920b818f067ec4c6b10",
+      "sha256": "5a58927d69fa6e26809a6a2a7f486657948d62f553ac93f9f95c0350d12b1acf",
       "source_output": "positive-yosys-transcript",
       "source_step": "rtl-structural-check"
     },
@@ -60,7 +60,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-check.result.json",
       "role": "native-artifact",
-      "sha256": "3e7a47d8574c4adf656fde2a4e60c2b802174ba19ac280e4b53f28bbe71fba25",
+      "sha256": "7616ad019363f50f394b818503b8f227266f71d239d087190eca4b7f0c0f6235",
       "source_output": "negative-rtl-result",
       "source_step": "missing-top-native"
     },
@@ -78,7 +78,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/yosys.transcript.json",
       "role": "native-artifact",
-      "sha256": "39cf3c386c4de7db96023cd27570045daaa1554b3247a7bb459fe72e112b579f",
+      "sha256": "b302cc801b6d6a6eaeb5eeea25be6f1a8e78edbe5bc0fdd82e2117c3c477ad45",
       "source_output": "negative-yosys-transcript",
       "source_step": "missing-top-native"
     },
@@ -87,7 +87,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.result.json",
       "role": "native-artifact",
-      "sha256": "0e894d71df94dba059c4e3c1c96c44e6d9b30be2ff26bfc83f229f53835b46cf",
+      "sha256": "ec4ffd9191946a76c529ba6d60083abaca40981de27ff237993b5cc0879f9dc5",
       "source_output": "positive-lint-result",
       "source_step": "rtl-lint-clean"
     },
@@ -96,7 +96,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive/rtl-lint.log",
       "role": "native-artifact",
-      "sha256": "567e6bebf11598c9eed876351ec7360c36c9990f6665a8bb2699c9bbaef7eec1",
+      "sha256": "764a67c3ff491b0c84ad2721c0faea4ac41a7461ecd7a30b97dba59dd7fd97d9",
       "source_output": "positive-verilator-transcript",
       "source_step": "rtl-lint-clean"
     },
@@ -105,7 +105,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive-2023/rtl-lint.result.json",
       "role": "native-artifact",
-      "sha256": "f7d2f6c8c94c21a990ca5972ae05a9a8c4f1a980d8f3a7c765c4e72f871ab9c6",
+      "sha256": "1fa9a0646d39cbb358d8f3e8413b2c9b4de44bb920bd1b395c6677e48bbe1c31",
       "source_output": "positive-lint-2023-result",
       "source_step": "rtl-lint-clean-2023"
     },
@@ -114,7 +114,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/positive-2023/rtl-lint.log",
       "role": "native-artifact",
-      "sha256": "4cc6c3d1c70fb12a66d99b139456d9773a2ab37120b242d072320a414c65f84e",
+      "sha256": "fac48eb6a90f6ba67b23a238fe72a69205a70cb38f8713a533292604ea5de69e",
       "source_output": "positive-verilator-2023-transcript",
       "source_step": "rtl-lint-clean-2023"
     },
@@ -123,7 +123,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/negative/rtl-lint.result.json",
       "role": "native-artifact",
-      "sha256": "7f6173d749c096d1e1fdbed2f3396fb411483c4e152c3cd02e8601f46f2b5ecf",
+      "sha256": "67020c889ed1ececa41e5a729795a6efea27de0d503157e610f1dde12e65c4f2",
       "source_output": "negative-lint-result",
       "source_step": "lint-missing-top-native"
     },
@@ -141,7 +141,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-artifacts/run.json",
       "role": "native-artifact",
-      "sha256": "49c07e8ece2539e4d35e2f052fba04ae3449ccbc0a39620a71389483959b3685",
+      "sha256": "ed8031844040efd998abc22c5a1234f8d76f1ce0d2a71c2645e46670c203e432",
       "source_output": "native-run-receipt",
       "source_step": "rtl-structural-check"
     },
@@ -150,7 +150,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
       "role": "independent-oracle",
-      "sha256": "9098b874fde9beb80473b2a0c80b6f8cfc6d165d69b4d70e0257a2164f163f52",
+      "sha256": "a51372d3573ea4def2715b91a934f15ca1dfc7f0775c609cd7b3ab41a862325f",
       "source_output": "independent-oracle-verdict",
       "source_step": "independent-verifier"
     },
@@ -159,7 +159,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-normalized.json",
       "role": "normalized-evidence",
-      "sha256": "c4324cff1b7d2fd566f716a13504334c493ebc37cc59f39599888b2e2b2bb5b6",
+      "sha256": "90c45f78e1eafdc39391a5cc767f12462046431b1d3feb217c7a268cbc8d4e6d",
       "source_output": "normalized-rtl-evidence",
       "source_step": "normalize-rtl-evidence"
     },
@@ -168,7 +168,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-decision.json",
       "role": "downstream-decision",
-      "sha256": "d9a5ebc7cead6a0325e4d20f4f973853ab5ab907a5e879624b0351cce68feff6",
+      "sha256": "45bd321bf1abf83870bf436db2874686546ad438c02e986a610d99705bfb70fc",
       "source_output": "downstream-rtl-decision",
       "source_step": "engineering-decision"
     },
@@ -177,7 +177,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-sar-rtl/semantic-evidence.json",
       "role": "agent-visible-evidence",
-      "sha256": "738e5590619b5ab2a12b655c6aa15a3e254892d563ed78d9c1ba820e9736f143",
+      "sha256": "e2ba0a9d3627d918abd56a381c636a16ca650bdc8d56c71f2fd33cf17d834409",
       "source_output": "agent-visible-rtl-evidence",
       "source_step": "agent-evidence"
     },
@@ -219,7 +219,7 @@
     }
   ],
   "chain_id": "openada.chain/ihp-sar-rtl/v1",
-  "chain_manifest_sha256": "e076b2cae7c75f96ba5e7c9f3b776fd4674eb5408789261085c35fde859b7735",
+  "chain_manifest_sha256": "0751026189e2d0bf68313ce70e64e898047368c32bfe290e6bd876243e1a3572",
   "checks": {
     "agent_visible_evidence": true,
     "contract_test": true,
@@ -238,15 +238,15 @@
     }
   },
   "schema": "openada.semantic-chain-run/v0alpha1",
-  "semantic_subject_sha256": "eefa662ac543bc587b4b4598c11a87aa6ccef43069acaef4bc58ec43a43ae964",
+  "semantic_subject_sha256": "45b1c60dbfdfff45ea3ad18d627d764891b6613c8148825b15f069f18fd436e9",
   "source_attestation": {
     "clean_after": true,
     "clean_before": true,
     "extensions": {},
     "receipt_class": "release",
-    "repository_revision": "1689c47df81d372853069deee34b3b7f9d561ec9",
-    "repository_tree": "8e19c4e5a960f91fd6d8c78e3c6987321fdf841e",
-    "semantic_subject_sha256": "eefa662ac543bc587b4b4598c11a87aa6ccef43069acaef4bc58ec43a43ae964",
+    "repository_revision": "1d22784da30cb3b9e62e21a17b46ab0df16a0e38",
+    "repository_tree": "8e24dc8a3281b2b1d50a1e7c9e5454da0ec3ceec",
+    "semantic_subject_sha256": "45b1c60dbfdfff45ea3ad18d627d764891b6613c8148825b15f069f18fd436e9",
     "state_unchanged": true
   },
   "status": "pass"
