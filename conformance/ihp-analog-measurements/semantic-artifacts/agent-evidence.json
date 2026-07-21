@@ -3,10 +3,10 @@
     "inverter": {
       "decision": "These generic ratios describe an inverter waveform and are not ADC or DAC quality evidence.",
       "metrics": {
-        "sfdr": 9.598544308390936,
-        "sinad": 6.3276550536545955,
+        "sfdr": 9.598544308390935,
+        "sinad": 6.327655053654594,
         "snr": 93.28584204315911,
-        "thd": -6.32765506240374
+        "thd": -6.327655062403739
       },
       "status": "expected-square-wave-harmonics-observed"
     },
@@ -28,89 +28,89 @@
     "Public IEEE pages were reviewed only for lifecycle and scope; no licensed clause-level review or standards-conformance claim was made."
   ],
   "lineage": {
-    "engineering_decision_sha256": "851f4bd9684e21b708dbb543ebca19256940394ff630c754a1d6f94e12c52280",
-    "inverter_raw_sha256": "08e9282189c2285b60a713a92da52fdf01112fe23ff14e94e77c79ebcfbbf60d",
-    "oracle_sha256": "ba5fe2ff0c5fccdb0c4452cd44f6c98b905c50c0884736bfb5d54619b68b76b3",
-    "ota_raw_sha256": "2e8f6e7790b6518ba8317d61b222611bd5492b677f7bb69af62afcff0340c225"
+    "engineering_decision_sha256": "78ef657d2f031484c340033162f18b46ee2c9822cdc05f78669c67862688ac1d",
+    "inverter_raw_sha256": "9a672828504310e2364fd21a4d66b1c6bca2096eb970ef2067eff5dbb5ea4097",
+    "oracle_sha256": "569ae3848d2334e2dce7cb8b4abb32f83bdf0d6cbb98874fec4c82bb74e76e2f",
+    "ota_raw_sha256": "7b00e58fbae394e7a64bd251b2fa7e8dee755d157aa284695ad833e813d0518b"
   },
   "negative_replays": {
     "extract-ac-missing-selector": {
       "diagnostic": "series.selector.missing",
       "engineering_status": "unknown",
       "execution_status": "completed",
-      "result_sha256": "a8e1bc7cc95609df1acccf07627edc2c3f53411196e99c455e6646cde5bfb0e3"
+      "result_sha256": "c0b9a2bf84c5b013b7bc3ca263385e58e620885f12435ee96adfdb15770641f6"
     },
     "extract-tran-missing-selector": {
       "diagnostic": "series.selector.missing",
       "engineering_status": "unknown",
       "execution_status": "completed",
-      "result_sha256": "59e845df77eaf25ad6a10639946e160eabfb28f90ada35de2bb75ced8e5da0da"
+      "result_sha256": "f016d5a2abff41f6f03dce975a7aafdc6b41842a010d82ce17381e10ad48708e"
     },
     "netlist-missing-symbol": {
       "diagnostic": "xschem.missing_symbol",
       "engineering_status": "fail",
       "execution_status": "completed",
-      "result_sha256": "76700e8b99c24a00b5b8848126e3f0d12425207d5567911714cb7544404902ce"
+      "result_sha256": "02fe43bb5bc552c48585273e1f2a827a7adc077d9ed2cf4fa172640f58fe7beb"
     },
     "provider-ac-parameter-mismatch": {
       "diagnostic": "simulation.request.invalid",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "54f431642c4b54c8d3ac41085ce6b2b983259e8b653a815e84bf55fb3195ebfc"
+      "result_sha256": "871da525c578a303235c06886f34e847920f7993d1822910cb2ccb445b526bc5"
     },
     "provider-tran-parameter-mismatch": {
       "diagnostic": "simulation.request.invalid",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "f6431ba427339333a1bcc6c4a03cbf3dbaf7373c9207946e8c204c22688e67e6"
+      "result_sha256": "a72fa6b83647b8d8683ef7793ce34079590ae17360b3d0bc782e95412952caf0"
     },
     "spectral-sfdr-invalid-standard-context": {
       "diagnostic": "spectral.standard_context.invalid",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "d28c1abf1a12d3b7147dce66df37d8b8833c80eb0c3959fc4cd086f64deaa0f1"
+      "result_sha256": "0920b8500e28df3821b448da5c1353d5825a550f112162d3f8af2977ba96b6bd"
     },
     "spectral-sinad-record-length": {
       "diagnostic": "spectral.method.record_length_mismatch",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "1cdc91d720d6d6b5e1683fc7f71116075a0825f8f1eac5a0e34473bcd42905c9"
+      "result_sha256": "10d0e42f2f4b5deb7852c18f4bd688eeef89f78d725f9e02bfbca33041631469"
     },
     "spectral-snr-noncoherent": {
       "diagnostic": "spectral.coherence.not_established",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "e6955fbdadc6170a0911ba953cdf9b286d773dabd171e9ded9a0f1fe10c05a00"
+      "result_sha256": "062422c16bb7e5344f7b8142a9357626d5fbccf9864d684c482cb16a0a4225bb"
     },
     "spectral-thd-unsupported-window": {
       "diagnostic": "spectral.method.unsupported",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "f9148c9afb00bec9ea241593929d636e06c2c54ba537a9240b61eb5ec48fdd87"
+      "result_sha256": "c87bd256270df0d5244add3e13a15baea7a7da1a863cc480f4c851160ff7a361"
     },
     "transfer-bandwidth-unsupported-drop": {
       "diagnostic": "transfer.method.unsupported",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "557894cc54e39bb07ac07099208ed493f51a36873b26b36cb08cb55d26b9a9b9"
+      "result_sha256": "eb80ac3a6025d9e3ddf24b61eb1df336b765e29572ce85a611c3307a986f2ef1"
     },
     "transfer-low-frequency-gain-invalid-unit": {
       "diagnostic": "transfer.unit.mismatch",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "e67e244f8665e6a53bf34ce68e7fe5347999fa0f684c6641eb086e68133bb3f5"
+      "result_sha256": "50de015abc53d9bb2b40735483871d8fe9ab95257e1dfe368596aa4340c8dd31"
     },
     "transfer-phase-margin-invalid-context": {
       "diagnostic": "transfer.phase_margin.invalid_context",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "ab287b1c5799265433a704a170bf94e4b179726dc778a94559380f5e619c8368"
+      "result_sha256": "c65548b62e8697dfe9efe401584299cb281fdcdd8315014855c5666853a4776b"
     },
     "transfer-unity-unsupported-policy": {
       "diagnostic": "transfer.method.unsupported",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "b74a8babe83ee8c26e4f2e63595cecd9ee939e8896a296f364d2750f9ba6ad5e"
+      "result_sha256": "1dfbfcc106477adbf936da3397858a8cea0a196f839e82c8daefc8c46a34ed7d"
     }
   },
   "schema": "openada.ihp-analog-agent-evidence/v0alpha1",

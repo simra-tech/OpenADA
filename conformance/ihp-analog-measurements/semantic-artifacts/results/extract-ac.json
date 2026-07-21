@@ -13,7 +13,7 @@
         "plotname": "AC Analysis",
         "point_count": 701
       },
-      "request_sha256": "6db1732a151cfdac01b12b2325511c5c770817491e64cb6d22471790f784cc69",
+      "request_sha256": "a48818f58e4f98c3344af4fcda023390bcf6d132c319514f2560b40fb87abdc3",
       "series": {
         "axis": {
           "name": "frequency",
@@ -3585,7 +3585,7 @@
           "artifact_sha256": "333c3dbe406b4da56a0a4ee45dfc6b38e888e8afa713f0136336ca1f909d6bf5",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "2e8f6e7790b6518ba8317d61b222611bd5492b677f7bb69af62afcff0340c225",
+            "artifact_sha256": "7b00e58fbae394e7a64bd251b2fa7e8dee755d157aa284695ad833e813d0518b",
             "binding": "unverified",
             "operation": "circuit.simulate",
             "request_id": "24000000-0000-4000-8000-000000000001"
@@ -3602,7 +3602,7 @@
           "kind": "ngspice-raw",
           "path": "/evidence/provider-ac/work/ota_ac.raw",
           "role": "simulation.result",
-          "sha256": "2e8f6e7790b6518ba8317d61b222611bd5492b677f7bb69af62afcff0340c225"
+          "sha256": "7b00e58fbae394e7a64bd251b2fa7e8dee755d157aa284695ad833e813d0518b"
         },
         "backend": "ngspice",
         "binding": "verified",
@@ -3639,12 +3639,12 @@
       "kind": "ngspice-raw",
       "path": "/evidence/provider-ac/work/ota_ac.raw",
       "role": "simulation.result",
-      "sha256": "2e8f6e7790b6518ba8317d61b222611bd5492b677f7bb69af62afcff0340c225"
+      "sha256": "7b00e58fbae394e7a64bd251b2fa7e8dee755d157aa284695ad833e813d0518b"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-17T12:21:27.978379Z",
+    "created_at": "2026-07-21T18:49:44.503421Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

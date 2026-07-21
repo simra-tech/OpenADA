@@ -31,11 +31,11 @@
       "-q",
       "-x",
       "-o",
-      "/tmp/openada-xschem-0osnljqf",
+      "/tmp/openada-xschem-t9ho96td",
       "/evidence/sources/inverter-spectral.sch"
     ],
     "cwd": "/evidence/sources",
-    "duration_ms": 65,
+    "duration_ms": 165,
     "exit_code": 0,
     "status": "completed"
   },
@@ -59,7 +59,7 @@
   ],
   "operation": "netlist",
   "provenance": {
-    "created_at": "2026-07-17T12:21:10.461239Z",
+    "created_at": "2026-07-21T18:49:31.024630Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
