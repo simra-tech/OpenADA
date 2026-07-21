@@ -1,12 +1,12 @@
 {
   "artifacts": [
     {
-      "bytes": 685,
+      "bytes": 687,
       "exists": true,
       "kind": "simulation-log",
       "path": "/evidence/sim/ngspice-op/inverter-op.log",
       "role": "simulation.log",
-      "sha256": "3c24f3c63200fb166a6c53e1d9898910a120caaf27eab5aed93d3f8d15d6aa2f"
+      "sha256": "3c0e72a946b64fc76d8ad85ddb7763eced0209b747f947e998cc10676d056bd8"
     },
     {
       "bytes": 668,
@@ -14,7 +14,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/sim/ngspice-op/inverter-op.raw",
       "role": "simulation.result",
-      "sha256": "e1ab9bb2712bcd30c821e3a8667d14bd07d1bb860cc55df3fa26462a9431be4c"
+      "sha256": "1ffe7d4330ef4df3716c28a12a33934028cf7c2c5f8fdc3d2eb10909db2273d7"
     }
   ],
   "data": {
@@ -79,12 +79,12 @@
           },
           "inputs_stable": true,
           "log_capture": {
-            "bytes": 685,
+            "bytes": 687,
             "path": "/evidence/sim/ngspice-op/inverter-op.log",
-            "sha256": "3c24f3c63200fb166a6c53e1d9898910a120caaf27eab5aed93d3f8d15d6aa2f",
+            "sha256": "3c0e72a946b64fc76d8ad85ddb7763eced0209b747f947e998cc10676d056bd8",
             "status": "valid"
           },
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-22nb0qan/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 11  \n\nNo. of Data Rows : 1\n\nTotal analysis time (seconds) = 0.00264662\n\nTotal elapsed time (seconds) = 0.018 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 12109.020 MB.\nMaximum ngspice program size =  531.711 MB.\nCurrent ngspice program size =   15.625 MB.\n\nShared ngspice pages =   12.152 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.195 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-589nio8u/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 11  \n\nNo. of Data Rows : 1\n\nTotal analysis time (seconds) = 0.00165227\n\nTotal elapsed time (seconds) = 0.047 \n\nTotal DRAM available = 773205.535 MB.\nDRAM currently available = 201738.758 MB.\nMaximum ngspice program size =  403.598 MB.\nCurrent ngspice program size =   14.504 MB.\n\nShared ngspice pages =   11.215 MB.\nText (code) pages =    6.562 MB.\nStack = 0 bytes.\nLibrary pages =   59.824 MB.\n\n",
           "measurement_section_count": 0,
           "measurements": [],
           "measurements_truncated": false,
@@ -95,7 +95,7 @@
               "kind": "raw",
               "origin": "wrapper",
               "path": "/evidence/sim/ngspice-op/inverter-op.raw",
-              "sha256": "e1ab9bb2712bcd30c821e3a8667d14bd07d1bb860cc55df3fa26462a9431be4c",
+              "sha256": "1ffe7d4330ef4df3716c28a12a33934028cf7c2c5f8fdc3d2eb10909db2273d7",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -153,7 +153,7 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "d0857c24-99ab-4d9a-8dd1-72ee83354f99"
+      "request_id": "a0d3f570-1ed3-4f1c-84df-0a49ff39d986"
     }
   },
   "diagnostics": [],
@@ -166,13 +166,13 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-22nb0qan/simulation.raw",
+      "/tmp/openada-ngspice-589nio8u/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-22nb0qan/simulation.log",
+      "/tmp/openada-ngspice-589nio8u/simulation.log",
       "/evidence/work/inverter-op.spice"
     ],
     "cwd": "/evidence",
-    "duration_ms": 32,
+    "duration_ms": 65,
     "exit_code": 0,
     "status": "completed"
   },
@@ -188,7 +188,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-17T12:26:37.796871Z",
+    "created_at": "2026-07-21T19:05:52.244525Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

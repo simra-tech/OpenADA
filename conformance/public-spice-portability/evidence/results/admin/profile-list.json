@@ -4,6 +4,15 @@
     "extensions": {},
     "profiles": [
       {
+        "assertion_profile": "openada.assertion/artifact.transform.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/artifact.transform.compilation/v1alpha1",
+          "openada.feature/artifact.transform.conversion/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/artifact.transform/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
         "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
         "feature_ids": [
           "openada.feature/simulation.analysis.op/v1alpha1",
@@ -26,11 +35,46 @@
         "schema": "openada.operation-profile/v0alpha1"
       },
       {
+        "assertion_profile": "openada.assertion/digital.hdl.self-check.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/digital.hdl.language.verilog/v1alpha1",
+          "openada.feature/digital.hdl.language.systemverilog/v1alpha1",
+          "openada.feature/digital.hdl.language.vhdl/v1alpha1",
+          "openada.feature/digital.hdl.self-check.assertion/v1alpha1",
+          "openada.feature/digital.hdl.waveform/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/digital.hdl.simulate/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
+        "assertion_profile": "openada.assertion/electromagnetic.evidence.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/electromagnetic.model.planar/v1alpha1",
+          "openada.feature/electromagnetic.model.three-dimensional/v1alpha1",
+          "openada.feature/electromagnetic.artifact.network/v1alpha1",
+          "openada.feature/electromagnetic.artifact.field/v1alpha1",
+          "openada.feature/electromagnetic.convergence/v1alpha1",
+          "openada.feature/electromagnetic.reference-comparison/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/electromagnetic.analyze/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
         "assertion_profile": "openada.assertion/synthesized-netlist.valid/v1alpha1",
         "feature_ids": [
           "openada.feature/synthesis.asic-liberty/v1alpha1"
         ],
         "operation_profile": "openada.operation/logic.synthesize/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
+        "assertion_profile": "openada.assertion/network.parameters.structurally-valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/network.encoding.real-imaginary/v1alpha1",
+          "openada.feature/network.encoding.magnitude-angle/v1alpha1",
+          "openada.feature/network.encoding.decibel-angle/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/network.parameters.extract/v1alpha1",
         "schema": "openada.operation-profile/v0alpha2"
       },
       {
@@ -107,7 +151,7 @@
   "diagnostics": [],
   "engineering": {
     "status": "pass",
-    "summary": "Listed 10 packaged operation profiles."
+    "summary": "Listed 14 packaged operation profiles."
   },
   "execution": {
     "command": [],
@@ -118,7 +162,7 @@
   "inputs": [],
   "operation": "profile.list",
   "provenance": {
-    "created_at": "2026-07-17T12:26:51.403759Z",
+    "created_at": "2026-07-21T19:06:14.011604Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

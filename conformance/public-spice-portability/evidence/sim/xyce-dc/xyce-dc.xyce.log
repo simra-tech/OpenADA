@@ -3,7 +3,7 @@
 ***** Welcome to the Xyce(TM) Parallel Electronic Simulator
 *****
 ***** This is version Xyce Release 7.10-opensource
-***** Date: Fri Jul 17 14:26:40 CEST 2026
+***** Date: Tue Jul 21 21:05:54 CEST 2026
 
 
 ***** Executing netlist /evidence/work/xyce-dc.cir
@@ -30,13 +30,13 @@ Netlist warning: No print specified
 	Number Failed Linear Solves:		0
 	Number Residual Evaluations:		303
 	Number Nonlinear Convergence Failures:	0
-	Total Residual Load Time:		0.000811338 seconds
-	Total Jacobian Load Time:		0.000223875 seconds
-	Total Linear Solution Time:		0.00577044 seconds
+	Total Residual Load Time:		0.000717402 seconds
+	Total Jacobian Load Time:		0.000231981 seconds
+	Total Linear Solution Time:		0.00133419 seconds
 
 
-***** Total Simulation Solvers Run Time: 0.0219049 seconds
-***** Total Elapsed Run Time:            0.114723 seconds
+***** Total Simulation Solvers Run Time: 0.00891614 seconds
+***** Total Elapsed Run Time:            0.0214369 seconds
 *****
 ***** End of Xyce(TM) Simulation
 *****
@@ -44,20 +44,20 @@ Netlist warning: No print specified
 Timing summary of 1 processor
                  Stats                   Count       CPU Time              Wall Time
 ---------------------------------------- ----- --------------------- ---------------------
-Xyce                                         1        0.023 (100.0%)        0.404 (100.0%)
-  Analysis                                   1        0.002 (10.01%)        0.022 ( 5.40%)
-    DC Sweep                                 1        0.002 ( 9.98%)        0.022 ( 5.40%)
-      Solve                                101        0.002 ( 8.19%)        0.020 ( 4.98%)
-        Residual                           303        0.000 ( 1.04%)        0.001 ( 0.28%)
-        Jacobian                           201        0.000 ( 0.38%)        0.000 ( 0.10%)
-        Linear Solve                       201        0.000 ( 1.78%)        0.006 ( 1.48%)
-      Successful Step                      101        0.000 ( 0.94%)        0.001 ( 0.22%)
-  Netlist Import                             1        0.005 (23.05%)        0.047 (11.74%)
-    Parse Context                            1        0.001 ( 2.78%)        0.003 ( 0.63%)
-    Distribute Devices                       1        0.000 ( 1.43%)        0.002 ( 0.53%)
-    Verify Devices                           1        0.000 ( 0.03%)        0.000 (<0.01%)
-    Instantiate                              1        0.000 ( 1.17%)        0.000 ( 0.07%)
-  Late Initialization                        1        0.001 ( 6.15%)        0.013 ( 3.12%)
-    Global Indices                           1        0.000 ( 0.21%)        0.000 ( 0.01%)
-  Setup Matrix Structure                     1        0.001 ( 4.80%)        0.007 ( 1.74%)
+Xyce                                         1        0.191 (100.0%)        0.653 (100.0%)
+  Analysis                                   1        0.003 ( 1.76%)        0.009 ( 1.36%)
+    DC Sweep                                 1        0.003 ( 1.75%)        0.009 ( 1.35%)
+      Solve                                101        0.003 ( 1.37%)        0.007 ( 1.13%)
+        Residual                           303        0.001 ( 0.27%)        0.001 ( 0.18%)
+        Jacobian                           201        0.000 ( 0.13%)        0.001 ( 0.08%)
+        Linear Solve                       201        0.001 ( 0.27%)        0.002 ( 0.25%)
+      Successful Step                      101        0.000 ( 0.17%)        0.001 ( 0.12%)
+  Netlist Import                             1        0.002 ( 1.17%)        0.006 ( 0.94%)
+    Parse Context                            1        0.000 ( 0.22%)        0.001 ( 0.08%)
+    Distribute Devices                       1        0.000 ( 0.02%)        0.001 ( 0.08%)
+    Verify Devices                           1        0.000 (<0.01%)        0.000 (<0.01%)
+    Instantiate                              1        0.000 ( 0.08%)        0.000 ( 0.02%)
+  Late Initialization                        1        0.001 ( 0.78%)        0.002 ( 0.32%)
+    Global Indices                           1        0.000 ( 0.03%)        0.000 (<0.01%)
+  Setup Matrix Structure                     1        0.001 ( 0.28%)        0.001 ( 0.14%)
 

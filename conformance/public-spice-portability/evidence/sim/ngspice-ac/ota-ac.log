@@ -4,7 +4,7 @@ Note: No compatibility mode selected!
 
 Circuit: ** sch_path: /evidence/work/ihp-ota/ota_testbench.sch
 
-binary raw file "/tmp/openada-ngspice-ezwhtx4m/simulation.raw"
+binary raw file "/tmp/openada-ngspice-kat59l_w/simulation.raw"
 Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
 
 Using SPARSE 1.3 as Direct Linear Solver
@@ -14,17 +14,17 @@ No. of Data Columns : 29
 
 No. of Data Rows : 51
 
-Total analysis time (seconds) = 0.0325611
+Total analysis time (seconds) = 0.00912532
 
-Total elapsed time (seconds) = 0.062 
+Total elapsed time (seconds) = 0.031 
 
-Total DRAM available = 32106.207 MB.
-DRAM currently available = 12096.793 MB.
-Maximum ngspice program size =  531.734 MB.
-Current ngspice program size =   15.062 MB.
+Total DRAM available = 773205.535 MB.
+DRAM currently available = 201737.453 MB.
+Maximum ngspice program size =  531.727 MB.
+Current ngspice program size =   14.828 MB.
 
-Shared ngspice pages =   11.551 MB.
-Text (code) pages =    5.875 MB.
+Shared ngspice pages =   11.320 MB.
+Text (code) pages =    6.562 MB.
 Stack = 0 bytes.
-Library pages =   60.219 MB.
+Library pages =   60.211 MB.
 

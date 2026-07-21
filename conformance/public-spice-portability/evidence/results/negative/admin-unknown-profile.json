@@ -25,7 +25,7 @@
   "inputs": [],
   "operation": "profile.show",
   "provenance": {
-    "created_at": "2026-07-17T12:26:59.010971Z",
+    "created_at": "2026-07-21T19:06:20.221255Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

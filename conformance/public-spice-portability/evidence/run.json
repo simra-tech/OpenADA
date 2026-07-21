@@ -1,12 +1,12 @@
 {
   "chain_id": "openada.chain/public-spice-portability/v1",
-  "chain_manifest_sha256": "b5c842bc4172fcb3930792f126a4a16c8e8fca965a43285af7bd18fe6b9a8b37",
+  "chain_manifest_sha256": "67d70ca043ebf9017b1f74e37f4580d0e4c31457bd84080445f8c091529ab61f",
   "container_command": [
-    "docker",
+    "podman",
     "run",
     "--rm",
     "--name",
-    "openada-portability-3994685-99dd09d6",
+    "openada-portability-1752167-804004a2",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -20,7 +20,7 @@
     "--pids-limit",
     "512",
     "--user",
-    "1001:1002",
+    "0:0",
     "--env",
     "HOME=/tmp/openada-home",
     "--env",
@@ -32,13 +32,13 @@
     "--workdir",
     "/evidence",
     "--mount",
-    "type=bind,source=/home/specialpedrito/simra/openada,target=/openada,readonly",
+    "type=bind,source=/tmp/openada-release-prep.TL5hFS/openada,target=/openada,readonly",
     "--mount",
-    "type=bind,source=/home/specialpedrito/.cache/openada/conformance/public-spice-portability/Xyce_Regression,target=/xyce,readonly",
+    "type=bind,source=/home/amirmabhout/.cache/openada/conformance/public-spice-portability/Xyce_Regression,target=/xyce,readonly",
     "--mount",
-    "type=bind,source=/home/specialpedrito/.cache/openada/conformance/public-spice-portability/IHP-AnalogAcademy,target=/ihp,readonly",
+    "type=bind,source=/home/amirmabhout/.cache/openada/conformance/public-spice-portability/IHP-AnalogAcademy,target=/ihp,readonly",
     "--mount",
-    "type=bind,source=/home/specialpedrito/simra/evaluations/openfasoc-temp-sense-20260717/semantic-release/portability-e20d1a7,target=/evidence",
+    "type=bind,source=/tmp/openada-release-415987f-06-public-spice-portability,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
@@ -48,11 +48,11 @@
     "--evidence",
     "/evidence"
   ],
-  "created_at": "2026-07-17T12:27:01.021095Z",
+  "created_at": "2026-07-21T19:06:23.148500Z",
   "execution_policy": {
     "container_root": "read-only",
     "evidence_mount": "writable",
-    "host_user": "1001:1002",
+    "host_user": "29051:10107",
     "network": "none",
     "openada_mount": "read-only",
     "public_source_mounts": "read-only"
@@ -858,7 +858,7 @@
     },
     "openada": {
       "after": {
-        "commit": "2546005b07821ed6d7cc4df3c9a5828dc8219feb",
+        "commit": "2511325d7e7b12e1d9b8fa29e48fde933b6597e8",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,
@@ -866,7 +866,7 @@
         "working_tree_modified": false
       },
       "before": {
-        "commit": "2546005b07821ed6d7cc4df3c9a5828dc8219feb",
+        "commit": "2511325d7e7b12e1d9b8fa29e48fde933b6597e8",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,

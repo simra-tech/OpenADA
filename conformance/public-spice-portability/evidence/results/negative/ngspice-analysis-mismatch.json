@@ -51,7 +51,7 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "ecb8c3b1-af47-44b5-b81c-82a7b601ca93"
+      "request_id": "9038de78-e79d-4658-8d64-e90938faf976"
     }
   },
   "diagnostics": [
@@ -83,7 +83,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-17T12:26:58.420649Z",
+    "created_at": "2026-07-21T19:06:19.919573Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -451,8 +451,8 @@
         "binary": "/foss/tools/bin/librelane",
         "maturity": "discovered",
         "operations": [],
-        "status": "available",
-        "version": "LibreLane v3.1.0.dev1"
+        "status": "unusable",
+        "version": null
       },
       "magic": {
         "binary": "/foss/tools/magic/bin/magic",
@@ -565,7 +565,7 @@
   "diagnostics": [],
   "engineering": {
     "status": "not_applicable",
-    "summary": "Discovered 17 of 18 inspected tool(s)."
+    "summary": "Discovered 16 of 18 inspected tool(s)."
   },
   "execution": {
     "command": [],
@@ -576,7 +576,7 @@
   "inputs": [],
   "operation": "doctor",
   "provenance": {
-    "created_at": "2026-07-17T12:26:49.209432Z",
+    "created_at": "2026-07-21T19:06:12.066518Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
