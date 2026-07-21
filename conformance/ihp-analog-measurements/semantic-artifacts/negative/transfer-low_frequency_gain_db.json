@@ -47,7 +47,7 @@
         "conditions_sha256": "ae4b756f3269ff33ac915c2eb84f294f55f724c35e647531ebc77470921cdcea",
         "lineage": {
           "artifact_role": "simulation.result",
-          "artifact_sha256": "7b00e58fbae394e7a64bd251b2fa7e8dee755d157aa284695ad833e813d0518b",
+          "artifact_sha256": "a6a7cfad1a8f3d06a76cfb46f71cb44fe09dc7c122fbe9844529a2175d399c99",
           "binding": "unverified",
           "operation": "circuit.simulate",
           "request_id": "24000000-0000-4000-8000-000000000001"
@@ -105,7 +105,7 @@
   "inputs": [],
   "operation": "result.transfer.measure",
   "provenance": {
-    "created_at": "2026-07-21T18:49:47.693858Z",
+    "created_at": "2026-07-21T19:00:50.588952Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

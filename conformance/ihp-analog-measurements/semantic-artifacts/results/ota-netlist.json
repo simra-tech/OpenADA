@@ -31,11 +31,11 @@
       "-q",
       "-x",
       "-o",
-      "/tmp/openada-xschem-3917htqo",
+      "/tmp/openada-xschem-r42tsvzo",
       "/evidence/sources/ota-ac.sch"
     ],
     "cwd": "/evidence/sources",
-    "duration_ms": 1670,
+    "duration_ms": 867,
     "exit_code": 0,
     "status": "completed"
   },
@@ -59,7 +59,7 @@
   ],
   "operation": "netlist",
   "provenance": {
-    "created_at": "2026-07-21T18:49:30.657791Z",
+    "created_at": "2026-07-21T19:00:33.978526Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

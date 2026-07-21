@@ -5,7 +5,7 @@
       "result": {
         "bytes": 15564,
         "path": "/evidence/results/spectral-sfdr.json",
-        "sha256": "8aaf9125f4a1b3f23537f7bcff093bdf15183187b49ed49815513fcd89bde6c4"
+        "sha256": "d52de8fdb2db41300ee332dc6bb21f89903db01f437f5868710d7a1af5fb8847"
       },
       "unit": "dB",
       "value": 9.598544308390958
@@ -14,7 +14,7 @@
       "result": {
         "bytes": 15567,
         "path": "/evidence/results/spectral-sinad.json",
-        "sha256": "c65c4719b5d24f2ecc7371bedb67db022b1631a466139368013dbfb205dc9ad9"
+        "sha256": "7b9acf333d756460fbca0d3045481feec45dd74000b9a3b9f9d70cf1c9ce5a37"
       },
       "unit": "dB",
       "value": 6.327655053654634
@@ -23,7 +23,7 @@
       "result": {
         "bytes": 15559,
         "path": "/evidence/results/spectral-snr.json",
-        "sha256": "d7cebda36453d3c45f9a9ab0ee213a2bd3775a9b87720b418b61859b180da6ae"
+        "sha256": "8c36c471cfcbfc9f3b6ce0262cb7a171e33966bb05aa28b85e173157ef7171b3"
       },
       "unit": "dB",
       "value": 93.28584204310002
@@ -32,7 +32,7 @@
       "result": {
         "bytes": 15560,
         "path": "/evidence/results/spectral-thd.json",
-        "sha256": "53ac43bd55cb541bf711dadc926518944e951218c9352dc8fce7375ca9ec3943"
+        "sha256": "971b152f89912a5a6246a8083444735f8d8c4d55c43ed52d86519ced595d36b1"
       },
       "unit": "dB",
       "value": -6.327655062403778
@@ -74,7 +74,7 @@
       "result": {
         "bytes": 67629,
         "path": "/evidence/results/transfer-bandwidth_3db.json",
-        "sha256": "62ee97439869a663f618d04aafe7cf85f54723d944b7741568dd78fe2cb10ddc"
+        "sha256": "389e506d15577dd9279f7900983d569bb139bc85574878d1cb8567ffe51ff62b"
       },
       "unit": "Hz",
       "value": 1332.3043851822767
@@ -83,7 +83,7 @@
       "result": {
         "bytes": 67645,
         "path": "/evidence/results/transfer-low_frequency_gain_db.json",
-        "sha256": "ea1658ac14177f98fa8f6895c4868e81ee304aed2328dd3a614c800144ad2dc7"
+        "sha256": "8b2b28cfdf131aef8b0261d7ee8094e7ccd42b207cbf36df9d08e2e7e19891e3"
       },
       "unit": "dB",
       "value": 70.11974138671727
@@ -92,7 +92,7 @@
       "result": {
         "bytes": 67645,
         "path": "/evidence/results/transfer-phase_margin.json",
-        "sha256": "d51342b1a8eb090e840dfad5d6d0aadb8bb96861e7b1e3956483f194b41da6fb"
+        "sha256": "c5014a2b2e4c8ff2ca7a909610527effef4fcfb8b8cd973d21ba7c029fb3e113"
       },
       "unit": "deg",
       "value": 61.42309151169668
@@ -101,7 +101,7 @@
       "result": {
         "bytes": 67657,
         "path": "/evidence/results/transfer-unity_gain_frequency.json",
-        "sha256": "db571859325048b9baf461d339b54118a234ae5485d1f8a96d92fd9c4bdeedd1"
+        "sha256": "671c4cee9a9900dc943ffe14048a0f2e82b96547d3b2a95d0a8c37f19a566414"
       },
       "unit": "Hz",
       "value": 4157414.5570058133
