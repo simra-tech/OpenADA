@@ -6,7 +6,7 @@
       "kind": "simulation-log",
       "path": "/evidence/builtin/simulation/inverter_shared.log",
       "role": "simulation.log",
-      "sha256": "aa5d88309591a4b03d7b750f4baca67ae7ba59f1252b3d890e325cb669c007a7"
+      "sha256": "33e0c3339004f15f406e7bc5c1e4bc3647c6eceaa26b9ccfda323a4a18b7709a"
     },
     {
       "bytes": 8391,
@@ -14,7 +14,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/builtin/simulation/inverter_shared.raw",
       "role": "simulation.result",
-      "sha256": "1b6924cbf7b41cd321e705cd46f10a200ef3c8b0cd771bdfa3404a29e1a31d03"
+      "sha256": "4e25637553da4d837c510ddba80f0774870afd772c1938135bc062548b414772"
     }
   ],
   "data": {
@@ -81,10 +81,10 @@
           "log_capture": {
             "bytes": 1092,
             "path": "/evidence/builtin/simulation/inverter_shared.log",
-            "sha256": "aa5d88309591a4b03d7b750f4baca67ae7ba59f1252b3d890e325cb669c007a7",
+            "sha256": "33e0c3339004f15f406e7bc5c1e4bc3647c6eceaa26b9ccfda323a4a18b7709a",
             "status": "valid"
           },
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-ebnuj2qh/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvin                                          0\nvdd                                        1.2\nvout                                       1.2\nv2#branch                         -3.10217e-10\nv1#branch                          8.18116e-11\n\n\nNo. of Data Rows : 81\n\nTotal analysis time (seconds) = 0.00714099\n\nTotal elapsed time (seconds) = 0.042 \n\nTotal DRAM available = 773205.535 MB.\nDRAM currently available = 201665.543 MB.\nMaximum ngspice program size =  531.602 MB.\nCurrent ngspice program size =   14.727 MB.\n\nShared ngspice pages =   11.438 MB.\nText (code) pages =    6.562 MB.\nStack = 0 bytes.\nLibrary pages =   60.086 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-_zshlbda/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvin                                          0\nvdd                                        1.2\nvout                                       1.2\nv2#branch                         -3.10217e-10\nv1#branch                          8.18116e-11\n\n\nNo. of Data Rows : 81\n\nTotal analysis time (seconds) = 0.00706809\n\nTotal elapsed time (seconds) = 0.034 \n\nTotal DRAM available = 773205.535 MB.\nDRAM currently available = 201849.875 MB.\nMaximum ngspice program size =  531.598 MB.\nCurrent ngspice program size =   14.719 MB.\n\nShared ngspice pages =   11.430 MB.\nText (code) pages =    6.562 MB.\nStack = 0 bytes.\nLibrary pages =   60.082 MB.\n\n",
           "measurement_section_count": 0,
           "measurements": [],
           "measurements_truncated": false,
@@ -95,7 +95,7 @@
               "kind": "raw",
               "origin": "wrapper",
               "path": "/evidence/builtin/simulation/inverter_shared.raw",
-              "sha256": "1b6924cbf7b41cd321e705cd46f10a200ef3c8b0cd771bdfa3404a29e1a31d03",
+              "sha256": "4e25637553da4d837c510ddba80f0774870afd772c1938135bc062548b414772",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -155,7 +155,7 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "5024316f-351c-4771-abce-38dface3c348"
+      "request_id": "739d782a-1a65-497f-8e5b-8d574037e50b"
     }
   },
   "diagnostics": [],
@@ -168,9 +168,9 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-ebnuj2qh/simulation.raw",
+      "/tmp/openada-ngspice-_zshlbda/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-ebnuj2qh/simulation.log",
+      "/tmp/openada-ngspice-_zshlbda/simulation.log",
       "/evidence/work/inverter_shared.spice"
     ],
     "cwd": "/evidence/builtin/work",
@@ -190,7 +190,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-21T18:51:03.508954Z",
+    "created_at": "2026-07-21T19:02:10.141575Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

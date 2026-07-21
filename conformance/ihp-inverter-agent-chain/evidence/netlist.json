@@ -31,11 +31,11 @@
       "-q",
       "-x",
       "-o",
-      "/tmp/openada-xschem-fo_ft0ib",
+      "/tmp/openada-xschem-qhkhvdo7",
       "/design/modules/module_0_foundations/inverter/inverter_tb.sch"
     ],
     "cwd": "/design/modules/module_0_foundations/inverter",
-    "duration_ms": 1167,
+    "duration_ms": 1269,
     "exit_code": 0,
     "status": "completed"
   },
@@ -59,7 +59,7 @@
   ],
   "operation": "netlist",
   "provenance": {
-    "created_at": "2026-07-21T18:50:56.312692Z",
+    "created_at": "2026-07-21T19:02:02.945505Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
