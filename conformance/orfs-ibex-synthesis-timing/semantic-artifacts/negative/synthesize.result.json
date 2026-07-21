@@ -171,8 +171,8 @@
       "-s",
       "/evidence/negative/synthesize.ys"
     ],
-    "cwd": "/evidence/negative/.openada-synthesize-p45mk7oz",
-    "duration_ms": 115,
+    "cwd": "/evidence/negative/.openada-synthesize-icf26_my",
+    "duration_ms": 266,
     "exit_code": 1,
     "status": "completed"
   },
@@ -396,7 +396,7 @@
   ],
   "operation": "synthesize",
   "provenance": {
-    "created_at": "2026-07-17T12:27:28.819478Z",
+    "created_at": "2026-07-21T19:07:19.763450Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
