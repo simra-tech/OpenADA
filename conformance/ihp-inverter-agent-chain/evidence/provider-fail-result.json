@@ -22,7 +22,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/provider-fail/work/test_inverter_fail.raw",
       "role": "simulation.result",
-      "sha256": "cb30b72a424c7afa8ef241e84a0652c7c321284470aeff1b565f84d34b7baefc"
+      "sha256": "53a7a1ba7e9429d491f6ee624bd70b87b1c64daf1b9b27ccf12344f04c16ed26"
     }
   ],
   "data": {
@@ -97,16 +97,16 @@
               "TZ"
             ],
             "effective_variables": {
-              "HOME": "/tmp/openada-provider-environment-fvnjwqrf/tmp/openada-ngspice-4k5rx6uf/home",
+              "HOME": "/tmp/openada-provider-environment-cu7hew0b/tmp/openada-ngspice-w6ldua2p/home",
               "LANG": "C",
               "LC_ALL": "C",
               "PATH": "/usr/local/bin:/usr/bin:/bin",
               "PDK": "ihp-sg13g2",
               "PDK_ROOT": "/foss/pdks",
               "SPICE_SCRIPTS": "/foss/tools/ngspice/share/ngspice/scripts",
-              "TEMP": "/tmp/openada-provider-environment-fvnjwqrf/tmp/openada-ngspice-4k5rx6uf/tmp",
-              "TMP": "/tmp/openada-provider-environment-fvnjwqrf/tmp/openada-ngspice-4k5rx6uf/tmp",
-              "TMPDIR": "/tmp/openada-provider-environment-fvnjwqrf/tmp/openada-ngspice-4k5rx6uf/tmp",
+              "TEMP": "/tmp/openada-provider-environment-cu7hew0b/tmp/openada-ngspice-w6ldua2p/tmp",
+              "TMP": "/tmp/openada-provider-environment-cu7hew0b/tmp/openada-ngspice-w6ldua2p/tmp",
+              "TMPDIR": "/tmp/openada-provider-environment-cu7hew0b/tmp/openada-ngspice-w6ldua2p/tmp",
               "TZ": "UTC"
             },
             "mode": "sanitized"
@@ -149,7 +149,7 @@
               "origin": "deck",
               "parent_anchored": true,
               "path": "/evidence/provider-fail/work/test_inverter_fail.raw",
-              "sha256": "cb30b72a424c7afa8ef241e84a0652c7c321284470aeff1b565f84d34b7baefc",
+              "sha256": "53a7a1ba7e9429d491f6ee624bd70b87b1c64daf1b9b27ccf12344f04c16ed26",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -238,11 +238,11 @@
       "-i",
       "-n",
       "-o",
-      "/tmp/openada-provider-environment-fvnjwqrf/tmp/openada-ngspice-4k5rx6uf/simulation.log",
+      "/tmp/openada-provider-environment-cu7hew0b/tmp/openada-ngspice-w6ldua2p/simulation.log",
       "/evidence/provider-fail/simulation/inverter_terminal_nonconvergence.openada-control.sp"
     ],
     "cwd": "/evidence/provider-fail/work",
-    "duration_ms": 265,
+    "duration_ms": 266,
     "exit_code": 0,
     "status": "completed"
   },
@@ -306,7 +306,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-21T19:02:09.626409Z",
+    "created_at": "2026-07-21T19:10:39.682158Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

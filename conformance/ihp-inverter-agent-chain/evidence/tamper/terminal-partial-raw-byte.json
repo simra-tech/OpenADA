@@ -2,11 +2,11 @@
   "diagnostic": "conformance.evidence.tampered",
   "independent_rejection": {
     "exception": "ConformanceError",
-    "message": "file[/tampered-evidence/provider-fail/work/test_inverter_fail.raw].sha256: expected '27f3aa9a0df0ef6bca7372455e4f50492833a9c6173bed59d1408ca8e08d20f3', got 'cb30b72a424c7afa8ef241e84a0652c7c321284470aeff1b565f84d34b7baefc'"
+    "message": "file[/tampered-evidence/provider-fail/work/test_inverter_fail.raw].sha256: expected '47290477dd1c281f99f421a8b219a4bb7c98966462c642c310d8e0f9ead18f48', got '53a7a1ba7e9429d491f6ee624bd70b87b1c64daf1b9b27ccf12344f04c16ed26'"
   },
   "mutation": {
-    "baseline_sha256": "cb30b72a424c7afa8ef241e84a0652c7c321284470aeff1b565f84d34b7baefc",
-    "mutated_sha256": "27f3aa9a0df0ef6bca7372455e4f50492833a9c6173bed59d1408ca8e08d20f3",
+    "baseline_sha256": "53a7a1ba7e9429d491f6ee624bd70b87b1c64daf1b9b27ccf12344f04c16ed26",
+    "mutated_sha256": "47290477dd1c281f99f421a8b219a4bb7c98966462c642c310d8e0f9ead18f48",
     "target": "provider-fail/work/test_inverter_fail.raw"
   },
   "replay_id": "terminal-partial-raw-byte",
