@@ -579,6 +579,43 @@ def run_checked(argv: Iterable[str], *, cwd: Path | None = None) -> subprocess.C
     return completed
 
 
+def _canonical_oci_sha256(value: object) -> str | None:
+    """Normalize Docker/Podman SHA-256 identities to the OCI spelling."""
+
+    if not isinstance(value, str):
+        return None
+    digest = value.removeprefix("sha256:")
+    if len(digest) != 64 or any(character not in "0123456789abcdef" for character in digest):
+        return None
+    return f"sha256:{digest}"
+
+
+def _repo_digest_matches(reference: str, record: dict[str, Any]) -> bool:
+    """Accept Docker Hub's explicit registry prefix without weakening the pin."""
+
+    repository, separator, digest = reference.rpartition("@")
+    expected_digest = _canonical_oci_sha256(digest)
+    if not separator or expected_digest is None:
+        return False
+    accepted_repositories = {repository}
+    if "/" in repository and not repository.startswith("docker.io/"):
+        accepted_repositories.add(f"docker.io/{repository}")
+    repo_digests = record.get("RepoDigests")
+    if not isinstance(repo_digests, list):
+        return False
+    for candidate in repo_digests:
+        if not isinstance(candidate, str):
+            continue
+        candidate_repository, candidate_separator, candidate_digest = candidate.rpartition("@")
+        if (
+            candidate_separator
+            and candidate_repository in accepted_repositories
+            and _canonical_oci_sha256(candidate_digest) == expected_digest
+        ):
+            return True
+    return False
+
+
 def inspect_image(container_engine: str, manifest: dict[str, Any]) -> dict[str, Any]:
     image = manifest["runtime"]["image"]
     reference = image["reference"]
@@ -594,8 +631,11 @@ def inspect_image(container_engine: str, manifest: dict[str, Any]) -> dict[str, 
         raise ConformanceError(
             f"local image is {record.get('Os')}/{record.get('Architecture')}, expected linux/amd64"
         )
-    repo_digests = record.get("RepoDigests")
-    if not isinstance(repo_digests, list) or reference not in repo_digests:
+    config_digest = _canonical_oci_sha256(record.get("Id"))
+    if config_digest is None:
+        raise ConformanceError("local image does not record a valid SHA-256 config digest")
+    record["Id"] = config_digest
+    if not _repo_digest_matches(reference, record):
         raise ConformanceError(f"local image does not record the required digest: {reference}")
     return record
 

@@ -281,6 +281,34 @@ def run_checked(argv: Iterable[str], *, cwd: Path | None = None) -> subprocess.C
     return completed
 
 
+def _canonical_oci_sha256(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    digest = value.removeprefix("sha256:")
+    if len(digest) != 64 or any(character not in "0123456789abcdef" for character in digest):
+        return None
+    return f"sha256:{digest}"
+
+
+def _repo_digest_matches(reference: str, record: dict[str, Any]) -> bool:
+    repository, separator, digest = reference.rpartition("@")
+    expected_digest = _canonical_oci_sha256(digest)
+    if not separator or expected_digest is None:
+        return False
+    accepted_repositories = {repository, f"docker.io/{repository}"}
+    for candidate in record.get("RepoDigests") or []:
+        if not isinstance(candidate, str):
+            continue
+        candidate_repository, candidate_separator, candidate_digest = candidate.rpartition("@")
+        if (
+            candidate_separator
+            and candidate_repository in accepted_repositories
+            and _canonical_oci_sha256(candidate_digest) == expected_digest
+        ):
+            return True
+    return False
+
+
 def inspect_image(container_engine: str, manifest: dict[str, Any]) -> dict[str, Any]:
     reference = manifest["runtime"]["image"]["reference"]
     completed = run_checked([container_engine, "image", "inspect", reference])
@@ -293,11 +321,13 @@ def inspect_image(container_engine: str, manifest: dict[str, Any]) -> dict[str, 
     record = records[0]
     if record.get("Os") != "linux" or record.get("Architecture") != "amd64":
         raise ConformanceError("local image platform is not the pinned linux/amd64 platform")
-    if record.get("Id") != IMAGE_CONFIG_DIGEST:
+    config_digest = _canonical_oci_sha256(record.get("Id"))
+    if config_digest != IMAGE_CONFIG_DIGEST:
         raise ConformanceError(
             f"local image config digest is {record.get('Id')!r}, expected {IMAGE_CONFIG_DIGEST!r}"
         )
-    if reference not in (record.get("RepoDigests") or []):
+    record["Id"] = config_digest
+    if not _repo_digest_matches(reference, record):
         raise ConformanceError(f"local image does not record the required digest: {reference}")
     return record
 

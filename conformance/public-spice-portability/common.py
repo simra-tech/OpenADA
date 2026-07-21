@@ -51,6 +51,8 @@ ensure_external_cache = _shared.ensure_external_cache
 require_mount_safe_path = _shared.require_mount_safe_path
 run_checked = _shared.run_checked
 sha256_file = _shared.sha256_file
+_canonical_oci_sha256 = _shared._canonical_oci_sha256
+_repo_digest_matches = _shared._repo_digest_matches
 
 
 def inspect_image(container_engine: str, manifest: dict[str, Any]) -> dict[str, Any]:
@@ -65,10 +67,11 @@ def inspect_image(container_engine: str, manifest: dict[str, Any]) -> dict[str, 
     record = records[0]
     if record.get("Os") != "linux" or record.get("Architecture") != "amd64":
         raise ConformanceError("local image platform differs from linux/amd64")
-    if record.get("Id") != IMAGE_CONFIG_DIGEST:
+    config_digest = _canonical_oci_sha256(record.get("Id"))
+    if config_digest != IMAGE_CONFIG_DIGEST:
         raise ConformanceError("local image configuration digest differs from the pin")
-    digests = record.get("RepoDigests")
-    if not isinstance(digests, list) or reference not in digests:
+    record["Id"] = config_digest
+    if not _repo_digest_matches(reference, record):
         raise ConformanceError("local image does not record the pinned manifest digest")
     return record
 
