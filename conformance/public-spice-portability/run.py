@@ -38,6 +38,17 @@ HERE = Path(__file__).resolve().parent
 REPOSITORY_ROOT = HERE.parents[1]
 MAX_OBSERVATION_BYTES = 8 * 1024 * 1024
 TOOLS_ROOT = REPOSITORY_ROOT / "tools"
+_PODMAN_CGROUPS_WARNING = (
+    "Resource limits are not supported and ignored on cgroups V1 rootless systems"
+)
+_PODMAN_STORAGE_MESSAGE = (
+    '"Network file system detected as backing store.  Enforcing overlay option '
+    '`force_mask=\\"700\\"`.  Add it to storage.conf to silence this warning"'
+)
+_PODMAN_WARNING_PREFIX = re.compile(
+    r'^time="\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})" '
+    r'level=warning msg='
+)
 if str(TOOLS_ROOT) not in sys.path:
     sys.path.insert(0, str(TOOLS_ROOT))
 
@@ -239,9 +250,26 @@ def _run_container(command: list[str], *, engine: str, name: str) -> tuple[dict[
             f"inside runner exited {completed.returncode}: error={observation.get('error')!r}; "
             f"stderr={completed.stderr[-4000:]!r}"
         )
-    if completed.stderr:
-        raise ConformanceError(f"inside runner emitted ambient stderr: {completed.stderr[-4000:]!r}")
+    unexpected_stderr = _unexpected_container_stderr(engine, completed.stderr)
+    if unexpected_stderr:
+        raise ConformanceError(f"inside runner emitted ambient stderr: {unexpected_stderr[-4000:]!r}")
     return observation, completed.stderr
+
+
+def _unexpected_container_stderr(engine: str, stderr: str) -> str:
+    """Remove only the two exact host warnings emitted by rootless Podman."""
+
+    if not stderr or Path(engine).name != "podman":
+        return stderr
+    unexpected: list[str] = []
+    for line in stderr.splitlines():
+        if line == _PODMAN_CGROUPS_WARNING:
+            continue
+        prefix = _PODMAN_WARNING_PREFIX.match(line)
+        if prefix is not None and line[prefix.end() :] == _PODMAN_STORAGE_MESSAGE:
+            continue
+        unexpected.append(line)
+    return "\n".join(unexpected)
 
 
 def _artifact(

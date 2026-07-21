@@ -18,6 +18,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 import common  # noqa: E402
+import run as chain_run  # noqa: E402
 import verify  # noqa: E402
 
 
@@ -84,6 +85,19 @@ def test_verifier_and_gate_bind_the_same_semantic_subject() -> None:
     assert verify.semantic_subject_sha256() == coverage._semantic_subject(
         coverage.DEFAULT_CATALOG
     )
+
+
+def test_rootless_podman_host_warnings_are_narrowly_filtered() -> None:
+    stderr = (
+        'time="2026-07-21T20:54:32+02:00" level=warning msg="Network file system '
+        'detected as backing store.  Enforcing overlay option `force_mask=\\"700\\"`.  '
+        'Add it to storage.conf to silence this warning"\n'
+        'Resource limits are not supported and ignored on cgroups V1 rootless systems\n'
+    )
+
+    assert chain_run._unexpected_container_stderr("podman", stderr) == ""
+    assert chain_run._unexpected_container_stderr("docker", stderr) == stderr
+    assert chain_run._unexpected_container_stderr("podman", stderr + "native warning\n") == "native warning"
 
 
 @pytest.mark.conformance
