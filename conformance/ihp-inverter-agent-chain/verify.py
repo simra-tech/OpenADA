@@ -509,13 +509,17 @@ def _verify_checkout(metadata: dict[str, Any]) -> None:
 
 
 def _verify_container_command(command: Any, manifest: dict[str, Any]) -> None:
-    if not isinstance(command, list) or len(command) != 43:
+    if not isinstance(command, list):
+        raise ConformanceError(f"run.container_command has unexpected shape: {command!r}")
+    if len(command) != 43:
         raise ConformanceError(f"run.container_command has unexpected shape: {command!r}")
     if CONTAINER_NAME_RE.fullmatch(command[4]) is None:
         raise ConformanceError("run.container_command container name is invalid")
-    if re.fullmatch(r"[0-9]+:[0-9]+", command[18]) is None:
+    user_position = 18
+    if re.fullmatch(r"[0-9]+:[0-9]+", command[user_position]) is None:
         raise ConformanceError("run.container_command user identity is invalid")
-    mounts = command[30], command[32], command[34]
+    mount_position = 30
+    mounts = command[mount_position], command[mount_position + 2], command[mount_position + 4]
     if re.fullmatch(r"type=bind,source=/[^,]+,target=/openada,readonly", mounts[0]) is None:
         raise ConformanceError("OpenADA bind mount is not read-only")
     if re.fullmatch(r"type=bind,source=/[^,]+,target=/design,readonly", mounts[1]) is None:
@@ -526,7 +530,7 @@ def _verify_container_command(command: Any, manifest: dict[str, Any]) -> None:
         command[0], "run", "--rm", "--name", command[4], "--pull=never",
         "--platform", "linux/amd64", "--network", "none", "--read-only",
         "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
-        "--pids-limit", "512", "--user", command[18],
+        "--pids-limit", "512", "--user", command[user_position],
         "--env", "HOME=/tmp/openada-home", "--env", "TMPDIR=/tmp",
         "--env", "PATH=/openada/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
         "--tmpfs", "/tmp:rw,nosuid,nodev,exec,size=512m", "--workdir", "/evidence",

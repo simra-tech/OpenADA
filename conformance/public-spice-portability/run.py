@@ -77,6 +77,11 @@ def _mount(source: Path, target: str, *, readonly: bool) -> str:
     return f"{value},readonly" if readonly else value
 
 
+def _container_user_args(engine: str) -> list[str]:
+    identity = "0:0" if Path(engine).name == "podman" else f"{os.getuid()}:{os.getgid()}"
+    return ["--user", identity]
+
+
 def _container_command(
     engine: str,
     manifest: dict[str, Any],
@@ -91,7 +96,7 @@ def _container_command(
         "--platform", manifest["runtime"]["platform"],
         "--network", "none", "--read-only", "--cap-drop", "ALL",
         "--security-opt", "no-new-privileges", "--pids-limit", "512",
-        "--user", f"{os.getuid()}:{os.getgid()}",
+        *_container_user_args(engine),
         "--env", "HOME=/tmp/openada-home", "--env", "TMPDIR=/tmp",
         "--env", "PATH=/openada/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
         "--tmpfs", "/tmp:rw,nosuid,nodev,size=512m", "--workdir", "/evidence",

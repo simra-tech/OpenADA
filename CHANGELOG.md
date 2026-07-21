@@ -158,9 +158,9 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Fixed
 
-- Canonicalized Docker and Podman OCI image identities in all seven public
-  conformance runners while retaining exact repository, manifest-digest,
-  config-digest, and platform checks.
+- Canonicalized Docker and rootless-Podman OCI image identities and unprivileged
+  user mappings in all seven public conformance runners while retaining exact
+  repository, manifest-digest, config-digest, and platform checks.
 - Preferred the active Python installation's provider entry point over the
   source-checkout fallback, so the closed local transport cannot accidentally
   select an unsupported system `python3` for an `/usr/bin/env` launcher. The

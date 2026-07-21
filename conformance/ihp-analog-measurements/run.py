@@ -113,6 +113,11 @@ def _fresh_evidence(path: Path | None) -> Path:
     return path
 
 
+def _container_user_args(engine: str) -> list[str]:
+    identity = "0:0" if Path(engine).name == "podman" else f"{os.getuid()}:{os.getgid()}"
+    return ["--user", identity]
+
+
 def _run_native(
     engine: str,
     manifest: dict[str, Any],
@@ -138,8 +143,7 @@ def _run_native(
         "no-new-privileges",
         "--pids-limit",
         "512",
-        "--user",
-        f"{os.getuid()}:{os.getgid()}",
+        *_container_user_args(engine),
         "--env",
         "HOME=/tmp/openada-home",
         "--env",

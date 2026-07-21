@@ -92,6 +92,11 @@ def _mount(source: Path, target: str, *, readonly: bool) -> str:
     return f"{value},readonly" if readonly else value
 
 
+def _container_user_args(container_engine: str) -> list[str]:
+    identity = "0:0" if Path(container_engine).name == "podman" else f"{os.getuid()}:{os.getgid()}"
+    return ["--user", identity]
+
+
 def _container_base(
     container_engine: str,
     manifest: dict[str, Any],
@@ -120,8 +125,7 @@ def _container_base(
         "no-new-privileges",
         "--pids-limit",
         "512",
-        "--user",
-        f"{os.getuid()}:{os.getgid()}",
+        *_container_user_args(container_engine),
         "--env",
         "HOME=/tmp/openada-home",
         "--env",

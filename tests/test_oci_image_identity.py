@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 from types import ModuleType, SimpleNamespace
 
 import pytest
@@ -42,6 +45,16 @@ CASES = (
         "conformance/orfs-ibex-synthesis-timing/common.py",
         "conformance/orfs-ibex-synthesis-timing/manifest.json",
     ),
+)
+
+RUNNERS = (
+    "conformance/ihp-inverter/run.py",
+    "conformance/ihp-analog-measurements/run.py",
+    "conformance/ihp-inverter-agent-chain/run.py",
+    "conformance/ihp-ngspice-provider-analyses/replay.py",
+    "conformance/ihp-sar-rtl/run.py",
+    "conformance/public-spice-portability/run.py",
+    "conformance/orfs-ibex-synthesis-timing/run.py",
 )
 
 
@@ -104,3 +117,38 @@ def test_same_digest_from_unrelated_repository_is_rejected(
 
     with pytest.raises(module.ConformanceError, match="digest"):
         module.inspect_image("podman", manifest)
+
+
+@pytest.mark.parametrize("runner_path", RUNNERS)
+def test_rootless_podman_uses_single_id_user_mapping(runner_path: str) -> None:
+    path = ROOT / runner_path
+    program = f"""
+import importlib.util
+import json
+import sys
+from pathlib import Path
+path = Path({str(path)!r})
+sys.path.insert(0, str(path.parent))
+spec = importlib.util.spec_from_file_location('_openada_runner_test', path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+print(json.dumps({{
+    'podman': module._container_user_args('podman'),
+    'absolute_podman': module._container_user_args('/usr/bin/podman'),
+    'docker': module._container_user_args('docker'),
+}}))
+"""
+    completed = subprocess.run(
+        [sys.executable, "-c", program],
+        cwd=ROOT,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout) == {
+        "podman": ["--user", "0:0"],
+        "absolute_podman": ["--user", "0:0"],
+        "docker": ["--user", f"{os.getuid()}:{os.getgid()}"],
+    }
