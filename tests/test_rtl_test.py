@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import os
 
 from jsonschema import Draft202012Validator
 from openada.discovery import DiscoveryManager
@@ -62,6 +63,51 @@ def test_iverilog_self_checking_test_pass(tmp_path: Path) -> None:
         (Path(__file__).resolve().parents[1] / "profiles/rtl.test-v1alpha1.json").read_text(encoding="utf-8")
     )
     Draft202012Validator(profile["normalized_result"]["data_schema"]).validate(payload["data"])
+
+
+def test_iverilog_runtime_uses_only_derived_sibling_library_path(
+    tmp_path: Path, monkeypatch
+) -> None:
+    tool_root = tmp_path / "iverilog"
+    bin_dir = tool_root / "bin"
+    library_dir = tool_root / "lib"
+    bin_dir.mkdir(parents=True)
+    library_dir.mkdir()
+    iverilog = bin_dir / "iverilog"
+    vvp = bin_dir / "vvp"
+    _executable(
+        iverilog,
+        """import pathlib, sys
+if '-V' in sys.argv:
+    print('Icarus Verilog version 14.0')
+else:
+    pathlib.Path(sys.argv[sys.argv.index('-o') + 1]).write_text('compiled')
+""",
+    )
+    _executable(
+        vvp,
+        f"""import os, sys
+if os.environ.get('LD_LIBRARY_PATH') != {str(library_dir.resolve())!r}:
+    print('runtime loader path was not derived from the selected tool', file=sys.stderr)
+    raise SystemExit(127)
+if '-V' in sys.argv:
+    print('Icarus Verilog runtime version 14.0')
+""",
+    )
+    monkeypatch.setenv("LD_LIBRARY_PATH", "/ambient/untrusted")
+    discovery = DiscoveryManager(
+        binary_overrides={"iverilog": iverilog, "vvp": vvp}
+    )
+
+    payload = RTLTestDriver(discovery=discovery).rtl_test(
+        [_source(tmp_path)], tmp_path / "out", top="tb"
+    )
+
+    assert payload["engineering"]["status"] == "pass"
+    assert payload["data"]["runtime_tool"]["version"] == (
+        "Icarus Verilog runtime version 14.0"
+    )
+    assert os.environ["LD_LIBRARY_PATH"] == "/ambient/untrusted"
 
 
 def test_compile_error_is_engineering_fail(tmp_path: Path) -> None:

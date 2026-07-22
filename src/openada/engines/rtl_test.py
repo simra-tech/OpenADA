@@ -22,7 +22,29 @@ _ARTIFACT_LIMIT = 32 * 1024 * 1024
 def _environment(*binaries: str | None) -> dict[str, str]:
     directories = [str(Path(item).parent) for item in binaries if item]
     directories.extend(item for item in os.defpath.split(os.pathsep) if item)
-    return {"PATH": os.pathsep.join(dict.fromkeys(directories)), "LANG": "C", "LC_ALL": "C"}
+    environment = {
+        "PATH": os.pathsep.join(dict.fromkeys(directories)),
+        "LANG": "C",
+        "LC_ALL": "C",
+    }
+    if os.name != "nt":
+        loader_directories: list[str] = []
+        for binary in binaries:
+            if not binary:
+                continue
+            prefix = Path(binary).parent.parent
+            for name in ("lib", "lib64"):
+                candidate = prefix / name
+                try:
+                    if candidate.is_dir():
+                        loader_directories.append(str(candidate.resolve()))
+                except (OSError, RuntimeError, ValueError):
+                    continue
+        if loader_directories:
+            environment["LD_LIBRARY_PATH"] = os.pathsep.join(
+                dict.fromkeys(loader_directories)
+            )
+    return environment
 
 
 def _complete(process: ProcessResult) -> bool:

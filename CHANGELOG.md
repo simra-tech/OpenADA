@@ -145,6 +145,9 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Fixed
 
+- Derived a closed sibling `lib`/`lib64` loader path from the selected Icarus
+  executables so relocatable `vvp` installations can pass identity validation
+  and run without inheriting an ambient `LD_LIBRARY_PATH`.
 - Accepted Netgen 1.5.321 hierarchical JSON's exact, equivalent pin-only
   auxiliary records without obscuring the unique requested top-cell LVS
   comparison. Unequal pin lists, partial known-key records, duplicate requested
