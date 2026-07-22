@@ -288,6 +288,9 @@ def test_bootstrap_coordinator_preserves_native_gap_and_signoff_boundaries():
     assert "not evaluated — capability unavailable" in text
     assert "explicitly requests an exploratory end-to-end run" in text
     assert "Never place native output inside an `openada.result` envelope" in text
+    assert "openada.operation/rtl.test/v1alpha1" in text
+    assert "no semantic operation for behavioral HDL simulation" not in text
+    assert "scoped doctor catalog does not yet map the RTL self-test assertion" in text
     assert "signoff: not claimed" in text
     assert (directory / "scripts" / "bootstrap_manifest.py").is_file()
     assert (directory / "references" / "project-manifest.md").is_file()

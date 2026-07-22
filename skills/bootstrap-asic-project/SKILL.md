@@ -154,7 +154,7 @@ Audit every RTL, firmware, memory image, macro, and generated-artifact license.
 | Project freeze | Frozen, hash-consistent identity ledger plus reviewed project specification | Any unresolved PDK, top, flow, deck, runtime, or mislabeled-input question |
 | RTL structure | OpenADA `rtl-check` pass for exact sources/top | Engineering `fail` or `unknown` |
 | Strict lint | `openada.operation/rtl.lint/v1alpha1` pass | Any normalized warning/error |
-| Function | Self-checking RTL simulation plus architectural/firmware tests | Missing or failing behavior; OpenADA has no current HDL-simulation profile |
+| Function | `openada.operation/rtl.test/v1alpha1` pass for a declared self-checking top plus architectural/firmware tests when the fixed Icarus or Verilator mapping fits | Missing, failing, `unknown`, or inadequately self-checking behavior |
 | Synthesis | `openada.operation/logic.synthesize/v1alpha1` pass when its request can express the stack | Unmapped cells, incomplete closure, or unsupported multi-library handoff |
 | Physical implementation | Fresh floorplan/PDN/place/CTS/route/GDS run with stage reports | Congestion, route, antenna, clock, power, or stream-out failure |
 | Timing | All declared corners and routed parasitics reviewed | OpenADA timing is currently one-corner ideal-interconnect only |
@@ -165,15 +165,23 @@ Audit every RTL, firmware, memory image, macro, and generated-artifact license.
 
 Preflight only the next OpenADA-supported assertion immediately before that
 operation. Preserve `execution.status` separately from `engineering.status`.
+The scoped doctor catalog does not yet map the RTL self-test assertion. For the
+Function gate, inspect the selected `rtl-test` backend tools directly and retain
+that readiness as preflight evidence without claiming that the design assertion
+was evaluated.
 Route RTL review to `$openada:review-rtl-architecture`, mapping review to
 `$openada:assess-synthesis-and-inference`, and supported synthesis-stage timing
 to `$openada:assess-asic-timing`.
 
 ## Handle missing OpenADA operations explicitly
 
-OpenADA currently has no semantic operation for behavioral HDL simulation,
-floorplanning, place/CTS/route, padframe generation, extraction/PEX, routed
-MCMM timing, power integrity, or final submission assembly.
+OpenADA's `rtl.test/v1alpha1` operation covers one bounded, declared
+self-checking HDL top through its fixed Icarus or Verilator mappings. It does
+not establish stimulus or assertion adequacy and does not expose arbitrary
+native flags or a general simulator workflow. OpenADA currently has no semantic
+operation for floorplanning, place/CTS/route, padframe generation,
+extraction/PEX, routed MCMM timing, power integrity, or final submission
+assembly.
 
 The default action is **not evaluated — capability unavailable**. If the user
 explicitly requests an exploratory end-to-end run and authorizes native gap

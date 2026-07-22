@@ -123,6 +123,10 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Changed
 
+- Updated the ASIC bootstrap coordinator to use the shipped
+  `rtl.test/v1alpha1` operation for compatible self-checking HDL tests while
+  preserving its assertion-adequacy boundary and explicitly recording the
+  current lack of a scoped RTL-test doctor mapping.
 - Promoted `jsonschema>=4.18` to a base dependency because operation-specific
   validation is part of the external-provider execution boundary.
 - Extended `evaluate` to accept complete ordinary or spectral measurement
