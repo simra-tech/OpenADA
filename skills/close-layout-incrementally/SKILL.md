@@ -75,6 +75,17 @@ devices, current crowding, route detours, shielding, and hierarchy transforms.
 Visual reasoning proposes and localizes a diagnosis; it never proves DRC,
 connectivity, extraction correctness, or performance.
 
+Treat hierarchy flattening as a scoped experiment, not a generic cure. Expand
+every proposed cell-name pattern against the exact layout hierarchy before
+launch, retain the resolved include and exclude lists, and confirm that the
+selection contains the marker-bearing cells without unintentionally matching
+standard-cell, fill, macro, or unrelated library namespaces. Prefer exact
+cells or the narrowest reviewed family patterns. Record expected runtime and
+memory relative to the hierarchical baseline; a broad flattening replay that
+changes thousands of unrelated instances is not a one-variable comparison.
+Validate the choice first on one representative marker or boundary when the
+native tool permits it.
+
 ## Gate the increment in order
 
 Run only the next unproven gate and stop at its first regression:
@@ -91,6 +102,23 @@ Run only the next unproven gate and stop at its first regression:
 A DRC pass does not prove connectivity. An LVS pass does not prove parasitic or
 performance closure. A PEX file does not prove a supplied budget. Keep
 execution, engineering, measurement, and specification statuses separate.
+
+Likewise, a connected PDN and a supplied voltage-source file do not by
+themselves prove IR-drop coverage. For every reported rail, require attributed
+load or current and a non-empty voltage-sample population. A header-only
+voltage map, zero samples, or zero attributed load on an expected powered rail
+is `unknown`, even when the solver reports connectivity and a numeric zero
+drop. Check the source voltage, Liberty power-pin/internal-power attribution,
+activity assumptions, and primary-versus-secondary voltage-domain handling;
+do not repair that gap by inventing PDK power data or calling zero an ideal
+result.
+
+When LVS sides spell the same legal Verilog escaped identifier differently,
+normalize only the language-defined escape form and require a one-to-one,
+collision-free mapping. Preserve both original pin lists, the exact setup and
+netlist hashes, and Netgen's structural counts and terminal result. Never use
+fuzzy, positional, case-folded, or hand-written aliases to manufacture a match;
+an ambiguous normalization is `unknown` until the naming source is repaired.
 
 If a gate fails, retain its markers and artifacts, render the failing region,
 revert or repair only that increment, and repeat the same gate. Do not stack a

@@ -180,6 +180,19 @@ Do not turn an area or cell-count observation into a specification pass. This
 release has no typed synthesis-statistics specification evaluator. Do not
 derive power from area or timing from a synthesis delay target.
 
+When a separate formal-equivalence flow is available, bind it to the exact RTL
+configuration and mapped-netlist hash rather than treating synthesis success
+as equivalence. Use the same functional PDK and macro abstractions on both
+sides. A PDK preprocessing error, a missing formal plugin, an unresolved
+blackbox SAT model, or a name-based partition with an undriven synthetic alias
+is a harness `unknown`, not inequivalence. Preserve those retries. If Liberty
+functional import is used, record every ignored missing function; keep macros
+as identical blackboxes only when their behavior is intentionally outside the
+proof. Convert top-level tri-state cells with an explicit formal policy and
+retain its mutual-exclusion assertions. Claim a pass only from a terminal
+assertion reporting every constructed equivalence point proven and zero
+unproven; bounded setup or partial point counts are not enough.
+
 ## Control experiments and handoff
 
 Change one variable per experiment: RTL structure, inference template,

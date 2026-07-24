@@ -304,9 +304,61 @@ def test_incremental_layout_skill_requires_visual_and_verification_gates():
     assert "$openada:openada" in text
     assert "Do not place or connect the whole block at once" in text
     assert "Visual reasoning proposes and localizes a diagnosis" in text
+    assert "every proposed cell-name pattern" in text
+    assert "without unintentionally matching" in text
     assert "A DRC pass does not prove connectivity" in text
     assert "signoff: not claimed" in text
     assert (directory / "scripts" / "render_layout.rb").is_file()
+
+
+def test_closure_learnings_preserve_fail_closed_evidence_boundaries():
+    timing = (SKILLS_ROOT / "assess-asic-timing" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    synthesis = (
+        SKILLS_ROOT / "assess-synthesis-and-inference" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    rtl = (SKILLS_ROOT / "review-rtl-architecture" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    layout = (SKILLS_ROOT / "close-layout-incrementally" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "zero physically wired unannotated nets" in timing
+    assert "optimization target distinct from the authoritative library" in timing
+    assert "candidate library-collateral ambiguity" in timing
+    assert "exact edit cardinality" in timing
+    assert "threshold causality only" in timing
+    assert "submission-program, or foundry authority" in timing
+    assert "unknown — harness capability gap" in timing
+    assert "simulator startup or annotation failure" in timing
+    assert "every constructed equivalence point proven and zero" in synthesis
+    assert "unproven; bounded setup or partial point counts are not enough" in synthesis
+    assert "assertions on the package-facing interface" in rtl
+    assert "independent reference model" in rtl
+    assert "zero samples, or zero attributed load" in layout
+    assert "is `unknown`" in layout
+
+
+def test_rtl_architecture_skill_requires_fail_closed_arithmetic_evidence():
+    text = " ".join(
+        (SKILLS_ROOT / "review-rtl-architecture" / "SKILL.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+
+    assert "freeze the operand-width contract" in text
+    assert "legal and reachable operand ranges" in text
+    assert "explicitly widened signed operands" in text
+    assert "implicit expression sizing" in text
+    assert "threshold boundaries" in text
+    assert "reachable extrema" in text
+    assert "illegal harness input, not a design defect" in text
+    assert "nonzero process exit and engineering `fail`" in text
+    assert "zero executed checks" in text
+    assert "hashes of both the failing transcript and the passing" in text
+    assert "A lint pass is not functional evidence" in text
 
 
 def test_spectral_skill_uses_the_closed_method_and_standards_reference():

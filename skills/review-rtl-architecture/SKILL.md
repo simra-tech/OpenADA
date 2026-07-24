@@ -1,6 +1,6 @@
 ---
 name: review-rtl-architecture
-description: Review ASIC RTL architecture with backend-independent OpenADA lint and structural evidence. Use for SystemVerilog or Verilog design reviews involving hierarchy, clocks and resets, state/control structure, parameterization, inferred latches or combinational loops, width and signedness diagnostics, interface protocols, or deciding whether RTL is ready for synthesis without treating a clean lint run as functional verification.
+description: Review ASIC RTL architecture with backend-independent OpenADA lint and structural evidence. Use for SystemVerilog or Verilog design reviews involving hierarchy, clocks and resets, state/control structure, parameterization, inferred latches or combinational loops, arithmetic width, signedness, overflow or saturation diagnostics, interface protocols, or deciding whether RTL is ready for synthesis without treating a clean lint run as functional verification.
 ---
 
 # Review RTL Architecture
@@ -96,6 +96,15 @@ frozen manifest. The v1alpha1 warning policy is strict: any normalized warning
 or error makes the engineering assertion fail. Do not suppress a warning to
 manufacture a pass.
 
+Keep design RTL distinct from PDK, macro, generated black-box, and simulator
+library sources. The current v1alpha1 request has no separate library-source or
+waiver-provenance role, so warnings originating only in those support models
+still make OpenADA's strict assertion fail. Preserve that result as a harness
+coverage gap and correlate it with the exact synthesis-flow lint configuration;
+do not relabel it as a clean design pass or add broad source suppressions. A
+future semantic extension should bind library sources and reviewed warning
+policy separately while retaining both original diagnostics and file hashes.
+
 Treat `1800-2017` or `1800-2023` as the requested frontend language revision,
 not as proof that the design or implementation has been certified conformant
 to the corresponding IEEE 1800 standard.
@@ -176,6 +185,41 @@ installed semantic primitive evaluates them. Route hardware-inference and
 mapping questions to `$openada:assess-synthesis-and-inference`; route
 constraint-bound delay questions to `$openada:assess-asic-timing` only after a
 valid mapped netlist exists.
+
+When functional simulation is supplied as adjacent evidence, audit what each
+test actually proves before citing its pass count. A test that only completes a
+command, logs an expected value, catches a missing internal signal, or replaces
+an unread value with zero is execution coverage, not a checked functional
+result. Prefer assertions on the package-facing interface and compare observed
+data with an independent reference model. Read only status bits defined by the
+interface contract; unresolved unused pad bits must not contaminate a defined
+status slice, but they must remain visible as separate unknown coverage. Make
+reset release and the first command distinct clock events so simulator
+scheduling cannot silently drop the first transaction. For multi-byte or
+multi-cycle protocols, assert the documented transfer length, address meaning,
+byte ordering, and final numerical result. If strengthening these checks turns
+a prior pass into a failure, supersede downstream synthesis/physical evidence
+that was built from the failing RTL rather than grandfathering it. A lint pass
+is not functional evidence.
+
+For arithmetic checks, freeze the operand-width contract before constructing
+the harness: signedness, declared and intermediate widths, legal and reachable
+operand ranges, and the intended truncation, rounding, overflow, or saturation
+behavior. Build the independent oracle from explicitly widened signed operands
+and intermediates; never let implicit expression sizing, an unsized literal, or
+a DUT helper function define the expected value. Drive the threshold boundaries
+directly, the reachable extrema, and deterministic nominal and mixed-sign
+vectors. Classify a vector outside the frozen reachable range as an illegal
+harness input, not a design defect, unless the implemented interface can admit
+it.
+
+Make the harness fail closed. Every mismatch must produce a nonzero process exit
+and engineering `fail`; zero executed checks, unknown observed values, timeout,
+compile or invocation failure, or incomplete capture must produce engineering
+`unknown`, never `pass`. Retain the exact RTL, harness, vector/reference, and
+tool identities plus hashes of both the failing transcript and the passing
+transcript after repair. Keep native adjacent evidence labeled as such when no
+OpenADA semantic operation produced its engineering status.
 
 ## Stop boundaries
 
