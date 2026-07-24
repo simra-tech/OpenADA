@@ -693,6 +693,16 @@ oversized or unstable file, or transcript collision cannot support an
 engineering conclusion. A stable malformed regular report or JSON file can
 still be retained and hashed as diagnostic evidence.
 
+For pin equality only, native JSON spelling is canonicalized with two bounded
+Netgen serialization rules: a leading backslash, one or more printable ASCII
+non-space bytes, and exactly one trailing ASCII space is decoded to its body;
+or an unterminated backslash spelling is decoded only when its body is a legal
+simple identifier (`[A-Za-z_][A-Za-z0-9_$]*`).
+Any backslash-prefixed spelling outside that grammar invalidates the JSON, and
+canonicalization must remain one-to-one independently on each side. Ordered
+canonical pin lists must then be equal. This parser policy neither rewrites an
+input netlist nor overrides the separately parsed native report outcome.
+
 The report validator requires a terminal Netgen outcome bound to the requested
 top-cell comparison and the native summary/count structure needed to interpret
 it. The separately produced JSON must be bounded UTF-8 JSON without duplicate

@@ -428,6 +428,12 @@ for classification. Inspect
 `stderr_accepted`), and `data.comparison.evidence_agrees` when the result is
 `unknown`. Never infer a match or mismatch from stale, linked, missing,
 malformed, conflicting, unrecognized-stderr, or truncated evidence.
+The JSON parser decodes the exact Verilog escaped-identifier form
+`\\body<ASCII-space>` with printable non-space ASCII body bytes, plus Netgen's
+unterminated form only for a legal simple-identifier body. It rejects
+malformed forms and canonical collisions, and requires ordered equality plus
+the independently parsed native-report verdict. Do not add project aliases or
+rewrite either netlist to turn a mismatch into a pass.
 
 ## Interpret the contract
 

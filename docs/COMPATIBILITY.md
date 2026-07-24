@@ -240,6 +240,13 @@ stderr either empty or limited to the exact reviewed
 accepts `pass` or `fail` only when the report and JSON outcomes and structural
 device/net totals agree. Accepted warning lines remain explicit through
 `netgen.stderr_reviewed_warning`; any other stderr still produces `unknown`.
+Native JSON pin comparison now decodes exact printable-ASCII Verilog escaped
+identifiers (`\\body` plus one ASCII-space terminator) and Netgen's observed
+unterminated serialization only for legal simple-identifier bodies. It rejects
+malformed escape spellings and canonical collisions, and still requires
+ordered equality plus an agreeing native report. This corrects false mismatch
+metrics caused solely by decoded-versus-lexical identifier spelling without
+introducing an alias or netlist-rewrite mechanism.
 
 Existing LVS automation must choose a report filename with a suffix and a fresh
 basename for every run. It must not pre-create the report, the `.json` path

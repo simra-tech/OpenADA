@@ -303,6 +303,75 @@ def test_unnamed_equivalent_pin_record_does_not_obscure_unique_top(
     assert comparison["mismatch_count"] == 0
 
 
+def test_exact_verilog_escaped_pin_spelling_matches_native_report(tmp_path: Path) -> None:
+    binary = tmp_path / "netgen"
+    document = json.loads(_pass_json())
+    document[0]["pins"] = [
+        ["corner.iovdd", "plain"],
+        ["\\corner.iovdd ", "plain"],
+    ]
+    _fake_netgen(
+        binary,
+        report_body=_pass_report(final_result=True),
+        json_body=json.dumps(document).encode(),
+    )
+
+    payload = _invoke(tmp_path, binary)
+
+    assert payload["engineering"]["status"] == "pass"
+    assert payload["data"]["comparison"]["report_outcome"] == "pass"
+    assert payload["data"]["comparison"]["json_outcome"] == "pass"
+
+
+def test_netgen_unterminated_simple_escaped_auxiliary_pin_is_bounded(tmp_path: Path) -> None:
+    binary = tmp_path / "netgen"
+    document = json.loads(_pass_json())
+    document.insert(0, {"pins": [["VSS", "VDD"], ["\\VSS", "\\VDD"]]})
+    _fake_netgen(binary, json_body=json.dumps(document).encode())
+
+    payload = _invoke(tmp_path, binary)
+
+    assert payload["engineering"]["status"] == "pass"
+    assert payload["data"]["comparison"]["json_outcome"] == "pass"
+
+
+@pytest.mark.parametrize(
+    "escaped",
+    ["\\", "\\ ", "\\corner.iovdd", "\\corner iovdd ", "\\corner.iovdd\t"],
+)
+def test_malformed_verilog_escaped_pin_forces_unknown(
+    tmp_path: Path, escaped: str
+) -> None:
+    binary = tmp_path / "netgen"
+    document = json.loads(_pass_json())
+    document[0]["pins"] = [["corner.iovdd"], [escaped]]
+    _fake_netgen(binary, json_body=json.dumps(document).encode())
+
+    payload = _invoke(tmp_path, binary)
+
+    assert payload["engineering"]["status"] == "unknown"
+    validation = payload["data"]["json_output"]["capture"]["validation"]
+    assert validation["reason"] == "json.invalid"
+    assert "malformed Verilog escaped identifier" in validation["detail"]
+
+
+def test_verilog_escaped_pin_collision_forces_unknown(tmp_path: Path) -> None:
+    binary = tmp_path / "netgen"
+    document = json.loads(_pass_json())
+    document[0]["pins"] = [
+        ["corner.iovdd", "other"],
+        ["corner.iovdd", "\\corner.iovdd "],
+    ]
+    _fake_netgen(binary, json_body=json.dumps(document).encode())
+
+    payload = _invoke(tmp_path, binary)
+
+    assert payload["engineering"]["status"] == "unknown"
+    validation = payload["data"]["json_output"]["capture"]["validation"]
+    assert validation["reason"] == "json.invalid"
+    assert "canonicalization is not one-to-one" in validation["detail"]
+
+
 @pytest.mark.parametrize(
     ("auxiliary", "detail"),
     [

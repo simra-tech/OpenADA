@@ -90,6 +90,10 @@ _REVIEWED_STDERR_RE = re.compile(
     r"(?P<first>[A-Za-z0-9_.$:+/@-]{1,128}), "
     r"(?P<second>[A-Za-z0-9_.$:+/@-]{1,128})\.$"
 )
+_VERILOG_ESCAPED_IDENTIFIER_RE = re.compile(r"^\\([\x21-\x7e]+) $")
+_VERILOG_SIMPLE_ESCAPED_IDENTIFIER_RE = re.compile(
+    r"^\\([A-Za-z_][A-Za-z0-9_$]*)$"
+)
 
 
 def _file_signature(value: os.stat_result) -> tuple[int, int, int, int, int, int]:
@@ -467,6 +471,28 @@ def _paired_strings(value: Any) -> tuple[list[str], list[str]]:
     return sides[0], sides[1]
 
 
+def _canonical_pin_identifiers(values: list[str]) -> list[str]:
+    """Decode only exact printable-ASCII Verilog escaped identifiers."""
+
+    canonical: list[str] = []
+    for value in values:
+        if value.startswith("\\"):
+            match = _VERILOG_ESCAPED_IDENTIFIER_RE.fullmatch(value)
+            if match is None:
+                match = _VERILOG_SIMPLE_ESCAPED_IDENTIFIER_RE.fullmatch(value)
+            if match is None:
+                raise ValueError("native pin has a malformed Verilog escaped identifier")
+            value = match.group(1)
+        canonical.append(value)
+    if len(set(canonical)) != len(canonical):
+        raise ValueError("native pin canonicalization is not one-to-one")
+    return canonical
+
+
+def _pins_equivalent(left: list[str], right: list[str]) -> bool:
+    return _canonical_pin_identifiers(left) == _canonical_pin_identifiers(right)
+
+
 def parse_netgen_json_stream(
     handle: BinaryIO,
     *,
@@ -517,7 +543,7 @@ def parse_netgen_json_stream(
             # Only their closed, equivalent form is safe to ignore as auxiliary data.
             if set(comparison) == {"pins"}:
                 pins_left, pins_right = _paired_strings(comparison["pins"])
-                if pins_left != pins_right:
+                if not _pins_equivalent(pins_left, pins_right):
                     raise ValueError("native JSON unnamed pin comparison is not equivalent")
                 continue
             names = comparison.get("name")
@@ -554,7 +580,7 @@ def parse_netgen_json_stream(
                 reasons.append("device-counts")
             if nets[0] != nets[1]:
                 reasons.append("net-counts")
-            if pins is not None and pins[0] != pins[1]:
+            if pins is not None and not _pins_equivalent(pins[0], pins[1]):
                 reasons.append("pins")
             for field in ("badnets", "badelements", "properties"):
                 if comparison.get(field):

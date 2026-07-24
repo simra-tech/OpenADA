@@ -145,6 +145,14 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Fixed
 
+- Compared native JSON LVS pins by their decoded Verilog escaped-identifier
+  spelling, so a `\name ` versus `name` difference no longer reports a false
+  pin mismatch. Only the exact language-defined form and Netgen's unterminated
+  serialization of a legal simple identifier are decoded; malformed spellings,
+  non-unique pin lists, and canonical collisions remain invalid and produce
+  engineering `unknown`. Ordered equality and the independently parsed native
+  report outcome are still required, and no netlist or alias is rewritten.
+
 - Accepted Netgen 1.5.321 hierarchical JSON's exact, equivalent pin-only
   auxiliary records without obscuring the unique requested top-cell LVS
   comparison. Unequal pin lists, partial known-key records, duplicate requested
