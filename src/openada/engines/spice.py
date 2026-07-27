@@ -48,6 +48,9 @@ MAX_CAPTURE_BYTES = 256 * 1024 * 1024
 MAX_MEASUREMENTS = 200
 MAX_MEASUREMENT_NAME_CHARS = 256
 MAX_SOLVER_WARNING_EXAMPLES = 50
+#: A startup file can list an unbounded number of preloads; the diagnostic
+#: quotes the first few so the reader can identify the file that named them.
+MAX_COLLATERAL_FAILURE_EXAMPLES = 8
 NGSPICE_ENVIRONMENT_OVERRIDE_NAMES = frozenset({"PDK", "PDK_ROOT"})
 NGSPICE_ENVIRONMENT_MODES = frozenset({"inherit", "sanitized"})
 # Provider execution must not resolve helper programs through the caller's
@@ -101,6 +104,34 @@ ANALYSIS_COMPLETE_PATTERNS = tuple(
     )
 )
 CIRCUIT_TITLE_RE = re.compile(r"^\s*Circuit\s*:", re.IGNORECASE)
+#: A model library ngspice was asked to preload and could not open. This is a
+#: statement about *collateral*, not about the analysis: it is printed while
+#: startup files are processed, before a deck has been read, and it says which
+#: file is missing. Reading it as a generic native error was the defect behind
+#: a real run that converged over 181 points, wrote a valid 8947-byte raw and
+#: was still reported ``simulation.result.malformed`` - "the output is
+#: unreadable" - because the log carried an unrelated preload failure. The two
+#: questions are separate and are now answered separately.
+COLLATERAL_LOAD_FAILURE_PATTERNS = tuple(
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        r"^\s*error opening osdi lib\b",
+        r"^\s*error:\s*library\b.*\bcouldn't be loaded\b",
+    )
+)
+#: ngspice's own summary of the same fact, emitted once after startup.
+COLLATERAL_LOAD_SUMMARY_RE = re.compile(
+    r"^\s*warning:\s*osdi libs have not been loaded successfully",
+    re.IGNORECASE,
+)
+#: ngspice processes its startup files *before* it prints this banner, and the
+#: banner is the first thing it prints otherwise. So a line above it came from
+#: a spinit or .spiceinit and cannot be evidence about a deck that had not yet
+#: been read. When no banner is present - a synthetic or truncated capture -
+#: no line is reclassified and the scan behaves exactly as it always has.
+NGSPICE_BANNER_RE = re.compile(
+    r"^\s*\*+\s*ngspice-\S+\s*:", re.IGNORECASE | re.MULTILINE
+)
 GENERIC_NATIVE_ERROR_RE = re.compile(r"^\s*(?:fatal\s+)?error(?:\s*:|\s+on\b)", re.IGNORECASE)
 HARMLESS_GRAPHICS_ERROR_RE = re.compile(
     r"^\s*error:\s*\(external\)\s+no graphics interface\b",
@@ -811,12 +842,27 @@ def _move_regular_output(
 
 def _scan_line(
     line: str,
-) -> tuple[str | None, str | None, str | None, bool, bool]:
+) -> tuple[str | None, str | None, str | None, bool, bool, str | None]:
     # ngspice echoes the untrusted first deck line as ``Circuit: <title>``.
     # A title is presentation text, not solver or analysis evidence, even when
     # it contains strings copied from native diagnostics.
     if CIRCUIT_TITLE_RE.match(line):
-        return None, None, None, False, False
+        return None, None, None, False, False, None
+
+    # A collateral load failure is classified first and never falls through to
+    # the generic error scan. It names a file the simulator could not open
+    # while reading its startup files; whether the analysis is trustworthy is
+    # decided by the analysis evidence, which is a different question with a
+    # different answer.
+    collateral_failure = None
+    for pattern in COLLATERAL_LOAD_FAILURE_PATTERNS:
+        if pattern.search(line):
+            collateral_failure = line.strip()[:1_000]
+            break
+    if collateral_failure is not None:
+        return None, None, None, False, False, collateral_failure
+    if COLLATERAL_LOAD_SUMMARY_RE.search(line):
+        return None, None, None, False, False, None
 
     convergence_error = None
     if not re.search(r"failures?\s*[:=]\s*0\b", line, re.IGNORECASE):
@@ -851,6 +897,7 @@ def _scan_line(
         native_error,
         measurement_warning,
         completed_analysis,
+        None,
     )
 
 
@@ -1750,6 +1797,9 @@ class NgspiceDriver:
         solver_warning_examples_seen: set[str] = set()
         solver_warning_count = 0
         native_error = None
+        startup_failure: str | None = None
+        collateral_failures: list[str] = []
+        collateral_failures_seen: set[str] = set()
         batch_measurement_warning = False
         completed_analysis_in_log = False
         log_text = ""
@@ -1765,15 +1815,37 @@ class NgspiceDriver:
             else:
                 log_text = captured_log_text
         for captured in (process.stdout, process.stderr, log_text):
+            # A stream that never shows the banner is treated exactly as before:
+            # every line is deck evidence, because nothing marks where startup
+            # ended.
+            banner_seen = NGSPICE_BANNER_RE.search(captured) is None
             for line in captured.splitlines():
+                if not banner_seen and NGSPICE_BANNER_RE.match(line):
+                    banner_seen = True
                 (
                     line_convergence,
                     line_solver_warning,
                     line_error,
                     line_warning,
                     line_analysis,
+                    line_collateral,
                 ) = _scan_line(line)
+                if not banner_seen:
+                    # Printed while startup files were being read, before any
+                    # deck existed. It says something about the simulator's
+                    # configuration; it cannot say anything about this circuit.
+                    if line_error and line_collateral is None:
+                        startup_failure = startup_failure or line_error
+                    line_convergence = None
+                    line_solver_warning = None
+                    line_error = None
+                    line_warning = False
+                    line_analysis = False
                 convergence_error = convergence_error or line_convergence
+                if line_collateral and line_collateral not in collateral_failures_seen:
+                    collateral_failures_seen.add(line_collateral)
+                    if len(collateral_failures) < MAX_COLLATERAL_FAILURE_EXAMPLES:
+                        collateral_failures.append(line_collateral)
                 if line_solver_warning:
                     solver_warning_count += 1
                     if (
@@ -1864,6 +1936,57 @@ class NgspiceDriver:
             )
         if native_error:
             diagnostics.append(diagnostic("error", "simulation.native_error", native_error))
+        if startup_failure:
+            diagnostics.append(
+                diagnostic(
+                    "error" if not enough_analysis_evidence else "warning",
+                    "simulation.startup.failed",
+                    (
+                        "A simulator startup file reported an error before any deck "
+                        f"was read: {startup_failure}"
+                    ),
+                    hint=(
+                        "The failing card is in SPICE_SCRIPTS' spinit, ./.spiceinit or "
+                        "$HOME/.spiceinit, not in the deck. Bind the technology with "
+                        "--pdk and OpenADA writes the startup file itself."
+                    ),
+                )
+            )
+        if collateral_failures:
+            # Severity follows the evidence, not the log. A preload the deck
+            # never needed leaves a converged, structurally valid raw file on
+            # disk; calling that run's *output* malformed described the wrong
+            # thing entirely. When the analysis did fail, the same fact is the
+            # error - and it names collateral, which is what the caller has to
+            # fix - rather than an unreadable result.
+            model_bearing_failure = bool(native_error) or not enough_analysis_evidence
+            diagnostics.append(
+                diagnostic(
+                    "error" if model_bearing_failure else "warning",
+                    "simulation.collateral.unloadable",
+                    (
+                        f"ngspice could not load {len(collateral_failures_seen)} model "
+                        "librar"
+                        + ("y" if len(collateral_failures_seen) == 1 else "ies")
+                        + " it was asked to preload: "
+                        + "; ".join(collateral_failures)
+                        + (
+                            "."
+                            if model_bearing_failure
+                            else ". The requested analysis still produced structurally "
+                            "valid evidence, so no device in this deck needed them."
+                        )
+                    ),
+                    hint=(
+                        "A preload is named by a startup file, not by the deck. "
+                        "Check SPICE_SCRIPTS, ./.spiceinit and $HOME/.spiceinit - an "
+                        "installed PDK may have written one that expands $PDK_ROOT and "
+                        "$PDK, in which case it names its own modules inside whichever "
+                        "PDK this run bound. Pass --pdk and OpenADA writes the startup "
+                        "file itself."
+                    ),
+                )
+            )
         if batch_measurement_warning:
             diagnostics.append(
                 diagnostic(

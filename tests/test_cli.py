@@ -906,7 +906,13 @@ def test_a_missing_pdk_root_names_the_environment_variable(tmp_path, capsys, mon
     assert "PDK_ROOT" in refusal["hint"]
 
 
-def test_typed_simulation_parameters_require_the_shared_backend(tmp_path, capsys):
+def test_typed_simulation_parameters_require_the_simulation_semantic(tmp_path, capsys):
+    """``--analysis`` needs the semantic path, not the ``--backend`` spelling.
+
+    ``--pdk``, ``--models`` and an artifact target already select it, and
+    demanding the flag as well cost one observed session four turns.
+    """
+
     source = tmp_path / "fixture.cir"
     source.write_text("typed simulation fixture\n.end\n", encoding="utf-8")
 
@@ -915,7 +921,10 @@ def test_typed_simulation_parameters_require_the_shared_backend(tmp_path, capsys
 
     assert exit_code == 2
     assert payload["execution"]["status"] == "invalid_request"
-    assert "require --backend" in payload["diagnostics"][0]["message"]
+    message = payload["diagnostics"][0]["message"]
+    assert "require the simulation semantic" in message
+    for selector in ("--backend", "--pdk", "--models", "schematic.artifact.json"):
+        assert selector in message
     assert payload["diagnostics"][0]["code"] == "request.invalid"
     assert payload["data"] == {}
 

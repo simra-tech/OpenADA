@@ -217,32 +217,37 @@ A netlist carries devices, not technologies. Write each device as a canonical
 role - `nmos.core` / `pmos.core`, and `.svt` / `.lvt` / `.hvt` / `.io` where a
 threshold or oxide flavour is meant - with SI geometry (`W=2u L=130n`), and name
 the PDK on the command line. The driver resolves the model name, instance
-prefix, parameter spelling, geometry unit convention, ordered library prelude,
-corner and any Verilog-A preload from a reviewed profile. One deck then binds to
-every installed PDK with only `--pdk` changing.
+prefix, parameter spelling, geometry units, library prelude, corner and any
+Verilog-A preload from a reviewed profile, so one deck binds to every installed
+PDK with only `--pdk` changing.
 
-A deck that carries `pre_osdi`, or a `.lib`/`.include` into an installed PDK's
-tree, is **refused** with `pdk.collateral.hand_bound` - including when its paths
-are correct, because such a deck can only ever ask its question in one
-technology. `pdk.collateral.foreign` fires when one PDK's incantation is applied
-to another, and `pdk.collateral.missing` when a deck would bind nothing. Run
-`openada simulate --help` for the PDKs that bind; digital place-and-route
-platforms are registered and refuse with `pdk.analog.unsupported` rather than
-"unknown PDK". `--unmanaged-collateral` exists only to qualify collateral no
-profile covers yet, and stamps the result with a permanent provenance
-limitation.
+A deck carrying `pre_osdi`, or a `.lib`/`.include` into an installed PDK's tree,
+is **refused** with `pdk.collateral.hand_bound` even when its paths are correct,
+because such a deck can only ask its question in one technology;
+`pdk.collateral.foreign` when one PDK's incantation is applied to another, and
+`pdk.collateral.missing` when it would bind nothing. A startup file binds
+collateral the same way and earlier, so the rules cover `--init-file` too and
+`--pdk` writes the ngspice startup file itself: no ambient `spinit`/`.spiceinit`
+can bind another technology into the run. A failed preload is
+`simulation.collateral.unloadable`, never a malformed result. `openada simulate
+--help` lists the PDKs that bind; platforms refuse with
+`pdk.analog.unsupported`, and `--unmanaged-collateral` qualifies collateral no
+profile covers yet, stamping a permanent provenance limitation.
 
 Never hand-write model cards to get past a refusal: cards named after real
-devices produce confident numbers with no relationship to the technology.
-Adding a PDK is a reviewed change to `src/openada/pdk_bindings.py`.
-`--pdk` and `--models` are mutually exclusive.
+devices produce confident numbers unrelated to the technology. Adding a PDK is
+a reviewed change to `src/openada/pdk_bindings.py`; `--pdk` and `--models` are
+mutually exclusive.
 
 ## Continue from native evidence to a specification
 
-A shared-profile simulation pass can feed the implemented typed evidence
-chain. Keep every result envelope as JSON; do not copy values from a log.
-
-First create a closed selection document:
+A shared-profile simulation pass feeds the typed evidence chain; never copy a
+value out of a log. You rarely assemble this by hand: a completed `simulate`
+retains its envelope as `simulate.result.json`, writes a ready-to-run
+`simulate.selection.json`, and prints the exact `openada extract` command as
+`claim.measurement.typed_chain`. Run it. A run reporting
+`claim.measurement.unsupported` produced nothing that may be called measured,
+simulated or verified. The selection is a closed document:
 
 ```json
 {

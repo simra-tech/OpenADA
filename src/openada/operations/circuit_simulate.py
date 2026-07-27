@@ -706,6 +706,8 @@ def _canonicalize_diagnostics(payload: dict) -> list[dict]:
             "simulation.result.malformed",
             "simulation.evidence.over_limit",
             "simulation.provenance.incomplete",
+            "simulation.collateral.unloadable",
+            "simulation.startup.failed",
         }:
             code = original_code
         elif original_code in {"simulation.nonconvergent"}:

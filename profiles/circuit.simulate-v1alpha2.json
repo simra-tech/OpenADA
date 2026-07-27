@@ -973,6 +973,20 @@
       "extensions": {}
     },
     {
+      "code": "simulation.collateral.unloadable",
+      "severity": "warning",
+      "condition": "The simulator was asked to preload a model library it could not open. Severity is error when the analysis produced no structurally valid evidence and warning when it did, because a preload no device needed does not make a converged result unreadable.",
+      "next_action": "Identify the startup file that named the preload - SPICE_SCRIPTS, ./.spiceinit or $HOME/.spiceinit - and bind the technology with --pdk so the driver writes the startup file itself.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.startup.failed",
+      "severity": "warning",
+      "condition": "A simulator startup file reported an error before any deck was read. Severity is error when the analysis produced no structurally valid evidence and warning when it did.",
+      "next_action": "Correct or displace the startup file named by SPICE_SCRIPTS, ./.spiceinit or $HOME/.spiceinit; binding with --pdk makes the driver write it instead.",
+      "extensions": {}
+    },
+    {
       "code": "pdk.collateral.foreign",
       "severity": "error",
       "condition": "A reference sits inside one registered PDK's tree but names collateral another registered PDK ships: one PDK's incantation applied to another.",
@@ -1082,6 +1096,20 @@
       "severity": "error",
       "condition": "The supplied model-card file reaches outside itself through a directive this bounded profile cannot accept.",
       "next_action": "Supply a flattened, self-contained model card set, or bind an installed PDK instead.",
+      "extensions": {}
+    },
+    {
+      "code": "claim.measurement.unsupported",
+      "severity": "error",
+      "condition": "The analysis did not complete, or the engineering assertion was not established, so the run supports no measured quantity at all.",
+      "next_action": "Report no quantity from this run as measured, simulated or verified; correct the named failure and re-run.",
+      "extensions": {}
+    },
+    {
+      "code": "claim.measurement.typed_chain",
+      "severity": "info",
+      "condition": "The analysis completed, so a quantity may become reportable - but only through a typed measurement envelope, never by parsing the retained raw file directly.",
+      "next_action": "Run result.series.extract against the retained result envelope, then result.measure, result.transfer.measure or result.spectral.measure.",
       "extensions": {}
     }
   ],

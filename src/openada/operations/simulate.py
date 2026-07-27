@@ -75,6 +75,7 @@ from ..pdk_bindings import (
     simulatable_pdk_ids,
 )
 from ..pdk_collateral import blocking, inspect_deck_collateral
+from ..pdk_startup import MANAGED_STARTUP_PROVENANCE, write_managed_startup
 from .circuit_simulate import (
     decorate_circuit_simulation_result,
     inspect_simulation_deck,
@@ -571,14 +572,25 @@ def _run_bound_deck(
     result is then decorated into the *same* ``circuit.simulate/v1alpha2``
     evidence block every other simulation produces: the model source changes
     what the simulator is told, never what the evidence means.
+
+    The run's ngspice startup file is OpenADA's own. A binding exports
+    ``PDK_ROOT`` and ``PDK``, and an ambient ``.spiceinit`` - IHP ships one, and
+    the workstation image installs it into the user's home - expands exactly
+    those two variables to preload *its* Verilog-A modules from *this* PDK's
+    tree. Handing ngspice an explicit startup file suppresses every ambient one,
+    so the technology binding stays the profile's and the startup becomes a
+    content-bound input rather than an invisible property of the host. See
+    ``pdk_startup``.
     """
 
+    startup_path = write_managed_startup(output_dir, resolved_pdk)
     payload = NgspiceDriver(discovery=discovery).simulate(
         deck_path,
         output_dir,
         workdir=workdir,
         execution_mode="control",
         expected_outputs=[NgspiceOutput(kind="raw", path=raw_name)],
+        init_file=startup_path,
         environment_overrides={
             "PDK_ROOT": str(resolved_pdk.root.parent),
             "PDK": resolved_pdk.pdk_id,
@@ -595,10 +607,12 @@ def _run_bound_deck(
         deck=deck,
         parameters=parameters,
         provenance_limitations=[
-            "The top-level bound deck, the selected native executable and every "
+            "The top-level bound deck, the selected native executable, the "
+            "simulator startup file and every "
             f"file the {resolved_pdk.pdk_id} binding profile names were "
             "content-bound; the model library's own transitive includes, host "
-            "runtime libraries and simulator defaults remain bounded provenance."
+            "runtime libraries and simulator defaults remain bounded provenance.",
+            MANAGED_STARTUP_PROVENANCE,
         ],
     )
 
@@ -916,6 +930,36 @@ def simulate(
     else:
         run_directory = deck_directory
 
+    # A bound deck runs the analysis it declares, because a PDK binding is a
+    # model source and not a rewrite of the experiment. So a caller who also
+    # names an analysis must be naming the same one; the alternative is that the
+    # request says ``op``, the deck says ``.ac``, an AC sweep runs and nothing
+    # anywhere reports the disagreement.
+    if resolved_pdk is not None and isinstance(parameters, Mapping):
+        requested = parameters.get("analysis")
+        requested_analysis = (
+            requested.get("type") if isinstance(requested, Mapping) else None
+        )
+        declared = {deck.kind for deck in decks if deck.kind != "deck"}
+        if (
+            isinstance(requested_analysis, str)
+            and declared
+            and requested_analysis not in declared
+        ):
+            return refuse(
+                "simulation.request.invalid",
+                f"The request names the {requested_analysis} analysis, but the "
+                f"deck a {resolved_pdk.pdk_id} binding will run declares "
+                f"{', '.join(sorted(declared))}. A PDK binding supplies device "
+                "models; it does not rewrite the experiment.",
+                hint=(
+                    "Drop --analysis to run what the deck declares, or state the "
+                    "analysis in the deck."
+                ),
+                inputs=input_records,
+                extensions={TARGET_EXTENSION: target_facts},
+            )
+
     # The collateral check runs on what the caller actually wrote, before any
     # binding, because the whole point is to catch a deck that reaches into a
     # PDK by hand.
@@ -1197,6 +1241,228 @@ def simulate(
     existing = list(envelope.get("diagnostics") or ())
     envelope["diagnostics"] = diagnostics + existing
     envelope["operation"] = OPERATION_NAME
+    return _retain_and_state_reportability(envelope, destination=destination)
+
+
+#: Where a completed simulation leaves its own envelope. The typed chain -
+#: ``extract`` then ``measure``/``transfer``/``spectral`` - takes the envelope as
+#: a *file*, and the envelope has only ever gone to stdout. So every agent that
+#: wanted a number faced a choice between saving the envelope itself and just
+#: parsing the ``.raw`` with its own Python, and the second is one step shorter.
+#: It was chosen four times, and each time the number was then reported as
+#: "measured" with nothing in the result contract vouching for it. Retaining the
+#: envelope makes the typed chain the shorter path, not the longer one.
+RETAINED_RESULT_NAME = "simulate.result.json"
+
+#: How much of a raw file's plain-text header is read to name its vectors. The
+#: header precedes the binary payload and is small; the bound keeps a hostile or
+#: truncated file from being read whole.
+MAX_RAW_HEADER_BYTES = 64 * 1024
+_RAW_VARIABLE_RE = re.compile(r"^\s*\d+\s+(\S+)\s+(\S+)")
+
+
+def _native_vector_names(raw_path: Path) -> tuple[str, ...]:
+    """Return the vector names a retained raw file declares, axis first.
+
+    ``extract`` selects by *native* vector name, and every failed attempt in
+    the observed runs started with not knowing what those names were. They are
+    in the raw file's own header; naming them costs one bounded read and saves
+    a round of guessing.
+    """
+
+    try:
+        with raw_path.open("rb") as handle:
+            head = handle.read(MAX_RAW_HEADER_BYTES)
+    except OSError:
+        return ()
+    text = head.decode("latin-1", errors="replace")
+    names: list[str] = []
+    collecting = False
+    for line in text.splitlines():
+        lowered = line.strip().lower()
+        if lowered.startswith("variables:"):
+            collecting = True
+            continue
+        if collecting:
+            if lowered.startswith(("binary:", "values:")):
+                break
+            match = _RAW_VARIABLE_RE.match(line)
+            if match is None:
+                break
+            names.append(match.group(1))
+            if len(names) >= 64:
+                break
+    return tuple(names)
+
+
+#: The selection ``extract`` needs, written out so the next command is a
+#: command and not a schema exercise. ``--selection`` takes a *path*; every
+#: observed attempt to pass the JSON inline was refused, and each refusal was a
+#: turn spent not measuring anything.
+SELECTION_TEMPLATE_NAME = "simulate.selection.json"
+
+#: ngspice names a vector for what it is. The unit follows from the name, and
+#: guessing it wrong is the difference between a typed measurement and another
+#: ``series.selector.invalid``.
+_VECTOR_UNITS = (("v(", "V"), ("i(", "A"), ("@", "A"))
+
+
+def _vector_unit(name: str) -> str | None:
+    lowered = name.lower()
+    for prefix, unit in _VECTOR_UNITS:
+        if lowered.startswith(prefix):
+            return unit
+    return None
+
+
+def _write_selection_template(
+    destination: Path, signals: Sequence[str]
+) -> Path | None:
+    """Write a ready-to-run ``extract`` selection and return its path."""
+
+    selectors = [
+        {
+            "native_name": name,
+            "output_name": re.sub(r"[^A-Za-z0-9_]", "_", name).strip("_"),
+            "unit": unit,
+            "component": "real",
+        }
+        for name in signals
+        if (unit := _vector_unit(name)) is not None
+    ][:8]
+    if not selectors:
+        return None
+    path = destination / SELECTION_TEMPLATE_NAME
+    try:
+        destination.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(
+                {"selectors": selectors, "conditions": [], "extensions": {}}, indent=2
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    except OSError:
+        return None
+    return path
+
+
+def _retain_and_state_reportability(
+    envelope: dict[str, Any], *, destination: Path
+) -> dict[str, Any]:
+    """Retain the envelope and say plainly what may be reported from it.
+
+    ``execution.status`` and ``engineering.status`` have always carried this,
+    and reading them correctly is a real skill. The failure this addresses is
+    not that the information was absent - it is that a number can be lifted out
+    of a ``.raw`` file and written into an answer as "Measured" without anything
+    in the evidence ever contradicting it. So the envelope now states the
+    permission in words, in the same object the caller is already reading.
+    """
+
+    analysis = (envelope.get("data") or {}).get("analysis") or {}
+    completion = analysis.get("completion") if isinstance(analysis, Mapping) else None
+    engineering = envelope.get("engineering") or {}
+    status = engineering.get("status") if isinstance(engineering, Mapping) else None
+    established = completion == "completed" and status in {"pass", "fail"}
+
+    raw_paths = [
+        str(record.get("path"))
+        for record in envelope.get("artifacts") or ()
+        if isinstance(record, Mapping) and record.get("role") == "simulation.result"
+    ]
+    retained = destination / RETAINED_RESULT_NAME
+
+    claims: list[dict[str, Any]] = []
+    if not established:
+        claims.append(
+            diagnostic(
+                "error",
+                "claim.measurement.unsupported",
+                (
+                    "This run establishes no measurable quantity: "
+                    f"analysis completion is {completion!r} and engineering status is "
+                    f"{status!r}. No number derived from it - including one read out of "
+                    "a retained raw file - may be reported as measured, simulated or "
+                    "verified. Report it as an estimate, or say the simulation did not "
+                    "produce a usable result."
+                ),
+                hint=(
+                    "Fix the reason named by the other diagnostics and re-run. A "
+                    "quantity becomes reportable only once an analysis completes and a "
+                    "typed measurement envelope carries it."
+                ),
+            )
+        )
+    else:
+        raw = raw_paths[0] if raw_paths else "<raw>"
+        vectors = _native_vector_names(Path(raw)) if raw_paths else ()
+        # An operating point has no sweep, so it has no axis and every vector is
+        # a signal. Every other analysis puts its axis first, and the axis is not
+        # a signal: selecting it alongside the dependent vectors is refused with
+        # ``series.selector.missing``, which names neither the axis nor the
+        # offending selector. Stating it here is cheaper than discovering it.
+        swept = analysis.get("type") != "op" if isinstance(analysis, Mapping) else True
+        axis = vectors[0] if vectors and swept else None
+        # ngspice saves every internal subcircuit body node alongside the nets
+        # the deck named. A '#' marks one; a caller almost never wants them, and
+        # listing them buries the nets that were asked for.
+        candidates = vectors[1:] if swept else vectors
+        signals = tuple(name for name in candidates if "#" not in name)
+        selection_path = _write_selection_template(destination, signals)
+        if signals and axis is not None:
+            vector_note = (
+                f" The retained raw declares {axis!r} as the axis - which must "
+                "NOT appear in selectors - over the vectors "
+                f"{', '.join(signals[:12])}."
+            )
+        elif signals:
+            vector_note = (
+                " The retained raw declares the vectors "
+                f"{', '.join(signals[:12])}; an operating point has no axis."
+            )
+        else:
+            vector_note = ""
+        template = (
+            f" --selection {selection_path}"
+            if selection_path is not None
+            else " --selection <selection.json>"
+        )
+        claims.append(
+            diagnostic(
+                "info",
+                "claim.measurement.typed_chain",
+                (
+                    "The analysis completed, so a quantity may be reported as measured "
+                    "- but only once a typed measurement envelope carries it. A number "
+                    "parsed out of the raw file by hand is not one: nothing in the "
+                    "result contract binds it to this run. This envelope has been "
+                    f"retained at {retained}.{vector_note} Continue with: openada "
+                    f"extract --simulation {retained} --artifact {raw}{template}, then "
+                    "`openada measure`, `openada transfer` or `openada spectral` on the "
+                    "series it returns."
+                ),
+            )
+        )
+    envelope["diagnostics"] = claims + list(envelope.get("diagnostics") or ())
+
+    try:
+        destination.mkdir(parents=True, exist_ok=True)
+        retained.write_text(
+            json.dumps(envelope, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+        )
+    except (OSError, TypeError, ValueError):
+        # Retention is a convenience, never a precondition for the evidence.
+        envelope["diagnostics"] = [
+            diagnostic(
+                "warning",
+                "simulation.result.missing",
+                f"The result envelope could not be retained at {retained}; the typed "
+                "chain needs it as a file, so save this output before calling "
+                "`openada extract`.",
+            ),
+            *envelope["diagnostics"],
+        ]
     return envelope
 
 
@@ -1264,6 +1530,31 @@ def simulate_legacy_native(
         bound_pdk=None,
         unmanaged=unmanaged_collateral,
     )
+    # A startup file binds collateral exactly as a deck does, and it does so
+    # before the deck is read - which is how one PDK's Verilog-A preload reached
+    # a run bound to another without appearing in any netlist. A caller who
+    # names a startup file explicitly is choosing its contents, so the same
+    # rules apply to it, with the same escape.
+    for label, candidate in (("init file", init_file), ("system init file", system_init_file)):
+        if candidate is None:
+            continue
+        startup_path = Path(candidate).expanduser()
+        try:
+            startup_text = startup_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        startup_errors, startup_advisories = _collateral_diagnostics(
+            startup_text,
+            workdir=startup_path.parent,
+            bound_pdk=None,
+            unmanaged=unmanaged_collateral,
+        )
+        for entry in (*startup_errors, *startup_advisories):
+            entry["message"] = f"The {label} {startup_path} binds PDK collateral. " + str(
+                entry.get("message", "")
+            )
+        errors.extend(startup_errors)
+        advisories.extend(startup_advisories)
     if errors:
         head = errors[0]
         return _refusal(

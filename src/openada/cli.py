@@ -1960,12 +1960,6 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             parameters = _simulation_profile_parameters(args)
         except ValueError as exc:
             return _simulation_cli_invalid(args, str(exc))
-        if args.backend is None and (args.analysis is not None or parameters is not None):
-            return _invalid_request(
-                "simulate",
-                "--analysis and its typed parameters require --backend",
-            )
-
         # Which path honours the request is decided by what the request needs,
         # never by the caller guessing. A published artifact, a PDK binding or a
         # model-card file can only be honoured by the semantic operation, so a
@@ -1983,6 +1977,19 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             or args.models is not None
             or target_kind == "simra-artifact"
         )
+        # ``--analysis`` belongs to the semantic operation, and asking for it
+        # alongside ``--pdk`` used to be refused for spelling: the request had
+        # already selected the semantic path, and the driver defaults the
+        # backend to ngspice anyway. One observed session spent four turns
+        # adding and removing flags to satisfy this, which is four turns not
+        # spent simulating anything.
+        if not semantic and (args.analysis is not None or parameters is not None):
+            return _invalid_request(
+                "simulate",
+                "--analysis and its typed parameters require the simulation "
+                "semantic: pass --backend, --pdk, --models, or a published "
+                "schematic.artifact.json target.",
+            )
         timeout = args.timeout
         if timeout is None:
             timeout = 600.0 if args.pdk is not None else 120.0

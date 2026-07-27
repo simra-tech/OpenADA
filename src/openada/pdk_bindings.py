@@ -270,6 +270,12 @@ class PdkBinding:
     osdi_relative_paths: tuple[str, ...] = ()
     #: Relative path of a PDK identity/version file, recorded when present.
     identity_relative_path: str | None = None
+    #: Simulator startup lines this PDK genuinely cannot express in a deck.
+    #: Empty for every reviewed profile so far, and that is the point: OpenADA
+    #: writes the startup file itself precisely so nobody else's can apply, so
+    #: anything listed here has to earn its place by being unstateable in the
+    #: deck. See ``pdk_startup``.
+    startup_directives: tuple[str, ...] = ()
     #: False for a platform that ships no transistor models at all. Such a
     #: platform is registered so that asking for it fails with a reason rather
     #: than "unknown PDK".

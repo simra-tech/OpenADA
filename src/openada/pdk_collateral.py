@@ -62,7 +62,11 @@ from .pdk_bindings import REGISTRY, PdkBinding
 #: else in a SPICE deck is self-contained by construction.
 _LIB_RE = re.compile(r"^\s*\.lib\s+(?P<path>\S+)(?:\s+(?P<section>\S+))?\s*$", re.IGNORECASE)
 _INCLUDE_RE = re.compile(r"^\s*\.inc(?:lude)?\s+(?P<path>\S+)\s*$", re.IGNORECASE)
-_PRE_OSDI_RE = re.compile(r"^\s*pre_osdi\s+(?P<path>\S+)\s*$", re.IGNORECASE)
+#: ``pre_osdi`` inside a deck's control block and ``osdi`` inside a startup file
+#: are the same act under two spellings; IHP's shipped ``.spiceinit`` uses the
+#: second. Reading only the first meant a startup file could bind a technology
+#: the deck never mentioned, invisibly.
+_PRE_OSDI_RE = re.compile(r"^\s*(?:pre_)?osdi\s+(?P<path>\S+)\s*$", re.IGNORECASE)
 _OPTION_SCALE_RE = re.compile(r"^\s*\.option[s]?\b.*\bscale\s*=", re.IGNORECASE)
 
 #: A malformed or hostile deck must not make this check unbounded.

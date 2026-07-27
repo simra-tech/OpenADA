@@ -181,7 +181,19 @@ where one PDK's incantation was applied to another;
 `pdk.collateral.missing` the case where a deck would bind nothing. The only way
 past is `--unmanaged-collateral`, which stamps the result with a permanent
 provenance limitation saying OpenADA cannot state which technology the evidence
-describes.
+describes. The same rules apply to a startup file the caller names with
+`--init-file` or `--system-init-file`, because a startup file binds collateral
+exactly as a deck does and does so before the deck is read.
+
+An *ambient* startup file cannot reach a `--pdk` run at all: the driver writes
+the ngspice startup file itself and passes it explicitly, so no `spinit` or
+`.spiceinit` on the host applies. This closes a real failure — IHP ships a
+`.spiceinit` preloading its own PSP103 modules from `$PDK_ROOT/$PDK`, and a
+binding exports `PDK`, so a sky130A run inherited IHP's preload aimed at
+SkyWater's tree. When a preload does fail, `simulation.collateral.unloadable`
+names the files: a warning when the analysis produced structurally valid
+evidence regardless, an error when it did not. A run that wrote a valid raw file
+is never reported as a malformed result because the log carried a preload error.
 
 The rows are experimental. They have contract tests and a native model-free
 replay, but no pinned public workflow chain.

@@ -8,6 +8,57 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Changed
 
+- **The driver owns the simulator's startup file, not just the deck.** The
+  collateral refusal read the deck, and the deck was never where the damage came
+  from. ngspice reads a startup file *before* it reads any deck; IHP's PDK ships
+  `<pdk-root>/ihp-sg13g2/libs.tech/ngspice/.spiceinit`, which preloads its own
+  PSP103 modules from `$PDK_ROOT/$PDK`; the workstation image installs it in the
+  user's home; and a binding exports `PDK` and `PDK_ROOT`. So every sky130A run
+  in the container preloaded **IHP's** compact model out of **SkyWater's** tree,
+  where it has never existed — one PDK's incantation applied to another, written
+  by nobody, invisible in every deck.
+
+  A `--pdk` run now writes its own `openada-pdk.spiceinit`, hands it to ngspice
+  explicitly and thereby suppresses every ambient `spinit` and `.spiceinit`. The
+  file is a retained, content-bound input, and `pdk_startup` renders it from the
+  reviewed profile: near-empty by design, because everything a bound deck needs
+  is *in* the bound deck. A startup file the caller names with `--init-file` or
+  `--system-init-file` is held to the same collateral rules as a deck, and the
+  `osdi` card spelling — IHP's — is recognised alongside `pre_osdi`.
+
+- **A model library that will not load is a fact about collateral, not about the
+  output.** `simulation.native_error` swept up ngspice's OSDI preload failures
+  and `simulation.result.malformed` then reported them as "the retained result
+  is unreadable". It fired on a run that converged over 181 points, wrote a valid
+  8947-byte raw file and printed `ngspice-46 done`. Preload failures are now
+  `simulation.collateral.unloadable`, a **warning** when the analysis produced
+  structurally valid evidence anyway — no device in the deck needed the module —
+  and an **error** when it did not. More generally, anything ngspice prints
+  *above its own banner* came from a startup file and cannot be evidence about a
+  deck it had not yet read; a non-preload error there is
+  `simulation.startup.failed`. A capture with no banner is classified exactly as
+  before.
+
+- **A number is not measured until a typed envelope says so.** Answers reported
+  self-derived quantities as "Measured" four times, independently of every
+  simulation fix, because the typed chain took the result envelope as a *file*
+  and the envelope only ever went to stdout — so hand-parsing the `.raw` was
+  always one step shorter than doing it properly. A completed `simulate` now
+  retains its own envelope as `simulate.result.json`, writes a ready-to-run
+  `simulate.selection.json` next to it — the raw's real vector names, units
+  inferred from them, and the axis excluded, since selecting the axis is refused
+  with a diagnostic that names neither — and prints the exact `openada extract`
+  command as `claim.measurement.typed_chain`. A run that establishes nothing
+  instead carries `claim.measurement.unsupported` (error), which states in words
+  that no quantity from it may be called measured, simulated or verified.
+
+- `--analysis` no longer requires `--backend`. It requires the *semantic*
+  operation, which `--pdk`, `--models` and an artifact target already select;
+  demanding the flag as well cost one observed session four turns. Naming an
+  analysis a PDK-bound deck does not declare is now refused with
+  `simulation.request.invalid` rather than silently ignored while the deck's own
+  analysis ran.
+
 - **One simulation semantic.** `openada.operation/circuit.simulate/v1alpha2` is
   now the only simulation operation and `openada simulate` the only verb. Its
   target is a SPICE deck *or* a published Simra `schematic.artifact.json`,
