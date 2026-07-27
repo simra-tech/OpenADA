@@ -29,6 +29,7 @@ from openada.operations.simulate import (
     PDK_BINDING_EXTENSION,
     RETAINED_RESULT_NAME,
     SELECTION_TEMPLATE_NAME,
+    _write_selection_template,
     simulate,
     simulate_legacy_native,
 )
@@ -345,6 +346,67 @@ def test_a_completed_run_hands_back_a_runnable_typed_chain(tmp_path):
     assert series["engineering"]["status"] == "pass"
 
 
+#: The testbench half of a live job that reported a 280 MOhm cascode output
+#: impedance. ``V_OUT_STIM`` carries a DC value and no AC magnitude, so the AC
+#: sweep drives nothing; the extracted series is zero at all 181 points, and the
+#: run is still a legitimate ``pass`` - the tool ran and the evidence is
+#: structurally valid. The question was empty, which is a different failure and
+#: had no name.
+UNDRIVEN_AC_DECK = """\
+* cascode mirror testbench, as published
+V_GND VSS 0 DC 0
+I_REF VDD IREF DC 10u
+V_DD VDD VSS DC 1.5
+V_OUT_STIM VOUT VSS DC 1.5
+M_REF IREF IREF VSS VSS nmos.core W=5u L=500n
+M_OUT VOUT IREF VSS VSS nmos.core W=5u L=500n
+.AC DEC 20 1 1G
+.END
+"""
+
+
+@pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")
+@pytest.mark.skipif(SKY130_ROOT is None, reason="no installed sky130A PDK")
+def test_an_ac_sweep_with_nothing_driving_it_is_named(tmp_path):
+    deck = tmp_path / "undriven.spice"
+    deck.write_text(UNDRIVEN_AC_DECK, encoding="utf-8")
+    payload = simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=DiscoveryManager(),
+        pdk=SKY130A.pdk_id,
+        pdk_root=SKY130_ROOT,
+    )
+    # Still a pass: execution and engineering are about the run, not the
+    # experiment. The warning is what makes the empty question visible.
+    assert payload["engineering"]["status"] == "pass"
+    absent = [
+        entry
+        for entry in payload["diagnostics"]
+        if entry["code"] == "simulation.stimulus.absent"
+    ]
+    assert len(absent) == 1
+    assert absent[0]["severity"] == "warning"
+
+
+@pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")
+@pytest.mark.skipif(SKY130_ROOT is None, reason="no installed sky130A PDK")
+def test_a_driven_ac_sweep_is_not_accused(tmp_path):
+    deck = tmp_path / "driven.spice"
+    deck.write_text(
+        MODEL_FREE_DECK.replace(".op\n", ".ac dec 20 1 1e9\n"), encoding="utf-8"
+    )
+    payload = simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=DiscoveryManager(),
+        pdk=SKY130A.pdk_id,
+        pdk_root=SKY130_ROOT,
+    )
+    codes = {entry["code"] for entry in payload["diagnostics"]}
+    assert "simulation.stimulus.absent" not in codes
+
+
 @pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")
 def test_an_operating_point_has_no_axis_to_exclude(tmp_path):
     """Every other analysis puts its axis first; an OP has none.
@@ -371,6 +433,29 @@ def test_an_operating_point_has_no_axis_to_exclude(tmp_path):
     assert names == ["v(a)", "v(b)", "i(v1)"]
     assert [entry["unit"] for entry in selection["selectors"]] == ["V", "V", "A"]
     assert "no axis" in payload["diagnostics"][0]["message"]
+
+
+def test_a_repeated_vector_name_is_selected_once(tmp_path):
+    """ngspice repeats a saved vector; ``extract`` refuses a repeated selector.
+
+    A published testbench in a real harness run produced an OP raw declaring
+    ``v(vin)`` twice, and a template reproducing that duplicate is refused on
+    its first use - which is precisely the friction the template removes.
+    """
+
+    import json
+
+    path = _write_selection_template(tmp_path, ("v(vin)", "v(vin)", "v(vout)"))
+    assert path is not None
+    selection = json.loads(path.read_text(encoding="utf-8"))
+    names = [entry["native_name"] for entry in selection["selectors"]]
+    assert names == ["v(vin)", "v(vout)"]
+    outputs = [entry["output_name"] for entry in selection["selectors"]]
+    assert len(outputs) == len(set(outputs))
+
+
+def test_a_selection_template_names_only_vectors_it_can_type(tmp_path):
+    assert _write_selection_template(tmp_path, ("frequency", "sweep")) is None
 
 
 @pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")

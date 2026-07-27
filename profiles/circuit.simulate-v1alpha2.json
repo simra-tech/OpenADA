@@ -987,6 +987,13 @@
       "extensions": {}
     },
     {
+      "code": "simulation.stimulus.absent",
+      "severity": "warning",
+      "condition": "The deck declares an AC analysis and no independent source carries an AC magnitude, so every dependent vector is identically zero and the run answers no small-signal question.",
+      "next_action": "Give the stimulating source an AC magnitude and re-run; do not derive a gain, impedance or bandwidth from the existing result.",
+      "extensions": {}
+    },
+    {
       "code": "pdk.collateral.foreign",
       "severity": "error",
       "condition": "A reference sits inside one registered PDK's tree but names collateral another registered PDK ships: one PDK's incantation applied to another.",

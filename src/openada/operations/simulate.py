@@ -349,6 +349,25 @@ _DC_SOURCE_RE = re.compile(
 #: supply-tolerance study and catches a deck written for a different node.
 _SUPPLY_TOLERANCE = 0.20
 
+#: An independent source declaring a small-signal magnitude. Without at least
+#: one of these an ``.AC`` sweep solves a circuit nothing is driving.
+_AC_STIMULUS_RE = re.compile(
+    r"^\s*[VvIi][^\s]*(?:[ \t]+[^\s]+){2}.*(?<![A-Za-z0-9_])ac(?![A-Za-z0-9_])",
+    re.IGNORECASE,
+)
+
+
+def _declares_ac_stimulus(deck_text: str) -> bool:
+    """Return whether any top-level source card carries an ``AC`` magnitude."""
+
+    for line in deck_text.splitlines():
+        stripped = line.lstrip()
+        if not stripped or stripped.startswith(("*", ".")):
+            continue
+        if _AC_STIMULUS_RE.match(line):
+            return True
+    return False
+
 
 def _largest_dc_source_v(deck_text: str) -> float | None:
     """Return the largest DC source magnitude a deck declares, if any."""
@@ -972,6 +991,30 @@ def simulate(
             unmanaged=unmanaged_collateral,
         )
         advisories.extend(notes)
+        # An AC sweep with nothing driving it converges over every point and
+        # returns zero everywhere, and the run is a legitimate `pass`: the tool
+        # ran, the evidence is structurally valid, and the *question* was empty.
+        # A live job reported a 280 MOhm cascode output impedance off exactly
+        # such a run - its testbench wired `V_OUT_STIM` with a DC value and no
+        # AC magnitude - and nothing in the evidence contradicted the number.
+        if deck.kind == "ac" and not _declares_ac_stimulus(deck.text):
+            advisories.append(
+                diagnostic(
+                    "warning",
+                    "simulation.stimulus.absent",
+                    (
+                        "The deck declares an AC analysis but no independent source "
+                        "carries an AC magnitude, so the sweep solves a circuit "
+                        "nothing is driving: every dependent vector is identically "
+                        "zero at every frequency. A gain, impedance or bandwidth "
+                        "derived from this run would be a ratio of zeros."
+                    ),
+                    hint=(
+                        "Give the stimulating source an AC magnitude - "
+                        "`V_IN in 0 DC 0.8 AC 1` - and re-run."
+                    ),
+                )
+            )
         if errors:
             head = errors[0]
             return refuse(
@@ -1320,16 +1363,28 @@ def _write_selection_template(
 ) -> Path | None:
     """Write a ready-to-run ``extract`` selection and return its path."""
 
-    selectors = [
-        {
-            "native_name": name,
-            "output_name": re.sub(r"[^A-Za-z0-9_]", "_", name).strip("_"),
-            "unit": unit,
-            "component": "real",
-        }
-        for name in signals
-        if (unit := _vector_unit(name)) is not None
-    ][:8]
+    # ngspice repeats a vector name when a net is saved twice - a `.SAVE VIN`
+    # beside a `V_IN` current, say - and ``extract`` refuses both a repeated
+    # native identity and a repeated output name. A template that reproduced
+    # the duplicate would be refused on its first use, which is exactly the
+    # friction this file exists to remove.
+    selectors: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for name in signals:
+        unit = _vector_unit(name)
+        if unit is None or name in seen:
+            continue
+        seen.add(name)
+        selectors.append(
+            {
+                "native_name": name,
+                "output_name": re.sub(r"[^A-Za-z0-9_]", "_", name).strip("_"),
+                "unit": unit,
+                "component": "real",
+            }
+        )
+        if len(selectors) >= 8:
+            break
     if not selectors:
         return None
     path = destination / SELECTION_TEMPLATE_NAME

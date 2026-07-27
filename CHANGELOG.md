@@ -52,6 +52,16 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   instead carries `claim.measurement.unsupported` (error), which states in words
   that no quantity from it may be called measured, simulated or verified.
 
+- **An AC sweep with nothing driving it is now named.** `simulation.stimulus.absent`
+  fires when a deck declares `.AC` and no independent source carries an AC
+  magnitude. Such a run converges over every point, returns identically zero
+  everywhere, and is a perfectly legitimate `pass` — execution and engineering
+  are about the run, not about whether the experiment asked anything. A live job
+  reported a 280 MOhm cascode output impedance off exactly this shape (its
+  `V_OUT_STIM` had a DC value and no AC card), and nothing in the evidence
+  contradicted it. Re-running that published deck now shows the warning, and its
+  extracted series is zero at all 181 points.
+
 - `--analysis` no longer requires `--backend`. It requires the *semantic*
   operation, which `--pdk`, `--models` and an artifact target already select;
   demanding the flag as well cost one observed session four turns. Naming an
