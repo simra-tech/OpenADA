@@ -317,7 +317,7 @@
         },
         "configuration": {
           "type": "array",
-          "maxItems": 8,
+          "maxItems": 12,
           "items": {
             "type": "object",
             "required": [
@@ -498,7 +498,11 @@
                 "osdi_modules",
                 "identity",
                 "rewritten_device_count",
-                "raw_outputs"
+                "raw_outputs",
+                "library_cards",
+                "geometry_scale",
+                "device_models",
+                "model_translations"
               ],
               "properties": {
                 "pdk_id": {
@@ -561,6 +565,34 @@
                     "type": "string",
                     "maxLength": 256
                   }
+                },
+                "library_cards": {
+                  "type": "array",
+                  "maxItems": 12,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 4096
+                  }
+                },
+                "geometry_scale": {
+                  "type": "string",
+                  "maxLength": 32
+                },
+                "device_models": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "maxLength": 128
+                  },
+                  "maxProperties": 16
+                },
+                "model_translations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "maxLength": 128
+                  },
+                  "maxProperties": 16
                 }
               },
               "additionalProperties": false

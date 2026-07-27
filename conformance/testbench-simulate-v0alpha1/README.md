@@ -1,15 +1,19 @@
 # `testbench.simulate` published-artifact dispatch fixtures
 
-Both fixtures are unmodified output of the Simra schematic compiler
-(`simra-schematic 0.4.0` over `ordec 0.7.0.dev88+g00277225e`), copied
-byte-for-byte with the digests their descriptors publish. They are not
-hand-written stand-ins: the point of this operation is to consume what a
-publisher actually emits.
+`model-free-differential/`, `nmos-common-source/` and `ihp-sg13g2-inverter/`
+are unmodified output of the Simra schematic compiler (`simra-schematic 0.4.0`
+over `ordec 0.7.0.dev88+g00277225e`), copied byte-for-byte with the digests
+their descriptors publish. They are not hand-written stand-ins: the point of
+this operation is to consume what a publisher actually emits.
+
+`portable-inverter/` is the one exception and is labelled as such below.
 
 | Fixture | `parameters` | `simulation_ready` | `simulation_handoff` | Declared analyses |
 | --- | --- | --- | --- | --- |
 | `model-free-differential/` | `resolved` | `true` | `split_required` | `op`, `tran` |
 | `nmos-common-source/` | `resolved` | `false` | `split_required` | `op`, `dc` |
+| `ihp-sg13g2-inverter/` | `resolved` | `false` | `direct` | `tran` |
+| `portable-inverter/` | `resolved` | `false` | `direct` | `tran` |
 
 ## What each fixture proves
 
@@ -65,6 +69,33 @@ to 1.8 V in 50 mV steps, with `VTH0=0.45` and a 10 kΩ drain load:
 The operating point independently reproduces the sweep's 0.9 V sample
 (`v(vout)=0.972905`), which is a cross-check that both derived decks describe
 the same circuit.
+
+## `portable-inverter/`: one deck, four PDKs
+
+This fixture is **derived, not published**: it is `ihp-sg13g2-inverter/` with
+its device models replaced by canonical roles (`nmos.core`, `pmos.core`), a
+10 fF load added, and its digests recomputed. Everything else about it is the
+shape Simra emits — `M` cards, SI geometry, `W`/`L`/`M`/`NF`.
+
+It exists to hold the portability claim honest. The same bytes were bound to
+four installed technologies with nothing but `--pdk` changing. ngspice 45.2,
+linux/amd64, `VDD = 1.2 V`, `W/L = 2 µm / 0.5 µm` (n) and `4 µm / 0.5 µm` (p),
+input edge 200 ps, 820 points to 8 ns, typical corner:
+
+| `--pdk` | corner | prefix | scale | model bound | V<sub>OL</sub> | V<sub>OH</sub> | t<sub>pHL</sub> |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `ihp-sg13g2` | `mos_tt` | `x` | 1 | `sg13_lv_nmos` | 0.00 mV | 1.2000 V | 81.3 ps |
+| `sky130A` | `tt` | `x` | 1e-6 | `sky130_fd_pr__nfet_01v8` | −0.00 mV | 1.2000 V | 147.1 ps |
+| `gf180mcuD` | `typical` | `x` | 1 | `nfet_03v3` | 0.00 mV | 1.2000 V | 251.8 ps |
+| `freepdk45` | `nom` | `m` | 1 | `NMOS_VTG` | 0.09 mV | 1.1997 V | 119.6 ps |
+
+The delay ordering follows the nodes (130 nm, 130 nm at a 1.8 V device driven
+at 1.2 V, 180 nm, 45 nm at a 500 nm drawn length), which is a weak but real
+cross-check that four different model sets were actually exercised rather than
+one being silently reused.
+
+None of this is a signoff, correlation or fidelity claim. It establishes that
+one canonical deck binds and converges on four technologies; nothing more.
 
 ## What this bundle does not establish
 

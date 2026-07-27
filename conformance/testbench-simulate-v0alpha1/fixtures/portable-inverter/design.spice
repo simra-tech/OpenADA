@@ -1,0 +1,14 @@
+* SIMRA HIERARCHICAL STRUCTURAL EXPORT - unresolved identifiers must be bound before simulation.
+.TITLE PortableInverterTb
+.SUBCKT Inverter A Y VDD VSS
+M_PD Y A VSS VSS nmos.core W=2u L=500n M=1 NF=1
+M_PU Y A VDD VDD pmos.core W=4u L=500n M=1 NF=1
+.ENDS Inverter
+V_GND VSS 0 DC 0
+V_DD VDD VSS DC 1.2
+V_IN VIN VSS DC 0 PULSE(0 1.2 500p 200p 200p 3n 8n)
+X_DUT VIN VOUT VDD VSS Inverter
+C_LOAD VOUT VSS 10f
+.SAVE VIN VOUT
+.TRAN 10p 8n
+.END

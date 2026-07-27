@@ -1,0 +1,1532 @@
+{
+  "cells": [
+    {
+      "canvas": {
+        "grid": 1.0,
+        "view_box": [
+          -4.95,
+          -1.5499999999999998,
+          8.95,
+          21.55
+        ]
+      },
+      "entities": {
+        "instances": [
+          {
+            "cell_ref": "cell:primitive/nmos/6a46752640ea",
+            "id": "instance:Inverter/schematic/M_PD",
+            "implementation_status": "implemented",
+            "kind": "nmos",
+            "name": "M_PD",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "l": "130n",
+              "m": 1,
+              "model": "sg13_lv_nmos",
+              "nf": 1,
+              "w": "2u"
+            },
+            "position": [
+              0.0,
+              4.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 13,
+              "line": 26
+            },
+            "terminals": {
+              "B": "net:Inverter/schematic/VSS",
+              "D": "net:Inverter/schematic/Y",
+              "G": "net:Inverter/schematic/A",
+              "S": "net:Inverter/schematic/VSS"
+            }
+          },
+          {
+            "cell_ref": "cell:primitive/pmos/48adc8d95489",
+            "id": "instance:Inverter/schematic/M_PU",
+            "implementation_status": "implemented",
+            "kind": "pmos",
+            "name": "M_PU",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "l": "130n",
+              "m": 1,
+              "model": "sg13_lv_pmos",
+              "nf": 1,
+              "w": "4u"
+            },
+            "position": [
+              0.0,
+              12.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 13,
+              "line": 25
+            },
+            "terminals": {
+              "B": "net:Inverter/schematic/VDD",
+              "D": "net:Inverter/schematic/Y",
+              "G": "net:Inverter/schematic/A",
+              "S": "net:Inverter/schematic/VDD"
+            }
+          }
+        ],
+        "junctions": [
+          {
+            "id": "junction:Inverter/schematic/A/0",
+            "net": "net:Inverter/schematic/A",
+            "position": [
+              -1.0,
+              10.0
+            ]
+          },
+          {
+            "id": "junction:Inverter/schematic/Y/0",
+            "net": "net:Inverter/schematic/Y",
+            "position": [
+              2.0,
+              10.0
+            ]
+          }
+        ],
+        "labels": [
+          {
+            "alignment": "R0",
+            "id": "label:Inverter/schematic/VDD/0",
+            "net": "net:Inverter/schematic/VDD",
+            "position": [
+              2.0,
+              16.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "id": "label:Inverter/schematic/VDD/1",
+            "net": "net:Inverter/schematic/VDD",
+            "position": [
+              4.0,
+              14.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "id": "label:Inverter/schematic/VSS/0",
+            "net": "net:Inverter/schematic/VSS",
+            "position": [
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "id": "label:Inverter/schematic/VSS/1",
+            "net": "net:Inverter/schematic/VSS",
+            "position": [
+              4.0,
+              6.0
+            ]
+          }
+        ],
+        "nets": [
+          {
+            "external": true,
+            "id": "net:Inverter/schematic/A",
+            "name": "A"
+          },
+          {
+            "external": true,
+            "id": "net:Inverter/schematic/VDD",
+            "name": "VDD"
+          },
+          {
+            "external": true,
+            "id": "net:Inverter/schematic/VSS",
+            "name": "VSS"
+          },
+          {
+            "external": true,
+            "id": "net:Inverter/schematic/Y",
+            "name": "Y"
+          }
+        ],
+        "ports": [
+          {
+            "alignment": "R270",
+            "direction": "in",
+            "id": "port:Inverter/A",
+            "name": "A",
+            "net": "net:Inverter/schematic/A",
+            "ordinal": 0,
+            "position": [
+              -4.0,
+              10.0
+            ]
+          },
+          {
+            "alignment": "R90",
+            "direction": "out",
+            "id": "port:Inverter/Y",
+            "name": "Y",
+            "net": "net:Inverter/schematic/Y",
+            "ordinal": 1,
+            "position": [
+              8.0,
+              10.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "id": "port:Inverter/VDD",
+            "name": "VDD",
+            "net": "net:Inverter/schematic/VDD",
+            "ordinal": 2,
+            "position": [
+              2.0,
+              20.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "id": "port:Inverter/VSS",
+            "name": "VSS",
+            "net": "net:Inverter/schematic/VSS",
+            "ordinal": 3,
+            "position": [
+              2.0,
+              0.0
+            ]
+          }
+        ],
+        "wires": [
+          {
+            "id": "wire:Inverter/schematic/A/0",
+            "net": "net:Inverter/schematic/A",
+            "points": [
+              [
+                -4.0,
+                10.0
+              ],
+              [
+                -3.0,
+                10.0
+              ],
+              [
+                -1.0,
+                10.0
+              ],
+              [
+                -1.0,
+                14.0
+              ],
+              [
+                0.0,
+                14.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:Inverter/schematic/A/1",
+            "net": "net:Inverter/schematic/A",
+            "points": [
+              [
+                -1.0,
+                10.0
+              ],
+              [
+                -1.0,
+                6.0
+              ],
+              [
+                0.0,
+                6.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:Inverter/schematic/Y/0",
+            "net": "net:Inverter/schematic/Y",
+            "points": [
+              [
+                2.0,
+                10.0
+              ],
+              [
+                2.0,
+                8.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:Inverter/schematic/Y/1",
+            "net": "net:Inverter/schematic/Y",
+            "points": [
+              [
+                8.0,
+                10.0
+              ],
+              [
+                7.0,
+                10.0
+              ],
+              [
+                2.0,
+                10.0
+              ],
+              [
+                2.0,
+                12.0
+              ]
+            ]
+          }
+        ]
+      },
+      "id": "cell:Inverter",
+      "kind": "design",
+      "name": "Inverter",
+      "port_order": [
+        "A",
+        "Y",
+        "VDD",
+        "VSS"
+      ],
+      "primitive_kind": null,
+      "scene": [
+        {
+          "entity": "wire:Inverter/schematic/A/0",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:Inverter/schematic/A/1",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:Inverter/schematic/Y/0",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:Inverter/schematic/Y/1",
+          "type": "wire"
+        },
+        {
+          "entity": "junction:Inverter/schematic/A/0",
+          "type": "junction"
+        },
+        {
+          "entity": "junction:Inverter/schematic/Y/0",
+          "type": "junction"
+        },
+        {
+          "entity": "label:Inverter/schematic/VDD/0",
+          "type": "label"
+        },
+        {
+          "entity": "label:Inverter/schematic/VDD/1",
+          "type": "label"
+        },
+        {
+          "entity": "label:Inverter/schematic/VSS/0",
+          "type": "label"
+        },
+        {
+          "entity": "label:Inverter/schematic/VSS/1",
+          "type": "label"
+        },
+        {
+          "entity": "instance:Inverter/schematic/M_PD",
+          "type": "instance"
+        },
+        {
+          "entity": "instance:Inverter/schematic/M_PU",
+          "type": "instance"
+        },
+        {
+          "entity": "port:Inverter/A",
+          "type": "port"
+        },
+        {
+          "entity": "port:Inverter/Y",
+          "type": "port"
+        },
+        {
+          "entity": "port:Inverter/VDD",
+          "type": "port"
+        },
+        {
+          "entity": "port:Inverter/VSS",
+          "type": "port"
+        }
+      ],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R90",
+            "direction": "in",
+            "name": "A",
+            "position": [
+              0.0,
+              2.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "direction": "out",
+            "name": "Y",
+            "position": [
+              4.0,
+              2.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "VDD",
+            "position": [
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "VSS",
+            "position": [
+              2.0,
+              0.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                4.0,
+                0.0
+              ],
+              [
+                4.0,
+                4.0
+              ],
+              [
+                0.0,
+                4.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            "type": "polyline"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": {
+        "grid": 1.0,
+        "view_box": [
+          0.0,
+          0.0,
+          14.0,
+          24.0
+        ]
+      },
+      "entities": {
+        "instances": [
+          {
+            "cell_ref": "cell:primitive/ground/44136fa355b3",
+            "id": "instance:InverterTb/schematic/GND",
+            "implementation_status": "implemented",
+            "kind": "ground",
+            "name": "GND",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {},
+            "position": [
+              0.0,
+              0.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 13,
+              "line": 47
+            },
+            "terminals": {
+              "P": "net:InverterTb/schematic/VSS"
+            }
+          },
+          {
+            "cell_ref": "cell:primitive/vdc/72f181ed1e22",
+            "id": "instance:InverterTb/schematic/V_DD",
+            "implementation_status": "implemented",
+            "kind": "vdc",
+            "name": "V_DD",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "dc": "1.2"
+            },
+            "position": [
+              0.0,
+              20.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 13,
+              "line": 45
+            },
+            "terminals": {
+              "M": "net:InverterTb/schematic/VSS",
+              "P": "net:InverterTb/schematic/VDD"
+            }
+          },
+          {
+            "cell_ref": "cell:primitive/vpulse/7aead01900c6",
+            "id": "instance:InverterTb/schematic/V_IN",
+            "implementation_status": "implemented",
+            "kind": "vpulse",
+            "name": "V_IN",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "delay_time": "10p",
+              "fall_time": "5p",
+              "initial_value": "0",
+              "period": "50p",
+              "pulse_width": "20p",
+              "pulsed_value": "1.2",
+              "rise_time": "5p"
+            },
+            "position": [
+              0.0,
+              10.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 13,
+              "line": 46
+            },
+            "terminals": {
+              "M": "net:InverterTb/schematic/VSS",
+              "P": "net:InverterTb/schematic/VIN"
+            }
+          },
+          {
+            "cell_ref": "cell:Inverter",
+            "id": "instance:InverterTb/schematic/X_DUT",
+            "implementation_status": "implemented",
+            "kind": "cell",
+            "name": "X_DUT",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {},
+            "position": [
+              10.0,
+              10.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 9,
+              "line": 49
+            },
+            "terminals": {
+              "A": "net:InverterTb/schematic/VIN",
+              "VDD": "net:InverterTb/schematic/VDD",
+              "VSS": "net:InverterTb/schematic/VSS",
+              "Y": "net:InverterTb/schematic/VOUT"
+            }
+          }
+        ],
+        "junctions": [],
+        "labels": [
+          {
+            "alignment": "R0",
+            "id": "label:InverterTb/schematic/VDD/0",
+            "net": "net:InverterTb/schematic/VDD",
+            "position": [
+              2.0,
+              24.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "id": "label:InverterTb/schematic/VDD/1",
+            "net": "net:InverterTb/schematic/VDD",
+            "position": [
+              12.0,
+              14.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "id": "label:InverterTb/schematic/VIN/0",
+            "net": "net:InverterTb/schematic/VIN",
+            "position": [
+              2.0,
+              14.0
+            ]
+          },
+          {
+            "alignment": "R90",
+            "id": "label:InverterTb/schematic/VIN/1",
+            "net": "net:InverterTb/schematic/VIN",
+            "position": [
+              10.0,
+              12.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "id": "label:InverterTb/schematic/VOUT/0",
+            "net": "net:InverterTb/schematic/VOUT",
+            "position": [
+              14.0,
+              12.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "id": "label:InverterTb/schematic/VSS/0",
+            "net": "net:InverterTb/schematic/VSS",
+            "position": [
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "id": "label:InverterTb/schematic/VSS/1",
+            "net": "net:InverterTb/schematic/VSS",
+            "position": [
+              2.0,
+              10.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "id": "label:InverterTb/schematic/VSS/2",
+            "net": "net:InverterTb/schematic/VSS",
+            "position": [
+              2.0,
+              20.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "id": "label:InverterTb/schematic/VSS/3",
+            "net": "net:InverterTb/schematic/VSS",
+            "position": [
+              12.0,
+              10.0
+            ]
+          }
+        ],
+        "nets": [
+          {
+            "external": false,
+            "id": "net:InverterTb/schematic/VDD",
+            "name": "VDD"
+          },
+          {
+            "external": false,
+            "id": "net:InverterTb/schematic/VIN",
+            "name": "VIN"
+          },
+          {
+            "external": false,
+            "id": "net:InverterTb/schematic/VOUT",
+            "name": "VOUT"
+          },
+          {
+            "external": false,
+            "id": "net:InverterTb/schematic/VSS",
+            "name": "VSS"
+          }
+        ],
+        "ports": [],
+        "wires": []
+      },
+      "id": "cell:InverterTb",
+      "kind": "testbench",
+      "name": "PortableInverterTb",
+      "port_order": [],
+      "primitive_kind": null,
+      "scene": [
+        {
+          "entity": "label:InverterTb/schematic/VDD/0",
+          "type": "label"
+        },
+        {
+          "entity": "label:InverterTb/schematic/VDD/1",
+          "type": "label"
+        },
+        {
+          "entity": "label:InverterTb/schematic/VIN/0",
+          "type": "label"
+        },
+        {
+          "entity": "label:InverterTb/schematic/VIN/1",
+          "type": "label"
+        },
+        {
+          "entity": "label:InverterTb/schematic/VOUT/0",
+          "type": "label"
+        },
+        {
+          "entity": "label:InverterTb/schematic/VSS/0",
+          "type": "label"
+        },
+        {
+          "entity": "label:InverterTb/schematic/VSS/1",
+          "type": "label"
+        },
+        {
+          "entity": "label:InverterTb/schematic/VSS/2",
+          "type": "label"
+        },
+        {
+          "entity": "label:InverterTb/schematic/VSS/3",
+          "type": "label"
+        },
+        {
+          "entity": "instance:InverterTb/schematic/GND",
+          "type": "instance"
+        },
+        {
+          "entity": "instance:InverterTb/schematic/V_DD",
+          "type": "instance"
+        },
+        {
+          "entity": "instance:InverterTb/schematic/V_IN",
+          "type": "instance"
+        },
+        {
+          "entity": "instance:InverterTb/schematic/X_DUT",
+          "type": "instance"
+        }
+      ],
+      "symbol": null
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/ground/44136fa355b3",
+      "kind": "primitive",
+      "name": "Gnd",
+      "port_order": [
+        "P"
+      ],
+      "primitive_kind": "ground",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "P",
+            "position": [
+              2.0,
+              4.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                2.5
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.0,
+                2.5
+              ],
+              [
+                3.0,
+                2.5
+              ],
+              [
+                2.0,
+                1.0
+              ],
+              [
+                1.0,
+                2.5
+              ]
+            ],
+            "type": "polyline"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/nmos/6a46752640ea",
+      "kind": "primitive",
+      "name": "Nmos_l_130n_w_2u_m_1_nf_1_model_sg13_lv_nmos",
+      "port_order": [
+        "G",
+        "S",
+        "D",
+        "B"
+      ],
+      "primitive_kind": "nmos",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R90",
+            "direction": "in",
+            "name": "G",
+            "position": [
+              0.0,
+              2.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "S",
+            "position": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "D",
+            "position": [
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "direction": "in",
+            "name": "B",
+            "position": [
+              4.0,
+              2.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                0.0
+              ],
+              [
+                2.0,
+                1.25
+              ],
+              [
+                1.3,
+                1.25
+              ],
+              [
+                1.3,
+                2.75
+              ],
+              [
+                2.0,
+                2.75
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.0,
+                1.25
+              ],
+              [
+                1.0,
+                2.75
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                0.0,
+                2.0
+              ],
+              [
+                1.0,
+                2.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                4.0,
+                2.0
+              ],
+              [
+                1.3,
+                2.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.7,
+                1.8
+              ],
+              [
+                1.3,
+                2.0
+              ],
+              [
+                1.7,
+                2.2
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.6,
+                1.05
+              ],
+              [
+                2.0,
+                1.25
+              ],
+              [
+                1.6,
+                1.45
+              ]
+            ],
+            "type": "polyline"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/pmos/48adc8d95489",
+      "kind": "primitive",
+      "name": "Pmos_l_130n_w_4u_m_1_nf_1_model_sg13_lv_pmos",
+      "port_order": [
+        "G",
+        "D",
+        "S",
+        "B"
+      ],
+      "primitive_kind": "pmos",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R90",
+            "direction": "in",
+            "name": "G",
+            "position": [
+              0.0,
+              2.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "D",
+            "position": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "S",
+            "position": [
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "direction": "in",
+            "name": "B",
+            "position": [
+              4.0,
+              2.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                0.0
+              ],
+              [
+                2.0,
+                1.25
+              ],
+              [
+                1.3,
+                1.25
+              ],
+              [
+                1.3,
+                2.75
+              ],
+              [
+                2.0,
+                2.75
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.0,
+                1.25
+              ],
+              [
+                1.0,
+                2.75
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                0.0,
+                2.0
+              ],
+              [
+                1.0,
+                2.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                4.0,
+                2.0
+              ],
+              [
+                1.3,
+                2.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.7,
+                2.55
+              ],
+              [
+                1.3,
+                2.75
+              ],
+              [
+                1.7,
+                2.95
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.6,
+                1.8
+              ],
+              [
+                2.0,
+                2.0
+              ],
+              [
+                1.6,
+                2.2
+              ]
+            ],
+            "type": "polyline"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/vdc/72f181ed1e22",
+      "kind": "primitive",
+      "name": "Vdc_dc_1_2",
+      "port_order": [
+        "M",
+        "P"
+      ],
+      "primitive_kind": "vdc",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "M",
+            "position": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "P",
+            "position": [
+              2.0,
+              4.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                3.0
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                2.0,
+                1.0
+              ],
+              [
+                2.0,
+                0.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                2.0,
+                2.2
+              ],
+              [
+                2.0,
+                2.8
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.7,
+                2.5
+              ],
+              [
+                2.3,
+                2.5
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.65,
+                1.5
+              ],
+              [
+                2.35,
+                1.5
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "center": [
+              2.0,
+              2.0
+            ],
+            "end": 1.0,
+            "radius": 1.0,
+            "start": 0.0,
+            "type": "arc"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/vpulse/7aead01900c6",
+      "kind": "primitive",
+      "name": "Vpulse_initial_value_0__pulsed_value_1_2_delay_time_10p_rise_time_5p_fall_time_5p_pulse_width_20p_period_50p",
+      "port_order": [
+        "M",
+        "P"
+      ],
+      "primitive_kind": "vpulse",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "M",
+            "position": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "P",
+            "position": [
+              2.0,
+              4.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                3.0
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                2.0,
+                1.0
+              ],
+              [
+                2.0,
+                0.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.5,
+                1.75
+              ],
+              [
+                1.5,
+                2.25
+              ],
+              [
+                2.0,
+                2.25
+              ],
+              [
+                2.0,
+                1.75
+              ],
+              [
+                2.5,
+                1.75
+              ],
+              [
+                2.5,
+                2.25
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                2.0,
+                2.55
+              ],
+              [
+                2.0,
+                2.95
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.8,
+                2.75
+              ],
+              [
+                2.2,
+                2.75
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.8,
+                1.2
+              ],
+              [
+                2.2,
+                1.2
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "center": [
+              2.0,
+              2.0
+            ],
+            "end": 1.0,
+            "radius": 1.0,
+            "start": 0.0,
+            "type": "arc"
+          }
+        ]
+      }
+    }
+  ],
+  "compiler": {
+    "name": "simra-schematic",
+    "ordec": {
+      "commit": "00277225e1c156231ae1515fef06094e993b1788",
+      "repository": "https://github.com/tub-msc/ordec.git",
+      "version": "0.7.0.dev88+g00277225e"
+    },
+    "version": "0.4.0"
+  },
+  "provenance": {
+    "paper_fidelity": "not_applicable",
+    "source": {
+      "artifact": "design.ord",
+      "sha256": "eacbeb1dcb05c87aee5ee3d3f1e15bce9c673a488c48120c2a0d7b3ed34d49aa"
+    },
+    "source_maps": {
+      "entities": [
+        {
+          "artifact": "design.ord",
+          "column": 13,
+          "entity": "instance:Inverter/schematic/M_PD",
+          "line": 26,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 13,
+          "entity": "instance:Inverter/schematic/M_PU",
+          "line": 25,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 13,
+          "entity": "instance:InverterTb/schematic/GND",
+          "line": 47,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 13,
+          "entity": "instance:InverterTb/schematic/V_DD",
+          "line": 45,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 13,
+          "entity": "instance:InverterTb/schematic/V_IN",
+          "line": 46,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 9,
+          "entity": "instance:InverterTb/schematic/X_DUT",
+          "line": 49,
+          "relation": "authored_at"
+        }
+      ],
+      "paper": []
+    }
+  },
+  "schema": "simra.schematic/v2",
+  "testbench": {
+    "analyses": [
+      {
+        "kind": "tran",
+        "step": "10p",
+        "stop": "8n"
+      }
+    ],
+    "save": [
+      "VIN",
+      "VOUT"
+    ]
+  },
+  "validation": {
+    "connectivity": "pass",
+    "contract": "pass",
+    "error_count": 0,
+    "errors": [],
+    "netlistable": true,
+    "parameters": "resolved",
+    "readability": [
+      {
+        "area": 16.0,
+        "aspect": 1.0,
+        "bends": 4,
+        "canvas_utilization": 0.2,
+        "cell": "Inverter",
+        "collinear_foreign": 0,
+        "crossings": 0,
+        "devices": 2,
+        "label_conflicts": 0,
+        "orphan_ports": 0,
+        "over_sheet_cap": false,
+        "routing_symmetry": 0.4,
+        "segments": 10,
+        "supply_orientation": 1.0,
+        "symbol_label_overflow": 0,
+        "wire_length": 23.0
+      },
+      {
+        "area": null,
+        "aspect": null,
+        "bends": 0,
+        "canvas_utilization": 1.0,
+        "cell": "InverterTb",
+        "collinear_foreign": 0,
+        "crossings": 0,
+        "devices": 4,
+        "label_conflicts": 0,
+        "orphan_ports": 0,
+        "over_sheet_cap": false,
+        "routing_symmetry": null,
+        "segments": 0,
+        "supply_orientation": 0.875,
+        "symbol_label_overflow": null,
+        "wire_length": 0
+      }
+    ],
+    "rendering": "pass",
+    "simulation": "not_run",
+    "simulation_handoff": "direct",
+    "simulation_ready": false,
+    "topology": "not_declared",
+    "warning_count": 0,
+    "warnings": []
+  },
+  "view": {
+    "id": "inverter-tb",
+    "kind": "testbench",
+    "title": "20 GS/s Inverter Testbench",
+    "top": "InverterTb",
+    "top_cell": "cell:InverterTb",
+    "topology_id": null
+  }
+}

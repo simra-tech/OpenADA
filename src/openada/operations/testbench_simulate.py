@@ -247,7 +247,9 @@ def simulate_testbench(
     pdk: str | None = None,
     pdk_root: str | Path | None = None,
     corner: str | None = None,
-    timeout: float = 120.0,
+    # A PDK binding pays the model library's parse cost on every derived deck;
+    # sky130A's tt section alone takes ~95 s. See cli.py's --timeout default.
+    timeout: float = 600.0,
     request_id: str | None = None,
 ) -> dict[str, Any]:
     """Dispatch every analysis one published Simra testbench artifact declares."""

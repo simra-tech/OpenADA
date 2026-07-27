@@ -48,7 +48,7 @@ from .operations import (
     simulate_circuit_profile,
     simulate_testbench,
 )
-from .pdk_bindings import available_pdk_ids
+from .pdk_bindings import available_pdk_ids, simulatable_pdk_ids
 from .preflight import PREFLIGHT_SPECS
 from .provider_runtime import (
     ProviderRuntimeError,
@@ -443,8 +443,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=list(available_pdk_ids()),
         help=(
             "Bind an installed PDK by its reviewed binding profile: device prefix, "
-            "parameter spelling, corner library, and any Verilog-A preload. Mutually "
-            "exclusive with --models."
+            "model vocabulary, parameter spelling, geometry units, library prelude "
+            "and any Verilog-A preload. Transistor-level simulation is available "
+            f"for {', '.join(simulatable_pdk_ids())}; the remaining choices are "
+            "digital place-and-route platforms and are refused with their reason. "
+            "Mutually exclusive with --models."
         ),
     )
     testbench.add_argument(
@@ -455,7 +458,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--corner",
         help="Library section selected from the PDK's corner library (default: the profile's typical corner).",
     )
-    testbench.add_argument("--timeout", type=_positive_float, default=120.0)
+    # Model-library parse time dominates a small testbench and is a property of
+    # the PDK: sky130A's tt section alone takes ~95 s on a 2025 host, so the
+    # 120 s that suits a flattened deck times out a real PDK binding.
+    testbench.add_argument("--timeout", type=_positive_float, default=600.0)
     testbench.add_argument(
         "--request-id",
         help="Canonical lowercase UUID correlating this request with its result.",

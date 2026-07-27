@@ -8,6 +8,47 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Added
 
+- One canonical netlist, four PDKs. A published Simra deck now names a
+  technology-independent *device role* (`nmos.core`, `pmos.core`, and
+  `.lvt`/`.hvt`/`.io` variants) and SI geometry, and the binding profile
+  translates it — so the same bytes bind to `ihp-sg13g2`, `sky130A`,
+  `gf180mcuD` and `freepdk45` with nothing but `--pdk` changing. A deck naming
+  one PDK's own model is translated through the same role index, so every
+  artifact published so far keeps working; each substitution is reported under
+  `data.extensions["org.openada.pdk_binding"].model_translations`.
+
+  `PdkBinding` now carries the four properties that previously had no
+  representation and made every non-IHP PDK fail:
+
+  - **`geometry_scale`** — the `.option scale` a PDK's own collateral installs.
+    sky130A's `libs.tech/ngspice/all.spice:2` sets `scale=1.0u`, reached from
+    every `corners/<corner>.spice`, so instance geometry must be a plain micron
+    number. An SI-valued card is scaled a second time, lands outside every
+    model bin, and ngspice reports only `could not find a valid modelname`.
+    Geometry is now converted at bind time and the bound deck states its own
+    convention.
+  - **`library_entries`** — an ordered prelude of `.include` and
+    `.lib <file> <section>` cards rather than one path. gf180mcuD's corner
+    library evaluates global switches (`fnoicor`, `sw_stat_global`) defined
+    only in `design.ngspice`, which must be included first; without it every
+    model card fails to evaluate. Both a path and a section may carry
+    `{corner}`, so a corner can be a library section or a directory —
+    FreePDK45 has no library sections at all.
+  - **`device_geometry`** — the binning envelope the simulator enforces, read
+    out of the PDK's own model cards. A device outside it is refused with
+    `pdk.device.geometry_out_of_range` naming the dimension and the legal
+    range, instead of surfacing as a missing model.
+  - **`analog` / `unsupported_reason`** — `asap7`, `nangate45` and `gt2n` ship
+    LEF, Liberty and GDS and no transistor models for any simulator. They are
+    registered so that requesting one fails with that reason rather than
+    "unknown PDK", which an agent answers by trying another spelling.
+
+  `sky130A`'s previous entry was declared from the published layout and never
+  exercised; it was wrong on two counts (its FETs are subcircuits, not `.model`
+  cards, and it needs the micron convention) and is corrected here.
+  `--timeout` defaults to 600 s because parsing `sky130.lib.spice tt` alone
+  takes ~95 s.
+
 - Per-PDK binding profiles for `testbench-simulate`, selected with `--pdk`,
   `--pdk-root`, and `--corner`. A published Simra testbench is deliberately
   model-free, so every MOS artifact previously required a hand-flattened
@@ -21,9 +62,7 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   must preload before a PSP103 device will bind. Every referenced PDK file is
   content-bound and reported under `data.configuration`; the binding itself is
   reported under `data.extensions["org.openada.pdk_binding"]`. `--pdk` and
-  `--models` are mutually exclusive. Bindings ship for `ihp-sg13g2` (verified by
-  a passing transient run of a published artifact) and `sky130A` (declared from
-  the published PDK layout, not yet exercised by a live run).
+  `--models` are mutually exclusive.
 
 - An experimental `drc-compare` operation with explicit `revision` and `deck`
   modes. Revision mode requires different GDS content and reports persistent,

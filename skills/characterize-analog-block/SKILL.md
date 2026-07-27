@@ -165,15 +165,14 @@ deck per analysis, and binds an installed PDK:
 
 ```bash
 openada testbench-simulate <path>/schematic.artifact.json \
-  --pdk ihp-sg13g2 --output-dir <evidence-dir>
+  --pdk <pdk-id> --output-dir <evidence-dir>
 ```
 
-Name the PDK and let the driver bind it. Device prefix, parameter spelling, the
-corner library entry point and any Verilog-A preload are properties of the PDK,
-not of the circuit, and they differ between PDKs - IHP ships subcircuits needing
-an OSDI module, sky130 ships plain model cards. Guessing them produces a deck
-that binds nothing, and the resulting error names the parameter rather than the
-cause.
+Name the technology; the driver owns every syntactic difference between PDKs.
+Run `openada testbench-simulate --help` for the PDKs it can bind, and pass
+`--corner` only when the request names one. Do not edit the published deck to
+suit a PDK: a deck that had to be edited is no longer the artifact whose digests
+the result binds.
 
 **Never hand-write model cards to get past a failed bind.** An invented `.model`
 line is not the PDK however closely its name matches a real device: it

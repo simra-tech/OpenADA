@@ -1,0 +1,71 @@
+{
+    "cdl": "design.cdl",
+    "hashes": {
+        "cdl_sha256": "9738ff77be2b0090d7d737069a8c3b3207225bb268c402c2af29838e3dd2cad2",
+        "netlist_sha256": "f9490d689ef7fa759e16fadc246e27a3293a2e30dae1ddbdf710cd5171f63378",
+        "source_sha256": "eacbeb1dcb05c87aee5ee3d3f1e15bce9c673a488c48120c2a0d7b3ed34d49aa",
+        "view_sha256": "224fc174630a814eeb73a49584e8b7f5cc459c9af3c520a84972013cc62ea9a4"
+    },
+    "id": "portable-inverter-tb",
+    "kind": "testbench",
+    "label": "PDK-portable Inverter Testbench",
+    "netlist": "design.spice",
+    "netlistable": true,
+    "schema": "simra.schematic-artifact/v2",
+    "source": "design.ord",
+    "top": "PortableInverterTb",
+    "validation": {
+        "connectivity": "pass",
+        "contract": "pass",
+        "error_count": 0,
+        "errors": [],
+        "netlistable": true,
+        "parameters": "resolved",
+        "readability": [
+            {
+                "area": 16.0,
+                "aspect": 1.0,
+                "bends": 4,
+                "canvas_utilization": 0.2,
+                "cell": "Inverter",
+                "collinear_foreign": 0,
+                "crossings": 0,
+                "devices": 2,
+                "label_conflicts": 0,
+                "orphan_ports": 0,
+                "over_sheet_cap": false,
+                "routing_symmetry": 0.4,
+                "segments": 10,
+                "supply_orientation": 1.0,
+                "symbol_label_overflow": 0,
+                "wire_length": 23.0
+            },
+            {
+                "area": null,
+                "aspect": null,
+                "bends": 0,
+                "canvas_utilization": 1.0,
+                "cell": "InverterTb",
+                "collinear_foreign": 0,
+                "crossings": 0,
+                "devices": 4,
+                "label_conflicts": 0,
+                "orphan_ports": 0,
+                "over_sheet_cap": false,
+                "routing_symmetry": null,
+                "segments": 0,
+                "supply_orientation": 0.875,
+                "symbol_label_overflow": null,
+                "wire_length": 0
+            }
+        ],
+        "rendering": "pass",
+        "simulation": "not_run",
+        "simulation_handoff": "direct",
+        "simulation_ready": false,
+        "topology": "not_declared",
+        "warning_count": 0,
+        "warnings": []
+    },
+    "view": "schematic.simra.json"
+}
