@@ -77,6 +77,26 @@
         "identity_requirement": "content-digest",
         "description": "One self-contained SPICE model-card file composed into every derived deck. Required whenever the artifact reports simulation_ready=false, which the publisher does for every deck naming a device model.",
         "extensions": {}
+      },
+      {
+        "role": "pdk",
+        "required": false,
+        "locator_types": [
+          "filesystem"
+        ],
+        "identity_requirement": "content-digest",
+        "description": "The installed PDK bound by a reviewed per-PDK binding profile: its corner library, device prefix, parameter spelling, and any Verilog-A modules the simulator must preload.",
+        "extensions": {}
+      },
+      {
+        "role": "simulator-configuration",
+        "required": false,
+        "locator_types": [
+          "filesystem"
+        ],
+        "identity_requirement": "content-digest",
+        "description": "One Verilog-A (OSDI) module the target PDK requires the simulator to load before any device binds.",
+        "extensions": {}
       }
     ],
     "parameters_schema": {
@@ -106,8 +126,8 @@
       "The descriptor schema, kind, netlistable claim, resolved parameter state, and simulation handoff are validated before any native launch.",
       "The published netlist and view digests are recomputed from the bytes on disk and must equal the digests the descriptor publishes.",
       "The emitted deck's ordered top-level analysis cards must correspond one-to-one with the typed testbench declaration; a disagreement is refused rather than guessed.",
-      "A deck carrying an unresolved publisher placeholder is refused; this operation binds no PDK.",
-      "Supplied model collateral must itself be self-contained: an include, library, control, or analysis directive inside it is refused.",
+      "A deck carrying an unresolved publisher placeholder is refused. Model collateral arrives either as one self-contained model-card file or as a named PDK bound by a reviewed binding profile; the two are mutually exclusive.",
+      "A supplied model-card file must itself be self-contained: an include, library, control, or analysis directive inside it is refused. A PDK bound by a reviewed binding profile is exempt, because its corner library, device prefix, parameter spelling, and Verilog-A preload are declared and every referenced file is content-bound.",
       "Every derived deck carries exactly one top-level analysis card and is dispatched through openada.operation/circuit.simulate/v1alpha2 unchanged."
     ],
     "extensions": {}
@@ -309,7 +329,11 @@
             ],
             "properties": {
               "role": {
-                "const": "spice-model-library"
+                "enum": [
+                  "spice-model-library",
+                  "pdk",
+                  "simulator-configuration"
+                ]
               },
               "path": {
                 "type": "string",
@@ -458,8 +482,90 @@
         },
         "extensions": {
           "type": "object",
-          "maxProperties": 0,
-          "additionalProperties": false
+          "additionalProperties": false,
+          "maxProperties": 1,
+          "properties": {
+            "org.openada.pdk_binding": {
+              "type": "object",
+              "required": [
+                "pdk_id",
+                "display_name",
+                "root",
+                "corner",
+                "library",
+                "device_prefix",
+                "parameter_names",
+                "osdi_modules",
+                "identity",
+                "rewritten_device_count",
+                "raw_outputs"
+              ],
+              "properties": {
+                "pdk_id": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "display_name": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "root": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "corner": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "library": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "device_prefix": {
+                  "enum": [
+                    "x",
+                    "m"
+                  ]
+                },
+                "parameter_names": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "maxLength": 32
+                  },
+                  "maxProperties": 8
+                },
+                "osdi_modules": {
+                  "type": "array",
+                  "maxItems": 8,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 4096
+                  }
+                },
+                "identity": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 4096
+                },
+                "rewritten_device_count": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "raw_outputs": {
+                  "type": "array",
+                  "maxItems": 16,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 256
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
         }
       },
       "additionalProperties": false
@@ -576,7 +682,7 @@
     ],
     "provenance_limitations": [
       "Only the published descriptor, deck, view, and explicitly supplied model collateral are content-bound; the publisher's own upstream source and toolchain are trusted as recorded.",
-      "Model collateral must be self-contained, so a hierarchical vendor PDK entry file with .include or .lib is outside this profile.",
+      "A supplied model-card file must be self-contained. A hierarchical vendor PDK entry file is reachable only through a reviewed per-PDK binding profile, which resolves its corner section and preloads its Verilog-A modules; transitive library reads beyond the declared entry point remain bounded provenance.",
       "Each dispatched analysis inherits the bounded provenance limitations of openada.operation/circuit.simulate/v1alpha2.",
       "The aggregate assertion covers only the analyses the artifact declares; it makes no claim about corners, statistical runs, or unauthored analyses."
     ],
@@ -645,14 +751,14 @@
       "code": "testbench.models.required",
       "severity": "error",
       "condition": "The artifact reports simulation_ready=false and no model collateral was supplied.",
-      "next_action": "Supply a self-contained spice-model-library configuration reference.",
+      "next_action": "Supply a self-contained spice-model-library configuration reference, or bind an installed PDK by name.",
       "extensions": {}
     },
     {
       "code": "configuration.models.not_self_contained",
       "severity": "error",
       "condition": "The supplied model collateral declares an include, library, control, or analysis directive.",
-      "next_action": "Supply flattened self-contained model cards.",
+      "next_action": "Supply flattened self-contained model cards, or bind an installed PDK by name so its binding profile resolves the library entry point.",
       "extensions": {}
     },
     {
@@ -742,7 +848,7 @@
       ],
       "limitations": [
         "Only the closed op, dc, ac, and tran analysis kinds the publisher may declare are dispatchable.",
-        "Model collateral must be self-contained; hierarchical vendor PDK entry files are unsupported in v1alpha1.",
+        "A supplied model-card file must be self-contained. A hierarchical vendor PDK entry file is supported only for a PDK with a reviewed binding profile, selected by name rather than by path.",
         "The operation adds no analysis the artifact does not declare and reinterprets no native convergence result."
       ],
       "extensions": {}
@@ -799,7 +905,7 @@
       ],
       "limitations": [
         "The Xyce mapping rejects the operating-point analysis, so a testbench declaring op is refused before launch.",
-        "Model collateral must be self-contained; hierarchical vendor PDK entry files are unsupported in v1alpha1."
+        "A supplied model-card file must be self-contained. A hierarchical vendor PDK entry file is supported only for a PDK with a reviewed binding profile, selected by name rather than by path."
       ],
       "extensions": {}
     }

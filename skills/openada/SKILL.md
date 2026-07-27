@@ -209,6 +209,37 @@ Omitting `--backend` preserves the broader legacy ngspice batch/control
 interface. Scoped preflight also remains mapped to ngspice in this alpha; Xyce
 selection is explicit.
 
+## Simulate a published Simra testbench against an installed PDK
+
+Simra publishes a deliberately model-free deck: it names a device model and its
+sizing but emits no model collateral, so `simulation_ready` is false for every
+MOS testbench. Bind an installed PDK by name rather than hand-writing model
+cards:
+
+```bash
+openada testbench-simulate path/to/schematic.artifact.json \
+  --pdk ihp-sg13g2 --pdk-root /foss/pdks --corner mos_tt \
+  --output-dir evidence/tb
+```
+
+`--pdk` selects a reviewed binding profile that owns the parts that differ
+between PDKs and are silent failures when guessed: the device prefix (IHP ships
+its MOS devices as subcircuits, so the emitted `M` card is rewritten to `X`),
+the parameter spelling (IHP's finger count is `ng`, not Simra's `NF`, and an
+unmapped parameter is a hard `unknown parameter` error), the two-argument
+`.lib <file> <section>` corner entry point, and any Verilog-A module the
+simulator must preload before a device will bind. Every file the binding touches
+is content-bound and reported under `data.configuration`.
+
+Do not hand-write model cards to work around a refusal. Approximated cards named
+after real devices produce confident numbers with no relationship to the
+technology. If a PDK has no binding profile yet, say so and stop; adding one is
+a reviewed change to `src/openada/pdk_bindings.py`, not something to improvise
+in a deck.
+
+`--pdk` and `--models` are mutually exclusive: a flattened self-contained card
+file remains the right input when there is no installed PDK to bind.
+
 ## Continue from native evidence to a specification
 
 A shared-profile simulation pass can feed the implemented typed evidence

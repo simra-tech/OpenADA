@@ -48,6 +48,7 @@ from .operations import (
     simulate_circuit_profile,
     simulate_testbench,
 )
+from .pdk_bindings import available_pdk_ids
 from .preflight import PREFLIGHT_SPECS
 from .provider_runtime import (
     ProviderRuntimeError,
@@ -436,6 +437,23 @@ def build_parser() -> argparse.ArgumentParser:
             "Absolute path to a self-contained SPICE model-card file composed into every "
             "derived deck. A hierarchical PDK entry file with .include or .lib is refused."
         ),
+    )
+    testbench.add_argument(
+        "--pdk",
+        choices=list(available_pdk_ids()),
+        help=(
+            "Bind an installed PDK by its reviewed binding profile: device prefix, "
+            "parameter spelling, corner library, and any Verilog-A preload. Mutually "
+            "exclusive with --models."
+        ),
+    )
+    testbench.add_argument(
+        "--pdk-root",
+        help="Absolute path to the directory containing the installed PDK tree.",
+    )
+    testbench.add_argument(
+        "--corner",
+        help="Library section selected from the PDK's corner library (default: the profile's typical corner).",
     )
     testbench.add_argument("--timeout", type=_positive_float, default=120.0)
     testbench.add_argument(
@@ -1831,6 +1849,11 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             models_file=(
                 Path(args.models).expanduser().resolve() if args.models else None
             ),
+            pdk=args.pdk,
+            pdk_root=(
+                Path(args.pdk_root).expanduser().resolve() if args.pdk_root else None
+            ),
+            corner=args.corner,
             timeout=args.timeout,
             request_id=args.request_id,
         )

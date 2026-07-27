@@ -8,6 +8,23 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Added
 
+- Per-PDK binding profiles for `testbench-simulate`, selected with `--pdk`,
+  `--pdk-root`, and `--corner`. A published Simra testbench is deliberately
+  model-free, so every MOS artifact previously required a hand-flattened
+  model-card file; a binding profile now supplies the collateral from an
+  installed PDK instead. The profile owns the parts that genuinely differ
+  between PDKs and fail silently when guessed: the device prefix (IHP SG13G2
+  ships its MOS devices as subcircuits, so the emitted `M` card is rewritten to
+  `X`), the parameter spelling (IHP's finger count is `ng`, while Simra emits
+  `NF`, and an unmapped parameter is a hard ngspice error), the two-argument
+  `.lib <file> <section>` corner entry point, and the Verilog-A modules ngspice
+  must preload before a PSP103 device will bind. Every referenced PDK file is
+  content-bound and reported under `data.configuration`; the binding itself is
+  reported under `data.extensions["org.openada.pdk_binding"]`. `--pdk` and
+  `--models` are mutually exclusive. Bindings ship for `ihp-sg13g2` (verified by
+  a passing transient run of a published artifact) and `sky130A` (declared from
+  the published PDK layout, not yet exercised by a live run).
+
 - An experimental `drc-compare` operation with explicit `revision` and `deck`
   modes. Revision mode requires different GDS content and reports persistent,
   resolved, and introduced bounded native markers. Deck mode requires the same
