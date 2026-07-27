@@ -158,6 +158,28 @@ circuit.simulate
   -> specification.evaluate only when an authoritative limit exists
 ```
 
+When the block arrives as a published Simra schematic artifact, start from
+`testbench.simulate` rather than `circuit.simulate`. It binds the artifact,
+verifies the digests it publishes, splits a multi-analysis testbench into one
+deck per analysis, and binds an installed PDK:
+
+```bash
+openada testbench-simulate <path>/schematic.artifact.json \
+  --pdk ihp-sg13g2 --output-dir <evidence-dir>
+```
+
+Name the PDK and let the driver bind it. Device prefix, parameter spelling, the
+corner library entry point and any Verilog-A preload are properties of the PDK,
+not of the circuit, and they differ between PDKs - IHP ships subcircuits needing
+an OSDI module, sky130 ships plain model cards. Guessing them produces a deck
+that binds nothing, and the resulting error names the parameter rather than the
+cause.
+
+**Never hand-write model cards to get past a failed bind.** An invented `.model`
+line is not the PDK however closely its name matches a real device: it
+substitutes different physics for the foundry's while still looking like a
+measurement. Report the bind failure instead.
+
 Record the result before scheduling another intent. A simulation pass advances
 only to extraction; an extraction pass advances only to its declared
 measurement; a measurement pass advances to specification evaluation only if
