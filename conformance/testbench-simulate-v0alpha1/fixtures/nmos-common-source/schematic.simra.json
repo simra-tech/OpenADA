@@ -1,0 +1,1113 @@
+{
+  "cells": [
+    {
+      "canvas": {
+        "grid": 1.0,
+        "view_box": [
+          0.0,
+          -2.0,
+          37.0,
+          5.0
+        ]
+      },
+      "entities": {
+        "instances": [
+          {
+            "cell_ref": "cell:primitive/ground/44136fa355b3",
+            "id": "instance:NMOS_CS_TB/schematic/GND",
+            "implementation_status": "implemented",
+            "kind": "ground",
+            "name": "GND",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {},
+            "position": [
+              0.0,
+              0.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 9,
+              "line": 11
+            },
+            "terminals": {
+              "P": "net:NMOS_CS_TB/schematic/VSS"
+            }
+          },
+          {
+            "cell_ref": "cell:primitive/nmos/10a1513ff83c",
+            "id": "instance:NMOS_CS_TB/schematic/M_1",
+            "implementation_status": "implemented",
+            "kind": "nmos",
+            "name": "M_1",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "l": "150n",
+              "m": 1,
+              "model": "nmos_lv",
+              "nf": 1,
+              "w": "2u"
+            },
+            "position": [
+              32.0,
+              0.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 9,
+              "line": 15
+            },
+            "terminals": {
+              "B": "net:NMOS_CS_TB/schematic/VSS",
+              "D": "net:NMOS_CS_TB/schematic/VOUT",
+              "G": "net:NMOS_CS_TB/schematic/VG",
+              "S": "net:NMOS_CS_TB/schematic/VSS"
+            }
+          },
+          {
+            "cell_ref": "cell:primitive/resistor/d8141946b3d6",
+            "id": "instance:NMOS_CS_TB/schematic/R_D",
+            "implementation_status": "implemented",
+            "kind": "resistor",
+            "name": "R_D",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "r": "10k"
+            },
+            "position": [
+              24.0,
+              0.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 9,
+              "line": 14
+            },
+            "terminals": {
+              "M": "net:NMOS_CS_TB/schematic/VOUT",
+              "P": "net:NMOS_CS_TB/schematic/VDD"
+            }
+          },
+          {
+            "cell_ref": "cell:primitive/vdc/43fb87d712e6",
+            "id": "instance:NMOS_CS_TB/schematic/V_DD",
+            "implementation_status": "implemented",
+            "kind": "vdc",
+            "name": "V_DD",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "dc": "1.8"
+            },
+            "position": [
+              8.0,
+              0.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 9,
+              "line": 12
+            },
+            "terminals": {
+              "M": "net:NMOS_CS_TB/schematic/VSS",
+              "P": "net:NMOS_CS_TB/schematic/VDD"
+            }
+          },
+          {
+            "cell_ref": "cell:primitive/vdc/91042bf38e5d",
+            "id": "instance:NMOS_CS_TB/schematic/V_G",
+            "implementation_status": "implemented",
+            "kind": "vdc",
+            "name": "V_G",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "dc": "900m"
+            },
+            "position": [
+              16.0,
+              0.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 9,
+              "line": 13
+            },
+            "terminals": {
+              "M": "net:NMOS_CS_TB/schematic/VSS",
+              "P": "net:NMOS_CS_TB/schematic/VG"
+            }
+          }
+        ],
+        "junctions": [
+          {
+            "id": "junction:NMOS_CS_TB/schematic/VSS/0",
+            "net": "net:NMOS_CS_TB/schematic/VSS",
+            "position": [
+              10.0,
+              -1.0
+            ]
+          },
+          {
+            "id": "junction:NMOS_CS_TB/schematic/VSS/1",
+            "net": "net:NMOS_CS_TB/schematic/VSS",
+            "position": [
+              18.0,
+              -1.0
+            ]
+          },
+          {
+            "id": "junction:NMOS_CS_TB/schematic/VSS/2",
+            "net": "net:NMOS_CS_TB/schematic/VSS",
+            "position": [
+              34.0,
+              -1.0
+            ]
+          }
+        ],
+        "labels": [
+          {
+            "alignment": "R0",
+            "id": "label:NMOS_CS_TB/schematic/VDD/0",
+            "net": "net:NMOS_CS_TB/schematic/VDD",
+            "position": [
+              10.0,
+              4.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "id": "label:NMOS_CS_TB/schematic/VDD/1",
+            "net": "net:NMOS_CS_TB/schematic/VDD",
+            "position": [
+              26.0,
+              4.0
+            ]
+          }
+        ],
+        "nets": [
+          {
+            "external": false,
+            "id": "net:NMOS_CS_TB/schematic/VDD",
+            "name": "VDD"
+          },
+          {
+            "external": false,
+            "id": "net:NMOS_CS_TB/schematic/VG",
+            "name": "VG"
+          },
+          {
+            "external": false,
+            "id": "net:NMOS_CS_TB/schematic/VOUT",
+            "name": "VOUT"
+          },
+          {
+            "external": false,
+            "id": "net:NMOS_CS_TB/schematic/VSS",
+            "name": "VSS"
+          }
+        ],
+        "ports": [],
+        "wires": [
+          {
+            "id": "wire:NMOS_CS_TB/schematic/VG/0",
+            "net": "net:NMOS_CS_TB/schematic/VG",
+            "points": [
+              [
+                18.0,
+                4.0
+              ],
+              [
+                18.0,
+                5.0
+              ],
+              [
+                30.0,
+                5.0
+              ],
+              [
+                30.0,
+                2.0
+              ],
+              [
+                32.0,
+                2.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:NMOS_CS_TB/schematic/VOUT/0",
+            "net": "net:NMOS_CS_TB/schematic/VOUT",
+            "points": [
+              [
+                26.0,
+                0.0
+              ],
+              [
+                26.0,
+                -2.0
+              ],
+              [
+                31.0,
+                -2.0
+              ],
+              [
+                31.0,
+                5.0
+              ],
+              [
+                34.0,
+                5.0
+              ],
+              [
+                34.0,
+                4.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:NMOS_CS_TB/schematic/VSS/0",
+            "net": "net:NMOS_CS_TB/schematic/VSS",
+            "points": [
+              [
+                2.0,
+                4.0
+              ],
+              [
+                2.0,
+                5.0
+              ],
+              [
+                7.0,
+                5.0
+              ],
+              [
+                7.0,
+                -1.0
+              ],
+              [
+                10.0,
+                -1.0
+              ],
+              [
+                10.0,
+                0.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:NMOS_CS_TB/schematic/VSS/1",
+            "net": "net:NMOS_CS_TB/schematic/VSS",
+            "points": [
+              [
+                10.0,
+                -1.0
+              ],
+              [
+                18.0,
+                -1.0
+              ],
+              [
+                18.0,
+                0.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:NMOS_CS_TB/schematic/VSS/2",
+            "net": "net:NMOS_CS_TB/schematic/VSS",
+            "points": [
+              [
+                18.0,
+                -1.0
+              ],
+              [
+                34.0,
+                -1.0
+              ],
+              [
+                34.0,
+                0.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:NMOS_CS_TB/schematic/VSS/3",
+            "net": "net:NMOS_CS_TB/schematic/VSS",
+            "points": [
+              [
+                34.0,
+                -1.0
+              ],
+              [
+                37.0,
+                -1.0
+              ],
+              [
+                37.0,
+                2.0
+              ],
+              [
+                36.0,
+                2.0
+              ]
+            ]
+          }
+        ]
+      },
+      "id": "cell:NMOS_CS_TB",
+      "kind": "testbench",
+      "name": "NMOS_CS_TB",
+      "port_order": [],
+      "primitive_kind": null,
+      "scene": [
+        {
+          "entity": "wire:NMOS_CS_TB/schematic/VG/0",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:NMOS_CS_TB/schematic/VOUT/0",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:NMOS_CS_TB/schematic/VSS/0",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:NMOS_CS_TB/schematic/VSS/1",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:NMOS_CS_TB/schematic/VSS/2",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:NMOS_CS_TB/schematic/VSS/3",
+          "type": "wire"
+        },
+        {
+          "entity": "junction:NMOS_CS_TB/schematic/VSS/0",
+          "type": "junction"
+        },
+        {
+          "entity": "junction:NMOS_CS_TB/schematic/VSS/1",
+          "type": "junction"
+        },
+        {
+          "entity": "junction:NMOS_CS_TB/schematic/VSS/2",
+          "type": "junction"
+        },
+        {
+          "entity": "label:NMOS_CS_TB/schematic/VDD/0",
+          "type": "label"
+        },
+        {
+          "entity": "label:NMOS_CS_TB/schematic/VDD/1",
+          "type": "label"
+        },
+        {
+          "entity": "instance:NMOS_CS_TB/schematic/GND",
+          "type": "instance"
+        },
+        {
+          "entity": "instance:NMOS_CS_TB/schematic/M_1",
+          "type": "instance"
+        },
+        {
+          "entity": "instance:NMOS_CS_TB/schematic/R_D",
+          "type": "instance"
+        },
+        {
+          "entity": "instance:NMOS_CS_TB/schematic/V_DD",
+          "type": "instance"
+        },
+        {
+          "entity": "instance:NMOS_CS_TB/schematic/V_G",
+          "type": "instance"
+        }
+      ],
+      "symbol": null
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/ground/44136fa355b3",
+      "kind": "primitive",
+      "name": "Gnd",
+      "port_order": [
+        "P"
+      ],
+      "primitive_kind": "ground",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "P",
+            "position": [
+              2.0,
+              4.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                2.5
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.0,
+                2.5
+              ],
+              [
+                3.0,
+                2.5
+              ],
+              [
+                2.0,
+                1.0
+              ],
+              [
+                1.0,
+                2.5
+              ]
+            ],
+            "type": "polyline"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/nmos/10a1513ff83c",
+      "kind": "primitive",
+      "name": "Nmos_l_150n_w_2u_m_1_nf_1_model_nmos_lv",
+      "port_order": [
+        "G",
+        "S",
+        "D",
+        "B"
+      ],
+      "primitive_kind": "nmos",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R90",
+            "direction": "in",
+            "name": "G",
+            "position": [
+              0.0,
+              2.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "S",
+            "position": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "D",
+            "position": [
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "direction": "in",
+            "name": "B",
+            "position": [
+              4.0,
+              2.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                0.0
+              ],
+              [
+                2.0,
+                1.25
+              ],
+              [
+                1.3,
+                1.25
+              ],
+              [
+                1.3,
+                2.75
+              ],
+              [
+                2.0,
+                2.75
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.0,
+                1.25
+              ],
+              [
+                1.0,
+                2.75
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                0.0,
+                2.0
+              ],
+              [
+                1.0,
+                2.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                4.0,
+                2.0
+              ],
+              [
+                1.3,
+                2.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.7,
+                1.8
+              ],
+              [
+                1.3,
+                2.0
+              ],
+              [
+                1.7,
+                2.2
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.6,
+                1.05
+              ],
+              [
+                2.0,
+                1.25
+              ],
+              [
+                1.6,
+                1.45
+              ]
+            ],
+            "type": "polyline"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/resistor/d8141946b3d6",
+      "kind": "primitive",
+      "name": "Res_r_10k",
+      "port_order": [
+        "M",
+        "P"
+      ],
+      "primitive_kind": "resistor",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "M",
+            "position": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "P",
+            "position": [
+              2.0,
+              4.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                0.0
+              ],
+              [
+                2.0,
+                1.0
+              ],
+              [
+                1.375,
+                1.1666666666666667
+              ],
+              [
+                2.625,
+                1.5
+              ],
+              [
+                1.375,
+                1.8333333333333333
+              ],
+              [
+                2.625,
+                2.1666666666666665
+              ],
+              [
+                1.375,
+                2.5
+              ],
+              [
+                2.625,
+                2.8333333333333335
+              ],
+              [
+                2.0,
+                3.0
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/vdc/43fb87d712e6",
+      "kind": "primitive",
+      "name": "Vdc_dc_1_8",
+      "port_order": [
+        "M",
+        "P"
+      ],
+      "primitive_kind": "vdc",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "M",
+            "position": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "P",
+            "position": [
+              2.0,
+              4.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                3.0
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                2.0,
+                1.0
+              ],
+              [
+                2.0,
+                0.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                2.0,
+                2.2
+              ],
+              [
+                2.0,
+                2.8
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.7,
+                2.5
+              ],
+              [
+                2.3,
+                2.5
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.65,
+                1.5
+              ],
+              [
+                2.35,
+                1.5
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "center": [
+              2.0,
+              2.0
+            ],
+            "end": 1.0,
+            "radius": 1.0,
+            "start": 0.0,
+            "type": "arc"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/vdc/91042bf38e5d",
+      "kind": "primitive",
+      "name": "Vdc_dc_900m",
+      "port_order": [
+        "M",
+        "P"
+      ],
+      "primitive_kind": "vdc",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "M",
+            "position": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "P",
+            "position": [
+              2.0,
+              4.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                3.0
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                2.0,
+                1.0
+              ],
+              [
+                2.0,
+                0.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                2.0,
+                2.2
+              ],
+              [
+                2.0,
+                2.8
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.7,
+                2.5
+              ],
+              [
+                2.3,
+                2.5
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.65,
+                1.5
+              ],
+              [
+                2.35,
+                1.5
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "center": [
+              2.0,
+              2.0
+            ],
+            "end": 1.0,
+            "radius": 1.0,
+            "start": 0.0,
+            "type": "arc"
+          }
+        ]
+      }
+    }
+  ],
+  "compiler": {
+    "name": "simra-schematic",
+    "ordec": {
+      "commit": "00277225e1c156231ae1515fef06094e993b1788",
+      "repository": "https://github.com/tub-msc/ordec.git",
+      "version": "0.7.0.dev88+g00277225e"
+    },
+    "version": "0.4.0"
+  },
+  "provenance": {
+    "paper_fidelity": "not_applicable",
+    "source": {
+      "artifact": "design.ord",
+      "sha256": "6d9539a9dd200f2f8f322a9af2c0706052826c6f9376cc160265b692e5534abe"
+    },
+    "source_maps": {
+      "entities": [
+        {
+          "artifact": "design.ord",
+          "column": 9,
+          "entity": "instance:NMOS_CS_TB/schematic/GND",
+          "line": 11,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 9,
+          "entity": "instance:NMOS_CS_TB/schematic/M_1",
+          "line": 15,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 9,
+          "entity": "instance:NMOS_CS_TB/schematic/R_D",
+          "line": 14,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 9,
+          "entity": "instance:NMOS_CS_TB/schematic/V_DD",
+          "line": 12,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 9,
+          "entity": "instance:NMOS_CS_TB/schematic/V_G",
+          "line": 13,
+          "relation": "authored_at"
+        }
+      ],
+      "paper": []
+    }
+  },
+  "schema": "simra.schematic/v2",
+  "testbench": {
+    "analyses": [
+      {
+        "kind": "op"
+      },
+      {
+        "kind": "dc",
+        "source": "V_G",
+        "start": 0,
+        "step": "50m",
+        "stop": "1.8"
+      }
+    ],
+    "save": [
+      "VG",
+      "VOUT"
+    ]
+  },
+  "validation": {
+    "connectivity": "pass",
+    "contract": "pass",
+    "error_count": 0,
+    "errors": [],
+    "netlistable": true,
+    "parameters": "resolved",
+    "readability": [
+      {
+        "area": null,
+        "aspect": null,
+        "bends": 15,
+        "canvas_utilization": 0.556,
+        "cell": "NMOS_CS_TB",
+        "collinear_foreign": 1,
+        "crossings": 3,
+        "devices": 5,
+        "label_conflicts": 0,
+        "orphan_ports": 0,
+        "over_sheet_cap": false,
+        "routing_symmetry": 0.19,
+        "segments": 21,
+        "supply_orientation": null,
+        "symbol_label_overflow": null,
+        "wire_length": 85.0
+      }
+    ],
+    "rendering": "pass",
+    "simulation": "not_run",
+    "simulation_handoff": "split_required",
+    "simulation_ready": false,
+    "topology": "not_declared",
+    "warning_count": 0,
+    "warnings": []
+  },
+  "view": {
+    "id": "nmos-common-source-testbench",
+    "kind": "testbench",
+    "title": "NMOS common-source testbench",
+    "top": "NMOS_CS_TB",
+    "top_cell": "cell:NMOS_CS_TB",
+    "topology_id": null
+  }
+}

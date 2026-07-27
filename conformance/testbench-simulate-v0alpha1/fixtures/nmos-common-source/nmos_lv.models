@@ -1,0 +1,5 @@
+* Self-contained bounded model collateral for the NMOS common-source testbench.
+* One BSIM4 card; every unlisted parameter takes the simulator default.
+* No .include, no .lib, no control block: the derived deck stays self-contained.
+.MODEL nmos_lv NMOS (LEVEL=14 VERSION=4.5 TOXE=4.1n TOXP=4.1n XJ=1.5e-7
++ VTH0=0.45 K1=0.5 K2=0.02 U0=0.032 VSAT=8e4 RDSW=200)

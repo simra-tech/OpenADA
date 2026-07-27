@@ -1,0 +1,821 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/testbench.simulate/v1alpha1",
+    "title": "Published testbench analysis dispatch",
+    "summary": "Bind one published schematic testbench artifact by its own digests, derive exactly one single-analysis deck per declared analysis, dispatch every derived deck through the shared circuit-simulation profile, and return one aggregated evidence envelope.",
+    "side_effect_mode": "evidence-only",
+    "target_kinds": [
+      "schematic-testbench-artifact"
+    ],
+    "locator_types": [
+      "filesystem"
+    ],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/testbench.analyses.evidence.valid/v1alpha1",
+    "statement": "Every analysis the digest-bound published testbench declares was dispatched as its own single-analysis deck and produced fresh, structurally valid, interpretable native simulation evidence.",
+    "non_goals": [
+      "This assertion does not state that any circuit performance specification was satisfied.",
+      "This assertion does not state that the published schematic is electrically correct, that its topology matches an intent, or that the declared analyses are adequate.",
+      "This operation binds no unresolved model, width, or length placeholder; parameter binding belongs to the authoring step that publishes the artifact.",
+      "This operation does not evaluate measurements, corners, statistical runs, or any analysis the artifact does not declare.",
+      "This operation does not mutate the published artifact, its deck, its view, or any supplied model collateral."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "The artifact was digest-verified, its typed declaration matched the emitted deck's analysis cards, and every declared analysis returned one passing shared circuit-simulation result.",
+        "allowed_execution_statuses": [
+          "completed"
+        ],
+        "required_evidence": [
+          "Verified descriptor, netlist, and view digests are retained as bound inputs.",
+          "Every derived single-analysis deck is retained by digest.",
+          "One complete shared circuit-simulation result envelope is retained per declared analysis."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "Every declared analysis was dispatched and evaluated, and at least one returned a trustworthy native simulation failure while none returned unknown.",
+        "allowed_execution_statuses": [
+          "completed"
+        ],
+        "required_evidence": [
+          "The failing analysis, its derived deck digest, and its complete shared circuit-simulation result envelope are retained."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The artifact, its digests, its declaration, its required model collateral, the dispatch, or at least one analysis result is insufficient to decide the assertion.",
+        "allowed_execution_statuses": [
+          "completed",
+          "timed_out",
+          "not_available",
+          "invalid_request",
+          "failed"
+        ],
+        "required_evidence": [
+          "A bounded diagnostic identifies the unbound, mismatched, missing, unstable, or undecided evidence."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [
+      {
+        "role": "spice-model-library",
+        "required": false,
+        "locator_types": [
+          "filesystem"
+        ],
+        "identity_requirement": "content-digest",
+        "description": "One self-contained SPICE model-card file composed into every derived deck. Required whenever the artifact reports simulation_ready=false, which the publisher does for every deck naming a device model.",
+        "extensions": {}
+      }
+    ],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": [
+        "backend",
+        "extensions"
+      ],
+      "properties": {
+        "backend": {
+          "enum": [
+            "ngspice",
+            "xyce"
+          ]
+        },
+        "extensions": {
+          "type": "object",
+          "maxProperties": 0,
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "The target locator must name one canonical absolute regular non-symlink schematic-artifact descriptor.",
+      "The descriptor schema, kind, netlistable claim, resolved parameter state, and simulation handoff are validated before any native launch.",
+      "The published netlist and view digests are recomputed from the bytes on disk and must equal the digests the descriptor publishes.",
+      "The emitted deck's ordered top-level analysis cards must correspond one-to-one with the typed testbench declaration; a disagreement is refused rather than guessed.",
+      "A deck carrying an unresolved publisher placeholder is refused; this operation binds no PDK.",
+      "Supplied model collateral must itself be self-contained: an include, library, control, or analysis directive inside it is refused.",
+      "Every derived deck carries exactly one top-level analysis card and is dispatched through openada.operation/circuit.simulate/v1alpha2 unchanged."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": [
+        "protocol",
+        "artifact",
+        "dispatch",
+        "configuration",
+        "analyses",
+        "extensions"
+      ],
+      "properties": {
+        "protocol": {
+          "type": "object",
+          "required": [
+            "request_id",
+            "operation_profile",
+            "assertion_profile",
+            "implementation_id",
+            "implementation_version",
+            "backend"
+          ],
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "operation_profile": {
+              "const": "openada.operation/testbench.simulate/v1alpha1"
+            },
+            "assertion_profile": {
+              "const": "openada.assertion/testbench.analyses.evidence.valid/v1alpha1"
+            },
+            "implementation_id": {
+              "enum": [
+                "org.openada.driver.simra.testbench.ngspice",
+                "org.openada.driver.simra.testbench.xyce",
+                null
+              ]
+            },
+            "implementation_version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "backend": {
+              "enum": [
+                "ngspice",
+                "xyce",
+                null
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "artifact": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "id",
+            "label",
+            "top",
+            "descriptor_path",
+            "netlist_path",
+            "view_path",
+            "netlist_sha256",
+            "view_sha256",
+            "source_sha256",
+            "digests_verified",
+            "parameters",
+            "self_contained",
+            "saved_nets"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 512
+            },
+            "top": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "descriptor_path": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "netlist_path": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "view_path": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "netlist_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "view_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "source_sha256": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "digests_verified": {
+              "const": true
+            },
+            "parameters": {
+              "const": "resolved"
+            },
+            "self_contained": {
+              "type": "boolean"
+            },
+            "saved_nets": {
+              "type": "array",
+              "maxItems": 1024,
+              "items": {
+                "type": "string",
+                "maxLength": 256
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "dispatch": {
+          "type": "object",
+          "required": [
+            "mode",
+            "simulation_handoff",
+            "declared_analysis_count",
+            "dispatched_analysis_count",
+            "completed_analysis_count",
+            "passing_analysis_count"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "direct",
+                "split",
+                null
+              ]
+            },
+            "simulation_handoff": {
+              "enum": [
+                "direct",
+                "split_required",
+                null
+              ]
+            },
+            "declared_analysis_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "dispatched_analysis_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "completed_analysis_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "passing_analysis_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          },
+          "additionalProperties": false
+        },
+        "configuration": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "required": [
+              "role",
+              "path",
+              "sha256",
+              "bytes",
+              "identity"
+            ],
+            "properties": {
+              "role": {
+                "const": "spice-model-library"
+              },
+              "path": {
+                "type": "string",
+                "maxLength": 4096
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "identity": {
+                "const": "content-digest"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "analyses": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "kind",
+              "declared",
+              "deck_path",
+              "deck_sha256",
+              "result_path",
+              "result_sha256",
+              "operation_profile",
+              "driver_id",
+              "execution_status",
+              "exit_code",
+              "duration_ms",
+              "engineering_status",
+              "summary",
+              "analysis",
+              "evidence"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 15
+              },
+              "kind": {
+                "enum": [
+                  "op",
+                  "dc",
+                  "ac",
+                  "tran"
+                ]
+              },
+              "declared": {
+                "type": "object"
+              },
+              "deck_path": {
+                "type": "string",
+                "maxLength": 4096
+              },
+              "deck_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "result_path": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 4096
+              },
+              "result_sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "operation_profile": {
+                "enum": [
+                  "openada.operation/circuit.simulate/v1alpha2",
+                  null
+                ]
+              },
+              "driver_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 256
+              },
+              "execution_status": {
+                "enum": [
+                  "completed",
+                  "timed_out",
+                  "not_available",
+                  "invalid_request",
+                  "failed",
+                  null
+                ]
+              },
+              "exit_code": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "duration_ms": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "engineering_status": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "unknown",
+                  "not_applicable",
+                  null
+                ]
+              },
+              "summary": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "analysis": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "evidence": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "extensions": {
+          "type": "object",
+          "maxProperties": 0,
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {
+        "path": "data.artifact.digests_verified",
+        "type": "boolean",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "description": "Whether the published netlist and view digests were recomputed and matched.",
+        "extensions": {}
+      },
+      {
+        "path": "data.dispatch",
+        "type": "object",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Declared, dispatched, completed, and passing analysis counts with the publisher's simulation handoff.",
+        "extensions": {}
+      },
+      {
+        "path": "data.analyses",
+        "type": "array",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "description": "Per-analysis derived-deck digest, retained child result, and its independent execution and engineering statuses.",
+        "extensions": {}
+      },
+      {
+        "path": "data.configuration",
+        "type": "array",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Digest-bound model collateral composed into every derived deck.",
+        "extensions": {}
+      }
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {
+        "role": "testbench.analysis.deck",
+        "kind": "spice-netlist",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "freshness": "fresh-per-invocation",
+        "integrity": [
+          "Derived from the digest-verified published deck and retained by digest before launch."
+        ],
+        "native_authority": "The exact single-analysis deck handed to the simulator.",
+        "extensions": {}
+      },
+      {
+        "role": "testbench.analysis.result",
+        "kind": "openada-result",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "freshness": "fresh-per-invocation",
+        "integrity": [
+          "One complete unmodified shared circuit-simulation envelope per declared analysis."
+        ],
+        "native_authority": "The downstream operation's own bounded evidence and status.",
+        "extensions": {}
+      },
+      {
+        "role": "simulation.log",
+        "kind": "simulation-log",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "freshness": "fresh-per-invocation",
+        "integrity": [
+          "Forwarded unchanged from the dispatched shared circuit-simulation result."
+        ],
+        "native_authority": "Authoritative simulator transcript.",
+        "extensions": {}
+      },
+      {
+        "role": "simulation.result",
+        "kind": "ngspice-raw",
+        "required_for": [
+          "pass"
+        ],
+        "freshness": "fresh-per-invocation",
+        "integrity": [
+          "Forwarded unchanged from the dispatched shared circuit-simulation result."
+        ],
+        "native_authority": "Authoritative native analysis output.",
+        "extensions": {}
+      }
+    ],
+    "integrity_rules": [
+      "Recompute the published netlist and view digests from disk before deriving any deck.",
+      "Rehash every derived deck after writing it and refuse a deck that does not match its derived digest.",
+      "Never report a stronger aggregate execution status than the weakest dispatched analysis.",
+      "Never report an aggregate pass while any declared analysis is unknown, and never report fail for an analysis that was not evaluated."
+    ],
+    "provenance_limitations": [
+      "Only the published descriptor, deck, view, and explicitly supplied model collateral are content-bound; the publisher's own upstream source and toolchain are trusted as recorded.",
+      "Model collateral must be self-contained, so a hierarchical vendor PDK entry file with .include or .lib is outside this profile.",
+      "Each dispatched analysis inherits the bounded provenance limitations of openada.operation/circuit.simulate/v1alpha2.",
+      "The aggregate assertion covers only the analyses the artifact declares; it makes no claim about corners, statistical runs, or unauthored analyses."
+    ],
+    "limits": {
+      "max_log_bytes": 16777216,
+      "max_artifact_bytes": 268435456,
+      "max_artifact_count": 64,
+      "extensions": {}
+    },
+    "extensions": {}
+  },
+  "features": [
+    {
+      "id": "openada.feature/testbench.analysis.split/v1alpha1",
+      "parameter_path": "backend",
+      "parameter_values": [
+        "ngspice",
+        "xyce"
+      ],
+      "request_effect": "Derive and dispatch one single-analysis deck per declared analysis when the published artifact reports simulation_handoff=split_required.",
+      "conformance_case": "Replay one published two-analysis model-free testbench artifact and confirm two derived decks, two retained child envelopes, and one aggregate pass.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/testbench.model.collateral/v1alpha1",
+      "parameter_path": "backend",
+      "parameter_values": [
+        "ngspice",
+        "xyce"
+      ],
+      "request_effect": "Compose one digest-bound self-contained model-card file into every derived deck so a deck naming device models becomes runnable without an uninspected include chain.",
+      "conformance_case": "Replay one published model-naming testbench artifact with and without model collateral and confirm a refusal in the second case.",
+      "extensions": {}
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "testbench.artifact.invalid",
+      "severity": "error",
+      "condition": "The descriptor is absent, unreadable, oversized, not JSON, or missing a required published field.",
+      "next_action": "Publish a complete schematic artifact descriptor and rerun.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.artifact.digest_mismatch",
+      "severity": "error",
+      "condition": "A published file does not hash to the digest its descriptor declares.",
+      "next_action": "Republish the artifact so its digests match its bytes.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.artifact.not_a_testbench",
+      "severity": "error",
+      "condition": "The published artifact is not a testbench and declares no analyses.",
+      "next_action": "Target a published testbench artifact.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.parameters.unresolved",
+      "severity": "error",
+      "condition": "The artifact reports an unresolved parameter state or its deck carries a publisher placeholder.",
+      "next_action": "Bind the model, width, and length at authoring time and republish.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.models.required",
+      "severity": "error",
+      "condition": "The artifact reports simulation_ready=false and no model collateral was supplied.",
+      "next_action": "Supply a self-contained spice-model-library configuration reference.",
+      "extensions": {}
+    },
+    {
+      "code": "configuration.models.not_self_contained",
+      "severity": "error",
+      "condition": "The supplied model collateral declares an include, library, control, or analysis directive.",
+      "next_action": "Supply flattened self-contained model cards.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.deck.mismatch",
+      "severity": "error",
+      "condition": "The emitted deck's analysis cards do not correspond to the typed testbench declaration.",
+      "next_action": "Recompile the testbench so its deck and declaration agree.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.analysis.unsupported",
+      "severity": "error",
+      "condition": "A declared analysis kind is outside the closed set or unsupported by the selected backend.",
+      "next_action": "Select a backend covering every declared analysis.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.handoff.split",
+      "severity": "info",
+      "condition": "The artifact declares more than one analysis and was dispatched as one deck per analysis.",
+      "next_action": "None; the split is the operation's declared behavior.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.destination.unusable",
+      "severity": "error",
+      "condition": "The evidence destination could not be created, written, or content-bound.",
+      "next_action": "Supply a writable absolute destination and rerun.",
+      "extensions": {}
+    }
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.driver.simra.testbench.ngspice",
+      "native_product_id": "org.ngspice.ngspice",
+      "backend_name": "Simra artifact dispatch over ngspice",
+      "supported_features": [
+        "openada.feature/testbench.analysis.split/v1alpha1",
+        "openada.feature/testbench.model.collateral/v1alpha1"
+      ],
+      "semantic_bindings": [
+        {
+          "feature_id": "openada.feature/testbench.analysis.split/v1alpha1",
+          "implementation": "Remove every top-level analysis card except one, carry all remaining lines through byte-for-byte, and dispatch each derived deck through the shared circuit-simulation profile.",
+          "output_fact_paths": [
+            "data.dispatch",
+            "data.analyses"
+          ],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/testbench.model.collateral/v1alpha1",
+          "implementation": "Insert the verified self-contained model-card text immediately after the deck title line of every derived deck.",
+          "output_fact_paths": [
+            "data.configuration",
+            "data.analyses"
+          ],
+          "extensions": {}
+        }
+      ],
+      "native_actions": [
+        "Recompute the published netlist and view SHA-256 digests and compare them with the descriptor.",
+        "Write one derived single-analysis deck per declared analysis into the evidence destination and rehash it.",
+        "Invoke openada.operation/circuit.simulate/v1alpha2 once per derived deck and retain its complete envelope."
+      ],
+      "artifact_bindings": [
+        {
+          "native_kind": "derived single-analysis deck",
+          "canonical_role": "testbench.analysis.deck",
+          "extensions": {}
+        },
+        {
+          "native_kind": "shared circuit-simulation result envelope",
+          "canonical_role": "testbench.analysis.result",
+          "extensions": {}
+        },
+        {
+          "native_kind": "simulator transcript",
+          "canonical_role": "simulation.log",
+          "extensions": {}
+        },
+        {
+          "native_kind": "native analysis output",
+          "canonical_role": "simulation.result",
+          "extensions": {}
+        }
+      ],
+      "limitations": [
+        "Only the closed op, dc, ac, and tran analysis kinds the publisher may declare are dispatchable.",
+        "Model collateral must be self-contained; hierarchical vendor PDK entry files are unsupported in v1alpha1.",
+        "The operation adds no analysis the artifact does not declare and reinterprets no native convergence result."
+      ],
+      "extensions": {}
+    },
+    {
+      "driver_id": "org.openada.driver.simra.testbench.xyce",
+      "native_product_id": "org.xyce.xyce",
+      "backend_name": "Simra artifact dispatch over Xyce",
+      "supported_features": [
+        "openada.feature/testbench.analysis.split/v1alpha1",
+        "openada.feature/testbench.model.collateral/v1alpha1"
+      ],
+      "semantic_bindings": [
+        {
+          "feature_id": "openada.feature/testbench.analysis.split/v1alpha1",
+          "implementation": "Derive the same single-analysis decks and dispatch them through the shared circuit-simulation profile's Xyce mapping.",
+          "output_fact_paths": [
+            "data.dispatch",
+            "data.analyses"
+          ],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/testbench.model.collateral/v1alpha1",
+          "implementation": "Insert the verified self-contained model-card text immediately after the deck title line of every derived deck.",
+          "output_fact_paths": [
+            "data.configuration",
+            "data.analyses"
+          ],
+          "extensions": {}
+        }
+      ],
+      "native_actions": [
+        "Recompute the published netlist and view SHA-256 digests and compare them with the descriptor.",
+        "Write one derived single-analysis deck per declared analysis into the evidence destination and rehash it.",
+        "Invoke openada.operation/circuit.simulate/v1alpha2 once per derived deck and retain its complete envelope."
+      ],
+      "artifact_bindings": [
+        {
+          "native_kind": "derived single-analysis deck",
+          "canonical_role": "testbench.analysis.deck",
+          "extensions": {}
+        },
+        {
+          "native_kind": "shared circuit-simulation result envelope",
+          "canonical_role": "testbench.analysis.result",
+          "extensions": {}
+        },
+        {
+          "native_kind": "simulator transcript",
+          "canonical_role": "simulation.log",
+          "extensions": {}
+        }
+      ],
+      "limitations": [
+        "The Xyce mapping rejects the operating-point analysis, so a testbench declaring op is refused before launch.",
+        "Model collateral must be self-contained; hierarchical vendor PDK entry files are unsupported in v1alpha1."
+      ],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": [
+      "operation and assertion truth table",
+      "artifact digest verification and declaration-to-deck correspondence",
+      "single-analysis deck derivation and per-analysis dispatch",
+      "aggregate execution and engineering status rules",
+      "bounded fresh derived-deck and per-analysis result evidence"
+    ],
+    "change_policy": "Any change to aggregate status meaning, deck derivation, digest binding, model-collateral composition, evidence bounds, or normalized facts requires a new profile identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

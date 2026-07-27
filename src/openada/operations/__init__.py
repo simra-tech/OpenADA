@@ -19,6 +19,12 @@ from .result_series_extract import extract_result_series
 from .result_spectral_measure import SPECTRAL_METRIC_KINDS, measure_spectrum
 from .result_transfer_measure import TRANSFER_METRIC_KINDS, measure_transfer
 from .specification_evaluate import SPECIFICATION_LIMIT_KINDS, evaluate_specification
+from .testbench_simulate import (
+    TESTBENCH_EVIDENCE_ASSERTION,
+    TESTBENCH_SIMULATE_PROFILE,
+    simulate_testbench,
+    resolve_testbench_driver,
+)
 
 __all__ = [
     "MAX_SHARED_ANALYSIS_POINTS",
@@ -39,7 +45,11 @@ __all__ = [
     "measure_transfer",
     "normalized_series_sha256",
     "SPECIFICATION_LIMIT_KINDS",
+    "TESTBENCH_EVIDENCE_ASSERTION",
+    "TESTBENCH_SIMULATE_PROFILE",
     "simulate_circuit_profile",
+    "simulate_testbench",
+    "resolve_testbench_driver",
     "evaluate_specification",
     "review_drc",
     "compare_drc",
