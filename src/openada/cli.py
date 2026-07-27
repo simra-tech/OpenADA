@@ -15,7 +15,12 @@ from . import __version__
 from .contract import diagnostic, result, static_execution
 from .conformance import ResultConformanceError, assert_result_conforms
 from .discovery import DiscoveryManager, TOOL_SPECS
-from .driver_registry import BUILTIN_DRIVERS, TRANSIENT_FEATURE
+from .driver_registry import (
+    BUILTIN_DRIVERS,
+    RTL_TEST_PROFILE,
+    TESTBENCH_SIMULATE_PROFILE,
+    TRANSIENT_FEATURE,
+)
 from .engines import (
     KLayoutDriver,
     NetgenDriver,
@@ -41,6 +46,7 @@ from .operations import (
     compare_drc,
     review_drc,
     simulate_circuit_profile,
+    simulate_testbench,
 )
 from .preflight import PREFLIGHT_SPECS
 from .provider_runtime import (
@@ -402,6 +408,41 @@ def build_parser() -> argparse.ArgumentParser:
         help=argparse.SUPPRESS,
     )
 
+    testbench = commands.add_parser(
+        "testbench-simulate",
+        help=(
+            "Run every analysis a published Simra schematic testbench artifact declares, "
+            "splitting a multi-analysis deck when the artifact reports split_required."
+        ),
+    )
+    testbench.add_argument(
+        "artifact",
+        help="Absolute path to the published schematic.artifact.json descriptor.",
+    )
+    testbench.add_argument(
+        "--output-dir",
+        required=True,
+        help="OpenADA-owned evidence destination for derived decks, logs, and per-analysis results.",
+    )
+    testbench.add_argument(
+        "--backend",
+        choices=["ngspice", "xyce"],
+        default="ngspice",
+        help="Reviewed simulation backend for every derived single-analysis deck.",
+    )
+    testbench.add_argument(
+        "--models",
+        help=(
+            "Absolute path to a self-contained SPICE model-card file composed into every "
+            "derived deck. A hierarchical PDK entry file with .include or .lib is refused."
+        ),
+    )
+    testbench.add_argument("--timeout", type=_positive_float, default=120.0)
+    testbench.add_argument(
+        "--request-id",
+        help="Canonical lowercase UUID correlating this request with its result.",
+    )
+
     measure = commands.add_parser(
         "measure",
         help="Derive one typed scalar from a provenance-bound normalized real series.",
@@ -741,7 +782,8 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                 "operation_profile": driver.operation_profile,
                 "operation_profile_schema": (
                     "openada.operation-profile/v0alpha2"
-                    if driver.operation_profile == "openada.operation/rtl.test/v1alpha1"
+                    if driver.operation_profile
+                    in {RTL_TEST_PROFILE, TESTBENCH_SIMULATE_PROFILE}
                     else "openada.operation-profile/v0alpha1"
                 ),
                 "assertion_profile": driver.assertion_profile,
@@ -758,7 +800,8 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                         ),
                         "conformance_ids": (
                             []
-                            if feature == "openada.feature/rtl.test.backend/v1alpha1"
+                            if driver.operation_profile
+                            in {RTL_TEST_PROFILE, TESTBENCH_SIMULATE_PROFILE}
                             else [conformance_id]
                         ),
                     }
@@ -1778,6 +1821,18 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             init_file=args.init_file,
             system_init_file=args.system_init_file,
             timeout=args.timeout,
+        )
+    if args.command == "testbench-simulate":
+        return simulate_testbench(
+            Path(args.artifact).expanduser().resolve(),
+            Path(args.output_dir).expanduser().resolve(),
+            discovery=discovery,
+            backend=args.backend,
+            models_file=(
+                Path(args.models).expanduser().resolve() if args.models else None
+            ),
+            timeout=args.timeout,
+            request_id=args.request_id,
         )
     if args.command == "extract":
         try:

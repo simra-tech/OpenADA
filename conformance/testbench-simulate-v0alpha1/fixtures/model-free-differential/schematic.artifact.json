@@ -1,0 +1,71 @@
+{
+  "cdl": "design.cdl",
+  "hashes": {
+    "cdl_sha256": "9738ff77be2b0090d7d737069a8c3b3207225bb268c402c2af29838e3dd2cad2",
+    "netlist_sha256": "55080365d32bf555ed5389a76e784f24e65efd1018973d078c12885e4660101a",
+    "source_sha256": "6da7d1e3094d69cfab4af546980c05f1cd681438de990a481b4d5c14ae949272",
+    "view_sha256": "11010cb33e0867239fc9652986301522002dfcd0d57172b10f55977e511372bb"
+  },
+  "id": "model-free-differential-testbench-v2-example",
+  "kind": "testbench",
+  "label": "Model-free differential testbench v2 example",
+  "netlist": "design.spice",
+  "netlistable": true,
+  "schema": "simra.schematic-artifact/v2",
+  "source": "design.ord",
+  "top": "MODEL_FREE_DIFF_TB_V2",
+  "validation": {
+    "connectivity": "pass",
+    "contract": "pass",
+    "error_count": 0,
+    "errors": [],
+    "netlistable": true,
+    "parameters": "resolved",
+    "readability": [
+      {
+        "area": 108.0,
+        "aspect": 1.333,
+        "bends": 12,
+        "canvas_utilization": 0.549,
+        "cell": "MODEL_FREE_DIFF_DRIVER_V2",
+        "collinear_foreign": 0,
+        "crossings": 1,
+        "devices": 5,
+        "label_conflicts": 0,
+        "orphan_ports": 0,
+        "over_sheet_cap": false,
+        "routing_symmetry": 0.0,
+        "segments": 27,
+        "supply_orientation": null,
+        "symbol_label_overflow": 0,
+        "wire_length": 136.0
+      },
+      {
+        "area": null,
+        "aspect": null,
+        "bends": 6,
+        "canvas_utilization": 0.913,
+        "cell": "MODEL_FREE_DIFF_TB_V2",
+        "collinear_foreign": 0,
+        "crossings": 1,
+        "devices": 4,
+        "label_conflicts": 0,
+        "orphan_ports": 0,
+        "over_sheet_cap": false,
+        "routing_symmetry": 0.0,
+        "segments": 15,
+        "supply_orientation": null,
+        "symbol_label_overflow": null,
+        "wire_length": 139.0
+      }
+    ],
+    "rendering": "pass",
+    "simulation": "not_run",
+    "simulation_handoff": "split_required",
+    "simulation_ready": true,
+    "topology": "not_declared",
+    "warning_count": 0,
+    "warnings": []
+  },
+  "view": "schematic.simra.json"
+}

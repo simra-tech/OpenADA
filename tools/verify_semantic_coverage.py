@@ -140,6 +140,7 @@ SURFACE_CLASSIFICATIONS: dict[tuple[str, ...], str] = {
     ("rtl-test",): "semantic-execution",
     ("simulate",): "semantic-execution",
     ("synthesize",): "semantic-execution",
+    ("testbench-simulate",): "semantic-execution",
     ("timing-analyze",): "semantic-execution",
     ("spectral",): "semantic-execution",
     ("transfer",): "semantic-execution",
@@ -155,6 +156,7 @@ NATIVE_EDA_SURFACES = frozenset(
         "rtl-test",
         "simulate",
         "synthesize",
+        "testbench-simulate",
         "timing-analyze",
     }
 )

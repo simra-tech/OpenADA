@@ -79,6 +79,7 @@ where = ["src"]
   "profiles/rtl.lint-v1alpha1.json",
   "profiles/rtl.test-v1alpha1.json",
   "profiles/specification.evaluate-v1alpha1.json",
+  "profiles/testbench.simulate-v1alpha1.json",
   "profiles/timing.analyze-v1alpha1.json",
 ]
 "share/openada/providers/ngspice-pdk-control" = [

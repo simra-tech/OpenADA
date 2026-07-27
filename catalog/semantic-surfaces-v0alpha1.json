@@ -16,7 +16,9 @@
       "discovery": "contract-tested",
       "administrative": "contract-tested"
     },
-    "active_lifecycles": ["active"],
+    "active_lifecycles": [
+      "active"
+    ],
     "extensions": {}
   },
   "profiles": [
@@ -81,6 +83,12 @@
       "extensions": {}
     },
     {
+      "repository_path": "profiles/testbench.simulate-v1alpha1.json",
+      "lifecycle": "experimental",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
       "repository_path": "profiles/timing.analyze-v1alpha1.json",
       "lifecycle": "active",
       "dispatchable": true,
@@ -90,7 +98,9 @@
   "surfaces": [
     {
       "surface_id": "openada.surface/cli.capabilities/v1",
-      "command_path": ["capabilities"],
+      "command_path": [
+        "capabilities"
+      ],
       "classification": "discovery",
       "lifecycle": "active",
       "profile_bindings": [],
@@ -99,7 +109,9 @@
     },
     {
       "surface_id": "openada.surface/cli.doctor/v1",
-      "command_path": ["doctor"],
+      "command_path": [
+        "doctor"
+      ],
       "classification": "discovery",
       "lifecycle": "active",
       "profile_bindings": [],
@@ -107,17 +119,21 @@
       "extensions": {}
     },
     {
-      "surface_id": "openada.surface/cli.drc/v1",
-      "command_path": ["drc"],
+      "surface_id": "openada.surface/cli.drc-compare/v1",
+      "command_path": [
+        "drc-compare"
+      ],
       "classification": "semantic-execution",
-      "lifecycle": "active",
+      "lifecycle": "experimental",
       "profile_bindings": [],
       "variants": [],
       "extensions": {}
     },
     {
       "surface_id": "openada.surface/cli.drc-review/v1",
-      "command_path": ["drc-review"],
+      "command_path": [
+        "drc-review"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "experimental",
       "profile_bindings": [],
@@ -125,35 +141,47 @@
       "extensions": {}
     },
     {
-      "surface_id": "openada.surface/cli.drc-compare/v1",
-      "command_path": ["drc-compare"],
+      "surface_id": "openada.surface/cli.drc/v1",
+      "command_path": [
+        "drc"
+      ],
       "classification": "semantic-execution",
-      "lifecycle": "experimental",
+      "lifecycle": "active",
       "profile_bindings": [],
       "variants": [],
       "extensions": {}
     },
     {
       "surface_id": "openada.surface/cli.evaluate/v1",
-      "command_path": ["evaluate"],
+      "command_path": [
+        "evaluate"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/specification.evaluate/v1alpha1"],
+      "profile_bindings": [
+        "openada.operation/specification.evaluate/v1alpha1"
+      ],
       "variants": [],
       "extensions": {}
     },
     {
       "surface_id": "openada.surface/cli.extract/v1",
-      "command_path": ["extract"],
+      "command_path": [
+        "extract"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/result.series.extract/v1alpha1"],
+      "profile_bindings": [
+        "openada.operation/result.series.extract/v1alpha1"
+      ],
       "variants": [],
       "extensions": {}
     },
     {
       "surface_id": "openada.surface/cli.lvs/v1",
-      "command_path": ["lvs"],
+      "command_path": [
+        "lvs"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
       "profile_bindings": [],
@@ -162,16 +190,22 @@
     },
     {
       "surface_id": "openada.surface/cli.measure/v1",
-      "command_path": ["measure"],
+      "command_path": [
+        "measure"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/result.measure/v1alpha1"],
+      "profile_bindings": [
+        "openada.operation/result.measure/v1alpha1"
+      ],
       "variants": [],
       "extensions": {}
     },
     {
       "surface_id": "openada.surface/cli.netlist/v1",
-      "command_path": ["netlist"],
+      "command_path": [
+        "netlist"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
       "profile_bindings": [],
@@ -180,7 +214,10 @@
     },
     {
       "surface_id": "openada.surface/cli.profile-list/v1",
-      "command_path": ["profile", "list"],
+      "command_path": [
+        "profile",
+        "list"
+      ],
       "classification": "administrative",
       "lifecycle": "active",
       "profile_bindings": [],
@@ -189,7 +226,10 @@
     },
     {
       "surface_id": "openada.surface/cli.profile-show/v1",
-      "command_path": ["profile", "show"],
+      "command_path": [
+        "profile",
+        "show"
+      ],
       "classification": "administrative",
       "lifecycle": "active",
       "profile_bindings": [],
@@ -198,14 +238,21 @@
     },
     {
       "surface_id": "openada.surface/cli.provider-invoke/v1",
-      "command_path": ["provider", "invoke"],
+      "command_path": [
+        "provider",
+        "invoke"
+      ],
       "classification": "transport-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/circuit.simulate/v1alpha2"],
+      "profile_bindings": [
+        "openada.operation/circuit.simulate/v1alpha2"
+      ],
       "variants": [
         {
           "variant_id": "explicit-local-provider",
-          "selector": {"provider_manifest": true},
+          "selector": {
+            "provider_manifest": true
+          },
           "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
           "provider_id": null,
           "extensions": {}
@@ -215,7 +262,10 @@
     },
     {
       "surface_id": "openada.surface/cli.provider-list/v1",
-      "command_path": ["provider", "list"],
+      "command_path": [
+        "provider",
+        "list"
+      ],
       "classification": "administrative",
       "lifecycle": "active",
       "profile_bindings": [],
@@ -224,7 +274,10 @@
     },
     {
       "surface_id": "openada.surface/cli.provider-validate/v1",
-      "command_path": ["provider", "validate"],
+      "command_path": [
+        "provider",
+        "validate"
+      ],
       "classification": "administrative",
       "lifecycle": "active",
       "profile_bindings": [],
@@ -233,7 +286,9 @@
     },
     {
       "surface_id": "openada.surface/cli.rtl-check/v1",
-      "command_path": ["rtl-check"],
+      "command_path": [
+        "rtl-check"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
       "profile_bindings": [],
@@ -242,49 +297,83 @@
     },
     {
       "surface_id": "openada.surface/cli.rtl-lint/v1",
-      "command_path": ["rtl-lint"],
+      "command_path": [
+        "rtl-lint"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/rtl.lint/v1alpha1"],
+      "profile_bindings": [
+        "openada.operation/rtl.lint/v1alpha1"
+      ],
       "variants": [],
       "extensions": {}
     },
     {
       "surface_id": "openada.surface/cli.rtl-test/v1",
-      "command_path": ["rtl-test"],
+      "command_path": [
+        "rtl-test"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "experimental",
-      "profile_bindings": ["openada.operation/rtl.test/v1alpha1"],
+      "profile_bindings": [
+        "openada.operation/rtl.test/v1alpha1"
+      ],
       "variants": [
-        {"variant_id": "iverilog", "selector": {"backend": "iverilog"}, "operation_profile": "openada.operation/rtl.test/v1alpha1", "provider_id": "org.openada.driver.iverilog.rtl-test", "extensions": {}},
-        {"variant_id": "verilator", "selector": {"backend": "verilator"}, "operation_profile": "openada.operation/rtl.test/v1alpha1", "provider_id": "org.openada.driver.verilator.rtl-test", "extensions": {}}
+        {
+          "variant_id": "iverilog",
+          "selector": {
+            "backend": "iverilog"
+          },
+          "operation_profile": "openada.operation/rtl.test/v1alpha1",
+          "provider_id": "org.openada.driver.iverilog.rtl-test",
+          "extensions": {}
+        },
+        {
+          "variant_id": "verilator",
+          "selector": {
+            "backend": "verilator"
+          },
+          "operation_profile": "openada.operation/rtl.test/v1alpha1",
+          "provider_id": "org.openada.driver.verilator.rtl-test",
+          "extensions": {}
+        }
       ],
       "extensions": {}
     },
     {
       "surface_id": "openada.surface/cli.simulate/v1",
-      "command_path": ["simulate"],
+      "command_path": [
+        "simulate"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/circuit.simulate/v1alpha2"],
+      "profile_bindings": [
+        "openada.operation/circuit.simulate/v1alpha2"
+      ],
       "variants": [
         {
           "variant_id": "legacy-ngspice",
-          "selector": {"backend": null},
+          "selector": {
+            "backend": null
+          },
           "operation_profile": null,
           "provider_id": "org.openada.driver.ngspice",
           "extensions": {}
         },
         {
           "variant_id": "shared-ngspice",
-          "selector": {"backend": "ngspice"},
+          "selector": {
+            "backend": "ngspice"
+          },
           "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
           "provider_id": "org.openada.driver.ngspice",
           "extensions": {}
         },
         {
           "variant_id": "shared-xyce",
-          "selector": {"backend": "xyce"},
+          "selector": {
+            "backend": "xyce"
+          },
           "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
           "provider_id": "org.openada.driver.xyce",
           "extensions": {}
@@ -294,37 +383,85 @@
     },
     {
       "surface_id": "openada.surface/cli.spectral/v1",
-      "command_path": ["spectral"],
+      "command_path": [
+        "spectral"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/result.spectral.measure/v1alpha1"],
+      "profile_bindings": [
+        "openada.operation/result.spectral.measure/v1alpha1"
+      ],
       "variants": [],
       "extensions": {}
     },
     {
       "surface_id": "openada.surface/cli.synthesize/v1",
-      "command_path": ["synthesize"],
+      "command_path": [
+        "synthesize"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/logic.synthesize/v1alpha1"],
+      "profile_bindings": [
+        "openada.operation/logic.synthesize/v1alpha1"
+      ],
       "variants": [],
       "extensions": {}
     },
     {
+      "surface_id": "openada.surface/cli.testbench-simulate/v1",
+      "command_path": [
+        "testbench-simulate"
+      ],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": [
+        "openada.operation/testbench.simulate/v1alpha1"
+      ],
+      "variants": [
+        {
+          "variant_id": "ngspice",
+          "selector": {
+            "backend": "ngspice"
+          },
+          "operation_profile": "openada.operation/testbench.simulate/v1alpha1",
+          "provider_id": "org.openada.driver.simra.testbench.ngspice",
+          "extensions": {}
+        },
+        {
+          "variant_id": "xyce",
+          "selector": {
+            "backend": "xyce"
+          },
+          "operation_profile": "openada.operation/testbench.simulate/v1alpha1",
+          "provider_id": "org.openada.driver.simra.testbench.xyce",
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
       "surface_id": "openada.surface/cli.timing-analyze/v1",
-      "command_path": ["timing-analyze"],
+      "command_path": [
+        "timing-analyze"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/timing.analyze/v1alpha1"],
+      "profile_bindings": [
+        "openada.operation/timing.analyze/v1alpha1"
+      ],
       "variants": [],
       "extensions": {}
     },
     {
       "surface_id": "openada.surface/cli.transfer/v1",
-      "command_path": ["transfer"],
+      "command_path": [
+        "transfer"
+      ],
       "classification": "semantic-execution",
       "lifecycle": "active",
-      "profile_bindings": ["openada.operation/result.transfer.measure/v1alpha1"],
+      "profile_bindings": [
+        "openada.operation/result.transfer.measure/v1alpha1"
+      ],
       "variants": [],
       "extensions": {}
     }
@@ -381,30 +518,6 @@
   ],
   "provider_mappings": [
     {
-      "provider_id": "org.openada.driver.opensta",
-      "provider_kind": "eda-driver",
-      "native_product": "sta",
-      "operation_profile": "openada.operation/timing.analyze/v1alpha1",
-      "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
-      "operation_maturity": null,
-      "features": [
-        {"id": "openada.feature/timing.setup-hold/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["orfs-ibex-synthesis-timing"], "extensions": {}}
-      ],
-      "extensions": {}
-    },
-    {
-      "provider_id": "org.openada.driver.verilator",
-      "provider_kind": "eda-driver",
-      "native_product": "verilator",
-      "operation_profile": "openada.operation/rtl.lint/v1alpha1",
-      "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
-      "operation_maturity": null,
-      "features": [
-        {"id": "openada.feature/rtl.lint.systemverilog/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["ihp-sar-rtl-check"], "extensions": {}}
-      ],
-      "extensions": {}
-    },
-    {
       "provider_id": "org.openada.driver.iverilog.rtl-test",
       "provider_kind": "eda-driver",
       "native_product": "iverilog",
@@ -412,31 +525,12 @@
       "assertion_profile": "openada.assertion/rtl.self-test.passes/v1alpha1",
       "operation_maturity": null,
       "features": [
-        {"id": "openada.feature/rtl.test.backend/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}}
-      ],
-      "extensions": {}
-    },
-    {
-      "provider_id": "org.openada.driver.verilator.rtl-test",
-      "provider_kind": "eda-driver",
-      "native_product": "verilator",
-      "operation_profile": "openada.operation/rtl.test/v1alpha1",
-      "assertion_profile": "openada.assertion/rtl.self-test.passes/v1alpha1",
-      "operation_maturity": null,
-      "features": [
-        {"id": "openada.feature/rtl.test.backend/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}}
-      ],
-      "extensions": {}
-    },
-    {
-      "provider_id": "org.openada.driver.yosys",
-      "provider_kind": "eda-driver",
-      "native_product": "yosys",
-      "operation_profile": "openada.operation/logic.synthesize/v1alpha1",
-      "assertion_profile": "openada.assertion/synthesized-netlist.valid/v1alpha1",
-      "operation_maturity": null,
-      "features": [
-        {"id": "openada.feature/synthesis.asic-liberty/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["orfs-ibex-synthesis-timing"], "extensions": {}}
+        {
+          "id": "openada.feature/rtl.test.backend/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        }
       ],
       "extensions": {}
     },
@@ -448,10 +542,139 @@
       "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
       "operation_maturity": null,
       "features": [
-        {"id": "openada.feature/simulation.analysis.op/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
-        {"id": "openada.feature/simulation.analysis.dc/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
-        {"id": "openada.feature/simulation.analysis.ac/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
-        {"id": "openada.feature/simulation.analysis.tran/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}}
+        {
+          "id": "openada.feature/simulation.analysis.op/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/simulation.analysis.dc/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/simulation.analysis.ac/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/simulation.analysis.tran/v1alpha1",
+          "implementation_maturity": "workflow-validated",
+          "conformance_ids": [
+            "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+          ],
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.opensta",
+      "provider_kind": "eda-driver",
+      "native_product": "sta",
+      "operation_profile": "openada.operation/timing.analyze/v1alpha1",
+      "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/timing.setup-hold/v1alpha1",
+          "implementation_maturity": "workflow-validated",
+          "conformance_ids": [
+            "orfs-ibex-synthesis-timing"
+          ],
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.simra.testbench.ngspice",
+      "provider_kind": "eda-driver",
+      "native_product": "ngspice",
+      "operation_profile": "openada.operation/testbench.simulate/v1alpha1",
+      "assertion_profile": "openada.assertion/testbench.analyses.evidence.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/testbench.analysis.split/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/testbench.model.collateral/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.simra.testbench.xyce",
+      "provider_kind": "eda-driver",
+      "native_product": "xyce",
+      "operation_profile": "openada.operation/testbench.simulate/v1alpha1",
+      "assertion_profile": "openada.assertion/testbench.analyses.evidence.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/testbench.analysis.split/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/testbench.model.collateral/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.verilator",
+      "provider_kind": "eda-driver",
+      "native_product": "verilator",
+      "operation_profile": "openada.operation/rtl.lint/v1alpha1",
+      "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/rtl.lint.systemverilog/v1alpha1",
+          "implementation_maturity": "workflow-validated",
+          "conformance_ids": [
+            "ihp-sar-rtl-check"
+          ],
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.verilator.rtl-test",
+      "provider_kind": "eda-driver",
+      "native_product": "verilator",
+      "operation_profile": "openada.operation/rtl.test/v1alpha1",
+      "assertion_profile": "openada.assertion/rtl.self-test.passes/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/rtl.test.backend/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        }
       ],
       "extensions": {}
     },
@@ -463,9 +686,84 @@
       "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
       "operation_maturity": null,
       "features": [
-        {"id": "openada.feature/simulation.analysis.dc/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
-        {"id": "openada.feature/simulation.analysis.ac/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}},
-        {"id": "openada.feature/simulation.analysis.tran/v1alpha1", "implementation_maturity": "workflow-validated", "conformance_ids": ["model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"], "extensions": {}}
+        {
+          "id": "openada.feature/simulation.analysis.dc/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/simulation.analysis.ac/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/simulation.analysis.tran/v1alpha1",
+          "implementation_maturity": "workflow-validated",
+          "conformance_ids": [
+            "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
+          ],
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.driver.yosys",
+      "provider_kind": "eda-driver",
+      "native_product": "yosys",
+      "operation_profile": "openada.operation/logic.synthesize/v1alpha1",
+      "assertion_profile": "openada.assertion/synthesized-netlist.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/synthesis.asic-liberty/v1alpha1",
+          "implementation_maturity": "workflow-validated",
+          "conformance_ids": [
+            "orfs-ibex-synthesis-timing"
+          ],
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.kernel.spectral-evidence",
+      "provider_kind": "evidence-kernel",
+      "native_product": null,
+      "operation_profile": "openada.operation/result.spectral.measure/v1alpha1",
+      "assertion_profile": "openada.assertion/spectral.measurement.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/spectral.snr/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/spectral.sinad/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/spectral.thd/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/spectral.sfdr/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        }
       ],
       "extensions": {}
     },
@@ -480,41 +778,6 @@
       "extensions": {}
     },
     {
-      "provider_id": "org.openada.kernel.typed-evidence",
-      "provider_kind": "evidence-kernel",
-      "native_product": null,
-      "operation_profile": "openada.operation/result.measure/v1alpha1",
-      "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
-      "operation_maturity": null,
-      "features": [
-        {"id": "openada.feature/measurement.sample-at/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
-        {"id": "openada.feature/measurement.minimum/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
-        {"id": "openada.feature/measurement.maximum/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
-        {"id": "openada.feature/measurement.mean/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
-        {"id": "openada.feature/measurement.rms/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
-        {"id": "openada.feature/measurement.crossing/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
-        {"id": "openada.feature/measurement.rise-time/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
-        {"id": "openada.feature/measurement.fall-time/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
-        {"id": "openada.feature/measurement.settling-time/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}}
-      ],
-      "extensions": {}
-    },
-    {
-      "provider_id": "org.openada.kernel.spectral-evidence",
-      "provider_kind": "evidence-kernel",
-      "native_product": null,
-      "operation_profile": "openada.operation/result.spectral.measure/v1alpha1",
-      "assertion_profile": "openada.assertion/spectral.measurement.valid/v1alpha1",
-      "operation_maturity": null,
-      "features": [
-        {"id": "openada.feature/spectral.snr/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
-        {"id": "openada.feature/spectral.sinad/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
-        {"id": "openada.feature/spectral.thd/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
-        {"id": "openada.feature/spectral.sfdr/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}}
-      ],
-      "extensions": {}
-    },
-    {
       "provider_id": "org.openada.kernel.transfer-evidence",
       "provider_kind": "evidence-kernel",
       "native_product": null,
@@ -522,10 +785,113 @@
       "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
       "operation_maturity": null,
       "features": [
-        {"id": "openada.feature/transfer.low-frequency-gain/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
-        {"id": "openada.feature/transfer.bandwidth-3db/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
-        {"id": "openada.feature/transfer.unity-gain-frequency/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}},
-        {"id": "openada.feature/transfer.phase-margin/v1alpha1", "implementation_maturity": "structured", "conformance_ids": [], "extensions": {}}
+        {
+          "id": "openada.feature/transfer.low-frequency-gain/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/transfer.bandwidth-3db/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/transfer.unity-gain-frequency/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/transfer.phase-margin/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.kernel.typed-evidence",
+      "provider_kind": "evidence-kernel",
+      "native_product": null,
+      "operation_profile": "openada.operation/result.measure/v1alpha1",
+      "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/measurement.sample-at/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/measurement.minimum/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/measurement.maximum/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/measurement.mean/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/measurement.rms/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/measurement.crossing/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/measurement.rise-time/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/measurement.fall-time/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/measurement.settling-time/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        }
       ],
       "extensions": {}
     },
@@ -537,8 +903,22 @@
       "assertion_profile": "openada.assertion/specification.satisfied/v1alpha1",
       "operation_maturity": null,
       "features": [
-        {"id": "openada.feature/specification.bound-evaluation/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}},
-        {"id": "openada.feature/specification.condition-binding/v1alpha1", "implementation_maturity": "structured", "conformance_ids": ["typed-evidence-measurement-specification-v0alpha1"], "extensions": {}}
+        {
+          "id": "openada.feature/specification.bound-evaluation/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/specification.condition-binding/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha1"
+          ],
+          "extensions": {}
+        }
       ],
       "extensions": {}
     }

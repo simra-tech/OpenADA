@@ -1,0 +1,11 @@
+* SIMRA HIERARCHICAL STRUCTURAL EXPORT - unresolved identifiers must be bound before simulation.
+.TITLE NMOS_CS_TB
+V_GND VSS 0 DC 0
+M_1 VOUT VG VSS VSS nmos_lv W=2u L=150n M=1 NF=1
+R_D VDD VOUT 10k
+V_DD VDD VSS DC 1.8
+V_G VG VSS DC 900m
+.SAVE VG VOUT
+.OP
+.DC V_G 0 1.8 50m
+.END

@@ -41,7 +41,11 @@ The published protocol documents are:
 - [`result.transfer.measure/v1alpha1`](../profiles/result.transfer.measure-v1alpha1.json),
   the same-unit AC complex-ratio and closed crossing-measurement profile; and
 - [`specification.evaluate/v1alpha1`](../profiles/specification.evaluate-v1alpha1.json),
-  the exact-unit specification profile.
+  the exact-unit specification profile; and
+- [`testbench.simulate/v1alpha1`](../profiles/testbench.simulate-v1alpha1.json),
+  the experimental digest-bound published-testbench dispatch profile that
+  derives one single-analysis deck per declared analysis and dispatches each
+  through `circuit.simulate/v1alpha2`.
 
 The digital set adds:
 

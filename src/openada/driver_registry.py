@@ -24,6 +24,20 @@ ANALYSIS_FEATURES = {
     "ac": AC_SWEEP_FEATURE,
     "tran": TRANSIENT_FEATURE,
 }
+TESTBENCH_SIMULATE_PROFILE = "openada.operation/testbench.simulate/v1alpha1"
+TESTBENCH_EVIDENCE_ASSERTION = (
+    "openada.assertion/testbench.analyses.evidence.valid/v1alpha1"
+)
+TESTBENCH_SPLIT_FEATURE = "openada.feature/testbench.analysis.split/v1alpha1"
+TESTBENCH_MODEL_COLLATERAL_FEATURE = (
+    "openada.feature/testbench.model.collateral/v1alpha1"
+)
+#: The published-testbench backends, keyed by the shared circuit.simulate alias
+#: each one dispatches its derived single-analysis decks through.
+TESTBENCH_DRIVER_ALIASES = {
+    "ngspice": "ngspice-testbench",
+    "xyce": "xyce-testbench",
+}
 RTL_TEST_PROFILE = "openada.operation/rtl.test/v1alpha1"
 RTL_TEST_ASSERTION = "openada.assertion/rtl.self-test.passes/v1alpha1"
 RTL_TEST_BACKEND_FEATURE = "openada.feature/rtl.test.backend/v1alpha1"
@@ -65,6 +79,26 @@ BUILTIN_DRIVERS: dict[str, BuiltinDriver] = {
         operation_profile=CIRCUIT_SIMULATE_PROFILE,
         assertion_profile=SIMULATION_EVIDENCE_ASSERTION,
         features=(DC_SWEEP_FEATURE, AC_SWEEP_FEATURE, TRANSIENT_FEATURE),
+        factory=lambda discovery: XyceDriver(discovery=discovery),
+    ),
+    "ngspice-testbench": BuiltinDriver(
+        alias="ngspice-testbench",
+        driver_id="org.openada.driver.simra.testbench.ngspice",
+        version=__version__,
+        native_tool="ngspice",
+        operation_profile=TESTBENCH_SIMULATE_PROFILE,
+        assertion_profile=TESTBENCH_EVIDENCE_ASSERTION,
+        features=(TESTBENCH_SPLIT_FEATURE, TESTBENCH_MODEL_COLLATERAL_FEATURE),
+        factory=lambda discovery: NgspiceDriver(discovery=discovery),
+    ),
+    "xyce-testbench": BuiltinDriver(
+        alias="xyce-testbench",
+        driver_id="org.openada.driver.simra.testbench.xyce",
+        version=__version__,
+        native_tool="xyce",
+        operation_profile=TESTBENCH_SIMULATE_PROFILE,
+        assertion_profile=TESTBENCH_EVIDENCE_ASSERTION,
+        features=(TESTBENCH_SPLIT_FEATURE, TESTBENCH_MODEL_COLLATERAL_FEATURE),
         factory=lambda discovery: XyceDriver(discovery=discovery),
     ),
     "iverilog-rtl-test": BuiltinDriver(
@@ -116,6 +150,11 @@ __all__ = [
     "DC_SWEEP_FEATURE",
     "OPERATING_POINT_FEATURE",
     "SIMULATION_EVIDENCE_ASSERTION",
+    "TESTBENCH_DRIVER_ALIASES",
+    "TESTBENCH_EVIDENCE_ASSERTION",
+    "TESTBENCH_MODEL_COLLATERAL_FEATURE",
+    "TESTBENCH_SIMULATE_PROFILE",
+    "TESTBENCH_SPLIT_FEATURE",
     "TRANSIENT_FEATURE",
     "analysis_feature",
     "builtin_driver",

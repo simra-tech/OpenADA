@@ -121,6 +121,44 @@ themselves justify workflow-validated maturity. Scoped preflight continues to
 select ngspice for `spice-analysis-evidence-valid`; choosing Xyce is explicit
 in this alpha.
 
+## Published-testbench dispatch (experimental)
+
+`circuit.simulate/v1alpha2` accepts exactly one analysis per deck. A schematic
+compiler that publishes a testbench artifact may declare several analyses in
+one typed view, and its emitted deck then carries several top-level analysis
+cards. Such an artifact reports `validation.simulation_handoff` as
+`split_required` and the shared profile rejects it outright.
+
+`testbench-simulate` owns that handoff. It binds one published
+`simra.schematic-artifact/v2` descriptor, recomputes the netlist and view
+SHA-256 digests it publishes, derives exactly one single-analysis deck per
+declared analysis, and dispatches each derived deck through the unmodified
+shared simulation profile:
+
+```bash
+./bin/openada testbench-simulate /path/to/schematic.artifact.json \
+  --backend ngspice --output-dir /tmp/openada-testbench
+```
+
+The aggregate `engineering.status` is `pass` only when every declared analysis
+returned a passing shared simulation result. One undecided analysis makes the
+aggregate `unknown`: an analysis that was not evaluated is never reported as a
+circuit failure. Each dispatched analysis retains its own derived deck, its own
+complete child result envelope, and the native log and raw evidence the shared
+profile captured.
+
+Two refusals are deliberate. A deck carrying an unresolved publisher
+placeholder is rejected rather than bound: parameter binding belongs to the
+authoring step that publishes the artifact. A deck that names device models is
+published with `simulation_ready=false` because model collateral is outside the
+schematic contract; that deck is dispatchable only when the caller supplies the
+collateral as an explicit digest-bound `--models` reference. The supplied file
+must itself be self-contained, so a hierarchical vendor PDK entry file with
+`.include` or `.lib` is outside `testbench.simulate/v1alpha1`.
+
+The rows are experimental. They have contract tests and a native model-free
+replay, but no pinned public workflow chain.
+
 ## Typed evidence and transfer kernels
 
 `extract` is the reviewed native-evidence bridge. It reopens and verifies the

@@ -1,0 +1,53 @@
+{
+  "cdl": "design.cdl",
+  "hashes": {
+    "cdl_sha256": "9738ff77be2b0090d7d737069a8c3b3207225bb268c402c2af29838e3dd2cad2",
+    "netlist_sha256": "8fbf7a07d60041f6810d0f54587c78774a79d87638f1cfeba269131d9a53c55f",
+    "source_sha256": "6d9539a9dd200f2f8f322a9af2c0706052826c6f9376cc160265b692e5534abe",
+    "view_sha256": "8c13edf1ffe3ffc1703ea8a20725a75ab909d87b7a518190104b091ead47504d"
+  },
+  "id": "nmos-common-source-testbench",
+  "kind": "testbench",
+  "label": "NMOS common-source testbench",
+  "netlist": "design.spice",
+  "netlistable": true,
+  "schema": "simra.schematic-artifact/v2",
+  "source": "design.ord",
+  "top": "NMOS_CS_TB",
+  "validation": {
+    "connectivity": "pass",
+    "contract": "pass",
+    "error_count": 0,
+    "errors": [],
+    "netlistable": true,
+    "parameters": "resolved",
+    "readability": [
+      {
+        "area": null,
+        "aspect": null,
+        "bends": 15,
+        "canvas_utilization": 0.556,
+        "cell": "NMOS_CS_TB",
+        "collinear_foreign": 1,
+        "crossings": 3,
+        "devices": 5,
+        "label_conflicts": 0,
+        "orphan_ports": 0,
+        "over_sheet_cap": false,
+        "routing_symmetry": 0.19,
+        "segments": 21,
+        "supply_orientation": null,
+        "symbol_label_overflow": null,
+        "wire_length": 85.0
+      }
+    ],
+    "rendering": "pass",
+    "simulation": "not_run",
+    "simulation_handoff": "split_required",
+    "simulation_ready": false,
+    "topology": "not_declared",
+    "warning_count": 0,
+    "warnings": []
+  },
+  "view": "schematic.simra.json"
+}
