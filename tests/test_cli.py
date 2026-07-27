@@ -652,15 +652,29 @@ def test_shared_simulation_cli_forwards_closed_typed_parameters(
             summary="Typed CLI dispatch captured.",
         )
 
-    monkeypatch.setattr(cli, "simulate_circuit_profile", fake_simulate)
+    # `simulate --backend ngspice` now routes through the one simulation
+    # semantic, which calls the shared bridge from its own module namespace.
+    # The module is reached through sys.modules because the package re-exports
+    # a *function* under the same dotted name.
+    monkeypatch.setattr(
+        sys.modules["openada.operations.simulate"],
+        "simulate_circuit_profile",
+        fake_simulate,
+    )
     exit_code = main(
         ["simulate", str(source), "--backend", "ngspice", *analysis_args]
     )
     payload = json.loads(capsys.readouterr().out)
 
     assert exit_code == 0
-    assert payload["operation"] == "circuit.simulate"
+    # One operation, one name: the unified path stamps its own envelope.
+    assert payload["operation"] == "simulate"
     assert captured["parameters"] == {"analysis": expected, "extensions": {}}
+    assert captured["backend"] == "ngspice"
+    assert captured["timeout"] == 120.0
+    # A bare deck resolves its own relative paths against its own directory, so
+    # the unified path names that directory rather than forwarding a bare None.
+    assert Path(captured["workdir"]) == source.parent
 
 
 @pytest.mark.parametrize(

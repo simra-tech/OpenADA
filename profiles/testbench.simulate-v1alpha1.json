@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "schema": "openada.operation-profile/v0alpha2",
-  "status": "alpha",
+  "status": "deprecated",
   "operation": {
     "id": "openada.operation/testbench.simulate/v1alpha1",
     "title": "Published testbench analysis dispatch",
-    "summary": "Bind one published schematic testbench artifact by its own digests, derive exactly one single-analysis deck per declared analysis, dispatch every derived deck through the shared circuit-simulation profile, and return one aggregated evidence envelope.",
+    "summary": "RETIRED. This was a second operation that meant \"simulate\". Its semantics - a published-artifact target, a PDK-bound model source, and splitting a multi-analysis testbench into one deck per analysis - were absorbed into openada.operation/circuit.simulate/v1alpha2, whose published contract already declared the artifact locator and the pdk and corner configuration roles. Two operations for one engineering act is how a request took a path that consulted no PDK binding at all. Nothing produces a result carrying this identifier; the document remains only so a published identifier stays readable. Original summary: Bind one published schematic testbench artifact by its own digests, derive exactly one single-analysis deck per declared analysis, dispatch every derived deck through the shared circuit-simulation profile, and return one aggregated evidence envelope.",
     "side_effect_mode": "evidence-only",
     "target_kinds": [
       "schematic-testbench-artifact"
@@ -17,7 +17,7 @@
   },
   "assertion": {
     "id": "openada.assertion/testbench.analyses.evidence.valid/v1alpha1",
-    "statement": "Every analysis the digest-bound published testbench declares was dispatched as its own single-analysis deck and produced fresh, structurally valid, interpretable native simulation evidence.",
+    "statement": "RETIRED, superseded by openada.assertion/simulation.evidence.valid/v1alpha1. Every analysis the digest-bound published testbench declares was dispatched as its own single-analysis deck and produced fresh, structurally valid, interpretable native simulation evidence.",
     "non_goals": [
       "This assertion does not state that any circuit performance specification was satisfied.",
       "This assertion does not state that the published schematic is electrically correct, that its topology matches an intent, or that the declared analyses are adequate.",

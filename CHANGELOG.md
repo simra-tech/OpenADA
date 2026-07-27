@@ -6,6 +6,46 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ## 0.4.0 — Unreleased
 
+### Changed
+
+- **One simulation semantic.** `openada.operation/circuit.simulate/v1alpha2` is
+  now the only simulation operation and `openada simulate` the only verb. Its
+  target is a SPICE deck *or* a published Simra `schematic.artifact.json`,
+  detected by reading the file; its model source is nothing, a flattened
+  `--models` card file, or an installed PDK bound by `--pdk`; and an artifact
+  declaring several analyses is split into one single-analysis deck per
+  declaration and every one is run. Every simulation, from every target, with
+  every model source, now returns exactly one `circuit.simulate/v1alpha2`
+  envelope — a PDK-bound run previously returned a raw native ngspice payload
+  with no `analysis` or `evidence` block at all.
+
+  `openada.operation/testbench.simulate/v1alpha1` is **retired**: it was a
+  second operation that meant "simulate", and two semantics for one engineering
+  act is how a live request took the path that consulted no PDK binding.
+  Its profile document is marked `deprecated` and is bound by no driver and no
+  surface; the `org.openada.driver.simra.testbench.*` identities are removed, so
+  there is one driver identity per backend. `openada testbench-simulate`
+  survives as a deprecated alias that emits `simulation.operation.deprecated`
+  and delegates — the result it returns is a `circuit.simulate` result.
+
+  The binding facts moved from `data.extensions["org.openada.pdk_binding"]` to
+  `data.extensions["org.openada.pdk-binding"]`: the underscore spelling is
+  illegal under the `circuit.simulate/v1alpha2` extension-name pattern, which is
+  itself evidence the two operations had drifted apart.
+
+- **A netlist carries devices, not technologies.** A deck that binds PDK
+  collateral by hand — any `pre_osdi`, or a `.lib`/`.include` reaching into an
+  installed PDK's tree — is refused with `pdk.collateral.hand_bound`, even when
+  its paths are correct, because such a deck can only ask its question in one
+  technology. `pdk.collateral.foreign` names the case where one PDK's
+  incantation was applied to another (the observed live failure: IHP's
+  `psp103.osdi` preloaded at a sky130 path); `pdk.collateral.missing` the case
+  where a deck would bind nothing; `pdk.collateral.conflict` a hand-written
+  prelude handed to `--pdk`. `--unmanaged-collateral` is the one way past and
+  stamps the result with a permanent provenance limitation.
+
+- `nmos.svt`/`pmos.svt` are accepted as synonyms of `nmos.core`/`pmos.core`.
+
 ### Added
 
 - One canonical netlist, four PDKs. A published Simra deck now names a
@@ -15,7 +55,7 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   `gf180mcuD` and `freepdk45` with nothing but `--pdk` changing. A deck naming
   one PDK's own model is translated through the same role index, so every
   artifact published so far keeps working; each substitution is reported under
-  `data.extensions["org.openada.pdk_binding"].model_translations`.
+  `data.extensions["org.openada.pdk-binding"].model_translations`.
 
   `PdkBinding` now carries the four properties that previously had no
   representation and made every non-IHP PDK fail:

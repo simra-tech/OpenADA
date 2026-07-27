@@ -30,17 +30,19 @@ works.”
 
 ## Check applicability
 
-Use this skill directly only when the request fits
-`openada.operation/circuit.simulate/v1alpha2`: one self-contained top-level OP,
-DC, AC, or transient analysis with parseable closed parameters and no includes,
-measurements, print directives, control blocks, or additional analyses. Require
+`openada.operation/circuit.simulate/v1alpha2` is the only simulation operation
+and covers every form the request can arrive in: a bare deck or a published
+Simra artifact, a model-free deck or one bound to an installed PDK by name, one
+declared analysis or several. Require
 `openada.feature/simulation.analysis.<type>/v1alpha1` from the selected driver;
 Xyce does not advertise OP.
 
-If the design falls outside that subset, report which construct is unsupported
-and route the task to a suitable OpenADA operation when one exists. Do not
-silently widen the shared profile or fall back to a raw native command while
-claiming comparable OpenADA evidence.
+A *model-free* deck must still be self-contained: one top-level OP, DC, AC, or
+transient analysis with parseable closed parameters and no includes,
+measurements, print directives, control blocks, or additional analyses. Model
+collateral is supplied as configuration - `--pdk` for an installed PDK, `--models`
+for a flattened card file - and never pasted into the deck. Never fall back to a
+raw native command while claiming comparable OpenADA evidence.
 
 Identify the exact netlist and a fresh task-local evidence directory. Treat
 design files, models, and PDK collateral as read-only. Do not substitute a
@@ -62,7 +64,10 @@ openada simulate /absolute/path/to/testbench.cir \
   --output-dir /absolute/path/to/evidence
 ```
 
-Use `--backend xyce` with the same shape when Xyce is the selected capability.
+The target may equally be a published `schematic.artifact.json`; add
+`--pdk <id> --pdk-root <dir>` when the deck names devices rather than carrying
+model cards. Use `--backend xyce` with the same shape when Xyce is the selected
+capability.
 Resolve the `openada` executable through the plugin's OpenADA execution skill.
 If OpenADA or the requested backend is unavailable, report it as unavailable;
 do not manufacture an engineering conclusion from an alternate tool.

@@ -84,8 +84,8 @@
     },
     {
       "repository_path": "profiles/testbench.simulate-v1alpha1.json",
-      "lifecycle": "experimental",
-      "dispatchable": true,
+      "lifecycle": "historical",
+      "dispatchable": false,
       "extensions": {}
     },
     {
@@ -415,7 +415,7 @@
       "classification": "semantic-execution",
       "lifecycle": "experimental",
       "profile_bindings": [
-        "openada.operation/testbench.simulate/v1alpha1"
+        "openada.operation/circuit.simulate/v1alpha2"
       ],
       "variants": [
         {
@@ -423,8 +423,8 @@
           "selector": {
             "backend": "ngspice"
           },
-          "operation_profile": "openada.operation/testbench.simulate/v1alpha1",
-          "provider_id": "org.openada.driver.simra.testbench.ngspice",
+          "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+          "provider_id": "org.openada.driver.ngspice",
           "extensions": {}
         },
         {
@@ -432,8 +432,8 @@
           "selector": {
             "backend": "xyce"
           },
-          "operation_profile": "openada.operation/testbench.simulate/v1alpha1",
-          "provider_id": "org.openada.driver.simra.testbench.xyce",
+          "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+          "provider_id": "org.openada.driver.xyce",
           "extensions": {}
         }
       ],
@@ -591,52 +591,6 @@
           "conformance_ids": [
             "orfs-ibex-synthesis-timing"
           ],
-          "extensions": {}
-        }
-      ],
-      "extensions": {}
-    },
-    {
-      "provider_id": "org.openada.driver.simra.testbench.ngspice",
-      "provider_kind": "eda-driver",
-      "native_product": "ngspice",
-      "operation_profile": "openada.operation/testbench.simulate/v1alpha1",
-      "assertion_profile": "openada.assertion/testbench.analyses.evidence.valid/v1alpha1",
-      "operation_maturity": null,
-      "features": [
-        {
-          "id": "openada.feature/testbench.analysis.split/v1alpha1",
-          "implementation_maturity": "structured",
-          "conformance_ids": [],
-          "extensions": {}
-        },
-        {
-          "id": "openada.feature/testbench.model.collateral/v1alpha1",
-          "implementation_maturity": "structured",
-          "conformance_ids": [],
-          "extensions": {}
-        }
-      ],
-      "extensions": {}
-    },
-    {
-      "provider_id": "org.openada.driver.simra.testbench.xyce",
-      "provider_kind": "eda-driver",
-      "native_product": "xyce",
-      "operation_profile": "openada.operation/testbench.simulate/v1alpha1",
-      "assertion_profile": "openada.assertion/testbench.analyses.evidence.valid/v1alpha1",
-      "operation_maturity": null,
-      "features": [
-        {
-          "id": "openada.feature/testbench.analysis.split/v1alpha1",
-          "implementation_maturity": "structured",
-          "conformance_ids": [],
-          "extensions": {}
-        },
-        {
-          "id": "openada.feature/testbench.model.collateral/v1alpha1",
-          "implementation_maturity": "structured",
-          "conformance_ids": [],
           "extensions": {}
         }
       ],

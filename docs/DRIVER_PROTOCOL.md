@@ -43,9 +43,11 @@ The published protocol documents are:
 - [`specification.evaluate/v1alpha1`](../profiles/specification.evaluate-v1alpha1.json),
   the exact-unit specification profile; and
 - [`testbench.simulate/v1alpha1`](../profiles/testbench.simulate-v1alpha1.json),
-  the experimental digest-bound published-testbench dispatch profile that
-  derives one single-analysis deck per declared analysis and dispatches each
-  through `circuit.simulate/v1alpha2`.
+  **retired**. It was a second operation that meant "simulate"; its
+  published-artifact target, PDK-bound model source and multi-analysis split
+  were absorbed into `circuit.simulate/v1alpha2`, whose contract already
+  declared the `artifact` locator and the `pdk` and `corner` configuration
+  roles. Nothing produces a result carrying this identifier.
 
 The digital set adds:
 

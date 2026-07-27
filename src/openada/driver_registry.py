@@ -24,19 +24,30 @@ ANALYSIS_FEATURES = {
     "ac": AC_SWEEP_FEATURE,
     "tran": TRANSIENT_FEATURE,
 }
+#: Retired. ``testbench.simulate`` was a second operation that meant "simulate";
+#: its semantics were absorbed into ``circuit.simulate/v1alpha2``, whose
+#: published contract already declared the ``artifact`` locator and the ``pdk``
+#: and ``corner`` configuration roles. The identifiers survive only so the
+#: deprecated profile document remains readable - no driver advertises them, no
+#: surface binds them, and nothing produces a result carrying them.
 TESTBENCH_SIMULATE_PROFILE = "openada.operation/testbench.simulate/v1alpha1"
 TESTBENCH_EVIDENCE_ASSERTION = (
     "openada.assertion/testbench.analyses.evidence.valid/v1alpha1"
 )
+#: Optional capabilities of the one simulation operation. Splitting a declared
+#: multi-analysis testbench and composing model collateral are things a
+#: simulation driver either can or cannot do; they were never a different act.
 TESTBENCH_SPLIT_FEATURE = "openada.feature/testbench.analysis.split/v1alpha1"
 TESTBENCH_MODEL_COLLATERAL_FEATURE = (
     "openada.feature/testbench.model.collateral/v1alpha1"
 )
-#: The published-testbench backends, keyed by the shared circuit.simulate alias
-#: each one dispatches its derived single-analysis decks through.
+#: There is one driver identity per backend. The former
+#: ``org.openada.driver.simra.testbench.*`` identities claimed a separate
+#: operation for the same ngspice; this map keeps the old selector resolving to
+#: the one driver so an in-flight caller is answered rather than refused.
 TESTBENCH_DRIVER_ALIASES = {
-    "ngspice": "ngspice-testbench",
-    "xyce": "xyce-testbench",
+    "ngspice": "ngspice",
+    "xyce": "xyce",
 }
 RTL_TEST_PROFILE = "openada.operation/rtl.test/v1alpha1"
 RTL_TEST_ASSERTION = "openada.assertion/rtl.self-test.passes/v1alpha1"
@@ -79,26 +90,6 @@ BUILTIN_DRIVERS: dict[str, BuiltinDriver] = {
         operation_profile=CIRCUIT_SIMULATE_PROFILE,
         assertion_profile=SIMULATION_EVIDENCE_ASSERTION,
         features=(DC_SWEEP_FEATURE, AC_SWEEP_FEATURE, TRANSIENT_FEATURE),
-        factory=lambda discovery: XyceDriver(discovery=discovery),
-    ),
-    "ngspice-testbench": BuiltinDriver(
-        alias="ngspice-testbench",
-        driver_id="org.openada.driver.simra.testbench.ngspice",
-        version=__version__,
-        native_tool="ngspice",
-        operation_profile=TESTBENCH_SIMULATE_PROFILE,
-        assertion_profile=TESTBENCH_EVIDENCE_ASSERTION,
-        features=(TESTBENCH_SPLIT_FEATURE, TESTBENCH_MODEL_COLLATERAL_FEATURE),
-        factory=lambda discovery: NgspiceDriver(discovery=discovery),
-    ),
-    "xyce-testbench": BuiltinDriver(
-        alias="xyce-testbench",
-        driver_id="org.openada.driver.simra.testbench.xyce",
-        version=__version__,
-        native_tool="xyce",
-        operation_profile=TESTBENCH_SIMULATE_PROFILE,
-        assertion_profile=TESTBENCH_EVIDENCE_ASSERTION,
-        features=(TESTBENCH_SPLIT_FEATURE, TESTBENCH_MODEL_COLLATERAL_FEATURE),
         factory=lambda discovery: XyceDriver(discovery=discovery),
     ),
     "iverilog-rtl-test": BuiltinDriver(

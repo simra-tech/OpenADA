@@ -158,21 +158,25 @@ circuit.simulate
   -> specification.evaluate only when an authoritative limit exists
 ```
 
-When the block arrives as a published Simra schematic artifact, start from
-`testbench.simulate` rather than `circuit.simulate`. It binds the artifact,
-verifies the digests it publishes, splits a multi-analysis testbench into one
-deck per analysis, and binds an installed PDK:
+`circuit.simulate` is the only simulation operation, and it takes the block in
+whatever form it arrived. Hand it a published Simra artifact and it verifies the
+digests, splits a multi-analysis testbench into one deck per declared analysis
+and binds an installed PDK; hand it a bare deck and it does the same without the
+split:
 
 ```bash
-openada testbench-simulate <path>/schematic.artifact.json \
-  --pdk <pdk-id> --output-dir <evidence-dir>
+openada simulate <path>/schematic.artifact.json \
+  --pdk <pdk-id> --pdk-root <pdk-root> --output-dir <evidence-dir>
 ```
 
-Name the technology; the driver owns every syntactic difference between PDKs.
-Run `openada testbench-simulate --help` for the PDKs it can bind, and pass
-`--corner` only when the request names one. Do not edit the published deck to
-suit a PDK: a deck that had to be edited is no longer the artifact whose digests
-the result binds.
+Name the technology; never write it into the deck. Devices are canonical roles
+(`nmos.core`, `.svt` / `.lvt` / `.hvt` / `.io`) with SI geometry, and the driver
+owns the model vocabulary, instance prefix, parameter spelling, geometry units,
+library prelude, corner and any Verilog-A preload. Run `openada simulate --help`
+for the PDKs it can bind, and pass `--corner` only when the request names one.
+Do not edit the published deck to suit a PDK: a deck that had to be edited is no
+longer the artifact whose digests the result binds, and a deck carrying
+`pre_osdi` or a PDK `.lib` is refused with `pdk.collateral.hand_bound`.
 
 **Never hand-write model cards to get past a failed bind.** An invented `.model`
 line is not the PDK however closely its name matches a real device: it

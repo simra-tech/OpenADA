@@ -100,12 +100,44 @@ MAX_BOUND_FILES = 12
 DEVICE_ROLES = (
     "nmos.core",
     "pmos.core",
+    "nmos.svt",
+    "pmos.svt",
     "nmos.lvt",
     "pmos.lvt",
     "nmos.hvt",
     "pmos.hvt",
     "nmos.io",
     "pmos.io",
+)
+
+#: ``svt`` (standard threshold) and ``core`` name the same device. Both spellings
+#: are in circulation - a designer says "SVT", a PDK says "core" or "01v8" - and
+#: an author should not have to know which one a given profile chose. The alias
+#: is resolved before any profile is consulted, so every PDK gets it for free.
+ROLE_SYNONYMS: Mapping[str, str] = {
+    "nmos.svt": "nmos.core",
+    "pmos.svt": "pmos.core",
+}
+
+
+def canonical_role(role: str) -> str:
+    """Return the profile-facing spelling of one canonical device role."""
+
+    return ROLE_SYNONYMS.get(role, role)
+
+
+#: The junction-geometry keys. A PDK either computes them from ``w`` and the
+#: finger count when they are absent, or treats absence as zero - and zero
+#: junction area removes every drain/source junction capacitance from the
+#: answer, which is invisible at DC and material in transient and AC.
+_JUNCTION_PARAMETERS = frozenset(("ad", "as", "pd", "ps"))
+
+#: A device instance line that starts with ``M`` and names a canonical role but
+#: does not have exactly four nodes. sky130A ships 5-terminal isolated devices
+#: (``sky130_fd_pr__nfet_20v0_iso d g s b sub``), so "every MOS has four nodes"
+#: is a property of the six devices currently mapped, not of the domain.
+_ROLE_TOKEN_RE = re.compile(
+    r"(?:^|[ \t])(?P<role>[np]mos\.[a-z]+)(?:[ \t]|$)"
 )
 
 
@@ -204,6 +236,35 @@ class PdkBinding:
     geometry_parameters: frozenset[str] = frozenset(("w", "l"))
     #: Role -> simulator-enforced geometry envelope, where the PDK bins.
     device_geometry: Mapping[str, DeviceGeometry] = field(default_factory=dict)
+    #: Role -> the supply this device family is characterised for, in volts.
+    #: A role-based deck names a device, not a bias, so the same deck at
+    #: ``VDD = 1.2`` is nominal on a 1.2 V process, 33 % under-driven on a 1.8 V
+    #: one and 2.75x under-driven on a 3.3 V one. The driver cannot rewrite the
+    #: deck's sources - that is the experiment - but it must never let the
+    #: difference be invisible.
+    nominal_supply_v: Mapping[str, str] = field(default_factory=dict)
+    #: The temperature this PDK's model cards were extracted at, in Celsius.
+    #: No installed PDK sets ``.temp`` itself, so every deck silently runs at
+    #: ngspice's 27 C default - which is the extraction point for some of them
+    #: and not for others.
+    model_tnom_c: str | None = None
+    #: The temperature the bound deck states explicitly. Stating it means a
+    #: reviewer never has to know a simulator default to read the evidence.
+    simulation_temperature_c: str = "27"
+    #: How this PDK treats omitted junction geometry. ``"auto"`` means the
+    #: device computes ``ad``/``as``/``pd``/``ps`` from ``w`` and the finger
+    #: count; ``"zero"`` means omitted junction geometry really is zero, and
+    #: every junction capacitance is then absent from the answer.
+    junction_geometry: str = "zero"
+    #: Simra parameter keys whose value is an *area* and therefore rescales by
+    #: the square of ``geometry_scale``. Perimeters rescale linearly and belong
+    #: in ``geometry_parameters``.
+    area_parameters: frozenset[str] = frozenset()
+    #: Roles a corner selection actually skews. ``None`` means every role.
+    #: gf180mcuD's ``ff``/``ss``/``fs``/``sf`` sections select skewed 3.3 V
+    #: devices but *typical* 6 V devices, so a deck mixing core and IO roles at
+    #: a non-typical corner gets a mixed-corner answer.
+    corner_skewed_roles: tuple[str, ...] | None = None
     #: Verilog-A modules ngspice must load before any device binds. Empty for a
     #: PDK whose devices are built-in models.
     osdi_relative_paths: tuple[str, ...] = ()
@@ -281,17 +342,41 @@ IHP_SG13G2 = PdkBinding(
     parameter_names={"w": "w", "l": "l", "m": "m", "nf": "ng"},
     library_entries=(
         PdkLibraryEntry("libs.tech/ngspice/models/cornerMOSlv.lib", "lib", "{corner}"),
+        # The 3.3 V devices live in a separate corner library using the same
+        # section names and a disjoint parameter namespace (sg13g2_hv_* vs
+        # sg13g2_lv_*), so including both is safe and makes the .io roles
+        # reachable. Verified: sg13g2_moshv_mod.lib:66 and :155 define
+        # sg13_hv_nmos / sg13_hv_pmos as .subckt d g s b.
+        PdkLibraryEntry("libs.tech/ngspice/models/cornerMOShv.lib", "lib", "{corner}"),
     ),
     corners=("mos_tt", "mos_ss", "mos_ff", "mos_sf", "mos_fs"),
     default_corner="mos_tt",
     device_models={
         "nmos.core": "sg13_lv_nmos",
         "pmos.core": "sg13_lv_pmos",
+        "nmos.io": "sg13_hv_nmos",
+        "pmos.io": "sg13_hv_pmos",
     },
     geometry_scale="1",
+    nominal_supply_v={
+        "nmos.core": "1.2",
+        "pmos.core": "1.2",
+        "nmos.io": "3.3",
+        "pmos.io": "3.3",
+    },
+    model_tnom_c="27",
+    # PSP103 computes ad/as/pd/ps from w and ng when they are omitted
+    # (sg13g2_moslv_mod.lib:67-88), so junction capacitance is present without
+    # the author supplying layout geometry.
+    junction_geometry="auto",
+    # The PDK's own .spiceinit loads four modules. Loading only the two PSP
+    # ones works for a MOS-only deck and fails the moment the deck instantiates
+    # a PDK resistor (r3_cmc) or a varicap (mosvar).
     osdi_relative_paths=(
         "libs.tech/ngspice/osdi/psp103.osdi",
         "libs.tech/ngspice/osdi/psp103_nqs.osdi",
+        "libs.tech/ngspice/osdi/r3_cmc.osdi",
+        "libs.tech/ngspice/osdi/mosvar.osdi",
     ),
     identity_relative_path="COMMIT",
     notes=(
@@ -320,6 +405,11 @@ SKY130A = PdkBinding(
         "nmos.core": "sky130_fd_pr__nfet_01v8",
         "pmos.core": "sky130_fd_pr__pfet_01v8",
         "nmos.lvt": "sky130_fd_pr__nfet_01v8_lvt",
+        # Verified present at libs.ref/sky130_fd_pr/spice/
+        # sky130_fd_pr__pfet_01v8_lvt__tt.pm3.spice:30 and already included by
+        # corners/tt.spice. Its absence made a role-based deck using
+        # nmos.lvt+pmos.lvt bind on FreePDK45 and fail on sky130.
+        "pmos.lvt": "sky130_fd_pr__pfet_01v8_lvt",
         "pmos.hvt": "sky130_fd_pr__pfet_01v8_hvt",
         "nmos.io": "sky130_fd_pr__nfet_g5v0d10v5",
         "pmos.io": "sky130_fd_pr__pfet_g5v0d10v5",
@@ -333,6 +423,19 @@ SKY130A = PdkBinding(
             l_min="1.5e-7", l_max="1e-4", w_min="4.2e-7", w_max="1e-4"
         ),
     },
+    # Read from the device names, which is the only place sky130A states them:
+    # nothing in the installed tree carries a numeric supply.
+    nominal_supply_v={
+        "nmos.core": "1.8",
+        "pmos.core": "1.8",
+        "nmos.lvt": "1.8",
+        "pmos.lvt": "1.8",
+        "pmos.hvt": "1.8",
+        "nmos.io": "5.0",
+        "pmos.io": "5.0",
+    },
+    model_tnom_c="30",
+    junction_geometry="zero",
     osdi_relative_paths=(),
     identity_relative_path=None,
     notes=(
@@ -365,14 +468,33 @@ GF180MCUD = PdkBinding(
         "pmos.io": "pfet_06v0",
     },
     geometry_scale="1",
+    # The full bin grid of section nfet_03v3_t / pfet_03v3_t in
+    # libs.tech/ngspice/sm141064.ngspice: lmin {2.8e-7, 5e-7, 1.2e-6, 1e-5},
+    # lmax {5e-7, 1.2e-6, 1e-5, 5.0001e-5}, wmin {2.2e-7, 5e-7, 1.2e-6, 1e-5},
+    # wmax {5e-7, 1.2e-6, 1e-5, 1.00001e-4}. An earlier l_max of 1e-5 took the
+    # *third* bin's top for the grid's top and refused every legal device wider
+    # than 10 um in length - a false refusal in the very check that exists to
+    # prevent false refusals.
     device_geometry={
         "nmos.core": DeviceGeometry(
-            l_min="2.8e-7", l_max="1e-5", w_min="2.2e-7", w_max="1e-4"
+            l_min="2.8e-7", l_max="5.0001e-5", w_min="2.2e-7", w_max="1.00001e-4"
         ),
         "pmos.core": DeviceGeometry(
-            l_min="2.8e-7", l_max="1e-5", w_min="2.2e-7", w_max="1e-4"
+            l_min="2.8e-7", l_max="5.0001e-5", w_min="2.2e-7", w_max="1.00001e-4"
         ),
     },
+    nominal_supply_v={
+        "nmos.core": "3.3",
+        "pmos.core": "3.3",
+        "nmos.io": "6.0",
+        "pmos.io": "6.0",
+    },
+    model_tnom_c="25",
+    junction_geometry="zero",
+    # sm141064.ngspice .lib ff selects nfet_03v3_f/pfet_03v3_f but then selects
+    # nfet_06v0_t/pfet_06v0_t - typical. Identical in ss, fs and sf. A corner
+    # therefore skews the core devices only.
+    corner_skewed_roles=("nmos.core", "pmos.core"),
     osdi_relative_paths=(),
     identity_relative_path=None,
     notes=(
@@ -420,6 +542,19 @@ FREEPDK45 = PdkBinding(
         "pmos.io": "PMOS_THKOX",
     },
     geometry_scale="1",
+    # ncsu_basekit/doc/FreePDK45_Manual.txt:159 characterises these models at a
+    # 1.0 V supply. The thick-oxide flavour has vth0 = 1.507 and no stated
+    # supply, so none is declared for the .io roles rather than one invented.
+    nominal_supply_v={
+        "nmos.core": "1.0",
+        "pmos.core": "1.0",
+        "nmos.lvt": "1.0",
+        "pmos.lvt": "1.0",
+        "nmos.hvt": "1.0",
+        "pmos.hvt": "1.0",
+    },
+    model_tnom_c="27",
+    junction_geometry="zero",
     osdi_relative_paths=(),
     identity_relative_path="README.txt",
     notes=(
@@ -692,12 +827,19 @@ def translate_model(model: str, binding: PdkBinding) -> tuple[str, str | None, b
         name.lower(): (role, name) for role, name in binding.device_models.items()
     }
 
-    if model in binding.device_models:  # a canonical role
-        return binding.device_models[model], model, True
+    # ``nmos.svt`` and ``nmos.core`` are the same device under two names the
+    # industry uses interchangeably; resolve before consulting the profile.
+    resolved_role = canonical_role(model)
+    if resolved_role in binding.device_models:  # a canonical role
+        return binding.device_models[resolved_role], resolved_role, True
     if lowered in native:  # already this PDK's own model
         role, name = native[lowered]
         return name, role, name != model
     role_name = device_role_index().get(lowered)
+    if role_name is None and resolved_role in DEVICE_ROLES:
+        # A canonical role this PDK does not ship is a different failure from an
+        # unrecognised token, and the caller needs to hear which.
+        role_name = resolved_role
     if role_name is not None and role_name in binding.device_models:
         return binding.device_models[role_name], role_name, True
     if role_name is not None:
@@ -730,6 +872,13 @@ class RewrittenCard:
     source_model: str | None = None
     target_model: str | None = None
     role: str | None = None
+    #: Parameter keys the target PDK does not accept and that were therefore
+    #: not emitted. Dropping is right - an unmapped key is a hard error on a
+    #: ``.model`` PDK and silently ignored on a ``.subckt`` one - but doing it
+    #: without saying so would make the author's intent vanish.
+    dropped_parameters: tuple[str, ...] = ()
+    #: Junction-geometry keys the author did supply.
+    junction_parameters: tuple[str, ...] = ()
 
 
 def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
@@ -747,6 +896,20 @@ def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
     trailing = line[len(body) :]
     match = MOS_CARD_RE.match(body)
     if match is None:
+        role_hint = _ROLE_TOKEN_RE.search(body)
+        if role_hint is not None and body[:1] in {"M", "m"}:
+            raise PdkBindingError(
+                "pdk.device.unbindable",
+                f"The device card {body.split()[0]!r} names the canonical role "
+                f"{role_hint.group('role')!r} but is not a four-terminal MOS card "
+                "of the form '<name> <d> <g> <s> <b> <role> <k=v>...', so the "
+                "driver cannot bind it to any PDK.",
+                hint=(
+                    "Canonical roles describe four-terminal MOS devices. A device "
+                    "with a separate substrate or isolation terminal has no "
+                    "canonical role yet and must be named by its PDK model."
+                ),
+            )
         return RewrittenCard(line, False)
 
     binding = resolved.binding
@@ -764,15 +927,24 @@ def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
     envelope = binding.device_geometry.get(role) if role else None
 
     parameters: list[str] = []
+    dropped: list[str] = []
+    junction: list[str] = []
     for parameter in PARAMETER_RE.finditer(match.group("params")):
         key = parameter.group("key").lower()
         value = parameter.group("value")
+        if key in _JUNCTION_PARAMETERS:
+            junction.append(key)
         mapped = binding.parameter_names.get(key)
         if mapped is None:
-            # Dropped deliberately: an unknown parameter is a hard ngspice
-            # error ("unknown parameter (nf)"), not a warning.
+            # Dropped deliberately: an unmapped key is a hard ngspice error
+            # ("unknown parameter (ng)") on a PDK that ships .model cards, and
+            # silently ignored on one that ships subcircuits. Dropping is the
+            # only behaviour that is safe on both - but it is recorded, because
+            # on three of the four installed PDKs neither dropping nor passing
+            # it through would have produced any signal at all.
+            dropped.append(key)
             continue
-        if key in binding.geometry_parameters:
+        if key in binding.geometry_parameters or key in binding.area_parameters:
             si = parse_spice_number(value)
             if envelope is not None:
                 complaint = envelope.check(dimension=key, value=si)
@@ -788,7 +960,13 @@ def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
                         ),
                     )
             if divisor != 1:
-                value = _format_number(si / divisor)
+                # An area rescales by the square of the unit convention; a
+                # length or a perimeter rescales linearly.
+                value = _format_number(
+                    si / (divisor * divisor)
+                    if key in binding.area_parameters
+                    else si / divisor
+                )
         parameters.append(f"{mapped}={value}")
 
     nodes = " ".join(match.group("nodes").split())
@@ -800,6 +978,8 @@ def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
         source_model=source_model,
         target_model=target_model,
         role=role,
+        dropped_parameters=tuple(dict.fromkeys(dropped)),
+        junction_parameters=tuple(dict.fromkeys(junction)),
     )
 
 
@@ -812,6 +992,10 @@ def _prelude_lines(resolved: ResolvedPdkBinding) -> list[str]:
         for module in resolved.osdi_paths:
             lines.append(f"pre_osdi {module}\n")
         lines.append(".endc\n")
+    # Stated rather than inherited: no installed PDK sets a temperature itself,
+    # so every deck silently ran at the simulator's default. A reviewer should
+    # be able to read the condition off the deck.
+    lines.append(f".option temp={resolved.binding.simulation_temperature_c}\n")
     scale = resolved.binding.geometry_scale
     if Decimal(scale) != 1:
         # Stated explicitly rather than relied upon: sky130 installs this from
@@ -867,6 +1051,9 @@ def bind_deck(
 
     rewritten = 0
     translations: dict[str, str] = {}
+    dropped: dict[str, None] = {}
+    junction_supplied: dict[str, None] = {}
+    roles_used: dict[str, None] = {}
     emitted_control = False
     for line in lines[1:]:
         if raw_name is not None and not emitted_control and _END_CARD_RE.match(line):
@@ -881,6 +1068,12 @@ def bind_deck(
             rewritten += 1
             if card.model_translated and card.source_model and card.target_model:
                 translations[card.source_model] = card.target_model
+            for key in card.dropped_parameters:
+                dropped[key] = None
+            for key in card.junction_parameters:
+                junction_supplied[key] = None
+            if card.role:
+                roles_used[card.role] = None
         bound.append(card.text)
 
     if raw_name is not None and not emitted_control:
@@ -894,10 +1087,27 @@ def bind_deck(
     if not text.endswith("\n"):
         text += "\n"
 
+    binding = resolved.binding
     facts = resolved.facts()
     facts["rewritten_device_count"] = rewritten
     facts["model_translations"] = dict(sorted(translations.items()))
     facts["raw_output"] = raw_name
+    facts["roles_bound"] = sorted(roles_used)
+    facts["dropped_parameters"] = sorted(dropped)
+    facts["junction_geometry"] = binding.junction_geometry
+    facts["junction_parameters_supplied"] = sorted(junction_supplied)
+    facts["simulation_temperature_c"] = binding.simulation_temperature_c
+    facts["model_tnom_c"] = binding.model_tnom_c
+    facts["nominal_supply_v"] = {
+        role: binding.nominal_supply_v[role]
+        for role in sorted(roles_used)
+        if role in binding.nominal_supply_v
+    }
+    facts["corner_skewed_roles"] = (
+        None
+        if binding.corner_skewed_roles is None
+        else list(binding.corner_skewed_roles)
+    )
     return text, facts
 
 

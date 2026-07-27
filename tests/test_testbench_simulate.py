@@ -1,3 +1,12 @@
+"""The one simulation semantic, exercised through ``circuit.simulate/v1alpha2``.
+
+``testbench.simulate/v1alpha1`` was a second operation that meant "simulate".
+Its semantics now live in :mod:`openada.operations.simulate`, so every case this
+file used to state about "the testbench operation" is restated here against the
+unified contract: one operation name, one profile, one result data schema, and
+one envelope per request whatever shape the request arrived in.
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -8,20 +17,35 @@ import subprocess
 import sys
 
 import pytest
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
 
+from openada import conformance
+from openada.cli import main
 from openada.discovery import DiscoveryManager
+from openada.driver_registry import (
+    BUILTIN_DRIVERS,
+    CIRCUIT_SIMULATE_PROFILE,
+    SIMULATION_EVIDENCE_ASSERTION,
+    TESTBENCH_SIMULATE_PROFILE,
+)
 from openada.engines.simra_artifact import (
     SimraArtifactError,
     derive_single_analysis_decks,
     load_model_prelude,
     load_simra_testbench,
 )
+from openada.operations.simulate import (
+    DISPATCH_EXTENSION,
+    OPERATION_NAME,
+    PDK_BINDING_EXTENSION,
+    TARGET_EXTENSION,
+    simulate,
+    simulate_legacy_native,
+)
 from openada.operations.testbench_simulate import (
-    TESTBENCH_EVIDENCE_ASSERTION,
-    TESTBENCH_SIMULATE_PROFILE,
-    simulate_testbench,
+    DEPRECATION_CODE,
     resolve_testbench_driver,
+    simulate_testbench,
 )
 
 
@@ -29,17 +53,20 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "conformance" / "testbench-simulate-v0alpha1" / "fixtures"
 MODEL_FREE = FIXTURES / "model-free-differential"
 NMOS_SOURCE = FIXTURES / "nmos-common-source"
-PROFILE_PATH = ROOT / "profiles" / "testbench.simulate-v1alpha1.json"
-RESULT_SCHEMA_PATH = ROOT / "schemas" / "result-v0alpha1.schema.json"
+#: Retired, but still published so an in-flight reader can resolve the old id.
+RETIRED_PROFILE_PATH = ROOT / "profiles" / "testbench.simulate-v1alpha1.json"
+#: The one simulation profile.
+PROFILE_PATH = ROOT / "profiles" / "circuit.simulate-v1alpha2.json"
 OPERATION_PROFILE_SCHEMA_PATH = (
     ROOT / "schemas" / "operation-profile-v0alpha2.schema.json"
 )
 
+RETIRED_PROFILE = json.loads(RETIRED_PROFILE_PATH.read_text(encoding="utf-8"))
 PROFILE = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
-RESULT_VALIDATOR = Draft202012Validator(
-    json.loads(RESULT_SCHEMA_PATH.read_text(encoding="utf-8"))
+#: ``request_id`` is ``format: uuid``, which only binds with a format checker.
+DATA_VALIDATOR = Draft202012Validator(
+    PROFILE["normalized_result"]["data_schema"], format_checker=FormatChecker()
 )
-DATA_VALIDATOR = Draft202012Validator(PROFILE["normalized_result"]["data_schema"])
 
 NGSPICE = shutil.which("ngspice")
 
@@ -49,6 +76,8 @@ def _digest(path: Path) -> str:
 
 
 def _assert_contract(payload: dict) -> None:
+    """Assert the one shape every simulation returns, whatever it was asked."""
+
     assert sorted(payload) == [
         "artifacts",
         "data",
@@ -61,8 +90,17 @@ def _assert_contract(payload: dict) -> None:
         "schema",
         "tool",
     ]
-    assert not list(RESULT_VALIDATOR.iter_errors(payload))
+    assert payload["operation"] == OPERATION_NAME == "simulate"
+    assert conformance.result_conformance_issues(payload) == ()
     assert not list(DATA_VALIDATOR.iter_errors(payload["data"]))
+    assert payload["data"]["protocol"]["operation_profile"] == CIRCUIT_SIMULATE_PROFILE
+    assert payload["data"]["protocol"]["assertion_profile"] == (
+        SIMULATION_EVIDENCE_ASSERTION
+    )
+
+
+def _codes(payload: dict) -> list[str]:
+    return [item["code"] for item in payload["diagnostics"]]
 
 
 def _published(tmp_path: Path, source: Path) -> Path:
@@ -82,7 +120,9 @@ def _republish(descriptor: Path, **validation: object) -> None:
         descriptor.parent / document["netlist"]
     )
     document["hashes"]["view_sha256"] = _digest(descriptor.parent / document["view"])
-    descriptor.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    descriptor.write_text(
+        json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 # --------------------------------------------------------------------------
@@ -197,7 +237,8 @@ def test_model_prelude_refuses_an_include_chain(tmp_path: Path) -> None:
 
 
 # --------------------------------------------------------------------------
-# Artifact binding refusals
+# Artifact binding refusals. These codes are raised by the artifact engine and
+# are unchanged by the unification.
 # --------------------------------------------------------------------------
 
 
@@ -205,7 +246,9 @@ def test_digest_mismatch_is_refused(tmp_path: Path) -> None:
     descriptor = _published(tmp_path, MODEL_FREE)
     deck = descriptor.parent / "design.spice"
     deck.write_text(
-        deck.read_text(encoding="utf-8").replace("R_LOAD OUTP OUTN 100", "R_LOAD OUTP OUTN 101"),
+        deck.read_text(encoding="utf-8").replace(
+            "R_LOAD OUTP OUTN 100", "R_LOAD OUTP OUTN 101"
+        ),
         encoding="utf-8",
     )
     with pytest.raises(SimraArtifactError) as excinfo:
@@ -268,13 +311,31 @@ def test_a_handoff_disagreeing_with_the_declaration_is_refused(tmp_path: Path) -
     assert excinfo.value.code == "testbench.handoff.inconsistent"
 
 
+def test_an_artifact_refusal_surfaces_as_one_contract_valid_envelope(
+    tmp_path: Path,
+) -> None:
+    """The engine raises; the operation never does. A caller gets evidence."""
+
+    descriptor = _published(tmp_path, MODEL_FREE)
+    _republish(descriptor, simulation_handoff="direct")
+
+    payload = simulate(descriptor, tmp_path / "out", discovery=DiscoveryManager())
+    _assert_contract(payload)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["engineering"]["status"] == "unknown"
+    assert _codes(payload) == ["testbench.handoff.inconsistent"]
+    # The target was classified before it was rejected, so the refusal still
+    # says what was asked about.
+    assert payload["data"]["extensions"][TARGET_EXTENSION]["kind"] == "simra-artifact"
+
+
 # --------------------------------------------------------------------------
 # Operation-level refusals return a contract-valid envelope, never an exception.
 # --------------------------------------------------------------------------
 
 
-def test_missing_artifact_returns_an_unknown_envelope(tmp_path: Path) -> None:
-    payload = simulate_testbench(
+def test_missing_target_returns_an_unknown_envelope(tmp_path: Path) -> None:
+    payload = simulate(
         tmp_path / "absent" / "schematic.artifact.json",
         tmp_path / "out",
         discovery=DiscoveryManager(),
@@ -282,20 +343,18 @@ def test_missing_artifact_returns_an_unknown_envelope(tmp_path: Path) -> None:
     _assert_contract(payload)
     assert payload["execution"]["status"] == "invalid_request"
     assert payload["engineering"]["status"] == "unknown"
-    assert payload["data"]["protocol"]["operation_profile"] == TESTBENCH_SIMULATE_PROFILE
-    assert payload["data"]["protocol"]["assertion_profile"] == TESTBENCH_EVIDENCE_ASSERTION
-    # No backend resolved, so no implementation identity may be claimed.
-    assert payload["data"]["protocol"]["implementation_id"] == (
+    assert _codes(payload) == ["input.missing"]
+    # A backend was named and resolved, so the driver identity is stated even
+    # though nothing ran.
+    assert payload["data"]["protocol"]["driver_id"] == (
         resolve_testbench_driver("ngspice").driver_id
     )
-    assert [item["code"] for item in payload["diagnostics"]] == [
-        "testbench.artifact.missing"
-    ]
+    # A refusal never creates an evidence directory it did not fill.
     assert not (tmp_path / "out").exists()
 
 
 def test_model_naming_artifact_without_collateral_is_refused(tmp_path: Path) -> None:
-    payload = simulate_testbench(
+    payload = simulate(
         NMOS_SOURCE / "schematic.artifact.json",
         tmp_path / "out",
         discovery=DiscoveryManager(),
@@ -303,81 +362,177 @@ def test_model_naming_artifact_without_collateral_is_refused(tmp_path: Path) -> 
     _assert_contract(payload)
     assert payload["execution"]["status"] == "invalid_request"
     assert payload["engineering"]["status"] == "unknown"
-    assert [item["code"] for item in payload["diagnostics"]] == [
-        "testbench.models.required"
-    ]
+    assert _codes(payload) == ["simulation.models.required"]
     # Nothing was launched, so nothing may be claimed.
-    assert payload["data"]["dispatch"]["dispatched_analysis_count"] == 0
+    assert payload["data"]["analysis"]["completion"] == "unproven"
+    assert payload["data"]["evidence"]["provenance"] == "incomplete"
+    assert DISPATCH_EXTENSION not in payload["data"]["extensions"]
+    assert PDK_BINDING_EXTENSION not in payload["data"]["extensions"]
+    target = payload["data"]["extensions"][TARGET_EXTENSION]
+    assert target["kind"] == "simra-artifact"
+    assert target["self_contained"] is False
 
 
 def test_an_unsupported_backend_is_refused(tmp_path: Path) -> None:
-    payload = simulate_testbench(
+    payload = simulate(
         MODEL_FREE / "schematic.artifact.json",
         tmp_path / "out",
         discovery=DiscoveryManager(),
         backend="spectre",
     )
     _assert_contract(payload)
-    assert [item["code"] for item in payload["diagnostics"]] == [
-        "testbench.backend.unsupported"
-    ]
+    assert _codes(payload) == ["simulation.backend.unsupported"]
+    # No backend resolved, so no implementation identity may be claimed.
+    assert payload["data"]["protocol"]["driver_id"] is None
 
 
 def test_a_noncanonical_request_id_is_refused(tmp_path: Path) -> None:
-    payload = simulate_testbench(
+    payload = simulate(
         MODEL_FREE / "schematic.artifact.json",
         tmp_path / "out",
         discovery=DiscoveryManager(),
         request_id="NOT-A-UUID",
     )
     _assert_contract(payload)
-    assert [item["code"] for item in payload["diagnostics"]] == [
-        "testbench.request.invalid"
-    ]
+    assert _codes(payload) == ["simulation.request.invalid"]
 
 
 def test_xyce_refuses_a_testbench_declaring_an_operating_point(tmp_path: Path) -> None:
     """The Xyce capability advertises no OP feature, so the split is refused early."""
 
-    payload = simulate_testbench(
+    payload = simulate(
         MODEL_FREE / "schematic.artifact.json",
         tmp_path / "out",
         discovery=DiscoveryManager(),
         backend="xyce",
     )
     _assert_contract(payload)
-    assert [item["code"] for item in payload["diagnostics"]] == [
-        "testbench.analysis.unsupported"
+    assert _codes(payload) == ["simulation.analysis.unsupported"]
+    assert payload["data"]["protocol"]["driver_id"] == "org.openada.driver.xyce"
+
+
+# --------------------------------------------------------------------------
+# The deprecated alias is an alias, not a second semantic.
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(NGSPICE is None, reason="native ngspice unavailable")
+def test_the_deprecated_alias_returns_a_circuit_simulate_result(tmp_path: Path) -> None:
+    payload = simulate_testbench(
+        MODEL_FREE / "schematic.artifact.json",
+        tmp_path / "out",
+        discovery=DiscoveryManager(),
+    )
+    _assert_contract(payload)
+    assert payload["operation"] == "simulate"
+    assert payload["data"]["protocol"]["operation_profile"] == CIRCUIT_SIMULATE_PROFILE
+    assert payload["engineering"]["status"] == "pass"
+
+    deprecations = [
+        item for item in payload["diagnostics"] if item["code"] == DEPRECATION_CODE
     ]
+    assert len(deprecations) == 1
+    assert deprecations[0]["severity"] == "warning"
+    assert CIRCUIT_SIMULATE_PROFILE in deprecations[0]["message"]
+
+
+def test_the_deprecated_alias_carries_its_warning_through_a_refusal(
+    tmp_path: Path,
+) -> None:
+    """A refusal is still one envelope, and it still names the unified form."""
+
+    payload = simulate_testbench(
+        NMOS_SOURCE / "schematic.artifact.json",
+        tmp_path / "out",
+        discovery=DiscoveryManager(),
+    )
+    _assert_contract(payload)
+    assert payload["data"]["protocol"]["operation_profile"] == CIRCUIT_SIMULATE_PROFILE
+    assert _codes(payload) == ["simulation.models.required", DEPRECATION_CODE]
+    assert [
+        item["severity"]
+        for item in payload["diagnostics"]
+        if item["code"] == DEPRECATION_CODE
+    ] == ["warning"]
+
+
+def test_the_native_interface_refuses_a_published_artifact(tmp_path: Path) -> None:
+    """Running an artifact as if it were a deck would simulate nothing at all.
+
+    The native path cannot verify digests, split declared analyses or bind a
+    PDK, so handing it a descriptor is a typed refusal that names the semantic
+    form instead of a silent empty run.
+    """
+
+    payload = simulate_legacy_native(
+        MODEL_FREE / "schematic.artifact.json",
+        tmp_path / "out",
+        discovery=DiscoveryManager(),
+    )
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["engineering"]["status"] == "unknown"
+    assert _codes(payload) == ["simulation.target.artifact"]
+    assert "openada simulate" in payload["diagnostics"][0]["hint"]
+
+
+def test_the_alias_resolves_the_one_driver_identity_per_backend() -> None:
+    assert resolve_testbench_driver("ngspice").driver_id == "org.openada.driver.ngspice"
+    assert resolve_testbench_driver("xyce").driver_id == "org.openada.driver.xyce"
+    assert resolve_testbench_driver("spectre") is None
+    assert resolve_testbench_driver(None) is None
 
 
 # --------------------------------------------------------------------------
-# Profile
+# Profile documents
 # --------------------------------------------------------------------------
 
 
-def test_profile_validates_and_declares_immutable_identities() -> None:
+def test_the_retired_profile_still_validates_and_is_marked_deprecated() -> None:
+    """The document survives so an old identifier still resolves to something.
+
+    What must not survive is any live binding: no driver advertises it, and the
+    resolver hands back the one driver identity per backend instead.
+    """
+
     schema = json.loads(OPERATION_PROFILE_SCHEMA_PATH.read_text(encoding="utf-8"))
-    assert not list(Draft202012Validator(schema).iter_errors(PROFILE))
-    Draft202012Validator.check_schema(PROFILE["request"]["parameters_schema"])
-    Draft202012Validator.check_schema(PROFILE["normalized_result"]["data_schema"])
+    assert not list(Draft202012Validator(schema).iter_errors(RETIRED_PROFILE))
+    Draft202012Validator.check_schema(RETIRED_PROFILE["request"]["parameters_schema"])
+    Draft202012Validator.check_schema(
+        RETIRED_PROFILE["normalized_result"]["data_schema"]
+    )
 
-    assert PROFILE["operation"]["id"] == TESTBENCH_SIMULATE_PROFILE
-    assert PROFILE["assertion"]["id"] == TESTBENCH_EVIDENCE_ASSERTION
-    assert PROFILE["operation"]["side_effect_mode"] == "evidence-only"
-    assert PROFILE["operation"]["locator_types"] == ["filesystem"]
-    assert PROFILE["normalized_result"]["result_schema"] == "openada.result/v0alpha1"
-    assert [mapping["driver_id"] for mapping in PROFILE["native_mappings"]] == [
-        resolve_testbench_driver("ngspice").driver_id,
-        resolve_testbench_driver("xyce").driver_id,
+    assert RETIRED_PROFILE["operation"]["id"] == TESTBENCH_SIMULATE_PROFILE
+    assert RETIRED_PROFILE["status"] == "deprecated"
+    assert RETIRED_PROFILE["operation"]["side_effect_mode"] == "evidence-only"
+    assert RETIRED_PROFILE["normalized_result"]["result_schema"] == (
+        "openada.result/v0alpha1"
+    )
+
+    assert not [
+        driver
+        for driver in BUILTIN_DRIVERS.values()
+        if driver.operation_profile == TESTBENCH_SIMULATE_PROFILE
     ]
+    assert resolve_testbench_driver("ngspice").driver_id == "org.openada.driver.ngspice"
 
 
 def test_profile_separates_process_completion_from_engineering_truth() -> None:
+    """"The tool ran" and "the circuit passes" are never promoted into each other."""
+
     truth = PROFILE["assertion"]["truth_table"]
-    assert truth["pass"]["allowed_execution_statuses"] == ["completed"]
-    assert truth["fail"]["allowed_execution_statuses"] == ["completed"]
-    assert "invalid_request" in truth["unknown"]["allowed_execution_statuses"]
+    allowed = {
+        verdict: set(facts["allowed_execution_statuses"])
+        for verdict, facts in truth.items()
+    }
+    # A pass may only ever be claimed for a process that completed.
+    assert allowed["pass"] == {"completed"}
+    # A request that never reached a simulator says nothing about the circuit.
+    assert "invalid_request" not in allowed["pass"]
+    assert "invalid_request" not in allowed["fail"]
+    assert "invalid_request" in allowed["unknown"]
+    # And a process that did complete does not by itself decide the verdict.
+    assert {"pass", "fail", "unknown"} == set(allowed)
+    assert all("completed" in statuses for statuses in allowed.values())
 
 
 def test_profile_is_packaged_for_installation() -> None:
@@ -385,19 +540,114 @@ def test_profile_is_packaged_for_installation() -> None:
     assert '"profiles/testbench.simulate-v1alpha1.json",' in pyproject
 
 
-def test_profile_declares_every_diagnostic_the_driver_can_emit(tmp_path: Path) -> None:
-    declared = {item["code"] for item in PROFILE["diagnostics"]}
-    # Codes reached by the refusal tests above must be documented in the profile.
-    for code in (
+#: Every error/warning code the unified simulation path can put in a result.
+#: Sources: ``operations/simulate.py`` (request, dispatch and destination
+#: refusals), ``operations/testbench_simulate.py`` (the alias warning),
+#: ``pdk_collateral.py`` (hand-bound technology), ``pdk_bindings.py`` (binding
+#: refusals) and ``engines/simra_artifact.py`` (artifact refusals).
+UNIFIED_DIAGNOSTIC_CODES = frozenset(
+    {
+        "input.missing",
+        "simulation.request.invalid",
+        "simulation.backend.unsupported",
+        "simulation.models.ambiguous",
+        "simulation.models.required",
+        "simulation.analysis.unsupported",
+        "simulation.analyses.over_limit",
+        "simulation.destination.unusable",
+        "simulation.deck.unstable",
+        "simulation.evidence.over_limit",
+        "simulation.result.missing",
+        "simulation.provenance.incomplete",
+        "simulation.target.artifact",
+        "simulation.collateral.unmanaged",
+        "simulation.operation.deprecated",
+        "pdk.collateral.foreign",
+        "pdk.collateral.missing",
+        "pdk.collateral.conflict",
+        "pdk.collateral.hand_bound",
+        "pdk.corner.unbound",
+        "pdk.corner.unknown",
+        "pdk.backend.unsupported",
+        "pdk.root.required",
+        "pdk.analog.unsupported",
+        "testbench.artifact.invalid",
+        "testbench.artifact.digest_mismatch",
+        "testbench.artifact.not_a_testbench",
+        "testbench.handoff.inconsistent",
         "testbench.parameters.unresolved",
-        "testbench.models.required",
+        "testbench.deck.mismatch",
+        "configuration.models.not_self_contained",
+    }
+)
+
+#: Codes the unification introduced or moved that the published profile does
+#: not declare yet. Listed explicitly rather than by weakening the check, so
+#: the gap is visible and shrinks to nothing as the profile catches up.
+PENDING_PROFILE_DIAGNOSTICS = frozenset(
+    {
+        "input.missing",
+        "simulation.backend.unsupported",
+        "simulation.models.ambiguous",
+        "simulation.models.required",
+        "simulation.analyses.over_limit",
+        "simulation.destination.unusable",
+        "simulation.deck.unstable",
+        "simulation.target.artifact",
+        "simulation.collateral.unmanaged",
+        "simulation.operation.deprecated",
+        "pdk.collateral.foreign",
+        "pdk.collateral.missing",
+        "pdk.collateral.conflict",
+        "pdk.collateral.hand_bound",
+        "pdk.corner.unbound",
+        "pdk.corner.unknown",
+        "pdk.backend.unsupported",
+        "pdk.root.required",
+        "pdk.analog.unsupported",
+        "testbench.artifact.invalid",
+        "testbench.artifact.digest_mismatch",
+        "testbench.artifact.not_a_testbench",
+        "testbench.handoff.inconsistent",
+        "testbench.parameters.unresolved",
+        "testbench.deck.mismatch",
+        "configuration.models.not_self_contained",
+    }
+)
+
+
+def test_profile_declares_every_diagnostic_the_unified_path_can_emit() -> None:
+    declared = {item["code"] for item in PROFILE["diagnostics"]}
+
+    undeclared = sorted(UNIFIED_DIAGNOSTIC_CODES - declared)
+    assert undeclared == sorted(PENDING_PROFILE_DIAGNOSTICS), (
+        "profiles/circuit.simulate-v1alpha2.json diagnostics[] and the codes the "
+        "unified path emits have drifted apart"
+    )
+
+    # The pending list may only ever shrink: a code the profile already declares
+    # must never be carried here as an excuse.
+    assert not (PENDING_PROFILE_DIAGNOSTICS & declared)
+    assert PENDING_PROFILE_DIAGNOSTICS <= UNIFIED_DIAGNOSTIC_CODES
+
+
+def test_the_codes_the_refusal_tests_reach_are_all_accounted_for() -> None:
+    """No refusal this file exercises may be an undocumented code."""
+
+    for code in (
+        "input.missing",
+        "simulation.models.required",
+        "simulation.backend.unsupported",
+        "simulation.request.invalid",
+        "simulation.analysis.unsupported",
+        "simulation.operation.deprecated",
+        "testbench.handoff.inconsistent",
+        "testbench.parameters.unresolved",
         "testbench.deck.mismatch",
         "testbench.artifact.digest_mismatch",
-        "testbench.analysis.unsupported",
-        "testbench.handoff.split",
         "configuration.models.not_self_contained",
     ):
-        assert code in declared
+        assert code in UNIFIED_DIAGNOSTIC_CODES
 
 
 # --------------------------------------------------------------------------
@@ -407,7 +657,7 @@ def test_profile_declares_every_diagnostic_the_driver_can_emit(tmp_path: Path) -
 
 @pytest.mark.skipif(NGSPICE is None, reason="native ngspice unavailable")
 def test_split_required_artifact_runs_every_declared_analysis(tmp_path: Path) -> None:
-    payload = simulate_testbench(
+    payload = simulate(
         MODEL_FREE / "schematic.artifact.json",
         tmp_path / "out",
         discovery=DiscoveryManager(),
@@ -417,47 +667,67 @@ def test_split_required_artifact_runs_every_declared_analysis(tmp_path: Path) ->
     assert payload["execution"]["status"] == "completed"
     assert payload["engineering"]["status"] == "pass"
 
-    dispatch = payload["data"]["dispatch"]
+    dispatch = payload["data"]["extensions"][DISPATCH_EXTENSION]
     assert dispatch["mode"] == "split"
-    assert dispatch["simulation_handoff"] == "split_required"
     assert dispatch["declared_analysis_count"] == 2
     assert dispatch["dispatched_analysis_count"] == 2
     assert dispatch["completed_analysis_count"] == 2
     assert dispatch["passing_analysis_count"] == 2
 
-    assert payload["data"]["artifact"]["digests_verified"] is True
-    assert "testbench.handoff.split" in {
-        item["code"] for item in payload["diagnostics"]
-    }
+    target = payload["data"]["extensions"][TARGET_EXTENSION]
+    assert target["kind"] == "simra-artifact"
+    assert target["digests_verified"] is True
+    assert target["simulation_handoff"] == "split_required"
+    assert target["declared_analysis_count"] == 2
 
-    operating_point, transient = payload["data"]["analyses"]
-    assert operating_point["kind"] == "op"
-    assert operating_point["engineering_status"] == "pass"
-    assert operating_point["analysis"]["point_count"] == 1
-    assert operating_point["analysis"]["convergence"] == "converged"
-    assert operating_point["analysis"]["finite_value_count"] == 4
+    assert "simulation.analyses.dispatched" in _codes(payload)
 
-    assert transient["kind"] == "tran"
-    assert transient["engineering_status"] == "pass"
-    assert transient["analysis"]["convergence"] == "converged"
-    assert transient["analysis"]["point_count"] > 1
-    assert transient["analysis"]["dependent_variable_count"] == 4
+    operating_point, transient = dispatch["analyses"]
+    assert [facts["kind"] for facts in dispatch["analyses"]] == ["op", "tran"]
+    assert [facts["index"] for facts in dispatch["analyses"]] == [0, 1]
+    for facts in dispatch["analyses"]:
+        assert facts["execution_status"] == "completed"
+        assert facts["engineering_status"] == "pass"
+    assert transient["declared"] == {"kind": "tran", "step": "100p", "stop": "20n"}
 
-    # Every dispatched analysis kept its own deck and its own child envelope.
+    # Both analyses pass, so the weakest is the first declared, and the returned
+    # envelope's own evidence block is that analysis's.
+    assert dispatch["reported_analysis_index"] == 0
+    assert payload["data"]["analysis"]["type"] == "op"
+    assert payload["data"]["analysis"]["point_count"] == 1
+
+    # Every dispatched analysis kept its own deck and its own full envelope.
     for facts in (operating_point, transient):
         deck = Path(facts["deck_path"])
         assert deck.is_file()
         assert _digest(deck) == facts["deck_sha256"]
-        child = json.loads(Path(facts["result_path"]).read_text(encoding="utf-8"))
-        assert not list(RESULT_VALIDATOR.iter_errors(child))
+
+        result_path = Path(facts["result_path"])
+        assert result_path.name == f"analysis-0{facts['index'] + 1}-{facts['kind']}.result.json"
+        assert _digest(result_path) == facts["result_sha256"]
+        child = json.loads(result_path.read_text(encoding="utf-8"))
+        assert conformance.result_conformance_issues(child) == ()
+        assert not list(DATA_VALIDATOR.iter_errors(child["data"]))
         assert child["data"]["protocol"]["operation_profile"] == (
-            "openada.operation/circuit.simulate/v1alpha2"
+            CIRCUIT_SIMULATE_PROFILE
         )
+
+    op_child = json.loads(Path(operating_point["result_path"]).read_text("utf-8"))
+    assert op_child["data"]["analysis"]["type"] == "op"
+    assert op_child["data"]["analysis"]["convergence"] == "converged"
+    assert op_child["data"]["analysis"]["point_count"] == 1
+    assert op_child["data"]["analysis"]["finite_value_count"] == 4
+
+    tran_child = json.loads(Path(transient["result_path"]).read_text("utf-8"))
+    assert tran_child["data"]["analysis"]["type"] == "tran"
+    assert tran_child["data"]["analysis"]["convergence"] == "converged"
+    assert tran_child["data"]["analysis"]["point_count"] > 1
+    assert tran_child["data"]["analysis"]["dependent_variable_count"] == 4
 
     roles = {item["role"] for item in payload["artifacts"]}
     assert {
-        "testbench.analysis.deck",
-        "testbench.analysis.result",
+        "simulation.deck",
+        "simulation.analysis-result",
         "simulation.log",
         "simulation.result",
     } <= roles
@@ -465,7 +735,7 @@ def test_split_required_artifact_runs_every_declared_analysis(tmp_path: Path) ->
 
 @pytest.mark.skipif(NGSPICE is None, reason="native ngspice unavailable")
 def test_model_naming_artifact_runs_with_supplied_collateral(tmp_path: Path) -> None:
-    payload = simulate_testbench(
+    payload = simulate(
         NMOS_SOURCE / "schematic.artifact.json",
         tmp_path / "out",
         discovery=DiscoveryManager(),
@@ -475,21 +745,58 @@ def test_model_naming_artifact_runs_with_supplied_collateral(tmp_path: Path) -> 
 
     assert payload["execution"]["status"] == "completed"
     assert payload["engineering"]["status"] == "pass"
-    assert payload["data"]["artifact"]["self_contained"] is False
+    assert payload["data"]["extensions"][TARGET_EXTENSION]["self_contained"] is False
 
-    configuration = payload["data"]["configuration"]
+    configuration = payload["data"]["extensions"]["org.openada"]["configuration"]
     assert len(configuration) == 1
     assert configuration[0]["role"] == "spice-model-library"
     assert configuration[0]["identity"] == "content-digest"
     assert configuration[0]["sha256"] == _digest(NMOS_SOURCE / "nmos_lv.models")
 
-    operating_point, sweep = payload["data"]["analyses"]
+    dispatch = payload["data"]["extensions"][DISPATCH_EXTENSION]
+    operating_point, sweep = dispatch["analyses"]
     assert operating_point["kind"] == "op"
-    assert operating_point["analysis"]["point_count"] == 1
     assert sweep["kind"] == "dc"
+
+    op_child = json.loads(Path(operating_point["result_path"]).read_text("utf-8"))
+    assert op_child["data"]["analysis"]["point_count"] == 1
+
+    dc_child = json.loads(Path(sweep["result_path"]).read_text("utf-8"))
     # 0 V to 1.8 V in 50 mV steps is 37 inclusive sweep points.
-    assert sweep["analysis"]["point_count"] == 37
-    assert sweep["analysis"]["convergence"] == "converged"
+    assert dc_child["data"]["analysis"]["point_count"] == 37
+    assert dc_child["data"]["analysis"]["convergence"] == "converged"
+
+
+@pytest.mark.skipif(NGSPICE is None, reason="native ngspice unavailable")
+def test_cli_simulate_honours_an_artifact_target_without_a_backend(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """``openada simulate`` decides by what the request needs, not by a flag.
+
+    A published artifact can only be honoured by the semantic path, so it goes
+    there whether or not ``--backend`` was spelled; the native ngspice interface
+    is never silently handed one.
+    """
+
+    exit_code = main(
+        [
+            "simulate",
+            str(MODEL_FREE / "schematic.artifact.json"),
+            "--output-dir",
+            str(tmp_path / "out"),
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    _assert_contract(payload)
+    assert exit_code == 0
+    assert payload["execution"]["status"] == "completed"
+    assert payload["engineering"]["status"] == "pass"
+    assert payload["data"]["protocol"]["driver_id"] == "org.openada.driver.ngspice"
+    assert payload["data"]["extensions"][TARGET_EXTENSION]["kind"] == "simra-artifact"
+    assert payload["data"]["extensions"][DISPATCH_EXTENSION][
+        "dispatched_analysis_count"
+    ] == 2
 
 
 @pytest.mark.skipif(NGSPICE is None, reason="native ngspice unavailable")
@@ -519,12 +826,15 @@ def test_cli_dispatches_a_published_artifact_and_exits_on_the_assertion(
     payload = json.loads(completed.stdout)
     _assert_contract(payload)
     assert completed.returncode == 0
-    assert payload["operation"] == "testbench.simulate"
+    # The deprecated verb is an alias: what comes back is a circuit.simulate
+    # result, so no caller can observe two semantics.
+    assert payload["operation"] == "simulate"
     assert payload["engineering"]["status"] == "pass"
     assert payload["data"]["protocol"]["request_id"] == (
         "3f2c1a6e-7b4d-4c8a-9e15-2d6f0b7a4c31"
     )
-    assert payload["data"]["protocol"]["backend"] == "ngspice"
+    assert payload["data"]["protocol"]["driver_id"] == "org.openada.driver.ngspice"
+    assert DEPRECATION_CODE in _codes(payload)
 
 
 @pytest.mark.skipif(NGSPICE is None, reason="native ngspice unavailable")
@@ -536,7 +846,7 @@ def test_collateral_free_dispatch_of_a_model_naming_deck_stays_unknown(
     descriptor = _published(tmp_path, NMOS_SOURCE)
     _republish(descriptor, simulation_ready=True)
 
-    payload = simulate_testbench(
+    payload = simulate(
         descriptor,
         tmp_path / "out",
         discovery=DiscoveryManager(),
@@ -544,4 +854,6 @@ def test_collateral_free_dispatch_of_a_model_naming_deck_stays_unknown(
     _assert_contract(payload)
     assert payload["execution"]["status"] == "completed"
     assert payload["engineering"]["status"] == "unknown"
-    assert payload["data"]["dispatch"]["passing_analysis_count"] == 0
+    assert payload["data"]["extensions"][DISPATCH_EXTENSION][
+        "passing_analysis_count"
+    ] == 0

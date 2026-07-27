@@ -48,6 +48,12 @@ from .operations import (
     simulate_circuit_profile,
     simulate_testbench,
 )
+from .operations.simulate import (
+    SimulationRequestError,
+    classify_target,
+    simulate,
+    simulate_legacy_native,
+)
 from .pdk_bindings import available_pdk_ids, simulatable_pdk_ids
 from .preflight import PREFLIGHT_SPECS
 from .provider_runtime import (
@@ -83,6 +89,9 @@ _COMMAND_OPERATIONS = {
     "capabilities": "doctor",
     "netlist": "netlist",
     "simulate": "simulate",
+    # The deprecated alias reports the operation it delegates to. There is one
+    # simulation semantic, so there is one envelope operation name.
+    "testbench-simulate": "simulate",
     "extract": "result.series.extract",
     "measure": "result.measure",
     "spectral": "result.spectral.measure",
@@ -303,9 +312,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     simulate = commands.add_parser(
         "simulate",
-        help="Run one circuit-simulation intent through ngspice or Xyce.",
+        help=(
+            "Simulate a circuit. The target is a SPICE deck or a published Simra "
+            "schematic artifact; the model source is nothing, --models, or an "
+            "installed PDK bound by --pdk. This is the one simulation operation."
+        ),
     )
-    simulate.add_argument("spice_file")
+    simulate.add_argument(
+        "spice_file",
+        metavar="TARGET",
+        help=(
+            "A SPICE deck, or a published Simra schematic.artifact.json. OpenADA "
+            "reads the file to decide which; an artifact target is digest-verified "
+            "and its declared analyses are each dispatched."
+        ),
+    )
     simulate.add_argument(
         "--backend",
         choices=["ngspice", "xyce"],
@@ -401,7 +422,64 @@ def build_parser() -> argparse.ArgumentParser:
         "--system-init-file",
         help="Explicit system spinit; overrides SPICE_SCRIPTS, disables local/user .spiceinit, and hashes this input.",
     )
-    simulate.add_argument("--timeout", type=_positive_float, default=120.0)
+    simulate.add_argument(
+        "--models",
+        help=(
+            "Absolute path to a self-contained SPICE model-card file composed into "
+            "the deck. A hierarchical PDK entry file with .include or .lib is "
+            "refused. Mutually exclusive with --pdk."
+        ),
+    )
+    simulate.add_argument(
+        "--pdk",
+        choices=list(available_pdk_ids()),
+        help=(
+            "Bind an installed PDK by its reviewed binding profile: device prefix, "
+            "model vocabulary, parameter spelling, geometry units, ordered library "
+            "prelude and any Verilog-A preload. Transistor-level simulation is "
+            f"available for {', '.join(simulatable_pdk_ids())}; the remaining "
+            "choices are digital place-and-route platforms and are refused with "
+            "their reason. Mutually exclusive with --models."
+        ),
+    )
+    simulate.add_argument(
+        "--pdk-root",
+        help="Absolute path to the directory containing the installed PDK tree.",
+    )
+    simulate.add_argument(
+        "--corner",
+        help=(
+            "Corner selected from the PDK's binding profile (default: the profile's "
+            "typical corner). Requires --pdk."
+        ),
+    )
+    # Model-library parse time dominates a small deck and is a property of the
+    # PDK: sky130A's tt section alone takes ~95 s on a 2025 host, so the 120 s
+    # that suits a flattened deck times out a real PDK binding.
+    simulate.add_argument(
+        "--timeout",
+        type=_positive_float,
+        default=None,
+        help="Seconds (default: 120, or 600 when --pdk binds a model library).",
+    )
+    simulate.add_argument(
+        "--request-id",
+        help="Canonical lowercase UUID correlating this request with its result.",
+    )
+    simulate.add_argument(
+        "--unmanaged-collateral",
+        action="store_true",
+        help=(
+            "Assert that YOU own the technology binding. A deck normally may not "
+            "carry pre_osdi, or a .lib/.include into an installed PDK's tree: "
+            "which model a device is, which corner, which preload and which "
+            "geometry unit convention are properties of the technology that "
+            "--pdk resolves from a reviewed profile. This flag permits such a "
+            "deck and stamps the result with a permanent provenance limitation "
+            "saying OpenADA cannot state which technology the evidence "
+            "describes. Use it to qualify collateral no profile covers yet."
+        ),
+    )
     simulate.add_argument(
         "--tool",
         choices=["ngspice"],
@@ -412,8 +490,9 @@ def build_parser() -> argparse.ArgumentParser:
     testbench = commands.add_parser(
         "testbench-simulate",
         help=(
-            "Run every analysis a published Simra schematic testbench artifact declares, "
-            "splitting a multi-analysis deck when the artifact reports split_required."
+            "DEPRECATED alias for `openada simulate`, which accepts a published "
+            "Simra artifact directly. Emits one deprecation diagnostic and "
+            "delegates; the result is a circuit.simulate result."
         ),
     )
     testbench.add_argument(
@@ -1808,7 +1887,29 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 "simulate",
                 "--analysis and its typed parameters require --backend",
             )
-        if args.backend is not None:
+
+        # Which path honours the request is decided by what the request needs,
+        # never by the caller guessing. A published artifact, a PDK binding or a
+        # model-card file can only be honoured by the semantic operation, so a
+        # request naming any of them goes there whether or not --backend was
+        # spelled; the native ngspice interface can honour none of the three and
+        # is never silently handed one.
+        try:
+            classified = classify_target(source)
+            target_kind = classified.kind
+        except SimulationRequestError:
+            target_kind = "deck"
+        semantic = (
+            args.backend is not None
+            or args.pdk is not None
+            or args.models is not None
+            or target_kind == "simra-artifact"
+        )
+        timeout = args.timeout
+        if timeout is None:
+            timeout = 600.0 if args.pdk is not None else 120.0
+
+        if semantic:
             profile_only_options = []
             if args.raw_file is not None:
                 profile_only_options.append("--raw-file")
@@ -1823,28 +1924,42 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             if profile_only_options:
                 return _simulation_cli_invalid(
                     args,
-                    "The shared circuit simulation profile does not accept legacy ngspice option(s): "
-                    + ", ".join(profile_only_options),
+                    "The circuit.simulate semantic does not accept native "
+                    "ngspice option(s): " + ", ".join(profile_only_options),
                 )
-            return simulate_circuit_profile(
+            return simulate(
                 source,
                 output_dir,
-                backend=args.backend,
                 discovery=discovery,
-                workdir=args.workdir,
-                timeout=args.timeout,
+                backend=args.backend or "ngspice",
+                models_file=(
+                    Path(args.models).expanduser().resolve() if args.models else None
+                ),
+                pdk=args.pdk,
+                pdk_root=(
+                    Path(args.pdk_root).expanduser().resolve()
+                    if args.pdk_root
+                    else None
+                ),
+                corner=args.corner,
                 parameters=parameters,
+                workdir=args.workdir,
+                timeout=timeout,
+                request_id=args.request_id,
+                unmanaged_collateral=args.unmanaged_collateral,
             )
-        return NgspiceDriver(discovery=discovery).simulate(
+        return simulate_legacy_native(
             source,
             output_dir,
+            discovery=discovery,
             raw_file=args.raw_file,
             workdir=args.workdir,
             execution_mode=args.execution_mode or "batch",
             expected_outputs=args.expect_output,
             init_file=args.init_file,
             system_init_file=args.system_init_file,
-            timeout=args.timeout,
+            timeout=timeout,
+            unmanaged_collateral=args.unmanaged_collateral,
         )
     if args.command == "testbench-simulate":
         return simulate_testbench(

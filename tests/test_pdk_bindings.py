@@ -6,10 +6,22 @@ from pathlib import Path
 import shutil
 
 import pytest
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
 
+from openada import conformance
 from openada.discovery import DiscoveryManager
-from openada.operations.testbench_simulate import simulate_testbench
+from openada.operations.simulate import (
+    OPERATION_NAME,
+    PDK_BINDING_EXTENSION,
+    simulate,
+)
+from openada.pdk_collateral import (
+    blocking,
+    collateral_basename_index,
+    collateral_references,
+    declares_option_scale,
+    inspect_deck_collateral,
+)
 from openada.pdk_bindings import (
     FREEPDK45,
     GF180MCUD,
@@ -34,14 +46,15 @@ FIXTURES = ROOT / "conformance" / "testbench-simulate-v0alpha1" / "fixtures"
 NMOS_SOURCE = FIXTURES / "nmos-common-source"
 IHP_INVERTER = FIXTURES / "ihp-sg13g2-inverter"
 PORTABLE_INVERTER = FIXTURES / "portable-inverter"
-PROFILE_PATH = ROOT / "profiles" / "testbench.simulate-v1alpha1.json"
-RESULT_SCHEMA_PATH = ROOT / "schemas" / "result-v0alpha1.schema.json"
+#: A PDK-bound run is a ``circuit.simulate`` run like any other; it returns the
+#: same reviewed evidence, so it is checked against the same published schema.
+PROFILE_PATH = ROOT / "profiles" / "circuit.simulate-v1alpha2.json"
 
 PROFILE = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
-RESULT_VALIDATOR = Draft202012Validator(
-    json.loads(RESULT_SCHEMA_PATH.read_text(encoding="utf-8"))
+#: ``request_id`` is ``format: uuid``, which only binds with a format checker.
+DATA_VALIDATOR = Draft202012Validator(
+    PROFILE["normalized_result"]["data_schema"], format_checker=FormatChecker()
 )
-DATA_VALIDATOR = Draft202012Validator(PROFILE["normalized_result"]["data_schema"])
 
 NGSPICE = shutil.which("ngspice")
 
@@ -49,7 +62,8 @@ ANALOG_BINDINGS = [binding for binding in REGISTRY.values() if binding.analog]
 
 
 def _assert_contract(payload: dict) -> None:
-    assert not list(RESULT_VALIDATOR.iter_errors(payload))
+    assert payload["operation"] == OPERATION_NAME == "simulate"
+    assert conformance.result_conformance_issues(payload) == ()
     assert not list(DATA_VALIDATOR.iter_errors(payload["data"]))
 
 
@@ -291,11 +305,16 @@ def test_a_native_model_name_passes_through_untranslated(tmp_path):
 
 
 def test_a_role_the_pdk_does_not_ship_is_refused_by_role(tmp_path):
+    # IHP SG13G2 has no threshold-flavour split: only a 1.2 V and a 3.3 V
+    # family, mapped to .core and .io. A deck naming another PDK's low-Vt
+    # device is refused by *role*, naming the role rather than the token, so
+    # the author learns the technology has no such device rather than that a
+    # spelling was wrong.
     resolved = _resolved(tmp_path, IHP_SG13G2)
     with pytest.raises(PdkBindingError) as excinfo:
-        rewrite_mos_card("M_PD Y A VSS VSS NMOS_THKOX W=2u L=1u M=1 NF=1", resolved)
+        rewrite_mos_card("M_PD Y A VSS VSS NMOS_VTL W=2u L=1u M=1 NF=1", resolved)
     assert excinfo.value.code == "pdk.model.unavailable"
-    assert "nmos.io" in excinfo.value.message
+    assert "nmos.lvt" in excinfo.value.message
 
 
 def test_an_unrecognised_model_names_the_canonical_vocabulary(tmp_path):
@@ -387,7 +406,11 @@ def test_bound_deck_orders_title_then_osdi_then_library(tmp_path):
     assert lines[0] == "* title"
     assert lines[1] == ".control"
     assert lines[2].startswith("pre_osdi ")
-    assert ".endc" in lines[:6]
+    # IHP's own .spiceinit loads four OSDI modules, not two: psp103,
+    # psp103_nqs, r3_cmc and mosvar. Loading only the PSP pair works for a
+    # MOS-only deck and fails the moment the deck instantiates a PDK resistor.
+    assert sum(1 for line in lines if line.startswith("pre_osdi ")) == 4
+    assert ".endc" in lines[:8]
     library_index = next(i for i, line in enumerate(lines) if line.startswith(".lib "))
     assert lines[library_index].endswith(f" {resolved.corner}")
     assert facts["rewritten_device_count"] == 1
@@ -454,7 +477,7 @@ def test_an_unbounded_raw_name_is_refused(tmp_path):
 # operation wiring
 # --------------------------------------------------------------------------- #
 def test_a_pdk_and_a_model_file_together_are_refused(tmp_path):
-    payload = simulate_testbench(
+    payload = simulate(
         NMOS_SOURCE / "schematic.artifact.json",
         tmp_path / "evidence",
         discovery=DiscoveryManager(),
@@ -462,52 +485,229 @@ def test_a_pdk_and_a_model_file_together_are_refused(tmp_path):
         pdk_root=tmp_path,
         models_file=NMOS_SOURCE / "nmos_lv.models",
     )
+    _assert_contract(payload)
     assert payload["execution"]["status"] == "invalid_request"
     assert payload["engineering"]["status"] == "unknown"
-    assert payload["diagnostics"][0]["code"] == "testbench.models.ambiguous"
+    assert payload["diagnostics"][0]["code"] == "simulation.models.ambiguous"
 
 
 def test_a_pdk_without_a_root_is_refused(tmp_path):
-    payload = simulate_testbench(
+    payload = simulate(
         NMOS_SOURCE / "schematic.artifact.json",
         tmp_path / "evidence",
         discovery=DiscoveryManager(),
         pdk=IHP_SG13G2.pdk_id,
     )
+    _assert_contract(payload)
     assert payload["diagnostics"][0]["code"] == "pdk.root.required"
 
 
 def test_a_corner_without_a_pdk_is_refused(tmp_path):
-    payload = simulate_testbench(
+    payload = simulate(
         NMOS_SOURCE / "schematic.artifact.json",
         tmp_path / "evidence",
         discovery=DiscoveryManager(),
         corner="mos_tt",
     )
+    _assert_contract(payload)
     assert payload["diagnostics"][0]["code"] == "pdk.corner.unbound"
 
 
 def test_a_digital_platform_request_is_refused_before_any_tool_runs(tmp_path):
-    payload = simulate_testbench(
+    payload = simulate(
         NMOS_SOURCE / "schematic.artifact.json",
         tmp_path / "evidence",
         discovery=DiscoveryManager(),
         pdk=NANGATE45.pdk_id,
         pdk_root=tmp_path,
     )
+    _assert_contract(payload)
     assert payload["execution"]["status"] == "invalid_request"
     assert payload["engineering"]["status"] == "unknown"
     assert payload["diagnostics"][0]["code"] == "pdk.analog.unsupported"
 
 
 def test_the_missing_models_hint_now_names_the_pdk_path(tmp_path):
-    payload = simulate_testbench(
+    payload = simulate(
         NMOS_SOURCE / "schematic.artifact.json",
         tmp_path / "evidence",
         discovery=DiscoveryManager(),
     )
-    assert payload["diagnostics"][0]["code"] == "testbench.models.required"
+    _assert_contract(payload)
+    assert payload["diagnostics"][0]["code"] == "simulation.models.required"
     assert "--pdk" in payload["diagnostics"][0]["hint"]
+
+
+def test_no_binding_facts_are_claimed_when_no_pdk_was_bound(tmp_path):
+    payload = simulate(
+        NMOS_SOURCE / "schematic.artifact.json",
+        tmp_path / "evidence",
+        discovery=DiscoveryManager(),
+    )
+    assert PDK_BINDING_EXTENSION not in payload["data"]["extensions"]
+
+
+# --------------------------------------------------------------------------- #
+# hand-written collateral
+# --------------------------------------------------------------------------- #
+def test_the_basename_index_is_derived_from_the_registered_profiles():
+    index = collateral_basename_index()
+    # Every analog binding contributes, and only analog bindings do: a digital
+    # platform ships no transistor collateral to confuse with anyone else's.
+    assert set(index) == {binding.pdk_id for binding in ANALOG_BINDINGS}
+    assert NANGATE45.pdk_id not in index
+    assert "psp103.osdi" in index[IHP_SG13G2.pdk_id]
+    assert "sky130.lib.spice" in index[SKY130A.pdk_id]
+    # The index is derived, so IHP's module is not claimed by sky130.
+    assert "psp103.osdi" not in index[SKY130A.pdk_id]
+
+
+def test_one_pdks_incantation_applied_to_another_is_refused_as_foreign():
+    """A card inside one PDK's tree naming a file another PDK ships.
+
+    ngspice cannot know that a path names a different PDK than the library
+    beside it, so this used to surface as "could not find a valid modelname" --
+    or, worse, as numbers from collateral nobody selected.
+    """
+
+    deck = (
+        "* inverter\n"
+        ".lib /foss/pdks/sky130A/libs.tech/ngspice/cornerMOSlv.lib mos_tt\n"
+        ".END\n"
+    )
+    findings = inspect_deck_collateral(deck)
+    assert [finding.code for finding in findings] == ["pdk.collateral.foreign"]
+    assert findings[0].severity == "error"
+    # Both sides are named: whose tree it is, and whose collateral it is.
+    assert "sky130A" in findings[0].message
+    assert "ihp-sg13g2" in findings[0].message
+    assert "--pdk sky130A" in findings[0].hint
+    assert findings[0] in blocking(findings)
+
+
+def test_the_observed_live_failure_is_refused_before_ngspice_runs():
+    """``pre_osdi <sky130 tree>/psp103.osdi`` -- IHP's recipe applied to sky130.
+
+    A Verilog-A preload is never a fact about a circuit, so it is refused for
+    being hand-written at all, before the question of whose module it is even
+    arises. The run is stopped either way; what matters is that it is stopped
+    with a typed error naming the binding form, not with ngspice's opaque
+    "could not find a valid modelname".
+    """
+
+    deck = (
+        "* inverter\n"
+        "pre_osdi /foss/pdks/sky130A/libs.tech/ngspice/osdi/psp103.osdi\n"
+        ".END\n"
+    )
+    findings = inspect_deck_collateral(deck)
+    assert [finding.code for finding in findings] == ["pdk.collateral.hand_bound"]
+    assert findings[0].severity == "error"
+    assert findings[0] in blocking(findings)
+    # The module is still attributed to the PDK that actually ships it.
+    assert "ihp-sg13g2" in findings[0].message
+    assert "--pdk" in findings[0].hint
+
+
+def test_a_reference_that_does_not_exist_is_refused_before_the_simulator(tmp_path):
+    """A deck that binds nothing simulates a circuit with no devices."""
+
+    deck = f"* t\n.include {tmp_path / 'absent' / 'models.spice'}\n.END\n"
+    findings = inspect_deck_collateral(deck)
+    assert [finding.code for finding in findings] == ["pdk.collateral.missing"]
+    assert findings[0].severity == "error"
+    assert "Line 2" in findings[0].message
+    assert "--pdk" in findings[0].hint
+
+
+def test_a_relative_reference_is_resolved_against_the_run_directory(tmp_path):
+    models = tmp_path / "models.spice"
+    deck = "* t\n.include models.spice\n.END\n"
+
+    assert [
+        finding.code for finding in inspect_deck_collateral(deck, workdir=tmp_path)
+    ] == ["pdk.collateral.missing"]
+
+    models.write_text("* cards\n", encoding="utf-8")
+    findings = inspect_deck_collateral(deck, workdir=tmp_path)
+    # It exists and belongs to no registered PDK: reported, never refused.
+    assert [finding.code for finding in findings] == ["simulation.collateral.unmanaged"]
+    assert blocking(findings) == ()
+
+
+@pytest.mark.parametrize(
+    "card",
+    [
+        ".lib /somewhere/vendor.lib tt",
+        ".include /somewhere/models.spice",
+        "pre_osdi /somewhere/compact.osdi",
+        ".option scale=1e-6",
+    ],
+)
+def test_hand_written_collateral_handed_to_a_binding_is_a_conflict(card):
+    """The driver owns the whole prelude; two preludes is a race, not a merge."""
+
+    findings = inspect_deck_collateral(f"* t\n{card}\n.END\n", bound_pdk=SKY130A.pdk_id)
+    assert [finding.code for finding in findings] == ["pdk.collateral.conflict"]
+    assert findings[0].severity == "error"
+    assert SKY130A.pdk_id in findings[0].message
+    assert findings[0] in blocking(findings)
+
+
+def test_a_model_free_deck_conflicts_with_nothing():
+    deck = "* t\nM_PD Y A VSS VSS nmos.core W=2u L=500n M=1 NF=1\n.END\n"
+    assert inspect_deck_collateral(deck, bound_pdk=SKY130A.pdk_id) == ()
+    assert inspect_deck_collateral(deck) == ()
+
+
+def test_a_deck_reaching_into_a_pdk_tree_by_hand_names_the_binding_that_owns_it():
+    """A reference that resolves, and is genuinely that PDK's own, is still refused.
+
+    Capability was never the problem: the deck would run. What it cannot do is
+    be asked the same question in another technology, because it has encoded
+    one -- the corner entry point, the prefix, the parameter spelling and the
+    unit convention are all restated for exactly one PDK.
+    """
+
+    root = _installed_root(IHP_SG13G2)
+    if root is None:
+        pytest.skip("no installed IHP SG13G2 PDK")
+    resolved = resolve_pdk_binding(IHP_SG13G2.pdk_id, root)
+
+    deck = f"* t\n.lib {resolved.library_paths[0]} {resolved.corner}\n.END\n"
+    findings = inspect_deck_collateral(deck)
+    assert [finding.code for finding in findings] == ["pdk.collateral.hand_bound"]
+    assert findings[0].severity == "error"
+    assert IHP_SG13G2.pdk_id in findings[0].message
+    assert "--pdk" in findings[0].hint
+    # The file is real and is that PDK's own, so it is neither foreign nor
+    # missing: the refusal is exactly about who owns the binding.
+    assert resolved.library_paths[0].is_file()
+
+
+def test_the_reference_vocabulary_is_bounded_and_ignores_comments():
+    deck = (
+        "* .lib /commented/out.lib tt\n"
+        ".LIB /a/one.lib tt\n"
+        ".inc /a/two.spice\n"
+        ".INCLUDE /a/three.spice\n"
+        "pre_osdi /a/four.osdi\n"
+        "R1 A B 1k\n"
+        ".END\n"
+    )
+    references = collateral_references(deck)
+    assert [reference.card for reference in references] == [
+        "lib",
+        "include",
+        "include",
+        "pre_osdi",
+    ]
+    assert [reference.line_number for reference in references] == [2, 3, 4, 5]
+    assert all(reference.resolved is not None for reference in references)
+
+    assert declares_option_scale(deck) is False
+    assert declares_option_scale("* t\n.option scale=1.0u\n.END\n") is True
+    assert declares_option_scale("* t\n.options scale = 1e-6\n.END\n") is True
 
 
 # --------------------------------------------------------------------------- #
@@ -548,7 +748,7 @@ def test_a_published_ihp_testbench_simulates_against_the_real_pdk(tmp_path):
     a binding profile existed.
     """
 
-    payload = simulate_testbench(
+    payload = simulate(
         IHP_INVERTER / "schematic.artifact.json",
         tmp_path / "evidence",
         discovery=DiscoveryManager(),
@@ -557,7 +757,15 @@ def test_a_published_ihp_testbench_simulates_against_the_real_pdk(tmp_path):
     )
     _assert_contract(payload)
 
-    binding = payload["data"]["extensions"]["org.openada.pdk_binding"]
+    # A PDK-bound run used to return a raw native payload with no analysis or
+    # evidence block at all. It now returns the same reviewed evidence as any
+    # other simulation: the model source changes what the simulator is told,
+    # never what the evidence means.
+    assert payload["data"]["analysis"]["type"] == "tran"
+    assert payload["data"]["analysis"]["completion"] == "completed"
+    assert payload["data"]["evidence"]["structure"] == "valid"
+
+    binding = payload["data"]["extensions"][PDK_BINDING_EXTENSION]
     assert binding["pdk_id"] == IHP_SG13G2.pdk_id
     assert binding["corner"] == IHP_SG13G2.default_corner
     assert binding["device_prefix"] == "x"
@@ -582,7 +790,7 @@ def test_a_published_ihp_testbench_simulates_against_the_real_pdk(tmp_path):
 @pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")
 @pytest.mark.skipif(IHP_ROOT is None, reason="no installed IHP SG13G2 PDK")
 def test_an_undeclared_corner_never_reaches_the_simulator(tmp_path):
-    payload = simulate_testbench(
+    payload = simulate(
         IHP_INVERTER / "schematic.artifact.json",
         tmp_path / "evidence",
         discovery=DiscoveryManager(),
@@ -590,6 +798,7 @@ def test_an_undeclared_corner_never_reaches_the_simulator(tmp_path):
         pdk_root=IHP_ROOT,
         corner="mos_typical",
     )
+    _assert_contract(payload)
     assert payload["execution"]["status"] == "invalid_request"
     assert payload["diagnostics"][0]["code"] == "pdk.corner.unknown"
 
@@ -614,7 +823,7 @@ def test_one_canonical_testbench_simulates_on_every_installed_pdk(tmp_path, bind
     if root is None:
         pytest.skip(f"no installed collateral for {binding.pdk_id}")
 
-    payload = simulate_testbench(
+    payload = simulate(
         PORTABLE_INVERTER / "schematic.artifact.json",
         tmp_path / "evidence",
         discovery=DiscoveryManager(),
@@ -627,7 +836,7 @@ def test_one_canonical_testbench_simulates_on_every_installed_pdk(tmp_path, bind
     assert payload["execution"]["status"] == "completed", payload["diagnostics"]
     assert payload["engineering"]["status"] == "pass", payload["diagnostics"]
 
-    facts = payload["data"]["extensions"]["org.openada.pdk_binding"]
+    facts = payload["data"]["extensions"][PDK_BINDING_EXTENSION]
     assert facts["pdk_id"] == binding.pdk_id
     assert facts["rewritten_device_count"] == 2
 

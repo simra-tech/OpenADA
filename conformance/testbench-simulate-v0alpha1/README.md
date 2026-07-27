@@ -1,4 +1,10 @@
-# `testbench.simulate` published-artifact dispatch fixtures
+# Published-artifact simulation fixtures
+
+These fixtures exercise `openada.operation/circuit.simulate/v1alpha2` with a
+published Simra artifact as its target. The directory keeps its
+`testbench-simulate-v0alpha1` name because the fixture digests are referenced by
+that path; the operation it once named is retired and its semantics are part of
+`circuit.simulate`.
 
 `model-free-differential/`, `nmos-common-source/` and `ihp-sg13g2-inverter/`
 are unmodified output of the Simra schematic compiler (`simra-schematic 0.4.0`
@@ -19,9 +25,12 @@ this operation is to consume what a publisher actually emits.
 
 `model-free-differential/` is the case the shared simulation profile cannot
 accept. Its deck carries both `.OP` and `.TRAN 100p 20n`, so
-`circuit.simulate/v1alpha2` refuses it with
-`simulation.analysis.unsupported`. Deriving one deck per declared analysis
-makes both runnable without touching any other line of the published deck.
+`circuit.simulate/v1alpha2` refuses *that deck* with
+`simulation.analysis.unsupported`. Handed the artifact rather than the deck, the
+same operation derives one deck per declared analysis and runs both without
+touching any other line of the published deck, returning the weaker of the two
+as one envelope and naming both in
+`data.extensions["org.openada.simulation-dispatch"]`.
 
 `nmos-common-source/` is the case the publisher marks not self-contained. Its
 parameters are fully resolved, yet `simulation_ready` is `false` because the
@@ -78,16 +87,29 @@ its device models replaced by canonical roles (`nmos.core`, `pmos.core`), a
 shape Simra emits — `M` cards, SI geometry, `W`/`L`/`M`/`NF`.
 
 It exists to hold the portability claim honest. The same bytes were bound to
-four installed technologies with nothing but `--pdk` changing. ngspice 45.2,
+four installed technologies with nothing but `--pdk`/`--pdk-root` changing, and
+re-run through the unified `openada simulate` operation. ngspice 45.2,
 linux/amd64, `VDD = 1.2 V`, `W/L = 2 µm / 0.5 µm` (n) and `4 µm / 0.5 µm` (p),
 input edge 200 ps, 820 points to 8 ns, typical corner:
 
-| `--pdk` | corner | prefix | scale | model bound | V<sub>OL</sub> | V<sub>OH</sub> | t<sub>pHL</sub> |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `ihp-sg13g2` | `mos_tt` | `x` | 1 | `sg13_lv_nmos` | 0.00 mV | 1.2000 V | 81.3 ps |
-| `sky130A` | `tt` | `x` | 1e-6 | `sky130_fd_pr__nfet_01v8` | −0.00 mV | 1.2000 V | 147.1 ps |
-| `gf180mcuD` | `typical` | `x` | 1 | `nfet_03v3` | 0.00 mV | 1.2000 V | 251.8 ps |
-| `freepdk45` | `nom` | `m` | 1 | `NMOS_VTG` | 0.09 mV | 1.1997 V | 119.6 ps |
+| `--pdk` | corner | prefix | scale | model bound | points | dependent vars | finite values | t<sub>pHL</sub> | wall |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `ihp-sg13g2` | `mos_tt` | `x` | 1 | `sg13_lv_nmos` | 820 | 2 | 1640 | 81.3 ps | 0.17 s |
+| `sky130A` | `tt` | `x` | 1e-6 | `sky130_fd_pr__nfet_01v8` | 820 | 2 | 1640 | 147.1 ps | 106 s |
+| `gf180mcuD` | `typical` | `x` | 1 | `nfet_03v3` | 820 | 2 | 1640 | 251.8 ps | 0.12 s |
+| `freepdk45` | `nom` | `m` | 1 | `NMOS_VTG` | 820 | 2 | 1640 | 119.6 ps | 0.04 s |
+
+Every row is `execution.status = completed`, `engineering.status = pass`, and
+`evidence.request_binding/structure/freshness = exact/valid/fresh`. The point,
+variable and finite-value counts come from the `circuit.simulate/v1alpha2`
+evidence block — which a PDK-bound run did not produce at all before the two
+simulation operations were merged; it returned a raw native ngspice payload
+with no `analysis` or `evidence` object. t<sub>pHL</sub> is measured from the
+written `.raw` at the 0.6 V crossings.
+
+`asap7`, `nangate45` and `gt2n` are registered and refuse before any tool runs
+with `pdk.analog.unsupported`: they are OpenROAD place-and-route platforms that
+ship no transistor models for any simulator.
 
 The delay ordering follows the nodes (130 nm, 130 nm at a 1.8 V device driven
 at 1.2 V, 180 nm, 45 nm at a 500 nm drawn length), which is a weak but real

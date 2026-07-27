@@ -426,6 +426,9 @@ def test_xyce_cli_emits_closed_circuit_simulate_profile_data(
     }
     assert data["evidence"]["provenance"] in {"bounded", "incomplete"}
     assert data["evidence"]["provenance_limitations"]
-    assert set(data["extensions"]) == {"org.openada"}
+    # One simulation semantic means every result says what it simulated,
+    # whatever the target was and whichever backend ran it.
+    assert set(data["extensions"]) == {"org.openada", "org.openada.simulation-target"}
+    assert data["extensions"]["org.openada.simulation-target"]["kind"] == "deck"
     assert data["extensions"]["org.openada"]["backend"] == "xyce"
     assert data["extensions"]["org.openada"]["native_data"]["inputs_stable"] is True

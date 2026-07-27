@@ -121,40 +121,52 @@ themselves justify workflow-validated maturity. Scoped preflight continues to
 select ngspice for `spice-analysis-evidence-valid`; choosing Xyce is explicit
 in this alpha.
 
-## Published-testbench dispatch (experimental)
+## One simulation semantic: deck or artifact, model-free or PDK-bound
 
-`circuit.simulate/v1alpha2` accepts exactly one analysis per deck. A schematic
-compiler that publishes a testbench artifact may declare several analyses in
-one typed view, and its emitted deck then carries several top-level analysis
-cards. Such an artifact reports `validation.simulation_handoff` as
-`split_required` and the shared profile rejects it outright.
+`circuit.simulate/v1alpha2` is the **only** simulation operation. Its target is
+a SPICE deck or a published `simra.schematic-artifact/v2` descriptor, detected
+by reading the file; its model source is nothing, a flattened `--models` card
+file, or an installed PDK bound by `--pdk`. `testbench.simulate/v1alpha1` was a
+second operation that meant the same thing and is retired; `openada
+testbench-simulate` survives only as a deprecated alias that emits
+`simulation.operation.deprecated` and delegates.
 
-`testbench-simulate` owns that handoff. It binds one published
-`simra.schematic-artifact/v2` descriptor, recomputes the netlist and view
-SHA-256 digests it publishes, derives exactly one single-analysis deck per
-declared analysis, and dispatches each derived deck through the unmodified
-shared simulation profile:
+An artifact target is bound by its own digests: the netlist and view SHA-256
+values it publishes are recomputed before anything runs. When it declares
+several analyses - `validation.simulation_handoff == "split_required"` - the
+driver derives exactly one single-analysis deck per declaration and runs them
+all:
 
 ```bash
-./bin/openada testbench-simulate /path/to/schematic.artifact.json \
-  --backend ngspice --output-dir /tmp/openada-testbench
+./bin/openada simulate /path/to/schematic.artifact.json \
+  --backend ngspice --pdk <pdk-id> --pdk-root /foss/pdks \
+  --output-dir /tmp/openada-simulation
 ```
 
-The aggregate `engineering.status` is `pass` only when every declared analysis
-returned a passing shared simulation result. One undecided analysis makes the
-aggregate `unknown`: an analysis that was not evaluated is never reported as a
-circuit failure. Each dispatched analysis retains its own derived deck, its own
-complete child result envelope, and the native log and raw evidence the shared
-profile captured.
+Every analysis produces a complete `circuit.simulate/v1alpha2` envelope, written
+as `analysis-0N-<kind>.result.json`. The envelope returned to the caller is the
+*weakest* of them - worst execution status, then worst engineering status, then
+declaration order - so an aggregate claim can never be stronger than its worst
+member, and one undecided analysis leaves the answer `unknown` rather than
+reporting a circuit failure that was never evaluated.
+`data.extensions["org.openada.simulation-dispatch"]` names every analysis and
+where its own result was retained;
+`data.extensions["org.openada.pdk-binding"]` records the binding, including
+every model name the driver translated.
 
-Two refusals are deliberate. A deck carrying an unresolved publisher
-placeholder is rejected rather than bound: parameter binding belongs to the
-authoring step that publishes the artifact. A deck that names device models is
-published with `simulation_ready=false` because model collateral is outside the
-schematic contract; that deck is dispatchable only when the caller supplies the
-collateral as an explicit digest-bound `--models` reference. The supplied file
-must itself be self-contained, so a hierarchical vendor PDK entry file with
-`.include` or `.lib` is outside `testbench.simulate/v1alpha1`.
+Refusals are deliberate and typed. A deck carrying an unresolved publisher
+placeholder is rejected rather than bound. A deck that names device models is
+published with `simulation_ready=false` and is dispatchable only against
+explicit digest-bound collateral - `--pdk`, or a `--models` file that is itself
+self-contained. And a deck that binds PDK collateral by hand - `pre_osdi`, or a
+`.lib`/`.include` into an installed PDK's tree - is refused with
+`pdk.collateral.hand_bound` even when its paths are correct, because a netlist
+carries devices and not technologies. `pdk.collateral.foreign` names the case
+where one PDK's incantation was applied to another;
+`pdk.collateral.missing` the case where a deck would bind nothing. The only way
+past is `--unmanaged-collateral`, which stamps the result with a permanent
+provenance limitation saying OpenADA cannot state which technology the evidence
+describes.
 
 The rows are experimental. They have contract tests and a native model-free
 replay, but no pinned public workflow chain.

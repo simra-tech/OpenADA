@@ -117,25 +117,19 @@ mkdir -p evidence
 # Xschem schematic -> SPICE; pass the project/PDK rcfile when library resolution depends on it
 openada netlist design.sch --rcfile path/to/xschemrc --output evidence/design.spice
 
-# streaming ngspice simulation without .measure or .control
-openada simulate testbench.spice --workdir path/to/project \
-  --output-dir evidence/simulation
-
-# typed same-intent transient profile through either reviewed built-in mapping
+# simulate: ONE operation. The target is a deck or a published Simra artifact,
+# and the model source is nothing, --models, or an installed PDK by name.
+openada simulate testbench.spice --backend ngspice --output-dir evidence/sim
+openada simulate path/to/schematic.artifact.json --backend ngspice \
+  --pdk <pdk-id> --pdk-root /foss/pdks --output-dir evidence/sim
 openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
-  --backend ngspice --output-dir evidence/shared-ngspice \
-  > evidence/shared-ngspice-result.json
-openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
-  --backend xyce --output-dir evidence/shared-xyce \
-  > evidence/shared-xyce-result.json
+  --backend xyce --output-dir evidence/shared-xyce
 
-# native control deck; declare every write/wrdata file relative to --workdir
+# native ngspice, for a deck whose collateral you own; not a semantic claim
 openada simulate testbench.spice --execution-mode control \
   --init-file path/to/pdk/.spiceinit \
-  --system-init-file path/to/ngspice/scripts/spinit \
   --workdir path/to/writable-project-copy \
-  --expect-output raw=testbench.raw \
-  --output-dir evidence/simulation
+  --expect-output raw=testbench.raw --output-dir evidence/simulation
 
 # KLayout DRC with the project's real deck and one fresh exact report
 mkdir -p /tmp/openada-drc-evidence
@@ -197,48 +191,51 @@ Tcl, sourced files, environment access, and `read_spef` are unsupported.
 Its version probe and analysis share `closed-opensta-runtime-v1` rather than
 inheriting ambient loader, interpreter, Tcl, OpenSTA, or shell-control state.
 
-An explicit `--backend ngspice|xyce` selects the typed
-`openada.operation/circuit.simulate/v1alpha2` bridge. Its initial common subset
-is exactly one self-contained top-level `.op`, `.dc`, `.ac`, or `.tran` with
-parseable closed arguments. Require the selected driver's matching advertised
-feature: ngspice supports OP/DC/AC/TRAN; Xyce supports DC/AC/TRAN and rejects
-OP. The bridge rejects includes, measurements, print directives, control
-blocks, and multiple analyses. Do not combine this path with legacy
-ngspice-only options.
-Omitting `--backend` preserves the broader legacy ngspice batch/control
-interface. Scoped preflight also remains mapped to ngspice in this alpha; Xyce
-selection is explicit.
+There is exactly one simulation operation,
+`openada.operation/circuit.simulate/v1alpha2`, and one verb, `openada simulate`.
+It accepts a bare deck or a published Simra artifact, detected by reading the
+file; it binds an installed PDK with `--pdk`; and when an artifact declares
+several analyses it derives one single-analysis deck per declaration, runs them
+all, and returns the weakest as one `circuit.simulate/v1alpha2` envelope, naming
+every analysis and its own retained result in
+`data.extensions["org.openada.simulation-dispatch"]`. `openada
+testbench-simulate` is a deprecated alias that emits
+`simulation.operation.deprecated` and delegates.
 
-## Simulate a published Simra testbench against an installed PDK
+A model-free deck must carry exactly one self-contained top-level `.op`, `.dc`,
+`.ac`, or `.tran` with parseable closed arguments, and no includes,
+measurements, print directives or control blocks. Require the selected driver's
+advertised feature: ngspice supports OP/DC/AC/TRAN; Xyce supports DC/AC/TRAN and
+rejects OP. Omitting `--backend` selects ngspice for an artifact, a `--pdk` or a
+`--models` request, and otherwise leaves the native ngspice interface active -
+which is a tool invocation, not a semantic claim, and reports no
+`operation_profile`.
 
-Simra publishes a deliberately model-free deck: it names a device model and its
-sizing but emits no model collateral, so `simulation_ready` is false for every
-MOS testbench. Bind an installed PDK by name rather than hand-writing model
-cards:
+## Name the technology; never write it into the deck
 
-```bash
-openada testbench-simulate path/to/schematic.artifact.json \
-  --pdk ihp-sg13g2 --pdk-root /foss/pdks --corner mos_tt \
-  --output-dir evidence/tb
-```
+A netlist carries devices, not technologies. Write each device as a canonical
+role - `nmos.core` / `pmos.core`, and `.svt` / `.lvt` / `.hvt` / `.io` where a
+threshold or oxide flavour is meant - with SI geometry (`W=2u L=130n`), and name
+the PDK on the command line. The driver resolves the model name, instance
+prefix, parameter spelling, geometry unit convention, ordered library prelude,
+corner and any Verilog-A preload from a reviewed profile. One deck then binds to
+every installed PDK with only `--pdk` changing.
 
-`--pdk` selects a reviewed binding profile that owns the parts that differ
-between PDKs and are silent failures when guessed: the device prefix (IHP ships
-its MOS devices as subcircuits, so the emitted `M` card is rewritten to `X`),
-the parameter spelling (IHP's finger count is `ng`, not Simra's `NF`, and an
-unmapped parameter is a hard `unknown parameter` error), the two-argument
-`.lib <file> <section>` corner entry point, and any Verilog-A module the
-simulator must preload before a device will bind. Every file the binding touches
-is content-bound and reported under `data.configuration`.
+A deck that carries `pre_osdi`, or a `.lib`/`.include` into an installed PDK's
+tree, is **refused** with `pdk.collateral.hand_bound` - including when its paths
+are correct, because such a deck can only ever ask its question in one
+technology. `pdk.collateral.foreign` fires when one PDK's incantation is applied
+to another, and `pdk.collateral.missing` when a deck would bind nothing. Run
+`openada simulate --help` for the PDKs that bind; digital place-and-route
+platforms are registered and refuse with `pdk.analog.unsupported` rather than
+"unknown PDK". `--unmanaged-collateral` exists only to qualify collateral no
+profile covers yet, and stamps the result with a permanent provenance
+limitation.
 
-Do not hand-write model cards to work around a refusal. Approximated cards named
-after real devices produce confident numbers with no relationship to the
-technology. If a PDK has no binding profile yet, say so and stop; adding one is
-a reviewed change to `src/openada/pdk_bindings.py`, not something to improvise
-in a deck.
-
-`--pdk` and `--models` are mutually exclusive: a flattened self-contained card
-file remains the right input when there is no installed PDK to bind.
+Never hand-write model cards to get past a refusal: cards named after real
+devices produce confident numbers with no relationship to the technology.
+Adding a PDK is a reviewed change to `src/openada/pdk_bindings.py`.
+`--pdk` and `--models` are mutually exclusive.
 
 ## Continue from native evidence to a specification
 

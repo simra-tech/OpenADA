@@ -123,11 +123,19 @@ openada.operation/circuit.simulate/v1alpha2
      one normalized evidence contract
 ```
 
-The alpha proof exposes both drivers through the same command and operation
-profile. An explicit `--backend` selects that typed shared-profile path;
-omitting it keeps the compatible legacy ngspice interface. A caller may either
-let OpenADA inspect the deck's one supported top-level analysis or supply the
-closed typed flags explicitly:
+`circuit.simulate` is the **one** simulation operation, and `openada simulate`
+the one verb. Its target is a SPICE deck or a published Simra
+`schematic.artifact.json`, detected by reading the file. Its model source is
+nothing, a flattened `--models` card file, or an installed PDK bound by name
+with `--pdk` - and naming the PDK is all a caller ever does about a technology:
+the model vocabulary, instance prefix, parameter spelling, geometry unit
+convention, ordered library prelude, corner and any Verilog-A preload come from
+a reviewed profile. A deck that binds any of that by hand is refused. An
+artifact declaring several analyses is split into one single-analysis deck per
+declaration and every one is run.
+
+A caller may either let OpenADA inspect the deck's one supported top-level
+analysis or supply the closed typed flags explicitly:
 
 ```bash
 ./bin/openada simulate conformance/circuit-simulate-v0alpha2/fixtures/rc-transient.cir \
@@ -140,6 +148,11 @@ closed typed flags explicitly:
   --backend ngspice --analysis dc \
   --source-name VSWEEP --source-unit V --start 0 --stop 1 --step 0.25 \
   --output-dir /tmp/ngspice-dc-evidence
+
+# the same operation, given a published Simra artifact and a technology by name
+./bin/openada simulate path/to/schematic.artifact.json \
+  --backend ngspice --pdk ihp-sg13g2 --pdk-root /foss/pdks \
+  --output-dir /tmp/pdk-bound-evidence
 ```
 
 The shared subset remains intentionally small: one self-contained OP, DC, AC,
