@@ -727,6 +727,185 @@ def test_typed_simulation_cli_rejects_incomplete_or_incoherent_parameters(
     assert payload["data"]["analysis"]["completion"] == "unproven"
 
 
+def test_a_named_analysis_takes_its_numbers_from_the_deck(
+    tmp_path, capsys, monkeypatch
+):
+    """``--analysis tran`` on a deck that already states ``.TRAN 10p 8n``.
+
+    Restating the deck's own numbers on the command line proves nothing: the
+    request is checked against the deck's directive anyway, so the deck's values
+    are the only ones that can run. Demanding them cost a turn per invocation.
+    """
+
+    source = tmp_path / "fixture.cir"
+    source.write_text(
+        "* transient fixture\nV1 a 0 1\nR1 a 0 1k\n.TRAN 10p 8n\n.end\n",
+        encoding="utf-8",
+    )
+    captured = {}
+
+    def fake_simulate(*args, **kwargs):
+        captured.update(kwargs)
+        return result(
+            "circuit.simulate",
+            tool=None,
+            execution=static_execution(),
+            engineering_status="not_applicable",
+            summary="Typed CLI dispatch captured.",
+        )
+
+    monkeypatch.setattr(
+        sys.modules["openada.operations.simulate"],
+        "simulate_circuit_profile",
+        fake_simulate,
+    )
+    exit_code = main(
+        ["simulate", str(source), "--backend", "ngspice", "--analysis", "tran"]
+    )
+
+    assert exit_code == 0
+    assert captured["parameters"] == {
+        "analysis": {
+            "type": "tran",
+            "step_s": 1e-11,
+            "stop_s": 8e-9,
+            "extensions": {},
+        },
+        "extensions": {},
+    }
+
+
+def test_an_explicit_flag_still_beats_the_decks_own_number(
+    tmp_path, capsys, monkeypatch
+):
+    """The deck supplies defaults, never an override.
+
+    A value the caller spelled is forwarded exactly as spelled; whether it
+    agrees with the deck is then decided where it has always been decided, by
+    the directive-versus-request check, not by the argument parser silently
+    replacing it.
+    """
+
+    source = tmp_path / "fixture.cir"
+    source.write_text(
+        "* transient fixture\nV1 a 0 1\nR1 a 0 1k\n.TRAN 10p 8n\n.end\n",
+        encoding="utf-8",
+    )
+    captured = {}
+
+    def fake_simulate(*args, **kwargs):
+        captured.update(kwargs)
+        return result(
+            "circuit.simulate",
+            tool=None,
+            execution=static_execution(),
+            engineering_status="not_applicable",
+            summary="Typed CLI dispatch captured.",
+        )
+
+    monkeypatch.setattr(
+        sys.modules["openada.operations.simulate"],
+        "simulate_circuit_profile",
+        fake_simulate,
+    )
+    exit_code = main(
+        [
+            "simulate",
+            str(source),
+            "--backend",
+            "ngspice",
+            "--analysis",
+            "tran",
+            "--stop-s",
+            "9e-9",
+        ]
+    )
+
+    assert exit_code == 0
+    assert captured["parameters"]["analysis"]["stop_s"] == 9e-9
+    assert captured["parameters"]["analysis"]["step_s"] == 1e-11
+
+
+def test_a_named_analysis_the_deck_does_not_state_is_still_refused(tmp_path, capsys):
+    """Taking values from the deck is not guessing them.
+
+    When the deck states no directive of the named type there is nothing to
+    take, and the refusal says so rather than repeating the bare requirement.
+    """
+
+    source = tmp_path / "fixture.cir"
+    source.write_text(
+        "* transient fixture\nV1 a 0 1\nR1 a 0 1k\n.TRAN 10p 8n\n.end\n",
+        encoding="utf-8",
+    )
+
+    exit_code = main(["simulate", str(source), "--backend", "ngspice", "--analysis", "dc"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 2
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "simulation.request.invalid"
+    assert "the deck states no single top-level .dc directive" in (
+        payload["diagnostics"][0]["message"]
+    )
+
+
+def test_pdk_root_falls_back_to_the_environment(tmp_path, capsys, monkeypatch):
+    """``openada doctor`` already reads ``PDK_ROOT``; ``simulate`` now does too.
+
+    The harness exports it for discovery, so an agent that trusts doctor's
+    report should not have to spell the same directory again as a flag.
+    """
+
+    source = tmp_path / "fixture.cir"
+    source.write_text("* deck\nV1 a 0 1\n.op\n.end\n", encoding="utf-8")
+    root = tmp_path / "pdks"
+    root.mkdir()
+    captured = {}
+
+    def fake_simulate(*args, **kwargs):
+        captured.update(kwargs)
+        return result(
+            "circuit.simulate",
+            tool=None,
+            execution=static_execution(),
+            engineering_status="not_applicable",
+            summary="Unified dispatch captured.",
+        )
+
+    monkeypatch.setattr(cli, "simulate", fake_simulate)
+    monkeypatch.setenv("PDK_ROOT", str(root))
+    assert main(["simulate", str(source), "--pdk", "sky130A"]) == 0
+    assert captured["pdk_root"] == root.resolve()
+
+    # An explicit flag always wins over the environment.
+    explicit = tmp_path / "explicit"
+    explicit.mkdir()
+    captured.clear()
+    assert (
+        main(["simulate", str(source), "--pdk", "sky130A", "--pdk-root", str(explicit)])
+        == 0
+    )
+    assert captured["pdk_root"] == explicit.resolve()
+
+
+def test_a_missing_pdk_root_names_the_environment_variable(tmp_path, capsys, monkeypatch):
+    """A refusal must say every way the missing thing could have been supplied."""
+
+    source = tmp_path / "fixture.cir"
+    source.write_text("* deck\nV1 a 0 1\n.op\n.end\n", encoding="utf-8")
+    monkeypatch.delenv("PDK_ROOT", raising=False)
+
+    exit_code = main(["simulate", str(source), "--pdk", "sky130A"])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 2
+    refusal = payload["diagnostics"][0]
+    assert refusal["code"] == "pdk.root.required"
+    assert "PDK_ROOT" in refusal["message"]
+    assert "PDK_ROOT" in refusal["hint"]
+
+
 def test_typed_simulation_parameters_require_the_shared_backend(tmp_path, capsys):
     source = tmp_path / "fixture.cir"
     source.write_text("typed simulation fixture\n.end\n", encoding="utf-8")

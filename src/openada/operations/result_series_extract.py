@@ -26,6 +26,10 @@ MAX_POINTS = 100_000
 MAX_SELECTORS = 32
 MAX_CONDITIONS = 64
 MAX_SELECTED_SCALARS = 1_000_000
+#: ``circuit.simulate`` records one entry per bound collateral file. A PDK
+#: binding is a handful of library entries plus at most a few OSDI modules and
+#: an identity file; ``pdk_bindings.MAX_BOUND_FILES`` is the producing bound.
+MAX_CONFIGURATION_REFERENCES = 64
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _NATIVE_TYPE_UNITS = {
@@ -192,6 +196,58 @@ def _validate_file_record(value: object, label: str) -> dict[str, object]:
             f"{label} may not bind bytes or a digest when exists is false.",
         )
     return record
+
+
+def _validate_configuration_references(value: object, label: str) -> None:
+    """Accept the model-source references ``circuit.simulate`` writes itself.
+
+    ``simulate`` records every file that bound the devices - a PDK's corner
+    libraries, its OSDI modules and identity file, or a flattened ``--models``
+    card file - under ``data.extensions['org.openada'].configuration``, each
+    entry content-bound by digest. That is provenance, and provenance that an
+    extraction refuses to accept is provenance a caller has to strip to get
+    past this operation. It is validated rather than merely tolerated: an
+    allowlisted field nobody checks is a hole in a closed object.
+    """
+
+    if not _is_sequence(value) or len(value) > MAX_CONFIGURATION_REFERENCES:
+        raise _InvalidRequest(
+            "series.simulation.invalid",
+            f"{label} must be an array of at most "
+            f"{MAX_CONFIGURATION_REFERENCES} configuration references.",
+        )
+    for index, item in enumerate(value):
+        entry_label = f"{label}[{index}]"
+        entry = _closed_object(
+            item,
+            entry_label,
+            required={"role", "path", "sha256", "bytes", "identity"},
+            code="series.simulation.invalid",
+        )
+        _text(entry["role"], f"{entry_label}.role", code="series.simulation.invalid")
+        _text(
+            entry["identity"],
+            f"{entry_label}.identity",
+            code="series.simulation.invalid",
+        )
+        _text(
+            entry["path"],
+            f"{entry_label}.path",
+            limit=4_095,
+            code="series.simulation.invalid",
+        )
+        digest = entry["sha256"]
+        size = entry["bytes"]
+        if not isinstance(digest, str) or _SHA256_RE.fullmatch(digest) is None:
+            raise _InvalidRequest(
+                "series.simulation.invalid",
+                f"{entry_label}.sha256 must be a lowercase SHA-256 digest.",
+            )
+        if isinstance(size, bool) or not isinstance(size, int) or size < 0:
+            raise _InvalidRequest(
+                "series.simulation.invalid",
+                f"{entry_label}.bytes must be a non-negative integer.",
+            )
 
 
 def _validate_base_envelope(value: object) -> Mapping[str, Any]:
@@ -521,8 +577,17 @@ def _simulation_source(
         extensions["org.openada"],
         "simulation_result.data.extensions.org.openada",
         required={"backend", "parameters", "native_data", "native_diagnostics"},
+        # circuit.simulate writes this itself whenever a model source bound the
+        # deck. Refusing it forced callers to strip the very record that names
+        # what the devices came from - which is how provenance dies quietly.
+        optional={"configuration"},
         code="series.simulation.invalid",
     )
+    if "configuration" in native_extension:
+        _validate_configuration_references(
+            native_extension["configuration"],
+            "simulation_result.data.extensions.org.openada.configuration",
+        )
     if native_extension["backend"] != backend:
         raise _InvalidRequest(
             "series.simulation.invalid",
@@ -876,6 +941,67 @@ def _payload(
     )
 
 
+#: How many available vector names a refusal may list before it is truncated.
+#: A plot may carry hundreds of vectors with long hierarchical names, and
+#: contract text is bounded at :data:`openada.contract.MAX_CONTRACT_TEXT_CHARS`
+#: by *middle* truncation - which would eat the clause naming the axis. The
+#: listing is therefore bounded here, by count and by characters, so the whole
+#: message stays inside the contract bound and no clause is lost.
+MAX_NAMED_AVAILABLE_SIGNALS = 24
+MAX_NAMED_SIGNAL_CHARS = 1_024
+
+
+def _selector_missing_message(extracted: RawSeriesExtraction) -> str:
+    """Say which selector failed, why, and what the plot actually offers.
+
+    The generic form of this refusal ("at least one selector is absent or
+    ambiguous") named neither the offending selector nor the axis, so the two
+    common causes - a misspelled vector, and naming the sweep axis alongside
+    the signals - produced the same sentence. The axis is not a signal: it is
+    already returned as ``series.axis``, so selecting it is never necessary.
+    """
+
+    metadata = extracted.metadata
+    selector = metadata.get("selector")
+    axis_name = metadata.get("axis_name")
+    available = metadata.get("available_signals")
+    if not isinstance(selector, str):
+        return "At least one exact native vector selector is absent or ambiguous."
+
+    resolution = metadata.get("selector_resolution")
+    if resolution == "is-the-sweep-axis":
+        head = (
+            f"Selector {selector!r} names the sweep axis of this analysis, not one "
+            "of its signals. The axis is always returned as the series axis, so it "
+            "must not also be selected."
+        )
+    elif resolution == "ambiguous":
+        head = (
+            f"Selector {selector!r} matches more than one native vector in the "
+            "selected plot, so it names no single series."
+        )
+    else:
+        head = f"Selector {selector!r} names no native vector in the selected plot."
+
+    if isinstance(available, Sequence) and not isinstance(available, (str, bytes)):
+        names = [str(item) for item in available]
+        shown: list[str] = []
+        budget = MAX_NAMED_SIGNAL_CHARS
+        for name in names[:MAX_NAMED_AVAILABLE_SIGNALS]:
+            rendered = repr(name)
+            if budget - len(rendered) - 2 < 0:
+                break
+            budget -= len(rendered) + 2
+            shown.append(rendered)
+        listing = ", ".join(shown)
+        if len(names) > len(shown):
+            listing += f", ... ({len(names)} total)" if listing else f"{len(names)} vectors"
+        head += f" Selectable signals: {listing or 'none'}."
+    if isinstance(axis_name, str):
+        head += f" Axis vector: {axis_name!r}."
+    return head
+
+
 def _raw_diagnostic(extracted: RawSeriesExtraction) -> tuple[str, str]:
     reason = extracted.reason
     if reason == "raw.extraction_over_limit":
@@ -884,10 +1010,7 @@ def _raw_diagnostic(extracted: RawSeriesExtraction) -> tuple[str, str]:
             "The selected native series exceeds the bounded extraction ceiling.",
         )
     if reason == "raw.selected_variable_missing":
-        return (
-            "series.selector.missing",
-            "At least one exact native vector selector is absent or ambiguous.",
-        )
+        return ("series.selector.missing", _selector_missing_message(extracted))
     if reason == "raw.encoding_unsupported":
         return (
             "series.format.unsupported",

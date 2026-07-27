@@ -29,12 +29,12 @@ from .simulate import (
     simulate,
     simulate_legacy_native,
 )
-from .testbench_simulate import (
-    TESTBENCH_EVIDENCE_ASSERTION,
-    TESTBENCH_SIMULATE_PROFILE,
-    simulate_testbench,
-    resolve_testbench_driver,
-)
+# The retired ``testbench.simulate`` verb survives only as a CLI alias, so the
+# only thing this package re-exports for it is the alias entry point the CLI
+# dispatches to. Its profile and assertion identifiers belong to
+# ``driver_registry`` and its driver lookup to the alias module itself; a second
+# spelling of either here is how a retired name keeps finding new callers.
+from .testbench_simulate import simulate_testbench
 
 __all__ = [
     "MAX_SHARED_ANALYSIS_POINTS",
@@ -60,14 +60,11 @@ __all__ = [
     "TARGET_EXTENSION",
     "SimulationRequestError",
     "SimulationTarget",
-    "TESTBENCH_EVIDENCE_ASSERTION",
-    "TESTBENCH_SIMULATE_PROFILE",
     "classify_target",
     "simulate",
     "simulate_circuit_profile",
     "simulate_legacy_native",
     "simulate_testbench",
-    "resolve_testbench_driver",
     "evaluate_specification",
     "review_drc",
     "compare_drc",

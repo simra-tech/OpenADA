@@ -284,6 +284,35 @@ def inspect_deck_collateral(
         basename = _basename(reference)
         shippers = _shipping_pdks(basename, index)
 
+        # Foreign is checked before every other classification, and for every
+        # card. It is the *sharper* statement: not merely "this deck bound
+        # collateral by hand" but "this deck applied one PDK's incantation to
+        # another", which is a different mistake with a different correction.
+        # Deciding it after the ``pre_osdi`` branch made the module's own
+        # headline example - IHP's psp103.osdi preloaded from the sky130A tree -
+        # report as merely hand-bound, which named the wrong failure.
+        if owner is not None and basename not in index.get(owner, frozenset()):
+            foreign = tuple(pdk for pdk in shippers if pdk != owner)
+            if foreign:
+                findings.append(
+                    CollateralFinding(
+                        "error",
+                        "pdk.collateral.foreign",
+                        (
+                            f"Line {reference.line_number} reaches into the {owner} tree "
+                            f"for {reference.raw_path!r}, but {basename!r} is collateral "
+                            f"{' and '.join(foreign)} ships and {owner} does not. One "
+                            "PDK's incantation was applied to another."
+                        ),
+                        hint=(
+                            f"Every PDK's prelude differs. Pass --pdk {owner} and the "
+                            "driver emits the entry points, preloads and unit "
+                            f"convention {owner} actually needs."
+                        ),
+                    )
+                )
+                continue
+
         if reference.card == "pre_osdi":
             # An OSDI preload is never a fact about a circuit. It exists because
             # this particular PDK ships a Verilog-A compact model, and which
@@ -310,28 +339,6 @@ def inspect_deck_collateral(
                 )
             )
             continue
-
-        if owner is not None and basename not in index.get(owner, frozenset()):
-            foreign = tuple(pdk for pdk in shippers if pdk != owner)
-            if foreign:
-                findings.append(
-                    CollateralFinding(
-                        "error",
-                        "pdk.collateral.foreign",
-                        (
-                            f"Line {reference.line_number} reaches into the {owner} tree "
-                            f"for {reference.raw_path!r}, but {basename!r} is collateral "
-                            f"{' and '.join(foreign)} ships and {owner} does not. One "
-                            "PDK's incantation was applied to another."
-                        ),
-                        hint=(
-                            f"Every PDK's prelude differs. Pass --pdk {owner} and the "
-                            "driver emits the entry points, preloads and unit "
-                            f"convention {owner} actually needs."
-                        ),
-                    )
-                )
-                continue
 
         if reference.resolved is not None and not reference.resolved.exists():
             findings.append(

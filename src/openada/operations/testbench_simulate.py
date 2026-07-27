@@ -27,24 +27,21 @@ from typing import Any
 
 from ..contract import diagnostic
 from ..discovery import DiscoveryManager
-from ..driver_registry import (
-    CIRCUIT_SIMULATE_PROFILE,
-    SIMULATION_EVIDENCE_ASSERTION,
-    TESTBENCH_EVIDENCE_ASSERTION,
-    TESTBENCH_SIMULATE_PROFILE,
-    builtin_driver,
-)
-from .simulate import (
-    MAX_DISPATCHED_ANALYSES,
-    OPERATION_NAME,
-    SUPPORTED_BACKENDS,
-    simulate,
-)
+from ..driver_registry import CIRCUIT_SIMULATE_PROFILE, builtin_driver
+from .simulate import SUPPORTED_BACKENDS, simulate
 
 
 #: The one diagnostic this alias adds. It is a warning, not an error: the run
 #: is honoured in full, and the caller is told exactly what to spell instead.
 DEPRECATION_CODE = "simulation.operation.deprecated"
+
+#: When the alias goes away. A deprecation with no stated end is a second
+#: semantic that becomes permanent by default, so the version and the date are
+#: stated here, in the profile document's ``extensions['org.openada']``, and in
+#: the warning every alias call already returns. The three must agree; a test
+#: asserts they do.
+REMOVAL_VERSION = "0.6.0"
+REMOVAL_NOT_BEFORE = "2026-11-01"
 
 
 def deprecation_diagnostic() -> dict[str, Any]:
@@ -52,7 +49,9 @@ def deprecation_diagnostic() -> dict[str, Any]:
         "warning",
         DEPRECATION_CODE,
         (
-            "testbench-simulate is a deprecated alias. Simulation is one semantic: "
+            "testbench-simulate is a deprecated alias, scheduled for removal in "
+            f"OpenADA {REMOVAL_VERSION} and not before {REMOVAL_NOT_BEFORE}. "
+            "Simulation is one semantic: "
             f"{CIRCUIT_SIMULATE_PROFILE}. `openada simulate` accepts a published "
             "Simra artifact or a bare deck, binds an installed PDK with --pdk, and "
             "splits a multi-analysis testbench itself. This result is a "
@@ -111,12 +110,8 @@ def simulate_testbench(
 
 __all__ = [
     "DEPRECATION_CODE",
-    "MAX_DISPATCHED_ANALYSES",
-    "OPERATION_NAME",
-    "SIMULATION_EVIDENCE_ASSERTION",
-    "SUPPORTED_BACKENDS",
-    "TESTBENCH_EVIDENCE_ASSERTION",
-    "TESTBENCH_SIMULATE_PROFILE",
+    "REMOVAL_NOT_BEFORE",
+    "REMOVAL_VERSION",
     "deprecation_diagnostic",
     "resolve_testbench_driver",
     "simulate_testbench",

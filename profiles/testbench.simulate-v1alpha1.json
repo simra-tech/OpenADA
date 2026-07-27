@@ -955,5 +955,16 @@
     "change_policy": "Any change to aggregate status meaning, deck derivation, digest binding, model-collateral composition, evidence bounds, or normalized facts requires a new profile identifier.",
     "extensions": {}
   },
-  "extensions": {}
+  "extensions": {
+    "org.openada": {
+      "deprecation": {
+        "superseded_by": "openada.operation/circuit.simulate/v1alpha2",
+        "deprecated_in": "0.4.0",
+        "removal_version": "0.6.0",
+        "removal_not_before": "2026-11-01",
+        "what_is_removed": "The `openada testbench-simulate` CLI alias, the `openada.operations.testbench_simulate` module and this profile document. Nothing produces a result carrying this operation identifier today; the alias already returns a circuit.simulate/v1alpha2 result carrying the simulation.operation.deprecated warning.",
+        "rationale": "A deprecation with no stated end is a second semantic that becomes permanent by default. This one has a version and a date so it cannot."
+      }
+    }
+  }
 }

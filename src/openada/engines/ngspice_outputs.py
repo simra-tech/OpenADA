@@ -101,9 +101,13 @@ class RawSeriesExtraction:
 
 
 class _InvalidOutput(Exception):
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, details: Mapping[str, object] | None = None) -> None:
         super().__init__(reason)
         self.reason = reason
+        #: Bounded, JSON-safe facts about *this* failure, carried into the
+        #: extraction metadata so the refusal can name what was asked for
+        #: rather than only that something was wrong.
+        self.details: dict[str, object] = dict(details or {})
 
 
 @dataclass(slots=True)
@@ -1109,6 +1113,11 @@ def _selected_variable_indices(
         raise _InvalidOutput("raw.variable_names_ambiguous")
     dependent_start = 0 if analysis_type == "op" else 1
     dependent_names = header.variable_names[dependent_start:]
+    # For every analysis but ``op``, index 0 is the sweep axis. It is returned
+    # as the series axis, never as a signal, so naming it in a selector is a
+    # distinct mistake from naming a vector the plot does not have - and the
+    # refusal has to say which, or the caller is left guessing.
+    axis_name = header.variable_names[0] if analysis_type != "op" else None
     indices: list[int] = []
     for selected_name in selected_names:
         matches = [
@@ -1117,7 +1126,19 @@ def _selected_variable_indices(
             if native_name == selected_name
         ]
         if len(matches) != 1:
-            raise _InvalidOutput("raw.selected_variable_missing")
+            raise _InvalidOutput(
+                "raw.selected_variable_missing",
+                {
+                    "selector": selected_name,
+                    "selector_resolution": (
+                        "is-the-sweep-axis"
+                        if selected_name == axis_name
+                        else ("ambiguous" if matches else "absent")
+                    ),
+                    "axis_name": axis_name,
+                    "available_signals": list(dependent_names),
+                },
+            )
         indices.append(matches[0])
     return indices
 
@@ -1441,7 +1462,9 @@ def extract_analysis_raw(
             if observed_sha256 != expected_sha256:
                 raise _InvalidOutput("file.digest_mismatch")
     except _InvalidOutput as error:
-        return _extraction_invalid(error.reason, format_name=format_name)
+        return _extraction_invalid(
+            error.reason, format_name=format_name, metadata=error.details
+        )
     except (OSError, ValueError, struct.error):
         return _extraction_invalid("file.read_error", format_name=format_name)
 

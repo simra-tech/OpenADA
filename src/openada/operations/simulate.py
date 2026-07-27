@@ -642,8 +642,13 @@ def _resolve_model_source(
         if pdk_root is None:
             raise SimulationRequestError(
                 "pdk.root.required",
-                f"Binding the PDK {pdk!r} requires an explicit --pdk-root.",
-                hint="Pass the directory containing the installed PDK tree.",
+                f"Binding the PDK {pdk!r} requires a PDK root, and neither "
+                "--pdk-root nor the PDK_ROOT environment variable supplied one.",
+                hint=(
+                    "Pass --pdk-root <dir> with the directory containing the "
+                    "installed PDK tree, or export PDK_ROOT=<dir>. `openada doctor` "
+                    "reports the roots it can already see."
+                ),
             )
         try:
             resolved = resolve_pdk_binding(pdk, pdk_root, corner=corner)

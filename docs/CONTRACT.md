@@ -226,6 +226,11 @@ typed request. Typed parameters require `--backend` and must match the deck:
 - transient: `--analysis tran --step-s SECONDS --stop-s SECONDS`, with
   optional `--start-s` and `--max-step-s`.
 
+A required parameter the caller omits is taken from the deck's own single
+top-level directive of the named analysis type, since the typed request must
+agree with that directive in any case; an explicitly supplied value always
+wins. `--pdk-root` falls back to the `PDK_ROOT` environment variable.
+
 The shared path does not accept legacy ngspice `--raw-file`,
 `--execution-mode`, `--expect-output`, `--init-file`, or
 `--system-init-file` options. Those continue to belong only to the legacy path

@@ -180,7 +180,10 @@ circuit.simulate/v1alpha2
 
 `openada extract` requires the complete simulation result plus the exact raw
 artifact path and explicit native-name/output-name/unit/Cartesian-component
-selectors. The three measurement commands accept the complete passing
+selectors. The simulation result is passed whole, exactly as `simulate` wrote
+it; no field is ever stripped to get it accepted. Selectors name *signals* -
+the sweep axis is always returned as `series.axis` and must not also be
+selected. The three measurement commands accept the complete passing
 extraction envelope directly. `openada spectral` implements one deliberately
 narrow coherent single-tone method; `openada transfer` implements an explicit
 same-unit Cartesian output-over-input trace with closed crossing semantics.

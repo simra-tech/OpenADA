@@ -4,14 +4,16 @@ from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import struct
 
 from jsonschema import Draft202012Validator, FormatChecker
 import pytest
 
 from openada.contract import result, static_execution, tool_record
+from openada.discovery import DiscoveryManager
 from openada.engines.ngspice_outputs import extract_analysis_raw
-from openada.operations import extract_result_series, measure_result
+from openada.operations import extract_result_series, measure_result, simulate
 from openada.operations.result_series_extract import (
     ASSERTION_PROFILE,
     IMPLEMENTATION_ID,
@@ -580,6 +582,65 @@ def test_selector_units_components_and_names_fail_closed(
     assert payload["diagnostics"][0]["code"] == code
 
 
+def test_a_missing_selector_names_what_was_asked_for_and_what_is_available(
+    tmp_path: Path,
+) -> None:
+    """The refusal must distinguish the two ways a selector can fail.
+
+    "At least one exact native vector selector is absent or ambiguous" was true
+    of a misspelled vector and of naming the sweep axis alongside the signals,
+    and gave a caller nothing to act on in either case. The axis is already
+    returned as ``series.axis``; selecting it is a different mistake from
+    naming a vector the plot does not have, and both are now said out loud
+    together with the names the plot does offer.
+    """
+
+    path, simulation = _transient_case(tmp_path, "ngspice")
+
+    misspelled = extract_result_series(
+        simulation,
+        path,
+        [
+            {
+                "native_name": "v(output)",
+                "output_name": "vout",
+                "unit": "V",
+                "component": "real",
+            }
+        ],
+    )
+    refusal = misspelled["diagnostics"][0]
+    assert refusal["code"] == "series.selector.missing"
+    assert "'v(output)'" in refusal["message"]
+    assert "'v(out)'" in refusal["message"]
+    assert "'time'" in refusal["message"]
+
+    axis = extract_result_series(
+        simulation,
+        path,
+        [
+            {
+                "native_name": "time",
+                "output_name": "t",
+                "unit": "s",
+                "component": "real",
+            },
+            {
+                "native_name": "v(out)",
+                "output_name": "vout",
+                "unit": "V",
+                "component": "real",
+            },
+        ],
+    )
+    refusal = axis["diagnostics"][0]
+    assert refusal["code"] == "series.selector.missing"
+    assert "sweep axis" in refusal["message"]
+    assert "'time'" in refusal["message"]
+    # The two causes must not produce the same sentence.
+    assert refusal["message"] != misspelled["diagnostics"][0]["message"]
+
+
 def test_engine_rejects_binary_xyce_and_selected_scalar_overflow(tmp_path: Path) -> None:
     path = tmp_path / "xyce.raw"
     body = _binary_raw(
@@ -753,3 +814,146 @@ def test_input_envelope_is_not_mutated(tmp_path: Path) -> None:
     )
 
     assert simulation == before
+
+
+# --------------------------------------------------------------------------
+# The round trip. Every case above builds its simulation envelope by hand, so
+# none of them could catch a field ``simulate`` writes and ``extract`` refuses.
+# --------------------------------------------------------------------------
+
+NGSPICE = shutil.which("ngspice")
+MODEL_CARDS = (
+    ROOT
+    / "conformance"
+    / "testbench-simulate-v0alpha1"
+    / "fixtures"
+    / "nmos-common-source"
+    / "nmos_lv.models"
+)
+#: One self-contained transient deck whose only outside reference is the model
+#: card file above, so the run needs ngspice and nothing else installed.
+COMMON_SOURCE_DECK = """* NMOS common-source transient
+V_GND VSS 0 DC 0
+M_1 VOUT VG VSS VSS nmos_lv W=2u L=150n M=1
+R_D VDD VOUT 10k
+V_DD VDD VSS DC 1.8
+V_G VG VSS PULSE(0 1.8 0 100p 100p 2n 4n)
+.TRAN 20p 4n
+.END
+"""
+
+
+@pytest.mark.skipif(NGSPICE is None, reason="native ngspice unavailable")
+def test_a_real_simulate_envelope_extracts_with_no_field_stripped(
+    tmp_path: Path,
+) -> None:
+    """``extract`` accepts the envelope ``simulate`` actually writes.
+
+    ``simulate`` records every file that bound the devices under
+    ``data.extensions['org.openada'].configuration``. ``extract`` used to
+    refuse that field as undeclared, so the only way past this operation was to
+    delete the record naming what the devices came from before handing the
+    evidence on - a round trip broken inside one contract, and provenance lost
+    to get work done. Nothing is stripped here: the envelope goes in exactly as
+    it came out.
+    """
+
+    deck = tmp_path / "common-source.spice"
+    deck.write_text(COMMON_SOURCE_DECK, encoding="utf-8")
+
+    simulation = simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=DiscoveryManager(),
+        backend="ngspice",
+        models_file=MODEL_CARDS,
+    )
+    assert simulation["execution"]["status"] == "completed", simulation["diagnostics"]
+    assert simulation["engineering"]["status"] == "pass", simulation["diagnostics"]
+
+    native = simulation["data"]["extensions"]["org.openada"]
+    configuration = native["configuration"]
+    assert [item["role"] for item in configuration] == ["spice-model-library"]
+    assert configuration[0]["identity"] == "content-digest"
+
+    raw_path = next(
+        item["path"]
+        for item in simulation["artifacts"]
+        if item["role"] == "simulation.result"
+    )
+    before = deepcopy(simulation)
+    payload = extract_result_series(
+        simulation,
+        raw_path,
+        [
+            {
+                "native_name": "v(vout)",
+                "output_name": "vout",
+                "unit": "V",
+                "component": "real",
+            }
+        ],
+    )
+
+    assert payload["execution"]["status"] == "completed", payload["diagnostics"]
+    assert payload["engineering"]["status"] == "pass", payload["diagnostics"]
+    assert not payload["diagnostics"]
+    # The extraction is bound to the simulation it came from, and the two
+    # statuses stay separate: "the tool ran" is not "the circuit passes".
+    extraction = payload["data"]["extraction"]
+    assert extraction["source"]["request_id"] == (
+        simulation["data"]["protocol"]["request_id"]
+    )
+    signals = extraction["series"]["signals"]
+    assert [signal["name"] for signal in signals] == ["vout"]
+    assert len(signals[0]["values"]) == simulation["data"]["analysis"]["point_count"]
+    assert simulation == before
+
+
+@pytest.mark.skipif(NGSPICE is None, reason="native ngspice unavailable")
+def test_a_configuration_record_is_validated_rather_than_merely_tolerated(
+    tmp_path: Path,
+) -> None:
+    """An allowlisted field nobody checks is a hole in a closed object."""
+
+    deck = tmp_path / "common-source.spice"
+    deck.write_text(COMMON_SOURCE_DECK, encoding="utf-8")
+    simulation = simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=DiscoveryManager(),
+        backend="ngspice",
+        models_file=MODEL_CARDS,
+    )
+    raw_path = next(
+        item["path"]
+        for item in simulation["artifacts"]
+        if item["role"] == "simulation.result"
+    )
+    selectors = [
+        {
+            "native_name": "v(vout)",
+            "output_name": "vout",
+            "unit": "V",
+            "component": "real",
+        }
+    ]
+
+    corrupted = deepcopy(simulation)
+    corrupted["data"]["extensions"]["org.openada"]["configuration"][0]["sha256"] = "0"
+    payload = extract_result_series(corrupted, raw_path, selectors)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "series.simulation.invalid"
+
+    undeclared = deepcopy(simulation)
+    undeclared["data"]["extensions"]["org.openada"]["configuration"][0]["origin"] = "x"
+    payload = extract_result_series(undeclared, raw_path, selectors)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "series.simulation.invalid"
+
+    # A field the envelope never carried is still undeclared.
+    invented = deepcopy(simulation)
+    invented["data"]["extensions"]["org.openada"]["provenance_notes"] = []
+    payload = extract_result_series(invented, raw_path, selectors)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "series.simulation.invalid"

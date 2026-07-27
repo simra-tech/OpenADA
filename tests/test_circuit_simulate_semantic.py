@@ -9,6 +9,7 @@ one envelope per request whatever shape the request arrived in.
 
 from __future__ import annotations
 
+from datetime import date
 import hashlib
 import json
 from pathlib import Path
@@ -44,6 +45,9 @@ from openada.operations.simulate import (
 )
 from openada.operations.testbench_simulate import (
     DEPRECATION_CODE,
+    REMOVAL_NOT_BEFORE,
+    REMOVAL_VERSION,
+    deprecation_diagnostic,
     resolve_testbench_driver,
     simulate_testbench,
 )
@@ -516,6 +520,50 @@ def test_the_retired_profile_still_validates_and_is_marked_deprecated() -> None:
     assert resolve_testbench_driver("ngspice").driver_id == "org.openada.driver.ngspice"
 
 
+def test_the_retired_alias_states_when_it_is_removed() -> None:
+    """A deprecation with no stated end becomes permanent by default.
+
+    The profile document, the module constants and the warning every alias call
+    returns must all name the same removal version and date, so no reader of
+    any one of them can conclude the alias is simply how things are now.
+    """
+
+    stated = RETIRED_PROFILE["extensions"]["org.openada"]["deprecation"]
+    assert stated["superseded_by"] == CIRCUIT_SIMULATE_PROFILE
+    assert stated["removal_version"] == REMOVAL_VERSION
+    assert stated["removal_not_before"] == REMOVAL_NOT_BEFORE
+    # A date, not just a version: a version alone can be deferred forever.
+    assert date.fromisoformat(stated["removal_not_before"]) > date(2026, 7, 27)
+
+    warning = deprecation_diagnostic()
+    assert warning["severity"] == "warning"
+    assert warning["code"] == DEPRECATION_CODE
+    assert REMOVAL_VERSION in warning["message"]
+    assert REMOVAL_NOT_BEFORE in warning["message"]
+
+
+def test_the_alias_re_export_surface_is_only_its_entry_point() -> None:
+    """The retired name may not offer a second spelling of anything live.
+
+    Every re-export of the retired name is a fresh way for it to acquire a
+    caller. ``openada.operations`` therefore publishes the alias entry point
+    the CLI dispatches to and nothing else; the profile and assertion
+    identifiers belong to ``driver_registry``.
+    """
+
+    import openada.operations as operations
+
+    retired = {
+        name
+        for name in operations.__all__
+        if "testbench" in name.lower() or "TESTBENCH" in name
+    }
+    assert retired == {"simulate_testbench"}
+    assert set(operations.__all__) == {
+        name for name in operations.__all__ if hasattr(operations, name)
+    }
+
+
 def test_profile_separates_process_completion_from_engineering_truth() -> None:
     """"The tool ran" and "the circuit passes" are never promoted into each other."""
 
@@ -581,39 +629,19 @@ UNIFIED_DIAGNOSTIC_CODES = frozenset(
     }
 )
 
-#: Codes the unification introduced or moved that the published profile does
-#: not declare yet. Listed explicitly rather than by weakening the check, so
-#: the gap is visible and shrinks to nothing as the profile catches up.
-PENDING_PROFILE_DIAGNOSTICS = frozenset(
-    {
-        "input.missing",
-        "simulation.backend.unsupported",
-        "simulation.models.ambiguous",
-        "simulation.models.required",
-        "simulation.analyses.over_limit",
-        "simulation.destination.unusable",
-        "simulation.deck.unstable",
-        "simulation.target.artifact",
-        "simulation.collateral.unmanaged",
-        "simulation.operation.deprecated",
-        "pdk.collateral.foreign",
-        "pdk.collateral.missing",
-        "pdk.collateral.conflict",
-        "pdk.collateral.hand_bound",
-        "pdk.corner.unbound",
-        "pdk.corner.unknown",
-        "pdk.backend.unsupported",
-        "pdk.root.required",
-        "pdk.analog.unsupported",
-        "testbench.artifact.invalid",
-        "testbench.artifact.digest_mismatch",
-        "testbench.artifact.not_a_testbench",
-        "testbench.handoff.inconsistent",
-        "testbench.parameters.unresolved",
-        "testbench.deck.mismatch",
-        "configuration.models.not_self_contained",
-    }
-)
+#: The one code the unified path can emit that the published profile
+#: deliberately does not declare.
+#:
+#: ``simulation.operation.deprecated`` is not a fact about circuit.simulate. It
+#: is emitted by the retired ``testbench-simulate`` alias, which delegates here
+#: and therefore carries the warning out inside a circuit.simulate envelope. It
+#: is scheduled for removal with the alias
+#: (:data:`openada.operations.testbench_simulate.REMOVAL_VERSION`), and a
+#: published profile's diagnostics are part of an identifier the compatibility
+#: policy treats as immutable: declaring a code that is meant to disappear is
+#: exactly how a retired semantic becomes permanent. It leaves this list by
+#: being deleted along with the alias, not by being declared.
+PENDING_PROFILE_DIAGNOSTICS = frozenset({"simulation.operation.deprecated"})
 
 
 def test_profile_declares_every_diagnostic_the_unified_path_can_emit() -> None:

@@ -588,11 +588,12 @@ def test_one_pdks_incantation_applied_to_another_is_refused_as_foreign():
 def test_the_observed_live_failure_is_refused_before_ngspice_runs():
     """``pre_osdi <sky130 tree>/psp103.osdi`` -- IHP's recipe applied to sky130.
 
-    A Verilog-A preload is never a fact about a circuit, so it is refused for
-    being hand-written at all, before the question of whose module it is even
-    arises. The run is stopped either way; what matters is that it is stopped
-    with a typed error naming the binding form, not with ngspice's opaque
-    "could not find a valid modelname".
+    Both classifications stop the run before ngspice, so this was never a
+    safety hole; it was the diagnostic naming the wrong mistake. "You bound
+    collateral by hand" and "you applied one PDK's incantation to another" have
+    different corrections, and this deck is the second. It is the module
+    docstring's own headline example, so the code that decides it and the
+    document that advertises it must agree.
     """
 
     deck = (
@@ -601,12 +602,31 @@ def test_the_observed_live_failure_is_refused_before_ngspice_runs():
         ".END\n"
     )
     findings = inspect_deck_collateral(deck)
-    assert [finding.code for finding in findings] == ["pdk.collateral.hand_bound"]
+    assert [finding.code for finding in findings] == ["pdk.collateral.foreign"]
     assert findings[0].severity == "error"
     assert findings[0] in blocking(findings)
-    # The module is still attributed to the PDK that actually ships it.
+    # Both PDKs are named: the tree reached into, and the one that ships it.
+    assert "sky130A" in findings[0].message
     assert "ihp-sg13g2" in findings[0].message
     assert "--pdk" in findings[0].hint
+
+
+def test_a_preload_from_its_own_pdks_tree_is_still_hand_bound():
+    """Foreign is the sharper case, not a replacement for the general rule.
+
+    An OSDI preload naming the module its own tree ships is not one PDK's
+    incantation applied to another -- but it is still a technology encoded into
+    a circuit, so the deck can only ask its question in that one technology.
+    """
+
+    deck = (
+        "* inverter\n"
+        "pre_osdi /foss/pdks/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi\n"
+        ".END\n"
+    )
+    findings = inspect_deck_collateral(deck)
+    assert [finding.code for finding in findings] == ["pdk.collateral.hand_bound"]
+    assert findings[0] in blocking(findings)
 
 
 def test_a_reference_that_does_not_exist_is_refused_before_the_simulator(tmp_path):

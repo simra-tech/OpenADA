@@ -28,6 +28,24 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   survives as a deprecated alias that emits `simulation.operation.deprecated`
   and delegates — the result it returns is a `circuit.simulate` result.
 
+  **The alias has a stated end.** It is removed in **0.6.0**, and not before
+  **2026-11-01**. The date and version are stated in the retired profile's
+  `extensions["org.openada"].deprecation`, in
+  `openada.operations.testbench_simulate.REMOVAL_VERSION` /
+  `REMOVAL_NOT_BEFORE`, and in the warning text every alias call returns; a
+  test asserts the three agree. `openada.operations` re-exports only the alias
+  entry point the CLI dispatches to — `TESTBENCH_SIMULATE_PROFILE` and
+  `resolve_testbench_driver` are no longer a second spelling there, since every
+  re-export of a retired name is a fresh way for it to acquire a caller.
+
+  `profiles/circuit.simulate-v1alpha2.json` now declares 25 of the 26
+  diagnostics the unified path could emit but had not published.
+  `simulation.operation.deprecated` is deliberately not declared: it is a fact
+  about the retired alias, not about `circuit.simulate`, and it disappears with
+  the alias — declaring a code meant to disappear inside an identifier the
+  compatibility policy treats as immutable is how a retired semantic becomes
+  permanent.
+
   The binding facts moved from `data.extensions["org.openada.pdk_binding"]` to
   `data.extensions["org.openada.pdk-binding"]`: the underscore spelling is
   illegal under the `circuit.simulate/v1alpha2` extension-name pattern, which is
@@ -240,6 +258,43 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   that agent marketplaces install skills but not the Python runtime dependency.
 
 ### Fixed
+
+- **`result.series.extract` accepts the envelope `circuit.simulate` writes.**
+  `simulate` records every file that bound the devices under
+  `data.extensions["org.openada"].configuration`; `extract` refused that field
+  as undeclared, so the only way to chain the two operations was to delete the
+  record naming where the devices came from. A round trip broken inside one
+  contract, paid for in provenance. The field is now declared *and* validated -
+  role, path, digest and byte count - so accepting it opens no hole. The
+  regression test round-trips a real `simulate` envelope with nothing stripped.
+
+- **`openada simulate` consults `PDK_ROOT`.** `--pdk` refused with
+  `pdk.root.required` even when the environment variable already named a valid
+  root that `openada doctor` reports. `--pdk-root` still wins when given; the
+  refusal now names both ways the root can be supplied.
+
+- **A named analysis takes its numbers from the deck.** `--analysis tran`
+  demanded `--step-s` and `--stop-s` from a deck that already states
+  `.TRAN 10p 8n`. Since the request is checked against the deck's own directive
+  anyway, those were the only values that could ever run. Any required field
+  the caller omits is now taken from the deck's single top-level directive of
+  the named type; an explicit flag always wins, and a deck stating no such
+  directive is still refused, saying so.
+
+- **`series.selector.missing` names what was asked for and what is available.**
+  One sentence covered both a misspelled vector and naming the sweep axis
+  alongside the signals, and gave a caller nothing to act on. The refusal now
+  names the offending selector, which of the two mistakes it is, the plot's
+  selectable signals and its axis vector.
+
+- **`pdk.collateral.foreign` is reachable for `pre_osdi` cards.** The
+  `pre_osdi` branch returned before the foreign check, so the module
+  docstring's own headline example - IHP's `psp103.osdi` preloaded from the
+  sky130A tree - classified as `pdk.collateral.hand_bound`. Both refuse before
+  ngspice runs, so nothing unsafe ran; the diagnostic simply named the wrong
+  mistake, and the two have different corrections. Foreign is now decided
+  first, for every card kind; a preload naming its own tree's module is still
+  `hand_bound`.
 
 - Accepted Netgen 1.5.321 hierarchical JSON's exact, equivalent pin-only
   auxiliary records without obscuring the unique requested top-cell LVS

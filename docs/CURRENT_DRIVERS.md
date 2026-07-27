@@ -106,6 +106,16 @@ Transient flags are `--step-s`, `--stop-s`, and optional `--start-s` and
 `--max-step-s`; OP takes no analysis parameters. Typed flags require an
 explicit backend and must agree with the deck.
 
+Because they must agree with the deck, they need not be *repeated* from it: any
+required flag omitted alongside an explicit `--analysis` is taken from the
+deck's single top-level directive of that type, so `--analysis tran` alone is
+enough for a deck stating `.TRAN 10p 8n`. An explicit flag always wins, and a
+deck stating no such directive is still refused.
+
+`--pdk-root` falls back to the `PDK_ROOT` environment variable — the same one
+`openada doctor` reports roots from — so a harness that exports it need not
+also pass the flag.
+
 The declared top-level deck is capped at 16 MiB and is rejected before native
 launch or hashing beyond that bound. This ceiling is part of the active
 operation profile rather than a backend-specific implementation detail.
@@ -129,7 +139,12 @@ by reading the file; its model source is nothing, a flattened `--models` card
 file, or an installed PDK bound by `--pdk`. `testbench.simulate/v1alpha1` was a
 second operation that meant the same thing and is retired; `openada
 testbench-simulate` survives only as a deprecated alias that emits
-`simulation.operation.deprecated` and delegates.
+`simulation.operation.deprecated` and delegates. **The alias is removed in
+0.6.0, and not before 2026-11-01** — stated in the retired profile's
+`extensions["org.openada"].deprecation`, in
+`openada.operations.testbench_simulate.REMOVAL_VERSION` / `REMOVAL_NOT_BEFORE`,
+and in the warning itself, so a deprecation with no end cannot quietly become
+the way things are.
 
 An artifact target is bound by its own digests: the netlist and view SHA-256
 values it publishes are recomputed before anything runs. When it declares

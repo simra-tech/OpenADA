@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Mapping
 import json
 import math
 import os
@@ -39,6 +40,7 @@ from .operations import (
     TRANSFER_METRIC_KINDS,
     evaluate_specification,
     extract_result_series,
+    inspect_simulation_deck,
     invalid_circuit_simulation_request,
     measure_result,
     measure_spectrum,
@@ -444,7 +446,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     simulate.add_argument(
         "--pdk-root",
-        help="Absolute path to the directory containing the installed PDK tree.",
+        help=(
+            "Absolute path to the directory containing the installed PDK tree. "
+            "Defaults to the PDK_ROOT environment variable when it is set - the "
+            "same root `openada doctor` reports."
+        ),
     )
     simulate.add_argument(
         "--corner",
@@ -531,7 +537,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     testbench.add_argument(
         "--pdk-root",
-        help="Absolute path to the directory containing the installed PDK tree.",
+        help=(
+            "Absolute path to the directory containing the installed PDK tree. "
+            "Defaults to the PDK_ROOT environment variable when it is set - the "
+            "same root `openada doctor` reports."
+        ),
     )
     testbench.add_argument(
         "--corner",
@@ -1332,6 +1342,30 @@ _SIMULATION_PARAMETER_OPTIONS = {
 }
 
 
+def _deck_declared_analysis(args: argparse.Namespace) -> dict | None:
+    """The one analysis the target deck states, when it states exactly one.
+
+    The typed request is not free: ``circuit_simulation_parameters_match``
+    refuses any request whose numbers disagree with the deck's own directive,
+    so the deck's declaration is the *only* value a request can carry and
+    still run. Restating ``.TRAN 10p 8n`` on the command line proves nothing
+    the file does not already prove.
+    """
+
+    source = getattr(args, "spice_file", None)
+    if not source:
+        return None
+    try:
+        deck = inspect_simulation_deck(Path(source).expanduser())
+    except (OSError, ValueError):
+        return None
+    parameters = deck.get("parameters")
+    if not isinstance(parameters, Mapping):
+        return None
+    analysis = parameters.get("analysis")
+    return dict(analysis) if isinstance(analysis, Mapping) else None
+
+
 def _simulation_profile_parameters(args: argparse.Namespace) -> dict | None:
     supplied = {
         name for name in _SIMULATION_PARAMETER_OPTIONS if getattr(args, name) is not None
@@ -1364,37 +1398,81 @@ def _simulation_profile_parameters(args: argparse.Namespace) -> dict | None:
             _SIMULATION_PARAMETER_OPTIONS[name] for name in sorted(unexpected)
         )
         raise ValueError(f"--analysis {args.analysis} does not accept {options}")
+
+    values = {name: getattr(args, name) for name in allowed}
+
+    # An explicit flag always wins; anything the caller left out is taken from
+    # the deck's own directive when the deck states one analysis of this type.
+    # The caller has already named the analysis; making them retype numbers the
+    # file states - and which the request is checked against anyway - buys no
+    # additional proof.
     missing = set(required) - supplied
     if missing:
+        declared = _deck_declared_analysis(args)
+        if declared is not None and declared.get("type") == args.analysis:
+            for name in allowed:
+                if values[name] is not None:
+                    continue
+                stated = declared.get(name)
+                if stated is not None:
+                    values[name] = stated
+            missing = {name for name in required if values[name] is None}
+    if missing:
         options = ", ".join(_SIMULATION_PARAMETER_OPTIONS[name] for name in sorted(missing))
-        raise ValueError(f"--analysis {args.analysis} requires {options}")
+        raise ValueError(
+            f"--analysis {args.analysis} requires {options}, and the deck states "
+            f"no single top-level .{args.analysis} directive to take {'them' if len(missing) > 1 else 'it'} from"
+        )
 
-    if args.analysis == "dc" and args.stop <= args.start:
+    if args.analysis == "dc" and values["stop"] <= values["start"]:
         raise ValueError("--stop must be greater than --start for a DC analysis")
     if args.analysis == "ac":
-        if args.points > MAX_SHARED_ANALYSIS_POINTS:
+        if values["points"] > MAX_SHARED_ANALYSIS_POINTS:
             raise ValueError(
                 f"--points must be no greater than {MAX_SHARED_ANALYSIS_POINTS}"
             )
-        if args.stop_hz <= args.start_hz:
+        if values["stop_hz"] <= values["start_hz"]:
             raise ValueError("--stop-hz must be greater than --start-hz for an AC analysis")
     if args.analysis == "tran":
-        start_s = args.start_s if args.start_s is not None else 0.0
+        start_s = values["start_s"] if values["start_s"] is not None else 0.0
         if start_s < 0:
             raise ValueError("--start-s must be greater than or equal to zero")
-        if start_s >= args.stop_s:
+        if start_s >= values["stop_s"]:
             raise ValueError("--start-s must be less than --stop-s for a transient analysis")
-        if args.max_step_s is not None and args.max_step_s > args.stop_s - start_s:
+        if values["max_step_s"] is not None and values["max_step_s"] > values["stop_s"] - start_s:
             raise ValueError(
                 "--max-step-s must not exceed --stop-s minus --start-s"
             )
 
     analysis = {"type": args.analysis, "extensions": {}}
     for name in allowed:
-        value = getattr(args, name)
-        if value is not None:
-            analysis[name] = value
+        if values[name] is not None:
+            analysis[name] = values[name]
     return {"analysis": analysis, "extensions": {}}
+
+
+#: The environment variable every open PDK install and ``openada doctor``
+#: already agree names the installed PDK tree. ``DiscoveryManager.pdk_roots``
+#: has always consulted it, so a caller who trusts ``doctor`` reasonably
+#: expects ``simulate`` to bind against the same root.
+PDK_ROOT_ENVIRONMENT_NAME = "PDK_ROOT"
+
+
+def _pdk_root_argument(args: argparse.Namespace) -> Path | None:
+    """Resolve ``--pdk-root``, falling back to ``$PDK_ROOT``.
+
+    An explicit flag always wins. The fallback is only ever a *default* for an
+    argument the caller omitted: nothing here decides whether a root is usable,
+    and every file the binding then resolves is recorded by absolute path and
+    content digest, so the evidence still names exactly what bound the devices.
+    """
+
+    if args.pdk_root:
+        return Path(args.pdk_root).expanduser().resolve()
+    environment_root = os.environ.get(PDK_ROOT_ENVIRONMENT_NAME)
+    if environment_root:
+        return Path(environment_root).expanduser().resolve()
+    return None
 
 
 def _simulation_cli_invalid(args: argparse.Namespace, message: str) -> dict:
@@ -1936,11 +2014,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                     Path(args.models).expanduser().resolve() if args.models else None
                 ),
                 pdk=args.pdk,
-                pdk_root=(
-                    Path(args.pdk_root).expanduser().resolve()
-                    if args.pdk_root
-                    else None
-                ),
+                pdk_root=_pdk_root_argument(args),
                 corner=args.corner,
                 parameters=parameters,
                 workdir=args.workdir,
@@ -1971,9 +2045,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 Path(args.models).expanduser().resolve() if args.models else None
             ),
             pdk=args.pdk,
-            pdk_root=(
-                Path(args.pdk_root).expanduser().resolve() if args.pdk_root else None
-            ),
+            pdk_root=_pdk_root_argument(args),
             corner=args.corner,
             timeout=args.timeout,
             request_id=args.request_id,

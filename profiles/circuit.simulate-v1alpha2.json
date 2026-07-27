@@ -908,6 +908,181 @@
       "condition": "One or more transitive includes, startup inputs, modules, environment values, or simulator defaults are not completely identified.",
       "next_action": "Declare or snapshot the missing material configuration when reproducibility requires it; retain the limitation in the result.",
       "extensions": {}
+    },
+    {
+      "code": "input.missing",
+      "severity": "error",
+      "condition": "The named simulation target does not exist as a readable file.",
+      "next_action": "Correct the target path; do not invoke a simulator or substitute another file.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.backend.unsupported",
+      "severity": "error",
+      "condition": "The requested backend is not one of the reviewed simulation backends this operation implements.",
+      "next_action": "Select a reviewed backend; do not substitute a different simulator.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.models.ambiguous",
+      "severity": "error",
+      "condition": "Both a PDK binding and a self-contained model-card file were supplied; exactly one model source may bind a deck.",
+      "next_action": "Supply exactly one model source; do not merge two preludes.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.models.required",
+      "severity": "error",
+      "condition": "The target names device models it does not itself carry and no model source was supplied, so no evidence would describe the intended circuit.",
+      "next_action": "Bind an installed PDK, or supply a self-contained model-card file; do not run a deck with no devices.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.analyses.over_limit",
+      "severity": "error",
+      "condition": "The target declares more analyses than the bounded per-request dispatch ceiling.",
+      "next_action": "Split the request into separate targets; do not silently drop declared analyses.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.destination.unusable",
+      "severity": "error",
+      "condition": "The evidence destination could not be prepared, or a derived deck or per-analysis result could not be written there.",
+      "next_action": "Name a writable evidence destination; do not report evidence that was not retained.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.deck.unstable",
+      "severity": "error",
+      "condition": "A derived single-analysis deck does not hash to the digest derived for it, so what ran cannot be bound to what was derived.",
+      "next_action": "Rerun on a stable filesystem; do not bind evidence to an unverified deck.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.target.artifact",
+      "severity": "error",
+      "condition": "A published schematic artifact was handed to the native interface, which can verify no digest, split no declaration and bind no PDK.",
+      "next_action": "Dispatch the artifact through this operation; do not run it as an opaque deck.",
+      "extensions": {}
+    },
+    {
+      "code": "simulation.collateral.unmanaged",
+      "severity": "warning",
+      "condition": "The deck binds collateral that no registered PDK profile describes, so the operation cannot state what technology bound the devices.",
+      "next_action": "Register a binding profile and select it, or accept the recorded provenance limitation; do not infer the technology.",
+      "extensions": {}
+    },
+    {
+      "code": "pdk.collateral.foreign",
+      "severity": "error",
+      "condition": "A reference sits inside one registered PDK's tree but names collateral another registered PDK ships: one PDK's incantation applied to another.",
+      "next_action": "Bind the PDK that owns the tree and let the driver emit its prelude; do not run collateral from a technology nobody selected.",
+      "extensions": {}
+    },
+    {
+      "code": "pdk.collateral.missing",
+      "severity": "error",
+      "condition": "A collateral reference names a file that does not exist, so the deck would simulate a circuit with no devices.",
+      "next_action": "Correct the reference or bind an installed PDK; do not run a deck that binds nothing.",
+      "extensions": {}
+    },
+    {
+      "code": "pdk.collateral.conflict",
+      "severity": "error",
+      "condition": "The deck binds PDK collateral by hand while also requesting a PDK binding; the driver owns the whole prelude and two preludes cannot be reconciled.",
+      "next_action": "Pass the model-free deck and let the binding own the prelude, or drop the binding; do not merge two preludes.",
+      "extensions": {}
+    },
+    {
+      "code": "pdk.collateral.hand_bound",
+      "severity": "error",
+      "condition": "The deck encodes a technology by hand - a Verilog-A preload, or a library or include reaching into a registered PDK's tree - so it can only ask its question in one technology.",
+      "next_action": "Pass the model-free deck with an explicit PDK binding; do not restate a technology inside a circuit.",
+      "extensions": {}
+    },
+    {
+      "code": "pdk.corner.unbound",
+      "severity": "error",
+      "condition": "A process corner was selected without a PDK binding, so no reviewed profile declares what that corner names.",
+      "next_action": "Select the corner together with its PDK; do not guess a corner's library entry point.",
+      "extensions": {}
+    },
+    {
+      "code": "pdk.corner.unknown",
+      "severity": "error",
+      "condition": "The selected PDK's reviewed binding profile declares no such corner.",
+      "next_action": "Select a declared corner; do not substitute the default corner for the requested one.",
+      "extensions": {}
+    },
+    {
+      "code": "pdk.backend.unsupported",
+      "severity": "error",
+      "condition": "PDK binding has no reviewed profile for the requested backend.",
+      "next_action": "Select a backend with a reviewed binding profile, or supply flattened model cards instead.",
+      "extensions": {}
+    },
+    {
+      "code": "pdk.root.required",
+      "severity": "error",
+      "condition": "A PDK binding was requested but no PDK root was supplied, by request field or by the PDK_ROOT environment variable.",
+      "next_action": "Name the directory containing the installed PDK tree; do not search the host for one.",
+      "extensions": {}
+    },
+    {
+      "code": "pdk.analog.unsupported",
+      "severity": "error",
+      "condition": "The selected PDK's reviewed binding profile states it cannot answer a transistor-level question.",
+      "next_action": "Select a PDK whose profile binds transistor-level devices; do not bind a digital-only collateral set to an analog deck.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.artifact.invalid",
+      "severity": "error",
+      "condition": "A published artifact document is not one valid, structurally acceptable JSON object of its declared role.",
+      "next_action": "Republish the artifact; do not interpret a malformed descriptor.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.artifact.digest_mismatch",
+      "severity": "error",
+      "condition": "A published artifact file does not hash to the digest its descriptor publishes.",
+      "next_action": "Republish the artifact; do not simulate content the descriptor does not bind.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.artifact.not_a_testbench",
+      "severity": "error",
+      "condition": "The published artifact is not a testbench, so it declares no analyses to dispatch.",
+      "next_action": "Supply a published testbench; do not infer an analysis the artifact does not declare.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.handoff.inconsistent",
+      "severity": "error",
+      "condition": "The artifact's simulation handoff state disagrees with the analyses it declares.",
+      "next_action": "Recompile the artifact so its handoff and declaration agree; do not resolve the disagreement by choosing one.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.parameters.unresolved",
+      "severity": "error",
+      "condition": "The artifact reports unresolved model, width, or length placeholders; this operation binds none of them.",
+      "next_action": "Re-author with explicit parameters and recompile; do not substitute a default device or geometry.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench.deck.mismatch",
+      "severity": "error",
+      "condition": "The published deck's analysis cards do not match the artifact's typed declaration.",
+      "next_action": "Recompile so the emitted deck and its declaration agree; do not run one and report the other.",
+      "extensions": {}
+    },
+    {
+      "code": "configuration.models.not_self_contained",
+      "severity": "error",
+      "condition": "The supplied model-card file reaches outside itself through a directive this bounded profile cannot accept.",
+      "next_action": "Supply a flattened, self-contained model card set, or bind an installed PDK instead.",
+      "extensions": {}
     }
   ],
   "native_mappings": [

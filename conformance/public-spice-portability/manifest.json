@@ -77,7 +77,7 @@
     {"repository_path": "tools/verify_semantic_coverage.py", "sha256": "1acb157011ce025ed97cd0a656f3cde7cd02b535cb0e9eb3c17e097416f55db2", "extensions": {}},
     {"repository_path": "schemas/result-v0alpha1.schema.json", "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15", "extensions": {}},
     {"repository_path": "schemas/driver-manifest-v0alpha1.schema.json", "sha256": "6d4a7945d7c1abe053071c440639f68f54a86f7a204ac4bf159f323e0d9a57ec", "extensions": {}},
-    {"repository_path": "profiles/circuit.simulate-v1alpha2.json", "sha256": "498c6e6c42f441f22fa881885623a5bd4358a40130828f942fff50f7c61bfdfc", "extensions": {}},
+    {"repository_path": "profiles/circuit.simulate-v1alpha2.json", "sha256": "4a4437334462c0544dc323c0ee12607b5d7b0f7a973fdd3a75722810f067d4ca", "extensions": {}},
     {"repository_path": "profiles/result.series.extract-v1alpha1.json", "sha256": "6d2baf44313e97b5070b8e68afe529abfafec8b6ab0e7808941078a0dd201164", "extensions": {}},
     {"repository_path": "catalog/semantic-surfaces-v0alpha1.json", "sha256": "d86371c8d1b1d9433c0b9535994ba1d3ed2d6d7ae890e7a9e205063fed009d61", "extensions": {}},
     {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}},

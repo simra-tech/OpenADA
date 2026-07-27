@@ -277,7 +277,12 @@ The later `measure`, `spectral`, and `transfer` commands accept this complete
 passing extraction envelope directly; `data.extraction.series` remains the
 embedded canonical series for programmatic use. Extraction requires the exact
 passing `circuit.simulate/v1alpha2` envelope and matching
-canonical path, byte count, and digest. It supports ngspice binary/ASCII and
+canonical path, byte count, and digest. Pass that envelope **whole**: it is
+accepted exactly as `simulate` wrote it, including the
+`data.extensions["org.openada"].configuration` record naming the collateral
+that bound the devices. Never delete a field to get an envelope accepted -
+what is deleted is the provenance of the evidence, and a refusal that a
+deletion fixes is a bug worth reporting. It supports ngspice binary/ASCII and
 Xyce ASCII padded Spice3 raw evidence. Select exact real or imaginary Cartesian
 components; it never derives magnitude, phase, differential expressions, or
 unit conversions. Conditions are caller-declared and digest-bound, not inferred
