@@ -391,10 +391,10 @@ MCP binding, credential model, session transport, or remote job transport in
 this command. Never describe an explicit manifest list as an EDA marketplace.
 
 `simulate` runs from the netlist directory by default. An explicit `--workdir`
-changes native relative-path resolution; it is not a sandbox, and ngspice may
-write files there. Prefer a task-local writable project copy when the source
-catalog is read-only. Transitive model/include files are not yet enumerated or
-hashed by the preview contract, so report that provenance limitation.
+changes relative-path resolution; it is not a sandbox. A reviewed `--pdk`
+binding captures its active closure in one content-addressed snapshot; arbitrary
+transitive files in a caller-authored legacy deck remain unenumerated.
+Use a task-local writable copy for caller-authored decks.
 
 For the legacy ngspice interface, choose the mode explicitly when the default
 batch policy is not appropriate:

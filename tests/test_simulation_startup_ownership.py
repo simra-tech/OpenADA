@@ -256,8 +256,10 @@ def test_an_ambient_spiceinit_cannot_reach_a_bound_run(tmp_path, monkeypatch):
     # binding exports SkyWater through variables consumed by IHP's startup
     # file. The explicit managed startup must disable the user's file anyway.
     assert native["environment"]["PDK"] == "sky130A"
-    resolved = resolve_pdk_binding(SKY130A.pdk_id, SKY130_ROOT)
-    assert native["environment"]["PDK_ROOT"] == str(resolved.root.parent)
+    captured_root = Path(
+        payload["data"]["extensions"][PDK_BINDING_EXTENSION]["root"]
+    )
+    assert native["environment"]["PDK_ROOT"] == str(captured_root.parent)
     assert native["initialization"]["local_user_spiceinit"] == "disabled"
     assert marker not in native["log_tail"]
 

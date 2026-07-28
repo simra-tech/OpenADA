@@ -23,15 +23,34 @@ import tempfile
 from typing import Any
 
 from .conformance import ResultConformanceError, assert_result_conforms
+from .pdk_bindings import (
+    MAX_PDK_FILE_BYTES,
+    MAX_PDK_SNAPSHOT_BYTES,
+)
 from .operations import extract_result_series, measure_result
+from .operations.result_series_extract import MAX_SIMULATION_INPUT_RECORDS
 
 
 RECEIPT_SCHEMA = "openada.conformance-receipt/v0alpha1"
 SIGNATURE_DOMAIN = b"openada.conformance-receipt/v0alpha1\0"
-MAX_RECEIPT_BYTES = 64 * 1024
+# A complete PDK-bound simulation can carry the extractor's maximum input
+# roster plus the bounded artifact roster.  The signed receipt repeats those
+# exact records, including their absolute paths, so the former 64 KiB / 128
+# record limits made a real 319-file Sky130 snapshot impossible to seal.
+MAX_SIMULATION_FILE_RECORDS = MAX_SIMULATION_INPUT_RECORDS + 64
+MAX_RECEIPT_BYTES = 16 * 1024 * 1024
 MAX_JSON_EVIDENCE_BYTES = 64 * 1024 * 1024
 MAX_RAW_EVIDENCE_BYTES = 256 * 1024 * 1024
-MAX_TOTAL_EVIDENCE_BYTES = 512 * 1024 * 1024
+MAX_SIMULATION_FILE_BYTES = MAX_PDK_FILE_BYTES
+# The PDK closure alone may legally reach MAX_PDK_SNAPSHOT_BYTES.  Reserve the
+# independently bounded native artifact plus the five primary JSON records and
+# three auxiliary records (snapshot manifest, deck, and log) without silently
+# reopening a lower aggregate ceiling in the receipt verifier.
+MAX_TOTAL_EVIDENCE_BYTES = (
+    MAX_PDK_SNAPSHOT_BYTES
+    + MAX_RAW_EVIDENCE_BYTES
+    + 8 * MAX_JSON_EVIDENCE_BYTES
+)
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _SIGNATURE_RE = re.compile(r"^[0-9a-f]{128}$")
@@ -54,7 +73,11 @@ _SIMULATION_FILE_FIELDS = {
 }
 _CONFIGURATION_ROLE_BY_INPUT_ROLE = {
     "model-library": "spice-model-library",
-    "pdk.corner-library": "spice-model-library",
+    # One content-addressed snapshot manifest aggregates the complete active
+    # include/lib closure. Individual corner, transitive, and parser-only
+    # collateral remain exact simulation inputs, but are not duplicated as
+    # hundreds of configuration references.
+    "pdk.snapshot": "pdk",
     "pdk.osdi-module": "simulator-configuration",
     "pdk.identity": "pdk",
 }
@@ -519,11 +542,12 @@ def _validate_receipt_shape(
     simulation_files = evidence["simulation_files"]
     if (
         not isinstance(simulation_files, list)
-        or not 2 <= len(simulation_files) <= 128
+        or not 2 <= len(simulation_files) <= MAX_SIMULATION_FILE_RECORDS
     ):
         _fail(
             "receipt.structure.invalid",
-            "receipt.evidence.simulation_files must contain 2 to 128 records",
+            "receipt.evidence.simulation_files must contain 2 to "
+            f"{MAX_SIMULATION_FILE_RECORDS} records",
         )
     for index, raw_record in enumerate(simulation_files):
         record = _closed(
@@ -1064,7 +1088,7 @@ def verify_typed_evidence_receipt(
             if captured is None:
                 captured = _StableCapture(
                     path,
-                    limit=MAX_JSON_EVIDENCE_BYTES,
+                    limit=MAX_SIMULATION_FILE_BYTES,
                     label=f"simulation_files[{index}]",
                     directory_identities=directory_identities,
                     file_identities=file_identities,

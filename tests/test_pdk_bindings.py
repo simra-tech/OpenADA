@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import importlib
 import json
 import os
 from pathlib import Path
@@ -11,6 +13,8 @@ from jsonschema import Draft202012Validator, FormatChecker
 from openada import conformance
 from openada.contract import file_record
 from openada.discovery import DiscoveryManager
+from openada.engines.ngspice_outputs import extract_analysis_raw
+from openada.engines.spice import NgspiceDriver
 from openada.operations.result_series_extract import extract_result_series
 from openada.operations.simulate import (
     OPERATION_NAME,
@@ -82,15 +86,25 @@ def _fake_pdk(tmp_path: Path, binding=IHP_SG13G2) -> Path:
     """Build a directory tree with the file layout one binding profile expects."""
 
     root = tmp_path / "pdks" / binding.pdk_id
+    sections_by_path: dict[Path, list[str | None]] = {}
     for corner in binding.corners:
         for entry in binding.library_entries:
             relative, section = entry.resolve(corner)
-            path = root / relative
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(
-                f".LIB {section}\n.ENDL\n" if section else "* model cards\n",
-                encoding="utf-8",
-            )
+            sections_by_path.setdefault(root / relative, []).append(section)
+    for path, sections in sections_by_path.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        unique_sections = tuple(dict.fromkeys(sections))
+        path.write_text(
+            "".join(
+                (
+                    f".LIB {section}\n.ENDL {section}\n"
+                    if section is not None
+                    else "* model cards\n"
+                )
+                for section in unique_sections
+            ),
+            encoding="utf-8",
+        )
     for relative in binding.osdi_relative_paths:
         module = root / relative
         module.parent.mkdir(parents=True, exist_ok=True)
@@ -431,15 +445,300 @@ def test_root_may_name_the_pdk_tree_itself(tmp_path):
     root = _fake_pdk(tmp_path)
     direct = resolve_pdk_binding(IHP_SG13G2.pdk_id, root / IHP_SG13G2.pdk_id)
     parent = resolve_pdk_binding(IHP_SG13G2.pdk_id, root)
-    assert direct.root == parent.root
+    assert direct.source_root == parent.source_root
+    assert direct.closure_root_sha256 == parent.closure_root_sha256
+    assert direct.snapshot_root_sha256 == parent.snapshot_root_sha256
+    assert direct.root != parent.root
 
 
 def test_every_referenced_pdk_file_is_content_bound(tmp_path):
     resolved = _resolved(tmp_path)
     roles = {record["role"] for record in resolved.input_records}
-    assert roles == {"pdk.corner-library", "pdk.osdi-module", "pdk.identity"}
+    assert roles == {
+        "pdk.snapshot",
+        "pdk.corner-library",
+        "pdk.osdi-module",
+        "pdk.identity",
+    }
     for record in resolved.input_records:
         assert len(record["sha256"]) == 64
+
+
+def test_snapshot_verification_refuses_a_writable_inner_directory(tmp_path):
+    resolved = _resolved(tmp_path)
+    inner = resolved.library_paths[0].parent
+    assert inner not in {resolved.snapshot_root, resolved.root}
+
+    inner.chmod(0o700)
+    try:
+        with pytest.raises(PdkBindingError) as caught:
+            resolved.verify_snapshot()
+        assert caught.value.code == "pdk.snapshot.unstable"
+        assert "non-writable directory" in caught.value.message
+    finally:
+        inner.chmod(0o500)
+
+
+def test_snapshot_verification_refuses_an_undeclared_inner_file(tmp_path):
+    resolved = _resolved(tmp_path)
+    inner = resolved.library_paths[0].parent
+    extra = inner / "undeclared-after-publication.spice"
+
+    inner.chmod(0o700)
+    extra.write_text("* not in the snapshot manifest\n", encoding="utf-8")
+    inner.chmod(0o500)
+    try:
+        with pytest.raises(PdkBindingError) as caught:
+            resolved.verify_snapshot()
+        assert caught.value.code == "pdk.snapshot.unstable"
+        assert "undeclared or missing entries" in caught.value.message
+    finally:
+        inner.chmod(0o700)
+        extra.unlink()
+        inner.chmod(0o500)
+
+
+def test_selected_transitive_closure_is_snapshotted_and_namespaced(tmp_path):
+    """Only selected sections define semantics, while ngspice parser inputs stay private."""
+
+    pdk_parent = _fake_pdk(tmp_path)
+    source_root = pdk_parent / IHP_SG13G2.pdk_id
+    low_entry, selected_section = IHP_SG13G2.library_entries[0].resolve(
+        IHP_SG13G2.default_corner
+    )
+    assert selected_section == "mos_tt"
+    low_library = source_root / low_entry
+    model_directory = low_library.parent
+    (model_directory / "top.spice").write_text(
+        ".global PDK_GLOBAL\n", encoding="utf-8"
+    )
+    (model_directory / "selected-a.spice").write_text(
+        ".subckt nmoscl_2 d g s b\n.ends nmoscl_2\n",
+        encoding="utf-8",
+    )
+    (model_directory / "selected-b.spice").write_text(
+        ".model selected_model nmos level=1\n", encoding="utf-8"
+    )
+    (model_directory / "inactive.spice").write_text(
+        ".subckt inactive_collision a b\n.ends inactive_collision\n",
+        encoding="utf-8",
+    )
+    low_library.write_text(
+        (
+            ".include top.spice\n"
+            ".lib mos_tt\n"
+            ".include selected-a.spice\n"
+            ".include selected-b.spice\n"
+            ".endl mos_tt\n"
+            ".lib mos_ss\n"
+            ".include inactive.spice\n"
+            ".endl mos_ss\n"
+            ".lib mos_ff\n.endl mos_ff\n"
+            ".lib mos_sf\n.endl mos_sf\n"
+            ".lib mos_fs\n.endl mos_fs\n"
+        ),
+        encoding="utf-8",
+    )
+
+    resolved = resolve_pdk_binding(IHP_SG13G2.pdk_id, pdk_parent)
+    active_paths = [
+        record["relative_path"] for record in resolved.closure_records
+    ]
+    assert active_paths[:4] == [
+        low_entry,
+        "libs.tech/ngspice/models/top.spice",
+        "libs.tech/ngspice/models/selected-a.spice",
+        "libs.tech/ngspice/models/selected-b.spice",
+    ]
+    assert "libs.tech/ngspice/models/inactive.spice" not in active_paths
+    assert "nmoscl_2" in resolved.namespace_model_names
+    assert "selected_model" in resolved.namespace_model_names
+    assert "pdk_global" in resolved.namespace_global_nodes
+    assert "inactive_collision" not in resolved.namespace_model_names
+
+    # Ngspice preprocesses includes in unselected sections, so inactive.spice
+    # is retained as parser transport, but it never enters the active closure
+    # digest or namespace.
+    inactive_record = next(
+        record
+        for record in resolved.input_records
+        if str(record["path"]).endswith("/inactive.spice")
+    )
+    assert inactive_record["role"] == "pdk.parser-library"
+
+    for record in resolved.input_records:
+        assert Path(record["path"]).is_relative_to(resolved.snapshot_root)
+        assert not Path(record["path"]).is_relative_to(resolved.source_root)
+    assert all(path.is_relative_to(resolved.snapshot_root) for path in resolved.library_paths)
+    assert all(path.is_relative_to(resolved.snapshot_root) for path in resolved.osdi_paths)
+
+    original_closure_root = resolved.closure_root_sha256
+    original_snapshot_root = resolved.snapshot_root_sha256
+    captured_selected = next(
+        Path(record["path"])
+        for record in resolved.input_records
+        if str(record["path"]).endswith("/selected-a.spice")
+    )
+    (model_directory / "selected-a.spice").write_text(
+        ".subckt changed_live_tree a b\n.ends changed_live_tree\n",
+        encoding="utf-8",
+    )
+    assert "nmoscl_2" in captured_selected.read_text(encoding="utf-8")
+    resolved.verify_snapshot()
+
+    # Changing a parser-only inactive file changes the complete snapshot
+    # identity but not the selected semantic closure root.
+    (model_directory / "inactive.spice").write_text(
+        ".subckt another_inactive a b\n.ends another_inactive\n",
+        encoding="utf-8",
+    )
+    (model_directory / "selected-a.spice").write_text(
+        ".subckt nmoscl_2 d g s b\n.ends nmoscl_2\n",
+        encoding="utf-8",
+    )
+    recaptured = resolve_pdk_binding(IHP_SG13G2.pdk_id, pdk_parent)
+    assert recaptured.closure_root_sha256 == original_closure_root
+    assert recaptured.snapshot_root_sha256 != original_snapshot_root
+
+
+def _write_freepdk_level1_models(pdk_parent: Path, *, kp: str) -> Path:
+    source_root = pdk_parent / FREEPDK45.pdk_id
+    for entry in FREEPDK45.library_entries:
+        relative, section = entry.resolve(FREEPDK45.default_corner)
+        assert section is None
+        path = source_root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        model = path.stem
+        polarity = "pmos" if model.upper().startswith("PMOS") else "nmos"
+        selected_kp = kp if model == "NMOS_VTG" else "1m"
+        path.write_text(
+            f".model {model} {polarity} level=1 vto=0.4 kp={selected_kp}\n",
+            encoding="utf-8",
+        )
+    return pdk_parent
+
+
+def _op_output(payload: dict, output_dir: Path) -> float:
+    raw = next(
+        record
+        for record in payload["artifacts"]
+        if record["role"] == "simulation.result"
+    )
+    extracted = extract_analysis_raw(
+        output_dir / "decks" / "gain.raw",
+        backend="ngspice",
+        analysis={
+            "type": "dc",
+            "source_name": "VIN",
+            "start": 0.8,
+            "stop": 0.81,
+            "step": 0.01,
+        },
+        selected_variables=("v(out)",),
+        expected_bytes=raw["bytes"],
+        expected_sha256=raw["sha256"],
+    )
+    assert extracted.valid, extracted
+    return extracted.signals[0].real_values[0]
+
+
+@pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")
+def test_live_model_swap_after_capture_cannot_change_native_answer(
+    tmp_path, monkeypatch
+):
+    """The launch consumes captured A even after the installed path becomes B."""
+
+    deck = tmp_path / "gain.spice"
+    deck.write_text(
+        (
+            "* immutable PDK capture race\n"
+            "VDD vdd 0 1.8\n"
+            "VIN in 0 DC 0.8\n"
+            "RLOAD vdd out 10k\n"
+            "M1 out in 0 0 nmos.core W=1u L=1u M=1\n"
+            ".save out\n"
+            ".dc VIN 0.8 0.81 0.01\n"
+            ".end\n"
+        ),
+        encoding="utf-8",
+    )
+    root_a = _write_freepdk_level1_models(tmp_path / "control-a", kp="1m")
+    root_b = _write_freepdk_level1_models(tmp_path / "control-b", kp="10u")
+    control_a_dir = tmp_path / "evidence-control-a"
+    control_b_dir = tmp_path / "evidence-control-b"
+    control_a = simulate(
+        deck,
+        control_a_dir,
+        discovery=DiscoveryManager(),
+        pdk=FREEPDK45.pdk_id,
+        pdk_root=root_a,
+    )
+    control_b = simulate(
+        deck,
+        control_b_dir,
+        discovery=DiscoveryManager(),
+        pdk=FREEPDK45.pdk_id,
+        pdk_root=root_b,
+    )
+    value_a = _op_output(control_a, control_a_dir)
+    value_b = _op_output(control_b, control_b_dir)
+    assert abs(value_a - value_b) > 0.1
+
+    race_root = _write_freepdk_level1_models(tmp_path / "race", kp="1m")
+    race_dir = tmp_path / "evidence-race"
+    captured_binding = resolve_pdk_binding(
+        FREEPDK45.pdk_id,
+        race_root,
+        snapshot_parent=race_dir / "pdk-snapshots",
+    )
+    live_model = (
+        race_root
+        / FREEPDK45.pdk_id
+        / "ncsu_basekit/models/hspice/tran_models/models_nom/NMOS_VTG.inc"
+    )
+    a_body = live_model.read_bytes()
+    original_simulate = NgspiceDriver.simulate
+    swapped = False
+
+    def swap_then_launch(self, *args, **kwargs):
+        nonlocal swapped
+        if not swapped:
+            swapped = True
+            live_model.write_text(
+                ".model NMOS_VTG nmos level=1 vto=0.4 kp=10u\n",
+                encoding="utf-8",
+            )
+        return original_simulate(self, *args, **kwargs)
+
+    monkeypatch.setattr(NgspiceDriver, "simulate", swap_then_launch)
+    monkeypatch.setattr(
+        importlib.import_module("openada.operations.simulate"),
+        "resolve_pdk_binding",
+        lambda *_args, **_kwargs: pytest.fail(
+            "an already captured binding must never be resolved from live paths"
+        ),
+    )
+    raced = simulate(
+        deck,
+        race_dir,
+        discovery=DiscoveryManager(),
+        resolved_pdk_binding=captured_binding,
+    )
+    assert swapped is True
+    assert raced["engineering"]["status"] == "pass", raced["diagnostics"]
+    assert _op_output(raced, race_dir) == pytest.approx(value_a, rel=1e-9)
+    assert _op_output(raced, race_dir) != pytest.approx(value_b, rel=1e-3)
+
+    retained_model = next(
+        record
+        for record in raced["inputs"]
+        if str(record["path"]).endswith("/NMOS_VTG.inc")
+    )
+    assert retained_model["sha256"] == hashlib.sha256(a_body).hexdigest()
+    assert retained_model["sha256"] != hashlib.sha256(live_model.read_bytes()).hexdigest()
+    binding = raced["data"]["extensions"][PDK_BINDING_EXTENSION]
+    assert binding["closure_root_sha256"]
+    assert Path(binding["snapshot_root"]).is_relative_to(race_dir)
 
 
 def test_a_corner_selected_by_directory_resolves_every_flavour(tmp_path):

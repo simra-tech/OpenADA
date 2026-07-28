@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import hashlib
 import json
 from pathlib import Path
@@ -14,6 +15,7 @@ from experiment_acceptance_spec import (
     gain_spec,
 )
 from openada.discovery import DiscoveryManager
+from openada.engines import simra_artifact
 import openada.operations.experiment as experiment_operation
 
 
@@ -378,6 +380,308 @@ def test_one_validation_pass_reports_all_independent_document_errors(
             "JSON Pointer: /measurements/0/analysis_id",
         ),
     }.issubset(observed)
+
+
+@pytest.mark.parametrize(
+    ("target", "code", "path"),
+    [
+        (
+            "element",
+            "experiment.element.parameter_out_of_range",
+            "/elements/3/parameters/c",
+        ),
+        (
+            "analysis",
+            "experiment.analysis.invalid",
+            "/analyses/0/stop",
+        ),
+    ],
+)
+def test_extreme_decimal_exponents_are_typed_preflight_refusals(
+    target,
+    code,
+    path,
+    tmp_path,
+    monkeypatch,
+):
+    if not _validation_assets_available():
+        pytest.skip("the IHP PDK and SourceFollower acceptance bundle are required")
+    spec = gain_spec()
+    if target == "element":
+        spec["elements"][3]["parameters"]["c"] = "1e1000000"
+    else:
+        spec["analyses"][0]["stop"] = "1e1000000"
+    _assert_refused_without_execution(
+        spec=spec,
+        expected_code=code,
+        expected_path=path,
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+    )
+
+
+def test_extreme_decimal_report_collects_all_typed_errors_without_traceback(
+    tmp_path,
+    monkeypatch,
+):
+    if not _validation_assets_available():
+        pytest.skip("the IHP PDK and SourceFollower acceptance bundle are required")
+    spec = gain_spec()
+    spec["elements"][3]["parameters"]["c"] = "1e1000000"
+    spec["analyses"][0]["stop"] = "1e1000000"
+    payload = _assert_refused_without_execution(
+        spec=spec,
+        expected_code="experiment.element.parameter_out_of_range",
+        expected_path="/elements/3/parameters/c",
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+    )
+    observed = {
+        (item["code"], item["hint"]) for item in payload["diagnostics"]
+    }
+    assert (
+        "experiment.analysis.invalid",
+        "JSON Pointer: /analyses/0/stop",
+    ) in observed
+
+
+@pytest.mark.parametrize(
+    ("target", "needle", "replacement", "expected_code", "expected_path"),
+    [
+        (
+            "element",
+            '"c": "1p"',
+            '"c": 1e1000000',
+            "experiment.element.parameter_out_of_range",
+            "/elements/3/parameters/c",
+        ),
+        (
+            "measurement",
+            '"bandwidth_drop_db": 3.0',
+            '"bandwidth_drop_db": 1e1000000',
+            "experiment.measurement.request_invalid",
+            "/measurements/0/request",
+        ),
+    ],
+)
+def test_unquoted_extreme_json_exponents_are_typed_without_traceback(
+    target,
+    needle,
+    replacement,
+    expected_code,
+    expected_path,
+    tmp_path,
+    monkeypatch,
+):
+    if not _validation_assets_available():
+        pytest.skip("the IHP PDK and SourceFollower acceptance bundle are required")
+    raw = json.dumps(gain_spec(), indent=2)
+    assert needle in raw, target
+    spec_path = tmp_path / f"{target}.experiment.json"
+    spec_path.write_text(
+        raw.replace(needle, replacement, 1) + "\n",
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "must-not-exist"
+
+    monkeypatch.setattr(
+        experiment_operation,
+        "simulate",
+        lambda *args, **kwargs: pytest.fail(
+            "an out-of-range experiment reached simulation"
+        ),
+    )
+    payload = experiment_operation.run_experiment(
+        spec_path,
+        output_dir,
+        discovery=DiscoveryManager(),
+        pdk="ihp-sg13g2",
+        pdk_root=PDK_ROOT,
+    )
+
+    assert not output_dir.exists()
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["engineering"]["status"] == "unknown"
+    assert any(
+        item["code"] == expected_code
+        and item["hint"] == f"JSON Pointer: {expected_path}"
+        for item in payload["diagnostics"]
+    ), payload["diagnostics"]
+
+
+@pytest.mark.parametrize(
+    "locator",
+    (
+        "relative/schematic.artifact.json",
+        "/tmp/publication/../schematic.artifact.json",
+        "~/schematic.artifact.json",
+        "//tmp/publication/schematic.artifact.json",
+        "/tmp/publication/control\tschematic.artifact.json",
+    ),
+)
+def test_suspicious_dut_locators_fire_publication_untrusted_before_lookup(
+    locator,
+    tmp_path,
+    monkeypatch,
+):
+    if not _validation_assets_available():
+        pytest.skip("the IHP PDK and SourceFollower acceptance bundle are required")
+    spec = gain_spec()
+    spec["dut"]["artifact"] = locator
+    _assert_refused_without_execution(
+        spec=spec,
+        expected_code="experiment.dut.publication_untrusted",
+        expected_path="/dut/artifact",
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+    )
+
+
+def test_every_ascii_control_in_dut_locator_is_publication_untrusted() -> None:
+    for codepoint in (*range(0x20), 0x7F):
+        spec = gain_spec()
+        spec["dut"]["artifact"] = (
+            f"/tmp/publication/control{chr(codepoint)}"
+            "schematic.artifact.json"
+        )
+        validator = experiment_operation._Validator(
+            document=spec,
+            spec_path=Path("/tmp/refused.experiment.json"),
+            spec_bytes=b"{}",
+            cli_pdk="ihp-sg13g2",
+            pdk_root=PDK_ROOT,
+        )
+
+        bundle, _connections = validator._dut(spec["dut"])
+
+        assert bundle is None
+        assert [issue.code for issue in validator.issues] == [
+            "experiment.dut.publication_untrusted"
+        ]
+
+
+def test_parent_symlink_dut_locator_is_publication_untrusted_before_lookup(
+    tmp_path,
+    monkeypatch,
+):
+    if not _validation_assets_available():
+        pytest.skip("the SourceFollower acceptance bundle is required")
+    alias = tmp_path / "publication-alias"
+    alias.symlink_to(SOURCE_FOLLOWER_BUNDLE, target_is_directory=True)
+    spec = gain_spec()
+    spec["dut"]["artifact"] = str(alias / "schematic.artifact.json")
+    _assert_refused_without_execution(
+        spec=spec,
+        expected_code="experiment.dut.publication_untrusted",
+        expected_path="/dut/artifact",
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+    )
+
+
+def test_transitive_ihp_nmoscl_2_namespace_collision_refuses_experiment(
+    tmp_path,
+    monkeypatch,
+):
+    if not _validation_assets_available():
+        pytest.skip("the IHP PDK and SourceFollower acceptance bundle are required")
+    spec = gain_spec()
+    published = simra_artifact.load_simra_schematic_bundle(
+        SOURCE_FOLLOWER_BUNDLE / "schematic.artifact.json",
+        expected_digests=spec["dut"]["bundle"],
+        expected_top=spec["dut"]["top"],
+    )
+    collision_name = "nmoscl_2"
+    collision_text = published.netlist_text.replace(
+        published.top,
+        collision_name,
+    )
+    collision_bundle = replace(
+        published,
+        top=collision_name,
+        design_subckt_names=(collision_name,),
+        netlist_text=collision_text,
+        netlist_bytes=collision_text.encode("utf-8"),
+    )
+    spec["dut"]["top"] = collision_name
+    monkeypatch.setattr(
+        simra_artifact,
+        "load_simra_schematic_bundle",
+        lambda *args, **kwargs: collision_bundle,
+    )
+
+    _assert_refused_without_execution(
+        spec=spec,
+        expected_code="experiment.compose.subckt_collision",
+        expected_path="/dut/top",
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+    )
+
+
+def test_extractor_point_limit_is_refused_before_simulation(
+    tmp_path,
+    monkeypatch,
+):
+    if not _validation_assets_available():
+        pytest.skip("the IHP PDK and SourceFollower acceptance bundle are required")
+    spec = gain_spec()
+    spec["analyses"] = [
+        {
+            "id": "long_transient",
+            "kind": "tran",
+            "step": "1n",
+            "stop": "100u",
+        }
+    ]
+    spec["observations"] = [
+        {
+            "id": "output_v",
+            "analysis_id": "long_transient",
+            "quantity": {"kind": "node_voltage", "net": "OUT"},
+        }
+    ]
+    spec["measurements"] = []
+    _assert_refused_without_execution(
+        spec=spec,
+        expected_code="experiment.analysis.over_limit",
+        expected_path="/analyses/0",
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+    )
+
+
+def test_transient_max_step_is_included_in_extractor_point_preflight(
+    tmp_path,
+    monkeypatch,
+):
+    if not _validation_assets_available():
+        pytest.skip("the IHP PDK and SourceFollower acceptance bundle are required")
+    spec = gain_spec()
+    spec["analyses"] = [
+        {
+            "id": "max_step_limited",
+            "kind": "tran",
+            "step": "10u",
+            "stop": "1m",
+            "max_step": "1n",
+        }
+    ]
+    spec["observations"] = [
+        {
+            "id": "output_v",
+            "analysis_id": "max_step_limited",
+            "quantity": {"kind": "node_voltage", "net": "OUT"},
+        }
+    ]
+    spec["measurements"] = []
+    _assert_refused_without_execution(
+        spec=spec,
+        expected_code="experiment.analysis.over_limit",
+        expected_path="/analyses/0",
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+    )
 
 
 SIMRA_ROOT = Path("/home/specialpedrito/simra/simra")

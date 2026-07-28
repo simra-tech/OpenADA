@@ -284,6 +284,14 @@ pytest -q tests/test_plugin_skills.py
 pytest -q
 ```
 
+Release validation of the cross-repository experiment ledger must make the
+Sandboxy compatibility dependency mandatory rather than silently skipping it:
+
+```bash
+SANDBOXY_CHECKOUT=../sandboxy OPENADA_REQUIRE_SANDBOXY_COMPAT=1 \
+  pytest -q tests/test_experiment_run_acceptance.py
+```
+
 Skill maturity is separate from **Discovered**, **Structured**, and
 **Workflow-validated** driver maturity. A skill cannot change contract meaning
 or substitute for native conformance evidence.

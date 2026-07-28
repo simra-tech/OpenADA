@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import math
+import os
 from pathlib import Path
 from types import ModuleType
 
@@ -18,9 +19,24 @@ from openada.discovery import DiscoveryManager
 from openada.operations.experiment import run_experiment
 
 
-MEASUREMENT_GUARD = Path(
-    "/home/specialpedrito/simra/sandboxy/sandbox/measurement_guard.py"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _sandboxy_checkout(locator: str | None = None) -> Path:
+    path = Path(locator or "../sandboxy").expanduser()
+    if not path.is_absolute():
+        path = REPO_ROOT / path
+    return path.resolve()
+
+
+SANDBOXY_CHECKOUT = _sandboxy_checkout(
+    os.environ.get("SANDBOXY_CHECKOUT")
 )
+MEASUREMENT_GUARD = SANDBOXY_CHECKOUT / "sandbox/measurement_guard.py"
+REQUIRE_SANDBOXY_COMPAT = (
+    os.environ.get("OPENADA_REQUIRE_SANDBOXY_COMPAT") == "1"
+)
+
 
 @pytest.fixture(scope="module")
 def ihp_gain_run(tmp_path_factory):
@@ -57,15 +73,10 @@ def test_real_ihp_source_follower_gain_passes(ihp_gain_run):
     assert measurement["unit"] == "dB"
     assert -8.0 <= measurement["value"] <= 0.0
 
-    retained_request = json.loads(
-        (
-            output_dir
-            / "analyses"
-            / "ac_gain"
-            / "measurements"
-            / "low_frequency_gain.request.json"
-        ).read_text(encoding="utf-8")
-    )
+    request_path = Path(measurement["request_path"])
+    assert request_path.parent.name == "requests"
+    assert request_path.name == f"{measurement['request_raw_sha256']}.json"
+    retained_request = json.loads(request_path.read_text(encoding="utf-8"))
     assert retained_request == gain_spec()["measurements"][0]["request"]
     assert measurement["request_raw_sha256"]
     assert measurement["request_canonical_sha256"]
@@ -94,10 +105,31 @@ def test_real_ihp_source_follower_gain_passes(ihp_gain_run):
     )
 
 
+def _require_measurement_guard(
+    measurement_guard: Path = MEASUREMENT_GUARD,
+    *,
+    required: bool = REQUIRE_SANDBOXY_COMPAT,
+) -> Path:
+    if measurement_guard.is_file():
+        return measurement_guard
+    reason = (
+        "Sandboxy ledger compatibility was not exercised because "
+        f"{measurement_guard} is unavailable; set SANDBOXY_CHECKOUT to the "
+        "coordinated Sandboxy checkout"
+    )
+    if required:
+        pytest.fail(
+            reason
+            + " (OPENADA_REQUIRE_SANDBOXY_COMPAT=1 makes this a release failure)"
+        )
+    pytest.skip(reason)
+
+
 def _load_measurement_guard() -> ModuleType:
+    measurement_guard = _require_measurement_guard()
     spec = importlib.util.spec_from_file_location(
         "sandboxy_measurement_guard_acceptance",
-        MEASUREMENT_GUARD,
+        measurement_guard,
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -105,11 +137,31 @@ def _load_measurement_guard() -> ModuleType:
     return module
 
 
+def test_sandboxy_ledger_compatibility_checkout_is_available() -> None:
+    assert _require_measurement_guard().is_file()
+
+
+def test_relative_sandboxy_checkout_is_resolved_from_repository_root() -> None:
+    assert _sandboxy_checkout("../sandboxy") == (
+        REPO_ROOT.parent / "sandboxy"
+    ).resolve()
+
+
+def test_required_sandboxy_compatibility_does_not_skip(tmp_path: Path) -> None:
+    missing = tmp_path / "missing-sandboxy/sandbox/measurement_guard.py"
+    with pytest.raises(pytest.fail.Exception, match="release failure"):
+        _require_measurement_guard(missing, required=True)
+
+
+def test_optional_sandboxy_compatibility_skips_loudly(tmp_path: Path) -> None:
+    missing = tmp_path / "missing-sandboxy/sandbox/measurement_guard.py"
+    with pytest.raises(pytest.skip.Exception, match="SANDBOXY_CHECKOUT"):
+        _require_measurement_guard(missing, required=False)
+
+
 def test_retained_gain_chain_backs_one_unsealed_typed_result(ihp_gain_run):
     payload, output_dir = ihp_gain_run
     assert payload["engineering"]["status"] == "pass", payload["diagnostics"]
-    if not MEASUREMENT_GUARD.is_file():
-        pytest.skip("sandboxy measurement_guard.py is not available")
 
     measurement_guard = _load_measurement_guard()
     entries = [
@@ -142,7 +194,11 @@ def test_retained_gain_chain_backs_one_unsealed_typed_result(ihp_gain_run):
     assert typed_result["unit"] == "dB"
     assert typed_result["origin"] == "simulated"
     assert typed_result["attestation"] == "unsealed"
-    assert typed_result["backed"] is True
+    assert "backed" not in typed_result
+    assert (
+        typed_result["digest_consistency"]
+        == "claimed_raw_lineage_only"
+    )
     assert typed_result["analysis"] == "ac"
     assert typed_result["pdk_id"] == "ihp-sg13g2"
     assert typed_result["corner"] == "mos_tt"

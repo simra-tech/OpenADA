@@ -17,12 +17,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import hashlib
+import importlib
 import json
+import math
 import os
 from pathlib import Path
 import re
 import stat
-from typing import Any, Mapping
+import sys
+from typing import Any, Callable, Mapping, NoReturn
 
 from ..contract import (
     FileRecordError,
@@ -94,6 +97,53 @@ _SCHEMATIC_DIGEST_KEYS = (
 _INDEPENDENT_SOURCE_KINDS = frozenset(
     ("vdc", "idc", "vpulse", "ipulse", "vsin", "isin", "vpwl", "ipwl")
 )
+_DEVICE_SPICE_PREFIX = {
+    "nmos": "M",
+    "pmos": "M",
+    "resistor": "R",
+    "capacitor": "C",
+    "inductor": "L",
+    "ground": "V",
+    "vdc": "V",
+    "idc": "I",
+    "vpulse": "V",
+    "ipulse": "I",
+    "vsin": "V",
+    "isin": "I",
+    "vpwl": "V",
+    "ipwl": "I",
+    "vcvs": "E",
+    "vccs": "G",
+    "cell": "X",
+    "abstract_block": "X",
+}
+_DEVICE_TERMINALS = {
+    "nmos": ("D", "G", "S", "B"),
+    "pmos": ("D", "G", "S", "B"),
+    "resistor": ("P", "M"),
+    "capacitor": ("P", "M"),
+    "inductor": ("P", "M"),
+    "ground": ("P",),
+    "vdc": ("P", "M"),
+    "idc": ("P", "M"),
+    "vpulse": ("P", "M"),
+    "ipulse": ("P", "M"),
+    "vsin": ("P", "M"),
+    "isin": ("P", "M"),
+    "vpwl": ("P", "M"),
+    "ipwl": ("P", "M"),
+    "vcvs": ("P", "M", "CP", "CM"),
+    "vccs": ("P", "M", "CP", "CM"),
+}
+_STRUCTURAL_PARAMETER_KEYS = {
+    "nmos": frozenset(("model", "w", "l", "m", "nf")),
+    "pmos": frozenset(("model", "w", "l", "m", "nf")),
+    "resistor": frozenset(("r",)),
+    "capacitor": frozenset(("c", "ic")),
+    "inductor": frozenset(("l",)),
+    "vcvs": frozenset(("gain",)),
+    "vccs": frozenset(("gain",)),
+}
 
 # This is the exact required-parameter vocabulary used by Simra's
 # ``contract_v2.lifecycle_v2``. Keep the lifecycle implementation below
@@ -556,6 +606,587 @@ def _netlist_subckts(
     return tuple(declarations)
 
 
+def _load_simra_bundle_validator() -> Callable[..., object] | None:
+    """Load the release-pinned Simra validator when its source root is present.
+
+    The production image exposes the same immutable Simra checkout used by the
+    schematic compiler through ``OPENADA_SIMRA_VALIDATOR_ROOT`` or the existing
+    ``SANDBOXY_SIMRA_VALIDATOR_ROOT`` compatibility name. Coordinated source
+    workspaces and Simra virtual environments provide two additional explicit
+    roots. Do not import an ambient ``plugins`` package from the caller's
+    working directory: in standalone OpenADA installations, absence of one of
+    these pinned roots deliberately selects the structural compatibility
+    battery.
+    """
+
+    configured_values = [
+        value
+        for value in (
+            os.environ.get("OPENADA_SIMRA_VALIDATOR_ROOT"),
+            os.environ.get("SANDBOXY_SIMRA_VALIDATOR_ROOT"),
+        )
+        if value is not None
+    ]
+    if len(set(configured_values)) > 1:
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "OPENADA_SIMRA_VALIDATOR_ROOT and "
+            "SANDBOXY_SIMRA_VALIDATOR_ROOT identify different checkouts.",
+        )
+    configured = configured_values[0] if configured_values else None
+    candidates: list[tuple[Path, bool]] = []
+    if configured is not None:
+        configured_root = Path(configured).expanduser()
+        if not configured_root.is_absolute():
+            raise SimraArtifactError(
+                "experiment.dut.bundle_invalid",
+                "The configured Simra validator root must identify one "
+                "absolute release-pinned checkout.",
+            )
+        candidates.append((configured_root, True))
+    candidates.extend(
+        (
+            (Path("/opt/sim/simra/current"), False),
+            (
+                Path(__file__).resolve().parents[3].parent / "simra",
+                False,
+            ),
+            (Path(sys.prefix).resolve().parent, False),
+        )
+    )
+
+    seen: set[Path] = set()
+    for candidate, required in candidates:
+        try:
+            root = candidate.resolve()
+        except OSError as exc:
+            if required:
+                raise SimraArtifactError(
+                    "experiment.dut.bundle_invalid",
+                    "The configured release-pinned Simra validator root could "
+                    "not be resolved.",
+                ) from exc
+            continue
+        if root in seen:
+            continue
+        seen.add(root)
+        module_file = root / "plugins/schematic/compiler/bundle.py"
+        if not module_file.is_file():
+            if required:
+                raise SimraArtifactError(
+                    "experiment.dut.bundle_invalid",
+                    "The configured release-pinned Simra checkout does not "
+                    "contain the schematic bundle validator.",
+                )
+            continue
+
+        root_text = str(root)
+        inserted = root_text not in sys.path
+        if inserted:
+            sys.path.insert(0, root_text)
+        try:
+            module = importlib.import_module(
+                "plugins.schematic.compiler.bundle"
+            )
+        except Exception as exc:
+            raise SimraArtifactError(
+                "experiment.dut.bundle_invalid",
+                "The release-pinned Simra schematic bundle validator could "
+                "not be imported.",
+            ) from exc
+        finally:
+            if inserted:
+                try:
+                    sys.path.remove(root_text)
+                except ValueError:
+                    pass
+
+        loaded_path = Path(str(getattr(module, "__file__", "")))
+        try:
+            loaded_path.resolve().relative_to(root)
+        except (OSError, ValueError) as exc:
+            raise SimraArtifactError(
+                "experiment.dut.bundle_invalid",
+                "The Simra schematic bundle validator resolved outside the "
+                "release-pinned source root.",
+            ) from exc
+        validator = getattr(module, "validate_bundle_bytes", None)
+        if not callable(validator):
+            raise SimraArtifactError(
+                "experiment.dut.bundle_invalid",
+                "The release-pinned Simra schematic bundle validator has an "
+                "unsupported API.",
+            )
+        return validator
+    return None
+
+
+def _validate_with_simra_bundle_validator(
+    validator: Callable[..., object],
+    *,
+    descriptor_bytes: bytes,
+    source_bytes: bytes,
+    view_bytes: bytes,
+    netlist_bytes: bytes,
+    cdl_bytes: bytes,
+    expected_top: str,
+) -> None:
+    """Require Simra's full deterministic validation of the captured bytes."""
+
+    files = {
+        "schematic.artifact.json": descriptor_bytes,
+        "design.ord": source_bytes,
+        "schematic.simra.json": view_bytes,
+        "design.spice": netlist_bytes,
+        "design.cdl": cdl_bytes,
+    }
+    try:
+        validated = validator(files, source_bytes, expected_top)
+    except Exception as exc:
+        detail = str(exc).replace("\r", " ").replace("\n", " ").strip()
+        if len(detail) > 1_000:
+            detail = detail[:997] + "..."
+        suffix = f": {detail}" if detail else f" ({type(exc).__name__})"
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "The release-pinned Simra validator rejected the captured "
+            f"five-file schematic bundle{suffix}",
+        ) from exc
+    if not isinstance(validated, Mapping):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "The release-pinned Simra validator returned an unsupported result.",
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _StructuralCard:
+    kind: str
+    tokens: tuple[str, ...]
+    node_count: int
+
+
+def _netlist_view_mismatch(message: str) -> NoReturn:
+    raise SimraArtifactError(
+        "experiment.dut.netlist_view_mismatch",
+        "The captured design.spice does not structurally match "
+        f"schematic.simra.json: {message}",
+    )
+
+
+def _structural_token(value: object, *, label: str) -> str:
+    if isinstance(value, bool) or value is None:
+        _netlist_view_mismatch(f"{label} is not one SPICE token")
+    if isinstance(value, float) and not math.isfinite(value):
+        _netlist_view_mismatch(f"{label} is not finite")
+    if not isinstance(value, (str, int, float)):
+        _netlist_view_mismatch(f"{label} is not one SPICE scalar")
+    token = str(value)
+    if _SAFE_SPICE_TOKEN_RE.fullmatch(token) is None:
+        _netlist_view_mismatch(f"{label} is not one bounded SPICE token")
+    return token
+
+
+def _prefixed_instance_name(name: str, kind: str) -> str:
+    prefix = _DEVICE_SPICE_PREFIX.get(kind)
+    if prefix is None:
+        _netlist_view_mismatch(
+            f"view instance {name!r} has unsupported kind {kind!r}"
+        )
+    return name if name[:1].upper() == prefix else f"{prefix}_{name}"
+
+
+def _primitive_parameter_tokens(
+    instance: Mapping[str, Any],
+    *,
+    name: str,
+    kind: str,
+) -> tuple[str, ...]:
+    parameters = instance.get("parameters")
+    if not isinstance(parameters, Mapping):
+        _netlist_view_mismatch(
+            f"view instance {name!r} has no parameters object"
+        )
+    allowed = _STRUCTURAL_PARAMETER_KEYS.get(kind)
+    if allowed is None:
+        _netlist_view_mismatch(
+            f"view instance {name!r} has unsupported DUT kind {kind!r}"
+        )
+    if not all(isinstance(key, str) for key in parameters):
+        _netlist_view_mismatch(
+            f"view instance {name!r} has a non-string parameter name"
+        )
+    unexpected = set(parameters) - allowed
+    if unexpected:
+        _netlist_view_mismatch(
+            f"view instance {name!r} has unsupported parameter(s) "
+            + ", ".join(sorted(str(key) for key in unexpected))
+        )
+
+    def value(key: str) -> str:
+        if key not in parameters:
+            _netlist_view_mismatch(
+                f"view instance {name!r} is missing parameter {key!r}"
+            )
+        return _structural_token(
+            parameters[key],
+            label=f"view instance {name!r} parameter {key!r}",
+        )
+
+    if kind in {"nmos", "pmos"}:
+        return (
+            value("model"),
+            f"W={value('w')}",
+            f"L={value('l')}",
+            f"M={value('m')}",
+            f"NF={value('nf')}",
+        )
+    if kind == "resistor":
+        return (value("r"),)
+    if kind == "capacitor":
+        tokens = [value("c")]
+        if "ic" in parameters:
+            tokens.append(f"IC={value('ic')}")
+        return tuple(tokens)
+    if kind == "inductor":
+        return (value("l"),)
+    if kind in {"vcvs", "vccs"}:
+        return (value("gain"),)
+    _netlist_view_mismatch(
+        f"view instance {name!r} has unsupported DUT kind {kind!r}"
+    )
+
+
+def _expected_structural_netlist(
+    view_document: Mapping[str, Any],
+) -> dict[str, tuple[tuple[str, ...], dict[str, _StructuralCard]]]:
+    raw_cells = view_document.get("cells")
+    if not isinstance(raw_cells, list):
+        _netlist_view_mismatch("the view contains no cells array")
+    all_cells = [cell for cell in raw_cells if isinstance(cell, Mapping)]
+    if len(all_cells) != len(raw_cells):
+        _netlist_view_mismatch("the view contains a non-object cell")
+    cell_by_id: dict[str, Mapping[str, Any]] = {}
+    for cell in all_cells:
+        cell_id = cell.get("id")
+        if not isinstance(cell_id, str) or cell_id in cell_by_id:
+            _netlist_view_mismatch(
+                "the view contains a missing or duplicate cell id"
+            )
+        cell_by_id[cell_id] = cell
+
+    expected: dict[
+        str, tuple[tuple[str, ...], dict[str, _StructuralCard]]
+    ] = {}
+    folded_cells: set[str] = set()
+    for cell in all_cells:
+        if cell.get("kind") != "design":
+            continue
+        cell_name = cell.get("name")
+        if (
+            not isinstance(cell_name, str)
+            or _SAFE_SPICE_TOKEN_RE.fullmatch(cell_name) is None
+        ):
+            _netlist_view_mismatch("a design cell has no SPICE-safe name")
+        folded_cell = cell_name.casefold()
+        if folded_cell in folded_cells:
+            _netlist_view_mismatch(
+                f"design cell name {cell_name!r} collides case-insensitively"
+            )
+        folded_cells.add(folded_cell)
+
+        entities = cell.get("entities")
+        if not isinstance(entities, Mapping):
+            _netlist_view_mismatch(
+                f"design cell {cell_name!r} has no entities object"
+            )
+        raw_nets = entities.get("nets")
+        if not isinstance(raw_nets, list):
+            _netlist_view_mismatch(
+                f"design cell {cell_name!r} has no nets array"
+            )
+        net_by_id: dict[str, str] = {}
+        folded_nets: set[str] = set()
+        for net in raw_nets:
+            if not isinstance(net, Mapping):
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} contains a non-object net"
+                )
+            net_id = net.get("id")
+            net_name = net.get("name")
+            if (
+                not isinstance(net_id, str)
+                or net_id in net_by_id
+                or not isinstance(net_name, str)
+                or _SAFE_SPICE_TOKEN_RE.fullmatch(net_name) is None
+            ):
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} contains an invalid net"
+                )
+            if net_name == "0":
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} names an internal net literal 0"
+                )
+            folded_net = net_name.casefold()
+            if folded_net in folded_nets:
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} contains colliding net names"
+                )
+            folded_nets.add(folded_net)
+            net_by_id[net_id] = net_name
+
+        raw_ports = entities.get("ports")
+        raw_port_order = cell.get("port_order")
+        if not isinstance(raw_ports, list) or not isinstance(
+            raw_port_order, list
+        ):
+            _netlist_view_mismatch(
+                f"design cell {cell_name!r} has no complete port map"
+            )
+        port_by_name: dict[str, Mapping[str, Any]] = {}
+        for port in raw_ports:
+            if not isinstance(port, Mapping):
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} contains a non-object port"
+                )
+            port_name = port.get("name")
+            if not isinstance(port_name, str) or port_name in port_by_name:
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} contains an invalid port"
+                )
+            port_by_name[port_name] = port
+        if (
+            not all(isinstance(name, str) for name in raw_port_order)
+            or len(port_by_name) != len(raw_port_order)
+            or set(port_by_name) != set(raw_port_order)
+        ):
+            _netlist_view_mismatch(
+                f"design cell {cell_name!r} port_order disagrees with its ports"
+            )
+        port_nets: list[str] = []
+        for port_name in raw_port_order:
+            net_id = port_by_name[port_name].get("net")
+            if not isinstance(net_id, str) or net_id not in net_by_id:
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} port {port_name!r} "
+                    "does not resolve through the net map"
+                )
+            port_nets.append(net_by_id[net_id])
+
+        raw_instances = entities.get("instances")
+        if not isinstance(raw_instances, list):
+            _netlist_view_mismatch(
+                f"design cell {cell_name!r} has no instances array"
+            )
+        cards: dict[str, _StructuralCard] = {}
+        for instance in raw_instances:
+            if not isinstance(instance, Mapping):
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} contains a non-object instance"
+                )
+            name = instance.get("name")
+            kind = instance.get("kind")
+            terminals = instance.get("terminals")
+            if (
+                not isinstance(name, str)
+                or _SAFE_SPICE_TOKEN_RE.fullmatch(name) is None
+                or not isinstance(kind, str)
+                or not isinstance(terminals, Mapping)
+            ):
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} contains an invalid instance"
+                )
+            spice_name = _prefixed_instance_name(name, kind)
+            folded_name = spice_name.casefold()
+            if folded_name in cards:
+                _netlist_view_mismatch(
+                    f"design cell {cell_name!r} contains colliding emitted "
+                    f"instance name {spice_name!r}"
+                )
+
+            if kind == "cell":
+                target_id = instance.get("cell_ref")
+                target = (
+                    cell_by_id.get(target_id)
+                    if isinstance(target_id, str)
+                    else None
+                )
+                if not isinstance(target, Mapping) or target.get("kind") != "design":
+                    _netlist_view_mismatch(
+                        f"hierarchical instance {name!r} does not resolve to "
+                        "one design cell"
+                    )
+                terminal_order = target.get("port_order")
+                target_name = target.get("name")
+                parameters = instance.get("parameters")
+                if (
+                    not isinstance(terminal_order, list)
+                    or not all(
+                        isinstance(terminal, str)
+                        for terminal in terminal_order
+                    )
+                    or not isinstance(target_name, str)
+                    or not isinstance(parameters, Mapping)
+                    or parameters
+                ):
+                    _netlist_view_mismatch(
+                        f"hierarchical instance {name!r} has invalid view metadata"
+                    )
+                tail = (target_name,)
+            else:
+                terminal_order = _DEVICE_TERMINALS.get(kind)
+                if terminal_order is None:
+                    _netlist_view_mismatch(
+                        f"view instance {name!r} has unsupported kind {kind!r}"
+                    )
+                tail = _primitive_parameter_tokens(
+                    instance,
+                    name=name,
+                    kind=kind,
+                )
+
+            nodes: list[str] = []
+            if set(terminals) != set(terminal_order):
+                _netlist_view_mismatch(
+                    f"view instance {name!r} terminals disagree with kind "
+                    f"{kind!r}"
+                )
+            for terminal in terminal_order:
+                net_id = terminals.get(terminal)
+                if not isinstance(net_id, str) or net_id not in net_by_id:
+                    _netlist_view_mismatch(
+                        f"view instance {name!r} terminal {terminal!r} does "
+                        "not resolve through the cell net map"
+                    )
+                nodes.append(net_by_id[net_id])
+            cards[folded_name] = _StructuralCard(
+                kind=kind,
+                tokens=(spice_name, *nodes, *tail),
+                node_count=len(nodes),
+            )
+        expected[cell_name] = (tuple(port_nets), cards)
+    return expected
+
+
+def _actual_structural_netlist(
+    netlist_text: str,
+) -> dict[str, tuple[tuple[str, ...], list[tuple[str, ...]]]]:
+    actual: dict[str, tuple[tuple[str, ...], list[tuple[str, ...]]]] = {}
+    folded_cells: set[str] = set()
+    active_name: str | None = None
+    active_cards: list[tuple[str, ...]] | None = None
+    for line_number, line in enumerate(netlist_text.splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("*"):
+            continue
+        tokens = tuple(stripped.split())
+        directive = tokens[0].casefold()
+        if directive == ".subckt":
+            if active_name is not None or len(tokens) < 2:
+                _netlist_view_mismatch(
+                    f"line {line_number} contains an invalid or nested .SUBCKT"
+                )
+            active_name = tokens[1]
+            folded_name = active_name.casefold()
+            if folded_name in folded_cells:
+                _netlist_view_mismatch(
+                    f"line {line_number} repeats or case-collides a .SUBCKT"
+                )
+            folded_cells.add(folded_name)
+            active_cards = []
+            actual[active_name] = (tokens[2:], active_cards)
+            continue
+        if directive == ".ends":
+            if (
+                active_name is None
+                or len(tokens) > 2
+                or (len(tokens) == 2 and tokens[1] != active_name)
+            ):
+                _netlist_view_mismatch(
+                    f"line {line_number} contains an unmatched .ENDS"
+                )
+            active_name = None
+            active_cards = None
+            continue
+        if active_name is None or active_cards is None:
+            _netlist_view_mismatch(
+                f"line {line_number} contains content outside a DUT subcircuit"
+            )
+        if stripped.startswith("+") or stripped.startswith("."):
+            _netlist_view_mismatch(
+                f"line {line_number} contains a forbidden directive or continuation"
+            )
+        if not tokens[0] or _SAFE_SPICE_TOKEN_RE.fullmatch(tokens[0]) is None:
+            _netlist_view_mismatch(
+                f"line {line_number} contains an invalid device name"
+            )
+        if tokens[0][0].upper() in {"V", "I"}:
+            raise SimraArtifactError(
+                "experiment.dut.embedded_stimulus",
+                "The captured design.spice contains an independent-source "
+                f"card inside DUT subcircuit {active_name!r} at line "
+                f"{line_number}.",
+            )
+        active_cards.append(tokens)
+    if active_name is not None:
+        _netlist_view_mismatch(
+            f"DUT subcircuit {active_name!r} has no matching .ENDS"
+        )
+    if not actual:
+        _netlist_view_mismatch("the netlist contains no DUT subcircuit")
+    return actual
+
+
+def _validate_structural_netlist_fallback(
+    view_document: Mapping[str, Any],
+    netlist_text: str,
+) -> None:
+    """Replay the view/netlist device relationship without importing Simra."""
+
+    expected = _expected_structural_netlist(view_document)
+    actual = _actual_structural_netlist(netlist_text)
+    if set(actual) != set(expected):
+        _netlist_view_mismatch(
+            "the netlist and view publish different design-cell names"
+        )
+    for cell_name, (expected_ports, expected_cards) in expected.items():
+        actual_ports, raw_cards = actual[cell_name]
+        if actual_ports != expected_ports:
+            _netlist_view_mismatch(
+                f"subcircuit {cell_name!r} terminal incidence disagrees "
+                "with the view port/net maps"
+            )
+        seen: set[str] = set()
+        for tokens in raw_cards:
+            folded_name = tokens[0].casefold()
+            card = expected_cards.get(folded_name)
+            if card is None or folded_name in seen:
+                _netlist_view_mismatch(
+                    f"subcircuit {cell_name!r} contains an extra, missing, "
+                    f"or duplicate device card {tokens[0]!r}"
+                )
+            seen.add(folded_name)
+            if len(tokens) < 1 + card.node_count:
+                _netlist_view_mismatch(
+                    f"device card {tokens[0]!r} has an incomplete node list"
+                )
+            if "0" in tokens[1 : 1 + card.node_count]:
+                _netlist_view_mismatch(
+                    f"device card {tokens[0]!r} connects to literal node 0"
+                )
+            if tokens != card.tokens:
+                _netlist_view_mismatch(
+                    f"device card {tokens[0]!r} disagrees in emitted name, "
+                    f"kind, parameters, or net incidence"
+                )
+        if seen != set(expected_cards):
+            missing = sorted(set(expected_cards) - seen)
+            _netlist_view_mismatch(
+                f"subcircuit {cell_name!r} omits view device card(s): "
+                + ", ".join(missing)
+            )
+
+
 def load_simra_schematic_bundle(
     descriptor_file: str | Path,
     *,
@@ -945,6 +1576,22 @@ def load_simra_schematic_bundle(
                 separators=(",", ":"),
             ),
         )
+
+    validator = _load_simra_bundle_validator()
+    if validator is not None:
+        _validate_with_simra_bundle_validator(
+            validator,
+            descriptor_bytes=descriptor_bytes,
+            source_bytes=source_bytes,
+            view_bytes=view_bytes,
+            netlist_bytes=netlist_bytes,
+            cdl_bytes=cdl_bytes,
+            expected_top=expected_top,
+        )
+    # Keep the structural replay even when the full validator is present. It
+    # independently enforces the experiment-specific prohibition on literal
+    # node 0 and independent sources inside reusable DUT subcircuits.
+    _validate_structural_netlist_fallback(view_document, netlist_text)
 
     records = (
         descriptor_record,

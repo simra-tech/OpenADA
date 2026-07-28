@@ -15,6 +15,7 @@ import uuid
 from ..contract import diagnostic, result, static_execution
 from ..driver_registry import CIRCUIT_SIMULATE_PROFILE, SIMULATION_EVIDENCE_ASSERTION
 from ..engines.ngspice_outputs import RawSeriesExtraction, extract_analysis_raw
+from ..pdk_bindings import MAX_BOUND_FILES
 from .result_measure import normalized_series_sha256
 
 
@@ -26,9 +27,14 @@ MAX_POINTS = 100_000
 MAX_SELECTORS = 32
 MAX_CONDITIONS = 64
 MAX_SELECTED_SCALARS = 1_000_000
-#: ``circuit.simulate`` records one entry per bound collateral file. A PDK
-#: binding is a handful of library entries plus at most a few OSDI modules and
-#: an identity file; ``pdk_bindings.MAX_BOUND_FILES`` is the producing bound.
+#: One simulation can retain the maximum captured PDK snapshot, the caller's
+#: bounded provenance inputs, and a small native deck/startup roster. Keep this
+#: separate from artifact and configuration limits: a complete Sky130 closure
+#: legitimately carries more than 300 exact inputs.
+MAX_SIMULATION_INPUT_RECORDS = MAX_BOUND_FILES + 64
+#: A captured PDK closure may contain hundreds of exact simulation inputs, but
+#: its configuration context is represented by one aggregate snapshot manifest
+#: plus the bounded OSDI/identity records that affect native startup directly.
 MAX_CONFIGURATION_REFERENCES = 64
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -350,12 +356,22 @@ def _validate_base_envelope(value: object) -> Mapping[str, Any]:
         code="series.simulation.invalid",
     )
 
-    for collection_name in ("inputs", "artifacts"):
+    collection_limits = {
+        "inputs": MAX_SIMULATION_INPUT_RECORDS,
+        "artifacts": 64,
+    }
+    for collection_name, collection_limit in collection_limits.items():
         collection = root[collection_name]
-        if not _is_sequence(collection) or len(collection) > 64:
+        if (
+            not _is_sequence(collection)
+            or len(collection) > collection_limit
+        ):
             raise _InvalidRequest(
                 "series.simulation.invalid",
-                f"simulation_result.{collection_name} must be a bounded array.",
+                (
+                    f"simulation_result.{collection_name} must contain at most "
+                    f"{collection_limit} records."
+                ),
             )
         for index, item in enumerate(collection):
             _validate_file_record(item, f"simulation_result.{collection_name}[{index}]")
@@ -1235,6 +1251,7 @@ __all__ = [
     "MAX_POINTS",
     "MAX_SELECTED_SCALARS",
     "MAX_SELECTORS",
+    "MAX_SIMULATION_INPUT_RECORDS",
     "OPERATION_PROFILE",
     "extract_result_series",
 ]

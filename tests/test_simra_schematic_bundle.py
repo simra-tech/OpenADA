@@ -6,6 +6,7 @@ from dataclasses import FrozenInstanceError
 import hashlib
 import json
 from pathlib import Path
+import shutil
 from typing import Any, Iterator
 
 import pytest
@@ -15,6 +16,19 @@ from openada.engines.simra_artifact import (
     SimraArtifactError,
     load_simra_schematic_bundle,
 )
+
+_REAL_VALIDATOR_LOADER = simra_artifact._load_simra_bundle_validator
+
+
+@pytest.fixture(autouse=True)
+def _standalone_validator_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep hand-authored unit bundles on the documented standalone path."""
+
+    monkeypatch.setattr(
+        simra_artifact,
+        "_load_simra_bundle_validator",
+        lambda: None,
+    )
 
 
 def _sha256(path: Path) -> str:
@@ -151,6 +165,15 @@ def _republish_view(descriptor: Path, view_document: dict[str, Any]) -> dict[str
     view = descriptor.parent / descriptor_document["view"]
     view.write_bytes(_json_bytes(view_document))
     descriptor_document["hashes"]["view_sha256"] = _sha256(view)
+    descriptor.write_bytes(_json_bytes(descriptor_document))
+    return _actual_digests(descriptor)
+
+
+def _republish_netlist(descriptor: Path, netlist_bytes: bytes) -> dict[str, str]:
+    descriptor_document = json.loads(descriptor.read_text(encoding="utf-8"))
+    netlist = descriptor.parent / descriptor_document["netlist"]
+    netlist.write_bytes(netlist_bytes)
+    descriptor_document["hashes"]["netlist_sha256"] = _sha256(netlist)
     descriptor.write_bytes(_json_bytes(descriptor_document))
     return _actual_digests(descriptor)
 
@@ -358,3 +381,233 @@ def test_top_subckt_port_order_must_match_the_view(tmp_path: Path) -> None:
             expected_top="DUT",
         )
     assert excinfo.value.code == "experiment.dut.port_abi_mismatch"
+
+
+def test_standalone_structural_replay_accepts_required_device_prefixing(
+    tmp_path: Path,
+) -> None:
+    descriptor, _expected = _write_bundle(tmp_path)
+    view_document = _view_document()
+    view_document["cells"][0]["entities"]["instances"][0]["name"] = "LOAD"
+    expected = _republish_view(descriptor, view_document)
+
+    bundle = load_simra_schematic_bundle(
+        descriptor,
+        expected_digests=expected,
+        expected_top="DUT",
+    )
+
+    assert bundle.netlist_text.count("R_LOAD A Y 1k") == 1
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        b"R_LOAD A 0 1k",
+        b"R_LOAD A Y 2k",
+    ),
+)
+def test_standalone_structural_replay_refuses_republished_netlist_edit(
+    tmp_path: Path,
+    replacement: bytes,
+) -> None:
+    descriptor, _expected = _write_bundle(tmp_path)
+    expected = _republish_netlist(
+        descriptor,
+        (tmp_path / "design.spice").read_bytes().replace(
+            b"R_LOAD A Y 1k",
+            replacement,
+        ),
+    )
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_schematic_bundle(
+            descriptor,
+            expected_digests=expected,
+            expected_top="DUT",
+        )
+
+    assert excinfo.value.code == "experiment.dut.netlist_view_mismatch"
+
+
+def test_standalone_structural_replay_refuses_netlist_only_source_card(
+    tmp_path: Path,
+) -> None:
+    descriptor, _expected = _write_bundle(tmp_path)
+    expected = _republish_netlist(
+        descriptor,
+        (tmp_path / "design.spice").read_bytes().replace(
+            b".ENDS DUT",
+            b"V_ATTACK A Y DC 1\n.ENDS DUT",
+        ),
+    )
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_schematic_bundle(
+            descriptor,
+            expected_digests=expected,
+            expected_top="DUT",
+        )
+
+    assert excinfo.value.code == "experiment.dut.embedded_stimulus"
+
+
+def test_importable_validator_receives_exact_captured_five_file_bundle(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    descriptor, expected = _write_bundle(tmp_path)
+    calls: list[tuple[dict[str, bytes], bytes, str]] = []
+
+    def validator(
+        files: dict[str, bytes],
+        expected_source: bytes,
+        expected_top: str,
+    ) -> dict[str, object]:
+        calls.append((files, expected_source, expected_top))
+        return {"descriptor": {}, "document": {}}
+
+    monkeypatch.setattr(
+        simra_artifact,
+        "_load_simra_bundle_validator",
+        lambda: validator,
+    )
+    bundle = load_simra_schematic_bundle(
+        descriptor,
+        expected_digests=expected,
+        expected_top="DUT",
+    )
+
+    assert bundle.top == "DUT"
+    assert len(calls) == 1
+    files, expected_source, expected_top = calls[0]
+    assert set(files) == {
+        "schematic.artifact.json",
+        "design.ord",
+        "schematic.simra.json",
+        "design.spice",
+        "design.cdl",
+    }
+    assert expected_source is files["design.ord"]
+    assert expected_top == "DUT"
+    assert files == {
+        "schematic.artifact.json": bundle.descriptor_bytes,
+        "design.ord": bundle.source_bytes,
+        "schematic.simra.json": bundle.view_bytes,
+        "design.spice": bundle.netlist_bytes,
+        "design.cdl": bundle.cdl_bytes,
+    }
+
+
+def test_importable_validator_maps_reexport_mismatch_to_bundle_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    descriptor, _expected = _write_bundle(tmp_path)
+    expected = _republish_netlist(
+        descriptor,
+        (tmp_path / "design.spice").read_bytes().replace(
+            b"R_LOAD A Y 1k",
+            b"R_LOAD A 0 1k",
+        ),
+    )
+
+    def validator(
+        files: dict[str, bytes],
+        expected_source: bytes,
+        expected_top: str,
+    ) -> dict[str, object]:
+        assert files["design.spice"] == (tmp_path / "design.spice").read_bytes()
+        assert expected_source == (tmp_path / "design.ord").read_bytes()
+        assert expected_top == "DUT"
+        raise ValueError("design.spice differs from deterministic graph re-export")
+
+    monkeypatch.setattr(
+        simra_artifact,
+        "_load_simra_bundle_validator",
+        lambda: validator,
+    )
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_schematic_bundle(
+            descriptor,
+            expected_digests=expected,
+            expected_top="DUT",
+        )
+
+    assert excinfo.value.code == "experiment.dut.bundle_invalid"
+
+
+def test_coordinated_simra_validator_refuses_real_netlist_ground_edit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    validator = _REAL_VALIDATOR_LOADER()
+    if validator is None:
+        pytest.skip(
+            "the coordinated Simra bundle validator is not importable; "
+            "standalone structural replay is covered separately"
+        )
+
+    fixture = Path(__file__).parent / "fixtures" / "dut-source-follower"
+    publication = tmp_path / "dut-source-follower"
+    shutil.copytree(fixture, publication)
+    descriptor = publication / "schematic.artifact.json"
+    original = (publication / "design.spice").read_bytes()
+    original_card = (
+        b"M_BIAS Y VBIAS VSS VSS nmos.core W=10u L=180n M=1 NF=1"
+    )
+    edited_card = (
+        b"M_BIAS 0 VBIAS VSS VSS nmos.core W=10u L=180n M=1 NF=1"
+    )
+    assert original_card in original
+    expected = _republish_netlist(
+        descriptor,
+        original.replace(original_card, edited_card),
+    )
+    monkeypatch.setattr(
+        simra_artifact,
+        "_load_simra_bundle_validator",
+        lambda: validator,
+    )
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_schematic_bundle(
+            descriptor,
+            expected_digests=expected,
+            expected_top="SourceFollower",
+        )
+
+    assert excinfo.value.code == "experiment.dut.bundle_invalid"
+
+
+def test_structural_literal_zero_refusal_remains_after_validator_success(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    descriptor, _expected = _write_bundle(tmp_path)
+    expected = _republish_netlist(
+        descriptor,
+        (tmp_path / "design.spice").read_bytes().replace(
+            b"R_LOAD A Y 1k",
+            b"R_LOAD A 0 1k",
+        ),
+    )
+    monkeypatch.setattr(
+        simra_artifact,
+        "_load_simra_bundle_validator",
+        lambda: (
+            lambda _files, _source, _top: {
+                "descriptor": {},
+                "document": {},
+            }
+        ),
+    )
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_schematic_bundle(
+            descriptor,
+            expected_digests=expected,
+            expected_top="DUT",
+        )
+
+    assert excinfo.value.code == "experiment.dut.netlist_view_mismatch"

@@ -13,7 +13,11 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation, ROUND_CEILING
+from decimal import (
+    Decimal,
+    DecimalException,
+    ROUND_CEILING,
+)
 import hashlib
 import json
 import math
@@ -32,7 +36,9 @@ from ..contract import (
     stable_regular_file,
     static_execution,
 )
+from ..conformance import result_conformance_issues
 from ..discovery import DiscoveryManager
+from ..driver_registry import CIRCUIT_SIMULATE_PROFILE
 from ..engines.simra_artifact import SimraArtifactError
 from ..pdk_bindings import (
     PdkBindingError,
@@ -44,7 +50,13 @@ from ..pdk_bindings import (
 from ..provider_runtime import ProviderRuntimeError, load_operation_profile
 from .circuit_simulate import MAX_SHARED_ANALYSIS_POINTS
 from .result_measure import measure_result
-from .result_series_extract import extract_result_series
+from .result_series_extract import (
+    MAX_POINTS as MAX_EXTRACTION_POINTS,
+    MAX_SELECTED_SCALARS as MAX_EXTRACTION_SCALARS,
+    MAX_SELECTORS as MAX_EXTRACTION_SELECTORS,
+    OPERATION_PROFILE as EXTRACTION_OPERATION_PROFILE,
+    extract_result_series,
+)
 from .result_spectral_measure import measure_spectrum
 from .result_transfer_measure import measure_transfer
 from .simulate import simulate
@@ -64,6 +76,9 @@ MAX_MEASUREMENTS = 128
 MAX_DERIVATIONS = 128
 MAX_DEBUG_SAVES = 128
 MAX_RAW_HEADER_BYTES = 256 * 1024
+MAX_RETAINED_JSON_BYTES = 128 * 1024 * 1024
+MAX_SCALAR_SIGNIFICANT_DIGITS = 128
+MAX_SCALAR_ADJUSTED_EXPONENT = 300
 
 _SLUG_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 _NAME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,63}$")
@@ -147,6 +162,15 @@ _SUPPORTED_MEASUREMENT_PROFILES = {
     "openada.operation/result.transfer.measure/v1alpha1": ("transfer", "transfer"),
     "openada.operation/result.spectral.measure/v1alpha1": ("spectral", "spectral"),
 }
+_MEASUREMENT_RESULT_OPERATIONS = {
+    "openada.operation/result.measure/v1alpha1": "result.measure",
+    "openada.operation/result.transfer.measure/v1alpha1": (
+        "result.transfer.measure"
+    ),
+    "openada.operation/result.spectral.measure/v1alpha1": (
+        "result.spectral.measure"
+    ),
+}
 _TRANSFER_UNITS = {
     "low_frequency_gain_db": "dB",
     "low_frequency_impedance": "Ohm",
@@ -207,6 +231,7 @@ class Analysis:
     document: Mapping[str, Any]
     card: str
     axis_unit: str
+    estimated_points: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,6 +261,9 @@ class Measurement:
     analysis_id: str
     operation_profile: str
     request: Mapping[str, Any]
+    request_bytes: bytes
+    request_raw_sha256: str
+    request_canonical_sha256: str
     expected_unit: str | None
 
 
@@ -267,7 +295,6 @@ class PreparedExperiment:
     identifier: str
     bundle: Any
     resolved_pdk: ResolvedPdkBinding
-    pdk_root: Path
     elements: tuple[Element, ...]
     analyses: tuple[Analysis, ...]
     observations: tuple[Observation, ...]
@@ -418,31 +445,58 @@ def _emitted_name(name: str, kind: str) -> str:
     return name if name[:1].upper() == prefix else f"{prefix}_{name}"
 
 
-def _scalar(value: object) -> Scalar | None:
+class _ScalarOutOfRange(ValueError):
+    """A syntactically valid scalar exceeds the closed numeric domain."""
+
+
+def _parse_scalar(value: object) -> Scalar:
     if isinstance(value, bool):
-        return None
+        raise ValueError("booleans are not numeric scalars")
     if isinstance(value, int):
         token = str(value)
     elif isinstance(value, float):
         if not math.isfinite(value):
-            return None
+            raise _ScalarOutOfRange("the scalar is not finite")
         token = repr(value)
     elif isinstance(value, str):
         token = value
     else:
-        return None
+        raise ValueError("unsupported scalar type")
     match = _SPICE_NUMBER_RE.fullmatch(token)
     if match is None:
-        return None
+        raise ValueError("not a strict SPICE scalar")
     try:
-        parsed = Decimal(match.group("number")) * _SPICE_SCALE[
-            (match.group("suffix") or "").casefold()
-        ]
-    except (InvalidOperation, KeyError):
-        return None
+        number = Decimal(match.group("number"))
+        scale = _SPICE_SCALE[(match.group("suffix") or "").casefold()]
+        significant_digits = len(number.as_tuple().digits)
+        if significant_digits > MAX_SCALAR_SIGNIFICANT_DIGITS:
+            raise _ScalarOutOfRange(
+                "the scalar has too many significant digits "
+                f"({significant_digits}; limit {MAX_SCALAR_SIGNIFICANT_DIGITS})"
+            )
+        if number != 0:
+            scaled_exponent = number.adjusted() + scale.adjusted()
+            if abs(scaled_exponent) > MAX_SCALAR_ADJUSTED_EXPONENT:
+                raise _ScalarOutOfRange(
+                    "the scalar magnitude exponent is outside "
+                    f"[-{MAX_SCALAR_ADJUSTED_EXPONENT}, "
+                    f"{MAX_SCALAR_ADJUSTED_EXPONENT}]"
+                )
+        parsed = number * scale
+    except _ScalarOutOfRange:
+        raise
+    except (DecimalException, KeyError, OverflowError, ValueError) as exc:
+        raise ValueError("the scalar could not be evaluated") from exc
     if not parsed.is_finite():
-        return None
+        raise _ScalarOutOfRange("the scalar is not finite")
     return Scalar(token=token, value=parsed)
+
+
+def _scalar(value: object) -> Scalar | None:
+    try:
+        return _parse_scalar(value)
+    except (ValueError, DecimalException, OverflowError):
+        return None
 
 
 def _ground_alias(value: str) -> bool:
@@ -807,67 +861,20 @@ def _bound_allowlist_issue(
     return None
 
 
-_PDK_NAMESPACE_RE = re.compile(
-    rb"^[ \t]*\.(?P<kind>subckt|model|global)[ \t]+(?P<body>[^\r\n*]+)",
-    re.IGNORECASE,
-)
-
-
 def _pdk_namespaces(
     resolved: ResolvedPdkBinding,
-) -> tuple[set[str], set[str], str | None]:
-    """Return selected-PDK model/subcircuit and global-node namespaces.
+) -> tuple[set[str], set[str], PdkBindingError | None]:
+    """Return namespaces captured while walking the complete active closure."""
 
-    The binding profiles already enumerate every model name emitted by the
-    rewriter.  Direct collateral declarations are added here so the composer
-    can also reject collisions with support subcircuits and global switches.
-    Each library is re-content-bound while it is scanned; a changed PDK file
-    invalidates the validation snapshot rather than silently changing the
-    namespace after the preflight bind.
-    """
-
-    model_names = {
-        name.casefold() for name in resolved.binding.device_models.values()
-    }
-    global_nodes: set[str] = set()
-    expected = {
-        str(Path(str(record.get("path"))).resolve()): str(record.get("sha256"))
-        for record in resolved.input_records
-        if record.get("role") == "pdk.corner-library"
-    }
-    for path in resolved.library_paths:
-        digest = hashlib.sha256()
-        try:
-            with stable_regular_file(path) as (handle, _opened):
-                for line in handle:
-                    digest.update(line)
-                    match = _PDK_NAMESPACE_RE.match(line)
-                    if match is None:
-                        continue
-                    kind = match.group("kind").decode("ascii").casefold()
-                    tokens = match.group("body").decode(
-                        "latin-1", errors="replace"
-                    ).split()
-                    if not tokens:
-                        continue
-                    if kind in {"subckt", "model"}:
-                        model_names.add(tokens[0].casefold())
-                    else:
-                        global_nodes.update(
-                            token.casefold()
-                            for token in tokens
-                            if token != "0" and not token.startswith("$")
-                        )
-        except (OSError, ValueError) as exc:
-            return set(), set(), f"PDK namespace scan failed for {path}: {exc}"
-        expected_digest = expected.get(str(path.resolve()))
-        if expected_digest is None or digest.hexdigest() != expected_digest:
-            return (
-                set(),
-                set(),
-                f"PDK library {path} changed after it was content-bound",
-            )
-    return model_names, global_nodes, None
+    try:
+        resolved.verify_snapshot()
+    except PdkBindingError as exc:
+        return set(), set(), exc
+    return (
+        set(resolved.namespace_model_names),
+        set(resolved.namespace_global_nodes),
+        None,
+    )
 
 
 class _Validator:
@@ -949,10 +956,31 @@ class _Validator:
             return None
         return str(value)
 
-    def scalar(self, value: object, path: str) -> Scalar | None:
-        parsed = _scalar(value)
-        if parsed is not None:
-            return parsed
+    def scalar(
+        self,
+        value: object,
+        path: str,
+        *,
+        range_code: str = "experiment.element.parameter_out_of_range",
+        invalid_code: str | None = None,
+    ) -> Scalar | None:
+        try:
+            return _parse_scalar(value)
+        except _ScalarOutOfRange as exc:
+            self.add(range_code, path, str(exc))
+            return None
+        except (DecimalException, OverflowError) as exc:
+            self.add(range_code, path, f"numeric evaluation is out of range: {exc}")
+            return None
+        except ValueError:
+            pass
+        if invalid_code is not None:
+            self.add(
+                invalid_code,
+                path,
+                "must be one strict finite in-range SPICE numeric scalar",
+            )
+            return None
         if isinstance(value, str):
             self.add(
                 "experiment.element.parameter_expression_forbidden",
@@ -1006,6 +1034,7 @@ class _Validator:
         observations = self._observations(
             root.get("observations"), analyses, elements, known_nets
         )
+        self._extraction_limits(analyses, observations)
         measurements = self._measurements(
             root.get("measurements"), analyses, observations
         )
@@ -1031,8 +1060,8 @@ class _Validator:
             self.add(
                 "experiment.pdk.binding_failed",
                 "/conditions/pdk",
-                namespace_error,
-                cause_code="pdk.file.unstable",
+                namespace_error.message,
+                cause_code=namespace_error.code,
             )
             return None
         for net in sorted(known_nets):
@@ -1238,7 +1267,6 @@ class _Validator:
             identifier=identifier,
             bundle=bundle,
             resolved_pdk=resolved,
-            pdk_root=Path(self.pdk_root).expanduser(),
             elements=tuple(elements),
             analyses=tuple(analyses),
             observations=tuple(observations),
@@ -1268,14 +1296,36 @@ class _Validator:
                 "must name one absolute schematic.artifact.json path",
             )
         else:
-            artifact = Path(artifact_value).expanduser()
-            if not artifact.is_absolute():
-                self.add(
-                    "experiment.dut.artifact_missing",
-                    "/dut/artifact",
-                    "must be an absolute path",
+            locator = Path(artifact_value)
+            suspicious = (
+                not locator.is_absolute()
+                or artifact_value.startswith("~")
+                or any(part in {".", ".."} for part in locator.parts)
+                or any(
+                    ord(character) < 0x20 or ord(character) == 0x7F
+                    for character in artifact_value
                 )
-                artifact = None
+                or os.path.normpath(artifact_value) != artifact_value
+            )
+            if not suspicious:
+                try:
+                    suspicious = (
+                        str(locator.resolve(strict=False)) != artifact_value
+                    )
+                except (OSError, RuntimeError, ValueError):
+                    suspicious = True
+            if suspicious:
+                self.add(
+                    "experiment.dut.publication_untrusted",
+                    "/dut/artifact",
+                    (
+                        "must be one canonical absolute schematic publication "
+                        "locator without expansion, control characters, dot "
+                        "segments, symlink aliases, or noncanonical spelling"
+                    ),
+                )
+            else:
+                artifact = locator
         top = self.name(
             dut.get("top"),
             "/dut/top",
@@ -1668,6 +1718,7 @@ class _Validator:
 
             normalized = dict(raw)
             valid = True
+            estimated_points = 1
             if kind == "op":
                 pass
             elif kind == "ac":
@@ -1698,7 +1749,12 @@ class _Validator:
                     )
                     valid = False
                 for key in ("start", "stop"):
-                    parsed = self.scalar(raw.get(key), f"{path}/{key}")
+                    parsed = self.scalar(
+                        raw.get(key),
+                        f"{path}/{key}",
+                        range_code="experiment.analysis.invalid",
+                        invalid_code="experiment.analysis.invalid",
+                    )
                     if parsed is None:
                         valid = False
                     else:
@@ -1726,20 +1782,33 @@ class _Validator:
                     and isinstance(start, Decimal)
                     and isinstance(stop, Decimal)
                 ):
-                    if raw.get("sweep") == "lin":
-                        estimated_points = points
-                    else:
-                        divisor = (
-                            Decimal(10).ln()
-                            if raw.get("sweep") == "dec"
-                            else Decimal(2).ln()
+                    try:
+                        if raw.get("sweep") == "lin":
+                            estimated_points = points
+                        else:
+                            divisor = (
+                                Decimal(10).ln()
+                                if raw.get("sweep") == "dec"
+                                else Decimal(2).ln()
+                            )
+                            estimated_points = int(
+                                (
+                                    Decimal(points)
+                                    * ((stop / start).ln() / divisor)
+                                ).to_integral_value(rounding=ROUND_CEILING)
+                            ) + 1
+                    except (
+                        DecimalException,
+                        OverflowError,
+                        TypeError,
+                        ValueError,
+                    ) as exc:
+                        self.add(
+                            "experiment.analysis.invalid",
+                            path,
+                            f"the AC point count could not be bounded safely: {exc}",
                         )
-                        estimated_points = int(
-                            (
-                                Decimal(points)
-                                * ((stop / start).ln() / divisor)
-                            ).to_integral_value(rounding=ROUND_CEILING)
-                        ) + 1
+                        valid = False
                     if estimated_points > MAX_SHARED_ANALYSIS_POINTS:
                         self.add(
                             "experiment.analysis.over_limit",
@@ -1761,7 +1830,12 @@ class _Validator:
                     )
                     valid = False
                 for key in ("start", "stop", "step"):
-                    parsed = self.scalar(raw.get(key), f"{path}/{key}")
+                    parsed = self.scalar(
+                        raw.get(key),
+                        f"{path}/{key}",
+                        range_code="experiment.analysis.invalid",
+                        invalid_code="experiment.analysis.invalid",
+                    )
                     if parsed is None:
                         valid = False
                     else:
@@ -1790,11 +1864,24 @@ class _Validator:
                     and isinstance(stop, Decimal)
                     and isinstance(step, Decimal)
                 ):
-                    estimated_points = int(
-                        ((stop - start) / step).to_integral_value(
-                            rounding=ROUND_CEILING
+                    try:
+                        estimated_points = int(
+                            ((stop - start) / step).to_integral_value(
+                                rounding=ROUND_CEILING
+                            )
+                        ) + 1
+                    except (
+                        DecimalException,
+                        OverflowError,
+                        TypeError,
+                        ValueError,
+                    ) as exc:
+                        self.add(
+                            "experiment.analysis.invalid",
+                            path,
+                            f"the DC point count could not be bounded safely: {exc}",
                         )
-                    ) + 1
+                        valid = False
                     if estimated_points > MAX_SHARED_ANALYSIS_POINTS:
                         self.add(
                             "experiment.analysis.over_limit",
@@ -1809,7 +1896,12 @@ class _Validator:
                 for key in ("step", "stop", "start", "max_step"):
                     if key not in raw:
                         continue
-                    parsed = self.scalar(raw.get(key), f"{path}/{key}")
+                    parsed = self.scalar(
+                        raw.get(key),
+                        f"{path}/{key}",
+                        range_code="experiment.analysis.invalid",
+                        invalid_code="experiment.analysis.invalid",
+                    )
                     if parsed is None:
                         valid = False
                     else:
@@ -1840,11 +1932,34 @@ class _Validator:
                     and isinstance(stop, Decimal)
                     and isinstance(start, Decimal)
                 ):
-                    estimated_points = int(
-                        ((stop - start) / step).to_integral_value(
-                            rounding=ROUND_CEILING
+                    try:
+                        effective_step = (
+                            min(step, maximum)
+                            if isinstance(maximum, Decimal)
+                            else step
                         )
-                    ) + 1
+                        estimated_points = int(
+                            (
+                                (stop - start) / effective_step
+                            ).to_integral_value(
+                                rounding=ROUND_CEILING
+                            )
+                        ) + 1
+                    except (
+                        DecimalException,
+                        OverflowError,
+                        TypeError,
+                        ValueError,
+                    ) as exc:
+                        self.add(
+                            "experiment.analysis.invalid",
+                            path,
+                            (
+                                "the transient point count could not be "
+                                f"bounded safely: {exc}"
+                            ),
+                        )
+                        valid = False
                     if estimated_points > MAX_SHARED_ANALYSIS_POINTS:
                         self.add(
                             "experiment.analysis.over_limit",
@@ -1877,6 +1992,7 @@ class _Validator:
                         document=card_input,
                         card=card,
                         axis_unit=axis_unit,
+                        estimated_points=estimated_points,
                     )
                 )
         return output
@@ -1921,7 +2037,21 @@ class _Validator:
         stop = normalized_analysis.get("_stop_value")
         start = normalized_analysis.get("_start_value", Decimal(0))
         if all(isinstance(item, Decimal) for item in (step, stop, start)):
-            if stop - start != step * (count - 1):
+            try:
+                coherent = stop - start == step * (count - 1)
+            except (
+                DecimalException,
+                OverflowError,
+                TypeError,
+                ValueError,
+            ) as exc:
+                self.add(
+                    "experiment.analysis.invalid",
+                    f"{analysis_path}/sampling_plan",
+                    f"the sampling plan could not be bounded safely: {exc}",
+                )
+                return
+            if not coherent:
                 self.add(
                     "experiment.analysis.invalid",
                     f"{analysis_path}/sampling_plan",
@@ -2276,6 +2406,73 @@ class _Validator:
                 identities[identity] = item.identifier
         return output
 
+    def _extraction_limits(
+        self,
+        analyses: Sequence[Analysis],
+        observations: Sequence[Observation],
+    ) -> None:
+        """Refuse runs which the real series extractor must reject later."""
+
+        observations_by_analysis: dict[str, list[Observation]] = defaultdict(list)
+        for observation in observations:
+            observations_by_analysis[observation.analysis_id].append(observation)
+        raw_analyses = (
+            self.document.get("analyses")
+            if isinstance(self.document, Mapping)
+            else None
+        )
+        analysis_paths: dict[str, str] = {}
+        if isinstance(raw_analyses, list):
+            for index, item in enumerate(raw_analyses):
+                if isinstance(item, Mapping) and isinstance(item.get("id"), str):
+                    analysis_paths[str(item["id"])] = f"/analyses/{index}"
+
+        for analysis in analyses:
+            selected = observations_by_analysis.get(analysis.identifier, [])
+            if not selected:
+                continue
+            path = analysis_paths.get(
+                analysis.identifier,
+                f"/analyses/{analysis.identifier}",
+            )
+            if len(selected) > MAX_EXTRACTION_SELECTORS:
+                self.add(
+                    "experiment.analysis.over_limit",
+                    path,
+                    (
+                        f"analysis {analysis.identifier!r} selects {len(selected)} "
+                        f"series; the extractor limit is {MAX_EXTRACTION_SELECTORS}"
+                    ),
+                )
+            if analysis.estimated_points > MAX_EXTRACTION_POINTS:
+                self.add(
+                    "experiment.analysis.over_limit",
+                    path,
+                    (
+                        f"analysis {analysis.identifier!r} would retain about "
+                        f"{analysis.estimated_points} points; the extractor limit "
+                        f"is {MAX_EXTRACTION_POINTS}"
+                    ),
+                )
+            native_names = {
+                observation.native_name.casefold() for observation in selected
+            }
+            scalar_width = 2 if analysis.kind == "ac" else 1
+            selected_scalars = analysis.estimated_points * (
+                1 + len(native_names) * scalar_width
+            )
+            if selected_scalars > MAX_EXTRACTION_SCALARS:
+                self.add(
+                    "experiment.analysis.over_limit",
+                    path,
+                    (
+                        f"analysis {analysis.identifier!r} would require about "
+                        f"{selected_scalars} selected raw scalars "
+                        "(points times selected native vectors, including the "
+                        f"axis); the extractor limit is {MAX_EXTRACTION_SCALARS}"
+                    ),
+                )
+
     def _profile_schema_issues(
         self,
         profile_id: str,
@@ -2430,12 +2627,37 @@ class _Validator:
                 entry is not None
                 for entry in (identifier, analysis, profile)
             ) and isinstance(request, Mapping):
+                request_document = dict(request)
+                try:
+                    request_bytes = _json_bytes(request_document)
+                    request_canonical_sha256 = _canonical_sha256(
+                        request_document
+                    )
+                except (
+                    DecimalException,
+                    OverflowError,
+                    RecursionError,
+                    TypeError,
+                    ValueError,
+                ) as exc:
+                    self.add(
+                        "experiment.measurement.request_invalid",
+                        f"{path}/request",
+                        (
+                            "the request cannot be serialized as finite bounded "
+                            f"JSON: {exc}"
+                        ),
+                    )
+                    continue
                 output.append(
                     Measurement(
                         identifier=str(identifier),
                         analysis_id=str(analysis_id),
                         operation_profile=str(profile),
-                        request=dict(request),
+                        request=request_document,
+                        request_bytes=request_bytes,
+                        request_raw_sha256=_sha256_bytes(request_bytes),
+                        request_canonical_sha256=request_canonical_sha256,
                         expected_unit=expected_unit,
                     )
                 )
@@ -2963,10 +3185,233 @@ def _write_bytes(path: Path, body: bytes) -> dict[str, Any]:
 
 
 def _write_json(path: Path, value: object, *, role: str) -> dict[str, Any]:
-    record = _write_bytes(path, _json_bytes(value))
+    body = _json_bytes(value)
+    record = _write_bytes(path, body)
+    if (
+        record.get("exists") is not True
+        or record.get("bytes") != len(body)
+        or record.get("sha256") != _sha256_bytes(body)
+    ):
+        raise FileRecordError(
+            f"{path} does not retain the exact serialized result bytes"
+        )
     record["kind"] = "openada-result" if role.endswith("result") else "experiment-json"
     record["role"] = role
     return record
+
+
+def _captured_json_mapping(body: bytes, *, label: str) -> dict[str, Any]:
+    """Strict-parse the exact bytes which will be retained and consumed."""
+
+    document, issues = _decode_json(body)
+    if issues or not isinstance(document, Mapping):
+        detail = (
+            "; ".join(f"{issue.path}: {issue.message}" for issue in issues)
+            or "the captured document is not an object"
+        )
+        raise FileRecordError(f"{label} is not strict captured JSON: {detail}")
+    return dict(document)
+
+
+def _capture_retained_json(
+    path: Path,
+    *,
+    label: str,
+    role: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Capture one persisted child envelope and bind that exact byte snapshot."""
+
+    try:
+        with stable_regular_file(path) as (handle, opened):
+            if opened.st_size > MAX_RETAINED_JSON_BYTES:
+                raise FileRecordError(
+                    f"{label} exceeds {MAX_RETAINED_JSON_BYTES} bytes"
+                )
+            body = handle.read(MAX_RETAINED_JSON_BYTES + 1)
+    except FileRecordError:
+        raise
+    except OSError as exc:
+        raise FileRecordError(f"{label} could not be captured: {exc}") from exc
+    if len(body) > MAX_RETAINED_JSON_BYTES:
+        raise FileRecordError(
+            f"{label} exceeds {MAX_RETAINED_JSON_BYTES} bytes"
+        )
+    document = _captured_json_mapping(body, label=label)
+    record = file_record(path, kind="openada-result", role=role)
+    if (
+        record.get("exists") is not True
+        or record.get("bytes") != len(body)
+        or record.get("sha256") != _sha256_bytes(body)
+    ):
+        raise FileRecordError(f"{label} changed after its stable capture")
+    return document, record
+
+
+def _write_captured_json(
+    path: Path,
+    body: bytes,
+    *,
+    role: str,
+) -> dict[str, Any]:
+    """Publish one pre-serialized request at its exact content address."""
+
+    expected_sha256 = _sha256_bytes(body)
+    if path.name != f"{expected_sha256}.json":
+        raise FileRecordError(
+            f"{path} is not the content address of its captured request bytes"
+        )
+    record = _write_bytes(path, body)
+    if (
+        record.get("exists") is not True
+        or record.get("bytes") != len(body)
+        or record.get("sha256") != expected_sha256
+    ):
+        raise FileRecordError(
+            f"{path} does not retain the exact captured request bytes"
+        )
+    record["kind"] = "experiment-json"
+    record["role"] = role
+    return record
+
+
+def _envelope_file_records(
+    envelope: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    """Retain every declared file record, including invalid audit sentinels."""
+
+    records: list[dict[str, Any]] = []
+    for section in ("inputs", "artifacts"):
+        values = envelope.get(section)
+        if not isinstance(values, list):
+            records.append({})
+            continue
+        records.extend(
+            (
+                dict(item)
+                if isinstance(item, Mapping)
+                else {}
+            )
+            for item in values
+        )
+    return records
+
+
+def _child_envelope_structure_issue(
+    envelope: Mapping[str, Any],
+    *,
+    expected_operation: str,
+) -> str | None:
+    """Return why one child is not a complete retained base envelope."""
+
+    conformance_issues = result_conformance_issues(
+        envelope,
+        expected_operation=expected_operation,
+        verify_recorded_files=False,
+    )
+    if conformance_issues:
+        return "; ".join(conformance_issues)
+
+    for section in ("inputs", "artifacts"):
+        values = envelope[section]
+        for index, entry in enumerate(values):
+            path = entry.get("path")
+            size = entry.get("bytes")
+            digest = entry.get("sha256")
+            if (
+                not isinstance(entry.get("kind"), str)
+                or not isinstance(entry.get("role"), str)
+                or entry.get("exists") is not True
+                or not isinstance(path, str)
+                or not Path(path).is_absolute()
+                or isinstance(size, bool)
+                or not isinstance(size, int)
+                or size < 0
+                or not isinstance(digest, str)
+                or _SHA256_RE.fullmatch(digest) is None
+            ):
+                return (
+                    f"{section}[{index}] must be one complete retained "
+                    "absolute file record"
+                )
+    return None
+
+
+def _audit_retained_files(
+    records: Sequence[Mapping[str, Any]],
+) -> list[ExperimentIssue]:
+    """Re-content-bind every retained file through one stable open descriptor."""
+
+    issues: list[ExperimentIssue] = []
+    expected_by_path: dict[str, tuple[int, str]] = {}
+    for index, record in enumerate(records):
+        path_value = record.get("path")
+        size = record.get("bytes")
+        digest = record.get("sha256")
+        exists = record.get("exists")
+        pointer = f"/artifacts/{index}"
+        if (
+            exists is not True
+            or not isinstance(path_value, str)
+            or not Path(path_value).is_absolute()
+            or isinstance(size, bool)
+            or not isinstance(size, int)
+            or size < 0
+            or not isinstance(digest, str)
+            or _SHA256_RE.fullmatch(digest) is None
+        ):
+            issues.append(
+                ExperimentIssue(
+                    "experiment.evidence.collection_incomplete",
+                    pointer,
+                    "a retained file record is absent or lacks a complete content binding",
+                )
+            )
+            continue
+        prior = expected_by_path.get(path_value)
+        if prior is not None and prior != (size, digest):
+            issues.append(
+                ExperimentIssue(
+                    "experiment.evidence.collection_incomplete",
+                    pointer,
+                    f"retained path {path_value} has conflicting digest bindings",
+                )
+            )
+            continue
+        expected_by_path[path_value] = (size, digest)
+
+    for path_value, (size, digest) in sorted(expected_by_path.items()):
+        try:
+            rebound = file_record(
+                Path(path_value),
+                kind="experiment-evidence",
+                role="experiment.final-audit",
+            )
+        except (FileRecordError, OSError, ValueError) as exc:
+            issues.append(
+                ExperimentIssue(
+                    "experiment.evidence.collection_incomplete",
+                    "",
+                    f"retained file {path_value} could not be stably audited: {exc}",
+                )
+            )
+            continue
+        if (
+            rebound.get("exists") is not True
+            or rebound.get("path") != path_value
+            or rebound.get("bytes") != size
+            or rebound.get("sha256") != digest
+        ):
+            issues.append(
+                ExperimentIssue(
+                    "experiment.evidence.collection_incomplete",
+                    "",
+                    (
+                        f"retained file {path_value} no longer matches its "
+                        "recorded byte count and SHA-256 digest"
+                    ),
+                )
+            )
+    return issues
 
 
 def _raw_artifact(envelope: Mapping[str, Any]) -> Mapping[str, Any] | None:
@@ -3058,6 +3503,64 @@ def _operation_request_sha(envelope: Mapping[str, Any]) -> str | None:
     return value if isinstance(value, str) and _SHA256_RE.fullmatch(value) else None
 
 
+def _extraction_request_sha(envelope: Mapping[str, Any]) -> str | None:
+    data = envelope.get("data")
+    extraction = data.get("extraction") if isinstance(data, Mapping) else None
+    value = extraction.get("request_sha256") if isinstance(extraction, Mapping) else None
+    return value if isinstance(value, str) and _SHA256_RE.fullmatch(value) else None
+
+
+def _expected_extraction_request_sha(
+    simulation: Mapping[str, Any],
+    raw: Mapping[str, Any],
+    request: Mapping[str, Any],
+) -> str | None:
+    data = simulation.get("data")
+    protocol = data.get("protocol") if isinstance(data, Mapping) else None
+    simulation_request_id = (
+        protocol.get("request_id") if isinstance(protocol, Mapping) else None
+    )
+    raw_sha256 = raw.get("sha256")
+    selectors = request.get("selectors")
+    conditions = request.get("conditions")
+    if (
+        not isinstance(simulation_request_id, str)
+        or not isinstance(raw_sha256, str)
+        or _SHA256_RE.fullmatch(raw_sha256) is None
+        or not isinstance(selectors, list)
+        or not isinstance(conditions, list)
+    ):
+        return None
+    return _canonical_sha256(
+        {
+            "simulation": {
+                "request_id": simulation_request_id,
+                "artifact_sha256": raw_sha256,
+            },
+            "selectors": selectors,
+            "conditions": conditions,
+        }
+    )
+
+
+def _protocol_profile(envelope: Mapping[str, Any]) -> str | None:
+    data = envelope.get("data")
+    protocol = data.get("protocol") if isinstance(data, Mapping) else None
+    value = (
+        protocol.get("operation_profile")
+        if isinstance(protocol, Mapping)
+        else None
+    )
+    return value if isinstance(value, str) else None
+
+
+def _protocol_request_id(envelope: Mapping[str, Any]) -> str | None:
+    data = envelope.get("data")
+    protocol = data.get("protocol") if isinstance(data, Mapping) else None
+    value = protocol.get("request_id") if isinstance(protocol, Mapping) else None
+    return value if isinstance(value, str) else None
+
+
 def _experiment_extension(
     prepared: PreparedExperiment,
     run: PreparedRun,
@@ -3080,11 +3583,399 @@ def _experiment_extension(
         "spec_raw_sha256": prepared.spec_raw_sha256,
         "spec_canonical_sha256": prepared.spec_canonical_sha256,
         "dut_bundle": bundle_digests,
+        "pdk_closure_root_sha256": (
+            prepared.resolved_pdk.closure_root_sha256
+        ),
+        "pdk_snapshot_root_sha256": (
+            prepared.resolved_pdk.snapshot_root_sha256
+        ),
         "base_deck_sha256": prepared.base_deck_sha256,
         "run_deck_sha256": run.portable_sha256,
         "analysis_id": run.analysis.identifier,
         "composer_version": COMPOSER_VERSION,
     }
+
+
+def _complete_child_states(
+    prepared: PreparedExperiment,
+    manifest: Mapping[str, Any],
+) -> tuple[list[dict[str, Any]], list[ExperimentIssue]]:
+    """Build the exhaustive child-state set which alone gates manifest pass."""
+
+    states: list[dict[str, Any]] = []
+    issues: list[ExperimentIssue] = []
+    analyses = manifest.get("analyses")
+    manifest_analyses = (
+        [item for item in analyses if isinstance(item, Mapping)]
+        if isinstance(analyses, list)
+        else []
+    )
+    expected_measurements: dict[str, list[Measurement]] = defaultdict(list)
+    for measurement in prepared.measurements:
+        expected_measurements[measurement.analysis_id].append(measurement)
+
+    for run in prepared.runs:
+        matches = [
+            item
+            for item in manifest_analyses
+            if item.get("id") == run.analysis.identifier
+        ]
+        analysis = matches[0] if len(matches) == 1 else None
+        analysis_path = f"/analyses/{run.analysis.identifier}"
+        simulation = (
+            analysis.get("simulation") if isinstance(analysis, Mapping) else None
+        )
+        simulation_pass = (
+            isinstance(simulation, Mapping)
+            and simulation.get("operation_profile")
+            == CIRCUIT_SIMULATE_PROFILE
+            and simulation.get("identity_matches") is True
+            and simulation.get("structure_complete") is True
+            and simulation.get("execution_status") == "completed"
+            and simulation.get("engineering_status") == "pass"
+            and isinstance(simulation.get("sha256"), str)
+            and _SHA256_RE.fullmatch(str(simulation["sha256"])) is not None
+            and isinstance(simulation.get("raw_sha256"), str)
+            and _SHA256_RE.fullmatch(str(simulation["raw_sha256"])) is not None
+        )
+        states.append(
+            {
+                "kind": "simulate",
+                "analysis_id": run.analysis.identifier,
+                "id": run.analysis.identifier,
+                "status": "pass" if simulation_pass else "fail",
+            }
+        )
+        if not simulation_pass:
+            issues.append(
+                ExperimentIssue(
+                    "experiment.result.execution_incomplete",
+                    analysis_path,
+                    "simulation child is missing, non-persisted, incomplete, or non-pass",
+                )
+            )
+
+        if run.observations:
+            extraction = (
+                analysis.get("extraction") if isinstance(analysis, Mapping) else None
+            )
+            extraction_pass = (
+                isinstance(extraction, Mapping)
+                and extraction.get("structure_complete") is True
+                and extraction.get("execution_status") == "completed"
+                and extraction.get("engineering_status") == "pass"
+                and extraction.get("status") == "extracted"
+                and extraction.get("request_digest_matches") is True
+                and isinstance(extraction.get("request_raw_sha256"), str)
+                and isinstance(extraction.get("result_sha256"), str)
+            )
+            states.append(
+                {
+                    "kind": "extract",
+                    "analysis_id": run.analysis.identifier,
+                    "id": run.analysis.identifier,
+                    "status": "pass" if extraction_pass else "fail",
+                }
+            )
+            if not extraction_pass:
+                issues.append(
+                    ExperimentIssue(
+                        "experiment.result.engineering_failed",
+                        analysis_path,
+                        "extraction child is missing, non-persisted, incomplete, or non-pass",
+                    )
+                )
+
+        retained_measurements = (
+            analysis.get("measurements")
+            if isinstance(analysis, Mapping)
+            else None
+        )
+        retained_measurement_list = (
+            [
+                item
+                for item in retained_measurements
+                if isinstance(item, Mapping)
+            ]
+            if isinstance(retained_measurements, list)
+            else []
+        )
+        for measurement in expected_measurements.get(
+            run.analysis.identifier, ()
+        ):
+            matches = [
+                item
+                for item in retained_measurement_list
+                if item.get("id") == measurement.identifier
+            ]
+            child = matches[0] if len(matches) == 1 else None
+            child_pass = (
+                isinstance(child, Mapping)
+                and child.get("structure_complete") is True
+                and child.get("execution_status") == "completed"
+                and child.get("engineering_status") == "pass"
+                and child.get("measurement_status") == "measured"
+                and child.get("request_digest_matches") is True
+                and isinstance(child.get("request_raw_sha256"), str)
+                and isinstance(child.get("result_sha256"), str)
+            )
+            states.append(
+                {
+                    "kind": "measure",
+                    "analysis_id": run.analysis.identifier,
+                    "id": measurement.identifier,
+                    "status": "pass" if child_pass else "fail",
+                }
+            )
+            if not child_pass:
+                issues.append(
+                    ExperimentIssue(
+                        "experiment.result.engineering_failed",
+                        f"/measurements/{measurement.identifier}",
+                        "measurement child is missing, non-persisted, incomplete, or non-pass",
+                    )
+                )
+
+        analysis_pass = (
+            isinstance(analysis, Mapping) and analysis.get("status") == "pass"
+        )
+        states.append(
+            {
+                "kind": "analysis",
+                "analysis_id": run.analysis.identifier,
+                "id": run.analysis.identifier,
+                "status": "pass" if analysis_pass else "fail",
+            }
+        )
+        if not analysis_pass:
+            issues.append(
+                ExperimentIssue(
+                    "experiment.result.execution_incomplete",
+                    analysis_path,
+                    "analysis child set is incomplete or non-pass",
+                )
+            )
+
+    retained_derivations = manifest.get("derivations")
+    retained_derivation_list = (
+        [
+            item
+            for item in retained_derivations
+            if isinstance(item, Mapping)
+        ]
+        if isinstance(retained_derivations, list)
+        else []
+    )
+    for derivation in prepared.derivations:
+        matches = [
+            item
+            for item in retained_derivation_list
+            if item.get("id") == derivation.identifier
+        ]
+        child = matches[0] if len(matches) == 1 else None
+        child_pass = (
+            isinstance(child, Mapping)
+            and child.get("status") == "pass"
+            and isinstance(child.get("result_sha256"), str)
+            and isinstance(child.get("parents"), list)
+            and len(child["parents"]) == 2
+        )
+        states.append(
+            {
+                "kind": "derivation",
+                "analysis_id": derivation.analysis_id,
+                "id": derivation.identifier,
+                "status": "pass" if child_pass else "fail",
+            }
+        )
+        if not child_pass:
+            issues.append(
+                ExperimentIssue(
+                    "experiment.derivation.parent_invalid",
+                    f"/derivations/{derivation.identifier}",
+                    "derivation child is missing, non-persisted, incomplete, or non-pass",
+                )
+            )
+    return states, issues
+
+
+def _derivation_parent_binding(
+    parent_id: str,
+    derivation: Derivation,
+    runtime: Mapping[str, Any] | None,
+) -> tuple[dict[str, Any] | None, ExperimentIssue | None]:
+    """Admit one measured parent only with its complete exact runtime lineage."""
+
+    path = f"/derivations/{derivation.identifier}"
+    if runtime is None:
+        return None, ExperimentIssue(
+            "experiment.derivation.parent_invalid",
+            path,
+            f"parent measurement {parent_id!r} has no retained runtime result",
+        )
+    declaration = runtime.get("measurement")
+    envelope = runtime.get("envelope")
+    if not isinstance(declaration, Measurement) or not isinstance(envelope, Mapping):
+        return None, ExperimentIssue(
+            "experiment.derivation.parent_invalid",
+            path,
+            f"parent measurement {parent_id!r} has malformed runtime state",
+        )
+    execution = envelope.get("execution")
+    engineering = envelope.get("engineering")
+    data = envelope.get("data")
+    measured = data.get("measurement") if isinstance(data, Mapping) else None
+    if (
+        not isinstance(execution, Mapping)
+        or execution.get("status") != "completed"
+        or not isinstance(engineering, Mapping)
+        or engineering.get("status") != "pass"
+        or not isinstance(measured, Mapping)
+        or measured.get("status") != "measured"
+    ):
+        return None, ExperimentIssue(
+            "experiment.derivation.parent_invalid",
+            path,
+            (
+                f"parent measurement {parent_id!r} did not complete with "
+                "engineering pass and measured status"
+            ),
+        )
+    if (
+        runtime.get("analysis_id") != derivation.analysis_id
+        or declaration.analysis_id != derivation.analysis_id
+    ):
+        return None, ExperimentIssue(
+            "experiment.derivation.parent_invalid",
+            path,
+            f"parent measurement {parent_id!r} is not from the derivation analysis",
+        )
+    if (
+        _protocol_profile(envelope) != declaration.operation_profile
+        or measured.get("measurement_id") != parent_id
+        or declaration.identifier != parent_id
+    ):
+        return None, ExperimentIssue(
+            "experiment.derivation.parent_invalid",
+            path,
+            f"parent measurement {parent_id!r} conflicts with its exact profile or id",
+        )
+
+    value = _measurement_value(envelope)
+    if value is None:
+        return None, ExperimentIssue(
+            "experiment.derivation.parent_invalid",
+            path,
+            f"parent measurement {parent_id!r} has no finite measured scalar",
+        )
+    if declaration.expected_unit is None or value[1] != declaration.expected_unit:
+        return None, ExperimentIssue(
+            "experiment.derivation.unit_mismatch",
+            path,
+            (
+                f"parent measurement {parent_id!r} returned unit {value[1]!r}; "
+                f"expected {declaration.expected_unit!r}"
+            ),
+        )
+
+    request_record = runtime.get("request_record")
+    result_record = runtime.get("result_record")
+    extraction_record = runtime.get("extraction_record")
+    extraction_request_record = runtime.get("extraction_request_record")
+    simulation_record = runtime.get("simulation_record")
+    raw_record = runtime.get("raw_record")
+    records = (
+        request_record,
+        result_record,
+        extraction_record,
+        extraction_request_record,
+        simulation_record,
+        raw_record,
+    )
+    if any(
+        not isinstance(record, Mapping)
+        or not isinstance(record.get("sha256"), str)
+        or _SHA256_RE.fullmatch(str(record["sha256"])) is None
+        for record in records
+    ):
+        return None, ExperimentIssue(
+            "experiment.derivation.parent_invalid",
+            path,
+            f"parent measurement {parent_id!r} lacks retained digest bindings",
+        )
+    assert isinstance(request_record, Mapping)
+    assert isinstance(result_record, Mapping)
+    assert isinstance(extraction_record, Mapping)
+    assert isinstance(extraction_request_record, Mapping)
+    assert isinstance(simulation_record, Mapping)
+    assert isinstance(raw_record, Mapping)
+
+    canonical_request_sha = _operation_request_sha(envelope)
+    if (
+        canonical_request_sha != declaration.request_canonical_sha256
+        or request_record.get("sha256") != declaration.request_raw_sha256
+    ):
+        return None, ExperimentIssue(
+            "experiment.derivation.parent_invalid",
+            path,
+            f"parent measurement {parent_id!r} conflicts with its retained request digest",
+        )
+
+    source = measured.get("source")
+    lineage = source.get("lineage") if isinstance(source, Mapping) else None
+    expected_conditions = runtime.get("conditions")
+    expected_conditions_sha = (
+        _canonical_sha256(expected_conditions)
+        if isinstance(expected_conditions, list)
+        else None
+    )
+    series_sha256 = runtime.get("series_sha256")
+    extraction_request_sha256 = runtime.get("extraction_request_sha256")
+    if (
+        not isinstance(source, Mapping)
+        or source.get("operation") != EXTRACTION_OPERATION_PROFILE
+        or source.get("request_id") != runtime.get("extraction_request_id")
+        or source.get("artifact_role") != "measurement.source"
+        or source.get("artifact_sha256") != series_sha256
+        or source.get("series_sha256") != series_sha256
+        or source.get("conditions") != expected_conditions
+        or source.get("conditions_sha256") != expected_conditions_sha
+        or not isinstance(lineage, Mapping)
+        or lineage.get("operation") != "circuit.simulate"
+        or lineage.get("request_id") != runtime.get("simulation_request_id")
+        or lineage.get("artifact_role") != "simulation.result"
+        or lineage.get("artifact_sha256") != raw_record.get("sha256")
+        or lineage.get("binding") != "unverified"
+        or not isinstance(series_sha256, str)
+        or _SHA256_RE.fullmatch(series_sha256) is None
+        or not isinstance(extraction_request_sha256, str)
+        or _SHA256_RE.fullmatch(extraction_request_sha256) is None
+    ):
+        return None, ExperimentIssue(
+            "experiment.derivation.parent_invalid",
+            path,
+            f"parent measurement {parent_id!r} lacks exact extraction/raw lineage",
+        )
+
+    return {
+        "measurement_id": parent_id,
+        "analysis_id": derivation.analysis_id,
+        "operation_profile": declaration.operation_profile,
+        "result_path": result_record["path"],
+        "result_sha256": result_record["sha256"],
+        "request_path": request_record["path"],
+        "request_raw_sha256": request_record["sha256"],
+        "request_canonical_sha256": canonical_request_sha,
+        "extraction_result_sha256": extraction_record["sha256"],
+        "extraction_request_raw_sha256": extraction_request_record["sha256"],
+        "extraction_request_canonical_sha256": extraction_request_sha256,
+        "series_sha256": series_sha256,
+        "simulation_result_sha256": simulation_record["sha256"],
+        "simulation_request_id": runtime.get("simulation_request_id"),
+        "raw_artifact_sha256": raw_record["sha256"],
+        "value": value[0],
+        "unit": value[1],
+    }, None
 
 
 def _run_experiment_impl(
@@ -3168,6 +4059,15 @@ def _run_experiment_impl(
             "id": prepared.resolved_pdk.pdk_id,
             "corner": prepared.resolved_pdk.corner,
             "temperature_c": prepared.resolved_pdk.binding.simulation_temperature_c,
+            "closure_root_sha256": (
+                prepared.resolved_pdk.closure_root_sha256
+            ),
+            "snapshot_root_sha256": (
+                prepared.resolved_pdk.snapshot_root_sha256
+            ),
+            "closure_edge_count": len(
+                prepared.resolved_pdk.closure_records
+            ),
         },
         "base_deck": {
             "path": base_record["path"],
@@ -3179,7 +4079,8 @@ def _run_experiment_impl(
         "extensions": {},
     }
 
-    measurement_results: dict[str, tuple[Measurement, Mapping[str, Any], dict[str, Any]]] = {}
+    measurement_results: dict[str, dict[str, Any]] = {}
+    retained_child_records: list[dict[str, Any]] = []
     measurements_by_analysis: dict[str, list[Measurement]] = defaultdict(list)
     for measurement in prepared.measurements:
         measurements_by_analysis[measurement.analysis_id].append(measurement)
@@ -3201,16 +4102,15 @@ def _run_experiment_impl(
         run_record["role"] = "experiment.run-deck"
         artifacts.append(run_record)
         extension = _experiment_extension(prepared, run)
+        simulation_request_id = str(uuid.uuid4())
         simulation = simulate(
             Path(run_record["path"]),
             analysis_dir / "simulation",
             discovery=discovery,
             backend="ngspice",
-            pdk=prepared.resolved_pdk.pdk_id,
-            pdk_root=prepared.pdk_root,
-            corner=prepared.resolved_pdk.corner,
+            resolved_pdk_binding=prepared.resolved_pdk,
             timeout=timeout,
-            request_id=str(uuid.uuid4()),
+            request_id=simulation_request_id,
             saved_nets=run.saved_nets,
             retained_current_sources=run.retained_current_sources,
             extra_input_records=extra_inputs,
@@ -3228,22 +4128,108 @@ def _run_experiment_impl(
             "simulation": {
                 "path": str(simulation_path),
                 "request_id": ((simulation.get("data") or {}).get("protocol") or {}).get("request_id"),
+                "expected_request_id": simulation_request_id,
+                "operation_profile": _protocol_profile(simulation),
+                "identity_matches": False,
+                "structure_complete": False,
                 "execution_status": (simulation.get("execution") or {}).get("status"),
                 "engineering_status": (simulation.get("engineering") or {}).get("status"),
             },
             "extraction": None,
             "measurements": [],
-            "status": "unknown",
+            "status": "fail",
         }
+        simulation_record: dict[str, Any] | None = None
+        simulation_coherent = False
+        simulation_identity_matches = False
+        simulation_structure_issue: str | None = (
+            "simulate envelope was not retained"
+        )
         if simulation_path.is_file():
             try:
-                simulation_record = file_record(
+                persisted_simulation, simulation_record = _capture_retained_json(
                     simulation_path,
-                    kind="openada-result",
+                    label=(
+                        "simulate envelope for "
+                        f"{run.analysis.identifier}"
+                    ),
                     role="simulation.envelope",
                 )
                 artifacts.append(simulation_record)
+                try:
+                    simulation_coherent = (
+                        _canonical_sha256(persisted_simulation)
+                        == _canonical_sha256(simulation)
+                    )
+                except (TypeError, ValueError, OverflowError):
+                    simulation_coherent = False
+                simulation = persisted_simulation
+                simulation_structure_issue = (
+                    _child_envelope_structure_issue(
+                        simulation,
+                        expected_operation="simulate",
+                    )
+                )
+                retained_child_records.extend(
+                    _envelope_file_records(simulation)
+                )
+                simulation_identity_matches = (
+                    _protocol_profile(simulation)
+                    == CIRCUIT_SIMULATE_PROFILE
+                    and _protocol_request_id(simulation)
+                    == simulation_request_id
+                )
+                analysis_manifest["simulation"].update(
+                    {
+                        "request_id": _protocol_request_id(simulation),
+                        "operation_profile": _protocol_profile(simulation),
+                        "identity_matches": simulation_identity_matches,
+                        "structure_complete": (
+                            simulation_structure_issue is None
+                        ),
+                        "execution_status": (
+                            simulation.get("execution") or {}
+                        ).get("status"),
+                        "engineering_status": (
+                            simulation.get("engineering") or {}
+                        ).get("status"),
+                    }
+                )
                 analysis_manifest["simulation"]["sha256"] = simulation_record.get("sha256")
+                if not simulation_coherent:
+                    runtime_issues.append(
+                        ExperimentIssue(
+                            "experiment.result.envelope_invalid",
+                            f"/analyses/{run.analysis.identifier}",
+                            (
+                                "the persisted simulate envelope differs from "
+                                "the exact returned child result"
+                            ),
+                        )
+                    )
+                if not simulation_identity_matches:
+                    runtime_issues.append(
+                        ExperimentIssue(
+                            "experiment.result.envelope_invalid",
+                            f"/analyses/{run.analysis.identifier}",
+                            (
+                                "the persisted simulate child does not carry "
+                                "the exact requested operation profile and "
+                                "request identity"
+                            ),
+                        )
+                    )
+                if simulation_structure_issue is not None:
+                    runtime_issues.append(
+                        ExperimentIssue(
+                            "experiment.result.envelope_invalid",
+                            f"/analyses/{run.analysis.identifier}",
+                            (
+                                "the persisted simulate child is structurally "
+                                f"incomplete: {simulation_structure_issue}"
+                            ),
+                        )
+                    )
             except FileRecordError as exc:
                 runtime_issues.append(
                     ExperimentIssue(
@@ -3252,6 +4238,22 @@ def _run_experiment_impl(
                         f"simulate envelope could not be content-bound: {exc}",
                     )
                 )
+        else:
+            runtime_issues.append(
+                ExperimentIssue(
+                    "experiment.result.missing",
+                    f"/analyses/{run.analysis.identifier}",
+                    "simulate.result.json was not persisted",
+                    )
+                )
+        if (
+            simulation_record is None
+            or not simulation_coherent
+            or not simulation_identity_matches
+            or simulation_structure_issue is not None
+        ):
+            manifest["analyses"].append(analysis_manifest)
+            continue
         actual_bound_deck = _input_by_sha256(
             simulation, run.bound_deck_sha256
         )
@@ -3353,6 +4355,8 @@ def _run_experiment_impl(
             manifest["analyses"].append(analysis_manifest)
             continue
         raw_path = Path(str(raw["path"]))
+        analysis_manifest["simulation"]["raw_path"] = str(raw_path)
+        analysis_manifest["simulation"]["raw_sha256"] = raw.get("sha256")
         available = {name.casefold() for name in _raw_vector_names(raw_path)}
         missing = sorted(
             {
@@ -3383,12 +4387,27 @@ def _run_experiment_impl(
             "conditions": extraction_conditions,
             "extensions": {},
         }
-        selection_path = analysis_dir / "extract.request.json"
-        selection_record = _write_json(
-            selection_path, selection, role="series.extraction-request"
+        selection_bytes = _json_bytes(selection)
+        retained_selection = _captured_json_mapping(
+            selection_bytes,
+            label=f"extraction request for {run.analysis.identifier}",
+        )
+        selection_path = (
+            analysis_dir
+            / "requests"
+            / f"{_sha256_bytes(selection_bytes)}.json"
+        )
+        selection_record = _write_captured_json(
+            selection_path,
+            selection_bytes,
+            role="series.extraction-request",
         )
         artifacts.append(selection_record)
-        retained_selection = json.loads(selection_path.read_text(encoding="utf-8"))
+        expected_extraction_sha = _expected_extraction_request_sha(
+            simulation,
+            raw,
+            retained_selection,
+        )
         extraction = extract_result_series(
             simulation,
             raw_path,
@@ -3396,24 +4415,61 @@ def _run_experiment_impl(
             conditions=retained_selection["conditions"],
             request_id=str(uuid.uuid4()),
         )
+        extraction_structure_issue = _child_envelope_structure_issue(
+            extraction,
+            expected_operation="result.series.extract",
+        )
+        retained_child_records.extend(_envelope_file_records(extraction))
         extraction_path = analysis_dir / "extract.result.json"
         extraction_record = _write_json(
             extraction_path, extraction, role="series.extraction-result"
         )
         artifacts.append(extraction_record)
         extraction_data = (extraction.get("data") or {}).get("extraction") or {}
+        actual_extraction_sha = _extraction_request_sha(extraction)
+        extraction_digest_matches = (
+            expected_extraction_sha is not None
+            and actual_extraction_sha == expected_extraction_sha
+        )
         analysis_manifest["extraction"] = {
             "request_path": selection_record["path"],
             "request_raw_sha256": selection_record["sha256"],
-            "request_canonical_sha256": extraction_data.get("request_sha256"),
+            "request_canonical_sha256": actual_extraction_sha,
+            "expected_request_canonical_sha256": expected_extraction_sha,
+            "request_digest_matches": extraction_digest_matches,
             "result_path": extraction_record["path"],
             "result_sha256": extraction_record["sha256"],
+            "execution_status": (extraction.get("execution") or {}).get("status"),
             "engineering_status": (extraction.get("engineering") or {}).get("status"),
+            "status": extraction_data.get("status"),
+            "request_id": _protocol_request_id(extraction),
+            "structure_complete": extraction_structure_issue is None,
         }
-        if (extraction.get("engineering") or {}).get("status") != "pass":
+        extraction_pass = (
+            extraction_structure_issue is None
+            and (extraction.get("execution") or {}).get("status") == "completed"
+            and (extraction.get("engineering") or {}).get("status") == "pass"
+            and extraction_data.get("status") == "extracted"
+            and _protocol_profile(extraction) == EXTRACTION_OPERATION_PROFILE
+            and extraction_digest_matches
+        )
+        if not extraction_pass:
+            if extraction_structure_issue is not None:
+                runtime_issues.append(
+                    ExperimentIssue(
+                        "experiment.result.envelope_invalid",
+                        f"/analyses/{run.analysis.identifier}",
+                        (
+                            "the extraction child is structurally incomplete: "
+                            f"{extraction_structure_issue}"
+                        ),
+                    )
+                )
+            diagnostic_count = 0
             for entry in extraction.get("diagnostics") or ():
                 if not isinstance(entry, Mapping):
                     continue
+                diagnostic_count += 1
                 runtime_issues.append(
                     ExperimentIssue(
                         (
@@ -3424,6 +4480,26 @@ def _run_experiment_impl(
                         f"/analyses/{run.analysis.identifier}",
                         str(entry.get("message") or "series extraction did not pass"),
                         cause_code=str(entry.get("code")) if entry.get("code") else None,
+                    )
+                )
+            if not extraction_digest_matches:
+                runtime_issues.append(
+                    ExperimentIssue(
+                        "experiment.result.request_digest_mismatch",
+                        f"/analyses/{run.analysis.identifier}",
+                        (
+                            "the extraction operation canonical digest does not "
+                            "match the full captured simulation/raw/selectors/"
+                            "conditions request"
+                        ),
+                    )
+                )
+            if diagnostic_count == 0:
+                runtime_issues.append(
+                    ExperimentIssue(
+                        "experiment.result.engineering_failed",
+                        f"/analyses/{run.analysis.identifier}",
+                        "series extraction did not produce a complete passing child envelope",
                     )
                 )
             manifest["analyses"].append(analysis_manifest)
@@ -3442,14 +4518,21 @@ def _run_experiment_impl(
 
         analysis_measurements_pass = True
         for measurement in measurements_by_analysis.get(run.analysis.identifier, ()):
-            request_path = analysis_dir / "measurements" / f"{measurement.identifier}.request.json"
-            request_record = _write_json(
+            request_path = (
+                analysis_dir
+                / "requests"
+                / f"{measurement.request_raw_sha256}.json"
+            )
+            retained_request = _captured_json_mapping(
+                measurement.request_bytes,
+                label=f"measurement request {measurement.identifier}",
+            )
+            request_record = _write_captured_json(
                 request_path,
-                measurement.request,
+                measurement.request_bytes,
                 role="measurement.request",
             )
             artifacts.append(request_record)
-            retained_request = json.loads(request_path.read_text(encoding="utf-8"))
             if measurement.operation_profile.endswith("/result.measure/v1alpha1"):
                 measured = measure_result(
                     series, retained_request, request_id=str(uuid.uuid4())
@@ -3464,38 +4547,92 @@ def _run_experiment_impl(
                 measured = measure_spectrum(
                     series, retained_request, request_id=str(uuid.uuid4())
                 )
+            measurement_structure_issue = _child_envelope_structure_issue(
+                measured,
+                expected_operation=_MEASUREMENT_RESULT_OPERATIONS[
+                    measurement.operation_profile
+                ],
+            )
+            retained_child_records.extend(_envelope_file_records(measured))
             result_path = analysis_dir / "measurements" / f"{measurement.identifier}.result.json"
             result_record = _write_json(
                 result_path, measured, role="measurement.result"
             )
             artifacts.append(result_record)
             canonical_request_sha = _operation_request_sha(measured)
+            request_digest_matches = (
+                canonical_request_sha == measurement.request_canonical_sha256
+            )
+            measured_data = measured.get("data")
+            measured_value = (
+                measured_data.get("measurement")
+                if isinstance(measured_data, Mapping)
+                else None
+            )
+            measurement_status = (
+                measured_value.get("status")
+                if isinstance(measured_value, Mapping)
+                else None
+            )
+            measured_id = (
+                measured_value.get("measurement_id")
+                if isinstance(measured_value, Mapping)
+                else None
+            )
             measurement_manifest = {
                 "id": measurement.identifier,
                 "operation_profile": measurement.operation_profile,
                 "request_path": request_record["path"],
                 "request_raw_sha256": request_record["sha256"],
                 "request_canonical_sha256": canonical_request_sha,
+                "expected_request_canonical_sha256": (
+                    measurement.request_canonical_sha256
+                ),
+                "request_digest_matches": request_digest_matches,
                 "result_path": result_record["path"],
                 "result_sha256": result_record["sha256"],
                 "execution_status": (measured.get("execution") or {}).get("status"),
                 "engineering_status": (measured.get("engineering") or {}).get("status"),
+                "measurement_status": measurement_status,
+                "structure_complete": measurement_structure_issue is None,
             }
             value = _measurement_value(measured)
             if value is not None:
                 measurement_manifest["value"] = value[0]
                 measurement_manifest["unit"] = value[1]
             analysis_manifest["measurements"].append(measurement_manifest)
-            if (
-                (measured.get("execution") or {}).get("status") != "completed"
+            measurement_failed = (
+                measurement_structure_issue is not None
+                or (measured.get("execution") or {}).get("status") != "completed"
                 or (measured.get("engineering") or {}).get("status") != "pass"
-                or canonical_request_sha is None
+                or measurement_status != "measured"
+                or _protocol_profile(measured) != measurement.operation_profile
+                or measured_id != measurement.identifier
+                or not request_digest_matches
                 or value is None
-            ):
+                or (
+                    measurement.expected_unit is not None
+                    and value[1] != measurement.expected_unit
+                )
+            )
+            if measurement_failed:
                 analysis_measurements_pass = False
+                if measurement_structure_issue is not None:
+                    runtime_issues.append(
+                        ExperimentIssue(
+                            "experiment.result.envelope_invalid",
+                            f"/measurements/{measurement.identifier}",
+                            (
+                                "the measurement child is structurally "
+                                f"incomplete: {measurement_structure_issue}"
+                            ),
+                        )
+                    )
+                diagnostic_count = 0
                 for entry in measured.get("diagnostics") or ():
                     if not isinstance(entry, Mapping):
                         continue
+                    diagnostic_count += 1
                     runtime_issues.append(
                         ExperimentIssue(
                             "experiment.result.engineering_failed",
@@ -3504,11 +4641,48 @@ def _run_experiment_impl(
                             cause_code=str(entry.get("code")) if entry.get("code") else None,
                         )
                     )
-            measurement_results[measurement.identifier] = (
-                measurement,
-                measured,
-                result_record,
+                if not request_digest_matches:
+                    runtime_issues.append(
+                        ExperimentIssue(
+                            "experiment.result.request_digest_mismatch",
+                            f"/measurements/{measurement.identifier}",
+                            (
+                                "the measurement operation canonical digest "
+                                "does not match the captured request"
+                            ),
+                        )
+                    )
+                if diagnostic_count == 0:
+                    runtime_issues.append(
+                        ExperimentIssue(
+                            "experiment.result.engineering_failed",
+                            f"/measurements/{measurement.identifier}",
+                            "measurement did not produce a complete passing child envelope",
+                        )
+                    )
+            series_source = (
+                series.get("source") if isinstance(series, Mapping) else None
             )
+            measurement_results[measurement.identifier] = {
+                "measurement": measurement,
+                "envelope": measured,
+                "result_record": result_record,
+                "request_record": request_record,
+                "analysis_id": run.analysis.identifier,
+                "simulation_record": simulation_record,
+                "simulation_request_id": _protocol_request_id(simulation),
+                "raw_record": dict(raw),
+                "extraction_record": extraction_record,
+                "extraction_request_record": selection_record,
+                "extraction_request_sha256": expected_extraction_sha,
+                "extraction_request_id": _protocol_request_id(extraction),
+                "series_sha256": (
+                    series_source.get("artifact_sha256")
+                    if isinstance(series_source, Mapping)
+                    else None
+                ),
+                "conditions": list(extraction_conditions),
+            }
 
         analysis_manifest["status"] = (
             "pass" if analysis_measurements_pass else "fail"
@@ -3517,47 +4691,46 @@ def _run_experiment_impl(
 
     derivation_dir = destination / "derivations"
     for derivation in prepared.derivations:
-        parents = [
-            measurement_results.get(parent)
-            for parent in derivation.parents
-        ]
-        if any(parent is None for parent in parents):
-            runtime_issues.append(
-                ExperimentIssue(
-                    "experiment.derivation.parent_unknown",
-                    f"/derivations/{derivation.identifier}",
-                    "one or both parent measurement results are unavailable",
-                )
-            )
-            continue
+        derivation_manifest: dict[str, Any] = {
+            "id": derivation.identifier,
+            "analysis_id": derivation.analysis_id,
+            "status": "fail",
+            "parents": [],
+        }
+        manifest["derivations"].append(derivation_manifest)
         parent_records: list[dict[str, Any]] = []
-        values: list[tuple[float, str]] = []
-        for parent_id, parent in zip(derivation.parents, parents):
-            assert parent is not None
-            _measurement, envelope, record = parent
-            value = _measurement_value(envelope)
-            if value is None:
-                break
-            values.append(value)
-            parent_records.append(
-                {
-                    "measurement_id": parent_id,
-                    "result_path": record["path"],
-                    "result_sha256": record["sha256"],
-                    "value": value[0],
-                    "unit": value[1],
-                }
+        parent_issue: ExperimentIssue | None = None
+        for parent_id in derivation.parents:
+            binding, issue = _derivation_parent_binding(
+                parent_id,
+                derivation,
+                measurement_results.get(parent_id),
             )
-        if len(values) != 2 or values[0][1] != values[1][1]:
+            if issue is not None:
+                parent_issue = issue
+                break
+            assert binding is not None
+            parent_records.append(binding)
+        derivation_manifest["parents"] = parent_records
+        if parent_issue is not None:
+            runtime_issues.append(parent_issue)
+            continue
+        if (
+            len(parent_records) != 2
+            or parent_records[0]["unit"] != parent_records[1]["unit"]
+        ):
             runtime_issues.append(
                 ExperimentIssue(
                     "experiment.derivation.unit_mismatch",
                     f"/derivations/{derivation.identifier}",
-                    "parent results are missing or have different units",
+                    "parent results do not have one exact common unit",
                 )
             )
             continue
-        derived_value = values[0][0] - values[1][0]
+        derived_value = (
+            float(parent_records[0]["value"])
+            - float(parent_records[1]["value"])
+        )
         if not math.isfinite(derived_value):
             runtime_issues.append(
                 ExperimentIssue(
@@ -3576,7 +4749,7 @@ def _run_experiment_impl(
             "parents": parent_records,
             "status": "derived",
             "value": derived_value,
-            "unit": values[0][1],
+            "unit": parent_records[0]["unit"],
             "extensions": {},
         }
         derived_record = _write_json(
@@ -3585,18 +4758,42 @@ def _run_experiment_impl(
             role="derivation.result",
         )
         artifacts.append(derived_record)
-        manifest["derivations"].append(
+        derivation_manifest.update(
             {
-                "id": derivation.identifier,
+                "status": "pass",
                 "result_path": derived_record["path"],
                 "result_sha256": derived_record["sha256"],
                 "value": derived_value,
-                "unit": values[0][1],
-                "parents": parent_records,
+                "unit": parent_records[0]["unit"],
             }
         )
 
-    manifest["status"] = "fail" if runtime_issues else "pass"
+    child_states, completeness_issues = _complete_child_states(
+        prepared,
+        manifest,
+    )
+    runtime_issues.extend(completeness_issues)
+    audit_issues = _audit_retained_files(
+        [*artifacts, *retained_child_records]
+    )
+    runtime_issues.extend(audit_issues)
+    passed_children = sum(
+        child.get("status") == "pass" for child in child_states
+    )
+    child_set_pass = passed_children == len(child_states)
+    evidence_audit_pass = not audit_issues
+    manifest["completeness"] = {
+        "status": (
+            "pass" if child_set_pass and evidence_audit_pass else "fail"
+        ),
+        "expected_child_count": len(child_states),
+        "passed_child_count": passed_children,
+        "children": child_states,
+        "evidence_audit": "pass" if evidence_audit_pass else "fail",
+    }
+    manifest["status"] = (
+        "pass" if child_set_pass and evidence_audit_pass else "fail"
+    )
     log_lines = [
         "openada experiment run",
         f"run_id={run_id}",
@@ -3625,6 +4822,14 @@ def _run_experiment_impl(
         "path": log_record["path"],
         "sha256": log_record["sha256"],
     }
+    final_evidence_audit = _audit_retained_files(
+        [*artifacts, *retained_child_records]
+    )
+    if final_evidence_audit:
+        runtime_issues.extend(final_evidence_audit)
+        manifest["completeness"]["status"] = "fail"
+        manifest["completeness"]["evidence_audit"] = "fail"
+        manifest["status"] = "fail"
     manifest_record = _write_json(
         destination / "run-manifest.json",
         manifest,
@@ -3632,7 +4837,7 @@ def _run_experiment_impl(
     )
     artifacts.append(manifest_record)
 
-    if runtime_issues:
+    if manifest["status"] != "pass":
         return _validation_payload(
             runtime_issues,
             execution_status="completed",

@@ -45,11 +45,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
+import hashlib
+import json
+import os
 from pathlib import Path
 import re
+import shlex
+import shutil
+import stat
+import tempfile
 from typing import Any, Mapping, Sequence
 
-from .contract import FileRecordError, file_record
+from .contract import FileRecordError, file_record, stable_regular_file
 
 
 #: Simra emits one MOS per line as ``<name> <d> <g> <s> <b> <model> <k=v>...``.
@@ -110,10 +117,21 @@ _SPICE_SCALE: Mapping[str, Decimal] = {
     "f": Decimal("1e-15"),
 }
 
-#: A bound deck references a small, fixed set of PDK files. The ceiling keeps a
-#: malformed binding from enumerating an unbounded tree. FreePDK45 is the widest
-#: reviewed profile at eight per-corner model files.
-MAX_BOUND_FILES = 12
+#: A PDK entry point can fan out substantially: sky130's selected corner, for
+#: example, includes the device, passive and specialised-cell model files it
+#: activates.  Keep the complete closure bounded without retaining the old
+#: twelve-file fiction that omitted those transitive inputs.
+MAX_BOUND_FILES = 512
+MAX_CLOSURE_EDGES = 1_024
+MAX_CLOSURE_DEPTH = 64
+MAX_PDK_FILE_BYTES = 256 * 1024 * 1024
+MAX_PDK_SNAPSHOT_BYTES = 512 * 1024 * 1024
+
+PDK_SNAPSHOT_SCHEMA = "openada.pdk-snapshot/v1"
+_SNAPSHOT_DOMAIN = b"openada.pdk-snapshot/v1\0"
+_CLOSURE_DOMAIN = b"openada.pdk-closure/v1\0"
+_INCLUDE_DIRECTIVES = frozenset((".include", ".inc"))
+_NAMESPACE_DIRECTIVES = frozenset((".model", ".subckt", ".global"))
 
 #: The canonical device roles a Simra deck may name instead of a PDK model. The
 #: vocabulary is deliberately tiny: it covers what a model-free schematic can
@@ -679,9 +697,16 @@ def device_role_index() -> dict[str, str]:
 
 @dataclass(frozen=True, slots=True)
 class ResolvedPdkBinding:
-    """One PDK binding resolved against a root, with every file content-bound."""
+    """One binding backed only by an immutable, content-addressed PDK snapshot.
+
+    ``source_root`` is provenance.  Every executable locator lives below
+    ``root`` (the PDK directory inside ``snapshot_root``), and no later
+    consumer needs or is permitted to reopen the installed source tree.
+    """
 
     binding: PdkBinding
+    source_root: Path
+    snapshot_root: Path
     root: Path
     corner: str
     library_paths: tuple[Path, ...]
@@ -689,6 +714,12 @@ class ResolvedPdkBinding:
     osdi_paths: tuple[Path, ...]
     identity_path: Path | None
     input_records: tuple[dict[str, Any], ...]
+    configuration_records: tuple[dict[str, Any], ...]
+    closure_records: tuple[dict[str, Any], ...]
+    closure_root_sha256: str
+    snapshot_root_sha256: str
+    namespace_model_names: tuple[str, ...]
+    namespace_global_nodes: tuple[str, ...]
 
     @property
     def pdk_id(self) -> str:
@@ -709,10 +740,15 @@ class ResolvedPdkBinding:
         return {
             "pdk_id": self.binding.pdk_id,
             "display_name": self.binding.display_name,
+            "source_root": str(self.source_root),
+            "snapshot_root": str(self.snapshot_root),
             "root": str(self.root),
             "corner": self.corner,
             "library": str(self.library_path),
             "library_cards": list(self.library_cards),
+            "closure_records": [dict(record) for record in self.closure_records],
+            "closure_root_sha256": self.closure_root_sha256,
+            "snapshot_root_sha256": self.snapshot_root_sha256,
             "device_prefix": self.binding.device_prefix,
             "parameter_names": dict(self.binding.parameter_names),
             "geometry_scale": self.binding.geometry_scale,
@@ -721,28 +757,956 @@ class ResolvedPdkBinding:
             "identity": str(self.identity_path) if self.identity_path else None,
         }
 
+    def verify_snapshot(self) -> None:
+        """Refuse if any published snapshot byte or locator is no longer exact.
 
-def _bind_file(path: Path, *, kind: str, role: str) -> dict[str, Any]:
+        Snapshot files are non-writable and their directories are non-writable,
+        but a same-UID process can still rename an ancestor it owns.  Native
+        launch therefore verifies every retained file immediately before and
+        after execution rather than treating chmod as an integrity boundary.
+        """
+
+        try:
+            snapshot_info = self.snapshot_root.lstat()
+            root_info = self.root.lstat()
+        except OSError as exc:
+            raise PdkBindingError(
+                "pdk.snapshot.unstable",
+                f"The captured PDK snapshot is unavailable: {exc}",
+            ) from exc
+        if (
+            stat.S_ISLNK(snapshot_info.st_mode)
+            or not stat.S_ISDIR(snapshot_info.st_mode)
+            or snapshot_info.st_mode
+            & (stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+            or stat.S_ISLNK(root_info.st_mode)
+            or not stat.S_ISDIR(root_info.st_mode)
+            or root_info.st_mode & (stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+            or self.snapshot_root.name != self.snapshot_root_sha256
+            or self.root != self.snapshot_root / self.pdk_id
+        ):
+            raise PdkBindingError(
+                "pdk.snapshot.unstable",
+                "The captured PDK snapshot root is not the immutable "
+                "content-addressed directory that was resolved.",
+            )
+
+        expected_by_path: dict[str, Mapping[str, Any]] = {}
+        for expected in self.input_records:
+            path = Path(str(expected.get("path", "")))
+            if not path.is_absolute():
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    "The captured PDK snapshot contains a non-absolute input "
+                    f"locator: {path}.",
+                )
+            try:
+                path.relative_to(self.snapshot_root)
+            except ValueError as exc:
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"The captured input {path} is outside its snapshot root.",
+                ) from exc
+            if str(path) in expected_by_path:
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"The captured PDK snapshot repeats input path {path}.",
+                )
+            expected_by_path[str(path)] = expected
+            try:
+                info = path.lstat()
+            except OSError as exc:
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"The captured PDK snapshot file {path} is unavailable: {exc}",
+                ) from exc
+            if (
+                stat.S_ISLNK(info.st_mode)
+                or not stat.S_ISREG(info.st_mode)
+                or info.st_nlink != 1
+                or info.st_mode & (stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+            ):
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"The captured PDK snapshot file {path} is no longer one "
+                    "non-writable, non-linked regular file.",
+                )
+            try:
+                observed = file_record(
+                    path,
+                    kind=str(expected.get("kind")),
+                    role=str(expected.get("role")),
+                    maximum_bytes=MAX_PDK_FILE_BYTES,
+                )
+            except FileRecordError as exc:
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"The captured PDK snapshot file {path} could not be "
+                    f"verified: {exc}",
+                ) from exc
+            if (
+                observed.get("exists") is not True
+                or observed.get("bytes") != expected.get("bytes")
+                or observed.get("sha256") != expected.get("sha256")
+                or observed.get("path") != expected.get("path")
+            ):
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"The captured PDK snapshot file {path} changed after "
+                    "publication.",
+                )
+
+        expected_files = {Path(path) for path in expected_by_path}
+        expected_directories = {self.snapshot_root}
+        for path in expected_files:
+            parent = path.parent
+            while True:
+                expected_directories.add(parent)
+                if parent == self.snapshot_root:
+                    break
+                parent = parent.parent
+
+        observed_files: set[Path] = set()
+        observed_directories: set[Path] = set()
+        pending = [self.snapshot_root]
+        while pending:
+            directory = pending.pop()
+            try:
+                info = directory.lstat()
+            except OSError as exc:
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"Snapshot directory {directory} is unavailable: {exc}",
+                ) from exc
+            if (
+                stat.S_ISLNK(info.st_mode)
+                or not stat.S_ISDIR(info.st_mode)
+                or info.st_mode
+                & (stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+            ):
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"Snapshot directory {directory} is not one real "
+                    "non-writable directory.",
+                )
+            observed_directories.add(directory)
+            try:
+                with os.scandir(directory) as iterator:
+                    entries = list(iterator)
+            except OSError as exc:
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"Snapshot directory {directory} cannot be enumerated: {exc}",
+                ) from exc
+            for entry in entries:
+                path = directory / entry.name
+                try:
+                    entry_info = entry.stat(follow_symlinks=False)
+                except OSError as exc:
+                    raise PdkBindingError(
+                        "pdk.snapshot.unstable",
+                        f"Snapshot entry {path} is unavailable: {exc}",
+                    ) from exc
+                if stat.S_ISLNK(entry_info.st_mode):
+                    raise PdkBindingError(
+                        "pdk.snapshot.unstable",
+                        f"Snapshot entry {path} is a symbolic link.",
+                    )
+                if stat.S_ISDIR(entry_info.st_mode):
+                    pending.append(path)
+                elif stat.S_ISREG(entry_info.st_mode):
+                    observed_files.add(path)
+                else:
+                    raise PdkBindingError(
+                        "pdk.snapshot.unstable",
+                        f"Snapshot entry {path} is not a regular file or directory.",
+                    )
+
+        if (
+            observed_files != expected_files
+            or observed_directories != expected_directories
+        ):
+            unexpected = sorted(
+                str(path)
+                for path in (
+                    (observed_files - expected_files)
+                    | (observed_directories - expected_directories)
+                )
+            )
+            missing = sorted(
+                str(path)
+                for path in (
+                    (expected_files - observed_files)
+                    | (expected_directories - observed_directories)
+                )
+            )
+            detail = (
+                f"unexpected={unexpected[:3]}, missing={missing[:3]}"
+            )
+            raise PdkBindingError(
+                "pdk.snapshot.unstable",
+                "The captured PDK snapshot tree contains undeclared or "
+                f"missing entries ({detail}).",
+            )
+
+        runtime_paths = (
+            *self.library_paths,
+            *self.osdi_paths,
+            *((self.identity_path,) if self.identity_path is not None else ()),
+        )
+        for path in runtime_paths:
+            try:
+                path.relative_to(self.root)
+            except ValueError as exc:
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"Runtime PDK locator {path} is outside the captured tree.",
+                ) from exc
+            if str(path) not in expected_by_path:
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"Runtime PDK locator {path} has no captured input record.",
+                )
+
+        digest_records: list[dict[str, Any]] = []
+        for index, record in enumerate(self.closure_records):
+            relative = Path(str(record.get("relative_path", "")))
+            if (
+                relative.is_absolute()
+                or ".." in relative.parts
+                or record.get("index") != index
+            ):
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    "The ordered PDK closure contains an invalid relative "
+                    f"locator or index at entry {index}.",
+                )
+            path = self.root / relative
+            expected = expected_by_path.get(str(path))
+            if (
+                record.get("path") != str(path)
+                or expected is None
+                or record.get("bytes") != expected.get("bytes")
+                or record.get("sha256") != expected.get("sha256")
+            ):
+                raise PdkBindingError(
+                    "pdk.snapshot.unstable",
+                    f"Ordered PDK closure entry {index} no longer matches its "
+                    "captured file.",
+                )
+            digest_records.append(
+                {
+                    key: record.get(key)
+                    for key in (
+                        "index",
+                        "form",
+                        "relative_path",
+                        "section",
+                        "bytes",
+                        "sha256",
+                    )
+                }
+            )
+        if (
+            _canonical_digest(_CLOSURE_DOMAIN, digest_records)
+            != self.closure_root_sha256
+        ):
+            raise PdkBindingError(
+                "pdk.snapshot.unstable",
+                "The ordered PDK closure facts no longer match their digest root.",
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class _CapturedPdkFile:
+    relative_path: Path
+    body: bytes
+    sha256: str
+
+    @property
+    def bytes(self) -> int:
+        return len(self.body)
+
+
+def _canonical_digest(domain: bytes, value: object) -> str:
+    encoded = json.dumps(
+        value,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(domain + encoded).hexdigest()
+
+
+def _without_inline_comment(line: str) -> str:
+    """Remove a SPICE ``$`` end-of-line comment without touching quoted paths."""
+
+    quote: str | None = None
+    escaped = False
+    for index, character in enumerate(line):
+        if escaped:
+            escaped = False
+            continue
+        if character == "\\" and quote is not None:
+            escaped = True
+            continue
+        if character in {"'", '"'}:
+            if quote == character:
+                quote = None
+            elif quote is None:
+                quote = character
+            continue
+        if (
+            character == "$"
+            and quote is None
+            and (index == 0 or line[index - 1].isspace())
+        ):
+            return line[:index]
+    return line
+
+
+def _directive_tokens(line: str) -> tuple[str, ...]:
+    stripped = _without_inline_comment(line).strip()
+    if not stripped.startswith(".") or stripped.startswith(".*"):
+        return ()
     try:
-        return file_record(path, kind=kind, role=role)
-    except FileRecordError as exc:
+        lexer = shlex.shlex(stripped, posix=True)
+        lexer.commenters = ""
+        lexer.whitespace_split = True
+        return tuple(lexer)
+    except ValueError as exc:
         raise PdkBindingError(
-            "pdk.file.unreadable",
-            f"The PDK file {path} could not be content-bound: {exc}",
+            "pdk.closure.directive_invalid",
+            f"The PDK collateral contains an unparseable directive: "
+            f"{stripped[:200]!r}.",
         ) from exc
 
+
+def _normalized_source_path(
+    root: Path,
+    base: Path,
+    locator: str,
+    *,
+    label: str,
+) -> tuple[Path, Path]:
+    """Resolve one closed relative collateral locator inside ``root``."""
+
+    if (
+        not locator
+        or "\x00" in locator
+        or "\r" in locator
+        or "\n" in locator
+        or "$" in locator
+        or Path(locator).is_absolute()
+    ):
+        raise PdkBindingError(
+            "pdk.closure.locator_invalid",
+            f"{label} uses a dynamic, absolute, or malformed collateral "
+            f"locator {locator!r}; a closed snapshot requires one relative path.",
+        )
+    lexical = Path(os.path.abspath(base / locator))
+    try:
+        relative = lexical.relative_to(root)
+    except ValueError as exc:
+        raise PdkBindingError(
+            "pdk.closure.path_escape",
+            f"{label} resolves outside the selected PDK root: {locator!r}.",
+        ) from exc
+    try:
+        resolved = lexical.resolve(strict=True)
+    except OSError as exc:
+        raise PdkBindingError(
+            "pdk.closure.missing",
+            f"{label} references missing or unreadable collateral {lexical}.",
+        ) from exc
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise PdkBindingError(
+            "pdk.closure.path_escape",
+            f"{label} resolves through the filesystem outside the selected PDK "
+            f"root: {locator!r}.",
+        ) from exc
+    # Mirroring a symlink into a regular snapshot file changes relative path
+    # semantics for any descendants. Refuse aliases instead of guessing.
+    if resolved != lexical:
+        raise PdkBindingError(
+            "pdk.closure.symlink",
+            f"{label} resolves through a symbolic-link alias {lexical}; the "
+            "active PDK closure must have one canonical in-root path per file.",
+        )
+    return lexical, relative
+
+
+class _PdkSnapshotBuilder:
+    """Read the selected PDK closure once and publish one immutable tree."""
+
+    def __init__(
+        self,
+        binding: PdkBinding,
+        source_root: Path,
+        corner: str,
+    ) -> None:
+        self.binding = binding
+        self.source_root = source_root
+        self.corner = corner
+        self.captured: dict[Path, _CapturedPdkFile] = {}
+        self.roles: dict[Path, tuple[str, str]] = {}
+        self.closure_records: list[dict[str, Any]] = []
+        self.namespace_models: set[str] = {
+            name.casefold() for name in binding.device_models.values()
+        }
+        self.namespace_globals: set[str] = set()
+        self._walked_views: set[tuple[Path, str | None]] = set()
+        self._active_views: list[tuple[Path, str | None]] = []
+        self._transport_walked: set[Path] = set()
+        self._transport_active: list[Path] = []
+        self._total_bytes = 0
+
+    def _capture(self, relative: Path) -> _CapturedPdkFile:
+        existing = self.captured.get(relative)
+        if existing is not None:
+            return existing
+        if len(self.captured) >= MAX_BOUND_FILES - 1:
+            raise PdkBindingError(
+                "pdk.files.over_limit",
+                f"The active PDK snapshot exceeds the {MAX_BOUND_FILES}-file "
+                "ceiling.",
+            )
+        source = self.source_root / relative
+        try:
+            with stable_regular_file(source) as (handle, opened):
+                if opened.st_size > MAX_PDK_FILE_BYTES:
+                    raise PdkBindingError(
+                        "pdk.file.over_limit",
+                        f"The PDK file {source} is {opened.st_size} bytes; the "
+                        f"per-file ceiling is {MAX_PDK_FILE_BYTES}.",
+                    )
+                body = handle.read(MAX_PDK_FILE_BYTES + 1)
+                if len(body) != opened.st_size:
+                    raise PdkBindingError(
+                        "pdk.file.unstable",
+                        f"The PDK file {source} changed during its one capture.",
+                    )
+        except PdkBindingError:
+            raise
+        except FileRecordError as exc:
+            raise PdkBindingError(
+                "pdk.file.unreadable",
+                f"The PDK file {source} could not be captured safely: {exc}",
+            ) from exc
+        self._total_bytes += len(body)
+        if self._total_bytes > MAX_PDK_SNAPSHOT_BYTES:
+            raise PdkBindingError(
+                "pdk.files.over_limit",
+                f"The active PDK snapshot exceeds the "
+                f"{MAX_PDK_SNAPSHOT_BYTES}-byte ceiling.",
+            )
+        captured = _CapturedPdkFile(
+            relative_path=relative,
+            body=body,
+            sha256=hashlib.sha256(body).hexdigest(),
+        )
+        self.captured[relative] = captured
+        return captured
+
+    def capture_material(
+        self,
+        relative: Path,
+        *,
+        kind: str,
+        role: str,
+    ) -> _CapturedPdkFile:
+        captured = self._capture(relative)
+        priority = {
+            "pdk.parser-library": 0,
+            "pdk.transitive-library": 1,
+            "pdk.corner-library": 2,
+            "pdk.osdi-module": 3,
+            "pdk.identity": 3,
+        }
+        existing = self.roles.get(relative)
+        if existing is None or priority.get(role, 0) > priority.get(existing[1], 0):
+            self.roles[relative] = (kind, role)
+        return captured
+
+    def capture_transport_closure(
+        self,
+        relative: Path,
+        *,
+        depth: int = 0,
+    ) -> None:
+        """Capture files ngspice's library preprocessor may open.
+
+        Ngspice selects the requested ``.lib`` section semantically, but its
+        source preprocessor still opens ``.include`` files appearing in other
+        sections (and recursively preprocesses them).  Those bytes do not enter
+        the *active semantic closure* or namespace, yet they must exist in the
+        private tree or a selected-corner launch fails before section
+        evaluation.  Keep this parser transport closure separate so inactive
+        model names never become collision evidence.
+        """
+
+        if depth > MAX_CLOSURE_DEPTH:
+            raise PdkBindingError(
+                "pdk.closure.over_limit",
+                "The PDK parser transport closure exceeds the bounded depth "
+                f"of {MAX_CLOSURE_DEPTH}.",
+            )
+        if relative in self._transport_active:
+            cycle = " -> ".join(
+                path.as_posix() for path in (*self._transport_active, relative)
+            )
+            raise PdkBindingError(
+                "pdk.closure.cycle",
+                f"The PDK parser transport closure is cyclic: {cycle}.",
+            )
+        if relative in self._transport_walked:
+            return
+
+        captured = self.capture_material(
+            relative,
+            kind="spice-model-library",
+            role="pdk.parser-library",
+        )
+        self._transport_active.append(relative)
+        try:
+            text = captured.body.decode("latin-1")
+            for line_number, line in enumerate(text.splitlines(), start=1):
+                tokens = _directive_tokens(line)
+                if not tokens:
+                    continue
+                directive = tokens[0].casefold()
+                child_locator: str | None = None
+                if directive in _INCLUDE_DIRECTIVES:
+                    if len(tokens) != 2:
+                        raise PdkBindingError(
+                            "pdk.closure.directive_invalid",
+                            f"{relative}:{line_number} has a malformed "
+                            f"{tokens[0]} directive.",
+                        )
+                    child_locator = tokens[1]
+                elif directive == ".lib" and len(tokens) == 3:
+                    child_locator = tokens[1]
+                elif directive == ".lib" and len(tokens) not in {2, 3}:
+                    raise PdkBindingError(
+                        "pdk.closure.directive_invalid",
+                        f"{relative}:{line_number} has a malformed .lib "
+                        "directive.",
+                    )
+                if child_locator is None:
+                    continue
+                _source, child = _normalized_source_path(
+                    self.source_root,
+                    self.source_root / relative.parent,
+                    child_locator,
+                    label=f"{relative}:{line_number}",
+                )
+                if directive == ".lib" and (
+                    child in self._transport_active
+                    or child in self._transport_walked
+                ):
+                    # A library file may select another section of itself (the
+                    # gf180 wrapper does this extensively). The one captured
+                    # file already transports every section; recursing here
+                    # would confuse legal section selection with an include
+                    # cycle.
+                    self.capture_material(
+                        child,
+                        kind="spice-model-library",
+                        role="pdk.parser-library",
+                    )
+                    continue
+                self.capture_transport_closure(child, depth=depth + 1)
+            self._transport_walked.add(relative)
+        finally:
+            self._transport_active.pop()
+
+    def _scan_namespace(self, line: str) -> None:
+        tokens = _directive_tokens(line)
+        if len(tokens) < 2:
+            return
+        directive = tokens[0].casefold()
+        if directive not in _NAMESPACE_DIRECTIVES:
+            return
+        if directive in {".model", ".subckt"}:
+            self.namespace_models.add(tokens[1].casefold())
+            return
+        self.namespace_globals.update(
+            token.casefold()
+            for token in tokens[1:]
+            if token != "0" and not token.startswith("$")
+        )
+
+    def walk(
+        self,
+        relative: Path,
+        *,
+        section: str | None,
+        form: str,
+        depth: int = 0,
+    ) -> None:
+        if depth > MAX_CLOSURE_DEPTH:
+            raise PdkBindingError(
+                "pdk.closure.over_limit",
+                f"The active PDK include/library closure exceeds the "
+                f"{MAX_CLOSURE_DEPTH}-edge depth ceiling.",
+            )
+        view = (relative, section.casefold() if section is not None else None)
+        if view in self._active_views:
+            cycle = " -> ".join(
+                f"{path}{(':' + selected) if selected else ''}"
+                for path, selected in (*self._active_views, view)
+            )
+            raise PdkBindingError(
+                "pdk.closure.cycle",
+                f"The active PDK include/library closure is cyclic: {cycle}.",
+            )
+
+        captured = self.capture_material(
+            relative,
+            kind="spice-model-library",
+            role="pdk.transitive-library",
+        )
+        if len(self.closure_records) >= MAX_CLOSURE_EDGES:
+            raise PdkBindingError(
+                "pdk.closure.over_limit",
+                f"The active PDK include/library closure exceeds the "
+                f"{MAX_CLOSURE_EDGES}-edge ceiling.",
+            )
+        self.closure_records.append(
+            {
+                "index": len(self.closure_records),
+                "form": form,
+                "relative_path": relative.as_posix(),
+                "section": section,
+                "bytes": captured.bytes,
+                "sha256": captured.sha256,
+            }
+        )
+        if view in self._walked_views:
+            return
+
+        self._active_views.append(view)
+        try:
+            text = captured.body.decode("latin-1")
+            current_section: str | None = None
+            requested_found = section is None
+            for line_number, line in enumerate(text.splitlines(), start=1):
+                tokens = _directive_tokens(line)
+                directive = tokens[0].casefold() if tokens else ""
+
+                if directive == ".lib" and len(tokens) == 2:
+                    if current_section is not None:
+                        raise PdkBindingError(
+                            "pdk.closure.section_invalid",
+                            f"{relative}:{line_number} opens nested .lib sections.",
+                        )
+                    current_section = tokens[1]
+                    if (
+                        section is not None
+                        and current_section.casefold() == section.casefold()
+                    ):
+                        requested_found = True
+                    continue
+                if directive in {".endl", ".endlib"}:
+                    if len(tokens) not in {1, 2} or current_section is None:
+                        raise PdkBindingError(
+                            "pdk.closure.section_invalid",
+                            f"{relative}:{line_number} has an unmatched or "
+                            "malformed library-section terminator.",
+                        )
+                    if (
+                        len(tokens) == 2
+                        and tokens[1].casefold() != current_section.casefold()
+                    ):
+                        raise PdkBindingError(
+                            "pdk.closure.section_invalid",
+                            f"{relative}:{line_number} closes {tokens[1]!r}, not "
+                            f"the active section {current_section!r}.",
+                        )
+                    current_section = None
+                    continue
+
+                active = current_section is None or (
+                    section is not None
+                    and current_section.casefold() == section.casefold()
+                )
+                if not active:
+                    continue
+                self._scan_namespace(line)
+
+                if directive in _INCLUDE_DIRECTIVES:
+                    if len(tokens) != 2:
+                        raise PdkBindingError(
+                            "pdk.closure.directive_invalid",
+                            f"{relative}:{line_number} has a malformed "
+                            f"{tokens[0]} directive.",
+                        )
+                    _source, child = _normalized_source_path(
+                        self.source_root,
+                        self.source_root / relative.parent,
+                        tokens[1],
+                        label=f"{relative}:{line_number}",
+                    )
+                    self.walk(
+                        child,
+                        section=None,
+                        form="include",
+                        depth=depth + 1,
+                    )
+                elif directive == ".lib":
+                    if len(tokens) != 3:
+                        raise PdkBindingError(
+                            "pdk.closure.directive_invalid",
+                            f"{relative}:{line_number} has a malformed .lib "
+                            "file-selection directive.",
+                        )
+                    _source, child = _normalized_source_path(
+                        self.source_root,
+                        self.source_root / relative.parent,
+                        tokens[1],
+                        label=f"{relative}:{line_number}",
+                    )
+                    self.walk(
+                        child,
+                        section=tokens[2],
+                        form="lib",
+                        depth=depth + 1,
+                    )
+
+            if current_section is not None:
+                raise PdkBindingError(
+                    "pdk.closure.section_invalid",
+                    f"{relative} has an unterminated .lib section "
+                    f"{current_section!r}.",
+                )
+            if not requested_found:
+                raise PdkBindingError(
+                    "pdk.library.section_missing",
+                    f"The captured PDK library {relative} has no section "
+                    f"{section!r}.",
+                )
+            self._walked_views.add(view)
+        finally:
+            self._active_views.pop()
+
+    @staticmethod
+    def _write_file(path: Path, body: bytes) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        descriptor = os.open(
+            path,
+            os.O_WRONLY
+            | os.O_CREAT
+            | os.O_EXCL
+            | getattr(os, "O_CLOEXEC", 0)
+            | getattr(os, "O_NOFOLLOW", 0),
+            0o400,
+        )
+        try:
+            position = 0
+            while position < len(body):
+                written = os.write(descriptor, body[position:])
+                if written <= 0:
+                    raise OSError("short PDK snapshot write")
+                position += written
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+    def publish(
+        self,
+        *,
+        snapshot_parent: str | Path | None,
+        osdi_relatives: Sequence[Path],
+        identity_relative: Path | None,
+    ) -> tuple[
+        Path,
+        str,
+        str,
+        tuple[dict[str, Any], ...],
+        tuple[dict[str, Any], ...],
+        tuple[dict[str, Any], ...],
+    ]:
+        closure_digest_records = [dict(record) for record in self.closure_records]
+        closure_root_sha256 = _canonical_digest(
+            _CLOSURE_DOMAIN, closure_digest_records
+        )
+        material_records = [
+            {
+                "relative_path": relative.as_posix(),
+                "kind": self.roles[relative][0],
+                "role": self.roles[relative][1],
+                "bytes": captured.bytes,
+                "sha256": captured.sha256,
+            }
+            for relative, captured in self.captured.items()
+        ]
+        snapshot_description = {
+            "schema": PDK_SNAPSHOT_SCHEMA,
+            "pdk_id": self.binding.pdk_id,
+            "corner": self.corner,
+            "closure_root_sha256": closure_root_sha256,
+            "closure": closure_digest_records,
+            "files": material_records,
+        }
+        snapshot_root_sha256 = _canonical_digest(
+            _SNAPSHOT_DOMAIN, snapshot_description
+        )
+        manifest = {
+            **snapshot_description,
+            "snapshot_root_sha256": snapshot_root_sha256,
+        }
+        manifest_body = (
+            json.dumps(
+                manifest,
+                allow_nan=False,
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        ).encode("utf-8")
+
+        if snapshot_parent is None:
+            private_parent = Path(
+                tempfile.mkdtemp(prefix="openada-pdk-snapshot-")
+            )
+        else:
+            parent = Path(snapshot_parent).expanduser()
+            if not parent.is_absolute():
+                raise PdkBindingError(
+                    "pdk.snapshot.destination_invalid",
+                    f"The PDK snapshot parent must be absolute: {parent}.",
+                )
+            try:
+                parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+                private_parent = Path(
+                    tempfile.mkdtemp(prefix=".openada-pdk-", dir=parent)
+                )
+            except OSError as exc:
+                raise PdkBindingError(
+                    "pdk.snapshot.destination_invalid",
+                    f"The PDK snapshot parent {parent} is unusable: {exc}",
+                ) from exc
+
+        staging = private_parent / ".capture"
+        final = private_parent / snapshot_root_sha256
+        try:
+            staging.mkdir(mode=0o700)
+            pdk_directory = staging / self.binding.pdk_id
+            for relative, captured in self.captured.items():
+                self._write_file(pdk_directory / relative, captured.body)
+            self._write_file(
+                staging / "openada-pdk-snapshot.json", manifest_body
+            )
+            # Files were created 0400. Remove write permission from every
+            # snapshot directory before atomic publication as the digest name.
+            for directory, _children, _files in os.walk(
+                staging, topdown=False, followlinks=False
+            ):
+                os.chmod(directory, 0o500)
+            os.rename(staging, final)
+        except OSError as exc:
+            shutil.rmtree(private_parent, ignore_errors=True)
+            raise PdkBindingError(
+                "pdk.snapshot.publication_failed",
+                f"The immutable PDK snapshot could not be published: {exc}",
+            ) from exc
+
+        snapshot_pdk_root = final / self.binding.pdk_id
+        published_records: list[dict[str, Any]] = []
+        by_relative: dict[Path, dict[str, Any]] = {}
+        try:
+            for relative, captured in self.captured.items():
+                kind, role = self.roles[relative]
+                record = file_record(
+                    snapshot_pdk_root / relative,
+                    kind=kind,
+                    role=role,
+                    maximum_bytes=MAX_PDK_FILE_BYTES,
+                )
+                if (
+                    record.get("exists") is not True
+                    or record.get("bytes") != captured.bytes
+                    or record.get("sha256") != captured.sha256
+                ):
+                    raise PdkBindingError(
+                        "pdk.snapshot.publication_failed",
+                        f"The published PDK snapshot file {relative} differs "
+                        "from its one captured preimage.",
+                    )
+                published_records.append(record)
+                by_relative[relative] = record
+            manifest_record = file_record(
+                final / "openada-pdk-snapshot.json",
+                kind="pdk-snapshot-manifest",
+                role="pdk.snapshot",
+                maximum_bytes=MAX_PDK_FILE_BYTES,
+            )
+            if (
+                manifest_record.get("exists") is not True
+                or manifest_record.get("sha256")
+                != hashlib.sha256(manifest_body).hexdigest()
+            ):
+                raise PdkBindingError(
+                    "pdk.snapshot.publication_failed",
+                    "The published PDK snapshot manifest differs from its "
+                    "canonical preimage.",
+                )
+        except (FileRecordError, PdkBindingError) as exc:
+            if isinstance(exc, PdkBindingError):
+                raise
+            raise PdkBindingError(
+                "pdk.snapshot.publication_failed",
+                f"The published PDK snapshot could not be verified: {exc}",
+            ) from exc
+
+        closure_facts = tuple(
+            {
+                **record,
+                "path": str(
+                    snapshot_pdk_root / Path(str(record["relative_path"]))
+                ),
+            }
+            for record in closure_digest_records
+        )
+        input_records = (manifest_record, *published_records)
+        configuration_records = (
+            manifest_record,
+            *(
+                by_relative[relative]
+                for relative in osdi_relatives
+            ),
+            *(
+                (by_relative[identity_relative],)
+                if identity_relative is not None
+                else ()
+            ),
+        )
+        return (
+            final,
+            closure_root_sha256,
+            snapshot_root_sha256,
+            tuple(input_records),
+            tuple(configuration_records),
+            closure_facts,
+        )
 
 def resolve_pdk_binding(
     pdk_id: str,
     pdk_root: str | Path,
     *,
     corner: str | None = None,
+    snapshot_parent: str | Path | None = None,
 ) -> ResolvedPdkBinding:
-    """Resolve one named PDK against ``pdk_root`` and content-bind its files.
+    """Capture one named PDK's complete active closure into one immutable tree.
 
     ``pdk_root`` is the directory *containing* the PDK tree, matching the
     ``PDK_ROOT``/``PDK`` split every open PDK uses. A root that already points
-    at the PDK directory itself is also accepted.
+    at the PDK directory itself is also accepted.  The installed tree is read
+    only during this call; all returned locators name the captured snapshot.
     """
 
     binding = REGISTRY.get(pdk_id)
@@ -763,17 +1727,20 @@ def resolve_pdk_binding(
             ),
         )
 
-    root = Path(pdk_root).expanduser()
-    if not root.is_absolute():
+    supplied_root = Path(pdk_root).expanduser()
+    if not supplied_root.is_absolute():
         raise PdkBindingError(
             "pdk.root.invalid",
-            f"The PDK root must be an absolute path: {root}",
+            f"The PDK root must be an absolute path: {supplied_root}",
         )
-    root = root.resolve()
+    root = supplied_root.resolve()
     # Accept either the parent of the PDK tree or the tree itself.
     candidate = root / binding.pdk_id
     if candidate.is_dir():
-        root = candidate
+        # Catalog roots commonly expose each installed immutable PDK through a
+        # symlink. Resolve that catalog alias once at the trust boundary; no
+        # source symlink is copied into or consulted from the snapshot.
+        root = candidate.resolve()
     if not root.is_dir():
         raise PdkBindingError(
             "pdk.root.missing",
@@ -782,71 +1749,150 @@ def resolve_pdk_binding(
 
     selected_corner = binding.resolved_corner(corner)
 
-    library_paths: list[Path] = []
-    library_cards: list[str] = []
+    builder = _PdkSnapshotBuilder(binding, root, selected_corner)
+    library_relatives: list[Path] = []
     for entry in binding.library_entries:
         relative, section = entry.resolve(selected_corner)
-        path = root / relative
-        if not path.is_file():
+        try:
+            _source, relative_path = _normalized_source_path(
+                root,
+                root,
+                relative,
+                label=f"{binding.pdk_id} binding profile",
+            )
+        except PdkBindingError as exc:
+            if exc.code != "pdk.closure.missing":
+                raise
             raise PdkBindingError(
                 "pdk.library.missing",
-                f"{binding.pdk_id} expects {path}, which does not exist.",
+                f"{binding.pdk_id} expects {root / relative}, which does not "
+                "exist or cannot be captured.",
                 hint="Check that --pdk-root points at the installed PDK.",
-            )
-        library_paths.append(path)
-        library_cards.append(
-            f".lib {path} {section}" if entry.form == "lib" else f".include {path}"
+            ) from exc
+        library_relatives.append(relative_path)
+        builder.capture_transport_closure(relative_path)
+        builder.capture_material(
+            relative_path,
+            kind="spice-model-library",
+            role="pdk.corner-library",
+        )
+        # A root role takes precedence if a profile entry was already reached
+        # transitively from an earlier ordered entry.
+        builder.roles[relative_path] = (
+            "spice-model-library",
+            "pdk.corner-library",
+        )
+        builder.walk(
+            relative_path,
+            section=section if entry.form == "lib" else None,
+            form=entry.form,
         )
 
-    osdi_paths: list[Path] = []
+    osdi_relatives: list[Path] = []
     for relative in binding.osdi_relative_paths:
-        module = root / relative
-        if not module.is_file():
+        try:
+            _source, module_relative = _normalized_source_path(
+                root,
+                root,
+                relative,
+                label=f"{binding.pdk_id} OSDI profile",
+            )
+        except PdkBindingError as exc:
             raise PdkBindingError(
                 "pdk.osdi.missing",
-                f"{binding.pdk_id} requires the Verilog-A module {module}, "
-                "which does not exist.",
+                f"{binding.pdk_id} requires the Verilog-A module "
+                f"{root / relative}, which could not be captured: {exc.message}",
                 hint=(
                     "Without its OSDI modules this PDK's devices cannot bind and "
                     "ngspice reports an unknown model type."
                 ),
-            )
-        osdi_paths.append(module)
+            ) from exc
+        builder.capture_material(
+            module_relative,
+            kind="verilog-a-module",
+            role="pdk.osdi-module",
+        )
+        osdi_relatives.append(module_relative)
 
-    identity_path: Path | None = None
+    identity_relative: Path | None = None
     if binding.identity_relative_path:
         candidate_identity = root / binding.identity_relative_path
-        if candidate_identity.is_file():
-            identity_path = candidate_identity
+        try:
+            candidate_identity.lstat()
+        except FileNotFoundError:
+            pass
+        except OSError as exc:
+            raise PdkBindingError(
+                "pdk.file.unreadable",
+                f"The PDK identity file {candidate_identity} could not be "
+                f"inspected: {exc}",
+            ) from exc
+        else:
+            _source, identity_relative = _normalized_source_path(
+                root,
+                root,
+                binding.identity_relative_path,
+                label=f"{binding.pdk_id} identity profile",
+            )
+            builder.capture_material(
+                identity_relative,
+                kind="pdk-identity",
+                role="pdk.identity",
+            )
 
-    records: list[dict[str, Any]] = [
-        _bind_file(path, kind="spice-model-library", role="pdk.corner-library")
-        for path in library_paths
-    ]
-    for module in osdi_paths:
-        records.append(
-            _bind_file(module, kind="verilog-a-module", role="pdk.osdi-module")
-        )
-    if identity_path is not None:
-        records.append(
-            _bind_file(identity_path, kind="pdk-identity", role="pdk.identity")
-        )
-    if len(records) > MAX_BOUND_FILES:
-        raise PdkBindingError(
-            "pdk.files.over_limit",
-            f"{len(records)} bound PDK files exceed the ceiling of {MAX_BOUND_FILES}.",
-        )
-
-    return ResolvedPdkBinding(
-        binding=binding,
-        root=root,
-        corner=selected_corner,
-        library_paths=tuple(library_paths),
-        library_cards=tuple(library_cards),
-        osdi_paths=tuple(osdi_paths),
-        identity_path=identity_path,
-        input_records=tuple(records),
+    (
+        snapshot_root,
+        closure_root_sha256,
+        snapshot_root_sha256,
+        input_records,
+        configuration_records,
+        closure_records,
+    ) = builder.publish(
+        snapshot_parent=snapshot_parent,
+        osdi_relatives=osdi_relatives,
+        identity_relative=identity_relative,
     )
+    snapshot_pdk_root = snapshot_root / binding.pdk_id
+    library_paths = tuple(
+        snapshot_pdk_root / relative for relative in library_relatives
+    )
+    library_cards = tuple(
+        (
+            f".lib {path} {entry.resolve(selected_corner)[1]}"
+            if entry.form == "lib"
+            else f".include {path}"
+        )
+        for entry, path in zip(binding.library_entries, library_paths)
+    )
+    osdi_paths = tuple(
+        snapshot_pdk_root / relative for relative in osdi_relatives
+    )
+    identity_path = (
+        snapshot_pdk_root / identity_relative
+        if identity_relative is not None
+        else None
+    )
+
+    resolved = ResolvedPdkBinding(
+        binding=binding,
+        source_root=root,
+        snapshot_root=snapshot_root,
+        root=snapshot_pdk_root,
+        corner=selected_corner,
+        library_paths=library_paths,
+        library_cards=library_cards,
+        osdi_paths=osdi_paths,
+        identity_path=identity_path,
+        input_records=input_records,
+        configuration_records=configuration_records,
+        closure_records=closure_records,
+        closure_root_sha256=closure_root_sha256,
+        snapshot_root_sha256=snapshot_root_sha256,
+        namespace_model_names=tuple(sorted(builder.namespace_models)),
+        namespace_global_nodes=tuple(sorted(builder.namespace_globals)),
+    )
+    resolved.verify_snapshot()
+    return resolved
 
 
 def translate_model(model: str, binding: PdkBinding) -> tuple[str, str | None, bool]:

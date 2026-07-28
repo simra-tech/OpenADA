@@ -655,6 +655,129 @@ def test_configuration_reference_cannot_escape_the_captured_inputs(
     assert caught.value.code == "receipt.chain.invalid"
 
 
+def test_pdk_snapshot_manifest_aggregates_transitive_configuration(
+    tmp_path: Path,
+) -> None:
+    raw_path = tmp_path / "simulation.raw"
+    deck_path = tmp_path / "run.spice"
+    log_path = tmp_path / "simulation.log"
+    model_path = tmp_path / "corner.spice"
+    parser_path = tmp_path / "parser-only.spice"
+    snapshot_path = tmp_path / "openada-pdk-snapshot.json"
+    deck_path.write_text("* deck\n.end\n", encoding="utf-8")
+    log_path.write_text("completed\n", encoding="utf-8")
+    model_path.write_text(".model n nmos\n", encoding="utf-8")
+    parser_path.write_text("* parser transport\n", encoding="utf-8")
+    snapshot_path.write_text('{"schema":"openada.pdk-snapshot/v1"}\n')
+
+    simulation = _simulation(
+        raw_path,
+        _raw_body(),
+        deck_path=deck_path,
+        log_path=log_path,
+        model_path=model_path,
+    )
+    deck_record = simulation["inputs"][0]
+    snapshot_record = _file_record(
+        snapshot_path,
+        kind="pdk-snapshot-manifest",
+        role="pdk.snapshot",
+    )
+    corner_record = _file_record(
+        model_path,
+        kind="spice-model-library",
+        role="pdk.corner-library",
+    )
+    parser_record = _file_record(
+        parser_path,
+        kind="spice-model-library",
+        role="pdk.parser-library",
+    )
+    simulation["inputs"] = [
+        deck_record,
+        snapshot_record,
+        corner_record,
+        parser_record,
+    ]
+    simulation["data"]["extensions"]["org.openada"]["configuration"] = [
+        {
+            "role": "pdk",
+            "path": snapshot_record["path"],
+            "bytes": snapshot_record["bytes"],
+            "sha256": snapshot_record["sha256"],
+            "identity": "content-digest",
+        }
+    ]
+
+    context = typed_evidence_simulation_context_sha256(simulation)
+
+    assert len(context) == 64
+
+
+def test_complete_pdk_roster_above_legacy_receipt_bounds_verifies(
+    tmp_path: Path,
+) -> None:
+    """A Sky130-scale exact roster fits without allocating large collateral."""
+
+    private_key = Ed25519PrivateKey.generate()
+    paths, trusted_public_key = _chain(tmp_path, private_key)
+    simulation = json.loads(
+        paths["simulation_envelope"].read_text(encoding="utf-8")
+    )
+    parser_record = {
+        **simulation["inputs"][1],
+        "role": "pdk.parser-library",
+    }
+    # Reusing one exact immutable fixture file keeps the test small while the
+    # signed roster itself exercises both historical gates: 128 records and a
+    # 64 KiB receipt. A real sky130A tt capture currently carries 319 files.
+    simulation["inputs"].extend(
+        dict(parser_record) for _index in range(320)
+    )
+    _write_json(paths["simulation_envelope"], simulation)
+
+    receipt = json.loads(paths["receipt"].read_text(encoding="utf-8"))
+    unsigned = deepcopy(receipt)
+    unsigned.pop("seal")
+    simulation_body = paths["simulation_envelope"].read_bytes()
+    unsigned["evidence"]["simulation_envelope"] = {
+        "bytes": len(simulation_body),
+        "sha256": hashlib.sha256(simulation_body).hexdigest(),
+    }
+    simulation_files = []
+    for section in ("inputs", "artifacts"):
+        for index, record in enumerate(simulation[section]):
+            if record["role"] == "simulation.result":
+                continue
+            simulation_files.append(
+                {
+                    "section": section,
+                    "index": index,
+                    "kind": record["kind"],
+                    "role": record["role"],
+                    "path": record["path"],
+                    "bytes": record["bytes"],
+                    "sha256": record["sha256"],
+                }
+            )
+    unsigned["evidence"]["simulation_files"] = simulation_files
+    _write_json(paths["receipt"], _seal(unsigned, private_key))
+
+    assert len(simulation_files) > 128
+    assert paths["receipt"].stat().st_size > 64 * 1024
+    assert (
+        receipt_module.MAX_SIMULATION_FILE_BYTES
+        == receipt_module.MAX_PDK_FILE_BYTES
+    )
+    assert receipt_module.MAX_TOTAL_EVIDENCE_BYTES >= (
+        receipt_module.MAX_PDK_SNAPSHOT_BYTES
+        + receipt_module.MAX_RAW_EVIDENCE_BYTES
+        + 8 * receipt_module.MAX_JSON_EVIDENCE_BYTES
+    )
+    verified = _verify(paths, trusted_public_key)
+    assert verified.measurement_id == "output.maximum"
+
+
 def test_tool_identity_cannot_diverge_from_the_pinned_simulation_context(
     tmp_path: Path,
 ) -> None:

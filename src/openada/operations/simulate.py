@@ -113,7 +113,7 @@ _ENGINEERING_PRECEDENCE = ("pass", "not_applicable", "fail", "unknown")
 
 #: How a bound PDK file is reported as a configuration reference.
 _PDK_CONFIGURATION_ROLES = {
-    "pdk.corner-library": "spice-model-library",
+    "pdk.snapshot": "pdk",
     "pdk.osdi-module": "simulator-configuration",
     "pdk.identity": "pdk",
 }
@@ -770,6 +770,7 @@ def _run_bound_deck(
     ``pdk_startup``.
     """
 
+    resolved_pdk.verify_snapshot()
     startup_path = write_managed_startup(output_dir, resolved_pdk)
     payload = NgspiceDriver(discovery=discovery).simulate(
         deck_path,
@@ -784,6 +785,7 @@ def _run_bound_deck(
         },
         timeout=timeout,
     )
+    resolved_pdk.verify_snapshot()
     deck = inspect_simulation_deck(deck_path)
     parameters = deck.get("parameters")
     parameters = parameters if isinstance(parameters, dict) else None
@@ -795,10 +797,11 @@ def _run_bound_deck(
         parameters=parameters,
         provenance_limitations=[
             "The top-level bound deck, the selected native executable, the "
-            "simulator startup file and every "
-            f"file the {resolved_pdk.pdk_id} binding profile names were "
-            "content-bound; the model library's own transitive includes, host "
-            "runtime libraries and simulator defaults remain bounded provenance.",
+            "simulator startup file, and the complete active ordered "
+            f"include/library closure for {resolved_pdk.pdk_id} were captured "
+            "into one immutable content-addressed snapshot and verified before "
+            "and after native launch; host runtime libraries and simulator "
+            "defaults remain bounded provenance.",
             MANAGED_STARTUP_PROVENANCE,
         ],
     )
@@ -812,27 +815,54 @@ def _resolve_model_source(
     pdk: str | None,
     pdk_root: str | Path | None,
     corner: str | None,
+    resolved_pdk_binding: ResolvedPdkBinding | None,
+    snapshot_parent: Path,
     inputs: list[dict[str, Any]],
     configuration: list[dict[str, Any]],
 ) -> tuple[ResolvedPdkBinding | None, str | None]:
     """Resolve at most one model source, or raise a typed refusal."""
 
-    if pdk is not None and models_file is not None:
+    if (
+        pdk is not None or resolved_pdk_binding is not None
+    ) and models_file is not None:
         raise SimulationRequestError(
             "simulation.models.ambiguous",
             "Both a PDK binding and a self-contained model-card file were "
             "supplied; exactly one model source may bind a deck.",
             hint="Pass --pdk for an installed PDK, or --models for flattened cards.",
         )
-    if corner is not None and pdk is None:
+    if corner is not None and pdk is None and resolved_pdk_binding is None:
         raise SimulationRequestError(
             "pdk.corner.unbound",
             "A corner may only be selected together with --pdk.",
             hint=f"Installed PDKs that bind a corner: {', '.join(simulatable_pdk_ids())}.",
         )
 
-    resolved: ResolvedPdkBinding | None = None
-    if pdk is not None:
+    resolved: ResolvedPdkBinding | None = resolved_pdk_binding
+    if resolved is not None:
+        if backend != "ngspice":
+            raise SimulationRequestError(
+                "pdk.backend.unsupported",
+                f"PDK binding is implemented for ngspice only; backend {backend!r} "
+                "has no reviewed binding profile.",
+                hint="Rerun with --backend ngspice, or supply --models instead.",
+            )
+        if pdk is not None or pdk_root is not None or corner is not None:
+            raise SimulationRequestError(
+                "pdk.binding.conflict",
+                (
+                    "An already captured PDK binding is the complete model "
+                    "source; pdk, pdk_root, and corner must not be supplied "
+                    "again because no later consumer may reopen live paths."
+                ),
+            )
+        try:
+            resolved.verify_snapshot()
+        except PdkBindingError as exc:
+            raise SimulationRequestError(
+                exc.code, exc.message, hint=exc.hint
+            ) from exc
+    elif pdk is not None:
         if backend != "ngspice":
             raise SimulationRequestError(
                 "pdk.backend.unsupported",
@@ -852,14 +882,30 @@ def _resolve_model_source(
                 ),
             )
         try:
-            resolved = resolve_pdk_binding(pdk, pdk_root, corner=corner)
+            resolved = resolve_pdk_binding(
+                pdk,
+                pdk_root,
+                corner=corner,
+                snapshot_parent=snapshot_parent,
+            )
         except PdkBindingError as exc:
             raise SimulationRequestError(exc.code, exc.message, hint=exc.hint) from exc
+
+    if resolved is not None:
         inputs.extend(resolved.input_records)
-        for record in resolved.input_records:
+        for record in resolved.configuration_records:
+            configuration_role = _PDK_CONFIGURATION_ROLES.get(
+                str(record.get("role"))
+            )
+            if configuration_role is None:
+                raise SimulationRequestError(
+                    "pdk.snapshot.invalid",
+                    "The captured PDK snapshot exposed an undeclared "
+                    f"configuration role {record.get('role')!r}.",
+                )
             configuration.append(
                 {
-                    "role": _PDK_CONFIGURATION_ROLES[record["role"]],
+                    "role": configuration_role,
                     "path": record.get("path"),
                     "sha256": record.get("sha256"),
                     "bytes": record.get("bytes"),
@@ -896,6 +942,7 @@ def simulate(
     pdk: str | None = None,
     pdk_root: str | Path | None = None,
     corner: str | None = None,
+    resolved_pdk_binding: ResolvedPdkBinding | None = None,
     parameters: Mapping[str, object] | None = None,
     workdir: str | Path | None = None,
     # A PDK binding pays the model library's parse cost on every derived deck;
@@ -913,7 +960,8 @@ def simulate(
 
     ``target`` is either a SPICE deck or a published Simra schematic artifact
     descriptor; the driver decides which by reading it. The model source is at
-    most one of ``models_file`` or ``pdk``. Every path returns exactly one
+    most one of ``models_file`` or ``pdk`` (or the already captured
+    ``resolved_pdk_binding`` used by experiment preflight). Every path returns exactly one
     ``circuit.simulate/v1alpha2`` envelope. ``saved_nets`` and
     ``retained_current_sources`` are the explicit observation binding for a
     caller-composed PDK deck; omitting them preserves the legacy behavior.
@@ -989,6 +1037,7 @@ def simulate(
         dict(record) for record in normalized_extra_inputs
     ]
     configuration: list[dict[str, Any]] = []
+    destination = Path(output_dir).expanduser().resolve()
     try:
         resolved_pdk, model_prelude = _resolve_model_source(
             correlation_id=correlation_id,
@@ -997,6 +1046,8 @@ def simulate(
             pdk=pdk,
             pdk_root=pdk_root,
             corner=corner,
+            resolved_pdk_binding=resolved_pdk_binding,
+            snapshot_parent=destination / "pdk-snapshots",
             inputs=input_records,
             configuration=configuration,
         )
@@ -1150,7 +1201,6 @@ def simulate(
             extensions={TARGET_EXTENSION: target_facts},
         )
 
-    destination = Path(output_dir).expanduser().resolve()
     try:
         destination.mkdir(parents=True, exist_ok=True)
         deck_directory = destination / "decks"
@@ -1333,16 +1383,26 @@ def simulate(
 
         if resolved_pdk is not None:
             assert raw_name is not None
-            payload = _run_bound_deck(
-                deck_path,
-                destination / stem,
-                discovery=discovery,
-                workdir=deck_directory,
-                resolved_pdk=resolved_pdk,
-                raw_name=raw_name,
-                timeout=timeout,
-                request_id=correlation_id,
-            )
+            try:
+                payload = _run_bound_deck(
+                    deck_path,
+                    destination / stem,
+                    discovery=discovery,
+                    workdir=deck_directory,
+                    resolved_pdk=resolved_pdk,
+                    raw_name=raw_name,
+                    timeout=timeout,
+                    request_id=correlation_id,
+                )
+            except PdkBindingError as exc:
+                return refuse(
+                    exc.code,
+                    exc.message,
+                    hint=exc.hint,
+                    inputs=input_records,
+                    execution_status="failed",
+                    extensions={TARGET_EXTENSION: target_facts},
+                )
         else:
             payload = simulate_circuit_profile(
                 deck_path,
