@@ -28,6 +28,7 @@ from openada.engines.spice import _scan_line
 from openada.operations.simulate import (
     PDK_BINDING_EXTENSION,
     RETAINED_RESULT_NAME,
+    MAX_TEMPLATE_VECTORS,
     SELECTION_TEMPLATE_NAME,
     _write_selection_template,
     simulate,
@@ -483,6 +484,47 @@ def test_an_ac_selection_template_carries_both_cartesian_components(tmp_path):
     outputs = [entry["output_name"] for entry in selectors]
     assert outputs == ["v_vinp_re", "v_vinp_im", "v_voutp_re", "v_voutp_im"]
     assert len(outputs) == len(set(outputs))
+
+
+def test_a_selection_template_keeps_a_current_within_its_ceiling(tmp_path):
+    """A voltage-first template drops the currents first, and they are the
+    entire operand set for `low_frequency_impedance`.
+
+    ngspice lists every ``v(...)`` before every ``i(...)``, so a ceiling
+    applied to deck order fell on the amperes -- and the ceiling used to be
+    counted in *selectors*, which halved an AC template again. An agent
+    following the file verbatim then never saw an ampere even once the raw
+    file carried one.
+    """
+
+    import json
+
+    signals = tuple(f"v(n{index})" for index in range(10)) + ("i(v_test)",)
+    path = _write_selection_template(tmp_path, signals, complex_plot=True)
+    assert path is not None
+    selectors = json.loads(path.read_text(encoding="utf-8"))["selectors"]
+    names = [entry["native_name"] for entry in selectors]
+
+    assert "i(v_test)" in names
+    assert {entry["unit"] for entry in selectors} == {"V", "A"}
+    # Bounded on vectors, so an AC template is not cut to half a DC one.
+    assert len(set(names)) == MAX_TEMPLATE_VECTORS
+    assert len(selectors) == 2 * MAX_TEMPLATE_VECTORS
+
+
+def test_a_selection_template_that_fits_keeps_deck_order(tmp_path):
+    """Reserving a slot per unit must not reshuffle a template that fits."""
+
+    import json
+
+    path = _write_selection_template(tmp_path, ("v(a)", "v(b)", "i(v1)"))
+    assert path is not None
+    selectors = json.loads(path.read_text(encoding="utf-8"))["selectors"]
+    assert [entry["native_name"] for entry in selectors] == [
+        "v(a)",
+        "v(b)",
+        "i(v1)",
+    ]
 
 
 def test_a_non_ac_selection_template_stays_real_only(tmp_path):

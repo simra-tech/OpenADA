@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 import re
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from .contract import FileRecordError, file_record
 
@@ -66,6 +66,19 @@ UNRESOLVED_TOKEN_RE = re.compile(r"\{SIMRA_UNRESOLVED_[A-Za-z0-9_]+\}")
 _END_CARD_RE = re.compile(r"^\s*\.end\s*$", re.IGNORECASE)
 _CORNER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
 _RAW_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+#: An independent voltage source at the top of the deck. ngspice gives each one
+#: a branch-current vector, and that vector is the only thing in the whole
+#: pipeline carrying amperes.
+_VSOURCE_CARD_RE = re.compile(r"^(?P<name>[Vv][A-Za-z0-9_.$#+-]*)[ \t]+\S")
+_SUBCKT_OPEN_RE = re.compile(r"^\s*\.subckt\b", re.IGNORECASE)
+_SUBCKT_CLOSE_RE = re.compile(r"^\s*\.ends\b", re.IGNORECASE)
+#: ``.save`` does not merely select what is written: it selects what ngspice
+#: *computes*. A branch current absent from this card cannot be written even by
+#: name, and ngspice fails the whole ``write`` with "no writable vector found".
+_SAVE_CARD_RE = re.compile(r"^(?P<head>\s*\.save\b)(?P<rest>.*?)(?P<eol>\r?\n?)$", re.IGNORECASE)
+#: One complex vector per source is negligible beside a saved net; this only
+#: bounds a pathological deck.
+MAX_PROBED_SOURCES = 16
 
 #: One SPICE numeric literal: a number, an optional engineering suffix, and any
 #: trailing alphabetic noise SPICE ignores (``1uF`` is one microfarad).
@@ -1013,6 +1026,93 @@ def _prelude_lines(resolved: ResolvedPdkBinding) -> list[str]:
     return lines
 
 
+def top_level_voltage_sources(deck_text: str) -> tuple[str, ...]:
+    """Return the deck's own independent voltage sources, outermost only.
+
+    Cards inside a ``.SUBCKT`` belong to the device under test, not to the
+    testbench that drives it; ngspice names their branch currents through the
+    instance path, and probing them is not what a testbench asked for.
+    """
+
+    names: list[str] = []
+    seen: set[str] = set()
+    depth = 0
+    for line in deck_text.splitlines():
+        if _SUBCKT_OPEN_RE.match(line):
+            depth += 1
+            continue
+        if _SUBCKT_CLOSE_RE.match(line):
+            depth = max(0, depth - 1)
+            continue
+        if depth:
+            continue
+        match = _VSOURCE_CARD_RE.match(line)
+        if match is None:
+            continue
+        name = match.group("name").lower()
+        if name in seen:
+            continue
+        seen.add(name)
+        names.append(name)
+        if len(names) >= MAX_PROBED_SOURCES:
+            break
+    return tuple(names)
+
+
+def source_current_vectors(deck_text: str) -> tuple[str, ...]:
+    """Return one ``i(source)`` vector per top-level independent source.
+
+    These are the only amperes anywhere in the pipeline.
+    `result.transfer.measure`'s `low_frequency_impedance` is volts over
+    amperes, so without them a driving-point impedance cannot be expressed as
+    a typed measurement at all -- and two live jobs
+    (job_35abcfd447c0d85f, job_383d058ac044c601) proved it: both were asked for
+    an output impedance, both built the right 1 V AC probe across the node,
+    both reached `extract`, and both stopped there with nothing in amperes to
+    name. `.SAVE`-ing only nets discarded the injected current before it ever
+    reached the raw file.
+    """
+
+    return tuple(f"i({source})" for source in top_level_voltage_sources(deck_text))
+
+
+def _extend_save_card(line: str, currents: Sequence[str]) -> str:
+    """Add the branch currents to a deck's own ``.save`` card, once."""
+
+    match = _SAVE_CARD_RE.match(line)
+    if match is None:
+        return line
+    rest = match.group("rest")
+    present = {token.lower() for token in rest.split()}
+    missing = [vector for vector in currents if vector not in present]
+    if not missing:
+        return line
+    return f"{match.group('head')}{rest} {' '.join(missing)}{match.group('eol')}"
+
+
+def _write_vectors(saved_nets: Sequence[str], currents: Sequence[str]) -> str:
+    """Return the ``write`` vector list: the saved nets, plus every current.
+
+    A bare ``write <file>`` dumps every vector ngspice has, branch currents
+    included -- which is how a testbench that declares no saves at all can be
+    measured for impedance today. Narrowing the list to ``v(net)`` per saved
+    net therefore *removed* capability: the saved-net list says which **nets**
+    to keep and was never a statement about currents, and one complex vector
+    per source is free beside them.
+    """
+
+    if not saved_nets:
+        return ""
+    vectors = [f"v({net})" for net in saved_nets]
+    seen = {vector.lower() for vector in vectors}
+    for vector in currents:
+        if vector in seen:
+            continue
+        seen.add(vector)
+        vectors.append(vector)
+    return " ".join(vectors)
+
+
 def bind_deck(
     deck_text: str,
     resolved: ResolvedPdkBinding,
@@ -1047,6 +1147,8 @@ def bind_deck(
     if not lines:
         raise PdkBindingError("pdk.deck.empty", "The deck is empty.")
 
+    current_vectors = source_current_vectors(deck_text) if raw_name is not None else ()
+    write_vectors = _write_vectors(saved_nets, current_vectors)
     bound: list[str] = []
     # A SPICE deck's first line is its title and is never a directive.
     title = lines[0]
@@ -1065,10 +1167,17 @@ def bind_deck(
         if raw_name is not None and not emitted_control and _END_CARD_RE.match(line):
             bound.append(".control\n")
             bound.append("run\n")
-            saved = " ".join(f"v({net})" for net in saved_nets)
-            bound.append(f"write {raw_name}{(' ' + saved) if saved else ''}\n")
+            bound.append(
+                f"write {raw_name}"
+                f"{(' ' + write_vectors) if write_vectors else ''}\n"
+            )
             bound.append(".endc\n")
             emitted_control = True
+        if current_vectors:
+            # `.save` selects what ngspice *computes*, not just what is
+            # written, so a current named only in `write` is refused with
+            # "no writable vector found" and the whole run loses its raw file.
+            line = _extend_save_card(line, current_vectors)
         card = rewrite_mos_card(line, resolved)
         if card.rewritten:
             rewritten += 1
@@ -1085,8 +1194,9 @@ def bind_deck(
     if raw_name is not None and not emitted_control:
         bound.append(".control\n")
         bound.append("run\n")
-        saved = " ".join(f"v({net})" for net in saved_nets)
-        bound.append(f"write {raw_name}{(' ' + saved) if saved else ''}\n")
+        bound.append(
+            f"write {raw_name}{(' ' + write_vectors) if write_vectors else ''}\n"
+        )
         bound.append(".endc\n")
 
     text = "".join(bound)

@@ -1358,6 +1358,41 @@ def _vector_unit(name: str) -> str | None:
     return None
 
 
+#: How many raw vectors a template may name. Bounded on *vectors* rather than
+#: selectors, so an AC plot -- two selectors per vector -- is not silently cut
+#: to half the signals a DC plot gets.
+MAX_TEMPLATE_VECTORS = 8
+
+
+def _template_vectors(signals: Sequence[str]) -> list[str]:
+    """Pick the vectors a template names, reserving a slot for every unit.
+
+    Deck order is kept whenever it fits, because it is the order the author
+    wrote and the order a reader expects. When the ceiling bites, though, that
+    order drops the currents first -- ngspice lists every ``v(...)`` before
+    every ``i(...)`` -- and the currents are the *entire* operand set for
+    `low_frequency_impedance`. So a truncated template gives up its last slots
+    to whichever units it would otherwise have lost.
+    """
+
+    unique: list[str] = []
+    for name in signals:
+        if _vector_unit(name) is not None and name not in unique:
+            unique.append(name)
+    if len(unique) <= MAX_TEMPLATE_VECTORS:
+        return unique
+    kept = unique[:MAX_TEMPLATE_VECTORS]
+    present = {_vector_unit(name) for name in kept}
+    missing = sorted({_vector_unit(name) for name in unique} - present)
+    for offset, unit in enumerate(missing):
+        if offset >= len(kept):
+            break
+        kept[len(kept) - 1 - offset] = next(
+            name for name in unique if _vector_unit(name) == unit
+        )
+    return kept
+
+
 def _write_selection_template(
     destination: Path, signals: Sequence[str], *, complex_plot: bool = False
 ) -> Path | None:
@@ -1379,12 +1414,8 @@ def _write_selection_template(
     # friction this file exists to remove.
     components = (("real", "_re"), ("imaginary", "_im")) if complex_plot else (("real", ""),)
     selectors: list[dict[str, str]] = []
-    seen: set[str] = set()
-    for name in signals:
+    for name in _template_vectors(signals):
         unit = _vector_unit(name)
-        if unit is None or name in seen:
-            continue
-        seen.add(name)
         stem = re.sub(r"[^A-Za-z0-9_]", "_", name).strip("_")
         for component, suffix in components:
             selectors.append(
@@ -1395,8 +1426,6 @@ def _write_selection_template(
                     "component": component,
                 }
             )
-        if len(selectors) >= 8:
-            break
     if not selectors:
         return None
     path = destination / SELECTION_TEMPLATE_NAME
@@ -1428,8 +1457,11 @@ _MEASUREMENT_MENU = {
         "Each operand is a Cartesian {real, imaginary} pair and may add "
         "negative_real/negative_imaginary to become differential, which is how a "
         "differential gain and any other two-terminal ratio becomes one typed "
-        "measurement instead of arithmetic in an answer. Run `openada transfer "
-        "--help` for the exact shape."
+        "measurement instead of arithmetic in an answer. The amperes an "
+        "impedance needs are the `i(<source>)` vectors already listed in the "
+        "selection file: hold the node with a 1 V AC source and name that "
+        "source's current as the input. Run `openada transfer --help` for the "
+        "exact shape."
     ),
     "default": (
         "`openada measure` on the series it returns; its kinds are sample_at, "

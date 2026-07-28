@@ -26,6 +26,7 @@ from openada.pdk_bindings import (
     FREEPDK45,
     GF180MCUD,
     IHP_SG13G2,
+    MAX_PROBED_SOURCES,
     NANGATE45,
     REGISTRY,
     SKY130A,
@@ -464,6 +465,79 @@ def test_a_requested_raw_output_closes_a_control_block_before_end(tmp_path):
     assert "write a.raw v(VOUT)" in lines
     assert lines.index(".endc", lines.index("run")) < lines.index(".END")
     assert facts["raw_output"] == "a.raw"
+
+
+_PROBE_DECK = (
+    "* t\n"
+    ".SUBCKT DUT IN OUT VSS\n"
+    "V_INTERNAL n1 VSS DC 0\n"
+    ".ENDS DUT\n"
+    "V_GND VSS 0 DC 0\n"
+    "I_REF VDD IN DC 20u\n"
+    "V_DD VDD VSS DC 1.8\n"
+    "V_TEST OUT VSS DC 1 AC 1\n"
+    "X_DUT IN OUT VSS DUT\n"
+    ".SAVE OUT\n"
+    ".AC DEC 10 1 1G\n"
+    ".END\n"
+)
+
+
+def test_a_narrowed_write_keeps_the_only_amperes_in_the_pipeline(tmp_path):
+    """`low_frequency_impedance` is volts over amperes.
+
+    Narrowing `write` to one `v(net)` per saved net removed every current from
+    the raw file, so a testbench that named its saved nets could never produce
+    a driving-point impedance. Two live jobs proved it: job_35abcfd447c0d85f
+    and job_383d058ac044c601 were each asked for an output impedance, each
+    built the right 1 V AC probe, each reached `extract`, and each stopped
+    with nothing in amperes to name.
+    """
+    resolved = _resolved(tmp_path)
+    text, _ = bind_deck(
+        _PROBE_DECK, resolved, raw_name="a.raw", saved_nets=("OUT",)
+    )
+    lines = [line.strip() for line in text.splitlines()]
+
+    assert "write a.raw v(OUT) i(v_gnd) i(v_dd) i(v_test)" in lines
+    # `.save` selects what ngspice *computes*. A current named only in `write`
+    # is refused with "no writable vector found" and the run loses its raw.
+    assert ".SAVE OUT i(v_gnd) i(v_dd) i(v_test)" in lines
+    # A source inside the device under test belongs to the DUT, not the
+    # testbench, and ngspice does not name its current this way.
+    assert "i(v_internal)" not in text
+
+
+def test_a_deck_without_saved_nets_still_writes_every_vector(tmp_path):
+    """A bare `write` already dumps the currents; nothing to narrow."""
+    resolved = _resolved(tmp_path)
+    text, _ = bind_deck(_PROBE_DECK, resolved, raw_name="a.raw")
+    lines = [line.strip() for line in text.splitlines()]
+
+    assert "write a.raw" in lines
+    assert ".SAVE OUT i(v_gnd) i(v_dd) i(v_test)" in lines
+
+
+def test_source_probes_are_added_once_and_bounded(tmp_path):
+    resolved = _resolved(tmp_path)
+    already = _PROBE_DECK.replace(".SAVE OUT\n", ".SAVE OUT i(v_dd)\n")
+    text, _ = bind_deck(already, resolved, raw_name="a.raw", saved_nets=("OUT",))
+
+    assert ".SAVE OUT i(v_dd) i(v_gnd) i(v_test)" in text
+    assert text.count("i(v_dd)") == 2  # once in `.SAVE`, once in `write`
+
+    crowded = (
+        "* t\n"
+        + "".join(f"V_{index} n{index} 0 DC 0\n" for index in range(40))
+        + ".END\n"
+    )
+    probed, _ = bind_deck(
+        crowded, resolved, raw_name="a.raw", saved_nets=("OUT",)
+    )
+    write_line = next(
+        line for line in probed.splitlines() if line.startswith("write ")
+    )
+    assert write_line.count("i(") == MAX_PROBED_SOURCES
 
 
 def test_an_unbounded_raw_name_is_refused(tmp_path):
