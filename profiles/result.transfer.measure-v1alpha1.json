@@ -5,7 +5,7 @@
   "operation": {
     "id": "openada.operation/result.transfer.measure/v1alpha1",
     "title": "Closed AC complex-ratio transfer measurement",
-    "summary": "Derive one low-frequency gain, minus-3-dB bandwidth, unity-gain frequency, or negative-feedback phase-margin scalar together with the exact finite output-over-input trace.",
+    "summary": "Derive one low-frequency gain, low-frequency driving-point impedance, minus-3-dB bandwidth, unity-gain frequency, or negative-feedback phase-margin scalar together with the exact finite output-over-input trace. Either operand may be a differential pair of terminals.",
     "side_effect_mode": "read-only",
     "target_kinds": ["normalized-series"],
     "locator_types": ["artifact", "uri", "workspace"],
@@ -18,11 +18,13 @@
       "This assertion does not state that a design specification is satisfied or that a feedback loop is stable.",
       "This assertion does not infer an input, output, feedback sign, loop break, loading condition, or transfer expression from simulator-native names.",
       "This assertion does not call the first simulated frequency DC; AC analysis requires positive frequency and the reference is named accordingly.",
-      "This assertion does not define gain margin, multi-crossing selection, phase wrapping alternatives, dimensional dB ratios, smoothing, fitting, extrapolation, or de-embedding."
+      "This assertion does not define gain margin, multi-crossing selection, phase wrapping alternatives, dimensional dB ratios, smoothing, fitting, extrapolation, or de-embedding.",
+      "This assertion does not call a V-over-A ratio an output impedance: it states the driving-point impedance of the operands the request names, and whether those operands are the output node and the current forced into it is the requester's declaration.",
+      "This assertion does not infer a differential terminal pairing; a differential operand is exactly the difference the request declares and nothing about common-mode rejection follows from it."
     ],
     "truth_table": {
       "pass": {
-        "meaning": "The source, same-unit complex ratio, unwrapped phase, and any required single falling crossing were established and the requested scalar is finite.",
+        "meaning": "The source, the complex ratio under the metric's declared operand units, the unwrapped phase, and any required single falling crossing were established and the requested scalar is finite.",
         "allowed_execution_statuses": ["completed"],
         "required_evidence": [
           "data.measurement.status is measured and data.measurement.value is finite.",
@@ -120,7 +122,8 @@
         "signalPair": {
           "type": "object",
           "required": ["real", "imaginary"],
-          "properties": {"real": {"$ref": "#/$defs/name"}, "imaginary": {"$ref": "#/$defs/name"}},
+          "properties": {"real": {"$ref": "#/$defs/name"}, "imaginary": {"$ref": "#/$defs/name"}, "negative_real": {"$ref": "#/$defs/name"}, "negative_imaginary": {"$ref": "#/$defs/name"}},
+          "dependentRequired": {"negative_real": ["negative_imaginary"], "negative_imaginary": ["negative_real"]},
           "additionalProperties": false
         },
         "method": {
@@ -142,6 +145,7 @@
         "metric": {
           "oneOf": [
             {"type": "object", "required": ["kind", "unit"], "properties": {"kind": {"const": "low_frequency_gain_db"}, "unit": {"const": "dB"}}, "additionalProperties": false},
+            {"type": "object", "required": ["kind", "unit"], "properties": {"kind": {"const": "low_frequency_impedance"}, "unit": {"const": "Ohm"}}, "additionalProperties": false},
             {"type": "object", "required": ["kind", "unit"], "properties": {"kind": {"const": "bandwidth_3db"}, "unit": {"const": "Hz"}}, "additionalProperties": false},
             {"type": "object", "required": ["kind", "unit"], "properties": {"kind": {"const": "unity_gain_frequency"}, "unit": {"const": "Hz"}}, "additionalProperties": false},
             {"type": "object", "required": ["kind", "unit"], "properties": {"kind": {"const": "phase_margin"}, "unit": {"const": "deg"}}, "additionalProperties": false}
@@ -216,7 +220,7 @@
             "status": {"enum": ["measured", "not_found", "unknown"]},
             "request_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
             "value": {"type": ["number", "null"]},
-            "unit": {"enum": ["dB", "Hz", "deg", null]},
+            "unit": {"enum": ["dB", "Ohm", "Hz", "deg", null]},
             "signal": {"type": ["string", "null"]},
             "location": {"$ref": "#/$defs/location"},
             "algorithm": {"type": "object", "required": ["id", "version"], "properties": {"id": {"type": "string"}, "version": {"type": "string"}}, "additionalProperties": false},
@@ -236,13 +240,13 @@
           "type": "object",
           "required": ["input", "output", "ratio"],
           "properties": {
-            "input": {"type": "object", "required": ["real", "imaginary", "unit"], "properties": {"real": {"type": "string"}, "imaginary": {"type": "string"}, "unit": {"type": "string"}}, "additionalProperties": false},
-            "output": {"type": "object", "required": ["real", "imaginary", "unit"], "properties": {"real": {"type": "string"}, "imaginary": {"type": "string"}, "unit": {"type": "string"}}, "additionalProperties": false},
+            "input": {"type": "object", "required": ["real", "imaginary", "unit"], "properties": {"real": {"type": "string"}, "imaginary": {"type": "string"}, "negative_real": {"type": "string"}, "negative_imaginary": {"type": "string"}, "unit": {"type": "string"}}, "dependentRequired": {"negative_real": ["negative_imaginary"], "negative_imaginary": ["negative_real"]}, "additionalProperties": false},
+            "output": {"type": "object", "required": ["real", "imaginary", "unit"], "properties": {"real": {"type": "string"}, "imaginary": {"type": "string"}, "negative_real": {"type": "string"}, "negative_imaginary": {"type": "string"}, "unit": {"type": "string"}}, "dependentRequired": {"negative_real": ["negative_imaginary"], "negative_imaginary": ["negative_real"]}, "additionalProperties": false},
             "ratio": {"const": "output-over-input"}
           },
           "additionalProperties": false
         },
-        "reference": {"type": "object", "required": ["kind", "frequency_hz", "magnitude_db"], "properties": {"kind": {"const": "first-simulated-frequency-not-dc"}, "frequency_hz": {"type": "number", "exclusiveMinimum": 0}, "magnitude_db": {"type": "number"}}, "additionalProperties": false},
+        "reference": {"type": "object", "required": ["kind", "frequency_hz", "magnitude_db", "magnitude", "unit"], "properties": {"kind": {"const": "first-simulated-frequency-not-dc"}, "frequency_hz": {"type": "number", "exclusiveMinimum": 0}, "magnitude_db": {"type": "number"}, "magnitude": {"type": "number", "minimum": 0}, "unit": {"enum": ["1", "Ohm"]}}, "additionalProperties": false},
         "trace": {"type": "object", "required": ["frequency_hz", "magnitude_db", "phase_deg", "phase_representation"], "properties": {"frequency_hz": {"type": "array", "minItems": 2, "maxItems": 100000, "items": {"type": "number", "exclusiveMinimum": 0}}, "magnitude_db": {"type": "array", "minItems": 2, "maxItems": 100000, "items": {"type": "number"}}, "phase_deg": {"type": "array", "minItems": 2, "maxItems": 100000, "items": {"type": "number"}}, "phase_representation": {"const": "unwrapped-degrees"}}, "additionalProperties": false},
         "candidate": {"type": "object", "required": ["frequency_hz", "magnitude_db", "phase_deg"], "properties": {"frequency_hz": {"type": "number", "exclusiveMinimum": 0}, "magnitude_db": {"type": "number"}, "phase_deg": {"type": "number"}}, "additionalProperties": false},
         "crossing": {"type": "object", "required": ["status", "threshold_db", "count", "candidates"], "properties": {"status": {"enum": ["measured", "not_found", "ambiguous"]}, "threshold_db": {"type": "number"}, "count": {"type": "integer", "minimum": 0, "maximum": 99999}, "candidates": {"type": "array", "maxItems": 99999, "items": {"$ref": "#/$defs/candidate"}}}, "additionalProperties": false},
@@ -293,6 +297,8 @@
   },
   "features": [
     {"id": "openada.feature/transfer.low-frequency-gain/v1alpha1", "parameter_path": "transfer.metric.kind", "parameter_values": ["low_frequency_gain_db"], "request_effect": "Report the output-over-input magnitude at the first positive simulated frequency in dB and explicitly do not call it DC gain.", "conformance_case": "Finite Cartesian fixtures freeze ratio direction, dB scaling, first-point location, and no-DC wording.", "extensions": {}},
+    {"id": "openada.feature/transfer.low-frequency-impedance/v1alpha1", "parameter_path": "transfer.metric.kind", "parameter_values": ["low_frequency_impedance"], "request_effect": "Report the linear magnitude of the V-over-A output-over-input ratio at the first positive simulated frequency in ohms; every output component must carry 'V' and every input component 'A'. A node held by a 1 V AC source with its source current as the input operand yields that node's small-signal driving-point impedance.", "conformance_case": "Fixtures freeze the linear ohm magnitude, the V-over-A operand-unit refusal, and the refusal of dB metrics on unlike operand units.", "extensions": {}},
+    {"id": "openada.feature/transfer.differential-operands/v1alpha1", "parameter_path": "transfer.input.negative_real", "parameter_values": ["<series name>"], "request_effect": "Take the operand phasor as the declared positive terminal minus the declared negative terminal, so a fully differential ratio such as (v(outp)-v(outn))/(v(inp)-v(inn)) is one typed measurement instead of arithmetic performed outside the contract. Both negative components are required together.", "conformance_case": "Fixtures freeze the differential phasor difference, the half-declared terminal refusal, and the differential signal expression retained on the measurement.", "extensions": {}},
     {"id": "openada.feature/transfer.bandwidth-3db/v1alpha1", "parameter_path": "transfer.metric.kind", "parameter_values": ["bandwidth_3db"], "request_effect": "Report the unique falling crossing of first-point magnitude minus exactly 3.0 dB using log-frequency interpolation.", "conformance_case": "Fixtures freeze exact interpolation, absent crossing, multiple crossing, and first-point reference behavior.", "extensions": {}},
     {"id": "openada.feature/transfer.unity-gain-frequency/v1alpha1", "parameter_path": "transfer.metric.kind", "parameter_values": ["unity_gain_frequency"], "request_effect": "Report the unique falling output-over-input 0 dB crossing using log-frequency interpolation.", "conformance_case": "Fixtures freeze exact frequency, absent crossing, multiple crossing, and falling-only selection.", "extensions": {}},
     {"id": "openada.feature/transfer.phase-margin/v1alpha1", "parameter_path": "transfer.metric.kind", "parameter_values": ["phase_margin"], "request_effect": "For an explicitly declared negative-feedback loop gain, report 180 degrees plus unwrapped phase at the unique falling 0 dB crossing.", "conformance_case": "Loop-gain fixtures freeze phase unwrapping, phase interpolation, reference sign, invalid forward context, and crossing ambiguity.", "extensions": {}}
@@ -301,8 +307,8 @@
     {"code": "transfer.request.invalid", "severity": "error", "condition": "The closed request shape, identity, component selection, or value is invalid.", "next_action": "Correct the explicit transfer declaration without introducing a simulator-native expression.", "extensions": {}},
     {"code": "transfer.source.invalid", "severity": "error", "condition": "The normalized source identity, digest, shape, values, axis, or conditions are invalid.", "next_action": "Regenerate the canonical AC Cartesian series through a verified extraction operation.", "extensions": {}},
     {"code": "transfer.method.unsupported", "severity": "error", "condition": "The request changes a fixed ratio, phase, reference, interpolation, or crossing method field.", "next_action": "Use the advertised v1alpha1 method or define a separately versioned method profile.", "extensions": {}},
-    {"code": "transfer.metric.unsupported", "severity": "error", "condition": "The requested scalar lies outside the four closed transfer metric kinds.", "next_action": "Select an advertised metric or add a separately specified feature.", "extensions": {}},
-    {"code": "transfer.unit.mismatch", "severity": "error", "condition": "The frequency, Cartesian component, or requested scalar units violate the fixed semantics.", "next_action": "Use a Hz axis, one identical component unit, and the exact scalar unit.", "extensions": {}},
+    {"code": "transfer.metric.unsupported", "severity": "error", "condition": "The requested scalar lies outside the closed set of advertised transfer metric kinds.", "next_action": "Select an advertised metric or add a separately specified feature.", "extensions": {}},
+    {"code": "transfer.unit.mismatch", "severity": "error", "condition": "The frequency axis unit, an operand's Cartesian component units, or the operand units the requested metric requires violate the fixed semantics.", "next_action": "Use a Hz axis, one identical unit across each operand's components, the operand units the metric declares (identical for a dB ratio, V over A for an impedance), and the exact scalar unit.", "extensions": {}},
     {"code": "transfer.domain.invalid", "severity": "error", "condition": "The AC axis contains a nonpositive frequency or too few points for log interpolation.", "next_action": "Extract at least two strictly increasing positive AC points.", "extensions": {}},
     {"code": "transfer.signal.missing", "severity": "error", "condition": "One or more declared Cartesian component series is absent.", "next_action": "Extract and name all four requested real and imaginary component series.", "extensions": {}},
     {"code": "transfer.ratio.undefined", "severity": "error", "condition": "Input or output magnitude is zero at a point and a finite dB/phase trace cannot be represented without a floor.", "next_action": "Inspect the AC excitation and selected phasors; do not invent a numeric floor.", "extensions": {}},
@@ -315,16 +321,18 @@
     "driver_id": "org.openada.kernel.transfer-evidence",
     "native_product_id": "org.openada.core.runtime",
     "backend_name": "OpenADA deterministic AC transfer evidence kernel",
-    "supported_features": ["openada.feature/transfer.low-frequency-gain/v1alpha1", "openada.feature/transfer.bandwidth-3db/v1alpha1", "openada.feature/transfer.unity-gain-frequency/v1alpha1", "openada.feature/transfer.phase-margin/v1alpha1"],
+    "supported_features": ["openada.feature/transfer.low-frequency-gain/v1alpha1", "openada.feature/transfer.low-frequency-impedance/v1alpha1", "openada.feature/transfer.differential-operands/v1alpha1", "openada.feature/transfer.bandwidth-3db/v1alpha1", "openada.feature/transfer.unity-gain-frequency/v1alpha1", "openada.feature/transfer.phase-margin/v1alpha1"],
     "semantic_bindings": [
       {"feature_id": "openada.feature/transfer.low-frequency-gain/v1alpha1", "implementation": "Finite same-unit output-over-input complex division and first positive frequency magnitude, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.transfer.reference", "data.transfer.trace"], "extensions": {}},
+      {"feature_id": "openada.feature/transfer.low-frequency-impedance/v1alpha1", "implementation": "Finite V-over-A output-over-input complex division and the linear first positive frequency magnitude in ohms, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.transfer.reference", "data.transfer.signals"], "extensions": {}},
+      {"feature_id": "openada.feature/transfer.differential-operands/v1alpha1", "implementation": "Pointwise complex difference of the declared positive and negative terminal phasors before the ratio, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.signal", "data.transfer.signals"], "extensions": {}},
       {"feature_id": "openada.feature/transfer.bandwidth-3db/v1alpha1", "implementation": "Unique falling first-reference-minus-3.0-dB crossing with linear response interpolation over log10 frequency, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.transfer.crossings", "data.transfer.trace"], "extensions": {}},
       {"feature_id": "openada.feature/transfer.unity-gain-frequency/v1alpha1", "implementation": "Unique falling 0 dB crossing with linear response interpolation over log10 frequency, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.transfer.crossings", "data.transfer.trace"], "extensions": {}},
       {"feature_id": "openada.feature/transfer.phase-margin/v1alpha1", "implementation": "Negative-feedback loop-gain 180-degree reference applied to unwrapped phase at the unique falling unity crossing, algorithm 1.0.0.", "output_fact_paths": ["data.measurement.value", "data.transfer.crossings", "data.transfer.trace"], "extensions": {}}
     ],
-    "native_actions": ["Validate the provenance-bound real AC series and exact closed method.", "Construct reviewed Cartesian input and output phasors and divide output by input pointwise.", "Derive finite magnitude and deterministically unwrapped phase, enumerate both falling-crossing sets, and return one scalar without EDA expressions."],
+    "native_actions": ["Validate the provenance-bound real AC series and exact closed method.", "Construct reviewed Cartesian input and output phasors, subtracting a declared negative terminal where the operand is differential, and divide output by input pointwise.", "Derive finite magnitude and deterministically unwrapped phase, enumerate both falling-crossing sets, and return one scalar without EDA expressions."],
     "artifact_bindings": [{"native_kind": "provenance-bound normalized real inline AC series", "canonical_role": "measurement.source", "extensions": {}}],
-    "limitations": ["Only one common positive Hz axis and four distinct same-unit Cartesian component signals are accepted.", "Only the first-frequency reference, exactly 3.0 dB bandwidth drop, falling crossings, and linear response interpolation over log10 frequency are implemented.", "No gain margin, phase-crossing search, multiple-crossing selection, extrapolation, smoothing, fitting, de-embedding, or stability claim is inferred."],
+    "limitations": ["Only one common positive Hz axis and distinctly named Cartesian component signals are accepted; each operand carries one unit, and the metric fixes which operand units are allowed.", "A differential operand is exactly two declared terminals subtracted; no scaling, common-mode operand, or three-terminal expression is available.", "Only the first-frequency reference, exactly 3.0 dB bandwidth drop, falling crossings, and linear response interpolation over log10 frequency are implemented.", "No gain margin, phase-crossing search, multiple-crossing selection, extrapolation, smoothing, fitting, de-embedding, or stability claim is inferred."],
     "extensions": {}
   }],
   "compatibility": {

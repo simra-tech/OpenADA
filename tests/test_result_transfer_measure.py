@@ -107,6 +107,7 @@ def _request(
 ) -> dict:
     units = {
         "low_frequency_gain_db": "dB",
+        "low_frequency_impedance": "Ohm",
         "bandwidth_3db": "Hz",
         "unity_gain_frequency": "Hz",
         "phase_margin": "deg",
@@ -199,6 +200,8 @@ def test_closed_transfer_metrics(
             "kind": "first-simulated-frequency-not-dc",
             "frequency_hz": 1.0,
             "magnitude_db": 20.0,
+            "magnitude": 10.0,
+            "unit": "1",
         }
     )
     assert trace["trace"]["magnitude_db"] == pytest.approx(
@@ -362,3 +365,245 @@ def test_inputs_are_not_mutated() -> None:
 
     assert series == series_before
     assert request == request_before
+
+
+# --------------------------------------------------------------------------
+# Derived ratios: the two shapes a live sweep asked for and could not express.
+#
+# A cascode mirror's output impedance and a differential pair's differential
+# gain both stalled at `extract` on the deployed release, because every metric
+# was a dB threshold on one identical unit and every operand was a single
+# terminal. Both are ratios; neither was expressible.
+# --------------------------------------------------------------------------
+
+
+def _cartesian_series(
+    signals: dict[str, tuple[str, list[complex]]],
+    *,
+    frequencies_hz: tuple[float, ...] = (1.0, 10.0, 100.0, 1000.0),
+) -> dict:
+    """A normalized AC series from ``{stem: (unit, phasors)}``."""
+
+    axis = {"name": "frequency", "unit": "Hz", "values": list(frequencies_hz)}
+    vectors = []
+    for stem, (unit, values) in signals.items():
+        assert len(values) == len(frequencies_hz)
+        vectors.append(
+            {"name": f"{stem}.real", "unit": unit, "values": [v.real for v in values]}
+        )
+        vectors.append(
+            {"name": f"{stem}.imag", "unit": unit, "values": [v.imag for v in values]}
+        )
+    conditions = [{"name": "corner", "value": "tt", "unit": "1"}]
+    return {
+        "source": {
+            "operation": "result.series.extract",
+            "request_id": str(uuid.uuid4()),
+            "artifact_role": "measurement.source",
+            "artifact_sha256": normalized_series_sha256(
+                axis=axis, signals=vectors, conditions=conditions
+            ),
+            "lineage": {
+                "operation": "simulate",
+                "request_id": str(uuid.uuid4()),
+                "artifact_role": "simulation.result",
+                "artifact_sha256": "b" * 64,
+                "binding": "unverified",
+            },
+        },
+        "axis": axis,
+        "signals": vectors,
+        "conditions": conditions,
+        "extensions": {},
+    }
+
+
+def _operand(stem: str, negative: str | None = None) -> dict:
+    operand = {"real": f"{stem}.real", "imaginary": f"{stem}.imag"}
+    if negative is not None:
+        operand["negative_real"] = f"{negative}.real"
+        operand["negative_imaginary"] = f"{negative}.imag"
+    return operand
+
+
+def _impedance_series(magnitude_ohm: float = 1.5e6) -> dict:
+    points = 4
+    return _cartesian_series(
+        {
+            "vout": ("V", [complex(1.0, 0.0)] * points),
+            "iout": ("A", [complex(1.0 / magnitude_ohm, 0.0)] * points),
+        }
+    )
+
+
+def test_low_frequency_impedance_is_a_linear_ohm_magnitude_not_a_db_ratio() -> None:
+    request = _request("low_frequency_impedance")
+    request["input"] = _operand("iout")
+    request["output"] = _operand("vout")
+
+    payload = measure_transfer(_impedance_series(), request)
+
+    _assert_envelope(payload)
+    assert payload["engineering"]["status"] == "pass"
+    measurement = payload["data"]["measurement"]
+    assert measurement["status"] == "measured"
+    assert measurement["unit"] == "Ohm"
+    assert measurement["value"] == pytest.approx(1.5e6)
+    assert measurement["location"] == {"value": 1.0, "unit": "Hz"}
+    assert measurement["algorithm"]["id"] == (
+        "openada.algorithm/transfer.low-frequency-impedance/v1alpha1"
+    )
+    reference = payload["data"]["transfer"]["reference"]
+    assert reference["magnitude"] == pytest.approx(1.5e6)
+    assert reference["unit"] == "Ohm"
+    assert payload["data"]["transfer"]["signals"]["output"]["unit"] == "V"
+    assert payload["data"]["transfer"]["signals"]["input"]["unit"] == "A"
+
+
+def test_impedance_request_schema_admits_the_ohm_metric() -> None:
+    request = _request("low_frequency_impedance")
+    request["input"] = _operand("iout")
+    request["output"] = _operand("vout")
+    parameters = {
+        "series": _impedance_series(),
+        "transfer": request,
+        "extensions": {},
+    }
+
+    errors = sorted(
+        REQUEST_VALIDATOR.iter_errors(parameters), key=lambda item: list(item.path)
+    )
+    assert not errors, "\n".join(error.message for error in errors)
+
+
+def test_impedance_refuses_operands_that_are_not_volts_over_amperes() -> None:
+    request = _request("low_frequency_impedance")
+    request["input"] = _operand("vout")
+    request["output"] = _operand("iout")
+
+    payload = measure_transfer(_impedance_series(), request)
+
+    _assert_envelope(payload)
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["data"]["measurement"]["value"] is None
+    assert payload["diagnostics"][0]["code"] == "transfer.unit.mismatch"
+
+
+def test_a_db_gain_still_refuses_unlike_operand_units() -> None:
+    request = _request("low_frequency_gain_db")
+    request["input"] = _operand("iout")
+    request["output"] = _operand("vout")
+
+    payload = measure_transfer(_impedance_series(), request)
+
+    _assert_envelope(payload)
+    assert payload["diagnostics"][0]["code"] == "transfer.unit.mismatch"
+    assert "impedance" in payload["diagnostics"][0]["message"]
+
+
+def test_differential_operands_measure_the_difference_of_two_terminals() -> None:
+    # A single-ended-driven pair: vinp swings, vinn is AC ground, and the
+    # outputs move by -2 and +2. Single-ended is 6.02 dB; differential is 12.04.
+    points = 4
+    series = _cartesian_series(
+        {
+            "vinp": ("V", [complex(1.0, 0.0)] * points),
+            "vinn": ("V", [complex(0.0, 0.0)] * points),
+            "voutp": ("V", [complex(2.0, 0.0)] * points),
+            "voutn": ("V", [complex(-2.0, 0.0)] * points),
+        }
+    )
+    request = _request("low_frequency_gain_db")
+    request["input"] = _operand("vinp", "vinn")
+    request["output"] = _operand("voutp", "voutn")
+
+    payload = measure_transfer(series, request)
+
+    _assert_envelope(payload)
+    assert payload["engineering"]["status"] == "pass"
+    measurement = payload["data"]["measurement"]
+    assert measurement["value"] == pytest.approx(20.0 * math.log10(4.0))
+    assert measurement["signal"] == "complex-differential-output-over-input"
+    signals = payload["data"]["transfer"]["signals"]
+    assert signals["output"]["negative_real"] == "voutn.real"
+    assert signals["output"]["negative_imaginary"] == "voutn.imag"
+
+    single_ended = _request("low_frequency_gain_db")
+    single_ended["input"] = _operand("vinp")
+    single_ended["output"] = _operand("voutp")
+    single = measure_transfer(series, single_ended)
+    assert single["data"]["measurement"]["value"] == pytest.approx(
+        20.0 * math.log10(2.0)
+    )
+    assert single["data"]["measurement"]["signal"] == "complex-output-over-input"
+
+
+def test_differential_request_schema_admits_both_negative_components() -> None:
+    points = 4
+    series = _cartesian_series(
+        {
+            "vinp": ("V", [complex(1.0, 0.0)] * points),
+            "vinn": ("V", [complex(0.0, 0.0)] * points),
+            "voutp": ("V", [complex(2.0, 0.0)] * points),
+            "voutn": ("V", [complex(-2.0, 0.0)] * points),
+        }
+    )
+    request = _request("low_frequency_gain_db")
+    request["input"] = _operand("vinp", "vinn")
+    request["output"] = _operand("voutp", "voutn")
+
+    errors = sorted(
+        REQUEST_VALIDATOR.iter_errors(
+            {"series": series, "transfer": request, "extensions": {}}
+        ),
+        key=lambda item: list(item.path),
+    )
+    assert not errors, "\n".join(error.message for error in errors)
+
+
+def test_half_a_differential_terminal_is_refused_by_code_and_by_schema() -> None:
+    request = _request("low_frequency_gain_db")
+    request["output"] = _operand("vout", "vin")
+    del request["output"]["negative_imaginary"]
+
+    payload = measure_transfer(_series(), request)
+
+    _assert_envelope(payload)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "transfer.request.invalid"
+    assert "negative_imaginary" in payload["diagnostics"][0]["message"]
+
+    errors = list(
+        REQUEST_VALIDATOR.iter_errors(
+            {"series": _series(), "transfer": request, "extensions": {}}
+        )
+    )
+    assert errors
+
+
+def test_a_differential_operand_may_not_reuse_one_series_twice() -> None:
+    request = _request("low_frequency_gain_db")
+    request["output"] = _operand("vout", "vout")
+
+    payload = measure_transfer(_series(), request)
+
+    _assert_envelope(payload)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "transfer.request.invalid"
+
+
+def test_every_advertised_metric_kind_has_a_declared_feature_and_unit() -> None:
+    from openada.operations.result_transfer_measure import (
+        TRANSFER_METRIC_KINDS,
+        _METRIC_UNITS,
+    )
+
+    declared = {
+        value
+        for feature in TRANSFER_PROFILE["features"]
+        if feature["parameter_path"] == "transfer.metric.kind"
+        for value in feature["parameter_values"]
+    }
+    assert declared == set(TRANSFER_METRIC_KINDS)
+    assert set(_METRIC_UNITS) == set(TRANSFER_METRIC_KINDS)

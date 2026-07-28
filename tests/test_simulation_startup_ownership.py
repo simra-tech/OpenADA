@@ -458,6 +458,43 @@ def test_a_selection_template_names_only_vectors_it_can_type(tmp_path):
     assert _write_selection_template(tmp_path, ("frequency", "sweep")) is None
 
 
+def test_an_ac_selection_template_carries_both_cartesian_components(tmp_path):
+    """A real-only AC template is a series ``openada transfer`` cannot consume.
+
+    ``result.transfer.measure`` -- the only operation that measures a gain, an
+    impedance or any other ratio -- takes each operand as a Cartesian pair. A
+    live job followed the printed one-liner verbatim on an AC run, got four
+    real components, and computed its differential gain by hand.
+    """
+
+    import json
+
+    path = _write_selection_template(
+        tmp_path, ("v(vinp)", "v(voutp)"), complex_plot=True
+    )
+    assert path is not None
+    selectors = json.loads(path.read_text(encoding="utf-8"))["selectors"]
+    assert [(entry["native_name"], entry["component"]) for entry in selectors] == [
+        ("v(vinp)", "real"),
+        ("v(vinp)", "imaginary"),
+        ("v(voutp)", "real"),
+        ("v(voutp)", "imaginary"),
+    ]
+    outputs = [entry["output_name"] for entry in selectors]
+    assert outputs == ["v_vinp_re", "v_vinp_im", "v_voutp_re", "v_voutp_im"]
+    assert len(outputs) == len(set(outputs))
+
+
+def test_a_non_ac_selection_template_stays_real_only(tmp_path):
+    import json
+
+    path = _write_selection_template(tmp_path, ("v(vin)", "v(vout)"))
+    assert path is not None
+    selectors = json.loads(path.read_text(encoding="utf-8"))["selectors"]
+    assert {entry["component"] for entry in selectors} == {"real"}
+    assert [entry["output_name"] for entry in selectors] == ["v_vin", "v_vout"]
+
+
 @pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")
 def test_a_run_that_proves_nothing_forbids_the_word_measured(tmp_path):
     deck = tmp_path / "broken.spice"

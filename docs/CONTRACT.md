@@ -473,14 +473,38 @@ openada transfer --series SERIES.json --measurement TRANSFER-REQUEST.json
 
 The series argument may be a canonical normalized real series or a complete
 passing extraction envelope. V1alpha1 requires at least two strictly
-increasing positive frequencies with axis unit exactly `Hz`, and four distinct
-same-unit real series naming the input and output phasors' real and imaginary
+increasing positive frequencies with axis unit exactly `Hz`, and distinctly
+named real series naming the input and output phasors' real and imaginary
 Cartesian components. At every point the kernel computes exactly complex
 output divided by complex input. A zero input or output magnitude, a non-finite
 ratio, or a dimensional mismatch is `unknown`; no numerical floor is invented.
 
-The closed metrics are `low_frequency_gain_db`, `bandwidth_3db`,
-`unity_gain_frequency`, and `phase_margin`. “Low frequency” means the first
+Either operand may be **differential**. Adding `negative_real` and
+`negative_imaginary` — both, or neither — makes that operand the complex
+difference of the two terminals it names, so
+
+```json
+"output": {"real": "voutp.re", "imaginary": "voutp.im",
+           "negative_real": "voutn.re", "negative_imaginary": "voutn.im"}
+```
+
+measures `(v(outp) - v(outn))` and a fully differential gain becomes one typed
+measurement instead of arithmetic performed outside the contract. The
+measurement records `complex-differential-output-over-input` as its signal
+expression. No scaling, common-mode operand, or three-terminal expression
+exists; a differential operand is exactly the difference declared.
+
+The closed metrics are `low_frequency_gain_db`, `low_frequency_impedance`,
+`bandwidth_3db`, `unity_gain_frequency`, and `phase_margin`. Every metric but
+`low_frequency_impedance` is a dB threshold on a dimensionless ratio and
+requires one identical unit across all declared components.
+`low_frequency_impedance` is the one dimensional ratio: it requires every
+output component in `V` and every input component in `A`, and reports the
+**linear** magnitude at the reference frequency in `Ohm`. Hold a node with a
+1 V AC source, extract `v(node)` and `i(vsource)`, and name V over A to get
+that node's small-signal driving-point impedance. Whether that node is the
+output is the requester's declaration, not something the kernel infers.
+“Low frequency” means the first
 positive simulated frequency and is explicitly not DC. The -3 dB reference is
 that first-point magnitude minus exactly 3.0 dB. Bandwidth and unity use only
 falling adjacent-point crossings, require exactly one candidate, and interpolate

@@ -746,6 +746,18 @@
           "extensions": {}
         },
         {
+          "id": "openada.feature/transfer.low-frequency-impedance/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/transfer.differential-operands/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
           "id": "openada.feature/transfer.bandwidth-3db/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [],

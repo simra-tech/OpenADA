@@ -559,6 +559,15 @@ def build_parser() -> argparse.ArgumentParser:
     measure = commands.add_parser(
         "measure",
         help="Derive one typed scalar from a provenance-bound normalized real series.",
+        description=(
+            "Derive one typed scalar from a provenance-bound normalized real series.\n\n"
+            "measurement.kind must be one of:\n"
+            "  " + ", ".join(MEASUREMENT_KINDS) + "\n\n"
+            "These are time- and sweep-domain readings of ONE named signal. A ratio\n"
+            "of two signals is not one of them: for an AC gain, a differential gain,\n"
+            "or a driving-point impedance use `openada transfer` instead."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     measure.add_argument(
         "--series",
@@ -624,6 +633,12 @@ def build_parser() -> argparse.ArgumentParser:
     spectral = commands.add_parser(
         "spectral",
         help="Derive one closed coherent single-tone SNR, SINAD, THD, or SFDR measurement.",
+        description=(
+            "Derive one closed coherent single-tone spectral measurement.\n\n"
+            "spectral.metric.kind must be one of:\n"
+            "  " + ", ".join(SPECTRAL_METRIC_KINDS)
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     spectral.add_argument(
         "--series",
@@ -645,7 +660,26 @@ def build_parser() -> argparse.ArgumentParser:
 
     transfer = commands.add_parser(
         "transfer",
-        help="Derive one closed AC gain, bandwidth, unity-frequency, or phase-margin measurement.",
+        help=(
+            "Derive one closed AC ratio measurement: gain, impedance, bandwidth, "
+            "unity-frequency, or phase margin."
+        ),
+        description=(
+            "Derive one closed AC output-over-input complex-ratio measurement.\n\n"
+            "transfer.metric.kind must be one of:\n"
+            "  low_frequency_gain_db     dB    output/input, identical operand units\n"
+            "  low_frequency_impedance   Ohm   output in V over input in A\n"
+            "  bandwidth_3db             Hz    unique falling reference-minus-3 dB crossing\n"
+            "  unity_gain_frequency      Hz    unique falling 0 dB crossing\n"
+            "  phase_margin              deg   requires interpretation 'loop-gain-negative-feedback'\n\n"
+            "Each operand is `{real, imaginary}` naming two extracted component series,\n"
+            "and may add `negative_real` and `negative_imaginary` to become DIFFERENTIAL --\n"
+            "the phasor is then the positive terminal minus the negative one. That is how\n"
+            "a differential gain (v(outp)-v(outn)) / (v(inp)-v(inn)) becomes one typed\n"
+            "measurement, and how an output impedance is measured: hold the node with a\n"
+            "1 V AC source, extract v(node) and i(vsource), and name V over A."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     transfer.add_argument(
         "--series",
@@ -1008,6 +1042,7 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                     {
                         "id": {
                             "low_frequency_gain_db": "openada.feature/transfer.low-frequency-gain/v1alpha1",
+                            "low_frequency_impedance": "openada.feature/transfer.low-frequency-impedance/v1alpha1",
                             "bandwidth_3db": "openada.feature/transfer.bandwidth-3db/v1alpha1",
                             "unity_gain_frequency": "openada.feature/transfer.unity-gain-frequency/v1alpha1",
                             "phase_margin": "openada.feature/transfer.phase-margin/v1alpha1",
@@ -1016,6 +1051,17 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                         "conformance_ids": [],
                     }
                     for kind in TRANSFER_METRIC_KINDS
+                ]
+                # Not a metric kind: an operand shape available to every metric.
+                # A differential ratio is the only way (v(outp) - v(outn)) is
+                # measured rather than computed in an answer, so it is a feature
+                # a caller must be able to discover, not an implementation note.
+                + [
+                    {
+                        "id": "openada.feature/transfer.differential-operands/v1alpha1",
+                        "maturity": "structured",
+                        "conformance_ids": [],
+                    }
                 ],
             },
             {

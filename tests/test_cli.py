@@ -214,9 +214,11 @@ def test_capabilities_exposes_semantic_provider_records(capsys):
     )
     assert {feature["id"] for feature in transfer["features"]} == {
         "openada.feature/transfer.low-frequency-gain/v1alpha1",
+        "openada.feature/transfer.low-frequency-impedance/v1alpha1",
         "openada.feature/transfer.bandwidth-3db/v1alpha1",
         "openada.feature/transfer.unity-gain-frequency/v1alpha1",
         "openada.feature/transfer.phase-margin/v1alpha1",
+        "openada.feature/transfer.differential-operands/v1alpha1",
     }
     assert {
         provider: by_provider[provider]["features"]

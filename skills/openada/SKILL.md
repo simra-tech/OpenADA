@@ -320,12 +320,10 @@ openada spectral \
   > evidence/spectral-result.json
 ```
 
-The alpha supports only SNR, SINAD, signed-dB THD, and SFDR under its fixed
-power-of-two rectangular coherent-bin method. A candidate IEEE context records
-application scope; it is not a conformity claim.
+The alpha supports only SNR, SINAD, signed-dB THD, and SFDR under its fixed power-of-two
+rectangular coherent-bin method. A candidate IEEE context records scope, not conformity.
 
-For an AC analysis with explicit same-unit input/output real and imaginary
-series, inspect `openada.operation/result.transfer.measure/v1alpha1` and run:
+For an AC analysis, inspect `openada.operation/result.transfer.measure/v1alpha1` and run:
 
 ```bash
 openada transfer \
@@ -334,10 +332,12 @@ openada transfer \
   > evidence/transfer-result.json
 ```
 
-The closed profile supports first-positive-frequency gain, unique falling
-−3 dB bandwidth, unity-gain frequency, and explicitly declared
-negative-feedback phase margin. It rejects ambiguous multiple crossings and
-does not implement gain margin.
+`transfer` is the only operation that measures a **ratio**; `measure` reads one signal and has
+no kind for a gain, a differential gain or an impedance. Metrics: `low_frequency_gain_db`,
+`low_frequency_impedance` (ohms, output V over input A), `bandwidth_3db`, `unity_gain_frequency`,
+`phase_margin`; ambiguous crossings are rejected and gain margin is absent. An operand is `{real,
+imaginary}` plus optional `negative_real`/`negative_imaginary` for a differential terminal; for
+an output impedance name `v(node)` over `i(vsource)` from a 1 V AC source on that node.
 
 Finally evaluate a scalar result only against an already supplied explicit
 limit and exact conditions:

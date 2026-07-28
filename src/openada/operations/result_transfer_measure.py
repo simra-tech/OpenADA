@@ -23,16 +23,32 @@ METHOD_ID = "openada.method/ac-complex-ratio-log-interpolation/v1alpha1"
 
 TRANSFER_METRIC_KINDS = (
     "low_frequency_gain_db",
+    "low_frequency_impedance",
     "bandwidth_3db",
     "unity_gain_frequency",
     "phase_margin",
 )
 _METRIC_UNITS = {
     "low_frequency_gain_db": "dB",
+    "low_frequency_impedance": "Ohm",
     "bandwidth_3db": "Hz",
     "unity_gain_frequency": "Hz",
     "phase_margin": "deg",
 }
+
+#: ``low_frequency_impedance`` is the one metric whose operands are *not*
+#: dimensionally alike. Every other kind is a dB threshold on a dimensionless
+#: ratio and requires one identical unit on all components; a driving-point
+#: impedance is volts over amperes and is refused unless the operands say so.
+#: The pair is stated here rather than inferred, because "the numerator happens
+#: to be in V" is not the same claim as "this ratio is an impedance".
+_METRIC_OPERAND_UNITS = {"low_frequency_impedance": ("V", "A")}
+
+#: The optional second terminal of an operand. Present in pairs or not at all:
+#: a differential phasor is ``(real + j*imaginary) - (negative_real +
+#: j*negative_imaginary)``, and half of that is not a terminal.
+_DIFFERENTIAL_KEYS = ("negative_real", "negative_imaginary")
+
 _ROLE_RE = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 
 
@@ -53,6 +69,7 @@ def _closed_object(
     label: str,
     *,
     required: set[str],
+    optional: set[str] = frozenset(),
 ) -> Mapping[str, Any]:
     if not isinstance(value, Mapping):
         raise _InvalidTransferRequest(
@@ -64,7 +81,7 @@ def _closed_object(
         )
     keys = set(value)
     missing = required - keys
-    extra = keys - required
+    extra = keys - required - set(optional)
     if missing:
         raise _InvalidTransferRequest(
             "transfer.request.invalid",
@@ -133,15 +150,38 @@ def _request_id(value: str | None) -> str:
 
 
 def _signal_pair(value: object, label: str) -> dict[str, str]:
-    pair = _closed_object(value, label, required={"real", "imaginary"})
-    real = _text(pair["real"], f"{label}.real")
-    imaginary = _text(pair["imaginary"], f"{label}.imaginary")
-    if real == imaginary:
+    """One operand phasor: a single-ended terminal, or a differential pair.
+
+    A single-ended operand names the Cartesian components of one node. A
+    differential operand additionally names the negative terminal's, and the
+    phasor is their difference -- which is the only way to express ``v(outp) -
+    v(outn)``, and therefore the only way a fully differential stage's gain
+    becomes a typed measurement rather than arithmetic in an answer.
+    """
+
+    pair = _closed_object(
+        value, label, required={"real", "imaginary"}, optional=set(_DIFFERENTIAL_KEYS)
+    )
+    operand = {
+        "real": _text(pair["real"], f"{label}.real"),
+        "imaginary": _text(pair["imaginary"], f"{label}.imaginary"),
+    }
+    declared = [key for key in _DIFFERENTIAL_KEYS if key in pair]
+    if len(declared) == 1:
+        missing = next(key for key in _DIFFERENTIAL_KEYS if key not in pair)
         raise _InvalidTransferRequest(
             "transfer.request.invalid",
-            f"{label}.real and {label}.imaginary must name different series.",
+            f"{label} declares {declared[0]!r} without {missing!r}; a differential "
+            "terminal needs both Cartesian components or neither.",
         )
-    return {"real": real, "imaginary": imaginary}
+    for key in declared:
+        operand[key] = _text(pair[key], f"{label}.{key}")
+    if len(set(operand.values())) != len(operand):
+        raise _InvalidTransferRequest(
+            "transfer.request.invalid",
+            f"{label} must name a different series for each Cartesian component.",
+        )
+    return operand
 
 
 def _normalize_request(value: object) -> dict[str, Any]:
@@ -172,7 +212,7 @@ def _normalize_request(value: object) -> dict[str, Any]:
     if len(signal_names) != len(set(signal_names)):
         raise _InvalidTransferRequest(
             "transfer.request.invalid",
-            "The four input/output Cartesian component series must have unique names.",
+            "Every input/output Cartesian component series must have a unique name.",
         )
 
     interpretation = _text(
@@ -240,6 +280,53 @@ def _normalize_request(value: object) -> dict[str, Any]:
         "metric": {"kind": kind, "unit": expected_unit},
         "extensions": {},
     }
+
+
+def _operand_unit(
+    operand: Mapping[str, str], by_name: Mapping[str, Any], label: str
+) -> str:
+    """The one unit every Cartesian component of ``operand`` carries."""
+
+    units = {by_name[name]["unit"] for name in operand.values()}
+    if len(units) != 1:
+        raise _InvalidTransferRequest(
+            "transfer.unit.mismatch",
+            f"Every Cartesian component of {label} must carry the same unit; "
+            f"the declared series carry {', '.join(sorted(units))}.",
+        )
+    return next(iter(units))
+
+
+def _operand_phasors(
+    operand: Mapping[str, str], by_name: Mapping[str, Any]
+) -> list[complex]:
+    """The operand's phasor at each AC point, differential terminals included."""
+
+    positive = [
+        complex(real, imaginary)
+        for real, imaginary in zip(
+            by_name[operand["real"]]["values"],
+            by_name[operand["imaginary"]]["values"],
+        )
+    ]
+    if "negative_real" not in operand:
+        return positive
+    negative = [
+        complex(real, imaginary)
+        for real, imaginary in zip(
+            by_name[operand["negative_real"]]["values"],
+            by_name[operand["negative_imaginary"]]["values"],
+        )
+    ]
+    return [
+        value - reference for value, reference in zip(positive, negative)
+    ]
+
+
+def _is_differential(request: Mapping[str, Any]) -> bool:
+    return any(
+        "negative_real" in request[side] for side in ("input", "output")
+    )
 
 
 def _measurement_template(
@@ -447,12 +534,11 @@ def measure_transfer(
             )
 
         request = _normalize_request(transfer)
+        kind = request["metric"]["kind"]
         by_name = {signal["name"]: signal for signal in normalized["signals"]}
         requested_names = [
-            request["input"]["real"],
-            request["input"]["imaginary"],
-            request["output"]["real"],
-            request["output"]["imaginary"],
+            *request["input"].values(),
+            *request["output"].values(),
         ]
         missing = [name for name in requested_names if name not in by_name]
         if missing:
@@ -460,28 +546,33 @@ def measure_transfer(
                 "transfer.signal.missing",
                 f"The normalized series does not contain: {', '.join(missing)}.",
             )
-        units = {by_name[name]["unit"] for name in requested_names}
-        if len(units) != 1:
+        input_unit = _operand_unit(request["input"], by_name, "transfer.input")
+        output_unit = _operand_unit(request["output"], by_name, "transfer.output")
+        expected_units = _METRIC_OPERAND_UNITS.get(kind)
+        if expected_units is not None:
+            expected_output, expected_input = expected_units
+            if output_unit != expected_output or input_unit != expected_input:
+                raise _InvalidTransferRequest(
+                    "transfer.unit.mismatch",
+                    f"{kind!r} is a {expected_output}-over-{expected_input} "
+                    "driving-point ratio: every output component must carry "
+                    f"{expected_output!r} and every input component "
+                    f"{expected_input!r}, not {output_unit!r} over {input_unit!r}.",
+                )
+            ratio_unit = _METRIC_UNITS[kind]
+        elif input_unit != output_unit:
             raise _InvalidTransferRequest(
                 "transfer.unit.mismatch",
-                "All four Cartesian component series must use the same unit for a dimensionless dB ratio.",
+                f"{kind!r} is a dimensionless dB ratio, so every Cartesian "
+                f"component series must use one identical unit; the output is "
+                f"{output_unit!r} and the input is {input_unit!r}. A ratio of "
+                "unlike units is an impedance or a transconductance, not a gain.",
             )
-        signal_unit = next(iter(units))
+        else:
+            ratio_unit = "1"
 
-        input_values = [
-            complex(real, imaginary)
-            for real, imaginary in zip(
-                by_name[request["input"]["real"]]["values"],
-                by_name[request["input"]["imaginary"]]["values"],
-            )
-        ]
-        output_values = [
-            complex(real, imaginary)
-            for real, imaginary in zip(
-                by_name[request["output"]["real"]]["values"],
-                by_name[request["output"]["imaginary"]]["values"],
-            )
-        ]
+        input_values = _operand_phasors(request["input"], by_name)
+        output_values = _operand_phasors(request["output"], by_name)
         ratios: list[complex] = []
         magnitudes_db: list[float] = []
         for index, (input_value, output_value) in enumerate(
@@ -520,21 +611,27 @@ def measure_transfer(
             bandwidth_crossings, threshold_db=bandwidth_threshold_db
         )
         unity_record = _crossing_record(unity_crossings, threshold_db=0.0)
-        signal_expression = "complex-output-over-input"
+        signal_expression = (
+            "complex-differential-output-over-input"
+            if _is_differential(request)
+            else "complex-output-over-input"
+        )
         transfer_record = {
             "status": "analyzed",
             "request_sha256": request_sha256,
             "method": request["method"],
             "interpretation": request["interpretation"],
             "signals": {
-                "input": {**request["input"], "unit": signal_unit},
-                "output": {**request["output"], "unit": signal_unit},
+                "input": {**request["input"], "unit": input_unit},
+                "output": {**request["output"], "unit": output_unit},
                 "ratio": "output-over-input",
             },
             "reference": {
                 "kind": "first-simulated-frequency-not-dc",
                 "frequency_hz": frequencies[0],
                 "magnitude_db": low_frequency_gain_db,
+                "magnitude": abs(ratios[0]),
+                "unit": ratio_unit,
             },
             "trace": {
                 "frequency_hz": frequencies,
@@ -554,7 +651,6 @@ def measure_transfer(
             ],
             "extensions": {},
         }
-        kind = request["metric"]["kind"]
         measurement = _measurement_template(
             measurement_id=request["measurement_id"],
             kind=kind,
@@ -571,6 +667,11 @@ def measure_transfer(
         selected_crossing: dict[str, Any] | None = None
         if kind == "low_frequency_gain_db":
             value = low_frequency_gain_db
+            location_hz = frequencies[0]
+        elif kind == "low_frequency_impedance":
+            # The linear magnitude, not the dB one: an impedance is reported in
+            # ohms, and 20*log10 of a V/A ratio is a number with no name.
+            value = abs(ratios[0])
             location_hz = frequencies[0]
         elif kind == "bandwidth_3db":
             selected_crossing = bandwidth_record
@@ -664,7 +765,11 @@ def measure_transfer(
     source = normalized["source"] if normalized is not None else None
     signal = None
     if request is not None:
-        signal = "complex-output-over-input"
+        signal = (
+            "complex-differential-output-over-input"
+            if _is_differential(request)
+            else "complex-output-over-input"
+        )
     return _payload(
         correlation_id,
         _measurement_template(

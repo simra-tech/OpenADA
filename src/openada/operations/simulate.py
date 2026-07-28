@@ -1359,15 +1359,25 @@ def _vector_unit(name: str) -> str | None:
 
 
 def _write_selection_template(
-    destination: Path, signals: Sequence[str]
+    destination: Path, signals: Sequence[str], *, complex_plot: bool = False
 ) -> Path | None:
-    """Write a ready-to-run ``extract`` selection and return its path."""
+    """Write a ready-to-run ``extract`` selection and return its path.
+
+    An AC plot is complex, and ``result.transfer.measure`` -- the only operation
+    that measures a gain, an impedance or any other ratio -- takes each operand
+    as a *Cartesian pair*. A real-only template therefore hands the caller a
+    series no transfer request can consume. That is not hypothetical: a live job
+    followed this file verbatim, extracted four real components off an AC run,
+    and then computed its differential gain by hand because nothing it had could
+    be fed to `openada transfer`. So an AC template emits both components.
+    """
 
     # ngspice repeats a vector name when a net is saved twice - a `.SAVE VIN`
     # beside a `V_IN` current, say - and ``extract`` refuses both a repeated
     # native identity and a repeated output name. A template that reproduced
     # the duplicate would be refused on its first use, which is exactly the
     # friction this file exists to remove.
+    components = (("real", "_re"), ("imaginary", "_im")) if complex_plot else (("real", ""),)
     selectors: list[dict[str, str]] = []
     seen: set[str] = set()
     for name in signals:
@@ -1375,14 +1385,16 @@ def _write_selection_template(
         if unit is None or name in seen:
             continue
         seen.add(name)
-        selectors.append(
-            {
-                "native_name": name,
-                "output_name": re.sub(r"[^A-Za-z0-9_]", "_", name).strip("_"),
-                "unit": unit,
-                "component": "real",
-            }
-        )
+        stem = re.sub(r"[^A-Za-z0-9_]", "_", name).strip("_")
+        for component, suffix in components:
+            selectors.append(
+                {
+                    "native_name": name,
+                    "output_name": f"{stem}{suffix}",
+                    "unit": unit,
+                    "component": component,
+                }
+            )
         if len(selectors) >= 8:
             break
     if not selectors:
@@ -1400,6 +1412,34 @@ def _write_selection_template(
     except OSError:
         return None
     return path
+
+
+#: What to run *after* ``extract``, per analysis, naming the kinds rather than
+#: only the commands. Naming the operation was not enough: two live jobs read
+#: "then `openada measure`, `openada transfer` or `openada spectral`", reached
+#: extract, and stopped -- both had been asked for a *derived ratio*, and
+#: neither had any way to learn from here that a ratio is what `transfer` is.
+#: An unreachable capability and an absent one cost the same turn.
+_MEASUREMENT_MENU = {
+    "ac": (
+        "`openada transfer` on the series it returns. Its metric kinds are "
+        "low_frequency_gain_db (dB), low_frequency_impedance (Ohm, output in V "
+        "over input in A), bandwidth_3db, unity_gain_frequency and phase_margin. "
+        "Each operand is a Cartesian {real, imaginary} pair and may add "
+        "negative_real/negative_imaginary to become differential, which is how a "
+        "differential gain and any other two-terminal ratio becomes one typed "
+        "measurement instead of arithmetic in an answer. Run `openada transfer "
+        "--help` for the exact shape."
+    ),
+    "default": (
+        "`openada measure` on the series it returns; its kinds are sample_at, "
+        "minimum, maximum, mean, rms, crossing, rise_time, fall_time and "
+        "settling_time, each reading ONE named signal. A ratio of two signals is "
+        "not among them - for a gain, a differential gain or a driving-point "
+        "impedance, run an AC analysis and use `openada transfer`. `openada "
+        "spectral` covers snr, sinad, thd and sfdr on a coherent single tone."
+    ),
+}
 
 
 def _retain_and_state_reportability(
@@ -1464,7 +1504,12 @@ def _retain_and_state_reportability(
         # listing them buries the nets that were asked for.
         candidates = vectors[1:] if swept else vectors
         signals = tuple(name for name in candidates if "#" not in name)
-        selection_path = _write_selection_template(destination, signals)
+        analysis_type = (
+            analysis.get("type") if isinstance(analysis, Mapping) else None
+        )
+        selection_path = _write_selection_template(
+            destination, signals, complex_plot=analysis_type == "ac"
+        )
         if signals and axis is not None:
             vector_note = (
                 f" The retained raw declares {axis!r} as the axis - which must "
@@ -1494,8 +1539,7 @@ def _retain_and_state_reportability(
                     "result contract binds it to this run. This envelope has been "
                     f"retained at {retained}.{vector_note} Continue with: openada "
                     f"extract --simulation {retained} --artifact {raw}{template}, then "
-                    "`openada measure`, `openada transfer` or `openada spectral` on the "
-                    "series it returns."
+                    f"{_MEASUREMENT_MENU[analysis_type if analysis_type in _MEASUREMENT_MENU else 'default']}"
                 ),
             )
         )
