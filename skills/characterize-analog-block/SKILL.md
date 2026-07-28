@@ -159,11 +159,30 @@ circuit.simulate
   -> specification.evaluate only when an authoritative limit exists
 ```
 
-`circuit.simulate` is the only simulation operation, and it takes the block in
-whatever form it arrived. Hand it a published Simra artifact and it verifies the
-digests, splits a multi-analysis testbench into one deck per declared analysis
-and binds an installed PDK; hand it a bare deck and it does the same without the
-split:
+**Preferred: a typed experiment against a DUT artifact.** When the block is a
+published Simra DUT schematic (no sources, no ground instance, artifact
+`lifecycle.state: "simulation_candidate"`), describe the whole characterization
+step as one `simra.experiment/v1` JSON — DUT bundle digests and port
+connections, ideal fixture elements, analyses with ids, observations, exact
+typed measurement requests, `{"pdk": {"id", "corner"}}` — and run the full
+chain in one command:
+
+```bash
+openada experiment run experiment.json --pdk <pdk-id> --output-dir <evidence-dir>
+```
+
+It validates the whole document before anything simulates (every refusal names
+the exact JSON path — fix the named field, never work around it), then
+simulates each analysis, extracts every observation, runs every measurement,
+and retains the complete typed chain including the request preimages.
+Propagation delay is a `derivations` entry subtracting two same-analysis
+crossings; there is no primitive delay kind.
+
+**Legacy: a drawn testbench artifact.** `circuit.simulate` still takes the
+block in whatever form it arrived. Hand it a published Simra testbench
+artifact and it verifies the digests, splits a multi-analysis testbench into
+one deck per declared analysis and binds an installed PDK; hand it a bare deck
+and it does the same without the split:
 
 ```bash
 openada simulate <path>/schematic.artifact.json \
