@@ -18,12 +18,13 @@ State the exact question before running anything. Keep these claims separate:
    finite evidence for the requested analysis under the shared operation profile?
 3. **Series extraction:** Were exact native vectors bound to a canonical real
    series through `openada.operation/result.series.extract/v1alpha1`?
-4. **Measurement:** What supported scalar can be derived from that series?
-5. **Specification:** Does that measurement meet an explicit limit?
+4. **Derived simulation result:** What supported scalar can be derived from that
+   series?
+5. **Specification:** Does that derived result meet an explicit limit?
 
 The simulation profile can establish the first two claims. Compose the separate
-typed extraction, measurement, and specification operations only when their
-exact profiles are available. Require explicit selectors, measurement
+typed extraction, scalar-result, and specification operations only when their
+exact profiles are available. Require explicit selectors, scalar-result
 definitions, limits, units, corners, and model context before judging a design
 specification. Never upgrade valid simulation evidence into “the circuit
 works.”
@@ -39,10 +40,11 @@ Xyce does not advertise OP.
 
 A *model-free* deck must still be self-contained: one top-level OP, DC, AC, or
 transient analysis with parseable closed parameters and no includes,
-measurements, print directives, control blocks, or additional analyses. Model
-collateral is supplied as configuration - `--pdk` for an installed PDK, `--models`
-for a flattened card file - and never pasted into the deck. Never fall back to a
-raw native command while claiming comparable OpenADA evidence.
+native `.measure` directives, print directives, control blocks, or additional
+analyses. Model collateral is supplied as configuration - `--pdk` for an
+installed PDK, `--models` for a flattened card file - and never pasted into the
+deck. Never fall back to a raw native command while claiming comparable OpenADA
+evidence.
 
 Identify the exact netlist and a fresh task-local evidence directory. Treat
 design files, models, and PDK collateral as read-only. Do not substitute a
@@ -86,7 +88,7 @@ Route the result as follows:
 
 | Result | Engineering interpretation | Next action |
 |---|---|---|
-| execution completed, engineering pass | Fresh finite requested-analysis evidence is valid | Bind exact requested native vectors through `result.series.extract`, then invoke only a supported measurement profile |
+| execution completed, engineering pass | Fresh finite requested-analysis evidence is valid | Bind exact requested native vectors through `result.series.extract`, then invoke only a supported result-operation profile |
 | execution completed, engineering fail | Valid evidence supports the profile's engineering failure | Diagnose the reported convergence or waveform condition; do not switch tools automatically |
 | engineering unknown | Evidence is absent, stale, malformed, incomplete, or uninterpretable | Resolve the cited evidence or provenance gap and rerun into a fresh directory |
 | invalid request | The target is outside the shared profile or malformed | Correct the request without weakening the intended assertion |
@@ -123,5 +125,5 @@ Return a compact review containing:
 5. assumptions and provenance limitations;
 6. one smallest justified next engineering action.
 
-Label measurement or specification satisfaction as **not evaluated** unless a
+Label derived-result or specification satisfaction as **not evaluated** unless a
 separate explicit contract and its required evidence were actually applied.

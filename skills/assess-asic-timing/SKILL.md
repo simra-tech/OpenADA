@@ -223,7 +223,7 @@ Treat SDF gate simulation as separate corroborating evidence, not a substitute
 for complete STA. Require the simulator to support every emitted SDF construct,
 the cell models' specify behavior, and the testbench access mechanism. If SDF
 interconnect creation makes VPI enumeration abort, timing checks are reported
-unsupported, paths cannot be matched, or annotation coverage is unmeasured,
+unsupported, paths cannot be matched, or annotation coverage is undetermined,
 classify the simulation as **unknown — harness capability gap**. Preserve the
 exact netlist, SDF, corner, command, transcript, and failure signature; never
 translate simulator startup or annotation failure into either a design fail or

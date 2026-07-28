@@ -25,6 +25,7 @@ from typing import Any, Mapping
 from ..contract import (
     FileRecordError,
     FileRecordLimitError,
+    bounded_text,
     file_record,
     stable_regular_file,
 )
@@ -40,6 +41,9 @@ MAX_MODELS_BYTES = 16 * 1024 * 1024
 MAX_ANALYSES = 16
 MAX_SAVED_NETS = 1_024
 MAX_UNRESOLVED_EXAMPLES = 20
+MAX_UNRESOLVED_TOKEN_DISPLAY_CHARS = 256
+MAX_UNRESOLVED_MESSAGE_CHARS = 3_500
+MAX_DIAGNOSTIC_NAME_CHARS = 128
 
 SUPPORTED_ANALYSIS_KINDS = ("op", "dc", "ac", "tran")
 SUPPORTED_HANDOFFS = ("direct", "split_required")
@@ -51,7 +55,13 @@ ANALYSIS_CARD_RE = re.compile(
     r"^\s*\.(op|dc|ac|tran|noise|hb|tf|pz|sens|sp|disto)\b",
     re.IGNORECASE,
 )
-UNRESOLVED_TOKEN_RE = re.compile(r"\{SIMRA_UNRESOLVED_[A-Za-z0-9_]+\}")
+UNRESOLVED_TOKEN_RE = re.compile(
+    rf"(?<![A-Za-z0-9_])"
+    rf"SIMRA_UNRESOLVED_[A-Za-z0-9_]+"
+    rf"(?![A-Za-z0-9_])"
+)
+_SUBCKT_CELL_RE = re.compile(r"^\s*\.subckt\s+(?P<cell>\S+)", re.IGNORECASE)
+_ENDS_RE = re.compile(r"^\s*\.ends(?:\s|$)", re.IGNORECASE)
 #: Directives that would make a composed model prelude non-self-contained or
 #: would terminate/redirect the deck the shared simulation profile inspects.
 MODELS_FORBIDDEN_RE = re.compile(
@@ -60,6 +70,9 @@ MODELS_FORBIDDEN_RE = re.compile(
 )
 _PATH_COMPONENT_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 _NET_NAME_RE = re.compile(r"^[A-Za-z0-9_.:+$\[\]-]{1,256}$")
+_DIAGNOSTIC_NAME_RE = re.compile(r"^[A-Za-z0-9_.:+-]+$")
+_DIAGNOSTIC_KIND_RE = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
+_DIAGNOSTIC_PARAMETER_RE = re.compile(r"^[A-Z0-9_]{1,64}$")
 
 
 class SimraArtifactError(Exception):
@@ -70,6 +83,12 @@ class SimraArtifactError(Exception):
         self.message = message
         self.hint = hint
         super().__init__(message)
+
+
+@dataclass(frozen=True, slots=True)
+class _UnresolvedPlaceholder:
+    token: str
+    cell_name: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,6 +262,333 @@ def _sibling(directory: Path, value: object, *, field_name: str) -> Path:
     return candidate
 
 
+def _diagnostic_name(value: object) -> str:
+    if isinstance(value, str) and _DIAGNOSTIC_NAME_RE.fullmatch(value) is not None:
+        return bounded_text(value, limit=MAX_DIAGNOSTIC_NAME_CHARS)
+    return "unknown"
+
+
+def _diagnostic_kind(value: object) -> str:
+    if isinstance(value, str) and _DIAGNOSTIC_KIND_RE.fullmatch(value) is not None:
+        return value
+    return "unknown"
+
+
+def _artifact_local_location(
+    source: object,
+    *,
+    descriptor_source: object,
+) -> str:
+    """Return a bounded source locator that cannot disclose a host path."""
+
+    published_name = (
+        descriptor_source
+        if isinstance(descriptor_source, str)
+        and _PATH_COMPONENT_RE.fullmatch(descriptor_source) is not None
+        else None
+    )
+    line: int | None = None
+    column: int | None = None
+    if isinstance(source, Mapping):
+        source_name = source.get("artifact")
+        if (
+            isinstance(source_name, str)
+            and _PATH_COMPONENT_RE.fullmatch(source_name) is not None
+        ):
+            published_name = source_name
+        candidate_line = source.get("line")
+        if (
+            isinstance(candidate_line, int)
+            and not isinstance(candidate_line, bool)
+            and 1 <= candidate_line <= 1_000_000_000
+        ):
+            line = candidate_line
+        candidate_column = source.get("column")
+        if (
+            isinstance(candidate_column, int)
+            and not isinstance(candidate_column, bool)
+            and 0 <= candidate_column <= 1_000_000_000
+        ):
+            column = candidate_column
+
+    location = (
+        f"artifact-local {published_name}"
+        if published_name is not None
+        else "the artifact-local source"
+    )
+    if line is not None:
+        location += f":{line}"
+        if column is not None:
+            location += f":{column}"
+    return location
+
+
+def _instance_placeholder_prefix(name: str) -> str:
+    token = re.sub(r"[^A-Za-z0-9_]", "_", name).upper()
+    return f"SIMRA_UNRESOLVED_{token}_"
+
+
+def _unresolved_placeholders(
+    deck_text: str,
+    *,
+    top_cell: str,
+) -> list[_UnresolvedPlaceholder]:
+    """Return each distinct placeholder with its netlist cell context."""
+
+    cell_stack: list[str] = []
+    seen: set[tuple[str | None, str]] = set()
+    unresolved: list[_UnresolvedPlaceholder] = []
+    for line in deck_text.splitlines():
+        subcircuit = _SUBCKT_CELL_RE.match(line)
+        if subcircuit is not None:
+            cell_stack.append(subcircuit.group("cell"))
+        cell_name = cell_stack[-1] if cell_stack else top_cell
+        for token in dict.fromkeys(UNRESOLVED_TOKEN_RE.findall(line)):
+            key = (cell_name.casefold(), token)
+            if key not in seen:
+                seen.add(key)
+                unresolved.append(
+                    _UnresolvedPlaceholder(token=token, cell_name=cell_name)
+                )
+        if _ENDS_RE.match(line) is not None and cell_stack:
+            cell_stack.pop()
+    return unresolved
+
+
+def _unresolved_parameter_diagnostic(
+    *,
+    parameters_state: object,
+    unresolved: list[_UnresolvedPlaceholder],
+    view_document: Mapping[str, Any],
+    descriptor_source: object,
+) -> tuple[str, str]:
+    """Describe unresolved authoring values using only bounded artifact-local facts."""
+
+    examples = unresolved[:MAX_UNRESOLVED_EXAMPLES]
+    best_matches: dict[
+        int,
+        tuple[tuple[int, int], list[dict[str, str]]],
+    ] = {}
+    nonresolved_instances: list[dict[str, str]] = []
+
+    cells = view_document.get("cells")
+    if isinstance(cells, list):
+        for cell in cells:
+            if not isinstance(cell, Mapping):
+                continue
+            raw_cell_name = cell.get("name")
+            cell_name = _diagnostic_name(raw_cell_name)
+            raw_cell_kind = cell.get("kind")
+            if raw_cell_kind == "design":
+                cell_role = "circuit"
+            elif raw_cell_kind == "testbench":
+                cell_role = "testbench"
+            else:
+                cell_role = "published"
+            entities = cell.get("entities")
+            if not isinstance(entities, Mapping):
+                continue
+            instances = entities.get("instances")
+            if not isinstance(instances, list):
+                continue
+            for instance in instances:
+                if not isinstance(instance, Mapping):
+                    continue
+                raw_name = instance.get("name")
+                if (
+                    not isinstance(raw_name, str)
+                    or _DIAGNOSTIC_NAME_RE.fullmatch(raw_name) is None
+                ):
+                    continue
+                record = {
+                    "cell_name": cell_name,
+                    "cell_role": cell_role,
+                    "device_kind": _diagnostic_kind(instance.get("kind")),
+                    "instance_name": _diagnostic_name(raw_name),
+                    "location": _artifact_local_location(
+                        instance.get("source"),
+                        descriptor_source=descriptor_source,
+                    ),
+                }
+                parameter_status = instance.get("parameter_status")
+                is_nonresolved = (
+                    parameter_status == "partial"
+                    or parameter_status == "unresolved"
+                )
+                if (
+                    is_nonresolved
+                    and len(nonresolved_instances) < MAX_UNRESOLVED_EXAMPLES
+                ):
+                    nonresolved_instances.append(record)
+
+                prefix = _instance_placeholder_prefix(raw_name)
+                for occurrence_index, occurrence in enumerate(examples):
+                    if (
+                        occurrence.cell_name is not None
+                        and (
+                            not isinstance(raw_cell_name, str)
+                            or raw_cell_name.casefold()
+                            != occurrence.cell_name.casefold()
+                        )
+                    ):
+                        continue
+                    token = occurrence.token
+                    if not token.startswith(prefix):
+                        continue
+                    parameter = token[len(prefix) :]
+                    if _DIAGNOSTIC_PARAMETER_RE.fullmatch(parameter) is None:
+                        continue
+                    candidate = dict(record)
+                    candidate["parameter"] = parameter.casefold()
+                    # A full instance-name match wins over a shorter prefix
+                    # (M_1 over M). Netlist cell context disambiguates equal
+                    # instance names in separate subcircuits. The view's
+                    # non-resolved status breaks any remaining equal-name tie
+                    # while still allowing a deck-tamper refusal to map a token
+                    # whose view status remains "resolved".
+                    rank = (len(prefix), 1 if is_nonresolved else 0)
+                    current = best_matches.get(occurrence_index)
+                    if current is None or rank > current[0]:
+                        best_matches[occurrence_index] = (rank, [candidate])
+                    elif rank == current[0] and len(current[1]) < MAX_UNRESOLVED_EXAMPLES:
+                        current[1].append(candidate)
+
+    grouped: dict[tuple[str, str, str, str, str], list[str]] = {}
+    mapped: set[int] = set()
+    ambiguous: dict[int, list[dict[str, str]]] = {}
+    for occurrence_index, _occurrence in enumerate(examples):
+        match = best_matches.get(occurrence_index)
+        if match is None:
+            continue
+        distinct = {
+            (
+                candidate["cell_role"],
+                candidate["cell_name"],
+                candidate["device_kind"],
+                candidate["instance_name"],
+                candidate["location"],
+            ): candidate
+            for candidate in match[1]
+        }
+        if len(distinct) != 1:
+            ambiguous[occurrence_index] = list(distinct.values())
+            continue
+        candidate = next(iter(distinct.values()))
+        key = (
+            candidate["cell_role"],
+            candidate["cell_name"],
+            candidate["device_kind"],
+            candidate["instance_name"],
+            candidate["location"],
+        )
+        parameters = grouped.setdefault(key, [])
+        parameter = candidate["parameter"]
+        if parameter not in parameters:
+            parameters.append(parameter)
+        mapped.add(occurrence_index)
+
+    if unresolved:
+        details = [
+            (
+                f"{device_kind} instance {instance_name!r} in {cell_role} "
+                f"cell {cell_name!r} at {location} has unset parameters: "
+                + ", ".join(parameters)
+            )
+            for (
+                cell_role,
+                cell_name,
+                device_kind,
+                instance_name,
+                location,
+            ), parameters in grouped.items()
+        ]
+        message = (
+            f"The published artifact carries {len(unresolved)} unresolved "
+            "parameter placeholder(s)"
+        )
+        if details:
+            message += ": " + "; ".join(details)
+        if ambiguous:
+            candidates = []
+            for occurrence_index, records in ambiguous.items():
+                locations = ", ".join(
+                    (
+                        f"{item['device_kind']} instance "
+                        f"{item['instance_name']!r} in {item['cell_role']} cell "
+                        f"{item['cell_name']!r} at {item['location']}"
+                    )
+                    for item in records
+                )
+                candidates.append(
+                    f"{bounded_text(examples[occurrence_index].token, limit=MAX_UNRESOLVED_TOKEN_DISPLAY_CHARS)}: "
+                    f"{locations}"
+                )
+            message += (
+                "; placeholder(s) with ambiguous view ownership: "
+                + "; ".join(candidates)
+            )
+        unmapped = [
+            occurrence.token
+            for occurrence_index, occurrence in enumerate(examples)
+            if occurrence_index not in mapped and occurrence_index not in ambiguous
+        ]
+        if unmapped:
+            message += (
+                "; placeholder(s) without bounded instance metadata: "
+                + ", ".join(
+                    bounded_text(
+                        token,
+                        limit=MAX_UNRESOLVED_TOKEN_DISPLAY_CHARS,
+                    )
+                    for token in unmapped
+                )
+            )
+        omitted = len(unresolved) - len(examples)
+        if omitted:
+            message += (
+                f"; {omitted} additional placeholder(s) omitted by the "
+                f"{MAX_UNRESOLVED_EXAMPLES}-placeholder detail limit"
+            )
+        message += "."
+        hint = (
+            "Set the listed parameters at the named artifact-local source "
+            "locations and recompile; this driver will not invent authoring values."
+        )
+        return bounded_text(message, limit=MAX_UNRESOLVED_MESSAGE_CHARS), hint
+
+    state = (
+        repr(parameters_state)
+        if isinstance(parameters_state, str)
+        and parameters_state in {"partial", "unresolved"}
+        else "'invalid'"
+    )
+    message = (
+        f"The published artifact reports validation.parameters={state}, but its "
+        "digest-bound deck carries no unresolved parameter placeholders"
+    )
+    if nonresolved_instances:
+        details = [
+            (
+                f"{item['device_kind']} instance {item['instance_name']!r} in "
+                f"{item['cell_role']} cell {item['cell_name']!r} at "
+                f"{item['location']}"
+            )
+            for item in nonresolved_instances
+        ]
+        message += "; the view marks these instances non-resolved: " + "; ".join(
+            details
+        )
+    else:
+        message += " and the view identifies no non-resolved instance"
+    message += "."
+    hint = (
+        "Recompile the named artifact-local source so the view and deck publish "
+        "matching unresolved parameter names; this driver will not invent "
+        "authoring values."
+    )
+    return bounded_text(message, limit=MAX_UNRESOLVED_MESSAGE_CHARS), hint
+
+
 def _typed_analysis(entry: object, position: int) -> dict[str, Any]:
     if not isinstance(entry, Mapping):
         raise SimraArtifactError(
@@ -359,24 +705,12 @@ def load_simra_testbench(descriptor_file: str | Path) -> SimraTestbench:
     # Simra clears simulation_ready whenever parameters are partial, and
     # "simulation_ready=false" tells an author nothing about what to bind.
     parameters_state = validation.get("parameters")
-    if parameters_state != "resolved":
-        raise SimraArtifactError(
-            "testbench.parameters.unresolved",
-            f"The published artifact reports validation.parameters={parameters_state!r}; "
-            "this driver binds no models, widths, or lengths.",
-            hint=(
-                "Re-author the testbench with explicit model/W/L parameters and recompile; "
-                "binding belongs to the authoring step, not to the run."
-            ),
-        )
-    # ``simulation_ready`` is narrower than its name suggests: Simra clears it
-    # for every testbench containing a MOS instance, because model collateral is
-    # deliberately outside the schematic contract. It therefore means "runs with
-    # no external collateral", not "is fit to simulate". Carry it as a fact and
-    # let the operation decide whether the caller supplied the missing models.
+    # Preserve the existing handoff refusal precedence for resolved artifacts.
+    # A partial artifact still takes the parameter refusal, after its published
+    # deck/view have supplied the actionable explanation.
     self_contained = validation.get("simulation_ready") is True
     handoff = validation.get("simulation_handoff")
-    if handoff not in SUPPORTED_HANDOFFS:
+    if parameters_state == "resolved" and handoff not in SUPPORTED_HANDOFFS:
         raise SimraArtifactError(
             "testbench.handoff.unsupported",
             f"The published artifact reports simulation_handoff={handoff!r}; "
@@ -418,6 +752,31 @@ def load_simra_testbench(descriptor_file: str | Path) -> SimraTestbench:
             "testbench.artifact.unsupported_schema",
             f"Expected a {VIEW_SCHEMA} view, got {view_document.get('schema')!r}.",
         )
+
+    # Simra publishes the exact missing parameter names in the deck and the
+    # owning instance/cell/source location in the typed view. Read and
+    # digest-check both before refusing so the author sees what and where to
+    # edit, without echoing the descriptor's absolute host location.
+    unresolved = _unresolved_placeholders(deck_text, top_cell=top)
+    if parameters_state != "resolved" or unresolved:
+        message, hint = _unresolved_parameter_diagnostic(
+            parameters_state=parameters_state,
+            unresolved=unresolved,
+            view_document=view_document,
+            descriptor_source=descriptor.get("source"),
+        )
+        raise SimraArtifactError(
+            "testbench.parameters.unresolved",
+            message,
+            hint=hint,
+        )
+
+    # ``simulation_ready`` is narrower than its name suggests: Simra clears it
+    # for every testbench containing a MOS instance, because model collateral is
+    # deliberately outside the schematic contract. It therefore means "runs with
+    # no external collateral", not "is fit to simulate". Carry it as a fact and
+    # let the operation decide whether the caller supplied the missing models.
+
     testbench = view_document.get("testbench")
     if not isinstance(testbench, Mapping):
         raise SimraArtifactError(
@@ -459,19 +818,6 @@ def load_simra_testbench(descriptor_file: str | Path) -> SimraTestbench:
                 "The published testbench save list contains an unbounded net name.",
             )
         saved_nets.append(name)
-
-    unresolved = sorted(set(UNRESOLVED_TOKEN_RE.findall(deck_text)))
-    if unresolved:
-        examples = unresolved[:MAX_UNRESOLVED_EXAMPLES]
-        raise SimraArtifactError(
-            "testbench.parameters.unresolved",
-            f"The published deck carries {len(unresolved)} unresolved Simra placeholder(s): "
-            + ", ".join(examples),
-            hint=(
-                "Bind the model, width, and length at authoring time and recompile; "
-                "this driver refuses to invent a PDK binding."
-            ),
-        )
 
     return SimraTestbench(
         descriptor_path=Path(descriptor_record["path"]),

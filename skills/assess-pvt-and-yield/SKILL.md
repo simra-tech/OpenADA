@@ -19,7 +19,7 @@ For every planned point, use:
 2. `openada.operation/result.series.extract/v1alpha1` with
    `openada.assertion/series.extraction.valid/v1alpha1` whenever a required
    scalar starts in a native waveform artifact;
-3. the smallest installed measurement profile: ordinary
+3. the smallest installed result operation: ordinary
    `openada.operation/result.measure/v1alpha1` with
    `openada.assertion/measurement.valid/v1alpha1`, coherent spectral
    `openada.operation/result.spectral.measure/v1alpha1` with
@@ -31,10 +31,10 @@ For every planned point, use:
    metric limit.
 
 Inspect the installed schemas and capabilities first. Do not invent a campaign,
-Monte Carlo, measurement, or statistical feature ID. If a required primitive
-is unavailable, preserve the affected planned points as not evaluated/unknown
-and report the capability gap. Do not run raw backend commands and call their
-outputs OpenADA evidence.
+Monte Carlo, result-operation, or statistical feature ID. If a required
+primitive is unavailable, preserve the affected planned points as not
+evaluated/unknown and report the capability gap. Do not run raw backend commands
+and call their outputs OpenADA evidence.
 
 ## Distinguish campaign types
 
@@ -45,7 +45,8 @@ outputs OpenADA evidence.
 - **Statistical ensemble:** samples drawn under an explicit variation model,
   seed policy, sample count, and mapping from sample ID to generated conditions.
 - **Yield assessment:** specification outcomes over the complete frozen point
-  set. It is not synonymous with simulation completion or measurement validity.
+  set. It is not synonymous with simulation completion or result-operation
+  validity.
 
 Never mix these populations into one denominator unless the campaign definition
 explicitly declares that combination.
@@ -61,7 +62,7 @@ Before execution, record:
 - for statistical work, variation scope, global seed, per-sample identity or
   derivation rule, sample count, and excluded/invalid-sample policy;
 - ordered analysis intents, required feature IDs, source signals, semantic
-  measurements, and explicit specifications;
+  result operations, and explicit specifications;
 - fresh evidence destination per point/analysis and resource/time ceilings;
 - resume policy, collision policy, stop conditions, and authorization for a
   potentially large campaign.
@@ -76,22 +77,22 @@ Require a plausible nominal baseline before broad execution:
 
 1. Run the same analysis intents intended for the matrix at the declared
    nominal point.
-2. Require valid analysis evidence, valid required measurements, and evaluated
-   nominal specifications.
-3. Stop if the nominal point is unknown, required measurement/specification
+2. Require valid analysis evidence, valid required operation results, and
+   evaluated nominal specifications.
+3. Stop if the nominal point is unknown, required result-operation/specification
    capabilities are unavailable, or the testbench does not represent the
    intended mode.
 
-A valid nominal simulation with unevaluated measurements is not a campaign
+A valid nominal simulation with unevaluated operation results is not a campaign
 gate. Ask whether the user wants a plan-only artifact or the missing primitive
 implemented before consuming broad compute.
 
 ## Execute and classify each point
 
-Run points independently with immutable point IDs. Bind every measurement to
-the exact point's source artifact and every specification to the exact
-measurement result. Do not reuse a nominal scalar or a measurement from another
-corner.
+Run points independently with immutable point IDs. Bind every operation result
+to the exact point's source artifact and every specification to the exact
+operation result. Do not reuse a nominal scalar or an operation result from
+another corner.
 
 Classify required metrics first, then the point:
 
@@ -99,12 +100,12 @@ Classify required metrics first, then the point:
 - **point fail:** at least one required specification validly fails; retain any
   additional unknown metrics instead of hiding them;
 - **point unknown:** no specification validly fails, but any required analysis,
-  measurement, specification, capability, or provenance condition failed before
+  result operation, specification, capability, or provenance condition failed before
   specification evaluation, is unknown, unavailable, invalid, or was not
   evaluated.
 
 Keep execution failures, terminal non-convergence, malformed evidence, invalid
-measurements, and genuine specification failures as distinct reason codes.
+operation results, and genuine specification failures as distinct reason codes.
 Simulation `engineering.status: fail` means the simulation assertion's solver
 failure, not an automatic specification failure.
 
@@ -149,8 +150,8 @@ Return:
 
 1. frozen campaign identity, dimensions, point count, seed policy, and coverage;
 2. nominal-gate result and capabilities actually used;
-3. pass/fail/unknown tables at analysis, measurement, specification, and point
-   layers;
+3. pass/fail/unknown tables at analysis, result-operation, specification, and
+   point layers;
 4. raw fractions/bounds with exact denominators and reason-code clusters;
 5. artifact lineage, retries, provenance limitations, and missing primitives;
 6. one smallest next experiment or capability addition.

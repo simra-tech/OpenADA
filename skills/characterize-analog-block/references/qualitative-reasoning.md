@@ -91,8 +91,8 @@ Before reporting the claim:
 
 Use an OpenADA operation only when the supplied project contains an
 authoritative executable target, required models and conditions, and a
-supported semantic operation that measures the same observable. Use the
-smallest such operation.
+supported semantic operation that produces the corresponding simulation
+result. Use the smallest such operation.
 
 If those inputs are absent, retain the qualitative result as source-derived.
 Describe a possible simulation only as a proposed experiment, list the missing

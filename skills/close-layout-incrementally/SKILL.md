@@ -101,7 +101,7 @@ Run only the next unproven gate and stop at its first regression:
 
 A DRC pass does not prove connectivity. An LVS pass does not prove parasitic or
 performance closure. A PEX file does not prove a supplied budget. Keep
-execution, engineering, measurement, and specification statuses separate.
+execution, engineering, derived-result, and specification statuses separate.
 
 Likewise, a connected PDN and a supplied voltage-source file do not by
 themselves prove IR-drop coverage. For every reported rail, require attributed
@@ -150,7 +150,7 @@ For every increment, record:
 | DRC | exact deck/top/report identity and normalized status |
 | LVS | exact schematic/setup/top/report identity and normalized status |
 | PEX | extractor identity, extracted artifact hash, and changed RC metrics |
-| Performance | exact test, condition, measurement, limit, and result |
+| Performance | exact test, condition, result operation, limit, and result |
 | Decision | accept, repair, revert, or blocked, with one reason |
 
 Never overwrite a passing checkpoint or reuse an evidence destination. A

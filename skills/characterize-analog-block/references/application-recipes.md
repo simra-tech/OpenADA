@@ -23,12 +23,13 @@ Apply these gates to every application:
 1. Freeze the authoritative DUT, testbench, PDK/model revision, mode, supply,
    stimulus, load, temperature, and corner.
 2. Establish nominal OP evidence before interpreting AC, transient, noise, or
-   statistical behavior. Validly measure the topology-specific bias, headroom,
-   common-mode, and current facts; an OP run alone does not prove they are good.
+   statistical behavior. Use supported result operations to derive the simulated
+   topology-specific bias, headroom, common-mode, and current facts; an OP run
+   alone does not prove they are good.
 3. Preserve one operation assertion per invocation and one evidence destination
    per run.
-4. Bind every measurement to exact source artifacts and every specification to
-   a measurement, units, conditions, and an explicit bound.
+4. Bind every simulation result to exact source artifacts and every specification
+   to a result-operation envelope, units, conditions, and an explicit bound.
 5. Delay broad PVT or statistical campaigns until nominal behavior and the
    metric definitions are credible.
 
@@ -130,7 +131,7 @@ Use this order for ADC, DAC, switched-capacitor, mixer-like, or sampled paths:
 1. **OP and phase context:** identify the exact clock phase, switch state,
    common mode, references, and loading represented by any static evidence.
 2. **DC:** transfer, endpoint behavior, monotonicity, or code boundaries only
-   when the stimulus/code sequence and measurement definition are explicit.
+   when the stimulus/code sequence and simulation-result definition are explicit.
 3. **Transient:** capture, settling, residue, decision timing, clock sequence,
    and source/load interaction with exact phase identities.
 4. **Spectrum:** route FFT, harmonics, SFDR, or SNDR-like questions to
@@ -145,7 +146,7 @@ oversampling ratio for FFT length or samples per period.
 
 - **Extracted or post-layout:** identify the exact extraction revision and
   included parasitic scope. Compare with pre-layout only through matched
-  conditions, measurements, and lineage.
+  conditions, simulation results, and lineage.
 - **Low-voltage or body-sensitive designs:** make body domains, common-mode,
   headroom, and device operating intent explicit; do not assume bulk ties.
 - **High-voltage or power devices:** ordinary simulation evidence does not

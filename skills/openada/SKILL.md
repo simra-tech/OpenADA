@@ -203,9 +203,9 @@ testbench-simulate` is a deprecated alias that emits
 `simulation.operation.deprecated` and delegates.
 
 A model-free deck must carry exactly one self-contained top-level `.op`, `.dc`,
-`.ac`, or `.tran` with parseable closed arguments, and no includes,
-measurements, print directives or control blocks. Require the selected driver's
-advertised feature: ngspice supports OP/DC/AC/TRAN; Xyce supports DC/AC/TRAN and
+`.ac`, or `.tran` with parseable closed arguments, and no includes, native
+`.measure` directives, print directives, or control blocks. Require the selected
+driver's advertised feature: ngspice supports OP/DC/AC/TRAN; Xyce supports DC/AC/TRAN and
 rejects OP. Omitting `--backend` selects ngspice for an artifact, a `--pdk` or a
 `--models` request, and otherwise leaves the native ngspice interface active -
 which is a tool invocation, not a semantic claim, and reports no
@@ -246,8 +246,8 @@ value out of a log. You rarely assemble this by hand: a completed `simulate`
 retains its envelope as `simulate.result.json`, writes a ready-to-run
 `simulate.selection.json`, and prints the exact `openada extract` command as
 `claim.measurement.typed_chain`. Run it. A run reporting
-`claim.measurement.unsupported` produced nothing that may be called measured,
-simulated or verified. The selection is a closed document:
+`claim.measurement.unsupported` produced no supported scalar result; do not
+report a value as simulated or verified. The selection is a closed document:
 
 ```json
 {
@@ -292,10 +292,10 @@ Xyce ASCII padded Spice3 raw evidence. Select exact real or imaginary Cartesian
 components; it never derives magnitude, phase, differential expressions, or
 unit conversions. Conditions are caller-declared and digest-bound, not inferred
 from simulator state. Retain the extraction envelope beside downstream results:
-it carries the verified native binding that immutable measurement lineage still
-labels `unverified`.
+it carries the verified native binding that immutable result-operation lineage
+still labels `unverified`.
 
-For an ordinary scalar, write one closed measurement object and run:
+For an ordinary scalar, write one closed `result.measure` request object and run:
 
 ```bash
 openada measure \
@@ -332,7 +332,7 @@ openada transfer \
   > evidence/transfer-result.json
 ```
 
-`transfer` is the only operation that measures a **ratio**; `measure` reads one signal and has
+`transfer` is the only operation that derives a **ratio**; `measure` reads one signal and has
 no kind for a gain, a differential gain or an impedance. Metrics: `low_frequency_gain_db`,
 `low_frequency_impedance` (ohms, output V over input A), `bandwidth_3db`, `unity_gain_frequency`,
 `phase_margin`; ambiguous crossings are rejected and gain margin is absent. An operand is `{real,
@@ -349,8 +349,8 @@ openada evaluate \
   > evidence/specification-result.json
 ```
 
-`evaluate` accepts ordinary, spectral, or transfer measurement envelopes. A
-measurement pass is not a specification pass, and a missing limit is not
+`evaluate` accepts ordinary, spectral, or transfer result envelopes. A
+result-operation pass is not a specification pass, and a missing limit is not
 permission to invent one.
 
 ## Use one explicit external provider

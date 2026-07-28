@@ -7,7 +7,7 @@ metric is already supported.
 | Engineering question | Required evidence chain | Implemented boundary |
 |---|---|---|
 | Bias, node voltage, branch current at one operating point | OP simulation → exact series extraction → `sample_at`, minimum, maximum, or mean as appropriate | ngspice OP only; exact native voltage/current selectors |
-| Static transfer or line/load sweep extrema and mean | DC simulation → series extraction → scalar measurement | Explicit typed single-source sweep; no arbitrary nested sweep |
+| Static transfer or line/load sweep extrema and mean | DC simulation → series extraction → `result.measure` | Explicit typed single-source sweep; no arbitrary nested sweep |
 | Threshold location or crossing | DC or transient simulation → series extraction → `crossing` | Exact threshold unit and directed occurrence; adjacent-point linear interpolation |
 | Rise or fall time | Transient simulation → series extraction → `rise_time` or `fall_time` | Caller supplies absolute lower/upper thresholds and occurrence |
 | Settling time | Transient simulation → series extraction → `settling_time` | Caller supplies target, tolerance, reference, hold duration, and optional window |
@@ -16,7 +16,7 @@ metric is already supported.
 | AC output-over-input trace and first-frequency gain | AC simulation → four Cartesian series → `result.transfer.measure` | Same-unit input/output phasors; first positive simulated frequency is explicitly not DC |
 | −3 dB bandwidth or unity-gain frequency | AC transfer trace → `result.transfer.measure` | Exactly one falling crossing; linear-value interpolation over log10 frequency |
 | Negative-feedback phase margin | Reviewed loop-gain testbench → AC transfer trace → `result.transfer.measure` | Explicit negative-feedback interpretation; 180° plus unwrapped phase at the unique falling unity crossing |
-| Explicit scalar limit | Any measured scalar → `specification.evaluate` | Exact units and exact condition bindings; lower and/or upper bound |
+| Explicit scalar limit | Any passing scalar result-operation envelope → `specification.evaluate` | Exact units and exact condition bindings; lower and/or upper bound |
 | Valid OP/DC/AC/TRAN native analysis evidence | `circuit.simulate/v1alpha2` | ngspice OP/DC/AC/TRAN; Xyce DC/AC/TRAN |
 | Explicit manifest-declared circuit-simulation provider execution | Explicit manifest + complete request → `provider invoke` | `circuit.simulate/v1alpha2` only; exact selector, canonical filesystem inputs/fresh destination, local JSON-stdio, wait-only; conformance metadata is self-declared; no discovery or MCP |
 

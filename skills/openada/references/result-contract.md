@@ -12,7 +12,7 @@ OpenADA emits one JSON object per operation using schema identifier
 - `inputs`: Native input files with roles, sizes, and SHA-256 hashes.
 - `artifacts`: Generated output/evidence files with roles, sizes, and SHA-256 hashes.
 - `diagnostics`: Bounded messages with stable codes, severities, and optional recovery hints.
-- `data`: Operation-specific normalized measurements or report details.
+- `data`: Operation-specific normalized result data or report details.
 - `provenance`: OpenADA, Python, OS, architecture, and timestamp metadata.
 
 ## Execution statuses

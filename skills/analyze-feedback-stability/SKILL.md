@@ -32,7 +32,8 @@ Use these exact layers:
 Inspect capability records, then run `openada profile show
 openada.operation/result.transfer.measure/v1alpha1` before constructing a
 request. Do not invent a metric kind or fall back to a backend expression when
-the requested measurement is not supported. Mark that metric **not evaluated**.
+the requested `result.transfer.measure` metric kind is not supported. Mark that
+metric **not evaluated**.
 None of these layers alone establishes silicon, reliability, or signoff.
 
 ## Freeze one baseline
@@ -65,16 +66,17 @@ preserves the relevant DC state and loading.
    `openada.feature/simulation.analysis.op/v1alpha1` and request nominal OP
    evidence under the frozen conditions.
 2. Treat analysis-evidence pass only as proof of valid OP evidence.
-3. Use the measurement contract for the topology-specific common-mode, bias,
-   rail, headroom, saturation, or device-operating facts needed by the review.
+3. Use `result.measure` for the topology-specific common-mode, bias, rail,
+   headroom, saturation, or device-operating facts needed by the review.
 4. Evaluate explicit acceptable ranges through the specification contract when
    they exist. Otherwise label the engineering acceptance as an identified
    reviewer assumption, not a specification result.
 
 Stop quantitative stability interpretation when OP evidence fails or is
-unknown, when required DC measurements are invalid/unavailable, or when the
-observed state is inconsistent with the intended loop mode. Report that gate;
-do not explain railing, saturation, or a floating state as phase-margin failure.
+unknown, when required DC `result.measure` results are invalid/unavailable, or
+when the simulated state is inconsistent with the intended loop mode. Report
+that gate; do not explain railing, saturation, or a floating state as
+phase-margin failure.
 
 ## Acquire complete loop evidence
 
@@ -82,7 +84,8 @@ Require capability `openada.feature/simulation.analysis.ac/v1alpha1` for the
 declared frequency range. Bind the request to the same baseline and retain the
 exact generated simulator input and native result artifacts.
 
-After analysis evidence passes, request supported measurements that preserve:
+After analysis evidence passes, request supported `result.transfer.measure`
+metrics that preserve:
 
 - loop-response signal definition, orientation, and sign convention;
 - full magnitude and unwrapped phase over the declared frequency range;
@@ -109,16 +112,16 @@ crossing is typed `not_found`; multiple falling crossings are `unknown`. Gain
 margin, phase-crossing search, favorable-crossing selection, smoothing,
 fitting, and a stability claim remain unavailable. Preserve the valid AC
 artifact and mark those metrics not evaluated. A plot may motivate a
-hypothesis, but it is not a contract measurement.
+hypothesis, but it is not a `result.transfer.measure` result.
 
 ## Correlate the closed loop
 
 Use a separate AC or transient request, with the matching advertised feature,
 for the exact closed-loop input/output and common-mode probes. Current profiles
-can measure declared settling behavior or the first-simulated-frequency AC
+can derive declared settling behavior or the first-simulated-frequency AC
 transfer gain from evidence bound to the same baseline. Overshoot and ringing
 metrics remain unavailable; do not infer them from a plot or rename an
-extremum measurement.
+`result.measure` extremum result.
 
 Do not answer a closed-loop question from an open-loop signal. Do not declare a
 physical instability until the evidence distinguishes it from:
@@ -127,7 +130,8 @@ physical instability until the evidence distinguishes it from:
 - floating nodes, saturation, or invalid bias;
 - convergence or numerical artifacts;
 - model/configuration changes or simulator-version effects;
-- incorrect injection, probe orientation, or measurement convention.
+- incorrect injection, probe orientation, or `result.transfer.measure`
+  convention.
 
 ## Evaluate specifications and one hypothesis
 
@@ -146,17 +150,17 @@ compensation, or authoritative design data without authorization.
 
 | State | Interpretation |
 |---|---|
-| Analysis evidence pass | The requested native analysis is trustworthy enough for supported measurements |
+| Analysis evidence pass | The requested native analysis is trustworthy enough for supported result operations |
 | Analysis evidence fail | The solver's defined terminal failure is proven; no margin conclusion follows |
 | Analysis evidence unknown | Resolve evidence, binding, configuration, or execution uncertainty |
-| Transfer measurement pass | The stated metric is valid for its exact input/output phasors, interpretation, and method |
-| Measurement fail/unknown/unavailable | Margin or response is not evaluated; repair or add the semantic primitive |
+| `result.transfer.measure` pass | The stated metric is valid for its exact input/output phasors, interpretation, and method |
+| `result.transfer.measure` fail/unknown/unavailable | Margin or response is not evaluated; repair or add the semantic primitive |
 | Specification pass/fail | Only the explicit limit at the frozen condition was evaluated |
 
 ## Report
 
 Return the frozen baseline, loop classification, DC gate, injection and probes,
-all observed crossovers, closed-loop correlation, contract status at each
+all simulated crossovers, closed-loop correlation, contract status at each
 layer, exact driver/artifact lineage, confounders, and one smallest next
-experiment. Mark statements as **observed**, **inferred**, or **proposed**.
+experiment. Mark statements as **simulated**, **inferred**, or **proposed**.
 Finish with `signoff: not claimed`.

@@ -265,7 +265,11 @@ def test_unresolved_placeholder_is_refused_without_binding(tmp_path: Path) -> No
     deck = descriptor.parent / "design.spice"
     deck.write_text(
         deck.read_text(encoding="utf-8").replace(
-            "NF=1", "NF={SIMRA_UNRESOLVED_M_1_NF}"
+            "nmos_lv W=2u L=150n M=1 NF=1",
+            (
+                "SIMRA_UNRESOLVED_M_1_MODEL W=2u L=150n M=1 "
+                "NF={SIMRA_UNRESOLVED_M_1_NF}"
+            ),
         ),
         encoding="utf-8",
     )
@@ -274,17 +278,248 @@ def test_unresolved_placeholder_is_refused_without_binding(tmp_path: Path) -> No
     with pytest.raises(SimraArtifactError) as excinfo:
         load_simra_testbench(descriptor)
     assert excinfo.value.code == "testbench.parameters.unresolved"
-    assert "SIMRA_UNRESOLVED_M_1_NF" in excinfo.value.message
+    assert excinfo.value.message == (
+        "The published artifact carries 2 unresolved parameter placeholder(s): "
+        "nmos instance 'M_1' in testbench cell 'NMOS_CS_TB' at artifact-local "
+        "design.ord:15:9 has unset parameters: model, nf."
+    )
+    assert excinfo.value.hint == (
+        "Set the listed parameters at the named artifact-local source locations "
+        "and recompile; this driver will not invent authoring values."
+    )
+    assert str(tmp_path) not in excinfo.value.message
+
+
+def test_unresolved_parameter_names_the_circuit_cell_and_source_line(
+    tmp_path: Path,
+) -> None:
+    descriptor = _published(tmp_path, MODEL_FREE)
+    deck = descriptor.parent / "design.spice"
+    deck.write_text(
+        deck.read_text(encoding="utf-8").replace(
+            "R_LOAD OUTP OUTN 100",
+            "R_LOAD OUTP OUTN {SIMRA_UNRESOLVED_R_LOAD_R}",
+        ),
+        encoding="utf-8",
+    )
+    view_path = descriptor.parent / "schematic.simra.json"
+    view = json.loads(view_path.read_text(encoding="utf-8"))
+    circuit = next(
+        cell
+        for cell in view["cells"]
+        if cell["name"] == "MODEL_FREE_DIFF_DRIVER_V2"
+    )
+    resistor = next(
+        instance
+        for instance in circuit["entities"]["instances"]
+        if instance["name"] == "R_LOAD"
+    )
+    resistor["parameters"] = {}
+    resistor["parameter_status"] = "unresolved"
+    view_path.write_text(
+        json.dumps(view, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    _republish(descriptor, parameters="partial", simulation_ready=False)
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_testbench(descriptor)
+    assert excinfo.value.code == "testbench.parameters.unresolved"
+    assert excinfo.value.message == (
+        "The published artifact carries 1 unresolved parameter placeholder(s): "
+        "resistor instance 'R_LOAD' in circuit cell 'MODEL_FREE_DIFF_DRIVER_V2' "
+        "at artifact-local design.ord:37:9 has unset parameters: r."
+    )
+
+
+def test_netlist_cell_context_disambiguates_repeated_instance_names(
+    tmp_path: Path,
+) -> None:
+    descriptor = _published(tmp_path, MODEL_FREE)
+    deck = descriptor.parent / "design.spice"
+    deck.write_text(
+        deck.read_text(encoding="utf-8").replace(
+            "R_LOAD OUTP OUTN 100",
+            "R_LOAD OUTP OUTN {SIMRA_UNRESOLVED_R_LOAD_R}",
+        ),
+        encoding="utf-8",
+    )
+    view_path = descriptor.parent / "schematic.simra.json"
+    view = json.loads(view_path.read_text(encoding="utf-8"))
+    circuit = next(
+        cell
+        for cell in view["cells"]
+        if cell["name"] == "MODEL_FREE_DIFF_DRIVER_V2"
+    )
+    original = next(
+        instance
+        for instance in circuit["entities"]["instances"]
+        if instance["name"] == "R_LOAD"
+    )
+    original["parameter_status"] = "unresolved"
+    duplicate = json.loads(json.dumps(circuit))
+    duplicate["id"] = "cell:OTHER_CIRCUIT"
+    duplicate["name"] = "OTHER_CIRCUIT"
+    repeated = next(
+        instance
+        for instance in duplicate["entities"]["instances"]
+        if instance["name"] == "R_LOAD"
+    )
+    repeated["parameter_status"] = "unresolved"
+    repeated["source"] = {"artifact": "design.ord", "column": 1, "line": 999}
+    view["cells"].append(duplicate)
+    view_path.write_text(
+        json.dumps(view, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    _republish(descriptor, parameters="partial", simulation_ready=False)
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_testbench(descriptor)
+    assert excinfo.value.code == "testbench.parameters.unresolved"
+    assert "circuit cell 'MODEL_FREE_DIFF_DRIVER_V2'" in excinfo.value.message
+    assert "design.ord:37:9" in excinfo.value.message
+    assert "OTHER_CIRCUIT" not in excinfo.value.message
+    assert "design.ord:999:1" not in excinfo.value.message
+
+
+def test_unresolved_placeholder_refusal_and_message_remain_bounded(
+    tmp_path: Path,
+) -> None:
+    descriptor = _published(tmp_path, NMOS_SOURCE)
+    deck = descriptor.parent / "design.spice"
+    oversized_parameter = "P" * 5_000
+    deck.write_text(
+        deck.read_text(encoding="utf-8").replace(
+            "NF=1",
+            f"NF={{SIMRA_UNRESOLVED_M_1_{oversized_parameter}}}",
+        ),
+        encoding="utf-8",
+    )
+    _republish(descriptor)
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_testbench(descriptor)
+    assert excinfo.value.code == "testbench.parameters.unresolved"
+    assert len(excinfo.value.message) <= 3_500
+    assert "[truncated]" in excinfo.value.message
+    assert str(tmp_path) not in excinfo.value.message
+
+
+def test_unresolved_vsin_names_testbench_parameters_without_leaking_a_host_path(
+    tmp_path: Path,
+) -> None:
+    descriptor = _published(tmp_path, NMOS_SOURCE)
+    deck = descriptor.parent / "design.spice"
+    deck.write_text(
+        deck.read_text(encoding="utf-8").replace(
+            "V_G VG VSS DC 900m",
+            (
+                "V_G VG VSS DC 0 AC 1 SIN(0 "
+                "{SIMRA_UNRESOLVED_V_G_AMPLITUDE} "
+                "{SIMRA_UNRESOLVED_V_G_FREQ} "
+                "{SIMRA_UNRESOLVED_V_G_DELAY} "
+                "{SIMRA_UNRESOLVED_V_G_DAMPING})"
+            ),
+        ),
+        encoding="utf-8",
+    )
+    view_path = descriptor.parent / "schematic.simra.json"
+    view = json.loads(view_path.read_text(encoding="utf-8"))
+    testbench = next(cell for cell in view["cells"] if cell["name"] == "NMOS_CS_TB")
+    source = next(
+        instance
+        for instance in testbench["entities"]["instances"]
+        if instance["name"] == "V_G"
+    )
+    source["kind"] = "vsin"
+    source["parameters"] = {"ac_mag": "1", "dc": "0"}
+    source["parameter_status"] = "partial"
+    source["source"]["artifact"] = "/home/private/testbench.ord"
+    view_path.write_text(
+        json.dumps(view, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    _republish(descriptor, parameters="partial", simulation_ready=False)
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_testbench(descriptor)
+    assert excinfo.value.code == "testbench.parameters.unresolved"
+    assert excinfo.value.message == (
+        "The published artifact carries 4 unresolved parameter placeholder(s): "
+        "vsin instance 'V_G' in testbench cell 'NMOS_CS_TB' at artifact-local "
+        "design.ord:13:9 has unset parameters: amplitude, freq, delay, damping."
+    )
+    assert "/home/private" not in excinfo.value.message
+    assert "model/W/L" not in (excinfo.value.hint or "")
+
+
+def test_malformed_parameter_metadata_still_gets_a_typed_refusal(
+    tmp_path: Path,
+) -> None:
+    descriptor = _published(tmp_path, MODEL_FREE)
+    deck = descriptor.parent / "design.spice"
+    deck.write_text(
+        deck.read_text(encoding="utf-8").replace(
+            "R_LOAD OUTP OUTN 100",
+            "R_LOAD OUTP OUTN {SIMRA_UNRESOLVED_R_LOAD_R}",
+        ),
+        encoding="utf-8",
+    )
+    view_path = descriptor.parent / "schematic.simra.json"
+    view = json.loads(view_path.read_text(encoding="utf-8"))
+    circuit = next(
+        cell
+        for cell in view["cells"]
+        if cell["name"] == "MODEL_FREE_DIFF_DRIVER_V2"
+    )
+    resistor = next(
+        instance
+        for instance in circuit["entities"]["instances"]
+        if instance["name"] == "R_LOAD"
+    )
+    circuit["kind"] = {"malformed": True}
+    resistor["parameter_status"] = ["malformed"]
+    view_path.write_text(
+        json.dumps(view, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    _republish(descriptor, parameters={"malformed": True})
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_testbench(descriptor)
+    assert excinfo.value.code == "testbench.parameters.unresolved"
+    assert "validation.parameters='invalid'" not in excinfo.value.message
+    assert "published cell 'MODEL_FREE_DIFF_DRIVER_V2'" in excinfo.value.message
+
+
+def test_malformed_validation_parameter_state_still_gets_a_typed_refusal(
+    tmp_path: Path,
+) -> None:
+    descriptor = _published(tmp_path, MODEL_FREE)
+    _republish(descriptor, parameters={"malformed": True})
+
+    with pytest.raises(SimraArtifactError) as excinfo:
+        load_simra_testbench(descriptor)
+    assert excinfo.value.code == "testbench.parameters.unresolved"
+    assert "validation.parameters='invalid'" in excinfo.value.message
 
 
 def test_partial_parameter_state_is_refused_before_readiness(tmp_path: Path) -> None:
     """The actionable parameter state must win over the derived readiness flag."""
 
     descriptor = _published(tmp_path, MODEL_FREE)
-    _republish(descriptor, parameters="partial", simulation_ready=False)
+    _republish(
+        descriptor,
+        parameters="partial",
+        simulation_handoff="unsupported",
+        simulation_ready=False,
+    )
     with pytest.raises(SimraArtifactError) as excinfo:
         load_simra_testbench(descriptor)
     assert excinfo.value.code == "testbench.parameters.unresolved"
+    assert "no unresolved parameter placeholders" in excinfo.value.message
+    assert "model/W/L" not in (excinfo.value.hint or "")
 
 
 def test_a_non_testbench_artifact_is_refused(tmp_path: Path) -> None:
