@@ -1,0 +1,73 @@
+{
+  "schema": "openada-pdk-conformance-fixture/v1",
+  "pdk_id": "gf180mcuD",
+  "pdk_revision": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+  "ngspice_version": "45.2",
+  "corner": "typical",
+  "temperature_c": 27.0,
+  "device": {
+    "role": "nmos.core",
+    "native_model": "nfet_03v3",
+    "native_prefix": "X",
+    "pins": ["d", "g", "s", "b"],
+    "w_m": 2.2e-7,
+    "l_m": 2.8e-7,
+    "nf": 1,
+    "m": 1
+  },
+  "bias": {
+    "vds_v": 3.3,
+    "vgs_v": 3.3
+  },
+  "observable": {
+    "name": "i(vd_ref)",
+    "unit": "A",
+    "expected": -0.0001434000642901236,
+    "relative_tolerance": 5e-5,
+    "absolute_tolerance": 1e-12
+  },
+  "pipeline": {
+    "rewritten_device_count": 7,
+    "vectors": {
+      "reference": "i(vd_ref)",
+      "unit_equivalent": "i(vd_units)",
+      "permuted_wrapper": "i(vd_permuted)",
+      "reversed_sense": "i(vd_flip)",
+      "double_width": "i(vd_double)",
+      "lower_supply": "i(vd_low)",
+      "higher_supply": "i(vd_high)"
+    }
+  },
+  "metamorphic": {
+    "equivalence_relative_tolerance": 1e-10,
+    "equivalence_absolute_tolerance": 1e-14,
+    "double_width_ratio_min": 1.5,
+    "double_width_ratio_max": 2.5
+  },
+  "independent_native_width_crosscheck": {
+    "w1_m": 2.2e-7,
+    "i1_a": -0.0001434000642901236,
+    "w2_m": 4.4e-7,
+    "i2_a": -0.00024364634971099777,
+    "ratio": 1.6990672278783523
+  },
+  "documentation": [
+    {
+      "path": "libs.tech/xschem/tests/test_nfet_03v3.sch",
+      "supports": "design.ngspice before typical .lib, 3.3 V sweep, W=0.22u, L=0.28u and nfet_03v3"
+    },
+    {
+      "path": "libs.tech/ngspice/design.ngspice",
+      "supports": "fnoicor and statistical switch definitions required by every model card"
+    },
+    {
+      "path": "libs.tech/ngspice/sm141064.ngspice",
+      "supports": "typical section, d g s b subcircuit and the complete bin grid"
+    }
+  ],
+  "known_limitations": [
+    "The minimum-width device scales by 1.6990672278783523 when W doubles from 0.22 um to 0.44 um. A hand-written native two-device deck reproduces the pipeline exactly; the documented 1.5-to-2.5 metamorphic band is deliberately broader than the initially tried 1.7 floor.",
+    "The fixture omits ad/as/pd/ps, which GF180 treats as zero; the OP current is covered but junction-capacitance-dependent AC/transient behavior is not.",
+    "The typical fixture does not establish I/O-device, skew-corner, passive or mismatch conformance."
+  ]
+}

@@ -1,0 +1,35 @@
+SkyWater SKY130 model-free operating-point and metamorphic fixture
+.subckt permuted_nmos g b d s
+Mwrapped d g s b nmos.core W=1e-6 L=1.5e-7 M=1 NF=1
+.ends permuted_nmos
+
+Vd_ref d_ref 0 1.8
+Vg_ref g_ref 0 1.8
+Mref d_ref g_ref 0 0 nmos.core W=1e-6 L=1.5e-7 M=1 NF=1
+
+Vd_units d_units 0 1.8
+Vg_units g_units 0 1.8
+Munits d_units g_units 0 0 nmos.core W=1u L=0.15u M=1 NF=1
+
+Vd_permuted d_permuted 0 1.8
+Vg_permuted g_permuted 0 1.8
+Xpermuted g_permuted 0 d_permuted 0 permuted_nmos
+
+Vd_flip 0 d_flip -1.8
+Vg_flip g_flip 0 1.8
+Mflip d_flip g_flip 0 0 nmos.core W=1e-6 L=1.5e-7 M=1 NF=1
+
+Vd_double d_double 0 1.8
+Vg_double g_double 0 1.8
+Mdouble d_double g_double 0 0 nmos.core W=2e-6 L=1.5e-7 M=1 NF=1
+
+Vd_low d_low 0 0.9
+Vg_low g_low 0 1.8
+Mlow d_low g_low 0 0 nmos.core W=1e-6 L=1.5e-7 M=1 NF=1
+
+Vd_high d_high 0 1.35
+Vg_high g_high 0 1.8
+Mhigh d_high g_high 0 0 nmos.core W=1e-6 L=1.5e-7 M=1 NF=1
+
+.op
+.end

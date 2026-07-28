@@ -1,0 +1,70 @@
+{
+  "schema": "openada-pdk-conformance-fixture/v1",
+  "pdk_id": "freepdk45",
+  "pdk_revision": "1.4",
+  "ngspice_version": "45.2",
+  "corner": "nom",
+  "temperature_c": 27.0,
+  "device": {
+    "role": "nmos.core",
+    "native_model": "NMOS_VTG",
+    "native_prefix": "M",
+    "pins": ["d", "g", "s", "b"],
+    "w_m": 1e-6,
+    "l_m": 5e-8,
+    "nf": 1,
+    "m": 1
+  },
+  "bias": {
+    "vds_v": 1.0,
+    "vgs_v": 1.0
+  },
+  "observable": {
+    "name": "i(vd_ref)",
+    "unit": "A",
+    "expected": -0.0009791805653814982,
+    "relative_tolerance": 5e-5,
+    "absolute_tolerance": 1e-12
+  },
+  "pipeline": {
+    "rewritten_device_count": 7,
+    "vectors": {
+      "reference": "i(vd_ref)",
+      "unit_equivalent": "i(vd_units)",
+      "permuted_wrapper": "i(vd_permuted)",
+      "reversed_sense": "i(vd_flip)",
+      "double_width": "i(vd_double)",
+      "lower_supply": "i(vd_low)",
+      "higher_supply": "i(vd_high)"
+    }
+  },
+  "metamorphic": {
+    "equivalence_relative_tolerance": 1e-10,
+    "equivalence_absolute_tolerance": 1e-14,
+    "double_width_ratio_min": 1.5,
+    "double_width_ratio_max": 2.5
+  },
+  "documentation": [
+    {
+      "path": "ncsu_basekit/doc/FreePDK45_Manual.txt",
+      "supports": "PTM provenance, VTG flavor and nominal Ion=975.5 uA/um at 1.0 V"
+    },
+    {
+      "path": "ncsu_basekit/doc/FreePDK45_Release_Notes.txt",
+      "supports": "nominal, fast and slow HSPICE model directories"
+    },
+    {
+      "path": "ncsu_basekit/models/hspice/tran_models/models_nom/NMOS_VTG.inc",
+      "supports": "flat nominal level-54 NMOS_VTG model with tnom=27 and no library section"
+    }
+  ],
+  "documentation_crosscheck": {
+    "manual_ion_a_per_um": 0.0009755,
+    "native_l45m_a": -0.00115074,
+    "native_l50m_a": -0.0009791805653814982
+  },
+  "known_limitations": [
+    "The manual omits the channel length used for its Ion table: L=45 nm disagrees by about 18 percent, while L=50 nm agrees within 0.38 percent. The 50 nm choice is recorded, not hidden.",
+    "These are HSPICE-targeted predictive models; an ngspice result is compatibility evidence, not fabrication or signoff evidence."
+  ]
+}

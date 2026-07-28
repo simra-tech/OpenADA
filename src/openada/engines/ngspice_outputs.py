@@ -211,34 +211,50 @@ def _open_regular_file(
     limits: ValidationLimits,
     format_name: str,
     dir_fd: int | None = None,
+    _source_fd: int | None = None,
 ) -> tuple[BinaryIO, os.stat_result] | OutputValidation:
     candidate = Path(path)
-    try:
-        path_stat = os.stat(candidate, dir_fd=dir_fd, follow_symlinks=False)
-    except FileNotFoundError:
-        return _invalid("file.not_found", format_name=format_name)
-    except (OSError, ValueError):
-        return _invalid("file.unreadable", format_name=format_name)
-    if not stat.S_ISREG(path_stat.st_mode):
-        return _invalid(
-            "file.not_regular",
-            format_name=format_name,
-            size=path_stat.st_size,
+    path_stat: os.stat_result | None = None
+    descriptor: int | None = None
+    if _source_fd is None:
+        try:
+            path_stat = os.stat(candidate, dir_fd=dir_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            return _invalid("file.not_found", format_name=format_name)
+        except (OSError, ValueError):
+            return _invalid("file.unreadable", format_name=format_name)
+        if not stat.S_ISREG(path_stat.st_mode):
+            return _invalid(
+                "file.not_regular",
+                format_name=format_name,
+                size=path_stat.st_size,
+            )
+
+        flags = (
+            os.O_RDONLY
+            | getattr(os, "O_CLOEXEC", 0)
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_NONBLOCK", 0)
         )
+        try:
+            descriptor = os.open(candidate, flags, dir_fd=dir_fd)
+        except FileNotFoundError:
+            return _invalid("file.not_found", format_name=format_name)
+        except (OSError, ValueError):
+            return _invalid("file.unreadable", format_name=format_name)
+    else:
+        try:
+            descriptor = os.dup(_source_fd)
+            os.lseek(descriptor, 0, os.SEEK_SET)
+        except (OSError, ValueError):
+            if descriptor is not None:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+            return _invalid("file.unreadable", format_name=format_name)
 
-    flags = (
-        os.O_RDONLY
-        | getattr(os, "O_CLOEXEC", 0)
-        | getattr(os, "O_NOFOLLOW", 0)
-        | getattr(os, "O_NONBLOCK", 0)
-    )
-    try:
-        descriptor = os.open(candidate, flags, dir_fd=dir_fd)
-    except FileNotFoundError:
-        return _invalid("file.not_found", format_name=format_name)
-    except (OSError, ValueError):
-        return _invalid("file.unreadable", format_name=format_name)
-
+    assert descriptor is not None
     try:
         file_stat = os.fstat(descriptor)
         if not stat.S_ISREG(file_stat.st_mode):
@@ -248,7 +264,10 @@ def _open_regular_file(
                 format_name=format_name,
                 size=file_stat.st_size,
             )
-        if (file_stat.st_dev, file_stat.st_ino) != (path_stat.st_dev, path_stat.st_ino):
+        if path_stat is not None and (file_stat.st_dev, file_stat.st_ino) != (
+            path_stat.st_dev,
+            path_stat.st_ino,
+        ):
             os.close(descriptor)
             return _invalid(
                 "file.changed_before_validation",
@@ -590,12 +609,14 @@ def _validate_spice3_raw(
     format_name: str,
     limits: ValidationLimits = DEFAULT_LIMITS,
     dir_fd: int | None = None,
+    _source_fd: int | None = None,
 ) -> OutputValidation:
     opened = _open_regular_file(
         path,
         limits=limits,
         format_name=format_name,
         dir_fd=dir_fd,
+        _source_fd=_source_fd,
     )
     if isinstance(opened, OutputValidation):
         return opened
@@ -702,6 +723,7 @@ def validate_ngspice_raw(
     *,
     limits: ValidationLimits = DEFAULT_LIMITS,
     dir_fd: int | None = None,
+    _source_fd: int | None = None,
 ) -> OutputValidation:
     """Validate a binary or ASCII Spice3f5/ngspice raw file.
 
@@ -715,6 +737,7 @@ def validate_ngspice_raw(
         format_name="ngspice-raw",
         limits=limits,
         dir_fd=dir_fd,
+        _source_fd=_source_fd,
     )
 
 
@@ -723,6 +746,7 @@ def validate_xyce_raw(
     *,
     limits: ValidationLimits = DEFAULT_LIMITS,
     dir_fd: int | None = None,
+    _source_fd: int | None = None,
 ) -> OutputValidation:
     """Validate a complete Xyce ASCII Spice raw analysis artifact."""
 
@@ -731,6 +755,7 @@ def validate_xyce_raw(
         format_name="xyce-raw",
         limits=limits,
         dir_fd=dir_fd,
+        _source_fd=_source_fd,
     )
 
 
@@ -1336,68 +1361,84 @@ def extract_analysis_raw(
     if analysis_type not in {"op", "dc", "ac", "tran"}:
         return _extraction_invalid("request.invalid", format_name=format_name)
 
-    validator = validate_ngspice_raw if backend == "ngspice" else validate_xyce_raw
-    validation = validator(path, limits=limits)
-    if not validation.valid:
-        return _extraction_invalid(
-            validation.reason,
-            format_name=format_name,
-            metadata={"validation": validation.to_dict()},
-        )
-    if validation.metadata.get("bytes") != expected_bytes:
-        return _extraction_invalid("file.size_mismatch", format_name=format_name)
-    counts = analysis_raw_counts(
-        {"validation": validation.to_dict()},
-        dict(analysis),
-    )
-    if counts is None:
-        return _extraction_invalid(
-            "raw.analysis_request_mismatch",
-            format_name=format_name,
-            metadata={"validation": validation.to_dict()},
-        )
-    points = counts[0]
-    if points > max_points:
-        return _extraction_invalid(
-            "raw.extraction_over_limit",
-            format_name=format_name,
-            metadata={"points": points, "max_points": max_points},
-        )
-
-    plots = validation.metadata.get("plots")
-    assert isinstance(plots, list)
-    matching_indices = [
-        index
-        for index, plot in enumerate(plots)
-        if isinstance(plot, dict)
-        and _analysis_plot_matches(plot.get("plotname"), str(analysis_type))
-    ]
-    if len(matching_indices) != 1:
-        return _extraction_invalid("raw.analysis_plot_ambiguous", format_name=format_name)
-    target_index = matching_indices[0]
-    target_metadata = plots[target_index]
-    assert isinstance(target_metadata, dict)
-    if backend == "xyce" and target_metadata.get("encoding") != "ascii":
-        return _extraction_invalid("raw.encoding_unsupported", format_name=format_name)
-    scalar_width = 2 if target_metadata.get("numeric_type") == "complex" else 1
-    selected_scalar_count = points * (1 + len(names) * scalar_width)
-    if selected_scalar_count > max_selected_scalars:
-        return _extraction_invalid(
-            "raw.extraction_over_limit",
-            format_name=format_name,
-            metadata={
-                "selected_scalar_count": selected_scalar_count,
-                "max_selected_scalars": max_selected_scalars,
-            },
-        )
-
     opened = _open_regular_file(path, limits=limits, format_name=format_name)
     if isinstance(opened, OutputValidation):
         return _extraction_invalid(opened.reason, format_name=format_name)
     handle, initial_stat = opened
-    if initial_stat.st_size != expected_bytes:
-        handle.close()
-        return _extraction_invalid("file.size_mismatch", format_name=format_name)
+    preflight_complete = False
+    try:
+        if initial_stat.st_size != expected_bytes:
+            return _extraction_invalid("file.size_mismatch", format_name=format_name)
+
+        validator = validate_ngspice_raw if backend == "ngspice" else validate_xyce_raw
+        validation = validator(
+            path,
+            limits=limits,
+            _source_fd=handle.fileno(),
+        )
+        if not validation.valid:
+            return _extraction_invalid(
+                validation.reason,
+                format_name=format_name,
+                metadata={"validation": validation.to_dict()},
+            )
+        if validation.metadata.get("bytes") != expected_bytes:
+            return _extraction_invalid("file.size_mismatch", format_name=format_name)
+        counts = analysis_raw_counts(
+            {"validation": validation.to_dict()},
+            dict(analysis),
+        )
+        if counts is None:
+            return _extraction_invalid(
+                "raw.analysis_request_mismatch",
+                format_name=format_name,
+                metadata={"validation": validation.to_dict()},
+            )
+        points = counts[0]
+        if points > max_points:
+            return _extraction_invalid(
+                "raw.extraction_over_limit",
+                format_name=format_name,
+                metadata={"points": points, "max_points": max_points},
+            )
+
+        plots = validation.metadata.get("plots")
+        assert isinstance(plots, list)
+        matching_indices = [
+            index
+            for index, plot in enumerate(plots)
+            if isinstance(plot, dict)
+            and _analysis_plot_matches(plot.get("plotname"), str(analysis_type))
+        ]
+        if len(matching_indices) != 1:
+            return _extraction_invalid(
+                "raw.analysis_plot_ambiguous",
+                format_name=format_name,
+            )
+        target_index = matching_indices[0]
+        target_metadata = plots[target_index]
+        assert isinstance(target_metadata, dict)
+        if backend == "xyce" and target_metadata.get("encoding") != "ascii":
+            return _extraction_invalid(
+                "raw.encoding_unsupported",
+                format_name=format_name,
+            )
+        scalar_width = 2 if target_metadata.get("numeric_type") == "complex" else 1
+        selected_scalar_count = points * (1 + len(names) * scalar_width)
+        if selected_scalar_count > max_selected_scalars:
+            return _extraction_invalid(
+                "raw.extraction_over_limit",
+                format_name=format_name,
+                metadata={
+                    "selected_scalar_count": selected_scalar_count,
+                    "max_selected_scalars": max_selected_scalars,
+                },
+            )
+        handle.seek(0)
+        preflight_complete = True
+    finally:
+        if not preflight_complete:
+            handle.close()
 
     selected_axis: tuple[float, ...] = ()
     selected_signals: tuple[RawSignalSeries, ...] = ()
@@ -1458,6 +1499,12 @@ def extract_analysis_raw(
             final_stat = os.fstat(handle.fileno())
             if _file_changed(initial_stat, final_stat):
                 raise _InvalidOutput("file.changed_during_extraction")
+            try:
+                current_stat = os.stat(path, follow_symlinks=False)
+            except (OSError, ValueError):
+                raise _InvalidOutput("file.changed_during_extraction") from None
+            if _file_changed(initial_stat, current_stat):
+                raise _InvalidOutput("file.changed_during_extraction")
             observed_sha256 = digest.hexdigest()
             if observed_sha256 != expected_sha256:
                 raise _InvalidOutput("file.digest_mismatch")
@@ -1515,6 +1562,7 @@ def validate_ngspice_wrdata(
     *,
     limits: ValidationLimits = DEFAULT_LIMITS,
     dir_fd: int | None = None,
+    _source_fd: int | None = None,
 ) -> OutputValidation:
     """Validate an ngspice ``wrdata`` ASCII table without loading it in memory."""
 
@@ -1524,6 +1572,7 @@ def validate_ngspice_wrdata(
         limits=limits,
         format_name=format_name,
         dir_fd=dir_fd,
+        _source_fd=_source_fd,
     )
     if isinstance(opened, OutputValidation):
         return opened

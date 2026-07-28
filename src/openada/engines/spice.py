@@ -277,26 +277,13 @@ def _content_signature(value: os.stat_result) -> tuple[int, int, int, int, int]:
     return (value.st_dev, value.st_ino, value.st_mode, value.st_size, value.st_mtime_ns)
 
 
-def _hash_regular_file(
-    path: str | Path,
-    expected: os.stat_result,
-    *,
-    dir_fd: int | None = None,
-) -> tuple[str, os.stat_result]:
-    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
-    descriptor = os.open(path, flags, dir_fd=dir_fd)
-    try:
-        opened = os.fstat(descriptor)
-        if not stat.S_ISREG(opened.st_mode) or _stat_signature(opened) != _stat_signature(expected):
-            raise OSError("file identity changed before capture")
-        digest = hashlib.sha256()
-        with os.fdopen(descriptor, "rb", closefd=False) as handle:
-            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                digest.update(chunk)
-        finished = os.fstat(descriptor)
-        return digest.hexdigest(), finished
-    finally:
-        os.close(descriptor)
+def _hash_descriptor(descriptor: int) -> tuple[str, os.stat_result]:
+    os.lseek(descriptor, 0, os.SEEK_SET)
+    digest = hashlib.sha256()
+    with os.fdopen(os.dup(descriptor), "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest(), os.fstat(descriptor)
 
 
 def _read_captured_text(path: Path, capture: dict, *, maximum_bytes: int) -> str | None:
@@ -366,31 +353,74 @@ def _capture_file(
         capture["status"] = "too_large"
         return None, capture
 
-    validation = validator(lookup, dir_fd=dir_fd) if validator else None
-    middle = _lstat(lookup, dir_fd=dir_fd)
-    if middle is None or _stat_signature(middle) != _stat_signature(before):
-        capture["status"] = "unstable"
-        if validation:
-            capture["validation"] = validation.to_dict()
-        return None, capture
-
+    validation: OutputValidation | None = None
+    flags = (
+        os.O_RDONLY
+        | getattr(os, "O_CLOEXEC", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+        | getattr(os, "O_NONBLOCK", 0)
+    )
     try:
-        digest, opened_after = _hash_regular_file(lookup, middle, dir_fd=dir_fd)
+        descriptor = os.open(lookup, flags, dir_fd=dir_fd)
+    except OSError:
+        capture["status"] = "unstable"
+        return None, capture
+    try:
+        opened = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(opened.st_mode)
+            or _stat_signature(opened) != _stat_signature(before)
+        ):
+            capture["status"] = "unstable"
+            return None, capture
+        if require_single_link and opened.st_nlink != 1:
+            capture["status"] = "hardlinked"
+            capture["link_count"] = opened.st_nlink
+            return None, capture
+
+        validation = (
+            validator(lookup, dir_fd=dir_fd, _source_fd=descriptor)
+            if validator
+            else None
+        )
+        middle = os.fstat(descriptor)
+        current = _lstat(lookup, dir_fd=dir_fd)
+        if (
+            current is None
+            or _stat_signature(middle) != _stat_signature(opened)
+            or _stat_signature(current) != _stat_signature(opened)
+            or (
+                require_single_link
+                and (middle.st_nlink != 1 or current.st_nlink != 1)
+            )
+        ):
+            capture["status"] = "unstable"
+            if validation:
+                capture["validation"] = validation.to_dict()
+            return None, capture
+
+        digest, finished = _hash_descriptor(descriptor)
+        after = _lstat(lookup, dir_fd=dir_fd)
+        if (
+            after is None
+            or _stat_signature(finished) != _stat_signature(opened)
+            or _stat_signature(after) != _stat_signature(opened)
+            or (
+                require_single_link
+                and (finished.st_nlink != 1 or after.st_nlink != 1)
+            )
+        ):
+            capture["status"] = "unstable"
+            if validation:
+                capture["validation"] = validation.to_dict()
+            return None, capture
     except OSError:
         capture["status"] = "unstable"
         if validation:
             capture["validation"] = validation.to_dict()
         return None, capture
-    after = _lstat(lookup, dir_fd=dir_fd)
-    if (
-        after is None
-        or _stat_signature(opened_after) != _stat_signature(middle)
-        or _stat_signature(after) != _stat_signature(middle)
-    ):
-        capture["status"] = "unstable"
-        if validation:
-            capture["validation"] = validation.to_dict()
-        return None, capture
+    finally:
+        os.close(descriptor)
 
     artifact = {
         "kind": kind,

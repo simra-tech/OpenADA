@@ -10,6 +10,7 @@ import struct
 from jsonschema import Draft202012Validator, FormatChecker
 import pytest
 
+import openada.engines.ngspice_outputs as ngspice_outputs
 from openada.contract import result, static_execution, tool_record
 from openada.discovery import DiscoveryManager
 from openada.engines.ngspice_outputs import extract_analysis_raw
@@ -740,6 +741,131 @@ def test_duplicate_matching_analysis_plots_are_ambiguous(tmp_path: Path) -> None
 
     assert extracted.valid is False
     assert extracted.reason == "raw.analysis_request_mismatch"
+
+
+def test_extraction_validation_cannot_be_swapped_and_restored(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plot = _binary_raw(
+        plotname="Transient Analysis",
+        numeric_type="real",
+        variables=[("time", "time"), ("v(out)", "voltage")],
+        rows=[[0.0, 0.0], [1.0, 1.0]],
+    )
+    continuation = plot.replace(
+        b"Title: result.series.extract fixture\n"
+        b"Date: fixture\n"
+        b"Plotname: Transient Analysis\n",
+        b"Plotname: Transient Analysis\n",
+        1,
+    )
+    original = plot + continuation
+    plot_name = b"Transient Analysis"
+    final_plot = original.rfind(plot_name)
+    replacement = (
+        original[:final_plot]
+        + b"Frequency Analysis"
+        + original[final_plot + len(plot_name) :]
+    )
+    assert len(replacement) == len(original)
+
+    original_dir = tmp_path / "original"
+    replacement_dir = tmp_path / "replacement"
+    original_dir.mkdir()
+    replacement_dir.mkdir()
+    (original_dir / "case.raw").write_bytes(original)
+    (replacement_dir / "case.raw").write_bytes(replacement)
+    current = tmp_path / "current"
+    attack = tmp_path / "attack"
+    restore = tmp_path / "restore"
+    current.symlink_to(original_dir, target_is_directory=True)
+    attack.symlink_to(replacement_dir, target_is_directory=True)
+    restore.symlink_to(original_dir, target_is_directory=True)
+    path = current / "case.raw"
+
+    real_validator = ngspice_outputs.validate_ngspice_raw
+
+    def racing_validator(candidate, **kwargs):
+        attack.replace(current)
+        try:
+            return real_validator(candidate, **kwargs)
+        finally:
+            restore.replace(current)
+
+    monkeypatch.setattr(
+        ngspice_outputs,
+        "validate_ngspice_raw",
+        racing_validator,
+    )
+    extracted = extract_analysis_raw(
+        path,
+        backend="ngspice",
+        analysis={
+            "type": "tran",
+            "step_s": 1.0,
+            "stop_s": 1.0,
+            "extensions": {},
+        },
+        selected_variables=["v(out)"],
+        expected_bytes=len(original),
+        expected_sha256=hashlib.sha256(original).hexdigest(),
+    )
+
+    assert extracted.valid is False
+    assert extracted.reason == "raw.analysis_request_mismatch"
+
+
+def test_extraction_rejects_parent_path_replacement_after_open(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    body = _binary_raw(
+        plotname="Transient Analysis",
+        numeric_type="real",
+        variables=[("time", "time"), ("v(out)", "voltage")],
+        rows=[[0.0, 0.0], [1.0, 1.0]],
+    )
+    original_dir = tmp_path / "original"
+    replacement_dir = tmp_path / "replacement"
+    original_dir.mkdir()
+    replacement_dir.mkdir()
+    (original_dir / "case.raw").write_bytes(body)
+    (replacement_dir / "case.raw").write_bytes(body)
+    current = tmp_path / "current"
+    replacement_link = tmp_path / "replacement-link"
+    current.symlink_to(original_dir, target_is_directory=True)
+    replacement_link.symlink_to(replacement_dir, target_is_directory=True)
+    path = current / "case.raw"
+
+    real_extract = ngspice_outputs._extract_binary_values
+
+    def racing_extract(*args, **kwargs):
+        extracted = real_extract(*args, **kwargs)
+        replacement_link.replace(current)
+        return extracted
+
+    monkeypatch.setattr(
+        ngspice_outputs,
+        "_extract_binary_values",
+        racing_extract,
+    )
+    extracted = extract_analysis_raw(
+        path,
+        backend="ngspice",
+        analysis={
+            "type": "tran",
+            "step_s": 1.0,
+            "stop_s": 1.0,
+            "extensions": {},
+        },
+        selected_variables=["v(out)"],
+        expected_bytes=len(body),
+        expected_sha256=hashlib.sha256(body).hexdigest(),
+    )
+
+    assert extracted.valid is False
+    assert extracted.reason == "file.changed_during_extraction"
 
 
 def test_source_analysis_counts_must_match_the_reparsed_native_plot(

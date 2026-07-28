@@ -1,0 +1,9 @@
+GF180MCU D native 3.3 V NMOS operating-point oracle
+.include @PDK@/libs.tech/ngspice/design.ngspice
+.lib @PDK@/libs.tech/ngspice/sm141064.ngspice typical
+Vd_ref d_ref 0 3.3
+Vg_ref g_ref 0 3.3
+Xref d_ref g_ref 0 0 nfet_03v3 w=0.22u l=0.28u nf=1 m=1
+.temp 27
+.op
+.end
