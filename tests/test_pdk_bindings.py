@@ -10,6 +10,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 from openada import conformance
 from openada.discovery import DiscoveryManager
+from openada.operations.result_series_extract import extract_result_series
 from openada.operations.simulate import (
     OPERATION_NAME,
     PDK_BINDING_EXTENSION,
@@ -237,15 +238,42 @@ def test_a_pdk_that_sets_scale_receives_geometry_in_its_own_units(tmp_path):
     """
 
     resolved = _resolved(tmp_path, SKY130A)
-    card = rewrite_mos_card(CANONICAL_MOS_CARD, resolved)
-    assert card.text == "xM_PD Y A VSS VSS sky130_fd_pr__nfet_01v8 w=2 l=0.5 m=1 nf=1"
+    deck = f"* SI geometry\n{CANONICAL_MOS_CARD}\n.END\n"
+    text, _ = bind_deck(deck, resolved)
+    lines = text.splitlines()
+
+    # All three pieces are load-bearing. The explicit scale states the units
+    # ngspice will apply, wnflag selects multi-finger bins using W/NF, and the
+    # SI source card is converted to plain microns exactly once before sky130's
+    # model-bin lookup sees it.
+    assert lines.count(".option scale=1e-6") == 1
+    assert lines.count(".option wnflag=1") == 1
+    assert (
+        "xM_PD Y A VSS VSS sky130_fd_pr__nfet_01v8 "
+        "w=2 l=0.5 m=1 nf=1"
+    ) in lines
+    assert CANONICAL_MOS_CARD not in text
 
 
 def test_a_scaling_pdk_states_its_convention_in_the_bound_deck(tmp_path):
     resolved = _resolved(tmp_path, SKY130A)
     text, facts = bind_deck("* t\n.END\n", resolved)
     assert ".option scale=1e-6\n" in text
+    assert ".option wnflag=1\n" in text
+    assert text.index(".option scale=1e-6\n") < text.index(".option wnflag=1\n")
+    assert text.index(".option wnflag=1\n") < text.index(".lib ")
     assert facts["geometry_scale"] == "1e-6"
+
+
+@pytest.mark.parametrize(
+    "binding",
+    (IHP_SG13G2, GF180MCUD, FREEPDK45),
+    ids=lambda binding: binding.pdk_id,
+)
+def test_non_sky_pdks_leave_width_normalization_untouched(tmp_path, binding):
+    resolved = _resolved(tmp_path, binding)
+    text, _ = bind_deck("* t\n.END\n", resolved)
+    assert ".option wnflag" not in text
 
 
 def test_an_si_pdk_leaves_the_geometry_untouched(tmp_path):
@@ -273,6 +301,34 @@ def test_a_pdk_without_binning_enforces_no_envelope(tmp_path):
     resolved = _resolved(tmp_path, IHP_SG13G2)
     # PSP103 is continuous, so a 130 nm channel binds without complaint.
     assert rewrite_mos_card(SIMRA_MOS_CARD, resolved).rewritten is True
+
+
+@pytest.mark.parametrize(
+    ("role", "target_model"),
+    [
+        ("nmos.core", "nfet_03v3"),
+        ("pmos.core", "pfet_03v3"),
+    ],
+)
+def test_gf180_accepts_devices_in_its_full_legal_binning_envelope(
+    tmp_path, role, target_model
+):
+    """The last gf180 bin extends to L=50.001 um and W=100.001 um.
+
+    The former envelope stopped at the third bin (10 um by 20 um), so its own
+    preflight refused legal devices before ngspice could select the fourth bin.
+    Exercise both polarities at a point legal only in that formerly omitted
+    part of the grid.
+    """
+
+    resolved = _resolved(tmp_path, GF180MCUD)
+    card = rewrite_mos_card(
+        f"M_LEGAL d g s b {role} W=100u L=50u M=1 NF=1",
+        resolved,
+    )
+    assert card.rewritten is True
+    assert card.target_model == target_model
+    assert f" {target_model} w=100u l=50u m=1 nf=1" in card.text
 
 
 # --------------------------------------------------------------------------- #
@@ -395,6 +451,19 @@ def test_a_corner_selected_by_directory_resolves_every_flavour(tmp_path):
     for path in resolved.library_paths:
         assert path.parent.name == "models_ss"
 
+    text, _ = bind_deck("* FreePDK45 ss\n.END\n", resolved)
+    model_cards = [
+        line
+        for line in text.splitlines()
+        if line.lower().startswith((".include ", ".lib "))
+    ]
+    # These are flat model cards, not sectioned libraries. In particular, the
+    # corner token must occur only in the selected directory and must never be
+    # emitted as a third `.lib` argument.
+    assert model_cards == [f".include {path}" for path in resolved.library_paths]
+    assert all("/models_ss/" in line for line in model_cards)
+    assert not any(line.lower().startswith(".lib ") for line in model_cards)
+
 
 # --------------------------------------------------------------------------- #
 # deck binding
@@ -436,8 +505,10 @@ def test_a_multi_entry_prelude_keeps_its_declared_order(tmp_path):
     resolved = _resolved(tmp_path, GF180MCUD)
     text, _ = bind_deck("* t\n.END\n", resolved)
     lines = [line for line in text.splitlines() if line.startswith((".lib", ".include"))]
-    assert lines[0].startswith(".include ") and lines[0].endswith("design.ngspice")
-    assert lines[1].startswith(".lib ") and lines[1].endswith(" typical")
+    assert lines == [
+        f".include {resolved.library_paths[0]}",
+        f".lib {resolved.library_paths[1]} typical",
+    ]
 
 
 def test_a_model_card_pdk_emits_no_osdi_preload(tmp_path):
@@ -736,6 +807,8 @@ def test_a_relative_reference_is_resolved_against_the_run_directory(tmp_path):
         ".include /somewhere/models.spice",
         "pre_osdi /somewhere/compact.osdi",
         ".option scale=1e-6",
+        ".option wnflag=0",
+        ".option temp=27\n+ wnflag=0",
     ],
 )
 def test_hand_written_collateral_handed_to_a_binding_is_a_conflict(card):
@@ -802,6 +875,9 @@ def test_the_reference_vocabulary_is_bounded_and_ignores_comments():
     assert declares_option_scale(deck) is False
     assert declares_option_scale("* t\n.option scale=1.0u\n.END\n") is True
     assert declares_option_scale("* t\n.options scale = 1e-6\n.END\n") is True
+    assert (
+        declares_option_scale("* t\n.option temp=27\n+ scale=1e-6\n.END\n") is True
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -879,6 +955,34 @@ def test_a_published_ihp_testbench_simulates_against_the_real_pdk(tmp_path):
 
     raw = tmp_path / "evidence" / "decks" / "analysis-01-tran.raw"
     assert raw.is_file() and raw.stat().st_size > 0
+
+    # The published artifact declares VIN/VOUT as saved nets. That used to
+    # narrow `write` to voltages only, silently deleting every ampere-valued
+    # quantity. Prove the source branch current survived all the way into the
+    # retained raw artifact and is consumable by the typed evidence pipeline.
+    write_line = next(
+        line for line in deck_text.splitlines() if line.startswith("write ")
+    )
+    assert "v(VIN)" in write_line and "v(VOUT)" in write_line
+    assert "i(v_dd)" in write_line
+    extracted = extract_result_series(
+        payload,
+        raw,
+        [
+            {
+                "native_name": "i(v_dd)",
+                "output_name": "supply_current",
+                "unit": "A",
+                "component": "real",
+            }
+        ],
+    )
+    assert extracted["execution"]["status"] == "completed", extracted["diagnostics"]
+    assert extracted["engineering"]["status"] == "pass", extracted["diagnostics"]
+    supply_current = extracted["data"]["extraction"]["series"]["signals"][0]
+    assert supply_current["name"] == "supply_current"
+    assert supply_current["unit"] == "A"
+    assert len(supply_current["values"]) == payload["data"]["analysis"]["point_count"]
 
 
 @pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")

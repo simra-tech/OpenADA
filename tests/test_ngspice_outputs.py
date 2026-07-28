@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from io import BytesIO
 import json
 import struct
@@ -14,6 +15,7 @@ from openada.engines.ngspice_outputs import (
     validate_ngspice_wrdata,
     validate_xyce_raw,
 )
+from openada.engines.spice import _capture_file
 
 
 def _raw_header(
@@ -534,6 +536,45 @@ def test_wrdata_validator_enforces_row_line_and_file_limits(tmp_path):
     assert row_limited.reason == "wrdata.too_many_rows"
     assert line_limited.reason == "wrdata.line_too_long"
     assert file_limited.reason == "file.too_large"
+
+
+def test_capture_validator_cannot_swap_in_valid_file_and_restore(tmp_path):
+    original_dir = tmp_path / "original"
+    replacement_dir = tmp_path / "replacement"
+    original_dir.mkdir()
+    replacement_dir.mkdir()
+    original = b"bad header\n"
+    (original_dir / "evidence.dat").write_bytes(original)
+    (replacement_dir / "evidence.dat").write_bytes(b"0 1\n")
+
+    current = tmp_path / "current"
+    attack = tmp_path / "attack"
+    restore = tmp_path / "restore"
+    current.symlink_to(original_dir, target_is_directory=True)
+    attack.symlink_to(replacement_dir, target_is_directory=True)
+    restore.symlink_to(original_dir, target_is_directory=True)
+    target = current / "evidence.dat"
+
+    def racing_validator(path, **kwargs):
+        attack.replace(current)
+        try:
+            return validate_ngspice_wrdata(path, **kwargs)
+        finally:
+            restore.replace(current)
+
+    artifact, capture = _capture_file(
+        target,
+        kind="ngspice-wrdata",
+        role="output",
+        validator=racing_validator,
+    )
+
+    assert artifact is not None
+    assert artifact["sha256"] == hashlib.sha256(original).hexdigest()
+    assert capture["status"] == "invalid"
+    assert capture["validation"]["valid"] is False
+    assert capture["validation"]["reason"] == "wrdata.header_without_data"
+    assert capture["validation"]["metadata"]["bytes"] == len(original)
 
 
 def test_validation_result_api_is_typed_and_json_serializable(tmp_path):

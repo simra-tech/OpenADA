@@ -1,0 +1,35 @@
+GF180MCU D model-free operating-point and metamorphic fixture
+.subckt permuted_nmos g b d s
+Mwrapped d g s b nmos.core W=2.2e-7 L=2.8e-7 M=1 NF=1
+.ends permuted_nmos
+
+Vd_ref d_ref 0 3.3
+Vg_ref g_ref 0 3.3
+Mref d_ref g_ref 0 0 nmos.core W=2.2e-7 L=2.8e-7 M=1 NF=1
+
+Vd_units d_units 0 3.3
+Vg_units g_units 0 3.3
+Munits d_units g_units 0 0 nmos.core W=0.22u L=0.28u M=1 NF=1
+
+Vd_permuted d_permuted 0 3.3
+Vg_permuted g_permuted 0 3.3
+Xpermuted g_permuted 0 d_permuted 0 permuted_nmos
+
+Vd_flip 0 d_flip -3.3
+Vg_flip g_flip 0 3.3
+Mflip d_flip g_flip 0 0 nmos.core W=2.2e-7 L=2.8e-7 M=1 NF=1
+
+Vd_double d_double 0 3.3
+Vg_double g_double 0 3.3
+Mdouble d_double g_double 0 0 nmos.core W=4.4e-7 L=2.8e-7 M=1 NF=1
+
+Vd_low d_low 0 1.65
+Vg_low g_low 0 3.3
+Mlow d_low g_low 0 0 nmos.core W=2.2e-7 L=2.8e-7 M=1 NF=1
+
+Vd_high d_high 0 2.475
+Vg_high g_high 0 3.3
+Mhigh d_high g_high 0 0 nmos.core W=2.2e-7 L=2.8e-7 M=1 NF=1
+
+.op
+.end

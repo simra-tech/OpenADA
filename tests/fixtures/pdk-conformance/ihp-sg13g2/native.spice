@@ -1,0 +1,14 @@
+IHP SG13G2 native NMOS operating-point oracle
+.control
+pre_osdi @PDK@/libs.tech/ngspice/osdi/psp103.osdi
+pre_osdi @PDK@/libs.tech/ngspice/osdi/psp103_nqs.osdi
+pre_osdi @PDK@/libs.tech/ngspice/osdi/r3_cmc.osdi
+pre_osdi @PDK@/libs.tech/ngspice/osdi/mosvar.osdi
+.endc
+.lib @PDK@/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+Vd_ref d_ref 0 1.2
+Vg_ref g_ref 0 1.0
+Xref d_ref g_ref 0 0 sg13_lv_nmos w=1u l=0.45u ng=1 m=1
+.temp 27
+.op
+.end

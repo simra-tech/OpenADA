@@ -1,0 +1,91 @@
+{
+  "schema": "openada-pdk-conformance-fixture/v1",
+  "pdk_id": "sky130A",
+  "pdk_revision": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+  "ngspice_version": "45.2",
+  "corner": "tt",
+  "temperature_c": 27.0,
+  "device": {
+    "role": "nmos.core",
+    "native_model": "sky130_fd_pr__nfet_01v8",
+    "native_prefix": "X",
+    "pins": ["d", "g", "s", "b"],
+    "w_m": 1e-6,
+    "l_m": 1.5e-7,
+    "nf": 1,
+    "m": 1
+  },
+  "bias": {
+    "vds_v": 1.8,
+    "vgs_v": 1.8
+  },
+  "observable": {
+    "name": "i(vd_ref)",
+    "unit": "A",
+    "expected": -0.0005010462008986461,
+    "relative_tolerance": 5e-5,
+    "absolute_tolerance": 1e-12
+  },
+  "multi_finger": {
+    "total_w_m": 1e-6,
+    "per_finger_w_m": 5e-7,
+    "l_m": 1.5e-7,
+    "nf": 2,
+    "m": 1,
+    "bias": {
+      "vds_v": 1.8,
+      "vgs_v": 1.8
+    },
+    "observable": {
+      "name": "i(vd_nf2)",
+      "unit": "A",
+      "expected": -0.0004969870468164799,
+      "relative_tolerance": 5e-5,
+      "absolute_tolerance": 1e-12
+    }
+  },
+  "pipeline": {
+    "rewritten_device_count": 8,
+    "vectors": {
+      "reference": "i(vd_ref)",
+      "unit_equivalent": "i(vd_units)",
+      "permuted_wrapper": "i(vd_permuted)",
+      "reversed_sense": "i(vd_flip)",
+      "double_width": "i(vd_double)",
+      "lower_supply": "i(vd_low)",
+      "higher_supply": "i(vd_high)",
+      "multi_finger": "i(vd_nf2)"
+    }
+  },
+  "metamorphic": {
+    "equivalence_relative_tolerance": 1e-10,
+    "equivalence_absolute_tolerance": 1e-14,
+    "double_width_ratio_min": 1.5,
+    "double_width_ratio_max": 2.5
+  },
+  "documentation": [
+    {
+      "path": "libs.tech/xschem/sky130_tests/test_nmos.sch",
+      "supports": "wnflag=1, 1.8 V biases, OP, W=1, L=0.15, nf=1 and the annotated current"
+    },
+    {
+      "path": "libs.tech/xschem/sky130_fd_pr/nfet_01v8.sym",
+      "supports": "native micron geometry and d g s b terminals"
+    },
+    {
+      "path": "libs.tech/xschem/sky130_fd_pr/nfet_01v8_nf.sym",
+      "supports": "multi-finger netlisting with total W equal to per-finger W times nf"
+    },
+    {
+      "path": "libs.tech/ngspice/sky130.lib.spice",
+      "supports": "the tt library section"
+    },
+    {
+      "path": "libs.tech/ngspice/all.spice",
+      "supports": "the inherited .option scale=1.0u"
+    }
+  ],
+  "known_limitations": [
+    "This fixture covers the standard 1.8 V NMOS at tt, not the other device variants, passives, mismatch or statistical models."
+  ]
+}

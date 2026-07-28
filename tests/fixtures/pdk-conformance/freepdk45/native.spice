@@ -1,0 +1,8 @@
+FreePDK45 native nominal VTG NMOS operating-point oracle
+.include @PDK@/ncsu_basekit/models/hspice/tran_models/models_nom/NMOS_VTG.inc
+Vd_ref d_ref 0 1.0
+Vg_ref g_ref 0 1.0
+Mref d_ref g_ref 0 0 NMOS_VTG w=1u l=50n m=1 nf=1
+.temp 27
+.op
+.end

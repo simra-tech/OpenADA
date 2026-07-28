@@ -67,7 +67,8 @@ _INCLUDE_RE = re.compile(r"^\s*\.inc(?:lude)?\s+(?P<path>\S+)\s*$", re.IGNORECAS
 #: second. Reading only the first meant a startup file could bind a technology
 #: the deck never mentioned, invisibly.
 _PRE_OSDI_RE = re.compile(r"^\s*(?:pre_)?osdi\s+(?P<path>\S+)\s*$", re.IGNORECASE)
-_OPTION_SCALE_RE = re.compile(r"^\s*\.option[s]?\b.*\bscale\s*=", re.IGNORECASE)
+_OPTION_RE = re.compile(r"^\s*\.option[s]?\b", re.IGNORECASE)
+_CONTINUATION_RE = re.compile(r"^\s*\+\s?(?P<body>.*)$")
 
 #: A malformed or hostile deck must not make this check unbounded.
 MAX_INSPECTED_LINES = 100_000
@@ -148,12 +149,39 @@ def collateral_references(
 def declares_option_scale(deck_text: str) -> bool:
     """Return whether the deck installs its own geometry unit convention."""
 
+    return _declares_option(deck_text, "scale")
+
+
+def _option_cards(deck_text: str) -> tuple[str, ...]:
+    """Return bounded logical ``.option`` cards with continuations joined."""
+
+    cards: list[str] = []
+    current: str | None = None
     for number, line in enumerate(deck_text.splitlines(), start=1):
         if number > MAX_INSPECTED_LINES:
             break
-        if _OPTION_SCALE_RE.match(line):
-            return True
-    return False
+        if _OPTION_RE.match(line):
+            if current is not None:
+                cards.append(current)
+            current = line
+            continue
+        continuation = _CONTINUATION_RE.match(line)
+        if current is not None and continuation is not None:
+            current = f"{current} {continuation.group('body')}"
+            continue
+        if current is not None:
+            cards.append(current)
+            current = None
+    if current is not None:
+        cards.append(current)
+    return tuple(cards)
+
+
+def _declares_option(deck_text: str, name: str) -> bool:
+    """Return whether the deck assigns one named simulator option."""
+
+    pattern = re.compile(rf"\b{re.escape(name)}\s*=", re.IGNORECASE)
+    return any(pattern.search(card) for card in _option_cards(deck_text))
 
 
 def _profile_basenames(binding: PdkBinding) -> frozenset[str]:
@@ -262,6 +290,12 @@ def inspect_deck_collateral(
         ]
         if declares_option_scale(deck_text):
             offenders.append("a .option scale card")
+        binding = REGISTRY.get(bound_pdk)
+        if binding is not None:
+            for assignment in binding.ngspice_options:
+                name, separator, _ = assignment.partition("=")
+                if separator and _declares_option(deck_text, name.strip()):
+                    offenders.append(f"a .option {name.strip()} card")
         if offenders:
             findings.append(
                 CollateralFinding(
@@ -271,9 +305,9 @@ def inspect_deck_collateral(
                         f"The deck binds PDK collateral by hand while requesting a "
                         f"{bound_pdk} binding: {', '.join(offenders[:5])}. The driver "
                         "emits the complete prelude for the named PDK - its library "
-                        "entries in order, its geometry unit convention and any "
-                        "Verilog-A preload - and a second, hand-written prelude "
-                        "cannot be reconciled with it."
+                        "entries in order, its geometry unit convention, required "
+                        "simulator options and any Verilog-A preload - and a "
+                        "second, hand-written prelude cannot be reconciled with it."
                     ),
                     hint=(
                         "Publish or pass the model-free deck and let --pdk own the "

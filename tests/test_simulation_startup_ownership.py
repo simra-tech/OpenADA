@@ -224,9 +224,13 @@ def test_an_ambient_spiceinit_cannot_reach_a_bound_run(tmp_path, monkeypatch):
     startup file and ngspice therefore reads no other one.
     """
 
+    marker = "OPENADA_AMBIENT_SPICEINIT_WAS_READ"
     home = tmp_path / "home"
     home.mkdir()
-    (home / ".spiceinit").write_text(IHP_SHIPPED_SPICEINIT, encoding="utf-8")
+    (home / ".spiceinit").write_text(
+        f"echo {marker}\n{IHP_SHIPPED_SPICEINIT}",
+        encoding="utf-8",
+    )
     monkeypatch.setenv("HOME", str(home))
 
     deck = tmp_path / "cs.spice"
@@ -246,6 +250,16 @@ def test_an_ambient_spiceinit_cannot_reach_a_bound_run(tmp_path, monkeypatch):
     assert "simulation.collateral.unloadable" not in codes
     assert PDK_BINDING_EXTENSION in payload["data"]["extensions"]
     assert (tmp_path / "evidence" / "cs" / MANAGED_STARTUP_NAME).is_file()
+
+    native = payload["data"]["extensions"]["org.openada"]["native_data"]
+    # This is the exact dangerous combination from the live incident: the
+    # binding exports SkyWater through variables consumed by IHP's startup
+    # file. The explicit managed startup must disable the user's file anyway.
+    assert native["environment"]["PDK"] == "sky130A"
+    resolved = resolve_pdk_binding(SKY130A.pdk_id, SKY130_ROOT)
+    assert native["environment"]["PDK_ROOT"] == str(resolved.root.parent)
+    assert native["initialization"]["local_user_spiceinit"] == "disabled"
+    assert marker not in native["log_tail"]
 
 
 @pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")
