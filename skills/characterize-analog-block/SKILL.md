@@ -163,8 +163,11 @@ circuit.simulate
 published Simra DUT schematic (no sources, no ground instance, artifact
 `lifecycle.state: "simulation_candidate"`), describe the whole characterization
 step as one `simra.experiment/v1` JSON — DUT bundle digests and port
-connections, ideal fixture elements, analyses with ids, observations, exact
-typed measurement requests, `{"pdk": {"id", "corner"}}` — and run the full
+connections; fixture elements with kinds exactly `vdc`, `idc`, `vpulse`,
+`ipulse`, `vsin`, `isin`, `vpwl`, `ipwl`, `resistor`, `capacitor`,
+`inductor`; analyses with ids; observations; exact typed measurement
+requests; and `"conditions": {"pdk": {"id": "<pdk-id>", "corner":
+"<corner>"}}` — and run the full
 chain in one command:
 
 ```bash
