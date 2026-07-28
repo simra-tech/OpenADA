@@ -9,6 +9,7 @@ import pytest
 from jsonschema import Draft202012Validator, FormatChecker
 
 from openada import conformance
+from openada.contract import file_record
 from openada.discovery import DiscoveryManager
 from openada.operations.result_series_extract import extract_result_series
 from openada.operations.simulate import (
@@ -611,6 +612,106 @@ def test_source_probes_are_added_once_and_bounded(tmp_path):
     assert write_line.count("i(") == MAX_PROBED_SOURCES
 
 
+def test_an_explicit_current_set_is_exact_canonical_and_not_truncated(tmp_path):
+    resolved = _resolved(tmp_path)
+    deck = (
+        "* t\n"
+        + "".join(f"V_{index} n{index} 0 DC 0\n" for index in range(20))
+        + ".SAVE n17 n19\n"
+        + ".OP\n"
+        + ".END\n"
+    )
+    text, facts = bind_deck(
+        deck,
+        resolved,
+        raw_name="a.raw",
+        saved_nets=("n17", "n19"),
+        retained_current_sources=("V_19", "v_17"),
+    )
+    lines = [line.strip() for line in text.splitlines()]
+
+    assert "write a.raw v(n17) v(n19) i(v_19) i(v_17)" in lines
+    assert ".SAVE n17 n19 i(v_19) i(v_17)" in lines
+    assert "i(v_0)" not in text
+    assert facts["current_retention"] == "explicit"
+    assert facts["retained_current_vectors"] == ["i(v_19)", "i(v_17)"]
+
+
+def test_an_explicit_empty_current_set_is_not_legacy_auto_probe(tmp_path):
+    resolved = _resolved(tmp_path)
+    text, facts = bind_deck(
+        _PROBE_DECK,
+        resolved,
+        raw_name="a.raw",
+        saved_nets=("OUT",),
+        retained_current_sources=(),
+    )
+
+    assert "write a.raw v(OUT)" in text
+    assert "i(v_gnd)" not in text
+    assert facts["current_retention"] == "explicit"
+    assert facts["retained_current_vectors"] == []
+
+
+def test_an_explicit_current_only_set_is_the_exact_write_set(tmp_path):
+    resolved = _resolved(tmp_path)
+    text, facts = bind_deck(
+        _PROBE_DECK,
+        resolved,
+        raw_name="a.raw",
+        retained_current_sources=("V_GND",),
+    )
+
+    assert "write a.raw i(v_gnd)" in text
+    assert facts["current_retention"] == "explicit"
+    assert facts["retained_current_vectors"] == ["i(v_gnd)"]
+
+
+@pytest.mark.parametrize(
+    ("sources", "code"),
+    [
+        (("V_MISSING",), "pdk.current_source.unknown"),
+        (("I_REF",), "pdk.current_source.invalid"),
+        (("V_DD", "v_dd"), "pdk.current_source.duplicate"),
+    ],
+)
+def test_an_explicit_current_set_refuses_non_voltage_or_duplicate_names(
+    tmp_path, sources, code
+):
+    resolved = _resolved(tmp_path)
+    with pytest.raises(PdkBindingError) as excinfo:
+        bind_deck(
+            _PROBE_DECK,
+            resolved,
+            raw_name="a.raw",
+            retained_current_sources=sources,
+        )
+    assert excinfo.value.code == code
+
+
+def test_explicit_saved_nets_are_closed_and_case_insensitively_unique(tmp_path):
+    resolved = _resolved(tmp_path)
+    with pytest.raises(PdkBindingError) as excinfo:
+        bind_deck(
+            _PROBE_DECK,
+            resolved,
+            raw_name="a.raw",
+            saved_nets=("OUT)",),
+            retained_current_sources=(),
+        )
+    assert excinfo.value.code == "pdk.saved_net.invalid"
+
+    with pytest.raises(PdkBindingError) as excinfo:
+        bind_deck(
+            _PROBE_DECK,
+            resolved,
+            raw_name="a.raw",
+            saved_nets=("OUT", "out"),
+            retained_current_sources=(),
+        )
+    assert excinfo.value.code == "pdk.saved_net.duplicate"
+
+
 def test_an_unbounded_raw_name_is_refused(tmp_path):
     resolved = _resolved(tmp_path)
     with pytest.raises(PdkBindingError) as excinfo:
@@ -690,6 +791,107 @@ def test_no_binding_facts_are_claimed_when_no_pdk_was_bound(tmp_path):
         discovery=DiscoveryManager(),
     )
     assert PDK_BINDING_EXTENSION not in payload["data"]["extensions"]
+
+
+@pytest.mark.skipif(NGSPICE is None, reason="ngspice is not installed")
+def test_a_bare_composed_deck_retains_exact_observations_and_context(tmp_path):
+    source = tmp_path / "experiment.spice"
+    source.write_text(
+        "* exact experiment observations\n"
+        "V_A A 0 DC 1\n"
+        "V_B B 0 DC 2\n"
+        "R_A A 0 1k\n"
+        "R_B B 0 1k\n"
+        ".SAVE A B\n"
+        ".OP\n"
+        ".END\n",
+        encoding="utf-8",
+    )
+    specification = tmp_path / "experiment.json"
+    specification.write_text('{"schema":"simra.experiment/v1"}\n', encoding="utf-8")
+    specification_record = file_record(
+        specification,
+        kind="experiment-specification",
+        role="simulation.experiment-specification",
+    )
+    extension = {
+        "schema": "simra.experiment/v1",
+        "spec_raw_sha256": specification_record["sha256"],
+        "analysis_id": "op_bias",
+    }
+    destination = tmp_path / "evidence"
+
+    payload = simulate(
+        source,
+        destination,
+        discovery=DiscoveryManager(),
+        pdk=FREEPDK45.pdk_id,
+        pdk_root=_fake_pdk(tmp_path, FREEPDK45),
+        saved_nets=("A",),
+        retained_current_sources=("V_B",),
+        extra_input_records=(specification_record,),
+        extra_data_extensions={"org.openada.experiment": extension},
+    )
+    _assert_contract(payload)
+    assert payload["execution"]["status"] == "completed", payload["diagnostics"]
+    assert payload["engineering"]["status"] == "pass", payload["diagnostics"]
+
+    bound = (destination / "decks" / "experiment.spice").read_text(
+        encoding="utf-8"
+    )
+    assert "write experiment.raw v(A) i(v_b)" in bound
+    assert ".SAVE A B i(v_b)" in bound
+    assert "i(v_a)" not in bound
+    facts = payload["data"]["extensions"][PDK_BINDING_EXTENSION]
+    assert facts["saved_nets"] == ["A"]
+    assert facts["retained_current_vectors"] == ["i(v_b)"]
+    assert facts["current_retention"] == "explicit"
+
+    assert payload["data"]["extensions"]["org.openada.experiment"] == extension
+    assert specification_record in payload["inputs"]
+    retained = json.loads(
+        (destination / "simulate.result.json").read_text(encoding="utf-8")
+    )
+    assert retained["data"]["extensions"]["org.openada.experiment"] == extension
+    assert specification_record in retained["inputs"]
+
+
+def test_explicit_binding_observations_without_a_pdk_are_refused(tmp_path):
+    source = tmp_path / "deck.spice"
+    source.write_text("* t\nV_A A 0 DC 1\nR_A A 0 1k\n.OP\n.END\n")
+    payload = simulate(
+        source,
+        tmp_path / "evidence",
+        discovery=DiscoveryManager(),
+        saved_nets=("A",),
+        retained_current_sources=(),
+    )
+    _assert_contract(payload)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "simulation.binding_options.unbound"
+
+
+def test_simulate_refuses_reserved_or_nonfinite_additive_extensions(tmp_path):
+    source = tmp_path / "deck.spice"
+    source.write_text("* t\n.END\n")
+
+    conflict = simulate(
+        source,
+        tmp_path / "conflict",
+        discovery=DiscoveryManager(),
+        extra_data_extensions={"org.openada": {}},
+    )
+    assert conflict["diagnostics"][0]["code"] == "simulation.extension.conflict"
+    assert not (tmp_path / "conflict").exists()
+
+    nonfinite = simulate(
+        source,
+        tmp_path / "nonfinite",
+        discovery=DiscoveryManager(),
+        extra_data_extensions={"org.openada.experiment": {"bad": float("nan")}},
+    )
+    assert nonfinite["diagnostics"][0]["code"] == "simulation.extension.invalid"
+    assert not (tmp_path / "nonfinite").exists()
 
 
 # --------------------------------------------------------------------------- #

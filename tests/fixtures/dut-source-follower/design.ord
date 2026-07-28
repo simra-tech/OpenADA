@@ -1,0 +1,45 @@
+from ordec.core import *
+from plugins.schematic.ordlib import Nmos, LabelSizedSymbol
+
+
+cell SourceFollower:
+    """NMOS source follower with a current-sink bias.
+
+    The reference example for a sized, model-bound MOS: every device carries
+    `.$model` and full sizing through the same `.$name=` assignments used by
+    passives and sources. There is no constructor form. The arrangement is
+    coordinate-free (`Series` + supply taps); nothing in this file hand-places
+    a device or routes a wire.
+    """
+    viewgen symbol -> LabelSizedSymbol:
+        input A: .align=West
+        output Y: .align=East
+        input VBIAS: .align=West
+        inout VDD: .align=North
+        inout VSS: .align=South
+
+    viewgen schematic -> Schematic:
+        net VSS, VDD
+        VSS.auto_wire = False
+        VDD.auto_wire = False
+
+        port A: .align=East
+        port Y: .align=West
+        port VBIAS: .align=East
+
+        with Series(gap=4):
+            port VDD: .align=South
+            Nmos M_FOLLOW: .$model="nmos.core"; .$w=10u; .$l=180n; .$m=1; .$nf=1; .g -- A; .b -- VSS; .d -- VDD; .s -- Y
+            Nmos M_BIAS: .$model="nmos.core"; .$w=10u; .$l=180n; .$m=1; .$nf=1; .g -- VBIAS; .b -- VSS; .d -- Y
+            port VSS: .align=North
+
+
+SIMRA_SCHEMATIC = {
+    "schema": "simra.schematic/v2",
+    "id": "sized-source-follower",
+    "title": "SourceFollower",
+    "top": "SourceFollower",
+    "topology_id": None,
+    "port_order": ['A', 'Y', 'VBIAS', 'VDD', 'VSS'],
+    "paper_fidelity": "not_applicable",
+}

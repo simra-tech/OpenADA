@@ -18,8 +18,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import stat
 from typing import Any, Mapping
 
 from ..contract import (
@@ -35,8 +37,10 @@ ARTIFACT_SCHEMA = "simra.schematic-artifact/v2"
 VIEW_SCHEMA = "simra.schematic/v2"
 
 MAX_DESCRIPTOR_BYTES = 4 * 1024 * 1024
+MAX_SOURCE_BYTES = 64 * 1024 * 1024
 MAX_VIEW_BYTES = 64 * 1024 * 1024
 MAX_DECK_BYTES = 16 * 1024 * 1024
+MAX_CDL_BYTES = 16 * 1024 * 1024
 MAX_MODELS_BYTES = 16 * 1024 * 1024
 MAX_ANALYSES = 16
 MAX_SAVED_NETS = 1_024
@@ -61,6 +65,10 @@ UNRESOLVED_TOKEN_RE = re.compile(
     rf"(?![A-Za-z0-9_])"
 )
 _SUBCKT_CELL_RE = re.compile(r"^\s*\.subckt\s+(?P<cell>\S+)", re.IGNORECASE)
+_SUBCKT_DECLARATION_RE = re.compile(
+    r"^\s*\.subckt[ \t]+(?P<cell>\S+)(?P<ports>[^\r\n]*)$",
+    re.IGNORECASE,
+)
 _ENDS_RE = re.compile(r"^\s*\.ends(?:\s|$)", re.IGNORECASE)
 #: Directives that would make a composed model prelude non-self-contained or
 #: would terminate/redirect the deck the shared simulation profile inspects.
@@ -73,6 +81,62 @@ _NET_NAME_RE = re.compile(r"^[A-Za-z0-9_.:+$\[\]-]{1,256}$")
 _DIAGNOSTIC_NAME_RE = re.compile(r"^[A-Za-z0-9_.:+-]+$")
 _DIAGNOSTIC_KIND_RE = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
 _DIAGNOSTIC_PARAMETER_RE = re.compile(r"^[A-Z0-9_]{1,64}$")
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+_SAFE_SPICE_TOKEN_RE = re.compile(r"^[A-Za-z0-9_.:+-]+$")
+
+_SCHEMATIC_DIGEST_KEYS = (
+    "descriptor_sha256",
+    "source_sha256",
+    "view_sha256",
+    "netlist_sha256",
+    "cdl_sha256",
+)
+_INDEPENDENT_SOURCE_KINDS = frozenset(
+    ("vdc", "idc", "vpulse", "ipulse", "vsin", "isin", "vpwl", "ipwl")
+)
+
+# This is the exact required-parameter vocabulary used by Simra's
+# ``contract_v2.lifecycle_v2``. Keep the lifecycle implementation below
+# standalone: an installed OpenADA package must not depend on a sibling Simra
+# source checkout merely to verify a published bundle.
+_LIFECYCLE_REQUIRED_PARAMETERS = {
+    "nmos": frozenset(("model", "w", "l", "m", "nf")),
+    "pmos": frozenset(("model", "w", "l", "m", "nf")),
+    "resistor": frozenset(("r",)),
+    "capacitor": frozenset(("c",)),
+    "inductor": frozenset(("l",)),
+    "ground": frozenset(),
+    "vdc": frozenset(("dc",)),
+    "idc": frozenset(("dc",)),
+    "vpulse": frozenset(
+        (
+            "initial_value",
+            "pulsed_value",
+            "delay_time",
+            "rise_time",
+            "fall_time",
+            "pulse_width",
+            "period",
+        )
+    ),
+    "ipulse": frozenset(
+        (
+            "initial_value",
+            "pulsed_value",
+            "delay_time",
+            "rise_time",
+            "fall_time",
+            "pulse_width",
+            "period",
+        )
+    ),
+    "vsin": frozenset(("dc", "amplitude", "freq", "delay", "damping")),
+    "isin": frozenset(("dc", "amplitude", "freq", "delay", "damping")),
+    "vpwl": frozenset(("dc", "points")),
+    "ipwl": frozenset(("dc", "points")),
+    "vcvs": frozenset(("gain",)),
+    "vccs": frozenset(("gain",)),
+}
 
 
 class SimraArtifactError(Exception):
@@ -129,6 +193,803 @@ class SimraTestbench:
     @property
     def dispatch_mode(self) -> str:
         return "split" if len(self.analyses) > 1 else "direct"
+
+
+@dataclass(frozen=True, slots=True)
+class SimraSchematicBundle:
+    """One immutable, five-file snapshot of a promoted schematic-only DUT."""
+
+    descriptor_path: Path
+    source_path: Path
+    view_path: Path
+    netlist_path: Path
+    cdl_path: Path
+    directory: Path
+    identifier: str
+    label: str
+    top: str
+    port_order: tuple[str, ...]
+    design_subckt_names: tuple[str, ...]
+    lifecycle: dict[str, Any]
+    descriptor_document: dict[str, Any]
+    view_document: dict[str, Any]
+    descriptor_bytes: bytes
+    source_bytes: bytes
+    view_bytes: bytes
+    netlist_bytes: bytes
+    cdl_bytes: bytes
+    descriptor_text: str
+    source_text: str
+    view_text: str
+    netlist_text: str
+    cdl_text: str
+    descriptor_sha256: str
+    source_sha256: str
+    view_sha256: str
+    netlist_sha256: str
+    cdl_sha256: str
+    descriptor_record: dict[str, Any]
+    source_record: dict[str, Any]
+    view_record: dict[str, Any]
+    netlist_record: dict[str, Any]
+    cdl_record: dict[str, Any]
+    input_records: tuple[dict[str, Any], ...] = field(default=())
+
+    @property
+    def bundle_digests(self) -> dict[str, str]:
+        """Return the exact digest vocabulary used by ``dut.bundle``."""
+
+        return {
+            "descriptor_sha256": self.descriptor_sha256,
+            "source_sha256": self.source_sha256,
+            "view_sha256": self.view_sha256,
+            "netlist_sha256": self.netlist_sha256,
+            "cdl_sha256": self.cdl_sha256,
+        }
+
+
+class _DuplicateJsonKey(ValueError):
+    pass
+
+
+def _stat_identity(value: os.stat_result) -> tuple[int, int, int, int, int, int]:
+    return (
+        value.st_dev,
+        value.st_ino,
+        value.st_mode,
+        value.st_size,
+        value.st_mtime_ns,
+        value.st_ctime_ns,
+    )
+
+
+def _snapshot_regular_file(
+    path: Path,
+    *,
+    kind: str,
+    role: str,
+    maximum_bytes: int,
+) -> tuple[bytes, str, dict[str, Any]]:
+    """Capture one non-symlink regular file exactly once.
+
+    ``stable_regular_file`` verifies the opened file and its resolved path, but
+    it resolves before applying ``O_NOFOLLOW``. The artifact contract is
+    stricter: the published path itself may not be a symlink. Check that path
+    before and after the bounded read, and bind its identity to the descriptor
+    opened by the shared stable-file helper.
+    """
+
+    try:
+        before = path.lstat()
+    except FileNotFoundError as exc:
+        raise SimraArtifactError(
+            "experiment.dut.artifact_missing",
+            f"The schematic bundle member is missing: {path}",
+        ) from exc
+    except OSError as exc:
+        raise SimraArtifactError(
+            "experiment.dut.artifact_unstable",
+            f"The schematic bundle member could not be inspected safely: {path}",
+        ) from exc
+    if stat.S_ISLNK(before.st_mode):
+        raise SimraArtifactError(
+            "experiment.dut.artifact_unstable",
+            f"The schematic bundle member must not be a symbolic link: {path}",
+        )
+    if not stat.S_ISREG(before.st_mode):
+        raise SimraArtifactError(
+            "experiment.dut.artifact_unstable",
+            f"The schematic bundle member is not a regular file: {path}",
+        )
+    if before.st_size > maximum_bytes:
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            f"The schematic bundle member exceeds its {maximum_bytes}-byte limit: {path}",
+        )
+
+    try:
+        with stable_regular_file(path) as (handle, opened):
+            if _stat_identity(opened) != _stat_identity(before):
+                raise SimraArtifactError(
+                    "experiment.dut.artifact_unstable",
+                    f"The schematic bundle member changed before capture: {path}",
+                )
+            raw = handle.read(maximum_bytes + 1)
+            if len(raw) > maximum_bytes:
+                raise SimraArtifactError(
+                    "experiment.dut.bundle_invalid",
+                    f"The schematic bundle member exceeds its {maximum_bytes}-byte limit: {path}",
+                )
+            if len(raw) != opened.st_size:
+                raise SimraArtifactError(
+                    "experiment.dut.artifact_unstable",
+                    f"The schematic bundle member changed during capture: {path}",
+                )
+    except SimraArtifactError:
+        raise
+    except FileRecordError as exc:
+        raise SimraArtifactError(
+            "experiment.dut.artifact_unstable",
+            f"The schematic bundle member could not be captured as one stable regular file: {path}",
+        ) from exc
+
+    try:
+        after = path.lstat()
+    except OSError as exc:
+        raise SimraArtifactError(
+            "experiment.dut.artifact_unstable",
+            f"The schematic bundle member changed after capture: {path}",
+        ) from exc
+    if stat.S_ISLNK(after.st_mode) or _stat_identity(after) != _stat_identity(before):
+        raise SimraArtifactError(
+            "experiment.dut.artifact_unstable",
+            f"The schematic bundle member changed after capture: {path}",
+        )
+
+    digest = hashlib.sha256(raw).hexdigest()
+    record = {
+        "kind": kind,
+        "role": role,
+        "path": str(path.resolve()),
+        "exists": True,
+        "bytes": len(raw),
+        "sha256": digest,
+    }
+    return raw, digest, record
+
+
+def _utf8_text(raw: bytes, *, role: str, path: Path) -> str:
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            f"The schematic {role} is not valid UTF-8: {path}",
+        ) from exc
+
+
+def _json_object(
+    text: str,
+    *,
+    role: str,
+    path: Path,
+) -> dict[str, Any]:
+    def pairs_hook(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        document: dict[str, Any] = {}
+        for name, value in pairs:
+            if name in document:
+                raise _DuplicateJsonKey(name)
+            document[name] = value
+        return document
+
+    def reject_constant(value: str) -> None:
+        raise ValueError(f"non-finite JSON constant {value}")
+
+    try:
+        document = json.loads(
+            text,
+            object_pairs_hook=pairs_hook,
+            parse_constant=reject_constant,
+        )
+    except (_DuplicateJsonKey, json.JSONDecodeError, ValueError) as exc:
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            f"The schematic {role} is not one strict JSON document: {path}",
+        ) from exc
+    if not isinstance(document, dict):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            f"The schematic {role} is not a JSON object: {path}",
+        )
+    return document
+
+
+def _schematic_member_path(
+    directory: Path,
+    value: object,
+    *,
+    field_name: str,
+) -> Path:
+    if not isinstance(value, str) or _PATH_COMPONENT_RE.fullmatch(value) is None:
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            f"The descriptor {field_name!r} must name one bounded artifact-local file.",
+        )
+    candidate = directory / value
+    if candidate.parent != directory:
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            f"The descriptor {field_name!r} must not escape the artifact directory.",
+        )
+    return candidate
+
+
+def _validated_expected_digests(
+    expected_digests: Mapping[str, str],
+) -> dict[str, str]:
+    if not isinstance(expected_digests, Mapping):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "dut.bundle must supply the five expected schematic bundle digests.",
+        )
+    if set(expected_digests) != set(_SCHEMATIC_DIGEST_KEYS):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "dut.bundle must contain exactly descriptor_sha256, source_sha256, "
+            "view_sha256, netlist_sha256, and cdl_sha256.",
+        )
+    normalized: dict[str, str] = {}
+    for name in _SCHEMATIC_DIGEST_KEYS:
+        value = expected_digests.get(name)
+        if not isinstance(value, str) or _SHA256_RE.fullmatch(value) is None:
+            raise SimraArtifactError(
+                "experiment.dut.bundle_invalid",
+                f"dut.bundle.{name} must be one lowercase SHA-256 digest.",
+            )
+        normalized[name] = value
+    return normalized
+
+
+def _rederive_lifecycle_v2(
+    document: dict[str, Any],
+    netlist_text: str | None = None,
+) -> dict[str, Any]:
+    """Standalone copy of Simra ``contract_v2.lifecycle_v2``."""
+
+    unresolved: list[dict[str, str]] = []
+    blockers: list[str] = []
+    instances = [
+        instance
+        for cell in document.get("cells", [])
+        if isinstance(cell, dict) and isinstance(cell.get("entities"), dict)
+        for instance in cell["entities"].get("instances", [])
+        if isinstance(instance, dict)
+    ]
+    for instance in instances:
+        name = str(instance.get("name") or instance.get("id") or "?")
+        required = _LIFECYCLE_REQUIRED_PARAMETERS.get(instance.get("kind"))
+        if required is not None:
+            parameters = instance.get("parameters")
+            present = set(parameters) if isinstance(parameters, dict) else set()
+            for key in sorted(required - present):
+                unresolved.append({"instance": name, "parameter": key})
+        if instance.get("netlistable") is not True:
+            blockers.append(f"instance {name} is not netlistable")
+    if document.get("view", {}).get("kind") == "testbench":
+        testbench = document.get("testbench")
+        if not isinstance(testbench, dict) or not testbench.get("analyses"):
+            blockers.append("testbench declares no analyses")
+        if not any(instance.get("kind") == "ground" for instance in instances):
+            blockers.append("testbench has no ground reference")
+    if netlist_text is not None and "SIMRA_UNRESOLVED_" in netlist_text:
+        blockers.append("emitted netlist contains unresolved placeholder tokens")
+    state = (
+        "simulation_candidate"
+        if instances and not unresolved and not blockers
+        else "display_candidate"
+    )
+    return {"state": state, "unresolved": unresolved, "blockers": blockers}
+
+
+def _design_cells(
+    view_document: Mapping[str, Any],
+) -> tuple[list[Mapping[str, Any]], tuple[str, ...]]:
+    cells = view_document.get("cells")
+    if not isinstance(cells, list):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "The schematic view publishes no cells array.",
+        )
+    design_cells: list[Mapping[str, Any]] = []
+    design_names: list[str] = []
+    for cell in cells:
+        if not isinstance(cell, Mapping) or cell.get("kind") != "design":
+            continue
+        name = cell.get("name")
+        if (
+            not isinstance(name, str)
+            or len(name) > 256
+            or _SAFE_SPICE_TOKEN_RE.fullmatch(name) is None
+        ):
+            raise SimraArtifactError(
+                "experiment.dut.bundle_invalid",
+                "Every design cell must publish one bounded SPICE-safe name.",
+            )
+        design_cells.append(cell)
+        design_names.append(name)
+    if not design_cells:
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "The schematic view publishes no design cell.",
+        )
+    folded = [name.casefold() for name in design_names]
+    if len(folded) != len(set(folded)):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "The schematic view publishes colliding design-cell names.",
+        )
+    return design_cells, tuple(design_names)
+
+
+def _netlist_subckts(
+    netlist_text: str,
+) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    declarations: list[tuple[str, tuple[str, ...]]] = []
+    for line in netlist_text.splitlines():
+        match = _SUBCKT_DECLARATION_RE.match(line)
+        if match is None:
+            continue
+        declarations.append(
+            (match.group("cell"), tuple(match.group("ports").split()))
+        )
+    if not declarations:
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            "The schematic netlist publishes no .SUBCKT declaration.",
+        )
+    folded = [name.casefold() for name, _ports in declarations]
+    if len(folded) != len(set(folded)):
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            "The schematic netlist publishes duplicate or case-colliding .SUBCKT names.",
+        )
+    return tuple(declarations)
+
+
+def load_simra_schematic_bundle(
+    descriptor_file: str | Path,
+    *,
+    expected_digests: Mapping[str, str],
+    expected_top: str,
+) -> SimraSchematicBundle:
+    """Capture and validate one promoted, schematic-only Simra DUT bundle.
+
+    All five files are read exactly once into this immutable snapshot. The
+    caller-supplied digest set identifies the publication to run; the
+    descriptor's four member digests independently bind its own contents.
+    Composition must use the returned bytes/text rather than reopen a member.
+    """
+
+    expected = _validated_expected_digests(expected_digests)
+    if (
+        not isinstance(expected_top, str)
+        or not expected_top
+        or len(expected_top) > 256
+        or _SAFE_SPICE_TOKEN_RE.fullmatch(expected_top) is None
+    ):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "dut.top must be one bounded SPICE-safe cell name.",
+        )
+
+    descriptor_path = Path(descriptor_file).expanduser()
+    if not descriptor_path.is_absolute():
+        raise SimraArtifactError(
+            "experiment.dut.publication_untrusted",
+            f"The schematic artifact descriptor locator must be absolute: {descriptor_path}",
+        )
+    directory = descriptor_path.parent
+    descriptor_bytes, descriptor_sha256, descriptor_record = (
+        _snapshot_regular_file(
+            descriptor_path,
+            kind="simra-artifact",
+            role="artifact-descriptor",
+            maximum_bytes=MAX_DESCRIPTOR_BYTES,
+        )
+    )
+    descriptor_text = _utf8_text(
+        descriptor_bytes,
+        role="artifact descriptor",
+        path=descriptor_path,
+    )
+    descriptor_document = _json_object(
+        descriptor_text,
+        role="artifact descriptor",
+        path=descriptor_path,
+    )
+
+    if descriptor_document.get("schema") != ARTIFACT_SCHEMA:
+        raise SimraArtifactError(
+            "experiment.dut.kind_unsupported",
+            f"Expected a {ARTIFACT_SCHEMA} descriptor, got "
+            f"{descriptor_document.get('schema')!r}.",
+        )
+    if descriptor_document.get("kind") != "schematic":
+        raise SimraArtifactError(
+            "experiment.dut.kind_unsupported",
+            f"The published artifact kind is {descriptor_document.get('kind')!r}; "
+            "the experiment DUT must be schematic-only.",
+        )
+
+    source_path = _schematic_member_path(
+        directory,
+        descriptor_document.get("source"),
+        field_name="source",
+    )
+    view_path = _schematic_member_path(
+        directory,
+        descriptor_document.get("view"),
+        field_name="view",
+    )
+    netlist_path = _schematic_member_path(
+        directory,
+        descriptor_document.get("netlist"),
+        field_name="netlist",
+    )
+    cdl_path = _schematic_member_path(
+        directory,
+        descriptor_document.get("cdl"),
+        field_name="cdl",
+    )
+    member_paths = (source_path, view_path, netlist_path, cdl_path)
+    published_paths = (descriptor_path, *member_paths)
+    if len({path.name.casefold() for path in published_paths}) != len(
+        published_paths
+    ):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "The bundle must contain five distinct descriptor, source, view, "
+            "netlist, and CDL files.",
+        )
+
+    source_bytes, source_sha256, source_record = _snapshot_regular_file(
+        source_path,
+        kind="simra-source",
+        role="schematic-source",
+        maximum_bytes=MAX_SOURCE_BYTES,
+    )
+    view_bytes, view_sha256, view_record = _snapshot_regular_file(
+        view_path,
+        kind="simra-artifact",
+        role="schematic-view",
+        maximum_bytes=MAX_VIEW_BYTES,
+    )
+    netlist_bytes, netlist_sha256, netlist_record = _snapshot_regular_file(
+        netlist_path,
+        kind="spice-netlist",
+        role="netlist",
+        maximum_bytes=MAX_DECK_BYTES,
+    )
+    cdl_bytes, cdl_sha256, cdl_record = _snapshot_regular_file(
+        cdl_path,
+        kind="cdl-netlist",
+        role="cdl",
+        maximum_bytes=MAX_CDL_BYTES,
+    )
+
+    source_text = _utf8_text(
+        source_bytes,
+        role="source",
+        path=source_path,
+    )
+    view_text = _utf8_text(
+        view_bytes,
+        role="view",
+        path=view_path,
+    )
+    netlist_text = _utf8_text(
+        netlist_bytes,
+        role="netlist",
+        path=netlist_path,
+    )
+    cdl_text = _utf8_text(
+        cdl_bytes,
+        role="CDL",
+        path=cdl_path,
+    )
+    view_document = _json_object(
+        view_text,
+        role="view",
+        path=view_path,
+    )
+
+    actual_digests = {
+        "descriptor_sha256": descriptor_sha256,
+        "source_sha256": source_sha256,
+        "view_sha256": view_sha256,
+        "netlist_sha256": netlist_sha256,
+        "cdl_sha256": cdl_sha256,
+    }
+    caller_mismatches = [
+        name
+        for name in _SCHEMATIC_DIGEST_KEYS
+        if expected[name] != actual_digests[name]
+    ]
+    if caller_mismatches:
+        details = ", ".join(
+            f"{name}: expected {expected[name]}, captured {actual_digests[name]}"
+            for name in caller_mismatches
+        )
+        raise SimraArtifactError(
+            "experiment.dut.digest_mismatch",
+            f"The captured schematic bundle disagrees with dut.bundle ({details}).",
+        )
+
+    hashes = descriptor_document.get("hashes")
+    if not isinstance(hashes, Mapping):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "The schematic descriptor publishes no hashes object.",
+        )
+    published_mismatches: list[str] = []
+    for name in ("source_sha256", "view_sha256", "netlist_sha256", "cdl_sha256"):
+        published = hashes.get(name)
+        if not isinstance(published, str) or _SHA256_RE.fullmatch(published) is None:
+            raise SimraArtifactError(
+                "experiment.dut.bundle_invalid",
+                f"The schematic descriptor publishes no valid hashes.{name}.",
+            )
+        if published != actual_digests[name]:
+            published_mismatches.append(name)
+    if published_mismatches:
+        details = ", ".join(
+            f"{name}: published {hashes[name]}, captured {actual_digests[name]}"
+            for name in published_mismatches
+        )
+        raise SimraArtifactError(
+            "experiment.dut.digest_mismatch",
+            f"The descriptor's member digests are stale ({details}).",
+        )
+
+    if view_document.get("schema") != VIEW_SCHEMA:
+        raise SimraArtifactError(
+            "experiment.dut.kind_unsupported",
+            f"Expected a {VIEW_SCHEMA} view, got {view_document.get('schema')!r}.",
+        )
+    view = view_document.get("view")
+    if not isinstance(view, Mapping) or view.get("kind") != "schematic":
+        raise SimraArtifactError(
+            "experiment.dut.kind_unsupported",
+            "The published view is not a schematic-only view.",
+        )
+    if view_document.get("testbench") is not None:
+        raise SimraArtifactError(
+            "experiment.dut.embedded_testbench",
+            "The schematic DUT embeds a testbench declaration.",
+        )
+
+    identifier = descriptor_document.get("id")
+    if (
+        not isinstance(identifier, str)
+        or not identifier
+        or len(identifier) > 256
+        or view.get("id") != identifier
+    ):
+        raise SimraArtifactError(
+            "experiment.dut.bundle_invalid",
+            "The descriptor and view do not publish one consistent bounded artifact id.",
+        )
+    label = descriptor_document.get("label")
+    if not isinstance(label, str) or len(label) > 512:
+        label = identifier
+
+    descriptor_top = descriptor_document.get("top")
+    view_top = view.get("top")
+    if descriptor_top != expected_top or view_top != expected_top:
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            f"dut.top={expected_top!r}, descriptor.top={descriptor_top!r}, and "
+            f"view.top={view_top!r} do not identify the same cell.",
+        )
+
+    design_cells, view_design_names = _design_cells(view_document)
+    all_cells = view_document["cells"]
+    if any(
+        isinstance(cell, Mapping) and cell.get("kind") == "testbench"
+        for cell in all_cells
+    ):
+        raise SimraArtifactError(
+            "experiment.dut.embedded_testbench",
+            "The schematic DUT embeds a testbench cell.",
+        )
+    top_cell_id = view.get("top_cell")
+    top_cells = [
+        cell
+        for cell in design_cells
+        if cell.get("name") == expected_top and cell.get("id") == top_cell_id
+    ]
+    if len(top_cells) != 1:
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            "The view's top/top_cell pair does not identify exactly one design cell.",
+        )
+    top_cell = top_cells[0]
+
+    raw_port_order = top_cell.get("port_order")
+    if not isinstance(raw_port_order, list) or not all(
+        isinstance(name, str)
+        and len(name) <= 256
+        and _SAFE_SPICE_TOKEN_RE.fullmatch(name) is not None
+        for name in raw_port_order
+    ):
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            "The top design cell publishes no bounded SPICE-safe port_order.",
+        )
+    port_order = tuple(raw_port_order)
+    if len({name.casefold() for name in port_order}) != len(port_order):
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            "The top design cell's port_order contains duplicate or case-colliding ports.",
+        )
+    if any(name == "0" for name in port_order):
+        raise SimraArtifactError(
+            "experiment.dut.global_ground_internal",
+            "The DUT must expose ground through an ordinary port bound externally; "
+            "a DUT port may not be named literal 0.",
+        )
+
+    top_entities = top_cell.get("entities")
+    top_ports = (
+        top_entities.get("ports") if isinstance(top_entities, Mapping) else None
+    )
+    if not isinstance(top_ports, list) or not all(
+        isinstance(port, Mapping)
+        and isinstance(port.get("name"), str)
+        and isinstance(port.get("ordinal"), int)
+        and not isinstance(port.get("ordinal"), bool)
+        for port in top_ports
+    ):
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            "The top design cell publishes no typed port entities.",
+        )
+    ordered_ports = sorted(top_ports, key=lambda port: port["ordinal"])
+    if (
+        [port["ordinal"] for port in ordered_ports] != list(range(len(port_order)))
+        or tuple(port["name"] for port in ordered_ports) != port_order
+    ):
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            "The top design cell's port entities disagree with port_order.",
+        )
+
+    declarations = _netlist_subckts(netlist_text)
+    netlist_design_names = tuple(name for name, _ports in declarations)
+    if (
+        {name.casefold(): name for name in netlist_design_names}
+        != {name.casefold(): name for name in view_design_names}
+    ):
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            "The netlist .SUBCKT names disagree with the view's design cells.",
+        )
+    top_declarations = [
+        ports for name, ports in declarations if name == expected_top
+    ]
+    if len(top_declarations) != 1 or top_declarations[0] != port_order:
+        raise SimraArtifactError(
+            "experiment.dut.port_abi_mismatch",
+            "The top .SUBCKT terminal order disagrees with the view's port_order.",
+        )
+
+    embedded_sources: list[str] = []
+    embedded_grounds: list[str] = []
+    internal_ground_nets: list[str] = []
+    for cell in all_cells:
+        if not isinstance(cell, Mapping):
+            continue
+        entities = cell.get("entities")
+        if not isinstance(entities, Mapping):
+            continue
+        instances = entities.get("instances")
+        if isinstance(instances, list):
+            for instance in instances:
+                if not isinstance(instance, Mapping):
+                    continue
+                kind = instance.get("kind")
+                name = str(instance.get("name") or instance.get("id") or "?")
+                if kind in _INDEPENDENT_SOURCE_KINDS:
+                    embedded_sources.append(name)
+                if kind == "ground":
+                    embedded_grounds.append(name)
+                terminals = instance.get("terminals")
+                if isinstance(terminals, Mapping) and any(
+                    value == "0" for value in terminals.values()
+                ):
+                    internal_ground_nets.append(name)
+        nets = entities.get("nets")
+        if isinstance(nets, list):
+            for net in nets:
+                if isinstance(net, Mapping) and net.get("name") == "0":
+                    internal_ground_nets.append(
+                        str(net.get("id") or f"{cell.get('name')}:0")
+                    )
+
+    if embedded_sources:
+        raise SimraArtifactError(
+            "experiment.dut.embedded_stimulus",
+            "The schematic DUT contains independent-source instance(s): "
+            + ", ".join(embedded_sources),
+        )
+    if embedded_grounds or internal_ground_nets:
+        details = embedded_grounds + internal_ground_nets
+        raise SimraArtifactError(
+            "experiment.dut.global_ground_internal",
+            "The schematic DUT contains an internal ground instance or literal-0 "
+            "net reference: "
+            + ", ".join(details),
+        )
+
+    lifecycle = _rederive_lifecycle_v2(view_document, netlist_text)
+    if lifecycle["state"] != "simulation_candidate":
+        raise SimraArtifactError(
+            "experiment.dut.not_promoted",
+            "The exact bundle bytes rederive as display_candidate: "
+            + json.dumps(
+                {
+                    "unresolved": lifecycle["unresolved"],
+                    "blockers": lifecycle["blockers"],
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+        )
+
+    records = (
+        descriptor_record,
+        source_record,
+        view_record,
+        netlist_record,
+        cdl_record,
+    )
+    return SimraSchematicBundle(
+        descriptor_path=Path(descriptor_record["path"]),
+        source_path=Path(source_record["path"]),
+        view_path=Path(view_record["path"]),
+        netlist_path=Path(netlist_record["path"]),
+        cdl_path=Path(cdl_record["path"]),
+        directory=directory,
+        identifier=identifier,
+        label=label,
+        top=expected_top,
+        port_order=port_order,
+        design_subckt_names=netlist_design_names,
+        lifecycle=lifecycle,
+        descriptor_document=descriptor_document,
+        view_document=view_document,
+        descriptor_bytes=descriptor_bytes,
+        source_bytes=source_bytes,
+        view_bytes=view_bytes,
+        netlist_bytes=netlist_bytes,
+        cdl_bytes=cdl_bytes,
+        descriptor_text=descriptor_text,
+        source_text=source_text,
+        view_text=view_text,
+        netlist_text=netlist_text,
+        cdl_text=cdl_text,
+        descriptor_sha256=descriptor_sha256,
+        source_sha256=source_sha256,
+        view_sha256=view_sha256,
+        netlist_sha256=netlist_sha256,
+        cdl_sha256=cdl_sha256,
+        descriptor_record=descriptor_record,
+        source_record=source_record,
+        view_record=view_record,
+        netlist_record=netlist_record,
+        cdl_record=cdl_record,
+        input_records=records,
+    )
 
 
 def _read_json_document(
@@ -960,17 +1821,21 @@ __all__ = [
     "ARTIFACT_SCHEMA",
     "DerivedDeck",
     "MAX_ANALYSES",
+    "MAX_CDL_BYTES",
     "MAX_DECK_BYTES",
     "MAX_DESCRIPTOR_BYTES",
     "MAX_MODELS_BYTES",
+    "MAX_SOURCE_BYTES",
     "MAX_VIEW_BYTES",
     "SUPPORTED_ANALYSIS_KINDS",
     "SUPPORTED_HANDOFFS",
     "SimraArtifactError",
+    "SimraSchematicBundle",
     "SimraTestbench",
     "VIEW_SCHEMA",
     "deck_file_name",
     "derive_single_analysis_decks",
     "load_model_prelude",
+    "load_simra_schematic_bundle",
     "load_simra_testbench",
 ]

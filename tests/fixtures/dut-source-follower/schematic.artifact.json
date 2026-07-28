@@ -1,0 +1,58 @@
+{
+  "cdl": "design.cdl",
+  "hashes": {
+    "cdl_sha256": "4083dfd1acb70f66a7ad0d0ab97a0d1840540dcb45bf056423061914a61783d2",
+    "netlist_sha256": "5ff9c3e3ff17f5f11830d66094c46ea8a5b8834a451fda5bfbb5d0cab2ce38d3",
+    "source_sha256": "69a01a488db517b5860688f0e59cc38baf4e194521da2189d7cb6107791856e8",
+    "view_sha256": "e26e7fbe8f19fa49c864e2ea3527e924a016f133c6190ce4328bd405b1976516"
+  },
+  "id": "sized-source-follower",
+  "kind": "schematic",
+  "label": "SourceFollower",
+  "lifecycle": {
+    "blockers": [],
+    "state": "simulation_candidate",
+    "unresolved": []
+  },
+  "netlist": "design.spice",
+  "netlistable": true,
+  "schema": "simra.schematic-artifact/v2",
+  "source": "design.ord",
+  "top": "SourceFollower",
+  "validation": {
+    "connectivity": "pass",
+    "contract": "pass",
+    "error_count": 0,
+    "errors": [],
+    "netlistable": true,
+    "parameters": "resolved",
+    "readability": [
+      {
+        "area": 30.0,
+        "aspect": 1.2,
+        "bends": 3,
+        "canvas_utilization": 0.3,
+        "cell": "SourceFollower",
+        "collinear_foreign": 0,
+        "crossings": 0,
+        "devices": 2,
+        "label_conflicts": 0,
+        "orphan_ports": 0,
+        "over_sheet_cap": false,
+        "routing_symmetry": 0.286,
+        "segments": 7,
+        "supply_orientation": 1.0,
+        "symbol_label_overflow": 0,
+        "wire_length": 13.0
+      }
+    ],
+    "rendering": "pass",
+    "simulation": "not_run",
+    "simulation_handoff": "not_applicable",
+    "simulation_ready": false,
+    "topology": "not_declared",
+    "warning_count": 0,
+    "warnings": []
+  },
+  "view": "schematic.simra.json"
+}

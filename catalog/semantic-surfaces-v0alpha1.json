@@ -152,6 +152,24 @@
       "extensions": {}
     },
     {
+      "surface_id": "openada.surface/cli.experiment-run/v1",
+      "command_path": [
+        "experiment",
+        "run"
+      ],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": [
+        "openada.operation/circuit.simulate/v1alpha2",
+        "openada.operation/result.series.extract/v1alpha1",
+        "openada.operation/result.measure/v1alpha1",
+        "openada.operation/result.transfer.measure/v1alpha1",
+        "openada.operation/result.spectral.measure/v1alpha1"
+      ],
+      "variants": [],
+      "extensions": {}
+    },
+    {
       "surface_id": "openada.surface/cli.evaluate/v1",
       "command_path": [
         "evaluate"

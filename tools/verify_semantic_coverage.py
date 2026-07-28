@@ -125,6 +125,7 @@ SURFACE_CLASSIFICATIONS: dict[tuple[str, ...], str] = {
     ("drc",): "semantic-execution",
     ("drc-compare",): "semantic-execution",
     ("drc-review",): "semantic-execution",
+    ("experiment", "run"): "semantic-execution",
     ("evaluate",): "semantic-execution",
     ("extract",): "semantic-execution",
     ("lvs",): "semantic-execution",
@@ -148,6 +149,7 @@ SURFACE_CLASSIFICATIONS: dict[tuple[str, ...], str] = {
 NATIVE_EDA_SURFACES = frozenset(
     {
         "drc",
+        "experiment-run",
         "lvs",
         "netlist",
         "provider-invoke",

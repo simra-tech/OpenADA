@@ -1,0 +1,5 @@
+* SIMRA HIERARCHICAL STRUCTURAL EXPORT - unresolved identifiers must be bound before simulation.
+.SUBCKT SourceFollower A Y VBIAS VDD VSS
+M_BIAS Y VBIAS VSS VSS nmos.core W=10u L=180n M=1 NF=1
+M_FOLLOW VDD A Y VSS nmos.core W=10u L=180n M=1 NF=1
+.ENDS SourceFollower

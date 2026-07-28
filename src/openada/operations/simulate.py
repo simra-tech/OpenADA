@@ -122,6 +122,20 @@ _PDK_CONFIGURATION_ROLES = {
 #: file; a descriptor is small and its schema token is near the top.
 MAX_TARGET_PROBE_BYTES = 4 * 1024 * 1024
 _SIMRA_ARTIFACT_SCHEMA_PREFIX = "simra.schematic-artifact/"
+MAX_EXTRA_INPUT_RECORDS = 16
+MAX_EXTRA_DATA_EXTENSIONS = 16
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+_EXTENSION_KEY_RE = re.compile(
+    r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$"
+)
+_RESERVED_DATA_EXTENSIONS = frozenset(
+    {
+        "org.openada",
+        PDK_BINDING_EXTENSION,
+        TARGET_EXTENSION,
+        DISPATCH_EXTENSION,
+    }
+)
 
 
 class SimulationRequestError(Exception):
@@ -132,6 +146,160 @@ class SimulationRequestError(Exception):
         self.message = message
         self.hint = hint
         super().__init__(message)
+
+
+def _extra_inputs(
+    value: Sequence[Mapping[str, Any]],
+) -> tuple[dict[str, Any], ...]:
+    """Validate already-captured additive simulation inputs.
+
+    The caller still owns stable capture (normally through ``file_record``);
+    this boundary accepts only the exact closed file-record shape that result
+    envelopes and downstream extraction already understand.
+    """
+
+    if isinstance(value, (str, bytes, bytearray)) or not isinstance(
+        value, Sequence
+    ):
+        raise SimulationRequestError(
+            "simulation.extra_input.invalid",
+            "extra_input_records must be a bounded sequence of file records.",
+        )
+    if len(value) > MAX_EXTRA_INPUT_RECORDS:
+        raise SimulationRequestError(
+            "simulation.extra_input.over_limit",
+            f"{len(value)} extra input records exceed the ceiling of "
+            f"{MAX_EXTRA_INPUT_RECORDS}.",
+        )
+    normalized: list[dict[str, Any]] = []
+    for index, raw in enumerate(value):
+        if not isinstance(raw, Mapping):
+            raise SimulationRequestError(
+                "simulation.extra_input.invalid",
+                f"extra_input_records[{index}] must be an object.",
+            )
+        required = {"kind", "role", "path", "exists", "bytes", "sha256"}
+        if set(raw) != required:
+            raise SimulationRequestError(
+                "simulation.extra_input.invalid",
+                f"extra_input_records[{index}] must contain exactly "
+                f"{', '.join(sorted(required))}.",
+            )
+        if any(
+            not isinstance(raw[field], str) or not raw[field]
+            for field in ("kind", "role", "path")
+        ):
+            raise SimulationRequestError(
+                "simulation.extra_input.invalid",
+                f"extra_input_records[{index}] kind, role, and path must be "
+                "nonempty text.",
+            )
+        size = raw["bytes"]
+        digest = raw["sha256"]
+        if raw["exists"] is not True:
+            raise SimulationRequestError(
+                "simulation.extra_input.invalid",
+                f"extra_input_records[{index}] must bind an existing file.",
+            )
+        if isinstance(size, bool) or not isinstance(size, int) or size < 0:
+            raise SimulationRequestError(
+                "simulation.extra_input.invalid",
+                f"extra_input_records[{index}].bytes must be a non-negative integer.",
+            )
+        if not isinstance(digest, str) or _SHA256_RE.fullmatch(digest) is None:
+            raise SimulationRequestError(
+                "simulation.extra_input.invalid",
+                f"extra_input_records[{index}].sha256 must be a lowercase SHA-256.",
+            )
+        normalized.append(dict(raw))
+    return tuple(normalized)
+
+
+def _extra_extensions(
+    value: Mapping[str, Any] | None,
+) -> dict[str, dict[str, Any]]:
+    """Return a JSON-safe closed set of non-reserved result-data extensions."""
+
+    if value is None:
+        return {}
+    if not isinstance(value, Mapping):
+        raise SimulationRequestError(
+            "simulation.extension.invalid",
+            "extra_data_extensions must be an object.",
+        )
+    if len(value) > MAX_EXTRA_DATA_EXTENSIONS:
+        raise SimulationRequestError(
+            "simulation.extension.over_limit",
+            f"{len(value)} extra data extensions exceed the ceiling of "
+            f"{MAX_EXTRA_DATA_EXTENSIONS}.",
+        )
+    normalized: dict[str, dict[str, Any]] = {}
+    for key, extension in value.items():
+        if (
+            not isinstance(key, str)
+            or _EXTENSION_KEY_RE.fullmatch(key) is None
+        ):
+            raise SimulationRequestError(
+                "simulation.extension.invalid",
+                f"The extra data extension key {key!r} is not canonical.",
+            )
+        if key in _RESERVED_DATA_EXTENSIONS:
+            raise SimulationRequestError(
+                "simulation.extension.conflict",
+                f"The extra data extension {key!r} is owned by simulate.",
+            )
+        if not isinstance(extension, Mapping):
+            raise SimulationRequestError(
+                "simulation.extension.invalid",
+                f"The extra data extension {key!r} must be an object.",
+            )
+        try:
+            # Clone at the request boundary so later caller mutation cannot
+            # change what is retained, and reject NaN/infinity at the same time.
+            encoded = json.dumps(
+                extension,
+                allow_nan=False,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                sort_keys=True,
+            )
+            cloned = json.loads(encoded)
+        except (TypeError, ValueError) as exc:
+            raise SimulationRequestError(
+                "simulation.extension.invalid",
+                f"The extra data extension {key!r} is not finite JSON: {exc}",
+            ) from exc
+        if not isinstance(cloned, dict):  # guarded by Mapping, kept explicit
+            raise SimulationRequestError(
+                "simulation.extension.invalid",
+                f"The extra data extension {key!r} must normalize to an object.",
+            )
+        normalized[key] = cloned
+    return normalized
+
+
+def _text_sequence(
+    value: Sequence[str] | None,
+    *,
+    label: str,
+) -> tuple[str, ...] | None:
+    """Copy an optional text sequence without treating one string as a list."""
+
+    if value is None:
+        return None
+    if isinstance(value, (str, bytes, bytearray)) or not isinstance(
+        value, Sequence
+    ):
+        raise SimulationRequestError(
+            "simulation.request.invalid",
+            f"{label} must be a sequence of names.",
+        )
+    if any(not isinstance(item, str) for item in value):
+        raise SimulationRequestError(
+            "simulation.request.invalid",
+            f"Every {label} entry must be text.",
+        )
+    return tuple(value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -736,18 +904,41 @@ def simulate(
     request_id: str | None = None,
     unmanaged_collateral: bool = False,
     extra_diagnostics: Sequence[Mapping[str, Any]] = (),
+    saved_nets: Sequence[str] | None = None,
+    retained_current_sources: Sequence[str] | None = None,
+    extra_input_records: Sequence[Mapping[str, Any]] = (),
+    extra_data_extensions: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Run one circuit simulation, whatever shape the request arrived in.
 
     ``target`` is either a SPICE deck or a published Simra schematic artifact
     descriptor; the driver decides which by reading it. The model source is at
     most one of ``models_file`` or ``pdk``. Every path returns exactly one
-    ``circuit.simulate/v1alpha2`` envelope.
+    ``circuit.simulate/v1alpha2`` envelope. ``saved_nets`` and
+    ``retained_current_sources`` are the explicit observation binding for a
+    caller-composed PDK deck; omitting them preserves the legacy behavior.
+    Additive input records and data extensions are applied before any result
+    envelope is retained.
     """
 
     correlation_id, request_id_error = _correlation_id(request_id)
     forwarded = [dict(entry) for entry in extra_diagnostics]
     normalized_backend = backend if backend in SUPPORTED_BACKENDS else None
+    normalized_extra_inputs: tuple[dict[str, Any], ...] = ()
+    normalized_extra_extensions: dict[str, dict[str, Any]] = {}
+    normalized_saved_nets: tuple[str, ...] | None = None
+    normalized_current_sources: tuple[str, ...] | None = None
+    preflight_error: SimulationRequestError | None = None
+    try:
+        normalized_extra_inputs = _extra_inputs(extra_input_records)
+        normalized_extra_extensions = _extra_extensions(extra_data_extensions)
+        normalized_saved_nets = _text_sequence(saved_nets, label="saved_nets")
+        normalized_current_sources = _text_sequence(
+            retained_current_sources,
+            label="retained_current_sources",
+        )
+    except SimulationRequestError as exc:
+        preflight_error = exc
 
     def refuse(
         code: str,
@@ -758,6 +949,8 @@ def simulate(
         execution_status: str = "invalid_request",
         extensions: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
+        merged_extensions = dict(normalized_extra_extensions)
+        merged_extensions.update(dict(extensions or {}))
         return _refusal(
             request_id=correlation_id,
             backend=normalized_backend,
@@ -766,12 +959,18 @@ def simulate(
             hint=hint,
             inputs=inputs,
             execution_status=execution_status,
-            extensions=extensions,
+            extensions=merged_extensions,
             extra_diagnostics=forwarded,
         )
 
     if request_id_error is not None:
         return refuse("simulation.request.invalid", request_id_error)
+    if preflight_error is not None:
+        return refuse(
+            preflight_error.code,
+            preflight_error.message,
+            hint=preflight_error.hint,
+        )
 
     driver = builtin_driver(backend) if isinstance(backend, str) else None
     if normalized_backend is None or driver is None:
@@ -786,7 +985,9 @@ def simulate(
     except SimulationRequestError as exc:
         return refuse(exc.code, exc.message, hint=exc.hint)
 
-    input_records: list[dict[str, Any]] = []
+    input_records: list[dict[str, Any]] = [
+        dict(record) for record in normalized_extra_inputs
+    ]
     configuration: list[dict[str, Any]] = []
     try:
         resolved_pdk, model_prelude = _resolve_model_source(
@@ -808,6 +1009,14 @@ def simulate(
         )
 
     if selected.kind == "simra-artifact":
+        if normalized_saved_nets is not None:
+            return refuse(
+                "simulation.saved_nets.artifact_unsupported",
+                "Explicit saved_nets are only accepted for a caller-composed bare "
+                "deck; a Simra artifact owns its published saved-net set.",
+                inputs=input_records,
+                extensions={TARGET_EXTENSION: _target_facts(selected)},
+            )
         try:
             testbench = load_simra_testbench(selected.path)
         except SimraArtifactError as exc:
@@ -844,7 +1053,7 @@ def simulate(
                 inputs=input_records,
                 extensions={TARGET_EXTENSION: _target_facts(selected)},
             )
-        saved_nets = testbench.saved_nets
+        bound_saved_nets = testbench.saved_nets
     else:
         try:
             deck_text = selected.path.read_text(encoding="utf-8", errors="replace")
@@ -895,9 +1104,24 @@ def simulate(
                 sha256=hashlib.sha256(deck_text.encode("utf-8")).hexdigest(),
             ),
         )
-        saved_nets = ()
+        bound_saved_nets = normalized_saved_nets or ()
 
     target_facts = _target_facts(selected)
+
+    if (
+        resolved_pdk is None
+        and (
+            normalized_saved_nets is not None
+            or normalized_current_sources is not None
+        )
+    ):
+        return refuse(
+            "simulation.binding_options.unbound",
+            "saved_nets and retained_current_sources require a PDK-bound deck, "
+            "because that binding owns the retained raw write set.",
+            inputs=input_records,
+            extensions={TARGET_EXTENSION: target_facts},
+        )
 
     if len(decks) > MAX_DISPATCHED_ANALYSES:
         return refuse(
@@ -1047,7 +1271,8 @@ def simulate(
                     deck.text,
                     resolved_pdk,
                     raw_name=raw_name,
-                    saved_nets=saved_nets,
+                    saved_nets=bound_saved_nets,
+                    retained_current_sources=normalized_current_sources,
                 )
             except PdkBindingError as exc:
                 return refuse(
@@ -1129,6 +1354,25 @@ def simulate(
                 request_id=correlation_id,
                 parameters=parameters,
             )
+
+        # Apply caller-owned provenance before either a per-analysis child or
+        # the final envelope can be retained.  The extension keys were cloned
+        # and collision-checked at the request boundary.
+        payload_extensions = payload.setdefault("data", {}).setdefault(
+            "extensions", {}
+        )
+        payload_extensions.update(normalized_extra_extensions)
+        payload_inputs = [
+            dict(record)
+            for record in payload.get("inputs") or ()
+            if isinstance(record, Mapping)
+        ]
+        payload_paths = {record.get("path") for record in payload_inputs}
+        for record in normalized_extra_inputs:
+            if record.get("path") not in payload_paths:
+                payload_inputs.insert(0, dict(record))
+                payload_paths.add(record.get("path"))
+        payload["inputs"] = payload_inputs
         payloads.append(payload)
 
         child_record: dict[str, Any] | None = None

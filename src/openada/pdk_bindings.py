@@ -67,6 +67,13 @@ UNRESOLVED_TOKEN_RE = re.compile(r"\{SIMRA_UNRESOLVED_[A-Za-z0-9_]+\}")
 _END_CARD_RE = re.compile(r"^\s*\.end\s*$", re.IGNORECASE)
 _CORNER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
 _RAW_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+#: A saved net reaches both ``.save`` and ``write ... v(<net>)``.  Keep the
+#: grammar aligned with the published Simra net-name grammar; parentheses or
+#: whitespace here would escape the generated vector expression.
+_SAVED_NET_RE = re.compile(r"^[A-Za-z0-9_.:+$\[\]-]{1,256}$")
+#: An explicitly retained current names the already-emitted voltage-source
+#: card, not a native expression supplied by the caller.
+_EMITTED_VSOURCE_NAME_RE = re.compile(r"^[Vv][A-Za-z0-9_.$#+-]*$")
 #: An independent voltage source at the top of the deck. ngspice gives each one
 #: a branch-current vector, and that vector is the only thing in the whole
 #: pipeline carrying amperes.
@@ -1037,12 +1044,17 @@ def _prelude_lines(resolved: ResolvedPdkBinding) -> list[str]:
     return lines
 
 
-def top_level_voltage_sources(deck_text: str) -> tuple[str, ...]:
-    """Return the deck's own independent voltage sources, outermost only.
+def _top_level_voltage_sources(
+    deck_text: str,
+    *,
+    maximum: int | None,
+) -> tuple[str, ...]:
+    """Return canonical lowercase top-level voltage-source card names.
 
-    Cards inside a ``.SUBCKT`` belong to the device under test, not to the
-    testbench that drives it; ngspice names their branch currents through the
-    instance path, and probing them is not what a testbench asked for.
+    ``maximum`` preserves the historical bounded discovery path.  The
+    experiment path supplies an already-bounded exact set and therefore asks
+    for the complete roster so every requested name can be checked rather than
+    silently disappearing after source sixteen.
     """
 
     names: list[str] = []
@@ -1065,9 +1077,20 @@ def top_level_voltage_sources(deck_text: str) -> tuple[str, ...]:
             continue
         seen.add(name)
         names.append(name)
-        if len(names) >= MAX_PROBED_SOURCES:
+        if maximum is not None and len(names) >= maximum:
             break
     return tuple(names)
+
+
+def top_level_voltage_sources(deck_text: str) -> tuple[str, ...]:
+    """Return the deck's own independent voltage sources, outermost only.
+
+    Cards inside a ``.SUBCKT`` belong to the device under test, not to the
+    testbench that drives it; ngspice names their branch currents through the
+    instance path, and probing them is not what a testbench asked for.
+    """
+
+    return _top_level_voltage_sources(deck_text, maximum=MAX_PROBED_SOURCES)
 
 
 def source_current_vectors(deck_text: str) -> tuple[str, ...]:
@@ -1087,6 +1110,68 @@ def source_current_vectors(deck_text: str) -> tuple[str, ...]:
     return tuple(f"i({source})" for source in top_level_voltage_sources(deck_text))
 
 
+def _explicit_source_current_vectors(
+    deck_text: str,
+    retained_current_sources: Sequence[str],
+) -> tuple[str, ...]:
+    """Resolve an exact caller-owned source set to canonical native vectors."""
+
+    requested: list[str] = []
+    seen: set[str] = set()
+    for index, source in enumerate(retained_current_sources):
+        if (
+            not isinstance(source, str)
+            or _EMITTED_VSOURCE_NAME_RE.fullmatch(source) is None
+        ):
+            raise PdkBindingError(
+                "pdk.current_source.invalid",
+                "retained_current_sources"
+                f"[{index}] must be one emitted independent voltage-source name.",
+            )
+        canonical = source.lower()
+        if canonical in seen:
+            raise PdkBindingError(
+                "pdk.current_source.duplicate",
+                f"The retained current source {source!r} is duplicated "
+                "case-insensitively.",
+            )
+        seen.add(canonical)
+        requested.append(canonical)
+
+    available = set(_top_level_voltage_sources(deck_text, maximum=None))
+    missing = [source for source in requested if source not in available]
+    if missing:
+        raise PdkBindingError(
+            "pdk.current_source.unknown",
+            "Every explicitly retained current must name a top-level independent "
+            "voltage source in the composed deck; not found as such: "
+            f"{', '.join(missing)}.",
+        )
+    return tuple(f"i({source})" for source in requested)
+
+
+def _validated_saved_nets(saved_nets: Sequence[str]) -> tuple[str, ...]:
+    """Return a closed, case-insensitively unique saved-net sequence."""
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for index, net in enumerate(saved_nets):
+        if not isinstance(net, str) or _SAVED_NET_RE.fullmatch(net) is None:
+            raise PdkBindingError(
+                "pdk.saved_net.invalid",
+                f"saved_nets[{index}] is not a bounded SPICE net name.",
+            )
+        folded = net.casefold()
+        if folded in seen:
+            raise PdkBindingError(
+                "pdk.saved_net.duplicate",
+                f"The saved net {net!r} is duplicated case-insensitively.",
+            )
+        seen.add(folded)
+        normalized.append(net)
+    return tuple(normalized)
+
+
 def _extend_save_card(line: str, currents: Sequence[str]) -> str:
     """Add the branch currents to a deck's own ``.save`` card, once."""
 
@@ -1101,18 +1186,22 @@ def _extend_save_card(line: str, currents: Sequence[str]) -> str:
     return f"{match.group('head')}{rest} {' '.join(missing)}{match.group('eol')}"
 
 
-def _write_vectors(saved_nets: Sequence[str], currents: Sequence[str]) -> str:
+def _write_vectors(
+    saved_nets: Sequence[str],
+    currents: Sequence[str],
+    *,
+    exact_current_set: bool,
+) -> str:
     """Return the ``write`` vector list: the saved nets, plus every current.
 
-    A bare ``write <file>`` dumps every vector ngspice has, branch currents
-    included -- which is how a testbench that declares no saves at all can be
-    measured for impedance today. Narrowing the list to ``v(net)`` per saved
-    net therefore *removed* capability: the saved-net list says which **nets**
-    to keep and was never a statement about currents, and one complex vector
-    per source is free beside them.
+    A legacy bare ``write <file>`` dumps every vector ngspice has, branch
+    currents included -- which is how a testbench that declares no saves at
+    all can be measured for impedance today.  Preserve that only when the
+    caller omitted an exact current set.  An explicit experiment-owned current
+    set is itself the complete write list even when there are no saved nets.
     """
 
-    if not saved_nets:
+    if not saved_nets and not exact_current_set:
         return ""
     vectors = [f"v({net})" for net in saved_nets]
     seen = {vector.lower() for vector in vectors}
@@ -1130,6 +1219,7 @@ def bind_deck(
     *,
     raw_name: str | None = None,
     saved_nets: tuple[str, ...] = (),
+    retained_current_sources: tuple[str, ...] | None = None,
 ) -> tuple[str, dict[str, Any]]:
     """Return one PDK-bound deck plus the bounded facts describing the binding.
 
@@ -1158,8 +1248,26 @@ def bind_deck(
     if not lines:
         raise PdkBindingError("pdk.deck.empty", "The deck is empty.")
 
-    current_vectors = source_current_vectors(deck_text) if raw_name is not None else ()
-    write_vectors = _write_vectors(saved_nets, current_vectors)
+    normalized_saved_nets = _validated_saved_nets(saved_nets)
+    explicit_current_vectors = (
+        _explicit_source_current_vectors(deck_text, retained_current_sources)
+        if retained_current_sources is not None
+        else None
+    )
+    if raw_name is None:
+        current_vectors: tuple[str, ...] = ()
+    elif explicit_current_vectors is None:
+        # Backward compatibility: legacy callers retain the first bounded set
+        # of every top-level voltage-source current.
+        current_vectors = source_current_vectors(deck_text)
+    else:
+        # An explicit empty tuple intentionally retains no currents.
+        current_vectors = explicit_current_vectors
+    write_vectors = _write_vectors(
+        normalized_saved_nets,
+        current_vectors,
+        exact_current_set=retained_current_sources is not None,
+    )
     bound: list[str] = []
     # A SPICE deck's first line is its title and is never a directive.
     title = lines[0]
@@ -1225,6 +1333,11 @@ def bind_deck(
     facts["junction_parameters_supplied"] = sorted(junction_supplied)
     facts["simulation_temperature_c"] = binding.simulation_temperature_c
     facts["model_tnom_c"] = binding.model_tnom_c
+    facts["saved_nets"] = list(normalized_saved_nets)
+    facts["retained_current_vectors"] = list(current_vectors)
+    facts["current_retention"] = (
+        "explicit" if retained_current_sources is not None else "legacy-auto"
+    )
     facts["nominal_supply_v"] = {
         role: binding.nominal_supply_v[role]
         for role in sorted(roles_used)

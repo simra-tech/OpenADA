@@ -56,6 +56,7 @@ from .operations.simulate import (
     simulate,
     simulate_legacy_native,
 )
+from .operations.experiment import run_experiment
 from .pdk_bindings import available_pdk_ids, simulatable_pdk_ids
 from .preflight import PREFLIGHT_SPECS
 from .provider_runtime import (
@@ -94,6 +95,7 @@ _COMMAND_OPERATIONS = {
     # The deprecated alias reports the operation it delegates to. There is one
     # simulation semantic, so there is one envelope operation name.
     "testbench-simulate": "simulate",
+    "experiment": "experiment.run",
     "extract": "result.series.extract",
     "measure": "result.measure",
     "spectral": "result.spectral.measure",
@@ -554,6 +556,44 @@ def build_parser() -> argparse.ArgumentParser:
     testbench.add_argument(
         "--request-id",
         help="Canonical lowercase UUID correlating this request with its result.",
+    )
+
+    experiment = commands.add_parser(
+        "experiment",
+        help="Validate and run one closed simra.experiment/v1 specification.",
+    )
+    experiment_commands = experiment.add_subparsers(
+        dest="experiment_command",
+        required=True,
+    )
+    experiment_run = experiment_commands.add_parser(
+        "run",
+        help="Compose, simulate, extract, and measure a typed experiment.",
+    )
+    experiment_run.add_argument(
+        "spec",
+        help="Path to one simra.experiment/v1 JSON specification.",
+    )
+    experiment_run.add_argument(
+        "--pdk",
+        required=True,
+        help=(
+            "Reviewed PDK binding id; must exactly equal conditions.pdk.id in "
+            "the specification."
+        ),
+    )
+    experiment_run.add_argument(
+        "--pdk-root",
+        dest="experiment_pdk_root",
+        help=(
+            "Absolute directory containing the selected PDK tree. Defaults to "
+            "PDK_ROOT; never comes from the experiment specification."
+        ),
+    )
+    experiment_run.add_argument(
+        "--output-dir",
+        required=True,
+        help="Absent or empty directory that will retain the complete experiment chain.",
     )
 
     measure = commands.add_parser(
@@ -1521,6 +1561,19 @@ def _pdk_root_argument(args: argparse.Namespace) -> Path | None:
     return None
 
 
+def _experiment_pdk_root_argument(args: argparse.Namespace) -> Path | None:
+    explicit = getattr(args, "experiment_pdk_root", None)
+    if explicit:
+        return Path(explicit).expanduser().resolve()
+    global_roots = getattr(args, "pdk_root", ())
+    if isinstance(global_roots, list) and len(global_roots) == 1:
+        return Path(global_roots[0]).expanduser().resolve()
+    environment_root = os.environ.get(PDK_ROOT_ENVIRONMENT_NAME)
+    if environment_root:
+        return Path(environment_root).expanduser().resolve()
+    return None
+
+
 def _simulation_cli_invalid(args: argparse.Namespace, message: str) -> dict:
     if args.backend is not None:
         return invalid_circuit_simulation_request(
@@ -2103,6 +2156,16 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             timeout=args.timeout,
             request_id=args.request_id,
         )
+    if args.command == "experiment":
+        if args.experiment_command != "run":  # pragma: no cover - argparse owns this
+            raise ValueError(f"unknown experiment command: {args.experiment_command}")
+        return run_experiment(
+            Path(args.spec).expanduser().resolve(),
+            Path(args.output_dir).expanduser().resolve(),
+            discovery=discovery,
+            pdk=args.pdk,
+            pdk_root=_experiment_pdk_root_argument(args),
+        )
     if args.command == "extract":
         try:
             simulation = _load_json_object(args.simulation, role="simulation result")
@@ -2413,6 +2476,29 @@ def _requested_shared_simulation(
 
 
 def _invalid_request(operation: str, message: str) -> dict:
+    if operation == "experiment.run":
+        return result(
+            "experiment.run",
+            tool=None,
+            execution=static_execution("invalid_request"),
+            engineering_status="unknown",
+            summary="OpenADA could not parse the experiment request.",
+            diagnostics=[
+                diagnostic("error", "experiment.document.invalid", message)
+            ],
+            data={
+                "schema": "simra.experiment-run/v1",
+                "refusals": [
+                    {
+                        "code": "experiment.document.invalid",
+                        "path": "",
+                        "message": message,
+                    }
+                ],
+                "manifest": None,
+                "extensions": {},
+            },
+        )
     if operation == "result.series.extract":
         payload = extract_result_series({}, "", [])
         payload["engineering"]["summary"] = (

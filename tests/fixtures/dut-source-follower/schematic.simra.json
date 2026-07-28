@@ -1,0 +1,694 @@
+{
+  "cells": [
+    {
+      "canvas": {
+        "grid": 1.0,
+        "view_box": [
+          -4.15,
+          -1.5499999999999998,
+          6.95,
+          21.55
+        ]
+      },
+      "entities": {
+        "instances": [
+          {
+            "cell_ref": "cell:primitive/nmos/546af6cc9f57",
+            "id": "instance:SourceFollower/schematic/M_BIAS",
+            "implementation_status": "implemented",
+            "kind": "nmos",
+            "name": "M_BIAS",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "l": "180n",
+              "m": 1,
+              "model": "nmos.core",
+              "nf": 1,
+              "w": "10u"
+            },
+            "position": [
+              0.0,
+              4.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 13,
+              "line": 33
+            },
+            "terminals": {
+              "B": "net:SourceFollower/schematic/VSS",
+              "D": "net:SourceFollower/schematic/Y",
+              "G": "net:SourceFollower/schematic/VBIAS",
+              "S": "net:SourceFollower/schematic/VSS"
+            }
+          },
+          {
+            "cell_ref": "cell:primitive/nmos/546af6cc9f57",
+            "id": "instance:SourceFollower/schematic/M_FOLLOW",
+            "implementation_status": "implemented",
+            "kind": "nmos",
+            "name": "M_FOLLOW",
+            "netlistable": true,
+            "orientation": "R0",
+            "parameter_status": "resolved",
+            "parameters": {
+              "l": "180n",
+              "m": 1,
+              "model": "nmos.core",
+              "nf": 1,
+              "w": "10u"
+            },
+            "position": [
+              0.0,
+              12.0
+            ],
+            "source": {
+              "artifact": "design.ord",
+              "column": 13,
+              "line": 32
+            },
+            "terminals": {
+              "B": "net:SourceFollower/schematic/VSS",
+              "D": "net:SourceFollower/schematic/VDD",
+              "G": "net:SourceFollower/schematic/A",
+              "S": "net:SourceFollower/schematic/Y"
+            }
+          }
+        ],
+        "junctions": [
+          {
+            "id": "junction:SourceFollower/schematic/Y/0",
+            "net": "net:SourceFollower/schematic/Y",
+            "position": [
+              2.0,
+              9.0
+            ]
+          }
+        ],
+        "labels": [
+          {
+            "alignment": "R0",
+            "id": "label:SourceFollower/schematic/VDD/0",
+            "net": "net:SourceFollower/schematic/VDD",
+            "position": [
+              2.0,
+              16.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "id": "label:SourceFollower/schematic/VSS/0",
+            "net": "net:SourceFollower/schematic/VSS",
+            "position": [
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "id": "label:SourceFollower/schematic/VSS/1",
+            "net": "net:SourceFollower/schematic/VSS",
+            "position": [
+              4.0,
+              6.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "id": "label:SourceFollower/schematic/VSS/2",
+            "net": "net:SourceFollower/schematic/VSS",
+            "position": [
+              4.0,
+              14.0
+            ]
+          }
+        ],
+        "nets": [
+          {
+            "external": true,
+            "id": "net:SourceFollower/schematic/A",
+            "name": "A"
+          },
+          {
+            "external": true,
+            "id": "net:SourceFollower/schematic/VBIAS",
+            "name": "VBIAS"
+          },
+          {
+            "external": true,
+            "id": "net:SourceFollower/schematic/VDD",
+            "name": "VDD"
+          },
+          {
+            "external": true,
+            "id": "net:SourceFollower/schematic/VSS",
+            "name": "VSS"
+          },
+          {
+            "external": true,
+            "id": "net:SourceFollower/schematic/Y",
+            "name": "Y"
+          }
+        ],
+        "ports": [
+          {
+            "alignment": "R270",
+            "direction": "in",
+            "id": "port:SourceFollower/A",
+            "name": "A",
+            "net": "net:SourceFollower/schematic/A",
+            "ordinal": 0,
+            "position": [
+              -2.0,
+              14.0
+            ]
+          },
+          {
+            "alignment": "R90",
+            "direction": "out",
+            "id": "port:SourceFollower/Y",
+            "name": "Y",
+            "net": "net:SourceFollower/schematic/Y",
+            "ordinal": 1,
+            "position": [
+              6.0,
+              8.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "direction": "in",
+            "id": "port:SourceFollower/VBIAS",
+            "name": "VBIAS",
+            "net": "net:SourceFollower/schematic/VBIAS",
+            "ordinal": 2,
+            "position": [
+              -2.0,
+              6.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "id": "port:SourceFollower/VDD",
+            "name": "VDD",
+            "net": "net:SourceFollower/schematic/VDD",
+            "ordinal": 3,
+            "position": [
+              2.0,
+              20.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "id": "port:SourceFollower/VSS",
+            "name": "VSS",
+            "net": "net:SourceFollower/schematic/VSS",
+            "ordinal": 4,
+            "position": [
+              2.0,
+              0.0
+            ]
+          }
+        ],
+        "wires": [
+          {
+            "id": "wire:SourceFollower/schematic/A/0",
+            "net": "net:SourceFollower/schematic/A",
+            "points": [
+              [
+                -2.0,
+                14.0
+              ],
+              [
+                0.0,
+                14.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:SourceFollower/schematic/VBIAS/0",
+            "net": "net:SourceFollower/schematic/VBIAS",
+            "points": [
+              [
+                -2.0,
+                6.0
+              ],
+              [
+                0.0,
+                6.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:SourceFollower/schematic/Y/0",
+            "net": "net:SourceFollower/schematic/Y",
+            "points": [
+              [
+                2.0,
+                9.0
+              ],
+              [
+                2.0,
+                12.0
+              ]
+            ]
+          },
+          {
+            "id": "wire:SourceFollower/schematic/Y/1",
+            "net": "net:SourceFollower/schematic/Y",
+            "points": [
+              [
+                6.0,
+                8.0
+              ],
+              [
+                5.0,
+                8.0
+              ],
+              [
+                5.0,
+                9.0
+              ],
+              [
+                2.0,
+                9.0
+              ],
+              [
+                2.0,
+                8.0
+              ]
+            ]
+          }
+        ]
+      },
+      "id": "cell:SourceFollower",
+      "kind": "design",
+      "name": "SourceFollower",
+      "port_order": [
+        "A",
+        "Y",
+        "VBIAS",
+        "VDD",
+        "VSS"
+      ],
+      "primitive_kind": null,
+      "scene": [
+        {
+          "entity": "wire:SourceFollower/schematic/A/0",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:SourceFollower/schematic/VBIAS/0",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:SourceFollower/schematic/Y/0",
+          "type": "wire"
+        },
+        {
+          "entity": "wire:SourceFollower/schematic/Y/1",
+          "type": "wire"
+        },
+        {
+          "entity": "junction:SourceFollower/schematic/Y/0",
+          "type": "junction"
+        },
+        {
+          "entity": "label:SourceFollower/schematic/VDD/0",
+          "type": "label"
+        },
+        {
+          "entity": "label:SourceFollower/schematic/VSS/0",
+          "type": "label"
+        },
+        {
+          "entity": "label:SourceFollower/schematic/VSS/1",
+          "type": "label"
+        },
+        {
+          "entity": "label:SourceFollower/schematic/VSS/2",
+          "type": "label"
+        },
+        {
+          "entity": "instance:SourceFollower/schematic/M_BIAS",
+          "type": "instance"
+        },
+        {
+          "entity": "instance:SourceFollower/schematic/M_FOLLOW",
+          "type": "instance"
+        },
+        {
+          "entity": "port:SourceFollower/A",
+          "type": "port"
+        },
+        {
+          "entity": "port:SourceFollower/Y",
+          "type": "port"
+        },
+        {
+          "entity": "port:SourceFollower/VBIAS",
+          "type": "port"
+        },
+        {
+          "entity": "port:SourceFollower/VDD",
+          "type": "port"
+        },
+        {
+          "entity": "port:SourceFollower/VSS",
+          "type": "port"
+        }
+      ],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          6.0,
+          5.0
+        ],
+        "ports": [
+          {
+            "alignment": "R90",
+            "direction": "in",
+            "name": "A",
+            "position": [
+              0.0,
+              2.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "direction": "out",
+            "name": "Y",
+            "position": [
+              6.0,
+              2.0
+            ]
+          },
+          {
+            "alignment": "R90",
+            "direction": "in",
+            "name": "VBIAS",
+            "position": [
+              0.0,
+              3.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "VDD",
+            "position": [
+              3.0,
+              5.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "VSS",
+            "position": [
+              3.0,
+              0.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                6.0,
+                0.0
+              ],
+              [
+                6.0,
+                5.0
+              ],
+              [
+                0.0,
+                5.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            "type": "polyline"
+          }
+        ]
+      }
+    },
+    {
+      "canvas": null,
+      "entities": null,
+      "id": "cell:primitive/nmos/546af6cc9f57",
+      "kind": "primitive",
+      "name": "Nmos_l_180n_w_10u_m_1_nf_1_model_nmos_core",
+      "port_order": [
+        "G",
+        "S",
+        "D",
+        "B"
+      ],
+      "primitive_kind": "nmos",
+      "scene": [],
+      "symbol": {
+        "outline": [
+          0.0,
+          0.0,
+          4.0,
+          4.0
+        ],
+        "ports": [
+          {
+            "alignment": "R90",
+            "direction": "in",
+            "name": "G",
+            "position": [
+              0.0,
+              2.0
+            ]
+          },
+          {
+            "alignment": "R180",
+            "direction": "inout",
+            "name": "S",
+            "position": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "alignment": "R0",
+            "direction": "inout",
+            "name": "D",
+            "position": [
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "alignment": "R270",
+            "direction": "in",
+            "name": "B",
+            "position": [
+              4.0,
+              2.0
+            ]
+          }
+        ],
+        "primitives": [
+          {
+            "points": [
+              [
+                2.0,
+                0.0
+              ],
+              [
+                2.0,
+                1.25
+              ],
+              [
+                1.3,
+                1.25
+              ],
+              [
+                1.3,
+                2.75
+              ],
+              [
+                2.0,
+                2.75
+              ],
+              [
+                2.0,
+                4.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.0,
+                1.25
+              ],
+              [
+                1.0,
+                2.75
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                0.0,
+                2.0
+              ],
+              [
+                1.0,
+                2.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                4.0,
+                2.0
+              ],
+              [
+                1.3,
+                2.0
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.7,
+                1.8
+              ],
+              [
+                1.3,
+                2.0
+              ],
+              [
+                1.7,
+                2.2
+              ]
+            ],
+            "type": "polyline"
+          },
+          {
+            "points": [
+              [
+                1.6,
+                1.05
+              ],
+              [
+                2.0,
+                1.25
+              ],
+              [
+                1.6,
+                1.45
+              ]
+            ],
+            "type": "polyline"
+          }
+        ]
+      }
+    }
+  ],
+  "compiler": {
+    "name": "simra-schematic",
+    "ordec": {
+      "commit": "00277225e1c156231ae1515fef06094e993b1788",
+      "repository": "https://github.com/tub-msc/ordec.git",
+      "version": "0.7.0.dev88+g00277225e"
+    },
+    "version": "0.4.0"
+  },
+  "provenance": {
+    "paper_fidelity": "not_applicable",
+    "source": {
+      "artifact": "design.ord",
+      "sha256": "69a01a488db517b5860688f0e59cc38baf4e194521da2189d7cb6107791856e8"
+    },
+    "source_maps": {
+      "entities": [
+        {
+          "artifact": "design.ord",
+          "column": 13,
+          "entity": "instance:SourceFollower/schematic/M_BIAS",
+          "line": 33,
+          "relation": "authored_at"
+        },
+        {
+          "artifact": "design.ord",
+          "column": 13,
+          "entity": "instance:SourceFollower/schematic/M_FOLLOW",
+          "line": 32,
+          "relation": "authored_at"
+        }
+      ],
+      "paper": []
+    }
+  },
+  "schema": "simra.schematic/v2",
+  "testbench": null,
+  "validation": {
+    "connectivity": "pass",
+    "contract": "pass",
+    "error_count": 0,
+    "errors": [],
+    "netlistable": true,
+    "parameters": "resolved",
+    "readability": [
+      {
+        "area": 30.0,
+        "aspect": 1.2,
+        "bends": 3,
+        "canvas_utilization": 0.3,
+        "cell": "SourceFollower",
+        "collinear_foreign": 0,
+        "crossings": 0,
+        "devices": 2,
+        "label_conflicts": 0,
+        "orphan_ports": 0,
+        "over_sheet_cap": false,
+        "routing_symmetry": 0.286,
+        "segments": 7,
+        "supply_orientation": 1.0,
+        "symbol_label_overflow": 0,
+        "wire_length": 13.0
+      }
+    ],
+    "rendering": "pass",
+    "simulation": "not_run",
+    "simulation_handoff": "not_applicable",
+    "simulation_ready": false,
+    "topology": "not_declared",
+    "warning_count": 0,
+    "warnings": []
+  },
+  "view": {
+    "id": "sized-source-follower",
+    "kind": "schematic",
+    "title": "SourceFollower",
+    "top": "SourceFollower",
+    "top_cell": "cell:SourceFollower",
+    "topology_id": null
+  }
+}
