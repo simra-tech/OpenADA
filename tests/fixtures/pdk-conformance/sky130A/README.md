@@ -9,12 +9,15 @@ Geometry is deliberately written in plain microns in the native deck because
 `libs.tech/ngspice/all.spice` installs `.option scale=1.0u`. The portable deck
 uses SI-valued canonical geometry; OpenADA must translate it exactly once.
 
-## Known conformance gap
+The independently authored NF=2 branch exercises the width normalization that
+NF=1 cannot. The PDK's `test_nmos.sch` says `wnflag=1` selects bins using W/NF,
+and `libs.tech/xschem/sky130_fd_pr/nfet_01v8_nf.sym` netlists total W as the
+entered per-finger width times NF. The fixture therefore uses total W=1 um,
+NF=2 (two 0.5 um fingers), L=0.15 um, and the same 1.8 V biases. Native
+ngspice 45.2 produces `i(vd_nf2) = -4.969870468164799e-4 A`; the model-free
+pipeline must reproduce that native value.
 
-The native documented experiment states `.option wnflag=1`, which selects
-model bins using W/NF. The current binding does not state that option. NF=1
-makes the scalar oracle insensitive to the disagreement, so this fixture does
-not establish multi-finger/bin conformance. The accompanying strict xfail test
-keeps the gap visible until the binding and an NF>1 oracle are addressed.
+Both native branches are hand-written against the PDK documentation. They are
+not generated from OpenADA's binding.
 
 This is open-tool exploratory evidence, not manufacturing or signoff evidence.

@@ -4,6 +4,9 @@ SkyWater SKY130 native NMOS operating-point oracle
 Vd_ref d_ref 0 1.8
 Vg_ref g_ref 0 1.8
 Xref d_ref g_ref 0 0 sky130_fd_pr__nfet_01v8 w=1 l=0.15 nf=1 m=1
+Vd_nf2 d_nf2 0 1.8
+Vg_nf2 g_nf2 0 1.8
+Xnf2 d_nf2 g_nf2 0 0 sky130_fd_pr__nfet_01v8 w=1 l=0.15 nf=2 m=1
 .temp 27
 .op
 .end

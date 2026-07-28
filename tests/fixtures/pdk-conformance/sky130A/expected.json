@@ -26,8 +26,26 @@
     "relative_tolerance": 5e-5,
     "absolute_tolerance": 1e-12
   },
+  "multi_finger": {
+    "total_w_m": 1e-6,
+    "per_finger_w_m": 5e-7,
+    "l_m": 1.5e-7,
+    "nf": 2,
+    "m": 1,
+    "bias": {
+      "vds_v": 1.8,
+      "vgs_v": 1.8
+    },
+    "observable": {
+      "name": "i(vd_nf2)",
+      "unit": "A",
+      "expected": -0.0004969870468164799,
+      "relative_tolerance": 5e-5,
+      "absolute_tolerance": 1e-12
+    }
+  },
   "pipeline": {
-    "rewritten_device_count": 7,
+    "rewritten_device_count": 8,
     "vectors": {
       "reference": "i(vd_ref)",
       "unit_equivalent": "i(vd_units)",
@@ -35,7 +53,8 @@
       "reversed_sense": "i(vd_flip)",
       "double_width": "i(vd_double)",
       "lower_supply": "i(vd_low)",
-      "higher_supply": "i(vd_high)"
+      "higher_supply": "i(vd_high)",
+      "multi_finger": "i(vd_nf2)"
     }
   },
   "metamorphic": {
@@ -54,6 +73,10 @@
       "supports": "native micron geometry and d g s b terminals"
     },
     {
+      "path": "libs.tech/xschem/sky130_fd_pr/nfet_01v8_nf.sym",
+      "supports": "multi-finger netlisting with total W equal to per-finger W times nf"
+    },
+    {
       "path": "libs.tech/ngspice/sky130.lib.spice",
       "supports": "the tt library section"
     },
@@ -63,7 +86,6 @@
     }
   ],
   "known_limitations": [
-    "The native documented test sets wnflag=1, but the current OpenADA binding does not; nf=1 is insensitive to that disagreement, so an nf>1 fixture remains mandatory.",
     "This fixture covers the standard 1.8 V NMOS at tt, not the other device variants, passives, mismatch or statistical models."
   ]
 }

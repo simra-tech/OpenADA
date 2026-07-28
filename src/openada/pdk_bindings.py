@@ -19,7 +19,8 @@ ngspice 45.2 runs:
   Every instance geometry must therefore be written as a **plain micron
   number** -- ``W=2 L=0.15``, not ``W=2u L=0.15u``. An SI-valued card is scaled
   by a further 1e-6, lands outside every model bin, and ngspice rejects it with
-  the opaque ``could not find a valid modelname``.
+  the opaque ``could not find a valid modelname``. Its documented ngspice flow
+  also states ``.option wnflag=1`` so multi-finger bin selection uses ``W/NF``.
 * **GlobalFoundries gf180mcuD** ships subcircuits with SI geometry, but its
   corner library references global switches (``fnoicor``, ``sw_stat_global``,
   ...) that live in a *separate* file which must be included first. Without it
@@ -245,6 +246,10 @@ class PdkBinding:
     #: deck's numbers pass through untouched and ``1e-6`` means the PDK expects
     #: plain micron numbers.
     geometry_scale: str = "1"
+    #: Additional ngspice ``.option`` assignments the reviewed PDK flow
+    #: requires in every composed deck. Values omit the ``.option`` prefix so
+    #: the binding owns the card spelling and placement.
+    ngspice_options: tuple[str, ...] = ()
     #: Simra parameter keys whose value is a length and must be rescaled.
     geometry_parameters: frozenset[str] = frozenset(("w", "l"))
     #: Role -> simulator-enforced geometry envelope, where the PDK bins.
@@ -408,7 +413,9 @@ IHP_SG13G2 = PdkBinding(
 #: SkyWater sky130A ships its FETs as subcircuits over binned BSIM4 cards, and
 #: its own corner collateral installs ``.option scale=1.0u``
 #: (``libs.tech/ngspice/all.spice:2``, included from ``corners/<corner>.spice``).
-#: Geometry must therefore be written in microns. Binning extents read from
+#: Its documented xschem flow also installs ``.option wnflag=1`` so bin
+#: selection uses W/NF for multi-finger devices. Geometry must therefore be
+#: written in microns. Binning extents read from
 #: ``libs.ref/sky130_fd_pr/spice/sky130_fd_pr__{n,p}fet_01v8__tt.pm3.spice``.
 SKY130A = PdkBinding(
     pdk_id="sky130A",
@@ -434,6 +441,7 @@ SKY130A = PdkBinding(
         "pmos.io": "sky130_fd_pr__pfet_g5v0d10v5",
     },
     geometry_scale="1e-6",
+    ngspice_options=("wnflag=1",),
     device_geometry={
         "nmos.core": DeviceGeometry(
             l_min="1.5e-7", l_max="1e-4", w_min="3.6e-7", w_max="1e-4"
@@ -459,9 +467,10 @@ SKY130A = PdkBinding(
     identity_relative_path=None,
     notes=(
         "Devices are subcircuits over binned BSIM4 models. The PDK sets "
-        "scale=1u itself, so instance geometry is expressed in microns; an "
-        "SI-valued card lands outside every bin. Parsing the full tt library "
-        "takes ~95 s on a 2025 host."
+        "scale=1u itself, so instance geometry is expressed in microns; its "
+        "documented ngspice flow sets wnflag=1 so multi-finger bin selection "
+        "uses W/NF. An SI-valued card lands outside every bin. Parsing the full "
+        "tt library takes ~95 s on a 2025 host."
     ),
 )
 
@@ -1021,6 +1030,8 @@ def _prelude_lines(resolved: ResolvedPdkBinding) -> list[str]:
         # its own corner collateral, but a deck that says what convention its
         # numbers are in can be reviewed without reading the PDK.
         lines.append(f".option scale={scale}\n")
+    for option in resolved.binding.ngspice_options:
+        lines.append(f".option {option}\n")
     for card in resolved.library_cards:
         lines.append(f"{card}\n")
     return lines
@@ -1123,10 +1134,10 @@ def bind_deck(
     """Return one PDK-bound deck plus the bounded facts describing the binding.
 
     The model-free deck gains, in order: its original title line, the PDK's
-    OSDI preload, its geometry unit convention, its ordered library prelude, its
-    own body with every MOS card rewritten, and -- when ``raw_name`` is given --
-    one closed control block that runs the deck's single analysis and writes
-    that raw file.
+    OSDI preload, its geometry unit convention and required simulator options,
+    its ordered library prelude, its own body with every MOS card rewritten,
+    and -- when ``raw_name`` is given -- one closed control block that runs the
+    deck's single analysis and writes that raw file.
     """
 
     unresolved = UNRESOLVED_TOKEN_RE.findall(deck_text)

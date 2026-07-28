@@ -31,5 +31,9 @@ Vd_high d_high 0 1.35
 Vg_high g_high 0 1.8
 Mhigh d_high g_high 0 0 nmos.core W=1e-6 L=1.5e-7 M=1 NF=1
 
+Vd_nf2 d_nf2 0 1.8
+Vg_nf2 g_nf2 0 1.8
+Mnf2 d_nf2 g_nf2 0 0 nmos.core W=1e-6 L=1.5e-7 M=1 NF=2
+
 .op
 .end

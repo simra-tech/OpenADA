@@ -242,10 +242,12 @@ def test_a_pdk_that_sets_scale_receives_geometry_in_its_own_units(tmp_path):
     text, _ = bind_deck(deck, resolved)
     lines = text.splitlines()
 
-    # Both halves are load-bearing. The explicit scale states the units
-    # ngspice will apply, and the SI source card is converted to plain microns
-    # exactly once before sky130's model-bin lookup sees it.
+    # All three pieces are load-bearing. The explicit scale states the units
+    # ngspice will apply, wnflag selects multi-finger bins using W/NF, and the
+    # SI source card is converted to plain microns exactly once before sky130's
+    # model-bin lookup sees it.
     assert lines.count(".option scale=1e-6") == 1
+    assert lines.count(".option wnflag=1") == 1
     assert (
         "xM_PD Y A VSS VSS sky130_fd_pr__nfet_01v8 "
         "w=2 l=0.5 m=1 nf=1"
@@ -257,7 +259,21 @@ def test_a_scaling_pdk_states_its_convention_in_the_bound_deck(tmp_path):
     resolved = _resolved(tmp_path, SKY130A)
     text, facts = bind_deck("* t\n.END\n", resolved)
     assert ".option scale=1e-6\n" in text
+    assert ".option wnflag=1\n" in text
+    assert text.index(".option scale=1e-6\n") < text.index(".option wnflag=1\n")
+    assert text.index(".option wnflag=1\n") < text.index(".lib ")
     assert facts["geometry_scale"] == "1e-6"
+
+
+@pytest.mark.parametrize(
+    "binding",
+    (IHP_SG13G2, GF180MCUD, FREEPDK45),
+    ids=lambda binding: binding.pdk_id,
+)
+def test_non_sky_pdks_leave_width_normalization_untouched(tmp_path, binding):
+    resolved = _resolved(tmp_path, binding)
+    text, _ = bind_deck("* t\n.END\n", resolved)
+    assert ".option wnflag" not in text
 
 
 def test_an_si_pdk_leaves_the_geometry_untouched(tmp_path):
@@ -791,6 +807,8 @@ def test_a_relative_reference_is_resolved_against_the_run_directory(tmp_path):
         ".include /somewhere/models.spice",
         "pre_osdi /somewhere/compact.osdi",
         ".option scale=1e-6",
+        ".option wnflag=0",
+        ".option temp=27\n+ wnflag=0",
     ],
 )
 def test_hand_written_collateral_handed_to_a_binding_is_a_conflict(card):
@@ -857,6 +875,9 @@ def test_the_reference_vocabulary_is_bounded_and_ignores_comments():
     assert declares_option_scale(deck) is False
     assert declares_option_scale("* t\n.option scale=1.0u\n.END\n") is True
     assert declares_option_scale("* t\n.options scale = 1e-6\n.END\n") is True
+    assert (
+        declares_option_scale("* t\n.option temp=27\n+ scale=1e-6\n.END\n") is True
+    )
 
 
 # --------------------------------------------------------------------------- #

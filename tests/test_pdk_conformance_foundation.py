@@ -355,6 +355,17 @@ def test_pdk_conformance_fixture_is_independently_authored(spec: FixtureSpec):
     assert expected["observable"]["name"] == "i(vd_ref)"
     assert expected["observable"]["unit"] == "A"
     assert expected["known_limitations"]
+    multi_finger = expected.get("multi_finger")
+    if spec.pdk_id == "sky130A":
+        assert isinstance(multi_finger, Mapping)
+    if isinstance(multi_finger, Mapping):
+        multi_observable = multi_finger["observable"]
+        assert multi_finger["nf"] > 1
+        assert multi_observable["unit"] == "A"
+        assert multi_observable["name"] == "i(vd_nf2)"
+        assert "Vd_nf2 " in native
+        assert "nf=2" in native
+        assert "NF=2" in portable
     for source in expected["documentation"]:
         path = Path(source["path"])
         assert not path.is_absolute()
@@ -387,6 +398,16 @@ def test_native_pdk_reference_matches_committed_oracle(
         rel_tol=float(observable["relative_tolerance"]),
         abs_tol=float(observable["absolute_tolerance"]),
     )
+    multi_finger = expected.get("multi_finger")
+    if isinstance(multi_finger, Mapping):
+        multi_observable = multi_finger["observable"]
+        assert multi_observable["name"] in values
+        assert math.isclose(
+            float(values[multi_observable["name"]]),
+            float(multi_observable["expected"]),
+            rel_tol=float(multi_observable["relative_tolerance"]),
+            abs_tol=float(multi_observable["absolute_tolerance"]),
+        )
 
 
 def test_model_free_pipeline_reproduces_independent_native_reference(
@@ -451,6 +472,23 @@ def test_model_free_pipeline_reproduces_independent_native_reference(
         rel_tol=1e-10,
         abs_tol=1e-14,
     )
+    multi_finger = expected.get("multi_finger")
+    if isinstance(multi_finger, Mapping):
+        multi_observable = multi_finger["observable"]
+        native_multi_finger = float(native_values[multi_observable["name"]])
+        pipeline_multi_finger = extracted_values[multi_observable["name"]]
+        assert math.isclose(
+            pipeline_multi_finger,
+            float(multi_observable["expected"]),
+            rel_tol=float(multi_observable["relative_tolerance"]),
+            abs_tol=float(multi_observable["absolute_tolerance"]),
+        )
+        assert math.isclose(
+            pipeline_multi_finger,
+            native_multi_finger,
+            rel_tol=1e-10,
+            abs_tol=1e-14,
+        )
 
 
 def test_equivalent_units_and_permuted_wrapper_preserve_the_operating_point(
@@ -538,13 +576,6 @@ def test_gf180_minimum_width_scaling_crosscheck_is_not_hidden():
     assert expected["metamorphic"]["double_width_ratio_min"] == 1.5
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "SKY130's documented multi-finger bin selection requires "
-        ".option wnflag=1; the current binding does not state it"
-    ),
-)
 def test_sky130_binding_states_the_documented_wnflag_option():
     spec = next(spec for spec in SPECS if spec.pdk_id == "sky130A")
     located = _locate_pdk(spec)
