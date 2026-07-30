@@ -43,8 +43,9 @@ simulator and makes no engineering claim.
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass, field
-from decimal import Decimal, InvalidOperation
+from decimal import Context, Decimal, InvalidOperation, localcontext
 import hashlib
 import json
 import os
@@ -165,6 +166,30 @@ def canonical_role(role: str) -> str:
     return ROLE_SYNONYMS.get(role, role)
 
 
+#: Non-MOS canonical roles. Each names a device family a paper schematic can
+#: mean without knowing the technology; the per-PDK ``device_cards`` table
+#: says how (and whether) a given PDK spells it. Ideal R/C/L cards — a plain
+#: numeric third token — are never touched by binding.
+DIODE_ROLES = ("diode.core",)
+BJT_ROLES = ("bjt.npn", "bjt.pnp")
+RESISTOR_ROLES = ("resistor.poly",)
+CAPACITOR_ROLES = ("cap.mim",)
+EXTENDED_DEVICE_ROLES = DIODE_ROLES + BJT_ROLES + RESISTOR_ROLES + CAPACITOR_ROLES
+
+#: Canonical node counts per leading card letter for the extended roles.
+#: BJTs carry an explicit substrate (C B E SUB) and physical resistors an
+#: explicit body (n1 n2 BODY) — exactly the MOS-bulk precedent: the author
+#: states the tie, the binder never invents a global node.
+_EXTENDED_CARD_NODES = {"d": 2, "q": 4, "r": 3, "c": 2}
+#: Which roles each card letter may carry.
+_EXTENDED_CARD_ROLES = {
+    "d": frozenset(DIODE_ROLES),
+    "q": frozenset(BJT_ROLES),
+    "r": frozenset(RESISTOR_ROLES),
+    "c": frozenset(CAPACITOR_ROLES),
+}
+
+
 #: The junction-geometry keys. A PDK either computes them from ``w`` and the
 #: finger count when they are absent, or treats absence as zero - and zero
 #: junction area removes every drain/source junction capacitance from the
@@ -206,6 +231,12 @@ class PdkLibraryEntry:
     #: selected, so the distinction is load-bearing.
     form: str = "lib"
     section: str | None = "{corner}"
+    #: Extended-role families this entry exists for. Empty means always load.
+    #: A tagged entry is loaded only when the deck actually uses one of these
+    #: roles — the collateral for unused families would otherwise install
+    #: hundreds of global parameter/model names (gf180) or generic model
+    #: names like ``darea`` (ihp diodes.lib) into every MOS-only deck.
+    families: tuple[str, ...] = ()
 
     def resolve(self, corner: str) -> tuple[str, str | None]:
         relative = self.relative_path.replace("{corner}", corner)
@@ -246,6 +277,41 @@ class DeviceGeometry:
 
 
 @dataclass(frozen=True, slots=True)
+class PdkDeviceCard:
+    """How one PDK spells one extended-role device card.
+
+    ``card_kind`` is ``"subckt"`` (the instance becomes an ``x``-prefixed
+    subcircuit call) or ``"model"`` (the native card letter stays and the
+    model name is substituted). The canonical card states every terminal
+    explicitly — BJTs a substrate, physical resistors a body — and
+    ``emit_nodes`` says how many of those (in order) the PDK device accepts;
+    a canonical terminal past that count is dropped-and-reported, never
+    silently rewired to an invented global node. ``parameter_names`` maps
+    canonical lowercase keys to the PDK spelling; unmapped keys are
+    dropped-and-reported exactly like the MOS path.
+    ``geometry_parameters`` are the canonical keys holding lengths that
+    rescale by the binding's geometry divisor; ``area_parameters`` hold areas
+    and rescale by its square, exactly like the MOS path.
+    ``companion_parameters`` emit one canonical key under *additional* PDK
+    spellings with the same value: several subcircuits read a separate
+    mismatch-scaling parameter (sky130 ``mult``/``mf``, gf180 pnp ``par``)
+    that the hierarchical instance ``m`` does not reach, so canonical M must
+    be stated in both places or Monte-Carlo mismatch scales wrongly. Each
+    companion is only declared where the subckt body verifiably reads it.
+    """
+
+    model: str
+    card_kind: str
+    emit_nodes: int | None = None
+    parameter_names: Mapping[str, str] = field(default_factory=dict)
+    geometry_parameters: frozenset[str] = frozenset()
+    area_parameters: frozenset[str] = frozenset()
+    companion_parameters: Mapping[str, tuple[str, ...]] = field(
+        default_factory=dict
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class PdkBinding:
     """One reviewed description of how a PDK expects a MOS card to be written."""
 
@@ -266,6 +332,13 @@ class PdkBinding:
     #: Also the alias source: a deck naming another PDK's model for the same
     #: role is translated through the union of every registered profile.
     device_models: Mapping[str, str]
+    #: Extended-role card mechanics (diode/BJT/PDK resistor/PDK capacitor).
+    #: Keys must also appear in ``device_models`` so translation, aliasing and
+    #: the unsupported-role refusal work identically for every family. Their
+    #: collateral binds its TYPICAL section regardless of the chosen MOS
+    #: corner in this revision; corner mapping for non-MOS classes is future
+    #: vocabulary work, not silently improvised here.
+    device_cards: Mapping[str, "PdkDeviceCard"] = field(default_factory=dict)
     #: The value of ``.option scale`` this PDK's own collateral installs, as a
     #: decimal string. Simra's SI geometry is divided by it, so ``1`` means the
     #: deck's numbers pass through untouched and ``1e-6`` means the PDK expects
@@ -308,6 +381,14 @@ class PdkBinding:
     #: devices but *typical* 6 V devices, so a deck mixing core and IO roles at
     #: a non-typical corner gets a mixed-corner answer.
     corner_skewed_roles: tuple[str, ...] | None = None
+    #: Per-corner overrides of ``corner_skewed_roles``: which roles a specific
+    #: corner skews when that differs from the binding-wide set. sky130's sf
+    #: and fs corner files include the *typical* NPN (corners/sf.spice:29,
+    #: fs.spice:29 select npn_05v5__t) while ff/ss select __f/__s, so "the
+    #: NPN follows the corner" is a per-corner fact, not a per-PDK one.
+    corner_skewed_role_overrides: Mapping[str, tuple[str, ...]] = field(
+        default_factory=dict
+    )
     #: Verilog-A modules ngspice must load before any device binds. Empty for a
     #: PDK whose devices are built-in models.
     osdi_relative_paths: tuple[str, ...] = ()
@@ -330,6 +411,15 @@ class PdkBinding:
     def geometry_divisor(self) -> Decimal:
         return Decimal(self.geometry_scale)
 
+    def skewed_roles_for(self, corner: str) -> tuple[str, ...] | None:
+        """Return the roles this specific corner skews (None = every role)."""
+
+        if self.corner_skewed_roles is None:
+            return None
+        return self.corner_skewed_role_overrides.get(
+            corner, self.corner_skewed_roles
+        )
+
     def resolved_corner(self, corner: str | None) -> str:
         if corner is None:
             return self.default_corner
@@ -347,16 +437,56 @@ class PdkBinding:
         return corner
 
 
-def _format_number(value: Decimal) -> str:
-    """Render one Decimal as a SPICE literal without losing exactness."""
+#: The one Decimal context every binding-path computation runs under. The
+#: ambient (caller-controlled) context must never shape a bound deck: the
+#: default 28-digit precision rounds long authored significands before they
+#: reach the wide formatter, and a hostile ambient Emax (e.g. 9) turns an
+#: ordinary ``1e60`` into an arithmetic error. 200 digits comfortably covers
+#: the canonical 1e-60..1e60 magnitude window squared by an area derivation
+#: and scaled by a unit divisor; the exponent range is the decimal default,
+#: stated explicitly so no caller can narrow it.
+_BINDING_DECIMAL_CONTEXT = Context(prec=200, Emax=999_999, Emin=-999_999)
 
-    normalized = value.normalize()
-    exponent = normalized.as_tuple().exponent
-    if isinstance(exponent, int) and exponent > 0:
-        # ``normalize`` renders 100 as ``1E+2``; legal SPICE, but unreadable in
-        # a deck a human may have to review.
-        return str(normalized.quantize(Decimal(1)))
-    return format(normalized, "f")
+
+def _format_number(value: Decimal) -> str:
+    """Render one Decimal as a SPICE literal without losing exactness.
+
+    Rendering runs under the binding's own wide context: the default
+    28-digit context makes ``quantize`` raise InvalidOperation for any value
+    past ~1e28, and inputs up to the canonical 1e60 magnitude window (squared
+    by an area derivation, further scaled by a unit divisor) are legitimate.
+    A value even that context cannot render is refused typed, never allowed
+    to escape as a bare decimal exception.
+    """
+
+    try:
+        with localcontext(_BINDING_DECIMAL_CONTEXT):
+            normalized = value.normalize()
+            exponent = normalized.as_tuple().exponent
+            if isinstance(exponent, int) and exponent > 0:
+                # ``normalize`` renders 100 as ``1E+2``; legal SPICE, but
+                # unreadable in a deck a human may have to review.
+                return str(normalized.quantize(Decimal(1)))
+            return format(normalized, "f")
+    except ArithmeticError as exc:
+        raise PdkBindingError(
+            "pdk.parameter.invalid",
+            f"The numeric value {value} is too extreme to render as a SPICE "
+            "literal.",
+            hint="Keep device scalars within 1e-60..1e60 SI.",
+        ) from exc
+
+
+def _rescaled(si: Decimal, divisor: Decimal, *, squared: bool) -> Decimal:
+    """Divide one SI value by the PDK's unit divisor, context-independent.
+
+    Areas rescale by the divisor squared, lengths and perimeters linearly.
+    Runs under the binding context so the ambient Decimal context can
+    neither round the quotient nor overflow it.
+    """
+
+    with localcontext(_BINDING_DECIMAL_CONTEXT):
+        return si / (divisor * divisor) if squared else si / divisor
 
 
 def parse_spice_number(text: str) -> Decimal:
@@ -369,15 +499,41 @@ def parse_spice_number(text: str) -> Decimal:
             f"The parameter value {text!r} is not a SPICE numeric literal.",
             hint="Every geometry a PDK binding rescales must be a plain number.",
         )
-    try:
-        magnitude = Decimal(match.group("number"))
-    except InvalidOperation as exc:  # pragma: no cover - guarded by the regex
+    # The binding context preserves 200 significant digits exactly; a longer
+    # significand would round silently — which can move a value across a bin
+    # boundary the author wrote it against — so it is refused typed instead.
+    # Trailing zeros round away exactly and do not count; nor do the
+    # exponent characters, which the ``number`` group also carries.
+    mantissa_text = re.split("[eE]", match.group("number"), maxsplit=1)[0]
+    digits = mantissa_text.lstrip("+-").replace(".", "")
+    if len(digits.lstrip("0").rstrip("0")) > 200:
         raise PdkBindingError(
             "pdk.parameter.unparsable",
-            f"The parameter value {text!r} is not a SPICE numeric literal.",
+            f"The parameter value {text!r} carries more than 200 significant "
+            "digits, which the binding cannot preserve exactly.",
+            hint="Author device scalars with at most 200 significant digits.",
+        )
+    try:
+        # The whole conversion is guarded AND runs under the binding's own
+        # wide context: the constructor raises InvalidOperation for
+        # exponents beyond Decimal's own limits, the suffix multiplication
+        # raises Overflow well before that, and the ambient context must
+        # decide neither (a caller-narrowed precision would round a long
+        # authored significand here, before the wide formatter ever sees
+        # it, and an ambient Emax of 9 would misclassify a plain 1e60).
+        # A regex-valid literal that defeats arithmetic is a typed refusal,
+        # never an escaping decimal exception.
+        with localcontext(_BINDING_DECIMAL_CONTEXT):
+            magnitude = Decimal(match.group("number"))
+            suffix = (match.group("suffix") or "").lower()
+            return magnitude * _SPICE_SCALE[suffix]
+    except ArithmeticError as exc:
+        raise PdkBindingError(
+            "pdk.parameter.unparsable",
+            f"The parameter value {text!r} is outside any representable "
+            "numeric range.",
+            hint="Keep device scalars within 1e-60..1e60 SI.",
         ) from exc
-    suffix = (match.group("suffix") or "").lower()
-    return magnitude * _SPICE_SCALE[suffix]
 
 
 #: IHP SG13G2's low-voltage MOS devices are subcircuits taking ``ng`` fingers,
@@ -397,6 +553,39 @@ IHP_SG13G2 = PdkBinding(
         # reachable. Verified: sg13g2_moshv_mod.lib:66 and :155 define
         # sg13_hv_nmos / sg13_hv_pmos as .subckt d g s b.
         PdkLibraryEntry("libs.tech/ngspice/models/cornerMOShv.lib", "lib", "{corner}"),
+        # Non-MOS device families. Their corner namespaces are disjoint from
+        # the MOS tokens (res_typ/cap_typ/hbt_typ vs mos_tt), so this revision
+        # binds their TYPICAL sections for every corner. The junction diodes
+        # (dantenna/dpantenna) have no corner wrapper at all — the PDK's own
+        # testbenches do a bare include of diodes.lib, and so do we.
+        # Family-tagged: loaded only when the deck uses the family. diodes.lib
+        # in particular installs generic model names (darea, dperim, dcorner)
+        # via a bare include, which must not shadow user models in MOS-only
+        # decks.
+        PdkLibraryEntry(
+            "libs.tech/ngspice/models/cornerRES.lib",
+            "lib",
+            "res_typ",
+            families=("resistor.poly",),
+        ),
+        PdkLibraryEntry(
+            "libs.tech/ngspice/models/cornerCAP.lib",
+            "lib",
+            "cap_typ",
+            families=("cap.mim",),
+        ),
+        PdkLibraryEntry(
+            "libs.tech/ngspice/models/cornerHBT.lib",
+            "lib",
+            "hbt_typ",
+            families=("bjt.npn", "bjt.pnp"),
+        ),
+        PdkLibraryEntry(
+            "libs.tech/ngspice/models/diodes.lib",
+            "include",
+            None,
+            families=("diode.core",),
+        ),
     ),
     corners=("mos_tt", "mos_ss", "mos_ff", "mos_sf", "mos_fs"),
     default_corner="mos_tt",
@@ -405,6 +594,61 @@ IHP_SG13G2 = PdkBinding(
         "pmos.core": "sg13_lv_pmos",
         "nmos.io": "sg13_hv_nmos",
         "pmos.io": "sg13_hv_pmos",
+        "diode.core": "dantenna",
+        "bjt.npn": "npn13G2",
+        "bjt.pnp": "pnpMPA",
+        "resistor.poly": "rppd",
+        "cap.mim": "cap_cmim",
+    },
+    device_cards={
+        # dantenna is the PDK's general-purpose junction diode subcircuit,
+        # sized by w/l (SI metres; profile scale is 1; unsupplied geometry
+        # defaults to 780n x 780n inside diodes.lib). Canonical M emits as
+        # the hierarchical instance ``m`` — dantenna declares no ``m`` of its
+        # own, so ngspice multiplies the whole subcircuit.
+        "diode.core": PdkDeviceCard(
+            model="dantenna",
+            card_kind="subckt",
+            parameter_names={"w": "w", "l": "l", "m": "m"},
+            geometry_parameters=frozenset(("w", "l")),
+        ),
+        # npn13G2 is c b e bn — the canonical SUB terminal lands on bn, which
+        # the author states like MOS bulk (never invented by the binder).
+        # Canonical M is functional multiplicity, so it emits as the
+        # hierarchical instance ``m``; the HBT's own Nx is finger GEOMETRY,
+        # not parallel multiplicity (sg13g2_hbt_mod.lib:56-66 scales cbeo/cje
+        # by Nx**0.975 and cjcp by Nx**0.8 while currents scale linearly), so
+        # M must never be spelled Nx.
+        "bjt.npn": PdkDeviceCard(
+            model="npn13G2",
+            card_kind="subckt",
+            parameter_names={"m": "m"},
+        ),
+        # pnpMPA models no substrate terminal: canonical SUB is dropped and
+        # reported, never rewired. Hierarchical ``m`` carries multiplicity.
+        "bjt.pnp": PdkDeviceCard(
+            model="pnpMPA",
+            card_kind="subckt",
+            emit_nodes=3,
+            parameter_names={"m": "m"},
+        ),
+        # rppd is 1 2 bn: the canonical BODY terminal lands on bn. rppd
+        # forwards its own ``m`` parameter onto the r3_cmc core's device
+        # multiplier (resistors_mod.lib:189), so m=M is exact multiplicity.
+        "resistor.poly": PdkDeviceCard(
+            model="rppd",
+            card_kind="subckt",
+            parameter_names={"w": "w", "l": "l", "m": "m"},
+            geometry_parameters=frozenset(("w", "l")),
+        ),
+        # cap_cmim declares no ``m``: the hierarchical instance ``m``
+        # multiplies the whole subcircuit.
+        "cap.mim": PdkDeviceCard(
+            model="cap_cmim",
+            card_kind="subckt",
+            parameter_names={"w": "w", "l": "l", "m": "m"},
+            geometry_parameters=frozenset(("w", "l")),
+        ),
     },
     geometry_scale="1",
     nominal_supply_v={
@@ -418,6 +662,10 @@ IHP_SG13G2 = PdkBinding(
     # (sg13g2_moslv_mod.lib:67-88), so junction capacitance is present without
     # the author supplying layout geometry.
     junction_geometry="auto",
+    # The cornerMOS libraries follow the requested corner; the non-MOS
+    # families are pinned to their typical sections (res_typ/cap_typ/hbt_typ,
+    # bare diodes.lib), so a corner skews the MOS devices only.
+    corner_skewed_roles=("nmos.core", "nmos.io", "pmos.core", "pmos.io"),
     # The PDK's own .spiceinit loads four modules. Loading only the two PSP
     # ones works for a MOS-only deck and fails the moment the deck instantiates
     # a PDK resistor (r3_cmc) or a varicap (mosvar).
@@ -429,9 +677,12 @@ IHP_SG13G2 = PdkBinding(
     ),
     identity_relative_path="COMMIT",
     notes=(
-        "Low-voltage MOS only. sg13_lv_nmos/sg13_lv_pmos are subcircuits whose "
-        "finger count is ng; PSP103 requires an OSDI preload. PSP103 is a "
-        "continuous compact model, so no binning envelope is enforced."
+        "LV and HV MOS plus junction diodes (dantenna), HBTs (npn13G2, "
+        "pnpMPA), poly resistors (rppd) and MIM caps (cap_cmim). MOS follows "
+        "the requested corner; the other families are bound typical-only. "
+        "sg13_lv_nmos/sg13_lv_pmos are subcircuits whose finger count is ng; "
+        "PSP103 requires an OSDI preload and is a continuous compact model, "
+        "so no binning envelope is enforced."
     ),
 )
 
@@ -464,6 +715,74 @@ SKY130A = PdkBinding(
         "pmos.hvt": "sky130_fd_pr__pfet_01v8_hvt",
         "nmos.io": "sky130_fd_pr__nfet_g5v0d10v5",
         "pmos.io": "sky130_fd_pr__pfet_g5v0d10v5",
+        # The tt section reaches all four non-MOS families through all.spice,
+        # so no extra library entries are needed for these.
+        "diode.core": "sky130_fd_pr__diode_pw2nd_05v5",
+        "bjt.npn": "sky130_fd_pr__npn_05v5_W1p00L1p00",
+        "bjt.pnp": "sky130_fd_pr__pnp_05v5_W0p68L0p68",
+        "resistor.poly": "sky130_fd_pr__res_high_po",
+        "cap.mim": "sky130_fd_pr__cap_mim_m3_1",
+    },
+    device_cards={
+        # A plain `.model d` card: the D instance letter survives. Like the
+        # MOS geometry, area/pj are written in the PDK's micron convention
+        # (verified: at 100 uA, area=100 pj=40 gives a 0.67 V forward drop
+        # while an SI area=1p makes rs explode to 9.8e10 ohm), so area
+        # rescales by the divisor squared and pj linearly.
+        "diode.core": PdkDeviceCard(
+            model="sky130_fd_pr__diode_pw2nd_05v5",
+            card_kind="model",
+            parameter_names={"area": "area", "pj": "pj", "m": "m"},
+            geometry_parameters=frozenset(("pj",)),
+            area_parameters=frozenset(("area",)),
+        ),
+        # Fixed-geometry subcircuits (W1p00L1p00 etc.), c b e s: the
+        # canonical SUB terminal lands on s. Canonical M emits as the plain
+        # instance `m` — ngspice's hierarchical multiplier, which the subckt
+        # does not declare as a formal and therefore inherits — AND as the
+        # subckt-local `mult`, which the body reads for Monte-Carlo mismatch
+        # scaling (model.spice:41,44 divide the is/bf mismatch terms by
+        # sqrt(mult); ngspice lets an instance assignment override the inner
+        # .param). One value, both meanings preserved.
+        "bjt.npn": PdkDeviceCard(
+            model="sky130_fd_pr__npn_05v5_W1p00L1p00",
+            card_kind="subckt",
+            parameter_names={"m": "m"},
+            companion_parameters={"m": ("mult",)},
+        ),
+        # Collector Base Emitter only: canonical SUB dropped and reported.
+        # Its body also reads `mult` for mismatch (model.spice:28,30).
+        "bjt.pnp": PdkDeviceCard(
+            model="sky130_fd_pr__pnp_05v5_W0p68L0p68",
+            card_kind="subckt",
+            emit_nodes=3,
+            parameter_names={"m": "m"},
+            companion_parameters={"m": ("mult",)},
+        ),
+        # res_high_po is r0 r1 b: the canonical BODY terminal lands on b.
+        # Its w/l are in the PDK's micron convention, so the geometry
+        # divisor applies. Nominal multiplicity is the hierarchical
+        # instance `m` (verified live, the M=2 divider probe reads exactly
+        # 0.400 V); the body separately reads `mult` for mismatch
+        # (model.spice:35,37,41 divide the Pelgrom terms by sqrt(...*mult)),
+        # so M is stated there too.
+        "resistor.poly": PdkDeviceCard(
+            model="sky130_fd_pr__res_high_po",
+            card_kind="subckt",
+            parameter_names={"w": "w", "l": "l", "m": "m"},
+            geometry_parameters=frozenset(("w", "l")),
+            companion_parameters={"m": ("mult",)},
+        ),
+        # cap_mim declares mf=1 as a formal and reads it only in the czero
+        # mismatch term (model.spice:25); hierarchical `m` is the nominal
+        # multiplier and mf mirrors M for mismatch.
+        "cap.mim": PdkDeviceCard(
+            model="sky130_fd_pr__cap_mim_m3_1",
+            card_kind="subckt",
+            parameter_names={"w": "w", "l": "l", "m": "m"},
+            geometry_parameters=frozenset(("w", "l")),
+            companion_parameters={"m": ("mf",)},
+        ),
     },
     geometry_scale="1e-6",
     ngspice_options=("wnflag=1",),
@@ -488,6 +807,34 @@ SKY130A = PdkBinding(
     },
     model_tnom_c="30",
     junction_geometry="zero",
+    # Verified in the corner files: every FET flavour switches per corner,
+    # while the PNP and the diodes come from the corner-independent all.spice
+    # and every named section includes r+c/res_typical__cap_typical.spice.
+    # The NPN follows only the uniform corners: ff.spice:29/ss.spice:29
+    # select npn_05v5__f/__s, but sf.spice:29 and fs.spice:29 select the
+    # TYPICAL npn_05v5__t — so bjt.npn is skewed at ff/ss and not at sf/fs.
+    corner_skewed_roles=(
+        "bjt.npn",
+        "nmos.core",
+        "nmos.io",
+        "nmos.lvt",
+        "pmos.core",
+        "pmos.hvt",
+        "pmos.io",
+        "pmos.lvt",
+    ),
+    corner_skewed_role_overrides={
+        corner: (
+            "nmos.core",
+            "nmos.io",
+            "nmos.lvt",
+            "pmos.core",
+            "pmos.hvt",
+            "pmos.io",
+            "pmos.lvt",
+        )
+        for corner in ("sf", "fs")
+    },
     osdi_relative_paths=(),
     identity_relative_path=None,
     notes=(
@@ -511,6 +858,37 @@ GF180MCUD = PdkBinding(
     library_entries=(
         PdkLibraryEntry("libs.tech/ngspice/design.ngspice", "include", None),
         PdkLibraryEntry("libs.tech/ngspice/sm141064.ngspice", "lib", "{corner}"),
+        # Non-MOS families live in per-class sections whose names do not
+        # follow the MOS corner tokens; this revision binds their TYPICAL
+        # sections for every corner. mimcap_typical re-dispatches into
+        # sm141064_mim.ngspice internally.
+        # Family-tagged: loaded only when the deck uses the family. Each
+        # section installs hundreds of global .param names, which a MOS-only
+        # deck must not pay for or collide with.
+        PdkLibraryEntry(
+            "libs.tech/ngspice/sm141064.ngspice",
+            "lib",
+            "diode_typical",
+            families=("diode.core",),
+        ),
+        PdkLibraryEntry(
+            "libs.tech/ngspice/sm141064.ngspice",
+            "lib",
+            "bjt_typical",
+            families=("bjt.npn", "bjt.pnp"),
+        ),
+        PdkLibraryEntry(
+            "libs.tech/ngspice/sm141064.ngspice",
+            "lib",
+            "res_typical",
+            families=("resistor.poly",),
+        ),
+        PdkLibraryEntry(
+            "libs.tech/ngspice/sm141064.ngspice",
+            "lib",
+            "mimcap_typical",
+            families=("cap.mim",),
+        ),
     ),
     corners=("typical", "ff", "ss", "fs", "sf"),
     default_corner="typical",
@@ -519,6 +897,54 @@ GF180MCUD = PdkBinding(
         "pmos.core": "pfet_03v3",
         "nmos.io": "nfet_06v0",
         "pmos.io": "pfet_06v0",
+        "diode.core": "diode_nd2ps_03v3",
+        "bjt.npn": "npn_10p00x10p00",
+        "bjt.pnp": "pnp_10p00x10p00",
+        "resistor.poly": "ppolyf_u",
+        "cap.mim": "cap_mim_2f0_m2m3_noshield",
+    },
+    device_cards={
+        "diode.core": PdkDeviceCard(
+            model="diode_nd2ps_03v3",
+            card_kind="model",
+            parameter_names={"area": "area", "pj": "pj", "m": "m"},
+        ),
+        # Every one of these subcircuits declares ``par=1``. Nominal
+        # multiplicity is the plain instance ``m`` — ngspice's hierarchical
+        # multiplier, inherited because ``m`` is not a formal — verified
+        # live: the M=2 divider probe reads exactly 0.400 V. Whether the
+        # body ALSO reads par differs per device (verified in
+        # sm141064.ngspice): the pnp model divides its is/bf mismatch terms
+        # by sqrt(par) (lines 47324, 47336), so par mirrors M there; the
+        # npn body (47432-47481), ppolyf_u (38723, mis_r=0) and
+        # cap_mim_2f0_m2m3_noshield (sm141064_mim.ngspice:72) never read
+        # par, so no companion is emitted for them.
+        "bjt.npn": PdkDeviceCard(
+            model="npn_10p00x10p00",
+            card_kind="subckt",
+            parameter_names={"m": "m"},
+        ),
+        "bjt.pnp": PdkDeviceCard(
+            model="pnp_10p00x10p00",
+            card_kind="subckt",
+            emit_nodes=3,
+            parameter_names={"m": "m"},
+            companion_parameters={"m": ("par",)},
+        ),
+        # ppolyf_u is (r0 r1 bulk) with SI r_width/r_length; the canonical
+        # BODY terminal lands on bulk.
+        "resistor.poly": PdkDeviceCard(
+            model="ppolyf_u",
+            card_kind="subckt",
+            parameter_names={"w": "r_width", "l": "r_length", "m": "m"},
+            geometry_parameters=frozenset(("w", "l")),
+        ),
+        "cap.mim": PdkDeviceCard(
+            model="cap_mim_2f0_m2m3_noshield",
+            card_kind="subckt",
+            parameter_names={"w": "c_width", "l": "c_length", "m": "m"},
+            geometry_parameters=frozenset(("w", "l")),
+        ),
     },
     geometry_scale="1",
     # The full bin grid of section nfet_03v3_t / pfet_03v3_t in
@@ -686,12 +1112,24 @@ def device_role_index() -> dict[str, str]:
     This is what lets a deck authored against one PDK bind to another without
     the author knowing either vocabulary. It is derived from the profiles
     rather than maintained separately, so it cannot drift from them.
+
+    Uniqueness is validated rather than resolved by registry order: one model
+    name mapping to two different roles would make alias translation depend
+    on iteration order, which is exactly the kind of silent first-wins this
+    table exists to prevent.
     """
 
     index: dict[str, str] = {}
     for binding in REGISTRY.values():
         for role, model in binding.device_models.items():
-            index.setdefault(model.lower(), role)
+            existing = index.get(model.lower())
+            if existing is not None and existing != role:
+                raise ValueError(
+                    f"The registered PDK profiles map the model name "
+                    f"{model!r} to two different roles ({existing!r} and "
+                    f"{role!r}); alias translation would be ambiguous."
+                )
+            index[model.lower()] = role
     return index
 
 
@@ -720,6 +1158,12 @@ class ResolvedPdkBinding:
     snapshot_root_sha256: str
     namespace_model_names: tuple[str, ...]
     namespace_global_nodes: tuple[str, ...]
+    #: The extended-role families this snapshot's captured libraries can
+    #: serve. ``None`` means the full conservative closure (no deck text was
+    #: supplied, nothing was gated). A gated snapshot records what it kept so
+    #: a later ``bind_deck`` against a *different* deck can refuse instead of
+    #: rewriting a device whose library was never captured.
+    captured_families: frozenset[str] | None = None
 
     @property
     def pdk_id(self) -> str:
@@ -755,6 +1199,11 @@ class ResolvedPdkBinding:
             "device_models": dict(self.binding.device_models),
             "osdi_modules": [str(path) for path in self.osdi_paths],
             "identity": str(self.identity_path) if self.identity_path else None,
+            "captured_families": (
+                None
+                if self.captured_families is None
+                else sorted(self.captured_families)
+            ),
         }
 
     def verify_snapshot(self) -> None:
@@ -1694,12 +2143,52 @@ class _PdkSnapshotBuilder:
             closure_facts,
         )
 
+def _extended_family_tokens() -> dict[str, str]:
+    """Every token that can bind to an extended family, mapped to its family.
+
+    ``translate_model()`` accepts target-native and cross-PDK aliases
+    (``dantenna``, ``sky130_fd_pr__diode_pw2nd_05v5``, ``npn_10p00x10p00``,
+    ...) in addition to the canonical roles, so the family scanner must
+    recognise exactly the same vocabulary: a scanner narrower than the binder
+    would gate out a library the rewritten deck then references (review
+    round-2 blocking finding 1).
+    """
+
+    tokens: dict[str, str] = {role: role for role in EXTENDED_DEVICE_ROLES}
+    for name, role in device_role_index().items():
+        if role in EXTENDED_DEVICE_ROLES:
+            tokens[name] = role
+    return tokens
+
+
+def scan_deck_families(deck_text: str) -> frozenset[str]:
+    """Return the extended-role families a deck's text could bind.
+
+    The token set is the full device registry: every canonical extended role
+    plus every registered PDK's model name for an extended family, folded
+    case-insensitively. Deliberately over-approximate — a mention inside a
+    comment still counts, because loading one unused library is recoverable
+    and an undefined subcircuit at simulation time is not.
+    """
+
+    found: set[str] = set()
+    lowered = deck_text.lower()
+    for token, family in _extended_family_tokens().items():
+        if family in found:
+            continue
+        pattern = rf"(?<![a-z0-9_.]){re.escape(token)}(?![a-z0-9_.])"
+        if re.search(pattern, lowered):
+            found.add(family)
+    return frozenset(found)
+
+
 def resolve_pdk_binding(
     pdk_id: str,
     pdk_root: str | Path,
     *,
     corner: str | None = None,
     snapshot_parent: str | Path | None = None,
+    deck_text: str | None = None,
 ) -> ResolvedPdkBinding:
     """Capture one named PDK's complete active closure into one immutable tree.
 
@@ -1707,6 +2196,11 @@ def resolve_pdk_binding(
     ``PDK_ROOT``/``PDK`` split every open PDK uses. A root that already points
     at the PDK directory itself is also accepted.  The installed tree is read
     only during this call; all returned locators name the captured snapshot.
+
+    ``deck_text`` gates family-tagged library entries: an entry tagged with
+    extended-role families is captured and loaded only when the deck names one
+    of them. Without ``deck_text`` every entry loads (the conservative,
+    backward-compatible closure).
     """
 
     binding = REGISTRY.get(pdk_id)
@@ -1726,6 +2220,33 @@ def resolve_pdk_binding(
                 f"{', '.join(simulatable_pdk_ids())}."
             ),
         )
+
+    captured_families: frozenset[str] | None = None
+    if deck_text is not None:
+        used_families = scan_deck_families(deck_text)
+        kept_entries = tuple(
+            entry
+            for entry in binding.library_entries
+            if not entry.families or set(entry.families) & used_families
+        )
+        # A family is served by this gated snapshot if some kept entry is
+        # tagged with it, or if no entry anywhere is tagged with it (its
+        # collateral rides an always-loaded entry, as on sky130). Recording
+        # the served set — not the scanned set — keeps reuse exact: a
+        # MOS-only sky130 snapshot can still bind a diode deck, an IHP one
+        # cannot.
+        all_tagged = {
+            family
+            for entry in binding.library_entries
+            for family in entry.families
+        }
+        kept_tagged = {
+            family for entry in kept_entries for family in entry.families
+        }
+        captured_families = frozenset(EXTENDED_DEVICE_ROLES) - (
+            all_tagged - kept_tagged
+        )
+        binding = dataclasses.replace(binding, library_entries=kept_entries)
 
     supplied_root = Path(pdk_root).expanduser()
     if not supplied_root.is_absolute():
@@ -1890,6 +2411,7 @@ def resolve_pdk_binding(
         snapshot_root_sha256=snapshot_root_sha256,
         namespace_model_names=tuple(sorted(builder.namespace_models)),
         namespace_global_nodes=tuple(sorted(builder.namespace_globals)),
+        captured_families=captured_families,
     )
     resolved.verify_snapshot()
     return resolved
@@ -1909,15 +2431,18 @@ def translate_model(model: str, binding: PdkBinding) -> tuple[str, str | None, b
     }
 
     # ``nmos.svt`` and ``nmos.core`` are the same device under two names the
-    # industry uses interchangeably; resolve before consulting the profile.
-    resolved_role = canonical_role(model)
+    # industry uses interchangeably, and SPICE is case-insensitive, so the
+    # role vocabulary is too; resolve before consulting the profile.
+    resolved_role = canonical_role(lowered)
     if resolved_role in binding.device_models:  # a canonical role
         return binding.device_models[resolved_role], resolved_role, True
     if lowered in native:  # already this PDK's own model
         role, name = native[lowered]
         return name, role, name != model
     role_name = device_role_index().get(lowered)
-    if role_name is None and resolved_role in DEVICE_ROLES:
+    if role_name is None and (
+        resolved_role in DEVICE_ROLES or resolved_role in EXTENDED_DEVICE_ROLES
+    ):
         # A canonical role this PDK does not ship is a different failure from an
         # unrecognised token, and the caller needs to hear which.
         role_name = resolved_role
@@ -1960,6 +2485,87 @@ class RewrittenCard:
     dropped_parameters: tuple[str, ...] = ()
     #: Junction-geometry keys the author did supply.
     junction_parameters: tuple[str, ...] = ()
+    #: Canonical terminals the target device does not model (e.g. a substrate
+    #: node on a 3-terminal PNP subcircuit). Dropped and reported, like
+    #: parameters.
+    dropped_nodes: tuple[str, ...] = ()
+    #: The card's instance name as the author wrote it, so a production fact
+    #: or advisory can say *which* device dropped a node or had its geometry
+    #: derived, not merely that one did.
+    instance: str | None = None
+    #: The canonical parameter keys the matched device card accepts. Threaded
+    #: into the dropped-parameter advisory so the hint describes THIS card,
+    #: not the binding-wide MOS vocabulary (an IHP diode dropping ``area``
+    #: must not be told ``nf`` is accepted).
+    accepted_parameters: tuple[str, ...] = ()
+    #: Human-readable record of a geometry conversion (e.g. AREA/PJ -> W/L on
+    #: a PDK that sizes its diode by W/L). None when nothing was derived.
+    geometry_derived: str | None = None
+
+
+#: Trailing-comment split, aligned with Simra's netlist_tool grammar: ``;``
+#: anywhere starts a comment (Simra splits on the first ``;`` with no
+#: whitespace required), and ``$`` preceded by whitespace starts a comment
+#: whether or not any text follows (a bare trailing ``$`` is legal). A ``$``
+#: glued to a token is not a comment in ngspice and stays in the card.
+_TRAILING_COMMENT_RE = re.compile(
+    r"(?P<card>.*?)(?P<comment>\s*;.*|\s\$(?:\s.*)?)$"
+)
+
+
+def _split_line_ending(line: str) -> tuple[str, str]:
+    """Split one line into (body, line-ending), CRLF-aware.
+
+    A deck written on Windows carries ``\\r\\n``; stripping only ``\\n``
+    leaves the ``\\r`` glued to the last token, where it defeats every
+    end-anchored card regex (review round-2 should-fix 2).
+    """
+
+    body = line.rstrip("\r\n")
+    return body, line[len(body):]
+
+
+def _split_card_cosmetics(line: str) -> tuple[str, str, str, str]:
+    """Split one physical/logical line into (indent, card, comment, newline).
+
+    Rewriters match against the bare card; indentation and trailing comments
+    are legal SPICE the author wrote deliberately, so they are reattached
+    verbatim around whatever the rewrite produced.
+    """
+
+    body, newline = _split_line_ending(line)
+    stripped = body.lstrip(" \t")
+    indent = body[: len(body) - len(stripped)]
+    comment = ""
+    match = _TRAILING_COMMENT_RE.match(stripped)
+    if match and not stripped.startswith(("*", ";")):
+        stripped, comment = match.group("card").rstrip(), match.group("comment")
+    return indent, stripped, comment, newline
+
+
+def join_spice_continuations(deck_text: str) -> str:
+    """Join ``+`` continuation lines into logical cards.
+
+    SPICE reads a leading ``+`` as "continue the previous card"; the binder's
+    per-line rewriters must therefore see joined cards or a continued device
+    card would be rewritten only in part (production finding: a Sky130 card
+    whose geometry sat on the continuation kept SI values past the micron
+    rescale). Comment and blank lines pass through; a ``+`` with no previous
+    card is left as-is for the simulator to refuse. Joining is CRLF-aware: a
+    ``\\r`` must neither survive mid-card nor lose the line ending.
+    """
+
+    logical: list[str] = []
+    for line in deck_text.splitlines(keepends=True):
+        body, ending = _split_line_ending(line)
+        stripped = body.lstrip(" \t")
+        if stripped.startswith("+") and logical:
+            prev, prev_ending = _split_line_ending(logical[-1])
+            newline = ending or prev_ending
+            logical[-1] = prev + " " + stripped[1:].strip() + newline
+            continue
+        logical.append(line)
+    return "".join(logical)
 
 
 def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
@@ -1971,10 +2577,9 @@ def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
     author ever encodes a PDK-specific syntax rule.
     """
 
-    if line.startswith(".") or line.startswith("*"):
+    if line.lstrip(" \t").startswith((".", "*")):
         return RewrittenCard(line, False)
-    body = line.rstrip("\n")
-    trailing = line[len(body) :]
+    indent, body, comment, trailing = _split_card_cosmetics(line)
     match = MOS_CARD_RE.match(body)
     if match is None:
         role_hint = _ROLE_TOKEN_RE.search(body)
@@ -1994,7 +2599,8 @@ def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
         return RewrittenCard(line, False)
 
     binding = resolved.binding
-    name = match.group("name")
+    source_name = match.group("name")
+    name = source_name
     if binding.device_prefix == "x":
         # Prepend rather than substitute: Simra also emits ``X`` cards for
         # subcircuit instances, and substituting ``M_DUT`` -> ``X_DUT`` could
@@ -2044,16 +2650,18 @@ def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
                 # An area rescales by the square of the unit convention; a
                 # length or a perimeter rescales linearly.
                 value = _format_number(
-                    si / (divisor * divisor)
-                    if key in binding.area_parameters
-                    else si / divisor
+                    _rescaled(
+                        si,
+                        divisor,
+                        squared=key in binding.area_parameters,
+                    )
                 )
         parameters.append(f"{mapped}={value}")
 
     nodes = " ".join(match.group("nodes").split())
     rebuilt = " ".join([name, nodes, target_model, *parameters])
     return RewrittenCard(
-        rebuilt + trailing,
+        indent + rebuilt + comment + trailing,
         True,
         model_translated=translated,
         source_model=source_model,
@@ -2061,6 +2669,438 @@ def rewrite_mos_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
         role=role,
         dropped_parameters=tuple(dict.fromkeys(dropped)),
         junction_parameters=tuple(dict.fromkeys(junction)),
+        instance=source_name,
+        accepted_parameters=tuple(sorted(binding.parameter_names)),
+    )
+
+
+#: One extended-role device per line: ``<name> <nodes...> <model> <k=v>...``
+#: with the canonical node count per letter (see ``_EXTENDED_CARD_NODES``):
+#: 2 for D and C, 3 for physical R (n1 n2 BODY), 4 for Q (C B E SUB). The
+#: model token must not contain ``=``.
+_EXTENDED_CARD_RES = {
+    letter: re.compile(
+        rf"^(?P<name>[{letter.upper()}{letter}][^\s]*)"
+        rf"(?P<nodes>(?:[ \t]+[^\s]+){{{count}}})"
+        r"[ \t]+(?P<model>[^\s=]+)"
+        r"(?P<params>(?:[ \t]+[^\s]+=[^\s]+)*)"
+        r"[ \t]*$"
+    )
+    for letter, count in _EXTENDED_CARD_NODES.items()
+}
+
+
+def _is_spice_number(token: str) -> bool:
+    try:
+        parse_spice_number(token)
+        return True
+    except PdkBindingError:
+        return False
+
+
+#: Canonical extended-card parameter classes the binder validates itself.
+#: A deck normally arrives through Simra's lint, but nothing forces that
+#: path: a bare deck handed straight to OpenADA must meet the same canonical
+#: contract or the violation sails through as a silent drop or a cryptic
+#: simulator error.
+_EXTENDED_LENGTH_KEYS = frozenset(("w", "l", "pj"))
+_EXTENDED_AREA_KEYS = frozenset(("area",))
+_EXTENDED_MULTIPLICITY_KEYS = frozenset(("m",))
+#: The same believable-magnitude window Simra's lint enforces (SI). Stated
+#: here too because a deck can reach the binder without passing lint, and
+#: the geometry derivation squares an area while the unit rescale divides by
+#: a squared divisor — bounded inputs keep every downstream Decimal step
+#: inside the wide formatting context.
+_EXTENDED_SCALAR_ABS_MAX = Decimal("1e60")
+_EXTENDED_SCALAR_ABS_MIN = Decimal("1e-60")
+
+
+def _in_scalar_window(value: Decimal) -> bool:
+    """Whether one positive scalar sits inside the believable SI window."""
+
+    return _EXTENDED_SCALAR_ABS_MIN <= value <= _EXTENDED_SCALAR_ABS_MAX
+
+
+def _validated_extended_parameters(
+    name: str, params_text: str
+) -> dict[str, str]:
+    """Parse one extended card's ``k=v`` list under the canonical contract.
+
+    Typed refusals (``pdk.parameter.invalid``): a duplicated key, nonpositive
+    geometry/area/perimeter, and a multiplicity that is not a whole number of
+    parallel devices >= 1. Keys outside the canonical classes are collected
+    untouched; whether they map or drop is the caller's per-PDK decision.
+    """
+
+    supplied: dict[str, str] = {}
+    for parameter in PARAMETER_RE.finditer(params_text):
+        key = parameter.group("key").lower()
+        value = parameter.group("value")
+        if key in supplied:
+            raise PdkBindingError(
+                "pdk.parameter.invalid",
+                f"{name}: the parameter {key.upper()} is given twice; one "
+                "card, one value.",
+            )
+        supplied[key] = value
+    for key, value in supplied.items():
+        if key in _EXTENDED_LENGTH_KEYS or key in _EXTENDED_AREA_KEYS:
+            magnitude = parse_spice_number(value)
+            if magnitude <= 0:
+                raise PdkBindingError(
+                    "pdk.parameter.invalid",
+                    f"{name}: {key.upper()}={value} — geometry, area and "
+                    "perimeter must be positive.",
+                )
+            if (
+                magnitude > _EXTENDED_SCALAR_ABS_MAX
+                or magnitude < _EXTENDED_SCALAR_ABS_MIN
+            ):
+                raise PdkBindingError(
+                    "pdk.parameter.invalid",
+                    f"{name}: {key.upper()}={value} — outside the believable "
+                    "1e-60..1e60 SI magnitude window.",
+                )
+        elif key in _EXTENDED_MULTIPLICITY_KEYS:
+            magnitude = parse_spice_number(value)
+            if magnitude < 1 or magnitude != magnitude.to_integral_value():
+                raise PdkBindingError(
+                    "pdk.parameter.invalid",
+                    f"{name}: {key.upper()}={value} — a device multiplicity "
+                    "is a whole number of parallel devices, at least 1.",
+                )
+            if magnitude > _EXTENDED_SCALAR_ABS_MAX:
+                raise PdkBindingError(
+                    "pdk.parameter.invalid",
+                    f"{name}: {key.upper()}={value} — outside the believable "
+                    "1e-60..1e60 SI magnitude window.",
+                )
+    return supplied
+
+
+def _derive_diode_geometry(
+    name: str,
+    card_spec: PdkDeviceCard,
+    supplied: Mapping[str, str],
+) -> tuple[dict[str, str], str | None]:
+    """Convert diode geometry between the AREA/PJ and W/L conventions.
+
+    Both spellings are canonical (Simra requires AREA or W/L), but each PDK's
+    device takes exactly one of them, and a card written in the other one
+    used to lose ALL geometry to the dropped-parameter path — the bound
+    device silently took the PDK's unrelated default size (review round-2
+    blocking finding 4). The conversion is exact where mathematics allows:
+
+    * target wants AREA/PJ, author gave W/L: ``AREA = W*L``,
+      ``PJ = 2*(W+L)`` — exact for the rectangle the author stated.
+    * target wants W/L, author gave AREA (+PJ): the rectangle with that area
+      and perimeter is recovered from ``x^2 - (PJ/2)x + AREA = 0``; with PJ
+      absent or inconsistent (negative discriminant) the square
+      ``W = L = sqrt(AREA)`` is assumed and the advisory says so.
+
+    Returns the (possibly rewritten) parameter mapping and a human-readable
+    derivation record for the ``pdk.device.geometry_derived`` advisory, or
+    raises a typed refusal when no geometry can be supplied or derived at
+    all — an unsized PDK diode is never emitted.
+    """
+
+    accepted = set(card_spec.parameter_names)
+    wants_area = "area" in accepted
+    wants_wl = "w" in accepted and "l" in accepted
+    has_area = "area" in supplied
+    has_wl = "w" in supplied and "l" in supplied
+    result = dict(supplied)
+    note: str | None = None
+
+    if wants_area and not has_area and has_wl:
+        with localcontext(_BINDING_DECIMAL_CONTEXT):
+            width = parse_spice_number(supplied["w"])
+            length = parse_spice_number(supplied["l"])
+            area_value = width * length
+            perimeter_value = 2 * (width + length)
+        # Derived values obey the same believable window as authored ones:
+        # two individually in-window lengths can multiply into an area far
+        # outside it, and emitting that would launder an absurd scalar
+        # through the derivation (round-4 should-fix 1).
+        if not _in_scalar_window(area_value) or (
+            "pj" in accepted and not _in_scalar_window(perimeter_value)
+        ):
+            raise PdkBindingError(
+                "pdk.device.geometry_missing",
+                f"{name}: the stated W/L describe an equivalent AREA/PJ "
+                "outside the believable 1e-60..1e60 SI window, so no "
+                f"geometry the {card_spec.model} device can take exists.",
+                hint="Resize the diode so AREA=W*L stays within 1e-60..1e60.",
+            )
+        area = _format_number(area_value)
+        result["area"] = area
+        derived = [f"AREA={area}"]
+        if "pj" in accepted and "pj" not in result:
+            perimeter = _format_number(perimeter_value)
+            result["pj"] = perimeter
+            derived.append(f"PJ={perimeter}")
+        del result["w"]
+        del result["l"]
+        # Geometry leads the emitted parameter list, like an authored card.
+        result = {
+            key: result[key]
+            for key in ("area", "pj", *result)
+            if key in result
+        }
+        note = (
+            f"W/L -> {' '.join(derived)} "
+            "(exact: AREA=W*L, PJ=2*(W+L), SI values before unit rescale)"
+        )
+    elif wants_wl and not has_wl and has_area:
+        with localcontext(_BINDING_DECIMAL_CONTEXT):
+            area = parse_spice_number(supplied["area"])
+            perimeter = (
+                parse_spice_number(supplied["pj"])
+                if "pj" in supplied
+                else None
+            )
+            width = length = None
+            how = ""
+            if perimeter is not None:
+                half = perimeter / 2
+                discriminant = half * half - 4 * area
+                if discriminant >= 0:
+                    root = discriminant.sqrt()
+                    width = (half + root) / 2
+                    # Small root via AREA / large_root: the textbook
+                    # ``(half - root) / 2`` cancels catastrophically when
+                    # AREA << PJ^2 and rounds to exactly zero — round-3
+                    # blocking 2 caught a lint-clean AREA=1e-30 PJ=1
+                    # emitting ``w=0.5 l=0``, an unsized device. The
+                    # quotient form keeps w*l = AREA by construction.
+                    length = area / width if width > 0 else None
+                    how = "the exact rectangle with this AREA and PJ"
+            # A rectangle whose dimensions are computable but outside the
+            # believable window is as unusable as a degenerate one: two
+            # in-window authored values (AREA=1e-60, PJ=1e60) can demand a
+            # side of 2e-120 (round-4 should-fix 1).
+            rectangle_out_of_window = (
+                width is not None
+                and length is not None
+                and width.is_finite()
+                and length.is_finite()
+                and width > 0
+                and length > 0
+                and not (
+                    _in_scalar_window(width) and _in_scalar_window(length)
+                )
+            )
+            if (
+                width is None
+                or length is None
+                or not width.is_finite()
+                or not length.is_finite()
+                or width <= 0
+                or length <= 0
+                or rectangle_out_of_window
+            ):
+                # Every derived value must be a positive finite in-window
+                # length; anything else falls back to the square (positive
+                # by construction, since the validator guaranteed AREA > 0).
+                width = length = area.sqrt()
+                if rectangle_out_of_window:
+                    how = (
+                        "assumed square W=L=sqrt(AREA): the exact "
+                        "rectangle's dimensions fall outside the believable "
+                        "1e-60..1e60 window"
+                    )
+                elif perimeter is None:
+                    how = "assumed square W=L=sqrt(AREA): no PJ was supplied"
+                else:
+                    how = (
+                        "assumed square W=L=sqrt(AREA): the supplied PJ "
+                        "yields no numerically valid rectangle of this AREA"
+                    )
+        if not _in_scalar_window(width):
+            raise PdkBindingError(
+                "pdk.device.geometry_missing",
+                f"{name}: no diode geometry inside the believable "
+                "1e-60..1e60 SI window can realise the stated AREA/PJ on "
+                f"the {card_spec.model} device.",
+                hint="Resize the diode so sqrt(AREA) stays within "
+                "1e-60..1e60.",
+            )
+        result["w"] = _format_number(width)
+        result["l"] = _format_number(length)
+        source = "AREA/PJ" if perimeter is not None else "AREA"
+        note = (
+            f"{source} -> W={result['w']} L={result['l']} "
+            f"({how}; SI values before unit rescale)"
+        )
+        result.pop("area", None)
+        result.pop("pj", None)
+        # Geometry leads the emitted parameter list, like an authored card.
+        result = {
+            key: result[key] for key in ("w", "l", *result) if key in result
+        }
+
+    required = (
+        ("area",) if wants_area else (("w", "l") if wants_wl else ())
+    )
+    if required and not all(key in result for key in required):
+        raise PdkBindingError(
+            "pdk.device.geometry_missing",
+            f"{name}: the diode card supplies no geometry the "
+            f"{card_spec.model} device can take and none can be derived — "
+            f"it needs {' and '.join(key.upper() for key in required)} "
+            "(or the convertible spelling: AREA [PJ] <-> W L). An unsized "
+            "PDK diode would silently take the PDK's unrelated default "
+            "geometry, so it is never emitted.",
+            hint="State AREA= (with optional PJ=) or W= and L= on the card.",
+        )
+    return result, note
+
+
+def rewrite_device_card(line: str, resolved: ResolvedPdkBinding) -> RewrittenCard:
+    """Rewrite one extended-role card (D/Q, role-tagged R/C) for the PDK.
+
+    Anything else — ideal R/C/L with numeric values, sources, X instances,
+    directives — is returned unchanged. Indentation and trailing comments are
+    preserved around the rewrite; role matching is case-insensitive. A card
+    that names an extended role with the wrong arity is a typed refusal,
+    never a silent pass-through into a cryptic simulator error.
+    """
+
+    if line.lstrip(" \t").startswith((".", "*")):
+        return RewrittenCard(line, False)
+    indent, card, comment, newline = _split_card_cosmetics(line)
+    letter = card[:1].lower()
+    if letter not in _EXTENDED_CARD_RES:
+        return RewrittenCard(line, False)
+
+    binding = resolved.binding
+    allowed_roles = _EXTENDED_CARD_ROLES[letter]
+    match = _EXTENDED_CARD_RES[letter].match(card)
+
+    # Ideal passives stay ideal: on R/C a numeric token in the value/model
+    # position (2-node form) is a value, not a model. This runs before the
+    # arity checks so plain ``R1 A B 10k`` never enters role machinery. Note
+    # the ngspice number grammar accepts trailing letters, so a token like
+    # ``10ohm`` is necessarily a value — a physical device must use a role.
+    if letter in ("r", "c"):
+        tokens = card.split()
+        if len(tokens) >= 4 and _is_spice_number(tokens[3]):
+            return RewrittenCard(line, False)
+
+    if match is None:
+        # Arity guard: a role token on a malformed card must not slip through.
+        for role in allowed_roles:
+            if re.search(
+                rf"(?:^|[ \t]){re.escape(role)}(?:[ \t]|$)", card, re.IGNORECASE
+            ):
+                raise PdkBindingError(
+                    "pdk.device.unbindable",
+                    f"The device card {card.split()[0]!r} names the canonical "
+                    f"role {role!r} but does not have the canonical "
+                    f"{_EXTENDED_CARD_NODES[letter]}-terminal form, so the "
+                    "driver cannot bind it to any PDK.",
+                    hint=(
+                        "Canonical BJTs are C B E SUB and physical resistors "
+                        "n1 n2 BODY — the substrate/body tie is stated by the "
+                        "author, exactly like MOS bulk."
+                    ),
+                )
+        return RewrittenCard(line, False)
+
+    source_model = match.group("model")
+    resolved_role = canonical_role(source_model.lower())
+    known_native = {
+        name.lower()
+        for other in (binding, *REGISTRY.values())
+        for role, name in other.device_models.items()
+        if role in allowed_roles
+    }
+    if (
+        resolved_role not in allowed_roles
+        and source_model.lower() not in known_native
+    ):
+        if letter in ("d", "q"):
+            # D/Q cards exist only to name devices; an unknown token there is
+            # an error the author needs to hear, phrased by translate_model.
+            translate_model(source_model, binding)
+        return RewrittenCard(line, False)
+
+    target_model, role, translated = translate_model(source_model, binding)
+    card_spec = binding.device_cards.get(role or "")
+    if card_spec is None:
+        raise PdkBindingError(
+            "pdk.model.unavailable",
+            f"{binding.display_name} ships no device for the role {role!r}, "
+            f"which the deck names as {source_model!r}.",
+            hint=(
+                "Roles this PDK offers: "
+                f"{', '.join(sorted(binding.device_cards) or binding.device_models)}."
+            ),
+        )
+
+    source_name = match.group("name")
+    name = source_name
+    if card_spec.card_kind == "subckt":
+        name = f"x{name}"
+
+    supplied = _validated_extended_parameters(
+        source_name, match.group("params")
+    )
+    geometry_derived: str | None = None
+    if role == "diode.core":
+        # Diode geometry has two canonical spellings and each PDK takes one;
+        # convert instead of letting a lint-clean card lose its size.
+        supplied, geometry_derived = _derive_diode_geometry(
+            source_name, card_spec, supplied
+        )
+
+    divisor = binding.geometry_divisor
+    parameters: list[str] = []
+    dropped: list[str] = []
+    for key, value in supplied.items():
+        mapped = card_spec.parameter_names.get(key)
+        if mapped is None:
+            dropped.append(key)
+            continue
+        if divisor != 1 and (
+            key in card_spec.geometry_parameters
+            or key in card_spec.area_parameters
+        ):
+            si = parse_spice_number(value)
+            value = _format_number(
+                _rescaled(
+                    si,
+                    divisor,
+                    squared=key in card_spec.area_parameters,
+                )
+            )
+        parameters.append(f"{mapped}={value}")
+        # A companion spelling carries the same value into a separately-read
+        # parameter (mismatch scaling: sky130 mult/mf, gf180 pnp par).
+        for companion in card_spec.companion_parameters.get(key, ()):
+            parameters.append(f"{companion}={value}")
+
+    canonical_nodes = match.group("nodes").split()
+    keep = (
+        len(canonical_nodes)
+        if card_spec.emit_nodes is None
+        else card_spec.emit_nodes
+    )
+    emitted_nodes = canonical_nodes[:keep]
+    dropped_nodes = tuple(canonical_nodes[keep:])
+    rebuilt = " ".join([name, *emitted_nodes, target_model, *parameters])
+    return RewrittenCard(
+        indent + rebuilt + comment + newline,
+        True,
+        model_translated=translated,
+        source_model=source_model,
+        target_model=target_model,
+        role=role,
+        dropped_parameters=tuple(dict.fromkeys(dropped)),
+        dropped_nodes=dropped_nodes,
+        instance=source_name,
+        accepted_parameters=tuple(sorted(card_spec.parameter_names)),
+        geometry_derived=geometry_derived,
     )
 
 
@@ -2284,13 +3324,32 @@ def bind_deck(
             f"bound: {', '.join(sorted(set(unresolved))[:5])}",
             hint="Resolve every device parameter in Simra before binding a PDK.",
         )
+    if resolved.captured_families is not None:
+        # This snapshot was gated against another deck's family usage; a deck
+        # needing a family whose libraries were never captured would rewrite
+        # into a subcircuit the composed prelude cannot define.
+        missing = scan_deck_families(deck_text) - resolved.captured_families
+        if missing:
+            raise PdkBindingError(
+                "pdk.snapshot.family_missing",
+                f"The captured {resolved.pdk_id} snapshot was resolved for a "
+                "deck that used none of the device families "
+                f"{', '.join(sorted(missing))}, so their model libraries were "
+                "not captured; binding this deck against it would reference "
+                "undefined subcircuits.",
+                hint=(
+                    "Re-resolve the PDK binding with this deck's text (or "
+                    "with no deck text for the full conservative closure) and "
+                    "bind again."
+                ),
+            )
     if raw_name is not None and not _RAW_NAME_RE.match(raw_name):
         raise PdkBindingError(
             "pdk.raw_name.invalid",
             f"The raw output name {raw_name!r} is not a bounded file name.",
         )
 
-    lines = deck_text.splitlines(keepends=True)
+    lines = join_spice_continuations(deck_text).splitlines(keepends=True)
     if not lines:
         raise PdkBindingError("pdk.deck.empty", "The deck is empty.")
 
@@ -2325,8 +3384,20 @@ def bind_deck(
     rewritten = 0
     translations: dict[str, str] = {}
     dropped: dict[str, None] = {}
+    #: One record per dropped parameter occurrence, carrying the scoped
+    #: instance and the canonical keys THAT card accepts. Keying by bare
+    #: parameter name and unioning accepted sets across card types would
+    #: resurrect the false hint this fact exists to prevent (a MOS and a
+    #: diode both dropping ``area`` must not merge into one vocabulary).
+    dropped_parameter_records: list[dict[str, Any]] = []
+    dropped_nodes: dict[str, list[str]] = {}
+    geometry_derived: dict[str, str] = {}
     junction_supplied: dict[str, None] = {}
     roles_used: dict[str, None] = {}
+    #: The enclosing ``.subckt`` names, so two subcircuits each containing a
+    #: ``Q2`` stay two distinct occurrences ("A/Q2" vs "B/Q2") in every fact
+    #: and advisory instead of merging into one misleading entry.
+    subckt_stack: list[str] = []
     emitted_control = False
     for line in lines[1:]:
         if raw_name is not None and not emitted_control and _END_CARD_RE.match(line):
@@ -2338,18 +3409,43 @@ def bind_deck(
             )
             bound.append(".endc\n")
             emitted_control = True
+        if _SUBCKT_OPEN_RE.match(line):
+            tokens = line.split()
+            subckt_stack.append(tokens[1] if len(tokens) > 1 else "?")
+        elif _SUBCKT_CLOSE_RE.match(line) and subckt_stack:
+            subckt_stack.pop()
         if current_vectors:
             # `.save` selects what ngspice *computes*, not just what is
             # written, so a current named only in `write` is refused with
             # "no writable vector found" and the whole run loses its raw file.
             line = _extend_save_card(line, current_vectors)
         card = rewrite_mos_card(line, resolved)
+        if not card.rewritten:
+            card = rewrite_device_card(line, resolved)
         if card.rewritten:
             rewritten += 1
+            occurrence = (
+                "/".join((*subckt_stack, card.instance))
+                if card.instance
+                else None
+            )
             if card.model_translated and card.source_model and card.target_model:
                 translations[card.source_model] = card.target_model
             for key in card.dropped_parameters:
                 dropped[key] = None
+                dropped_parameter_records.append(
+                    {
+                        "instance": occurrence,
+                        "parameter": key,
+                        "accepted": sorted(card.accepted_parameters),
+                    }
+                )
+            if card.dropped_nodes and occurrence:
+                dropped_nodes.setdefault(occurrence, []).extend(
+                    card.dropped_nodes
+                )
+            if card.geometry_derived and occurrence:
+                geometry_derived[occurrence] = card.geometry_derived
             for key in card.junction_parameters:
                 junction_supplied[key] = None
             if card.role:
@@ -2375,6 +3471,11 @@ def bind_deck(
     facts["raw_output"] = raw_name
     facts["roles_bound"] = sorted(roles_used)
     facts["dropped_parameters"] = sorted(dropped)
+    facts["dropped_parameter_records"] = dropped_parameter_records
+    facts["dropped_nodes"] = {
+        instance: list(nodes) for instance, nodes in sorted(dropped_nodes.items())
+    }
+    facts["geometry_derived"] = dict(sorted(geometry_derived.items()))
     facts["junction_geometry"] = binding.junction_geometry
     facts["junction_parameters_supplied"] = sorted(junction_supplied)
     facts["simulation_temperature_c"] = binding.simulation_temperature_c
@@ -2389,10 +3490,11 @@ def bind_deck(
         for role in sorted(roles_used)
         if role in binding.nominal_supply_v
     }
+    # Corner-dependent: sky130's sf/fs select the typical NPN while ff/ss
+    # select skewed ones, so the skew set must be read for THIS corner.
+    skewed_for_corner = binding.skewed_roles_for(resolved.corner)
     facts["corner_skewed_roles"] = (
-        None
-        if binding.corner_skewed_roles is None
-        else list(binding.corner_skewed_roles)
+        None if skewed_for_corner is None else list(skewed_for_corner)
     )
     return text, facts
 
@@ -2415,6 +3517,9 @@ __all__ = [
     "available_pdk_ids",
     "bind_deck",
     "device_role_index",
+    "join_spice_continuations",
+    "rewrite_device_card",
+    "scan_deck_families",
     "parse_spice_number",
     "resolve_pdk_binding",
     "rewrite_mos_card",

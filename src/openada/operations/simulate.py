@@ -351,6 +351,39 @@ def classify_target(path: str | Path) -> SimulationTarget:
     return SimulationTarget("deck", source)
 
 
+def _artifact_deck_probe_text(descriptor_path: Path) -> str | None:
+    """Best-effort read of a Simra artifact's published deck, for family scans.
+
+    Mirrors the loader's sibling resolution (the descriptor names its netlist
+    as one file in the artifact directory) without importing its validation:
+    any irregularity returns ``None``, which keeps the full conservative
+    library closure. The load-bearing digest and shape checks still happen in
+    ``load_simra_testbench``; this read only decides which family-tagged
+    libraries the PDK snapshot captures.
+    """
+
+    try:
+        document = json.loads(
+            descriptor_path.read_text(encoding="utf-8", errors="replace")
+        )
+    except (OSError, ValueError):
+        return None
+    if not isinstance(document, Mapping):
+        return None
+    netlist = document.get("netlist")
+    if not isinstance(netlist, str) or not netlist:
+        return None
+    candidate = descriptor_path.parent / netlist
+    if candidate.parent != descriptor_path.parent:
+        return None
+    try:
+        if not candidate.is_file() or candidate.stat().st_size > MAX_SOURCE_BYTES:
+            return None
+        return candidate.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+
 def _protocol(request_id: str, backend: str | None) -> dict[str, Any]:
     driver = builtin_driver(backend) if isinstance(backend, str) else None
     return {
@@ -579,6 +612,37 @@ def _binding_advisories(
 
     dropped = list(facts.get("dropped_parameters") or ())
     if dropped:
+        # The hint must describe the card that dropped the key, not the
+        # binding-wide MOS vocabulary — and not a union across card types
+        # either: a MOS and a diode both dropping ``area`` accept different
+        # keys, so each occurrence record keeps its own instance and its own
+        # accepted set (deduplicated only when both agree exactly).
+        records = [
+            record
+            for record in (facts.get("dropped_parameter_records") or ())
+            if isinstance(record, Mapping) and record.get("accepted")
+        ]
+        per_card_hints = []
+        seen: set[tuple[Any, ...]] = set()
+        for record in records:
+            accepted = tuple(record["accepted"])
+            key = (record.get("parameter"), accepted)
+            if key in seen:
+                continue
+            seen.add(key)
+            instance = record.get("instance") or "?"
+            per_card_hints.append(
+                f"{record.get('parameter')} ({instance}): accepted on that "
+                f"card are {', '.join(accepted)}"
+            )
+        hint = (
+            "; ".join(per_card_hints) + "."
+            if per_card_hints
+            else (
+                "Parameters this PDK accepts: "
+                f"{', '.join(sorted(facts.get('parameter_names') or ()))}."
+            )
+        )
         notes.append(
             diagnostic(
                 "warning",
@@ -589,9 +653,46 @@ def _binding_advisories(
                     "ships subcircuits ngspice would have ignored them without a "
                     "word, so the intent would simply have vanished."
                 ),
+                hint=hint,
+            )
+        )
+
+    for instance, nodes in sorted((facts.get("dropped_nodes") or {}).items()):
+        notes.append(
+            diagnostic(
+                "warning",
+                "pdk.device.node_dropped",
+                (
+                    f"{instance}: the canonical terminal(s) "
+                    f"{', '.join(nodes)} were dropped because the bound "
+                    f"{pdk_id} device models no such terminal. The author's "
+                    "stated tie is electrically absent from this answer — "
+                    "material whenever it differs from the device's implicit "
+                    "reference."
+                ),
                 hint=(
-                    "Parameters this PDK accepts: "
-                    f"{', '.join(sorted(facts.get('parameter_names') or ()))}."
+                    "If the substrate/body tie matters here, choose a PDK "
+                    "whose device models that terminal."
+                ),
+            )
+        )
+
+    for instance, derivation in sorted(
+        (facts.get("geometry_derived") or {}).items()
+    ):
+        notes.append(
+            diagnostic(
+                "warning",
+                "pdk.device.geometry_derived",
+                (
+                    f"{instance}: the deck's diode geometry was converted to "
+                    f"the convention the bound {pdk_id} device takes: "
+                    f"{derivation}"
+                ),
+                hint=(
+                    "State the geometry in the target's own convention to "
+                    "avoid the conversion (exact for W/L->AREA/PJ; a square "
+                    "is assumed only when PJ is absent or inconsistent)."
                 ),
             )
         )
@@ -819,6 +920,7 @@ def _resolve_model_source(
     snapshot_parent: Path,
     inputs: list[dict[str, Any]],
     configuration: list[dict[str, Any]],
+    deck_text: str | None = None,
 ) -> tuple[ResolvedPdkBinding | None, str | None]:
     """Resolve at most one model source, or raise a typed refusal."""
 
@@ -887,6 +989,7 @@ def _resolve_model_source(
                 pdk_root,
                 corner=corner,
                 snapshot_parent=snapshot_parent,
+                deck_text=deck_text,
             )
         except PdkBindingError as exc:
             raise SimulationRequestError(exc.code, exc.message, hint=exc.hint) from exc
@@ -1038,6 +1141,24 @@ def simulate(
     ]
     configuration: list[dict[str, Any]] = []
     destination = Path(output_dir).expanduser().resolve()
+    # Family-tagged PDK libraries load only when the deck names the family.
+    # The probe is a best-effort read of the caller's own deck; an unreadable
+    # target scans as None and keeps the full (conservative) closure. A Simra
+    # artifact's deck is its published sibling netlist file — cheaply readable
+    # before resolution, and safe to gate on now that the family scanner
+    # recognises the binder's full alias vocabulary (a scan miss can only
+    # over-load, and a reused gated snapshot refuses a mismatched deck with
+    # pdk.snapshot.family_missing instead of failing in the simulator).
+    deck_probe_text: str | None = None
+    if selected.kind != "simra-artifact":
+        try:
+            deck_probe_text = selected.path.read_text(
+                encoding="utf-8", errors="replace"
+            )
+        except OSError:
+            deck_probe_text = None
+    else:
+        deck_probe_text = _artifact_deck_probe_text(selected.path)
     try:
         resolved_pdk, model_prelude = _resolve_model_source(
             correlation_id=correlation_id,
@@ -1050,6 +1171,7 @@ def simulate(
             snapshot_parent=destination / "pdk-snapshots",
             inputs=input_records,
             configuration=configuration,
+            deck_text=deck_probe_text,
         )
     except SimulationRequestError as exc:
         return refuse(
