@@ -1168,7 +1168,11 @@ def simulate(
             pdk_root=pdk_root,
             corner=corner,
             resolved_pdk_binding=resolved_pdk_binding,
-            snapshot_parent=destination / "pdk-snapshots",
+            # System temp, like `experiment run`: the snapshot is a read-only
+            # (0500/0400) integrity-verified model cache, and parking it under
+            # the evidence dir made that dir un-removable and polluted output
+            # collection wherever the evidence tree gets harvested.
+            snapshot_parent=None,
             inputs=input_records,
             configuration=configuration,
             deck_text=deck_probe_text,

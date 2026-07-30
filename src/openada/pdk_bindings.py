@@ -43,6 +43,7 @@ simulator and makes no engineering claim.
 
 from __future__ import annotations
 
+import atexit
 import dataclasses
 from dataclasses import dataclass, field
 from decimal import Context, Decimal, InvalidOperation, localcontext
@@ -1133,6 +1134,25 @@ def device_role_index() -> dict[str, str]:
     return index
 
 
+def _cleanup_temp_snapshot_parent(parent: Path) -> None:
+    """Reclaim a system-temp snapshot tree at process exit.
+
+    Published snapshots are 0o500 directories of 0o400 files, so the write
+    bits must come back before rmtree can unlink anything. Best-effort:
+    a snapshot another actor already removed, or one on a read-only mount,
+    must never turn process exit into a crash.
+    """
+
+    for directory, _children, _files in os.walk(
+        parent, topdown=False, followlinks=False
+    ):
+        try:
+            os.chmod(directory, 0o700)
+        except OSError:
+            pass
+    shutil.rmtree(parent, ignore_errors=True)
+
+
 @dataclass(frozen=True, slots=True)
 class ResolvedPdkBinding:
     """One binding backed only by an immutable, content-addressed PDK snapshot.
@@ -2022,6 +2042,12 @@ class _PdkSnapshotBuilder:
             private_parent = Path(
                 tempfile.mkdtemp(prefix="openada-pdk-snapshot-")
             )
+            # A system-temp snapshot is this process's private model closure:
+            # nothing may reopen it after the run, so reclaim it at process
+            # exit. (The 0o500/0o400 integrity chmods must be relaxed first
+            # or rmtree cannot unlink the tree.) Snapshots published under an
+            # explicit snapshot_parent stay: the caller owns that location.
+            atexit.register(_cleanup_temp_snapshot_parent, private_parent)
         else:
             parent = Path(snapshot_parent).expanduser()
             if not parent.is_absolute():
