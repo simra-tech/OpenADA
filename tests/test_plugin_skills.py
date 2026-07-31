@@ -97,6 +97,21 @@ def test_all_plugin_skills_have_agent_discovery_metadata():
         assert f"$openada:{skill_directory.name}" in metadata
 
 
+def test_circuit_execution_reference_is_bounded_and_contract_complete():
+    reference = SKILLS_ROOT / "openada" / "references" / "circuit-simulation.md"
+    text = reference.read_text(encoding="utf-8")
+
+    assert len(text) < 8_000
+    assert "spice-analysis-evidence-valid" in text
+    assert "openada.operation/circuit.simulate/v1alpha2" in text
+    assert "openada.operation/result.series.extract/v1alpha1" in text
+    assert "openada.operation/result.measure/v1alpha1" in text
+    assert "openada.operation/specification.evaluate/v1alpha1" in text
+    assert "execution.status=completed" in text
+    assert "engineering.status=pass" in text
+    assert "direct simulator command" in text
+
+
 def test_codex_manifest_discovers_the_shared_skills_directory():
     manifest = json.loads(
         (ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
