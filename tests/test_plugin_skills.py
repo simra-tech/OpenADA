@@ -109,6 +109,8 @@ def test_circuit_execution_reference_is_bounded_and_contract_complete():
     assert "openada.operation/specification.evaluate/v1alpha1" in text
     assert "execution.status=completed" in text
     assert "engineering.status=pass" in text
+    assert "OpenADA exits" in text and "code 1" in text
+    assert "retain and parse stdout first" in text
     assert "direct simulator command" in text
 
 

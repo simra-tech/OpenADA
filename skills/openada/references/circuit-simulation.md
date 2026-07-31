@@ -79,6 +79,13 @@ openada --compact evaluate \
   > evidence/case/evaluate.result.json
 ```
 
+Do not make a nonzero CLI exit synonymous with missing evidence. OpenADA exits
+with code 1 when a valid result envelope has `engineering.status=fail`, including
+a conclusive specification miss. A wrapper must retain and parse stdout first,
+then classify the envelope; it must not discard that JSON or abort the remaining
+campaign merely because the engineering result failed. Exit code 2, malformed
+JSON, or an inconclusive envelope remains a command/evidence problem.
+
 Require extraction status `extracted`, measurement status `measured`, and a
 retained `specification.evaluate` result before reporting that a numeric limit
 passed. Requests and selections are supporting inputs, not result evidence.
