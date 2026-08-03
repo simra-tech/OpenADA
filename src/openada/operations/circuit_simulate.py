@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import dataclass, field
 import math
 from pathlib import Path
 import re
-from typing import Callable, Mapping
+from typing import Mapping
 import uuid
 
 from ..contract import (
@@ -27,7 +28,7 @@ from ..driver_registry import (
     builtin_driver,
 )
 from ..engines.ngspice_outputs import analysis_raw_counts
-from ..engines.spice import MAX_SOURCE_BYTES
+from ..engines.spice import MAX_SOURCE_BYTES, NgspicePinnedInput
 
 
 MAX_SOURCE_LINE_BYTES = 65_536
@@ -899,6 +900,48 @@ def decorate_circuit_simulation_result(
     return payload
 
 
+@dataclass(frozen=True)
+class NgspiceProfileExecution:
+    """A typed, content-pinned ngspice launch for the shared circuit.simulate
+    profile — the ONE seam that replaces the former arbitrary
+    ``native_control_run`` callback and the loose inspection/provenance kwargs.
+
+    Every OpenADA-derived deck reaches ngspice through this spec, so the driver's
+    content-identity launch contract (``expected_source_sha256`` + re-verified
+    ``pinned_inputs``) applies uniformly — batch and control mode alike — instead
+    of only on the PDK and OSDI paths.
+
+    * ``execution_mode`` — ``"batch"`` or ``"control"``; control mode is the
+      sanctioned block-OSDI launch (a reviewed ``.control pre_osdi`` preload the
+      initial shared profile would otherwise reject).
+    * ``expected_source_sha256`` — the digest the run deck must still hash to at
+      launch; the driver refuses otherwise (entry check + pre-``run_process``
+      recheck). ``None`` leaves the deck unbound (legacy callers).
+    * ``pinned_inputs`` — every path-loaded object ngspice will map (OSDI
+      ``.osdi`` modules; cosim ``d_cosim`` ``.so`` objects) re-verified against
+      its reviewed digest immediately before launch.
+    * ``inspection_source`` — when set, the profile-compliance inspection runs
+      against THIS control-free deck while the different (composed) ``spice_file``
+      runs; defaults to ``spice_file`` so every other caller is unchanged.
+    * ``init_file`` — an explicit managed ngspice startup (control mode only).
+    * ``provenance_limitations`` — recorded on the decorated evidence in place of
+      the default model-free note, so a control-mode run states its own
+      content-bound-preload provenance.
+    """
+
+    execution_mode: str = "batch"
+    expected_source_sha256: str | None = None
+    pinned_inputs: tuple[NgspicePinnedInput, ...] = ()
+    inspection_source: Path | None = None
+    init_file: Path | None = None
+    #: ``None`` keeps the decorator's default model-free note; an explicit
+    #: (possibly empty) tuple replaces it — an empty tuple suppresses the note.
+    provenance_limitations: tuple[str, ...] | None = None
+
+
+_DEFAULT_EXECUTION = NgspiceProfileExecution()
+
+
 def simulate_circuit_profile(
     spice_file: str | Path,
     output_dir: str | Path,
@@ -909,36 +952,30 @@ def simulate_circuit_profile(
     timeout: float = 120.0,
     request_id: str | None = None,
     parameters: Mapping[str, object] | None = None,
-    inspection_source: str | Path | None = None,
-    native_control_run: Callable[[Path, Path], dict] | None = None,
-    provenance_limitations: list[str] | None = None,
+    execution: NgspiceProfileExecution | None = None,
 ) -> dict:
     """Execute one closed circuit.simulate analysis through a selected driver.
 
-    ``inspection_source`` lets the profile-compliance inspection (the analysis
-    directive and the forbidden-directive/`.include` scan) run against the
-    CALLER's own deck while the DIFFERENT ``spice_file`` is what actually runs.
-    It exists for the sanctioned behavioral-block OSDI path: the run deck carries
-    a reviewed `.control pre_osdi .endc` preload (which the initial shared profile
-    would otherwise reject as an unsupported directive), but the caller's deck —
-    the thing being profile-checked — is control-free. Defaults to ``spice_file``
-    so every other caller is unchanged.
-
-    ``native_control_run`` swaps ONLY the ngspice execution primitive: when set,
-    it is called as ``native_control_run(source, output_dir)`` and must return
-    the same driver payload the built-in batch call would, but is free to run the
-    deck in control mode. The caller-independent profile gate above — every
-    off-profile refusal, the analysis-match check, the decoration — is unchanged,
-    so a sanctioned OSDI control-mode run is validated by exactly the same rules
-    as a batch run and only its launch differs. ``provenance_limitations``, when
-    set, is recorded on the decorated evidence in place of the default model-free
-    note, so the OSDI run states its own (content-bound preload) provenance.
+    ``execution`` (an :class:`NgspiceProfileExecution`) is the typed ngspice
+    launch spec: it carries the execution mode, the content-identity binding
+    (``expected_source_sha256`` + ``pinned_inputs``), the optional control-free
+    ``inspection_source`` (so the profile gate inspects the caller's own deck
+    while the composed ``spice_file`` runs), the managed ``init_file``, and the
+    run's ``provenance_limitations``. It defaults to a plain unbound batch launch,
+    so every non-behavioral-block caller is unchanged. Replacing the former
+    arbitrary ``native_control_run`` callable with this closed type is what lets
+    the driver's content-identity contract apply to EVERY OpenADA-derived deck
+    (batch and control alike), not just the PDK and OSDI paths.
     """
+
+    if execution is not None and not isinstance(execution, NgspiceProfileExecution):
+        raise TypeError("execution must be an NgspiceProfileExecution")
+    exec_spec = execution if execution is not None else _DEFAULT_EXECUTION
 
     source = Path(spice_file).expanduser().resolve()
     inspected = (
-        Path(inspection_source).expanduser().resolve()
-        if inspection_source is not None
+        Path(exec_spec.inspection_source).expanduser().resolve()
+        if exec_spec.inspection_source is not None
         else source
     )
     request_id_error: str | None = None
@@ -1042,20 +1079,22 @@ def simulate_circuit_profile(
     assert driver is not None
     implementation = driver.factory(discovery)
     if driver.alias == "ngspice":
-        if native_control_run is not None:
-            # The sanctioned block-OSDI path runs the reviewed pre_osdi deck in
-            # ngspice control mode. The same batch-safety and profile gate above
-            # already ran against the caller's control-free deck; only the launch
-            # differs, so the evidence still means exactly what a batch run means.
-            payload = native_control_run(source, Path(output_dir))
-        else:
-            payload = implementation.simulate(  # type: ignore[attr-defined]
-                source,
-                output_dir,
-                workdir=workdir,
-                execution_mode="batch",
-                timeout=timeout,
-            )
+        # One typed launch for every ngspice deck. The caller-independent profile
+        # gate above — every off-profile refusal, the analysis-match check, the
+        # decoration — already ran against the (possibly control-free) inspected
+        # deck, so a sanctioned control-mode run is validated by exactly the same
+        # rules as a batch run; only the launch differs. The driver re-verifies
+        # the deck digest and every pinned object immediately before run_process.
+        payload = implementation.simulate(  # type: ignore[attr-defined]
+            source,
+            output_dir,
+            workdir=workdir,
+            execution_mode=exec_spec.execution_mode,
+            init_file=exec_spec.init_file,
+            timeout=timeout,
+            expected_source_sha256=exec_spec.expected_source_sha256,
+            pinned_inputs=exec_spec.pinned_inputs,
+        )
     else:
         payload = implementation.simulate(  # type: ignore[attr-defined]
             source,
@@ -1070,13 +1109,16 @@ def simulate_circuit_profile(
         request_id=correlation_id,
         deck=deck,
         parameters=requested,
-        provenance_limitations=provenance_limitations,
+        provenance_limitations=list(exec_spec.provenance_limitations)
+        if exec_spec.provenance_limitations is not None
+        else None,
     )
 
 
 __all__ = [
     "MAX_SHARED_ANALYSIS_POINTS",
     "MAX_SOURCE_BYTES",
+    "NgspiceProfileExecution",
     "circuit_simulation_parameter_issue",
     "circuit_simulation_parameters_match",
     "decorate_circuit_simulation_result",

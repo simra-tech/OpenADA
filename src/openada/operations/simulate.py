@@ -92,6 +92,7 @@ from ..pdk_startup import (
 from .circuit_simulate import (
     decorate_circuit_simulation_result,
     inspect_simulation_deck,
+    NgspiceProfileExecution,
     simulate_circuit_profile,
 )
 
@@ -1768,6 +1769,21 @@ def simulate(
             deck_path = selected.path
             deck_record = dict(input_records[0])
             deck_record["role"] = "simulation.deck"
+            # The deck's launch is content-bound to this raw-byte digest. If the
+            # caller's file could not be stably content-captured (file_record
+            # returns no digest, e.g. it was replaced mid-operation), refuse
+            # rather than forward a None binding and launch it unverified. A
+            # derived deck is instead guarded by the deck.sha256 check below.
+            if not isinstance(deck_record.get("sha256"), str):
+                return refuse(
+                    "simulation.deck.unstable",
+                    f"{deck_path} could not be content-bound before launch; its "
+                    "digest is required to bind the run to the bytes that were "
+                    "profile-checked.",
+                    inputs=input_records,
+                    execution_status="failed",
+                    extensions={TARGET_EXTENSION: target_facts},
+                )
         else:
             deck_path = deck_directory / name
             try:
@@ -1816,8 +1832,6 @@ def simulate(
                     extensions={TARGET_EXTENSION: target_facts},
                 )
         else:
-            osdi_control_run: Any = None
-            osdi_provenance: list[str] | None = None
             osdi_inspection_source: Path | None = None
             osdi_ready = (
                 osdi_preload_text is not None
@@ -1857,7 +1871,6 @@ def simulate(
                         execution_status="failed",
                         extensions={TARGET_EXTENSION: target_facts},
                     )
-                osdi_workdir = run_directory
 
                 # The composed OSDI run deck and every reviewed .osdi module are
                 # content-bound at the driver boundary: ngspice refuses to launch
@@ -1874,36 +1887,65 @@ def simulate(
                     )
                     for module_path, module_sha256 in verified_osdi_modules
                 )
-
-                def osdi_control_run(
-                    src: Path,
-                    out: Path,
-                    _startup: Path = osdi_startup,
-                    _workdir: Path = osdi_workdir,
-                    _expected_deck_sha256: str = deck.sha256,
-                    _pinned: tuple[NgspicePinnedInput, ...] = osdi_pinned_modules,
-                ) -> dict[str, Any]:
-                    return NgspiceDriver(discovery=discovery).simulate(
-                        src,
-                        out,
-                        workdir=_workdir,
-                        execution_mode="control",
-                        init_file=_startup,
-                        timeout=timeout,
-                        expected_source_sha256=_expected_deck_sha256,
-                        pinned_inputs=_pinned,
+                execution = NgspiceProfileExecution(
+                    execution_mode="control",
+                    # The RAW-byte digest of the exact file the driver opens and
+                    # scans (`deck_record` is a file_record over raw bytes, as is
+                    # the driver's own scan), so the driver refuses to launch a
+                    # deck whose file changed between this capture and launch. For
+                    # a derived OSDI deck this is verified == deck.sha256 above;
+                    # deck.sha256 itself is NOT usable as the bind (it is the
+                    # text-mode-normalized digest, which diverges from the raw
+                    # bytes the driver hashes for a CRLF deck). Never None: the
+                    # non-derived path is guarded below and a derived record is
+                    # verified against deck.sha256.
+                    expected_source_sha256=deck_record.get("sha256"),
+                    pinned_inputs=osdi_pinned_modules,
+                    # For the sanctioned OSDI preload, the run deck carries a
+                    # reviewed `.control pre_osdi` block the initial shared profile
+                    # forbids; profile-check the caller's own control-free deck
+                    # (the exact bytes spliced, written to a stable file above).
+                    inspection_source=osdi_inspection_source,
+                    init_file=osdi_startup,
+                    provenance_limitations=(
+                        "The reviewed behavioral-block OSDI preload (the digest-"
+                        "bound pre_osdi cards and wrapper subckts) and the caller's "
+                        "control-free deck were composed into one deck, whose "
+                        "digest was verified before launch; every compiled .osdi "
+                        "module was re-hashed from disk against its reviewed "
+                        "OpenVAF compile digest before ngspice mapped it. Host "
+                        "runtime libraries and simulator defaults remain bounded "
+                        "provenance.",
+                        MANAGED_OSDI_STARTUP_PROVENANCE,
+                    ),
+                )
+            else:
+                # Every OpenADA-derived deck reaching the shared batch profile —
+                # a bare deck, a per-analysis artifact split, a --models
+                # composition, or a d_cosim deck — is now content-bound at the
+                # driver: it must still hash to its retained digest at launch
+                # (entry check + pre-run_process recheck). A cosim deck also pins
+                # each compiled d_cosim `.so` to its reviewed digest, re-verified
+                # immediately before launch (the operation already re-hashes them
+                # per analysis; this closes the last rehash->launch window, same
+                # descriptor-level FD residual as the OSDI path).
+                cosim_pinned_objects = tuple(
+                    NgspicePinnedInput(
+                        path=Path(object_path),
+                        sha256=object_sha256,
+                        kind="cosim-code-model",
                     )
-
-                osdi_provenance = [
-                    "The reviewed behavioral-block OSDI preload (the digest-bound "
-                    "pre_osdi cards and wrapper subckts) and the caller's "
-                    "control-free deck were composed into one deck, whose digest "
-                    "was verified before launch; every compiled .osdi module was "
-                    "re-hashed from disk against its reviewed OpenVAF compile "
-                    "digest before ngspice mapped it. Host runtime libraries and "
-                    "simulator defaults remain bounded provenance.",
-                    MANAGED_OSDI_STARTUP_PROVENANCE,
-                ]
+                    for _name, (object_path, object_sha256) in sorted(permitted.items())
+                )
+                execution = NgspiceProfileExecution(
+                    execution_mode="batch",
+                    # The RAW-byte digest of the file the driver opens (see the
+                    # OSDI spec above for why deck.sha256's text-normalized digest
+                    # cannot be used here); the driver refuses a file changed
+                    # between capture and launch. Guarded non-None below.
+                    expected_source_sha256=deck_record.get("sha256"),
+                    pinned_inputs=cosim_pinned_objects,
+                )
             payload = simulate_circuit_profile(
                 deck_path,
                 destination / stem,
@@ -1913,13 +1955,7 @@ def simulate(
                 timeout=timeout,
                 request_id=correlation_id,
                 parameters=parameters,
-                # For the sanctioned OSDI preload, the run deck carries a reviewed
-                # `.control pre_osdi` block the initial shared profile forbids;
-                # profile-check the caller's own control-free deck (the exact
-                # bytes spliced, written to a stable file above) instead.
-                inspection_source=osdi_inspection_source,
-                native_control_run=osdi_control_run,
-                provenance_limitations=osdi_provenance,
+                execution=execution,
             )
 
         # Apply caller-owned provenance before either a per-analysis child or

@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 from pathlib import Path
 
 import pytest
 
 from openada.discovery import DiscoveryManager
 from openada.driver_registry import BUILTIN_DRIVERS
+from openada.engines.spice import NgspicePinnedInput
 from openada.operations.circuit_simulate import (
     MAX_SOURCE_BYTES,
+    NgspiceProfileExecution,
     inspect_simulation_deck,
     simulate_circuit_profile,
 )
@@ -579,4 +582,244 @@ def test_noncanonical_request_identity_is_rejected_before_launch(tmp_path: Path)
     assert payload["diagnostics"][0]["code"] == "simulation.request.invalid"
     assert payload["data"]["protocol"]["request_id"] != (
         "00000000-0000-4000-8000-00000000000A"
+    )
+
+
+# --------------------------------------------------------------------------
+# Typed compiled-behavioral launch seam: the shared batch profile now content-
+# binds EVERY OpenADA-derived deck at the driver (not just PDK/OSDI decks), and
+# the former arbitrary native_control_run callback is gone. These tests drive
+# the fake simulator through the real NgspiceDriver, so they prove the wiring
+# (expected_source_sha256 + pinned_inputs reach the driver) without needing a
+# real ngspice.
+# --------------------------------------------------------------------------
+
+
+def _ngspice_discovery(tmp_path: Path, *, analysis_type: str = "op", marker: Path | None = None):
+    binary = tmp_path / "ngspice" / "ngspice"
+    binary.parent.mkdir(parents=True)
+    _write_fake_simulator(
+        binary, backend="ngspice", raw=RAW_RESULTS[analysis_type], marker=marker
+    )
+    return DiscoveryManager(binary_overrides={"ngspice": binary})
+
+
+def test_execution_rejects_a_non_typed_spec(tmp_path: Path) -> None:
+    # The seam is closed: an arbitrary callable (the old native_control_run
+    # surface) can no longer be smuggled in as the execution.
+    discovery = _ngspice_discovery(tmp_path)
+    with pytest.raises(TypeError):
+        simulate_circuit_profile(
+            FIXTURES / FIXTURE_NAMES["op"],
+            tmp_path / "evidence",
+            backend="ngspice",
+            discovery=discovery,
+            parameters=PARAMETERS["op"],
+            execution=lambda src, out: {},  # type: ignore[arg-type]
+        )
+
+
+def test_batch_execution_binds_the_deck_digest_and_refuses_a_mismatch(
+    tmp_path: Path,
+) -> None:
+    # A derived-deck digest that no longer matches the file is refused BEFORE the
+    # simulator launches -- the batch profile now carries expected_source_sha256
+    # to the driver.
+    marker = tmp_path / "launched.marker"
+    discovery = _ngspice_discovery(tmp_path, marker=marker)
+    payload = simulate_circuit_profile(
+        FIXTURES / FIXTURE_NAMES["op"],
+        tmp_path / "evidence",
+        backend="ngspice",
+        discovery=discovery,
+        parameters=PARAMETERS["op"],
+        execution=NgspiceProfileExecution(expected_source_sha256="0" * 64),
+    )
+    assert payload["engineering"]["status"] != "pass"
+    codes = [d.get("code") for d in payload.get("diagnostics", [])]
+    # The driver's pre-launch digest refusal surfaces at the operation layer as
+    # the "changed between resolution and launch" unproven diagnostic.
+    assert "simulation.analysis.unproven" in codes, payload
+    assert not marker.exists(), "the simulator must not launch on a digest refusal"
+
+
+def test_batch_execution_accepts_the_matching_deck_digest(tmp_path: Path) -> None:
+    # The happy path: the exact digest is forwarded and the run proceeds.
+    fixture = FIXTURES / FIXTURE_NAMES["op"]
+    digest = hashlib.sha256(fixture.read_bytes()).hexdigest()
+    discovery = _ngspice_discovery(tmp_path)
+    payload = simulate_circuit_profile(
+        fixture,
+        tmp_path / "evidence",
+        backend="ngspice",
+        discovery=discovery,
+        parameters=PARAMETERS["op"],
+        execution=NgspiceProfileExecution(expected_source_sha256=digest),
+    )
+    assert payload["engineering"]["status"] == "pass", payload
+    assert payload["data"]["analysis"]["type"] == "op"
+
+
+def test_batch_execution_pins_and_refuses_a_changed_object(tmp_path: Path) -> None:
+    # A pinned compiled object (a d_cosim .so) whose digest no longer matches is
+    # refused by the driver launch guard -- the batch profile forwards
+    # pinned_inputs, closing the operation-rehash -> launch window.
+    obj = tmp_path / "core.so"
+    obj.write_bytes(b"reviewed-cosim-object-bytes")
+    marker = tmp_path / "launched.marker"
+    discovery = _ngspice_discovery(tmp_path, marker=marker)
+    payload = simulate_circuit_profile(
+        FIXTURES / FIXTURE_NAMES["op"],
+        tmp_path / "evidence",
+        backend="ngspice",
+        discovery=discovery,
+        parameters=PARAMETERS["op"],
+        execution=NgspiceProfileExecution(
+            pinned_inputs=(
+                NgspicePinnedInput(
+                    path=obj, sha256="0" * 64, kind="cosim-code-model"
+                ),
+            ),
+        ),
+    )
+    assert payload["engineering"]["status"] != "pass"
+    codes = [d.get("code") for d in payload.get("diagnostics", [])]
+    assert "simulation.analysis.unproven" in codes, payload
+    assert not marker.exists(), "the simulator must not launch on a pin refusal"
+
+
+def test_batch_execution_accepts_a_matching_pinned_object(tmp_path: Path) -> None:
+    # A pin whose digest matches is re-verified and the run proceeds.
+    obj = tmp_path / "core.so"
+    obj.write_bytes(b"reviewed-cosim-object-bytes")
+    digest = hashlib.sha256(obj.read_bytes()).hexdigest()
+    discovery = _ngspice_discovery(tmp_path)
+    payload = simulate_circuit_profile(
+        FIXTURES / FIXTURE_NAMES["op"],
+        tmp_path / "evidence",
+        backend="ngspice",
+        discovery=discovery,
+        parameters=PARAMETERS["op"],
+        execution=NgspiceProfileExecution(
+            pinned_inputs=(
+                NgspicePinnedInput(path=obj, sha256=digest, kind="cosim-code-model"),
+            ),
+        ),
+    )
+    assert payload["engineering"]["status"] == "pass", payload
+
+
+def _fake_ngspice(tmp_path: Path, *, marker: Path | None = None) -> DiscoveryManager:
+    binary = tmp_path / "ngspice" / "ngspice"
+    binary.parent.mkdir(parents=True)
+    _write_fake_simulator(binary, backend="ngspice", raw=RAW_RESULTS["op"], marker=marker)
+    return DiscoveryManager(binary_overrides={"ngspice": binary})
+
+
+def test_operation_bare_deck_binds_parsed_bytes_and_passes(tmp_path: Path) -> None:
+    # End-to-end through operations.simulate(): a stable bare deck builds a batch
+    # execution spec whose expected_source_sha256 IS the digest of the deck bytes
+    # the operation parsed, so a well-formed run is not falsely refused.
+    from openada.operations.simulate import simulate as operation_simulate
+
+    import shutil
+
+    deck = tmp_path / "deck.cir"
+    shutil.copyfile(FIXTURES / FIXTURE_NAMES["op"], deck)
+    payload = operation_simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=_fake_ngspice(tmp_path),
+        backend="ngspice",
+        parameters=PARAMETERS["op"],
+    )
+    assert payload["engineering"]["status"] == "pass", payload
+    assert payload["data"]["analysis"]["type"] == "op"
+
+
+def test_operation_bare_deck_swapped_before_launch_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The bare-deck launch is bound to the digest of the bytes the operation
+    # parsed and profile/collateral/stimulus-checked (deck.sha256). If the deck
+    # file is atomically swapped after that parse but before the driver scans it,
+    # the driver refuses -- the earlier checks can never be attributed to
+    # different launched bytes.
+    from openada.engines.spice import NgspiceDriver
+    from openada.operations.simulate import simulate as operation_simulate
+
+    import shutil
+
+    deck = tmp_path / "deck.cir"
+    shutil.copyfile(FIXTURES / FIXTURE_NAMES["op"], deck)
+
+    marker = tmp_path / "launched.marker"
+    discovery = _fake_ngspice(tmp_path, marker=marker)
+
+    original_simulate = NgspiceDriver.simulate
+
+    def swap_then_simulate(self, source, output_dir, **kwargs):
+        # Same .op deck, different bytes: a comment line the profile still accepts
+        # but that changes the file digest away from the parsed deck.sha256.
+        swapped = Path(source).read_text(encoding="utf-8") + "* raced in after parse\n"
+        Path(source).write_text(swapped, encoding="utf-8")
+        return original_simulate(self, source, output_dir, **kwargs)
+
+    monkeypatch.setattr(NgspiceDriver, "simulate", swap_then_simulate)
+
+    payload = operation_simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=discovery,
+        backend="ngspice",
+        parameters=PARAMETERS["op"],
+    )
+    assert payload["engineering"]["status"] != "pass"
+    codes = [d.get("code") for d in payload.get("diagnostics", [])]
+    assert "simulation.analysis.unproven" in codes, payload
+    assert not marker.exists(), "a swapped bare deck must not reach the simulator"
+
+
+def test_operation_bare_crlf_deck_is_not_falsely_refused(tmp_path: Path) -> None:
+    # Regression guard: the launch binds to the RAW-byte digest the driver scans
+    # (deck_record), NOT the text-mode-normalized deck.sha256. A CRLF deck must
+    # run, not be refused for a digest that silently normalized its line endings.
+    from openada.operations.simulate import simulate as operation_simulate
+
+    deck = tmp_path / "deck.cir"
+    lf = (FIXTURES / FIXTURE_NAMES["op"]).read_text(encoding="utf-8")
+    deck.write_bytes(lf.replace("\n", "\r\n").encode("utf-8"))
+    payload = operation_simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=_fake_ngspice(tmp_path),
+        backend="ngspice",
+        parameters=PARAMETERS["op"],
+    )
+    assert payload["engineering"]["status"] == "pass", payload
+
+
+def test_explicit_empty_provenance_suppresses_the_default_note(tmp_path: Path) -> None:
+    # The three-state field is preserved: () suppresses the default model-free
+    # note, None keeps it.
+    suppressed = _run_with_execution(
+        tmp_path / "suppressed",
+        execution=NgspiceProfileExecution(provenance_limitations=()),
+    )
+    assert suppressed["data"]["evidence"]["provenance_limitations"] == []
+    defaulted = _run_with_execution(
+        tmp_path / "defaulted",
+        execution=NgspiceProfileExecution(),
+    )
+    assert len(defaulted["data"]["evidence"]["provenance_limitations"]) >= 1
+
+
+def _run_with_execution(tmp_path: Path, *, execution: NgspiceProfileExecution) -> dict:
+    return simulate_circuit_profile(
+        FIXTURES / FIXTURE_NAMES["op"],
+        tmp_path / "evidence",
+        backend="ngspice",
+        discovery=_fake_ngspice(tmp_path),
+        parameters=PARAMETERS["op"],
+        execution=execution,
     )
