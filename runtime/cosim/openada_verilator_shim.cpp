@@ -119,9 +119,14 @@ static void accept_input(struct co_info *pinfo,
                          unsigned int index, Digital_t *vp)
 {
     instance      *inst = (instance *)pinfo->handle;
-    Vlng          *topp = inst->topp;
-    unsigned char *previous_output = inst->previous_output;
+    Vlng          *topp;
+    unsigned char *previous_output;
     unsigned int   val, offset;
+
+    if (inst == nullptr)
+        return;                      // see the note in step().
+    topp = inst->topp;
+    previous_output = inst->previous_output;
 
     val = vp->state;
     if (val == UNKNOWN)
@@ -184,7 +189,15 @@ static void step(struct co_info *pinfo)
      */
     Digital_t      oval = {ZERO, STRONG};
     instance      *inst = (instance *)pinfo->handle;
-    Vlng          *topp = inst->topp;
+    Vlng          *topp;
+
+    /* ngspice only WARNS about port-count mismatches after Cosim_setup and
+     * then calls step() unconditionally, so a setup that could not allocate
+     * must leave a callable no-op rather than a null pointer.
+     */
+    if (inst == nullptr)
+        return;
+    topp = inst->topp;
     unsigned char *previous_output = inst->previous_output;
     int            index, i;
     unsigned char  bit;
@@ -220,12 +233,17 @@ static void step(struct co_info *pinfo)
     Digital_t         oval = {ZERO, STRONG};
     instance         *inst = (instance *)pinfo->handle;
     VerilatedContext *contextp;
-    Vlng             *topp = inst->topp;
-    unsigned char    *previous_output = inst->previous_output;
+    Vlng             *topp;
+    unsigned char    *previous_output;
     double            tick;
     uint64_t          target, next;
     int               index, i, stop = 0;
     unsigned char     bit;
+
+    if (inst == nullptr)
+        return;                      // see the note in the untimed step().
+    topp = inst->topp;
+    previous_output = inst->previous_output;
 
     /* When the Verilog source was compiled with --timing, run queued events
      * until the Verilog simulation catches up with SPICE.
@@ -289,6 +307,24 @@ extern "C" void Cosim_setup(struct co_info *pinfo)
 
     Verilated::debug(0);
 
+    /* Publish the callbacks FIRST. ngspice calls step() whatever happens, so
+     * every exit path below must leave callable functions behind; they all
+     * return immediately while pinfo->handle is null.
+     */
+
+    pinfo->handle = nullptr;
+    pinfo->step = step;
+    pinfo->cleanup = cleanup;
+    pinfo->in_fn = accept_input;
+    pinfo->in_count = 0;
+    pinfo->out_count = 0;
+    pinfo->inout_count = 0;
+#ifdef WITH_TIMING
+    pinfo->method = Both;         // There may be immediate results from input.
+#else
+    pinfo->method = After_input;  // Verilator requires input to advance.
+#endif
+
     instance *inst = new (std::nothrow) instance;
     if (inst == nullptr)
         return;                      // ngspice reports the unusable instance.
@@ -312,11 +348,9 @@ extern "C" void Cosim_setup(struct co_info *pinfo)
         return;
     }
 
-    /* Return information to caller. */
+    /* Fully constructed: publish the handle and the real port counts. */
 
     pinfo->handle = inst;
-    pinfo->step = step;
-    pinfo->cleanup = cleanup;
 
 #define VL_DATA(size, name, msb, lsb) i += msb - lsb + 1; // Count ports
 
@@ -326,11 +360,5 @@ extern "C" void Cosim_setup(struct co_info *pinfo)
 
     pinfo->out_count = outs;
     pinfo->inout_count = inouts;
-    pinfo->in_fn = accept_input;
-#ifdef WITH_TIMING
-    pinfo->method = Both;         // There may be immediate results from input.
-#else
-    pinfo->method = After_input;  // Verilator requires input to advance.
-#endif
 }
 #undef VL_DATA
