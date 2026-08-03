@@ -75,7 +75,12 @@ from ..pdk_bindings import (
     simulatable_pdk_ids,
 )
 from ..pdk_collateral import blocking, inspect_deck_collateral
-from ..pdk_startup import MANAGED_STARTUP_PROVENANCE, write_managed_startup
+from ..pdk_startup import (
+    MANAGED_OSDI_STARTUP_PROVENANCE,
+    MANAGED_STARTUP_PROVENANCE,
+    write_managed_osdi_startup,
+    write_managed_startup,
+)
 from .circuit_simulate import (
     decorate_circuit_simulation_result,
     inspect_simulation_deck,
@@ -1600,6 +1605,49 @@ def simulate(
                     extensions={TARGET_EXTENSION: target_facts},
                 )
         else:
+            osdi_control_run: Any = None
+            osdi_provenance: list[str] | None = None
+            if osdi_preload_text is not None and normalized_backend == "ngspice":
+                # The reviewed pre_osdi deck cannot run in the batch profile
+                # runner: batch refuses its `.control` block, and even in control
+                # mode a bare `.op`/`.tran` does not auto-run. So the OSDI path
+                # runs through ngspice control mode with a wrapper-owned raw and
+                # an empty managed startup (no PDK) that suppresses every ambient
+                # `.spiceinit`. The profile gate in simulate_circuit_profile still
+                # validates the caller's control-free deck (inspection_source),
+                # so nothing about the evidence's meaning changes — only the
+                # launch does.
+                osdi_run_dir = destination / stem
+                osdi_startup = write_managed_osdi_startup(osdi_run_dir)
+                osdi_workdir = (
+                    run_directory if selected.kind == "deck" else deck_directory
+                )
+
+                def osdi_control_run(
+                    src: Path,
+                    out: Path,
+                    _startup: Path = osdi_startup,
+                    _workdir: Path = osdi_workdir,
+                ) -> dict[str, Any]:
+                    return NgspiceDriver(discovery=discovery).simulate(
+                        src,
+                        out,
+                        workdir=_workdir,
+                        execution_mode="control",
+                        init_file=_startup,
+                        timeout=timeout,
+                    )
+
+                osdi_provenance = [
+                    "The reviewed behavioral-block OSDI preload (the digest-bound "
+                    "pre_osdi cards and wrapper subckts) and the caller's "
+                    "control-free deck were composed into one deck, whose digest "
+                    "was verified before launch; the compiled .osdi modules were "
+                    "produced from digest-bound Verilog-A sources by the selected "
+                    "OpenVAF build. Host runtime libraries and simulator defaults "
+                    "remain bounded provenance.",
+                    MANAGED_OSDI_STARTUP_PROVENANCE,
+                ]
             payload = simulate_circuit_profile(
                 deck_path,
                 destination / stem,
@@ -1617,6 +1665,8 @@ def simulate(
                     if osdi_preload_text is not None and selected.kind == "deck"
                     else None
                 ),
+                native_control_run=osdi_control_run,
+                provenance_limitations=osdi_provenance,
             )
 
         # Apply caller-owned provenance before either a per-analysis child or

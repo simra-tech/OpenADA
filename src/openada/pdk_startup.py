@@ -97,9 +97,63 @@ def write_managed_startup(directory: Path, resolved: ResolvedPdkBinding) -> Path
     return path
 
 
+#: The startup OpenADA installs for a behavioral-block OSDI run. A block-OSDI run
+#: binds no PDK, so it exports no ``PDK_ROOT``/``PDK`` and declares no library
+#: prelude - the reviewed ``.control pre_osdi`` cards and wrapper subckts are
+#: emitted into the deck by ``osdi_compile.osdi_preload_prelude``. This file's
+#: only job is the same hygiene the PDK path buys: reading it explicitly
+#: suppresses every ambient ``spinit``/``.spiceinit``, so an installed PDK's
+#: startup cannot preload another technology's Verilog-A/OSDI modules into a run
+#: that is meant to load exactly the reviewed block modules and nothing else.
+MANAGED_OSDI_STARTUP_NAME = "openada-osdi.spiceinit"
+
+MANAGED_OSDI_STARTUP_PROVENANCE = (
+    "The simulator's startup file was written by OpenADA as an empty managed "
+    "startup and passed explicitly, so no ambient spinit or .spiceinit - "
+    "including one an installed PDK ships into the user's home - could preload "
+    "another technology's Verilog-A/OSDI modules or extend the model search "
+    "path; the run loads exactly the reviewed, digest-bound block OSDI modules "
+    "named by the deck's own pre_osdi cards."
+)
+
+
+def managed_osdi_startup_text() -> str:
+    """Return the empty managed startup for a block-OSDI (no-PDK) run.
+
+    A block-OSDI run binds no technology, so unlike ``managed_startup_text`` this
+    carries no ``startup_directives`` at all. It exists solely so ngspice reads
+    no ambient startup file; every OSDI card is in the deck.
+    """
+
+    return "\n".join(
+        [
+            "* OpenADA-managed ngspice startup for a behavioral-block OSDI run.",
+            "* Do not edit.",
+            "*",
+            "* This file exists so that ngspice reads no other one. Every OSDI",
+            "* preload the run needs is a reviewed, digest-bound pre_osdi card in",
+            "* the bound deck; a startup file that reached outside it would be",
+            "* invisible in the retained evidence.",
+        ]
+    ) + "\n"
+
+
+def write_managed_osdi_startup(directory: Path) -> Path:
+    """Write the empty managed OSDI startup file and return its path."""
+
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / MANAGED_OSDI_STARTUP_NAME
+    path.write_text(managed_osdi_startup_text(), encoding="utf-8")
+    return path
+
+
 __all__ = [
+    "MANAGED_OSDI_STARTUP_NAME",
+    "MANAGED_OSDI_STARTUP_PROVENANCE",
     "MANAGED_STARTUP_NAME",
     "MANAGED_STARTUP_PROVENANCE",
+    "managed_osdi_startup_text",
     "managed_startup_text",
+    "write_managed_osdi_startup",
     "write_managed_startup",
 ]

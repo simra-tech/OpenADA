@@ -6,7 +6,7 @@ from copy import deepcopy
 import math
 from pathlib import Path
 import re
-from typing import Mapping
+from typing import Callable, Mapping
 import uuid
 
 from ..contract import (
@@ -910,6 +910,8 @@ def simulate_circuit_profile(
     request_id: str | None = None,
     parameters: Mapping[str, object] | None = None,
     inspection_source: str | Path | None = None,
+    native_control_run: Callable[[Path, Path], dict] | None = None,
+    provenance_limitations: list[str] | None = None,
 ) -> dict:
     """Execute one closed circuit.simulate analysis through a selected driver.
 
@@ -921,6 +923,16 @@ def simulate_circuit_profile(
     would otherwise reject as an unsupported directive), but the caller's deck —
     the thing being profile-checked — is control-free. Defaults to ``spice_file``
     so every other caller is unchanged.
+
+    ``native_control_run`` swaps ONLY the ngspice execution primitive: when set,
+    it is called as ``native_control_run(source, output_dir)`` and must return
+    the same driver payload the built-in batch call would, but is free to run the
+    deck in control mode. The caller-independent profile gate above — every
+    off-profile refusal, the analysis-match check, the decoration — is unchanged,
+    so a sanctioned OSDI control-mode run is validated by exactly the same rules
+    as a batch run and only its launch differs. ``provenance_limitations``, when
+    set, is recorded on the decorated evidence in place of the default model-free
+    note, so the OSDI run states its own (content-bound preload) provenance.
     """
 
     source = Path(spice_file).expanduser().resolve()
@@ -1030,13 +1042,20 @@ def simulate_circuit_profile(
     assert driver is not None
     implementation = driver.factory(discovery)
     if driver.alias == "ngspice":
-        payload = implementation.simulate(  # type: ignore[attr-defined]
-            source,
-            output_dir,
-            workdir=workdir,
-            execution_mode="batch",
-            timeout=timeout,
-        )
+        if native_control_run is not None:
+            # The sanctioned block-OSDI path runs the reviewed pre_osdi deck in
+            # ngspice control mode. The same batch-safety and profile gate above
+            # already ran against the caller's control-free deck; only the launch
+            # differs, so the evidence still means exactly what a batch run means.
+            payload = native_control_run(source, Path(output_dir))
+        else:
+            payload = implementation.simulate(  # type: ignore[attr-defined]
+                source,
+                output_dir,
+                workdir=workdir,
+                execution_mode="batch",
+                timeout=timeout,
+            )
     else:
         payload = implementation.simulate(  # type: ignore[attr-defined]
             source,
@@ -1051,6 +1070,7 @@ def simulate_circuit_profile(
         request_id=correlation_id,
         deck=deck,
         parameters=requested,
+        provenance_limitations=provenance_limitations,
     )
 
 

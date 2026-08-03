@@ -213,3 +213,107 @@ def test_compose_input_refusals(block_ids, code):
     with pytest.raises(oc.OsdiCompileError) as caught:
         oc.compose_blocks_osdi(lib, block_ids, Path(tempfile.mkdtemp()))
     assert caught.value.code == code
+
+
+# --- operation-level end-to-end: `simulate --blocks --osdi` through the
+#     sanctioned control-mode runner (gates 4-5). The physics value is proven
+#     above at the module level with the identical prelude; this proves the prod
+#     simulate OPERATION drives the control-mode run and returns valid evidence.
+
+def _opamp_op_deck(tmp_path: Path) -> Path:
+    # Control-free caller deck: the profile gate inspects THIS, while the run
+    # deck (title + reviewed pre_osdi preload + this) executes in control mode.
+    deck = tmp_path / "opamp_op.cir"
+    deck.write_text(
+        "* opamp OSDI op-point testbench\n"
+        "X1 inp inn out 0 bhv_opamp_1p_v1\n"
+        "vinp inp 0 0.01\n"
+        "vinn inn 0 0\n"
+        "rl out 0 1meg\n"
+        ".op\n"
+        ".end\n",
+        encoding="utf-8",
+    )
+    return deck
+
+
+@native
+def test_simulate_blocks_osdi_operation_runs_control_mode_and_passes(tmp_path, capsys):
+    import json
+    from openada.cli import main
+
+    deck = _opamp_op_deck(tmp_path)
+    out = tmp_path / "evidence"
+    exit_code = main(
+        [
+            "simulate",
+            str(deck),
+            "--blocks",
+            "bhv-core:opamp_1p",
+            "--osdi",
+            "--analysis",
+            "op",
+            "--output-dir",
+            str(out),
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    # The control-mode runner produced a valid op result end to end.
+    assert exit_code == 0, payload
+    assert payload["operation"] == "simulate"
+    assert payload["execution"]["status"] == "completed"
+    assert payload["engineering"]["status"] == "pass"
+
+    data = payload["data"]
+    assert data["analysis"]["type"] == "op"
+    assert data["analysis"]["point_count"] == 1
+    assert data["analysis"]["finite_value_count"] >= 1
+    # Request binding is exact only when the run deck is content-bound and the
+    # retained op raw structurally matches the requested analysis.
+    assert data["evidence"]["request_binding"] == "exact"
+    assert data["evidence"]["structure"] == "valid"
+    assert "simulation.result" in data["evidence"]["artifact_roles_present"]
+
+    # Provenance states the OSDI preload + empty managed startup story, not the
+    # default model-free note.
+    limitations = " ".join(data["evidence"]["provenance_limitations"])
+    assert "pre_osdi" in limitations
+    assert "managed startup" in limitations
+
+    # The digest-bound OSDI provenance rode through into the retained envelope.
+    osdi = data["extensions"]["org.openada.behavioral-blocks-osdi"]
+    assert osdi["library"] == "bhv-core"
+    assert osdi["requested"] == ["opamp_1p"]
+    assert [m["module"] for m in osdi["modules"]] == ["bhv_opamp_1p_v1"]
+    assert all(len(m["osdi_sha256"]) == 64 for m in osdi["modules"])
+
+
+def test_simulate_osdi_preload_digest_mismatch_refuses_before_launch(tmp_path):
+    """The operation pins the OSDI preload to its reviewed composition digest: a
+    preload that does not hash to the declared sha256 is a pre-launch
+    blocks.materialize.tampered refusal, so no simulator runs. Needs no native
+    tools — the guard fires before any ngspice launch."""
+    from openada.discovery import DiscoveryManager
+    from openada.operations.simulate import simulate
+
+    deck = _opamp_op_deck(tmp_path)
+    preload = (
+        ".control\npre_osdi /nonexistent/bhv_opamp_1p_v1.osdi\n.endc\n"
+        ".subckt bhv_opamp_1p_v1 inp inn out vss\n"
+        ".model bhv_opamp_1p_v1__osdi bhv_opamp_1p_v1\n"
+        "N1 inp inn out vss bhv_opamp_1p_v1__osdi\n"
+        ".ends bhv_opamp_1p_v1\n"
+    )
+    payload = simulate(
+        deck,
+        tmp_path / "out",
+        discovery=DiscoveryManager(),
+        backend="ngspice",
+        parameters={"analysis": {"type": "op", "extensions": {}}, "extensions": {}},
+        osdi_preload_text=preload,
+        osdi_preload_sha256="0" * 64,  # deliberately not the preload's digest
+    )
+    codes = [d.get("code") for d in payload.get("diagnostics", [])]
+    assert "blocks.materialize.tampered" in codes, payload
+    assert payload["engineering"]["status"] != "pass"
