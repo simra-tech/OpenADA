@@ -772,3 +772,27 @@ def test_compiled_object_records_the_openada_shim_digest(tmp_path):
     )
     _directory, digest = cc.resolve_cosim_shim_dir()
     assert module.shim_sha256 == digest
+
+
+def test_missing_shim_source_is_a_typed_refusal_not_a_fallback():
+    """A missing shim must never silently fall back to ngspice's (defective) one."""
+
+    directory, _digest = cc.resolve_cosim_shim_dir()
+    for name in cc.SHIM_SOURCES:
+        path = directory / name
+        backup = path.read_bytes()
+        try:
+            path.unlink()
+            with pytest.raises(cc.CosimCompileError) as caught:
+                cc.resolve_cosim_shim_dir()
+            assert caught.value.code == "cosim.shim.unavailable"
+        finally:
+            path.write_bytes(backup)
+
+
+def test_named_missing_ngspice_is_refused_rather_than_falling_back():
+    # Otherwise the object is compiled against one ngspice's d_cosim ABI
+    # headers and loaded by another.
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.resolve_cosim_shim_dir(ngspice_bin="/nonexistent/ngspice")
+    assert caught.value.code == "cosim.shim.unavailable"

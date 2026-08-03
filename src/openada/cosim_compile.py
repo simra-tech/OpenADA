@@ -243,6 +243,15 @@ def resolve_cosim_abi_dir(*, ngspice_bin: str | None = None) -> Path:
             "cosim.shim.unavailable",
             "no ngspice binary is available to locate the d_cosim ABI headers.",
         )
+    # A named simulator that does not exist must not silently fall back to
+    # some OTHER installation's headers: the object would be compiled against
+    # one ngspice's d_cosim ABI and loaded by another.
+    if not Path(resolved).is_file():
+        raise CosimCompileError(
+            "cosim.shim.unavailable",
+            f"the named ngspice binary {resolved!r} does not exist, so its "
+            "d_cosim ABI headers cannot be located.",
+        )
     try:
         prefix = Path(resolved).resolve().parent.parent
     except OSError as exc:
@@ -288,7 +297,17 @@ def resolve_cosim_shim_dir(*, ngspice_bin: str | None = None) -> tuple[Path, str
     """
 
     resolve_cosim_abi_dir(ngspice_bin=ngspice_bin)
-    directory = _installed_data_path("runtime/cosim", SHIM_SOURCES[0]).parent
+    try:
+        directory = _installed_data_path("runtime/cosim", SHIM_SOURCES[0]).parent
+    except Exception as exc:
+        # A missing shim must be a typed refusal at this boundary, never a raw
+        # provider-runtime traceback -- and never a silent fall back to
+        # ngspice's shipped shim, which is the defective one.
+        raise CosimCompileError(
+            "cosim.shim.unavailable",
+            "OpenADA's reviewed d_cosim shim sources are not installed: "
+            f"{exc}",
+        ) from exc
     if not _PATH_SAFE_RE.fullmatch(str(directory)):
         raise CosimCompileError(
             "cosim.shim.unsafe_path",
