@@ -210,6 +210,9 @@ class CosimBlockBackend:
     core_source_sha256: str
     core_inputs: tuple[str, ...]
     core_outputs: tuple[str, ...]
+    #: Relational parameter constraints this realization requires, which a
+    #: per-parameter range cannot express (checked per instantiation).
+    parameter_constraints: tuple[Mapping[str, Any], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1220,6 +1223,9 @@ def _bind_block(
             core_source_sha256=core_record["sha256"],
             core_inputs=core_inputs,
             core_outputs=core_outputs,
+            parameter_constraints=tuple(
+                declared_cosim.get("parameter_constraints", ())
+            ),
         )
 
     return (

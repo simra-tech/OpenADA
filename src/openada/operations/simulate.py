@@ -36,6 +36,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 from typing import Any, Iterable, Mapping, Sequence
@@ -65,6 +66,7 @@ from ..engines.simra_artifact import (
     load_model_prelude,
     load_simra_testbench,
 )
+from ..cosim_compile import CosimCompileError, verify_single_instantiation
 from ..engines.spice import MAX_SOURCE_BYTES, NgspiceDriver, NgspiceOutput
 from ..pdk_bindings import (
     PdkBindingError,
@@ -1097,6 +1099,39 @@ def _resolve_model_source(
         for name in sorted(permitted):
             object_path, object_sha256 = permitted[name]
             candidate = Path(object_path)
+            # The path ngspice will dlopen must mean the same thing to both
+            # processes and must not be redirectable between verification and
+            # load: a relative path resolves against the SIMULATOR's working
+            # directory, not ours, and a symlinked component can be repointed
+            # after the bytes were read.
+            if not candidate.is_absolute():
+                raise SimulationRequestError(
+                    "simulation.models.executable_unverifiable",
+                    f"the compiled object {object_path} bound by the model "
+                    f"card {name!r} is a relative path; it would resolve "
+                    "against the simulator's working directory, not the one "
+                    "verified here.",
+                )
+            if str(candidate) != os.path.normpath(str(candidate)):
+                raise SimulationRequestError(
+                    "simulation.models.executable_unverifiable",
+                    f"the compiled object {object_path} bound by the model "
+                    f"card {name!r} is not a normalized path.",
+                )
+            try:
+                if candidate.resolve(strict=True) != candidate:
+                    raise SimulationRequestError(
+                        "simulation.models.executable_unverifiable",
+                        f"the compiled object {object_path} bound by the model "
+                        f"card {name!r} reaches through a symbolic link; the "
+                        "verified bytes and the loaded bytes could differ.",
+                    )
+            except OSError as exc:
+                raise SimulationRequestError(
+                    "simulation.models.executable_unverifiable",
+                    f"the compiled object {object_path} bound by the model "
+                    f"card {name!r} could not be resolved: {exc}.",
+                ) from exc
             try:
                 object_bytes = candidate.read_bytes()
             except OSError as exc:
@@ -1160,6 +1195,8 @@ def simulate(
     extra_data_extensions: Mapping[str, Any] | None = None,
     expected_models_sha256: str | None = None,
     permitted_executable_models: Mapping[str, tuple[str, str]] | None = None,
+    cosim_wrappers: Sequence[str] = (),
+    cosim_composition: Any | None = None,
 ) -> dict[str, Any]:
     """Run one circuit simulation, whatever shape the request arrived in.
 
@@ -1264,6 +1301,8 @@ def simulate(
             deck_probe_text = None
     else:
         deck_probe_text = _artifact_deck_probe_text(selected.path)
+    permitted = dict(permitted_executable_models or {})
+    caller_deck_text: str | None = None
     try:
         resolved_pdk, model_prelude = _resolve_model_source(
             correlation_id=correlation_id,
@@ -1327,6 +1366,7 @@ def simulate(
                 inputs=input_records,
                 extensions={TARGET_EXTENSION: _target_facts(selected)},
             )
+        caller_deck_text = testbench.deck_text
         try:
             decks = derive_single_analysis_decks(testbench, model_prelude=model_prelude)
         except SimraArtifactError as exc:
@@ -1369,6 +1409,7 @@ def simulate(
                 f"{selected.path} could not be content-bound: {exc}",
                 inputs=input_records,
             )
+        caller_deck_text = deck_text
         if model_prelude is not None:
             # A model-card file is composed after the title line, which is the
             # one line SPICE never reads as a directive.
@@ -1389,6 +1430,28 @@ def simulate(
             ),
         )
         bound_saved_nets = normalized_saved_nets or ()
+
+    # The d_cosim single-instance rule is enforced HERE, at the operation
+    # boundary, on the caller's own deck text (before the composed prelude is
+    # spliced in -- the prelude's wrapper bodies are DEFINITIONS, not
+    # instances). Enforcing it only in the CLI left the programmatic
+    # compose->simulate path unchecked and mis-scanned an artifact descriptor
+    # as if it were a deck.
+    if permitted and caller_deck_text is not None:
+        try:
+            if cosim_composition is not None:
+                cosim_composition.verify_deck(caller_deck_text)
+            else:
+                verify_single_instantiation(
+                    caller_deck_text, cosim_wrappers or (), tuple(permitted)
+                )
+        except CosimCompileError as exc:
+            return refuse(
+                exc.code,
+                exc.message,
+                inputs=input_records,
+                extensions={TARGET_EXTENSION: _target_facts(selected)},
+            )
 
     target_facts = _target_facts(selected)
 
@@ -1540,6 +1603,32 @@ def simulate(
     total_duration = 0
 
     for deck in decks:
+        # A multi-analysis artifact launches the simulator once per derived
+        # deck, so the admitted executable objects are re-verified before EACH
+        # dispatch: verifying once before the loop would let an object swapped
+        # between analyses be attributed to the digest checked earlier.
+        for permitted_name in sorted(permitted):
+            permitted_path, permitted_sha256 = permitted[permitted_name]
+            try:
+                current = hashlib.sha256(Path(permitted_path).read_bytes()).hexdigest()
+            except OSError as exc:
+                return refuse(
+                    "simulation.models.executable_unverifiable",
+                    f"the compiled object {permitted_path} bound by the model "
+                    f"card {permitted_name!r} could not be re-read before this "
+                    f"analysis: {exc}.",
+                    inputs=input_records,
+                    extensions={TARGET_EXTENSION: target_facts},
+                )
+            if current != permitted_sha256:
+                return refuse(
+                    "simulation.models.executable_tampered",
+                    f"the compiled object {permitted_path} bound by the model "
+                    f"card {permitted_name!r} changed between analyses; no "
+                    "further simulator launch was made.",
+                    inputs=input_records,
+                    extensions={TARGET_EXTENSION: target_facts},
+                )
         name = (
             deck_file_name(deck, total=len(decks))
             if selected.kind == "simra-artifact"

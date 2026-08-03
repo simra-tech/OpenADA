@@ -68,6 +68,16 @@
       "core_module": "bhv_comparator_clocked_v1_core",
       "core_inputs": ["clk", "din"],
       "core_outputs": ["q"],
+      "parameter_constraints": [
+        {
+          "id": "latency-headroom",
+          "left": "td",
+          "relation": ">",
+          "right_terms": [{"parameter": "tedge", "coefficient": 0.5}],
+          "right_constant": 7e-12,
+          "rationale": "The delay stage realizing td is d_buffer(td - tedge/2 - 7p); at or below this bound ngspice would clamp a negative delay and silently return a latency other than the declared td."
+        }
+      ],
       "notes": "The compiled 2-state core holds its last value on a digital UNKNOWN, so the decision bridge is crisp at +dif_band/2 (same observable boundary as native; in-band inputs decide LOW at the bridge instead of via the dac out_undef mapping). The rising clock event fires at the clk_band in_high crossing, a deterministic choice inside the declared ambiguity band. Latency chain: adc 1p + d_cosim model delay 1p + event-bridge residual 5p + d_buffer (td - tedge/2 - 7p) + dac ramp tedge/2 = td; this backend therefore requires td > tedge/2 + 7 ps."
     }
   },

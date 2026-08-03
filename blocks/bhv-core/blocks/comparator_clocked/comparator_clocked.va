@@ -11,8 +11,12 @@ module bhv_comparator_clocked_v1(inp, inn, clk, out, vss);
 
   parameter real vhi = 1.0;
   parameter real vlo = 0.0;
-  parameter real td = 2n from (0:inf);
-  parameter real tedge = 1n from (0:inf);
+  // The contract floors td at 10 ps AND requires td > tedge/2 + 7 ps (the
+  // largest fixed event-chain overhead across the executable backends). The
+  // relational half cannot be expressed as a parameter range; the block
+  // library enforces it against each instantiation's effective parameters.
+  parameter real td = 2n from (10p:inf);
+  parameter real tedge = 1n from [1p:inf);
   parameter real vhyst = 0.0 from [0:inf);
   parameter real vth_clk = 0.5;
   parameter real rout = 100 from (0:inf);

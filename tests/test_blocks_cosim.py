@@ -100,6 +100,9 @@ def test_cosim_backend_reproduces_golden_case(case_path, tmp_path, tmp_path_fact
         models_file=models_file,
         expected_models_sha256=composition.text_sha256,
         permitted_executable_models=composition.executable_allowance(),
+        # The composition is the authority for its own deck-level rules
+        # (single d_cosim instance + declared parameter constraints).
+        cosim_composition=composition,
     )
     assert payload["execution"]["status"] == "completed", payload["diagnostics"]
     assert payload["engineering"]["status"] == "pass", payload["diagnostics"]

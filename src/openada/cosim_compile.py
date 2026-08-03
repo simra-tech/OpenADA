@@ -586,6 +586,32 @@ class CosimComposition:
     text_sha256: str
     modules: tuple[CosimModule, ...]
     model_names: tuple[str, ...]
+    #: Public wrapper name per requested block, in the same order.
+    wrappers: tuple[str, ...] = ()
+    #: Declared relational parameter constraints per block, same order.
+    constraints: tuple[tuple[Mapping[str, object], ...], ...] = ()
+    #: Contract parameter defaults per block, same order.
+    defaults: tuple[Mapping[str, float], ...] = ()
+
+    def verify_deck(self, deck_text: str) -> None:
+        """Every deck-level rule this composition's realization requires.
+
+        One place, so the CLI, the operation boundary, and any programmatic
+        caller enforce the SAME rules: exactly one d_cosim instance, and each
+        backend's declared relational parameter constraints checked against
+        the effective parameters of the instantiating card.
+        """
+
+        verify_single_instantiation(deck_text, self.wrappers, self.model_names)
+        for wrapper, constraints, defaults in zip(
+            self.wrappers, self.constraints, self.defaults
+        ):
+            if not constraints:
+                continue
+            effective = instantiation_parameters(deck_text, wrapper, defaults)
+            verify_parameter_constraints(
+                constraints, effective, block_id=wrapper
+            )
 
     def executable_allowance(self) -> dict[str, tuple[str, str]]:
         """The generated binding cards as ``{model name: (object path, sha256)}``.
@@ -795,24 +821,232 @@ def compose_blocks_cosim(
         text_sha256=_sha256_bytes(text.encode("utf-8")),
         modules=tuple(modules),
         model_names=tuple(model_names),
+        wrappers=tuple(cosim.wrapper for _block_id, cosim in wrapper_texts),
+        constraints=tuple(
+            tuple(getattr(cosim, "parameter_constraints", ()) or ())
+            for _block_id, cosim in wrapper_texts
+        ),
+        defaults=tuple(
+            _contract_defaults(blocks[block_id]) for block_id, _cosim in wrapper_texts
+        ),
     )
 
 
-def verify_single_instantiation(deck_text: str, wrappers: Sequence[str]) -> None:
+def _x_card_child(fields: Sequence[str]) -> str | None:
+    """The subcircuit an ``X`` card instantiates, under every parameter spelling.
+
+    ngspice accepts ``X1 n1 n2 sub p=1``, ``X1 n1 n2 sub params: p=1``, and
+    ``X1 n1 n2 sub p = 1`` (spaces around ``=``). Reading "the last token that
+    contains no ``=``" gets the last two wrong and mistakes a parameter VALUE
+    for the subcircuit name, which is how a second instance slipped past the
+    gate. Tokens are therefore re-joined around ``=`` first, then the whole
+    parameter tail is dropped.
+    """
+
+    joined: list[str] = []
+    for token in fields:
+        if token == "=" and joined:
+            joined[-1] = joined[-1] + "="
+            continue
+        if token.startswith("=") and joined:
+            joined[-1] = joined[-1] + token
+            continue
+        if joined and joined[-1].endswith("="):
+            joined[-1] = joined[-1] + token
+            continue
+        joined.append(token)
+    child: str | None = None
+    for token in joined[1:]:
+        lowered = token.lower()
+        if lowered in ("params:", "params"):
+            break
+        if "=" in token:
+            break
+        child = lowered
+    return child
+
+
+#: A SPICE scalar with an optional engineering suffix, as an X-card parameter
+#: value may spell it. Matches block_library's literal grammar; an expression
+#: default (braces, identifiers) is not a literal and is refused rather than
+#: guessed at.
+_SCALAR_RE = re.compile(
+    r"^(?P<number>[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:e[+-]?[0-9]+)?)"
+    r"(?P<letters>[a-z]*)$",
+    re.IGNORECASE,
+)
+_SCALE_FACTORS: tuple[tuple[str, float], ...] = (
+    ("meg", 1e6),
+    ("mil", 25.4e-6),
+    ("t", 1e12),
+    ("g", 1e9),
+    ("k", 1e3),
+    ("m", 1e-3),
+    ("u", 1e-6),
+    ("n", 1e-9),
+    ("p", 1e-12),
+    ("f", 1e-15),
+    ("a", 1e-18),
+)
+
+
+def _scalar_value(text: str) -> float | None:
+    match = _SCALAR_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    value = float(match.group("number"))
+    letters = match.group("letters").lower()
+    for factor, scale in _SCALE_FACTORS:
+        if letters.startswith(factor):
+            value *= scale
+            break
+    return value
+
+
+def verify_parameter_constraints(
+    constraints: Sequence[Mapping[str, object]],
+    effective: Mapping[str, float],
+    *,
+    block_id: str,
+) -> None:
+    """Check the backend's declared relational constraints, fail-closed.
+
+    A per-parameter ``range`` cannot say ``td > tedge/2 + 7 ps``, so the
+    backend declares such relations and they are checked HERE against the
+    effective parameters of the instantiating card. Without this the contract
+    admits a parameterization the realization cannot honor and the simulator
+    silently clamps it, returning a latency other than the declared one.
+    """
+
+    for constraint in constraints:
+        left_name = str(constraint["left"])
+        if left_name not in effective:
+            raise CosimCompileError(
+                "cosim.parameters.unresolved",
+                f"{block_id}: constraint {constraint['id']!r} names the "
+                f"parameter {left_name!r}, which has no effective value.",
+            )
+        total = float(constraint["right_constant"])
+        for term in constraint["right_terms"]:  # type: ignore[union-attr]
+            name = str(term["parameter"])  # type: ignore[index]
+            if name not in effective:
+                raise CosimCompileError(
+                    "cosim.parameters.unresolved",
+                    f"{block_id}: constraint {constraint['id']!r} names the "
+                    f"parameter {name!r}, which has no effective value.",
+                )
+            total += float(term["coefficient"]) * effective[name]  # type: ignore[index]
+        left = effective[left_name]
+        relation = str(constraint["relation"])
+        satisfied = left > total if relation == ">" else left >= total
+        if not satisfied:
+            raise CosimCompileError(
+                "cosim.parameters.constraint_violated",
+                f"{block_id}: {left_name}={left!r} violates the declared "
+                f"constraint {constraint['id']!r} ({left_name} {relation} "
+                f"{total!r}). {constraint.get('rationale', '')}".strip(),
+            )
+
+
+def instantiation_parameters(
+    deck_text: str, wrapper: str, defaults: Mapping[str, float]
+) -> dict[str, float]:
+    """The effective parameters of the deck's instantiation of ``wrapper``.
+
+    Contract defaults overlaid with the ``name=value`` overrides on the X card
+    (continuations folded, every parameter spelling accepted). A non-literal
+    override is refused rather than ignored: silently falling back to the
+    default would check a constraint against parameters the run does not use.
+    """
+
+    effective = dict(defaults)
+    target = wrapper.lower()
+    for _number, statement in _folded_statements(deck_text):
+        fields = statement.split()
+        if fields[0][0].lower() != "x":
+            continue
+        if _x_card_child(fields) != target:
+            continue
+        for name, value in _x_card_parameters(fields).items():
+            scalar = _scalar_value(value)
+            if scalar is None:
+                raise CosimCompileError(
+                    "cosim.parameters.unresolved",
+                    f"the instantiation of {wrapper} passes {name}={value!r}, "
+                    "which is not a literal scalar; the backend's declared "
+                    "parameter constraints cannot be checked against it.",
+                )
+            effective[name.lower()] = scalar
+    return effective
+
+
+def _folded_statements(deck_text: str) -> list[tuple[int, str]]:
+    """Deck statements with ``+`` continuations folded and comments dropped."""
+
+    statements: list[tuple[int, str]] = []
+    for number, raw in enumerate(deck_text.splitlines(), start=1):
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("*"):
+            continue
+        if stripped.startswith("+") and statements:
+            first, body = statements[-1]
+            statements[-1] = (first, body + " " + stripped[1:].strip())
+            continue
+        statements.append((number, stripped))
+    return statements
+
+
+def _x_card_parameters(fields: Sequence[str]) -> dict[str, str]:
+    """The ``name=value`` overrides on an X card, under every spelling."""
+
+    joined: list[str] = []
+    for token in fields:
+        if token == "=" and joined:
+            joined[-1] = joined[-1] + "="
+            continue
+        if token.startswith("=") and joined:
+            joined[-1] = joined[-1] + token
+            continue
+        if joined and joined[-1].endswith("="):
+            joined[-1] = joined[-1] + token
+            continue
+        joined.append(token)
+    parameters: dict[str, str] = {}
+    for token in joined:
+        if token.lower() in ("params:", "params"):
+            continue
+        name, separator, value = token.partition("=")
+        if separator and name and value:
+            parameters[name] = value
+    return parameters
+
+
+def verify_single_instantiation(
+    deck_text: str,
+    wrappers: Sequence[str],
+    binding_models: Sequence[str] = (),
+) -> None:
     """Refuse a deck that would place more than one ``d_cosim`` in the circuit.
 
     The shipped shim supports exactly one instance (see the module docstring),
-    so the composed wrapper may be instantiated exactly once. Two shapes are
-    refused: more than one top-level ``X`` card naming a composed wrapper, and
-    any wrapper instantiation nested inside a deck-defined ``.subckt`` -- the
-    latter because the realized instance count then depends on how often that
-    subcircuit is itself instantiated, which this bounded scan does not
-    resolve, and guessing it would be the difference between a correct run and
-    a simulator crash.
+    so exactly one may exist. Every way a deck can create one is counted:
+
+    * an ``X`` card instantiating a composed wrapper (each wrapper body holds
+      exactly one ``d_cosim`` A-device), under every parameter spelling; and
+    * an ``A`` card referencing a generated binding model DIRECTLY, which is a
+      d_cosim instance without any wrapper in sight.
+
+    Refused shapes: more than one instance in total; any instance nested
+    inside a deck-defined ``.subckt``, because the realized count then depends
+    on how often that subcircuit is itself instantiated, which this bounded
+    scan does not resolve and guessing it would be the difference between a
+    correct run and a simulator crash; and zero instances, because compiling a
+    core the run cannot execute would attest physics that never ran.
     """
 
     wanted = {name.lower() for name in wrappers}
-    if not wanted:
+    bindings = {name.lower() for name in binding_models}
+    if not wanted and not bindings:
         return
     # Continuations are FOLDED first: `X1 a b c d e\n+ bhv_x_v1` is ONE card to
     # the simulator, and reading raw lines would see neither an X-card naming
@@ -839,25 +1073,28 @@ def verify_single_instantiation(deck_text: str, wrappers: Sequence[str]) -> None
         if token == ".ends":
             depth = max(0, depth - 1)
             continue
-        if token[0] != "x":
-            continue
-        # X<name> n1 n2 ... <subckt> [params]: the child is the last token
-        # that is not a name=value parameter.
-        child = None
-        for candidate in reversed(fields[1:]):
-            if "=" in candidate:
-                continue
-            child = candidate.lower()
-            break
-        if child not in wanted:
+        letter = token[0]
+        referenced: str | None = None
+        if letter == "x":
+            child = _x_card_child(fields)
+            if child in wanted:
+                referenced = child
+        elif letter == "a":
+            # An XSPICE A-device names its model LAST: a card referencing a
+            # generated binding model IS a d_cosim instance, with no wrapper
+            # anywhere in the deck.
+            model = fields[-1].lower()
+            if model in bindings:
+                referenced = model
+        if referenced is None:
             continue
         if depth > 0:
             raise CosimCompileError(
                 "cosim.deck.nested_instance",
-                f"line {number}: the cosim wrapper {child!r} is instantiated "
-                "inside a deck-defined subcircuit, so its realized instance "
-                "count is not bounded by inspection; the mixed-signal backend "
-                "admits exactly one top-level instantiation.",
+                f"line {number}: the cosim instance {referenced!r} sits inside "
+                "a deck-defined subcircuit, so its realized instance count is "
+                "not bounded by inspection; the mixed-signal backend admits "
+                "exactly one top-level instantiation.",
             )
         total += 1
     if total > 1:
@@ -875,6 +1112,25 @@ def verify_single_instantiation(deck_text: str, wrappers: Sequence[str]) -> None
             f"({', '.join(sorted(wanted))}); compiling a core the run cannot "
             "execute would attest physics that never ran.",
         )
+
+
+def _contract_defaults(block: object) -> dict[str, float]:
+    """The block contract's literal parameter defaults, as numbers."""
+
+    contract = getattr(block, "contract", None)
+    if not isinstance(contract, Mapping):
+        return {}
+    defaults: dict[str, float] = {}
+    for parameter in contract.get("parameters", ()):
+        if not isinstance(parameter, Mapping):
+            continue
+        name = parameter.get("name")
+        value = parameter.get("default")
+        if isinstance(name, str) and isinstance(value, (int, float)) and not isinstance(
+            value, bool
+        ):
+            defaults[name.lower()] = float(value)
+    return defaults
 
 
 def _wrapper_symbols(source_text: str) -> tuple[str, ...]:

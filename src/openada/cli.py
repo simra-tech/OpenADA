@@ -2255,6 +2255,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
         # existing bounded model path carries it unchanged.
         composed_blocks = None
         composed_cosim = None
+        cosim_wrappers: list[str] = []
         if args.cosim and args.blocks is None:
             return _simulation_cli_invalid(
                 args,
@@ -2299,27 +2300,31 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                             f"--output-dir {output_dir} cannot hold the cosim "
                             f"build tree: {exc}",
                         )
-                    # The shim hosts exactly one d_cosim instance per run, so
-                    # the deck is checked BEFORE the (slow) Verilator compile:
-                    # a deck that would crash the simulator is refused, not
-                    # built.
-                    try:
-                        deck_probe = Path(source).expanduser().read_text(
-                            encoding="utf-8", errors="replace"
-                        )
-                    except OSError:
-                        deck_probe = None
-                    if deck_probe is not None:
-                        # An unknown block contributes no wrapper here; the
-                        # compose below is the authority that refuses it.
-                        verify_single_instantiation(
-                            deck_probe,
-                            [
-                                block_library.blocks[block].wrapper
-                                for block in selection
-                                if block in block_library.blocks
-                            ],
-                        )
+                    # The shim hosts exactly one d_cosim instance per run.
+                    # simulate() is the AUTHORITY for that rule (it sees the
+                    # caller's deck text on every path, including published
+                    # artifacts); this early copy only avoids paying a slow
+                    # Verilator compile for a bare deck that will be refused,
+                    # so a descriptor target simply skips it.
+                    cosim_wrappers = [
+                        block_library.blocks[block].wrapper
+                        for block in selection
+                        if block in block_library.blocks
+                    ]
+                    if classify_target(source).kind == "deck":
+                        try:
+                            deck_probe = Path(source).expanduser().read_text(
+                                encoding="utf-8", errors="replace"
+                            )
+                        except OSError:
+                            deck_probe = None
+                        if deck_probe is not None:
+                            verify_single_instantiation(
+                                deck_probe,
+                                cosim_wrappers,
+                                [f"bhv_{block}_cosim" for block in selection],
+                            )
+                    cosim_deck_probe = deck_probe if deck_probe is not None else None
                     composed_cosim = compose_blocks_cosim(
                         block_library, selection, output_dir / "cosim-build"
                     )
@@ -2471,6 +2476,10 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                     if composed_cosim is not None
                     else None
                 ),
+                cosim_wrappers=cosim_wrappers,
+                # The composition is the authority for its own deck-level
+                # rules (single instance + declared parameter constraints).
+                cosim_composition=composed_cosim,
             )
             return simulation
         return simulate_legacy_native(

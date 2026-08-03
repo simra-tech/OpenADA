@@ -591,3 +591,126 @@ def test_instance_gate_folds_x_card_continuations():
 def test_instance_gate_counts_a_continued_card_as_one_instance():
     deck = "* one\nX1 a b c d 0\n+ bhv_comparator_clocked_v1 td=2n\n.end\n"
     cc.verify_single_instantiation(deck, ["bhv_comparator_clocked_v1"])
+
+
+# ---------------------------------------------------------------------------
+# Adversarial-review regressions (Codex round 2)
+# ---------------------------------------------------------------------------
+
+
+def test_instance_gate_counts_a_direct_binding_a_device():
+    # An A-device naming the generated binding model IS a d_cosim instance,
+    # with no wrapper in the deck at all.
+    deck = (
+        "* direct\n"
+        "X1 a b c d 0 bhv_comparator_clocked_v1\n"
+        "Aevil [p q] [r] bhv_comparator_clocked_cosim\n"
+        ".end\n"
+    )
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.verify_single_instantiation(
+            deck, ["bhv_comparator_clocked_v1"], ["bhv_comparator_clocked_cosim"]
+        )
+    assert caught.value.code == "cosim.deck.multi_instance"
+
+
+@pytest.mark.parametrize(
+    "second",
+    [
+        "X2 a b c e 0 bhv_comparator_clocked_v1 params: td=2n",
+        "X2 a b c e 0 bhv_comparator_clocked_v1 td = 2n",
+        "X2 a b c e 0 bhv_comparator_clocked_v1 params td=2n",
+    ],
+)
+def test_instance_gate_parses_every_x_card_parameter_spelling(second):
+    # Reading "the last token without '='" mistook a parameter VALUE for the
+    # subcircuit name, so these second instances were counted as zero.
+    deck = f"* two\nX1 a b c d 0 bhv_comparator_clocked_v1\n{second}\n.end\n"
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.verify_single_instantiation(deck, ["bhv_comparator_clocked_v1"])
+    assert caught.value.code == "cosim.deck.multi_instance"
+
+
+@pytest.mark.parametrize(
+    "fields,expected",
+    [
+        (["X1", "a", "b", "sub"], "sub"),
+        (["X1", "a", "b", "sub", "p=1"], "sub"),
+        (["X1", "a", "b", "sub", "params:", "p=1"], "sub"),
+        (["X1", "a", "b", "sub", "p", "=", "1"], "sub"),
+        (["X1", "a", "b", "sub", "p=", "1"], "sub"),
+    ],
+)
+def test_x_card_child_under_every_parameter_spelling(fields, expected):
+    assert cc._x_card_child(fields) == expected
+
+
+def test_declared_parameter_relation_is_enforced():
+    # td=11p / tedge=100p satisfies both declared RANGES but violates the
+    # relation the realization needs, which ngspice would silently clamp.
+    constraints = [
+        {
+            "id": "latency-headroom",
+            "left": "td",
+            "relation": ">",
+            "right_terms": [{"parameter": "tedge", "coefficient": 0.5}],
+            "right_constant": 7e-12,
+            "rationale": "",
+        }
+    ]
+    cc.verify_parameter_constraints(
+        constraints, {"td": 2e-9, "tedge": 1e-9}, block_id="x"
+    )
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.verify_parameter_constraints(
+            constraints, {"td": 11e-12, "tedge": 100e-12}, block_id="x"
+        )
+    assert caught.value.code == "cosim.parameters.constraint_violated"
+
+
+def test_instantiation_parameters_overlay_contract_defaults():
+    deck = "* d\nX1 a b c d 0 bhv_x_v1 td=3n\n.end\n"
+    effective = cc.instantiation_parameters(
+        deck, "bhv_x_v1", {"td": 2e-9, "tedge": 1e-9}
+    )
+    assert effective["td"] == pytest.approx(3e-9)
+    assert effective["tedge"] == pytest.approx(1e-9)
+
+
+def test_instantiation_parameters_refuse_non_literal_overrides():
+    deck = "* d\nX1 a b c d 0 bhv_x_v1 td={foo*2}\n.end\n"
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.instantiation_parameters(deck, "bhv_x_v1", {"td": 2e-9})
+    assert caught.value.code == "cosim.parameters.unresolved"
+
+
+@toolchain
+def test_operation_refuses_a_relative_or_symlinked_object(tmp_path):
+    from openada.discovery import DiscoveryManager
+    from openada.operations.simulate import simulate
+
+    models = tmp_path / "models.spice"
+    models.write_text(
+        '.model bhv_x_cosim d_cosim(simulation="rel/x.so" delay=1p)\n',
+        encoding="utf-8",
+    )
+    deck = tmp_path / "deck.cir"
+    deck.write_text("* t\nR1 a 0 1k\n.op\n.end\n", encoding="utf-8")
+    import hashlib as _hashlib
+
+    payload = simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=DiscoveryManager(),
+        backend="ngspice",
+        models_file=models,
+        expected_models_sha256=_hashlib.sha256(
+            models.read_bytes()
+        ).hexdigest(),
+        permitted_executable_models={"bhv_x_cosim": ("rel/x.so", "0" * 64)},
+    )
+    assert payload["execution"]["status"] == "invalid_request"
+    assert (
+        payload["diagnostics"][0]["code"]
+        == "simulation.models.executable_unverifiable"
+    )

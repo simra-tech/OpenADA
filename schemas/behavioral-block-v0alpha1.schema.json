@@ -331,6 +331,36 @@
               "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
               "description": "Scalar core output ports in shim binding order; re-verified on every compose."
             },
+            "parameter_constraints": {
+              "type": "array",
+              "maxItems": 16,
+              "description": "Relational constraints this backend's realization requires, which a per-parameter range cannot express (e.g. td > tedge/2 + 7 ps). Each is checked against the effective parameters of the instantiating card before any simulator launch.",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "left", "relation", "right_terms", "right_constant", "rationale"],
+                "properties": {
+                  "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,47}$"},
+                  "left": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+                  "relation": {"enum": [">", ">=" ]},
+                  "right_terms": {
+                    "type": "array",
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["parameter", "coefficient"],
+                      "properties": {
+                        "parameter": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+                        "coefficient": {"type": "number"}
+                      }
+                    }
+                  },
+                  "right_constant": {"type": "number"},
+                  "rationale": {"type": "string", "minLength": 1, "maxLength": 1000}
+                }
+              }
+            },
             "notes": {
               "type": "string",
               "maxLength": 4000,
