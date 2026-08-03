@@ -67,7 +67,12 @@ from ..engines.simra_artifact import (
     load_simra_testbench,
 )
 from ..cosim_compile import CosimCompileError, verify_single_instantiation
-from ..engines.spice import MAX_SOURCE_BYTES, NgspiceDriver, NgspiceOutput
+from ..engines.spice import (
+    MAX_SOURCE_BYTES,
+    NgspiceDriver,
+    NgspiceOutput,
+    NgspicePinnedInput,
+)
 from ..pdk_bindings import (
     PdkBindingError,
     ResolvedPdkBinding,
@@ -860,6 +865,7 @@ def _run_bound_deck(
     raw_name: str,
     timeout: float,
     request_id: str,
+    expected_deck_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Run one PDK-bound deck and return the reviewed evidence envelope.
 
@@ -893,6 +899,7 @@ def _run_bound_deck(
             "PDK": resolved_pdk.pdk_id,
         },
         timeout=timeout,
+        expected_source_sha256=expected_deck_sha256,
     )
     resolved_pdk.verify_snapshot()
     deck = inspect_simulation_deck(deck_path)
@@ -934,7 +941,7 @@ def _resolve_model_source(
     osdi_preload_text: str | None = None,
     osdi_preload_sha256: str | None = None,
     osdi_module_digests: Mapping[str, str] | None = None,
-) -> tuple[ResolvedPdkBinding | None, str | None]:
+) -> tuple[ResolvedPdkBinding | None, str | None, tuple[tuple[str, str], ...]]:
     """Resolve at most one model source, or raise a typed refusal.
 
     ``permitted_executable_models`` maps a generated ``d_cosim`` binding-card
@@ -1072,6 +1079,10 @@ def _resolve_model_source(
             )
 
     model_prelude: str | None = None
+    # The exact `(osdi_path, sha256)` of every ``pre_osdi`` module the validated
+    # preload references -- the authoritative set to content-bind at the driver
+    # boundary (never the raw, possibly-incomplete caller digest map).
+    verified_osdi_modules: tuple[tuple[str, str], ...] = ()
     if models_file is not None:
         try:
             model_prelude, models_record = load_model_prelude(
@@ -1215,6 +1226,7 @@ def _resolve_model_source(
         except OsdiCompileError as exc:
             raise SimulationRequestError(exc.code, exc.message)
         model_prelude = osdi_preload_text
+        verified_osdi_modules = verified_preload.modules
         configuration.append(
             {
                 "role": "osdi-block-preload",
@@ -1233,7 +1245,7 @@ def _resolve_model_source(
                     "identity": "content-digest",
                 }
             )
-    return resolved, model_prelude
+    return resolved, model_prelude, verified_osdi_modules
 
 
 def simulate(
@@ -1373,7 +1385,7 @@ def simulate(
     permitted = dict(permitted_executable_models or {})
     caller_deck_text: str | None = None
     try:
-        resolved_pdk, model_prelude = _resolve_model_source(
+        resolved_pdk, model_prelude, verified_osdi_modules = _resolve_model_source(
             correlation_id=correlation_id,
             backend=normalized_backend,
             models_file=models_file,
@@ -1792,6 +1804,7 @@ def simulate(
                     raw_name=raw_name,
                     timeout=timeout,
                     request_id=correlation_id,
+                    expected_deck_sha256=deck_record.get("sha256"),
                 )
             except PdkBindingError as exc:
                 return refuse(
@@ -1842,11 +1855,29 @@ def simulate(
                     )
                 osdi_workdir = run_directory
 
+                # The composed OSDI run deck and every reviewed .osdi module are
+                # content-bound at the driver boundary: ngspice refuses to launch
+                # unless the deck still hashes to its derived digest and each
+                # module still matches its reviewed OpenVAF compile digest,
+                # re-checked immediately before ngspice maps them (narrows the
+                # resolve-time -> launch TOCTOU inside the private evidence dir;
+                # the final hash-to-open() gap is the documented FD residual).
+                osdi_pinned_modules = tuple(
+                    NgspicePinnedInput(
+                        path=Path(module_path),
+                        sha256=module_sha256,
+                        kind="osdi-block-module",
+                    )
+                    for module_path, module_sha256 in verified_osdi_modules
+                )
+
                 def osdi_control_run(
                     src: Path,
                     out: Path,
                     _startup: Path = osdi_startup,
                     _workdir: Path = osdi_workdir,
+                    _expected_deck_sha256: str = deck.sha256,
+                    _pinned: tuple[NgspicePinnedInput, ...] = osdi_pinned_modules,
                 ) -> dict[str, Any]:
                     return NgspiceDriver(discovery=discovery).simulate(
                         src,
@@ -1855,6 +1886,8 @@ def simulate(
                         execution_mode="control",
                         init_file=_startup,
                         timeout=timeout,
+                        expected_source_sha256=_expected_deck_sha256,
+                        pinned_inputs=_pinned,
                     )
 
                 osdi_provenance = [

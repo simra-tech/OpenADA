@@ -8,7 +8,12 @@ from pathlib import Path
 import pytest
 
 from openada.cli import main
-from openada.engines.spice import MAX_SOURCE_BYTES, NgspiceDriver, NgspiceOutput
+from openada.engines.spice import (
+    MAX_SOURCE_BYTES,
+    NgspiceDriver,
+    NgspiceOutput,
+    NgspicePinnedInput,
+)
 
 
 def _ascii_raw(plotname: str = "Transient Analysis") -> bytes:
@@ -900,3 +905,265 @@ def test_invalid_execution_mode_cli_is_one_invalid_request_object(tmp_path, caps
     assert payload["operation"] == "simulate"
     assert payload["execution"]["status"] == "invalid_request"
     assert _diagnostic_codes(payload) == {"request.invalid"}
+
+
+# --- driver-bound content-identity launch contract (SC#1) ------------------
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_pinned_source_digest_match_runs(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source, tmp_path / "out", expected_source_sha256=_sha256(source)
+    )
+
+    assert payload["engineering"]["status"] == "pass"
+
+
+def test_pinned_source_digest_mismatch_refuses_before_launch(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+    wrong = hashlib.sha256(b"a different deck").hexdigest()
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source, tmp_path / "out", expected_source_sha256=wrong
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["engineering"]["status"] == "unknown"
+    assert _diagnostic_codes(payload) == {"input.digest_mismatch"}
+    # No launch: the command was never assembled.
+    assert not payload["execution"].get("command")
+
+
+def test_pinned_source_digest_malformed_is_refused(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source, tmp_path / "out", expected_source_sha256="NOTAHEXDIGEST"
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert _diagnostic_codes(payload) == {"input.digest_invalid"}
+
+
+def test_pinned_input_match_runs_and_is_recorded(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+    module = tmp_path / "opamp.osdi"
+    module.write_bytes(b"\x00OSDI-fixture-bytes\x01")
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        pinned_inputs=[
+            NgspicePinnedInput(path=module, sha256=_sha256(module), kind="osdi-module")
+        ],
+    )
+
+    assert payload["engineering"]["status"] == "pass"
+    recorded = {inp["path"] for inp in payload["inputs"]}
+    assert str(module.resolve()) in recorded
+
+
+def test_pinned_input_digest_mismatch_refuses_before_launch(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+    module = tmp_path / "opamp.osdi"
+    module.write_bytes(b"real compiled bytes")
+    stale = hashlib.sha256(b"the reviewed bytes").hexdigest()
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        pinned_inputs=[
+            NgspicePinnedInput(path=module, sha256=stale, kind="osdi-module")
+        ],
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["engineering"]["status"] == "unknown"
+    assert _diagnostic_codes(payload) == {"input.digest_mismatch"}
+    assert not payload["execution"].get("command")
+
+
+def test_pinned_input_missing_is_refused(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+    missing = tmp_path / "gone.osdi"
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        pinned_inputs=[
+            NgspicePinnedInput(
+                path=missing, sha256=hashlib.sha256(b"x").hexdigest(), kind="osdi-module"
+            )
+        ],
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert _diagnostic_codes(payload) == {"input.missing"}
+
+
+def test_pinned_input_malformed_digest_is_refused(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+    module = tmp_path / "opamp.osdi"
+    module.write_bytes(b"bytes")
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        pinned_inputs=[NgspicePinnedInput(path=module, sha256="short", kind="osdi-module")],
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert _diagnostic_codes(payload) == {"input.digest_invalid"}
+
+
+def test_duplicate_pinned_input_is_refused(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+    module = tmp_path / "opamp.osdi"
+    module.write_bytes(b"bytes")
+    digest = _sha256(module)
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        pinned_inputs=[
+            NgspicePinnedInput(path=module, sha256=digest, kind="osdi-module"),
+            NgspicePinnedInput(path=module, sha256=digest, kind="osdi-module"),
+        ],
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert _diagnostic_codes(payload) == {"input.duplicate"}
+
+
+def test_pinned_input_symlink_is_refused(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+    real = tmp_path / "real.osdi"
+    real.write_bytes(b"compiled bytes")
+    link = tmp_path / "link.osdi"
+    link.symlink_to(real)
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        pinned_inputs=[
+            NgspicePinnedInput(path=link, sha256=_sha256(real), kind="osdi-module")
+        ],
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["engineering"]["status"] == "unknown"
+    assert _diagnostic_codes(payload) == {"input.unsafe_path"}
+    assert not payload["execution"].get("command")
+
+
+def test_malformed_pinned_record_is_a_typed_refusal_not_a_crash(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+
+    # A non-NgspicePinnedInput item (wrong type) must return one typed envelope,
+    # never raise AttributeError/TypeError out of the driver.
+    payload = NgspiceDriver(str(binary)).simulate(
+        source, tmp_path / "out", pinned_inputs=[{"path": str(source)}]
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert _diagnostic_codes(payload) == {"input.invalid"}
+
+
+def test_non_string_source_digest_is_a_typed_refusal(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source, tmp_path / "out", expected_source_sha256=1234  # type: ignore[arg-type]
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert _diagnostic_codes(payload) == {"input.digest_invalid"}
+
+
+def test_relative_pinned_path_is_refused(tmp_path):
+    # ngspice resolves a relative pre_osdi against run_dir, not OpenADA's CWD,
+    # so a relative pinned path could guard a different file than it loads.
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        pinned_inputs=[
+            NgspicePinnedInput(
+                path="models/a.osdi", sha256="0" * 64, kind="osdi-module"
+            )
+        ],
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert _diagnostic_codes(payload) == {"input.unsafe_path"}
+    assert not payload["execution"].get("command")
+
+
+def test_non_normalized_pinned_path_is_refused(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+    module = tmp_path / "a.osdi"
+    module.write_bytes(b"bytes")
+    # An absolute but non-normalized spelling (contains `..`).
+    spelled = str(tmp_path / "sub" / ".." / "a.osdi")
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        pinned_inputs=[
+            NgspicePinnedInput(path=spelled, sha256=_sha256(module), kind="osdi-module")
+        ],
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert _diagnostic_codes(payload) == {"input.unsafe_path"}
+
+
+def test_non_string_pinned_kind_is_a_typed_refusal(tmp_path):
+    binary = tmp_path / "ngspice"
+    _write_fake_ngspice(binary)
+    source = _source(tmp_path)
+    module = tmp_path / "a.osdi"
+    module.write_bytes(b"bytes")
+
+    payload = NgspiceDriver(str(binary)).simulate(
+        source,
+        tmp_path / "out",
+        pinned_inputs=[
+            NgspicePinnedInput(path=str(module), sha256=_sha256(module), kind=123)  # type: ignore[arg-type]
+        ],
+    )
+
+    assert payload["execution"]["status"] == "invalid_request"
+    assert _diagnostic_codes(payload) == {"input.invalid"}

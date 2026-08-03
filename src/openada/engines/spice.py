@@ -194,12 +194,37 @@ def _sanitized_ngspice_environment(
     return environment
 
 
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
 @dataclass(frozen=True, slots=True)
 class NgspiceOutput:
     """One required file written directly by an ngspice control deck."""
 
     kind: str
     path: str | Path
+
+
+@dataclass(frozen=True, slots=True)
+class NgspicePinnedInput:
+    """A path-loaded input whose on-disk bytes are pinned to a reviewed digest.
+
+    The operation layer content-binds compiled model artifacts (OSDI modules,
+    cosim objects) and derived run decks at resolve time. Passing them here
+    makes the driver refuse to launch unless the bytes on disk still match the
+    reviewed digest -- narrowing the resolve-time -> launch TOCTOU by a final
+    pathname recheck immediately before ngspice maps the file, and flagging any
+    mutation that outlives the run. This is the driver-side half of
+    ``validate_osdi_preload`` and ``ResolvedPdkBinding.verify_snapshot``. The
+    irreducible hash-to-``open()`` window (a same-principal swap-and-restore in
+    the private dir) is only closable by FD-backed launch; see the future-work
+    backlog.
+    """
+
+    path: str | Path
+    sha256: str
+    kind: str
+    role: str = "configuration"
 
 
 @dataclass(frozen=True, slots=True)
@@ -444,7 +469,7 @@ def _capture_file(
 
 def _scan_source(
     path: Path,
-) -> tuple[set[str], bool, bool, bool, bool, bool, bool, bool, bool, bool]:
+) -> tuple[set[str], bool, bool, bool, bool, bool, bool, bool, bool, bool, str]:
     measurements: set[str] = set()
     has_control = False
     has_pure_control = False
@@ -455,6 +480,11 @@ def _scan_source(
     long_line = False
     source_too_large = False
     source_unstable = False
+    # Hash the exact bytes scanned so the caller can require they equal the
+    # entry capture: the forbidden-construct scan must inspect the SAME bytes
+    # that launch (which is pinned to the entry digest), closing the
+    # scan-reads-B / launch-runs-A divergence.
+    hasher = hashlib.sha256()
     try:
         with stable_regular_file(path) as (handle, _):
             line_number = 0
@@ -463,6 +493,7 @@ def _scan_source(
                 raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
                 if not raw_line:
                     break
+                hasher.update(raw_line)
                 source_bytes += len(raw_line)
                 if source_bytes > MAX_SOURCE_BYTES:
                     source_too_large = True
@@ -472,6 +503,7 @@ def _scan_source(
                     long_line = True
                     while raw_line and not raw_line.endswith(b"\n"):
                         raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
+                        hasher.update(raw_line)
                         source_bytes += len(raw_line)
                         if source_bytes > MAX_SOURCE_BYTES:
                             source_too_large = True
@@ -513,6 +545,7 @@ def _scan_source(
         long_line,
         source_too_large,
         source_unstable,
+        hasher.hexdigest(),
     )
 
 
@@ -1015,6 +1048,8 @@ class NgspiceDriver:
         environment_overrides: Mapping[str, str] | None = None,
         environment_mode: str = "inherit",
         timeout: float = 120.0,
+        expected_source_sha256: str | None = None,
+        pinned_inputs: Sequence[NgspicePinnedInput] = (),
     ) -> dict:
         source = Path(spice_file).expanduser().resolve()
         out_dir = Path(output_dir).expanduser().resolve()
@@ -1071,6 +1106,40 @@ class NgspiceDriver:
                 message=f"Regular file not found: {source}",
                 data=base_data,
             )
+        # Content-identity launch contract: the operation layer may pin the
+        # exact reviewed digest of the top-level deck. If the bytes captured on
+        # entry do not equal it, the resolve-time -> driver-entry window was
+        # used to swap the deck; refuse before any further work.
+        if expected_source_sha256 is not None:
+            if not isinstance(expected_source_sha256, str) or not _SHA256_RE.fullmatch(
+                expected_source_sha256
+            ):
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The pinned source digest is malformed.",
+                    code="input.digest_invalid",
+                    message="expected_source_sha256 must be 64 lowercase hex characters.",
+                    data=base_data,
+                )
+            if input_records[0].get("sha256") != expected_source_sha256:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="The SPICE input does not match its reviewed digest.",
+                    code="input.digest_mismatch",
+                    message=(
+                        "The top-level SPICE input changed between resolution and "
+                        f"launch: {source}"
+                    ),
+                    data=base_data,
+                )
+        # Paths whose bytes must be re-verified immediately before launch. The
+        # source is always guarded; pinned inputs are appended below. Each entry
+        # is (path, kind, role, bound_sha256).
+        launch_guard: list[tuple[Path, str, str, str]] = [
+            (source, "spice-netlist", "input", input_records[0]["sha256"])
+        ]
         if not isinstance(execution_mode, str) or execution_mode not in EXECUTION_MODES:
             return _static_invalid(
                 tool,
@@ -1267,6 +1336,132 @@ class NgspiceDriver:
                     ),
                     data=base_data,
                 )
+        # Content-bound path-loaded inputs (OSDI modules, cosim objects). Each
+        # is captured, digest-pinned, and added to the launch guard + post-run
+        # stability set so a swap in the operation's private evidence dir cannot
+        # slip a different artifact past the reviewed digest.
+        pinned_paths: set[Path] = set()
+        for pinned in pinned_inputs:
+            if not isinstance(pinned, NgspicePinnedInput) or not isinstance(
+                pinned.path, (str, Path)
+            ):
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input record is malformed.",
+                    code="input.invalid",
+                    message="Every pinned input must be an NgspicePinnedInput with a path.",
+                    data=base_data,
+                )
+            if not isinstance(pinned.sha256, str) or not _SHA256_RE.fullmatch(pinned.sha256):
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input digest is malformed.",
+                    code="input.digest_invalid",
+                    message="Every pinned input digest must be 64 lowercase hex characters.",
+                    data=base_data,
+                )
+            if not isinstance(pinned.kind, str) or not isinstance(pinned.role, str):
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input record is malformed.",
+                    code="input.invalid",
+                    message="A pinned input kind and role must both be strings.",
+                    data=base_data,
+                )
+            pinned_str = os.fspath(pinned.path)
+            # The pinned path must be ABSOLUTE and already lexically normalized:
+            # ngspice resolves a relative `pre_osdi` against run_dir, not
+            # OpenADA's CWD, so a relative spelling could guard one file and load
+            # another; a non-normalized spelling (`.`, `..`, `//`) can diverge
+            # under a symlinked component. Generated OSDI module paths are always
+            # absolute and canonical, so this refuses only malformed callers.
+            if not os.path.isabs(pinned_str) or os.path.normpath(pinned_str) != pinned_str:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input path is not an absolute, normalized path.",
+                    code="input.unsafe_path",
+                    message=(
+                        "A content-bound input must be an absolute, lexically "
+                        f"normalized path (ngspice opens it verbatim): {pinned_str}"
+                    ),
+                    data=base_data,
+                )
+            pinned_path = Path(pinned_str)
+            # A symlinked final component is refused so the guard hashes the same
+            # file ngspice opens under O_NOFOLLOW (a symlinked PARENT retargeted
+            # mid-run is the documented same-principal residual, not closable by
+            # pathname re-hashing).
+            if os.path.islink(pinned_path):
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input path is a symbolic link.",
+                    code="input.unsafe_path",
+                    message=f"A content-bound input may not be a symbolic link: {pinned_path}",
+                    data=base_data,
+                )
+            if pinned_path in pinned_paths:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input was supplied more than once.",
+                    code="input.duplicate",
+                    message=f"Pinned input listed twice: {pinned_path}",
+                    data=base_data,
+                )
+            try:
+                pinned_record = file_record(
+                    pinned_path,
+                    kind=pinned.kind,
+                    role=pinned.role,
+                    maximum_bytes=MAX_SOURCE_BYTES,
+                )
+            except FileRecordLimitError:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input exceeds the bounded input limit.",
+                    code="input.too_large",
+                    message=f"Pinned input must not exceed {MAX_SOURCE_BYTES} bytes: {pinned_path}",
+                    data=base_data,
+                )
+            except FileRecordError:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input changed during bounded capture.",
+                    code="input.changed",
+                    message=f"Pinned input was not stable: {pinned_path}",
+                    data=base_data,
+                )
+            input_records.append(pinned_record)
+            if not pinned_record["exists"]:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input is not a readable regular file.",
+                    code="input.missing",
+                    message=f"Pinned input not found: {pinned_path}",
+                    data=base_data,
+                )
+            if pinned_record.get("sha256") != pinned.sha256:
+                return _static_invalid(
+                    tool,
+                    input_records,
+                    summary="A pinned input does not match its reviewed digest.",
+                    code="input.digest_mismatch",
+                    message=(
+                        "A content-bound input changed between resolution and "
+                        f"launch: {pinned_path}"
+                    ),
+                    data=base_data,
+                )
+            pinned_paths.add(pinned_path)
+            launch_guard.append((pinned_path, pinned.kind, pinned.role, pinned.sha256))
         if execution_mode == "batch" and expected_outputs:
             return _static_invalid(
                 tool,
@@ -1324,6 +1519,7 @@ class NgspiceDriver:
             input_paths.add(init_path)
         if system_init_path is not None:
             input_paths.add(system_init_path)
+        input_paths |= pinned_paths
         invalid_output = (
             out_dir.is_file()
             or len(set(output_paths)) != len(output_paths)
@@ -1376,6 +1572,7 @@ class NgspiceDriver:
             long_source_line,
             source_too_large,
             source_unstable,
+            scanned_source_sha256,
         ) = _scan_source(source)
         base_data["transitive_include_detected"] = has_transitive_include
         if source_unstable:
@@ -1385,6 +1582,18 @@ class NgspiceDriver:
                 summary="The SPICE input changed or became non-regular during inspection.",
                 code="input.changed",
                 message="The top-level SPICE input could not be inspected as one stable regular file.",
+                data=base_data,
+            )
+        # The scan must have read the SAME bytes captured on entry (and pinned
+        # for launch); otherwise the deck was swapped between capture and scan
+        # and the construct scan is meaningless.
+        if not source_too_large and scanned_source_sha256 != input_records[0].get("sha256"):
+            return _static_invalid(
+                tool,
+                input_records,
+                summary="The SPICE input changed between capture and inspection.",
+                code="input.changed",
+                message=f"The top-level SPICE input was not stable during inspection: {source}",
                 data=base_data,
             )
         if source_too_large:
@@ -1716,6 +1925,36 @@ class NgspiceDriver:
                             data=base_data,
                         )
                     output_anchors.append(anchor)
+            # Last boundary before ngspice maps the files: re-verify every
+            # guarded input still matches the digest captured on entry. This
+            # narrows the entry-capture -> launch window that argument, command,
+            # and anchor construction opened (the final hash-to-open() gap
+            # remains the documented FD-backed residual).
+            for guard_path, guard_kind, guard_role, guard_sha in launch_guard:
+                try:
+                    recheck = file_record(
+                        guard_path,
+                        kind=guard_kind,
+                        role=guard_role,
+                        maximum_bytes=MAX_SOURCE_BYTES,
+                    )
+                except FileRecordError:
+                    recheck = None
+                if (
+                    recheck is None
+                    or not recheck.get("exists")
+                    or recheck.get("sha256") != guard_sha
+                ):
+                    for opened_anchor in output_anchors:
+                        opened_anchor.close()
+                    return _static_invalid(
+                        tool,
+                        input_records,
+                        summary="A content-bound input changed just before ngspice launch.",
+                        code="input.digest_mismatch",
+                        message=f"A guarded input was mutated before launch: {guard_path}",
+                        data=base_data,
+                    )
             process = run_process(
                 command,
                 cwd=run_dir,
@@ -2194,5 +2433,6 @@ __all__ = [
     "NGSPICE_SANITIZED_PATH",
     "NgspiceDriver",
     "NgspiceOutput",
+    "NgspicePinnedInput",
     "SpiceEngine",
 ]
