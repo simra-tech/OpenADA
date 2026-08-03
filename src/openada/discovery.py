@@ -117,7 +117,10 @@ TOOL_SPECS: dict[str, ToolSpec] = {
     ),
     "slang": ToolSpec("slang", ("slang",), (("--version",),), "discovered"),
     "surelog": ToolSpec("surelog", ("surelog",), (("--version",), ("-version",)), "discovered"),
-    "openvaf": ToolSpec("openvaf", ("openvaf",), (("--version",),), "discovered"),
+    # The prod IIC image ships the binary as ``openvaf-r`` (OpenVAF-Reloaded);
+    # classic upstream and local installs name it ``openvaf``. Probe both so the
+    # OSDI compile path resolves a compiler on every runtime.
+    "openvaf": ToolSpec("openvaf", ("openvaf-r", "openvaf"), (("--version",),), "discovered"),
     "qucs-s": ToolSpec("qucs-s", ("qucs-s",), (("--version",),), "discovered"),
     "gtkwave": ToolSpec("gtkwave", ("gtkwave",), (("--version",), ("-V",)), "discovered"),
     "librelane": ToolSpec("librelane", ("librelane",), (("--version",),), "discovered"),

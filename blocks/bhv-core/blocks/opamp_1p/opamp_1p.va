@@ -13,7 +13,12 @@ module bhv_opamp_1p_v1(inp, inn, out, vss);
 
   parameter real av0 = 100e3 from (1:inf);
   parameter real gbw = 10e6 from (0:inf);
-  parameter real slew = 10e6 from (0:inf);
+  // ``slew`` is a reserved keyword in OpenVAF/OpenVAF-Reloaded, so it is
+  // written as a Verilog-A escaped identifier (\slew<space>). The escape
+  // delimiters are not part of the name: the compiled OSDI module still
+  // exposes the public parameter as ``slew``, matching the ngspice-native
+  // backend's card so the wrapper interface is identical across backends.
+  parameter real \slew  = 10e6 from (0:inf);
   parameter real vhi = 1.65;
   parameter real vlo = -1.65;
   parameter real rout = 100 from (0:inf);
@@ -24,7 +29,7 @@ module bhv_opamp_1p_v1(inp, inn, out, vss);
     @(initial_step) begin
       c1x = 1e-9;
       gmx = `M_TWO_PI * gbw * c1x;
-      itx = slew * c1x;
+      itx = \slew  * c1x;
       r1x = av0 / gmx;
     end
     I(vss, x) <+ itx * tanh((gmx/itx) * (V(inp, vss) - V(inn, vss)));

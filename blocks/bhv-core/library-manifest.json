@@ -94,8 +94,8 @@
     {
       "path": "blocks/opamp_1p/opamp_1p.va",
       "role": "verilog-a",
-      "bytes": 1253,
-      "sha256": "ab309466305baf408fd03c643d73932f0972f5d2aab59f41b02700d16a117447"
+      "bytes": 1628,
+      "sha256": "dc5b0e8193e58579b791e83010433dfa756ad7d07c4cfcb22b10041740f14f72"
     },
     {
       "path": "blocks/sw_bbm_pair/block.json",
