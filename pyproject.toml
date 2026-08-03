@@ -67,6 +67,10 @@ where = ["src"]
   "schemas/behavioral-block-v0alpha1.schema.json",
   "schemas/behavioral-block-library-v0alpha1.schema.json",
 ]
+"share/openada/runtime/cosim" = [
+  "runtime/cosim/openada_verilator_shim.cpp",
+  "runtime/cosim/openada_verilator_main.cpp",
+]
 "share/openada/catalog" = [
   "catalog/semantic-surfaces-v0alpha1.json",
 ]

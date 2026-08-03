@@ -46,17 +46,28 @@ the prod image's ngspice-46, 2026-08-03):
 * The shim is 2-state: a digital UNKNOWN input holds its last known value
   inside the core. Wrappers must therefore resolve declared ambiguity bands
   in the analog domain (a crisp ``adc_bridge``) before the core.
-* **EXACTLY ONE ``d_cosim`` instance may exist in a deck.** The shipped
-  ``verilator_shim.cpp`` builds its ``VerilatedContext`` in a function-local
-  ``std::unique_ptr`` and hands the model a raw pointer to it, so the context
-  is destroyed when ``Cosim_setup`` returns; it also keeps a file-scope
-  ``static previous_output[]`` shared by every instance. With one instance
-  the freed block is not reused and the model runs correctly (validated
-  against every golden case on ngspice-45.2 and ngspice-46); with two, the
-  second context reuses the first's freed memory and ngspice SEGFAULTS --
-  reproduced on both versions, with one model or two, with one shared object
-  or two. This module therefore refuses multi-instance compositions and decks
-  rather than emitting a deck that crashes the simulator.
+* **EXACTLY ONE ``d_cosim`` instance may exist in a deck.** This is an
+  ngspice-side limit, NOT a shim limit -- OpenADA compiles its own corrected
+  shim (see ``runtime/cosim/openada_verilator_shim.cpp``) and the restriction
+  still stands. Two independent ngspice defects force it, both reproduced on
+  ngspice-45.2 and ngspice-46 with a minimal hand-written shim that shares no
+  state at all (see ``UPSTREAM-NGSPICE-DCOSIM-SHIM-UAF.md``):
+
+  1. ``cm_irreversible()`` (src/xspice/cm/cm.c) omits a ``break`` after its
+     duplicate-place warning, so a second instance requesting the same
+     ``irreversible`` place overwrites the first in ``evt->info.hybrids`` and
+     leaves an uninitialized slot that ``EVTcall_hybrids()`` then
+     dereferences -- SIGSEGV. ``irreversible`` is a MODEL parameter, so two
+     instances of one ``.model`` card cannot even be given distinct places.
+  2. Worse, when the crash IS avoided (distinct models with distinct places),
+     two co-existing instances silently produce results that depend on
+     netlist card order: a buck converter reads 1.885890 V when instantiated
+     first and 1.250168e-07 V when instantiated second, reproducibly, with no
+     diagnostic.
+
+  A wrong number with no warning is the worst outcome available here, so this
+  module refuses multi-instance compositions and decks outright rather than
+  emitting a deck whose correctness depends on card order.
 """
 
 from __future__ import annotations
@@ -71,6 +82,7 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from .discovery import TOOL_SPECS
+from .provider_runtime import _installed_data_path
 
 #: Ceiling on a compiled cosim shared object. The Verilator runtime plus a
 #: reviewed behavioral core links to ~200 KiB; a huge artifact means the
@@ -200,38 +212,43 @@ def resolve_verilator(*, override: str | None = None) -> tuple[str, str]:
     )
 
 
-#: The exact shim source files linked into every cosim object, relative to the
-#: ngspice ``scripts/src`` directory. Their digest is part of the provenance:
-#: two of them ARE the runtime that schedules every event the core produces.
-_SHIM_FILES = ("verilator_main.cpp", "verilator_shim.cpp")
-_SHIM_HEADER = Path("ngspice") / "cmtypes.h"
+#: The reviewed shim translation units OpenADA compiles into every cosim
+#: object. These are OUR sources (runtime/cosim/), not ngspice's: the shipped
+#: ngspice shim destroys its VerilatedContext at the end of Cosim_setup while
+#: the Verilated model keeps a raw pointer to it, and keeps the
+#: edge-detection memory in file-scope statics -- a use-after-free at one
+#: instance and a segfault at two. See runtime/cosim/openada_verilator_shim.cpp
+#: and UPSTREAM-NGSPICE-DCOSIM-SHIM-UAF.md.
+SHIM_SOURCES = ("openada_verilator_main.cpp", "openada_verilator_shim.cpp")
+#: The ABI headers still belong to the trusted ngspice installation: ngspice
+#: owns the d_cosim interface, OpenADA owns only the logic on our side of it.
+_ABI_HEADER = Path("ngspice") / "cmtypes.h"
+_COSIM_HEADER = Path("ngspice") / "cosim.h"
 
 
-def resolve_cosim_shim_dir(*, ngspice_bin: str | None = None) -> tuple[Path, str]:
-    """Locate the trusted ngspice cosim shim sources and digest them.
+def resolve_cosim_abi_dir(*, ngspice_bin: str | None = None) -> Path:
+    """Locate the trusted ngspice d_cosim ABI headers.
 
-    ngspice installs ``scripts/src/verilator_shim.cpp`` (the ``d_cosim``
-    coroutine bridge) next to its own share tree; both the Debian host layout
-    (``/usr/bin/ngspice`` -> ``/usr/share/ngspice/scripts/src``) and the IIC
-    image layout (``/foss/tools/ngspice/bin/ngspice`` ->
+    Both the Debian host layout (``/usr/bin/ngspice`` ->
+    ``/usr/share/ngspice/scripts/src``) and the IIC image layout
+    (``/foss/tools/ngspice/bin/ngspice`` ->
     ``/foss/tools/ngspice/share/ngspice/scripts/src``) follow
     ``<prefix>/share/ngspice/scripts/src`` for the resolved binary's prefix.
-    The shim belongs to the trusted simulator installation, exactly like the
-    code models it talks to; it is digested so the provenance records which
-    bridge was compiled in.
+    Only the headers are taken from there; the shim logic is OpenADA's.
     """
 
     resolved = ngspice_bin or shutil.which("ngspice")
     if resolved is None:
         raise CosimCompileError(
             "cosim.shim.unavailable",
-            "no ngspice binary is available to locate the d_cosim shim sources.",
+            "no ngspice binary is available to locate the d_cosim ABI headers.",
         )
     try:
         prefix = Path(resolved).resolve().parent.parent
     except OSError as exc:
         raise CosimCompileError(
-            "cosim.shim.unavailable", f"ngspice binary {resolved!r} could not be resolved: {exc}"
+            "cosim.shim.unavailable",
+            f"ngspice binary {resolved!r} could not be resolved: {exc}",
         ) from exc
     candidates = [
         prefix / "share" / "ngspice" / "scripts" / "src",
@@ -239,34 +256,66 @@ def resolve_cosim_shim_dir(*, ngspice_bin: str | None = None) -> tuple[Path, str
         Path("/usr/local/share/ngspice/scripts/src"),
     ]
     for candidate in candidates:
-        if not (candidate / _SHIM_HEADER).is_file():
+        if not (candidate / _ABI_HEADER).is_file():
             continue
-        hasher = hashlib.sha256()
-        complete = True
-        for name in _SHIM_FILES:
-            path = candidate / name
-            if not path.is_file():
-                complete = False
-                break
-            hasher.update(name.encode())
-            hasher.update(b"\0")
-            hasher.update(path.read_bytes())
-        if not complete:
+        if not (candidate / _COSIM_HEADER).is_file():
             continue
         if not _PATH_SAFE_RE.fullmatch(str(candidate)):
             raise CosimCompileError(
                 "cosim.shim.unsafe_path",
-                f"shim directory {str(candidate)!r} contains characters that "
-                "cannot ride on a compiler command line unquoted.",
+                f"ngspice header directory {str(candidate)!r} contains "
+                "characters that cannot ride on a compiler command line "
+                "unquoted.",
             )
-        return candidate, hasher.hexdigest()
+        return candidate
     raise CosimCompileError(
         "cosim.shim.unavailable",
-        "the ngspice d_cosim shim sources (scripts/src/verilator_shim.cpp and "
-        "ngspice/cmtypes.h) were not found next to the resolved ngspice "
+        "the ngspice d_cosim ABI headers (ngspice/cmtypes.h and "
+        f"ngspice/cosim.h) were not found next to the resolved ngspice "
         f"installation ({resolved}); this ngspice cannot host compiled cosim "
         "cores.",
     )
+
+
+def resolve_cosim_shim_dir(*, ngspice_bin: str | None = None) -> tuple[Path, str]:
+    """Return OpenADA's reviewed shim source directory and its content digest.
+
+    The digest covers every byte of every shim translation unit, so the
+    provenance of a run records exactly which co-simulation runtime scheduled
+    its events -- the shim IS the runtime, not a build detail. ``ngspice_bin``
+    is accepted (and the ABI headers probed) so an ngspice that cannot host
+    cosim at all still fails closed here rather than at link time.
+    """
+
+    resolve_cosim_abi_dir(ngspice_bin=ngspice_bin)
+    directory = _installed_data_path("runtime/cosim", SHIM_SOURCES[0]).parent
+    if not _PATH_SAFE_RE.fullmatch(str(directory)):
+        raise CosimCompileError(
+            "cosim.shim.unsafe_path",
+            f"shim directory {str(directory)!r} contains characters that "
+            "cannot ride on a compiler command line unquoted.",
+        )
+    hasher = hashlib.sha256()
+    for name in SHIM_SOURCES:
+        path = directory / name
+        if not path.is_file():
+            raise CosimCompileError(
+                "cosim.shim.unavailable",
+                f"the reviewed shim source {name} is missing from {directory}.",
+            )
+        data = path.read_bytes()
+        if not 0 < len(data) <= MAX_CORE_BYTES:
+            raise CosimCompileError(
+                "cosim.shim.oversize",
+                f"the reviewed shim source {name} is {len(data)} bytes, "
+                f"outside 1..{MAX_CORE_BYTES}.",
+            )
+        hasher.update(name.encode())
+        hasher.update(b"\0")
+        hasher.update(data)
+    return directory, hasher.hexdigest()
+
+
 
 
 def _validate_port_list(ports: Sequence[str], *, direction: str) -> tuple[str, ...]:
@@ -420,6 +469,7 @@ def compile_verilog_digital(
         )
     source_sha256 = _sha256_bytes(encoded)
     verilator, verilator_version = resolve_verilator(override=verilator_bin)
+    abi_dir = resolve_cosim_abi_dir(ngspice_bin=ngspice_bin)
     shim_dir, shim_sha256 = resolve_cosim_shim_dir(ngspice_bin=ngspice_bin)
 
     work_dir.mkdir(parents=True, exist_ok=True)
@@ -485,14 +535,13 @@ def compile_verilog_digital(
             "--top-module",
             core_module,
             "--CFLAGS",
-            f"-I{shim_dir}",
+            f"-I{abi_dir}",
             "--CFLAGS",
             "-fpic",
             "--cc",
             "--build",
             "--exe",
-            str(shim_dir / "verilator_main.cpp"),
-            str(shim_dir / "verilator_shim.cpp"),
+            *(str(shim_dir / name) for name in SHIM_SOURCES),
             str(v_path),
         ],
         cwd=scratch,
@@ -506,7 +555,7 @@ def compile_verilog_digital(
             + (second.stdout or "").strip()[-2000:],
         )
     link_objects = [
-        obj_dir / "verilator_shim.o",
+        obj_dir / "openada_verilator_shim.o",
         obj_dir / "verilated.o",
         obj_dir / "verilated_threads.o",
         obj_dir / "Vlng__ALL.a",
@@ -718,10 +767,12 @@ def compose_blocks_cosim(
     if len(requested) > 1:
         raise CosimCompileError(
             "cosim.compose.multi_instance",
-            "the mixed-signal backend carries ONE block per deck: the ngspice "
-            "d_cosim shim keeps per-instance state in a destroyed context and "
-            "in file-scope statics, so a second instance corrupts the first "
-            f"and the simulator aborts. Requested: {list(requested)}.",
+            "the mixed-signal backend carries ONE block per deck: ngspice's "
+            "d_cosim path crashes on a duplicate irreversible place and, when "
+            "that is avoided, returns results that depend on netlist card "
+            "order with no diagnostic (see "
+            "UPSTREAM-NGSPICE-DCOSIM-SHIM-UAF.md). Requested: "
+            f"{list(requested)}.",
         )
 
     header_symbols: dict[str, str] = {}
@@ -1100,9 +1151,10 @@ def verify_single_instantiation(
     if total > 1:
         raise CosimCompileError(
             "cosim.deck.multi_instance",
-            f"the deck instantiates the cosim wrapper {total} times; the "
-            "ngspice d_cosim shim hosts exactly one instance per run (a "
-            "second corrupts the first and the simulator aborts). Use the "
+            f"the deck instantiates the cosim wrapper {total} times; ngspice "
+            "hosts exactly one d_cosim instance per run (a second either "
+            "aborts the simulator or silently makes the results depend on "
+            "card order -- see UPSTREAM-NGSPICE-DCOSIM-SHIM-UAF.md). Use the "
             "ngspice-native backend for multi-instance decks.",
         )
     if total == 0:

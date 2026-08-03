@@ -714,3 +714,61 @@ def test_operation_refuses_a_relative_or_symlinked_object(tmp_path):
         payload["diagnostics"][0]["code"]
         == "simulation.models.executable_unverifiable"
     )
+
+
+# ---------------------------------------------------------------------------
+# OpenADA's own d_cosim shim (replaces ngspice's, which has a UAF)
+# ---------------------------------------------------------------------------
+
+
+def test_shim_sources_are_openada_owned_and_digest_bound():
+    directory, digest = cc.resolve_cosim_shim_dir()
+    assert len(digest) == 64
+    for name in cc.SHIM_SOURCES:
+        assert (directory / name).is_file(), name
+    # The digest must actually cover the bytes: perturbing a source changes it.
+    import hashlib as _hashlib
+
+    hasher = _hashlib.sha256()
+    for name in cc.SHIM_SOURCES:
+        hasher.update(name.encode())
+        hasher.update(b"\0")
+        hasher.update((directory / name).read_bytes())
+    assert hasher.hexdigest() == digest
+
+
+def test_shim_owns_its_verilated_context_for_the_models_lifetime():
+    """The defect this shim exists to fix must not reappear.
+
+    ngspice's shipped shim holds the context in a function-local
+    ``unique_ptr`` and hands the Verilated model ``contextp.get()``, so the
+    context dies when Cosim_setup returns. Ours must own it per instance.
+    """
+
+    directory, _digest = cc.resolve_cosim_shim_dir()
+    source = (directory / "openada_verilator_shim.cpp").read_text()
+    # The file header deliberately QUOTES the upstream defect, so every
+    # assertion below is scoped to the code, not the explanation.
+    code = source[source.index("// Verilated -*- C++ -*-") :]
+    body = code[code.index("extern \"C\" void Cosim_setup") :]
+    assert "unique_ptr" not in code, "the context must not be a scoped local"
+    assert "inst->contextp = new" in body
+    assert "Vlng{inst->contextp}" in body
+    # Per-instance, not file-scope: the shipped shim shared these across every
+    # instance in the process.
+    assert "static unsigned char previous_output" not in code
+    assert "previous_output[previous_output_size];" in code
+    assert "static Digital_t" not in code
+    # The model and its context must be released; upstream never set cleanup.
+    assert "pinfo->cleanup = cleanup;" in body
+    assert "delete inst->topp;" in code
+    assert "delete inst->contextp;" in code
+
+
+@toolchain
+def test_compiled_object_records_the_openada_shim_digest(tmp_path):
+    module = cc.compile_verilog_digital(
+        CORE_V.read_text(), CORE_MODULE, CORE_INPUTS, CORE_OUTPUTS, tmp_path
+    )
+    _directory, digest = cc.resolve_cosim_shim_dir()
+    assert module.shim_sha256 == digest
