@@ -77,7 +77,7 @@
     },
     {
       "repository_path": "tools/semantic_receipts.py",
-      "sha256": "983637e95cc33c8259142dd80c96e005364dd49c6cc729e4a7f0d2d7cbcb13f0",
+      "sha256": "0c8265710978ff1551a485e6e3044fee561aa5a5aa0ee4a98d1039e8f5fe6a1f",
       "extensions": {}
     },
     {
@@ -92,7 +92,7 @@
     },
     {
       "repository_path": "catalog/semantic-surfaces-v0alpha1.json",
-      "sha256": "d86371c8d1b1d9433c0b9535994ba1d3ed2d6d7ae890e7a9e205063fed009d61",
+      "sha256": "d753048b1ce9e230d1386205d653410d0b169304c7fbf0cb6ee0ff7f9674d618",
       "extensions": {}
     },
     {
