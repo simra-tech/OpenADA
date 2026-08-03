@@ -2385,6 +2385,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 }
             osdi_preload_text = None
             osdi_preload_sha256 = None
+            osdi_module_digests = None
             if composed_osdi is not None:
                 # The .osdi modules are already compiled under output_dir by
                 # compose_blocks_osdi; the preload text (which references them by
@@ -2393,6 +2394,12 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 osdi_preload_sha256 = hashlib.sha256(
                     osdi_preload_text.encode("utf-8")
                 ).hexdigest()
+                # Pin every compiled .osdi to its reviewed compile digest so the
+                # operation re-verifies the module bytes on disk before ngspice
+                # maps them (the preload only names them by path).
+                osdi_module_digests = {
+                    str(m.osdi_path): m.osdi_sha256 for m in composed_osdi.modules
+                }
                 blocks_extensions = {
                     "org.openada.behavioral-blocks-osdi": {
                         "library": composed_osdi.library_id,
@@ -2438,6 +2445,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 ),
                 osdi_preload_text=osdi_preload_text,
                 osdi_preload_sha256=osdi_preload_sha256,
+                osdi_module_digests=osdi_module_digests,
             )
             return simulation
         return simulate_legacy_native(

@@ -9,6 +9,7 @@ ngspice). The refusal tests are pure and always run.
 
 from __future__ import annotations
 
+import hashlib
 import re
 import shutil
 import subprocess
@@ -215,6 +216,90 @@ def test_compose_input_refusals(block_ids, code):
     assert caught.value.code == code
 
 
+# --- validate_osdi_preload: the structural exemption gate (pure, no toolchain) ---
+
+_GOOD_WRAPPER = (
+    ".subckt bhv_opamp_1p_v1 inp inn out vss\n"
+    ".model bhv_opamp_1p_v1__osdi bhv_opamp_1p_v1\n"
+    "N1 inp inn out vss bhv_opamp_1p_v1__osdi\n"
+    ".ends bhv_opamp_1p_v1\n"
+)
+
+
+def _preload(control_body: str, wrapper: str = _GOOD_WRAPPER) -> str:
+    return ".control\n" + control_body + ".endc\n" + wrapper
+
+
+def test_validate_preload_accepts_a_pre_osdi_only_control_block(tmp_path):
+    osdi = tmp_path / "bhv_opamp_1p_v1.osdi"
+    osdi.write_bytes(b"fake-osdi-bytes")
+    text = _preload(f"pre_osdi {osdi}\n")
+    verified = oc.validate_osdi_preload(text)
+    assert [p for p, _ in verified.modules] == [str(osdi)]
+    assert all(re.fullmatch(r"[0-9a-f]{64}", h) for _, h in verified.modules)
+
+
+@pytest.mark.parametrize(
+    "control_body",
+    [
+        "pre_osdi /x.osdi\nshell rm -rf /\n",     # arbitrary shell in .control
+        "pre_osdi /x.osdi\nsystem echo pwned\n",  # arbitrary system command
+        "pre_osdi /x.osdi\nsource /etc/passwd\n", # arbitrary source
+        "pre_osdi /x.osdi\nrun\n",                # a stray analysis run
+        "op\n",                                    # no pre_osdi at all, bare cmd
+    ],
+)
+def test_validate_preload_refuses_arbitrary_control_commands(control_body):
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.validate_osdi_preload(_preload(control_body))
+    assert caught.value.code in {"osdi.preload.unsafe_control", "osdi.preload.empty"}
+
+
+def test_validate_preload_refuses_a_second_control_block_below_endc():
+    text = _preload("pre_osdi /x.osdi\n", _GOOD_WRAPPER + ".control\nshell id\n.endc\n")
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.validate_osdi_preload(text)
+    assert caught.value.code == "osdi.preload.unsafe_control"
+
+
+def test_validate_preload_refuses_a_control_char_in_the_osdi_path():
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.validate_osdi_preload(_preload("pre_osdi /a\x01b.osdi\n"))
+    assert caught.value.code == "osdi.preload.unsafe_path"
+
+
+def test_validate_preload_refuses_a_nonsubckt_card_in_the_wrapper_section():
+    text = _preload("pre_osdi /x.osdi\n", "vinp inp 0 1.0\n")
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.validate_osdi_preload(text)
+    assert caught.value.code == "osdi.preload.unsafe_control"
+
+
+def test_validate_preload_refuses_a_missing_module(tmp_path):
+    text = _preload(f"pre_osdi {tmp_path / 'gone.osdi'}\n")
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.validate_osdi_preload(text)
+    assert caught.value.code == "osdi.preload.missing_module"
+
+
+def test_validate_preload_binds_each_module_to_its_reviewed_digest(tmp_path):
+    osdi = tmp_path / "m.osdi"
+    osdi.write_bytes(b"real-bytes")
+    good = hashlib.sha256(b"real-bytes").hexdigest()
+    text = _preload(f"pre_osdi {osdi}\n")
+    # Correct digest -> accepted.
+    oc.validate_osdi_preload(text, expected_osdi_sha256={str(osdi): good})
+    # A module without a reviewed digest in the map -> refused (unbound).
+    with pytest.raises(oc.OsdiCompileError) as unbound:
+        oc.validate_osdi_preload(text, expected_osdi_sha256={})
+    assert unbound.value.code == "osdi.preload.unbound_module"
+    # A swapped module (digest mismatch) -> tampered.
+    osdi.write_bytes(b"swapped-bytes")
+    with pytest.raises(oc.OsdiCompileError) as tampered:
+        oc.validate_osdi_preload(text, expected_osdi_sha256={str(osdi): good})
+    assert tampered.value.code == "blocks.materialize.tampered"
+
+
 # --- operation-level end-to-end: `simulate --blocks --osdi` through the
 #     sanctioned control-mode runner (gates 4-5). The physics value is proven
 #     above at the module level with the identical prelude; this proves the prod
@@ -275,11 +360,11 @@ def test_simulate_blocks_osdi_operation_runs_control_mode_and_passes(tmp_path, c
     assert data["evidence"]["structure"] == "valid"
     assert "simulation.result" in data["evidence"]["artifact_roles_present"]
 
-    # Provenance states the OSDI preload + empty managed startup story, not the
+    # Provenance states the OSDI preload + managed-startup story, not the
     # default model-free note.
     limitations = " ".join(data["evidence"]["provenance_limitations"])
     assert "pre_osdi" in limitations
-    assert "managed startup" in limitations
+    assert ".spiceinit" in limitations
 
     # The digest-bound OSDI provenance rode through into the retained envelope.
     osdi = data["extensions"]["org.openada.behavioral-blocks-osdi"]

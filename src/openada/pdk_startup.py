@@ -108,12 +108,15 @@ def write_managed_startup(directory: Path, resolved: ResolvedPdkBinding) -> Path
 MANAGED_OSDI_STARTUP_NAME = "openada-osdi.spiceinit"
 
 MANAGED_OSDI_STARTUP_PROVENANCE = (
-    "The simulator's startup file was written by OpenADA as an empty managed "
-    "startup and passed explicitly, so no ambient spinit or .spiceinit - "
-    "including one an installed PDK ships into the user's home - could preload "
-    "another technology's Verilog-A/OSDI modules or extend the model search "
-    "path; the run loads exactly the reviewed, digest-bound block OSDI modules "
-    "named by the deck's own pre_osdi cards."
+    "The simulator's local/user startup was written by OpenADA as an empty "
+    "managed file and passed explicitly, so no local or home-directory "
+    ".spiceinit - including one an installed PDK ships into the user's home - "
+    "could preload another technology's Verilog-A/OSDI modules or extend the "
+    "model search path for this run. The system spinit remains the image's "
+    "enumerated-as-default startup (as for every run); the run's own reviewed, "
+    "digest-bound block OSDI modules are named by the deck's pre_osdi cards and "
+    "content-verified before launch. See the native initialization record for "
+    "the exact startup policy this run used."
 )
 
 
