@@ -480,7 +480,12 @@ ALLOWED_HIDDEN_VARIANTS: dict[tuple[str, str], dict[str, Any]] = {
         "provider_id": "org.openada.driver.ngspice",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
         "selector": {"blocks": "<library>:<block>[,<block>...]"},
-    }
+    },
+    ("openada.surface/cli.simulate/v1", "behavioral-blocks-osdi"): {
+        "provider_id": "org.openada.driver.ngspice",
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "selector": {"blocks": "<library>:<block>[,<block>...]", "osdi": True},
+    },
 }
 
 

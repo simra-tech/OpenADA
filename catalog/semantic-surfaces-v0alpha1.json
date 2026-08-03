@@ -433,6 +433,21 @@
               "note": "The --blocks selector composes a reviewed behavioral-block library into the model-library role of the shared circuit.simulate profile. The variant-level lifecycle override keeps this executable selector inventoried by the coverage verifier while exempting it from active release obligations until its evidence chain exists."
             }
           }
+        },
+        {
+          "variant_id": "behavioral-blocks-osdi",
+          "selector": {
+            "blocks": "<library>:<block>[,<block>...]",
+            "osdi": true
+          },
+          "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+          "provider_id": "org.openada.driver.ngspice",
+          "extensions": {
+            "org.openada.lifecycle": {
+              "lifecycle": "experimental-hidden",
+              "note": "The --blocks --osdi selector compiles each reviewed block's Verilog-A to an OSDI module with OpenVAF and preloads it (a digest-bound .control pre_osdi block plus wrapper subcircuits) into the shared circuit.simulate profile via the sanctioned control-mode runner. The run driver is ngspice; OpenVAF is the compile-time producer of the .osdi collateral. The variant-level lifecycle override keeps this executable selector inventoried by the coverage verifier while exempting it from active release obligations until its evidence chain exists."
+            }
+          }
         }
       ],
       "extensions": {}
