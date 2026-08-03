@@ -46,6 +46,17 @@ the prod image's ngspice-46, 2026-08-03):
 * The shim is 2-state: a digital UNKNOWN input holds its last known value
   inside the core. Wrappers must therefore resolve declared ambiguity bands
   in the analog domain (a crisp ``adc_bridge``) before the core.
+* **EXACTLY ONE ``d_cosim`` instance may exist in a deck.** The shipped
+  ``verilator_shim.cpp`` builds its ``VerilatedContext`` in a function-local
+  ``std::unique_ptr`` and hands the model a raw pointer to it, so the context
+  is destroyed when ``Cosim_setup`` returns; it also keeps a file-scope
+  ``static previous_output[]`` shared by every instance. With one instance
+  the freed block is not reused and the model runs correctly (validated
+  against every golden case on ngspice-45.2 and ngspice-46); with two, the
+  second context reuses the first's freed memory and ngspice SEGFAULTS --
+  reproduced on both versions, with one model or two, with one shared object
+  or two. This module therefore refuses multi-instance compositions and decks
+  rather than emitting a deck that crashes the simulator.
 """
 
 from __future__ import annotations
@@ -651,6 +662,19 @@ def compose_blocks_cosim(
         raise CosimCompileError(
             "cosim.compose.duplicate", "a block was requested more than once."
         )
+    # Each reviewed cosim wrapper carries exactly one d_cosim instance, and the
+    # shipped shim cannot host two (see the module docstring: dangling
+    # VerilatedContext + shared static state, ngspice segfaults). A multi-block
+    # cosim composition is therefore refused up front rather than compiled into
+    # a deck that crashes the simulator.
+    if len(requested) > 1:
+        raise CosimCompileError(
+            "cosim.compose.multi_instance",
+            "the mixed-signal backend carries ONE block per deck: the ngspice "
+            "d_cosim shim keeps per-instance state in a destroyed context and "
+            "in file-scope statics, so a second instance corrupts the first "
+            f"and the simulator aborts. Requested: {list(requested)}.",
+        )
 
     header_symbols: dict[str, str] = {}
     modules: list[CosimModule] = []
@@ -750,6 +774,74 @@ def compose_blocks_cosim(
         modules=tuple(modules),
         model_names=tuple(model_names),
     )
+
+
+def verify_single_instantiation(deck_text: str, wrappers: Sequence[str]) -> None:
+    """Refuse a deck that would place more than one ``d_cosim`` in the circuit.
+
+    The shipped shim supports exactly one instance (see the module docstring),
+    so the composed wrapper may be instantiated exactly once. Two shapes are
+    refused: more than one top-level ``X`` card naming a composed wrapper, and
+    any wrapper instantiation nested inside a deck-defined ``.subckt`` -- the
+    latter because the realized instance count then depends on how often that
+    subcircuit is itself instantiated, which this bounded scan does not
+    resolve, and guessing it would be the difference between a correct run and
+    a simulator crash.
+    """
+
+    wanted = {name.lower() for name in wrappers}
+    if not wanted:
+        return
+    depth = 0
+    total = 0
+    for number, raw in enumerate(deck_text.splitlines(), start=1):
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("*") or stripped.startswith("+"):
+            continue
+        fields = stripped.split()
+        token = fields[0].lower()
+        if token == ".subckt":
+            depth += 1
+            continue
+        if token == ".ends":
+            depth = max(0, depth - 1)
+            continue
+        if token[0] != "x":
+            continue
+        # X<name> n1 n2 ... <subckt> [params]: the child is the last token
+        # that is not a name=value parameter.
+        child = None
+        for candidate in reversed(fields[1:]):
+            if "=" in candidate:
+                continue
+            child = candidate.lower()
+            break
+        if child not in wanted:
+            continue
+        if depth > 0:
+            raise CosimCompileError(
+                "cosim.deck.nested_instance",
+                f"line {number}: the cosim wrapper {child!r} is instantiated "
+                "inside a deck-defined subcircuit, so its realized instance "
+                "count is not bounded by inspection; the mixed-signal backend "
+                "admits exactly one top-level instantiation.",
+            )
+        total += 1
+    if total > 1:
+        raise CosimCompileError(
+            "cosim.deck.multi_instance",
+            f"the deck instantiates the cosim wrapper {total} times; the "
+            "ngspice d_cosim shim hosts exactly one instance per run (a "
+            "second corrupts the first and the simulator aborts). Use the "
+            "ngspice-native backend for multi-instance decks.",
+        )
+    if total == 0:
+        raise CosimCompileError(
+            "cosim.deck.uninstantiated",
+            "the deck never instantiates any composed cosim wrapper "
+            f"({', '.join(sorted(wanted))}); compiling a core the run cannot "
+            "execute would attest physics that never ran.",
+        )
 
 
 def _wrapper_symbols(source_text: str) -> tuple[str, ...]:

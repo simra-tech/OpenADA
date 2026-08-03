@@ -364,3 +364,60 @@ def test_permitted_name_matching_is_case_insensitive(tmp_path):
         path, permitted_executable_models=frozenset({"bhv_x_cosim"})
     )
     assert "BHV_X_COSIM" in prelude
+
+
+# ---------------------------------------------------------------------------
+# Single-instance enforcement (the shipped d_cosim shim hosts exactly one)
+# ---------------------------------------------------------------------------
+
+
+def test_compose_refuses_multi_block_selection(tmp_path):
+    library = _FakeLibrary({"a": _FakeBlock(), "b": _FakeBlock()})
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.compose_blocks_cosim(library, ("a", "b"), tmp_path)
+    assert caught.value.code == "cosim.compose.multi_instance"
+
+
+def test_deck_with_two_wrapper_instances_is_refused():
+    deck = (
+        "* two\n"
+        "X1 a b c d e bhv_comparator_clocked_v1\n"
+        "X2 a b c f e bhv_comparator_clocked_v1\n"
+        ".end\n"
+    )
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.verify_single_instantiation(deck, ["bhv_comparator_clocked_v1"])
+    assert caught.value.code == "cosim.deck.multi_instance"
+
+
+def test_deck_with_nested_wrapper_instance_is_refused():
+    deck = (
+        "* nested\n"
+        ".subckt wrap a b c d e\n"
+        "X1 a b c d e bhv_comparator_clocked_v1\n"
+        ".ends wrap\n"
+        "Xw a b c d e wrap\n"
+        ".end\n"
+    )
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.verify_single_instantiation(deck, ["bhv_comparator_clocked_v1"])
+    assert caught.value.code == "cosim.deck.nested_instance"
+
+
+def test_deck_without_any_instantiation_is_refused():
+    deck = "* nothing\nR1 a 0 1k\n.end\n"
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.verify_single_instantiation(deck, ["bhv_comparator_clocked_v1"])
+    assert caught.value.code == "cosim.deck.uninstantiated"
+
+
+def test_single_top_level_instantiation_with_parameters_is_accepted():
+    deck = (
+        "* one\n"
+        "X1 a b c d e bhv_comparator_clocked_v1 td=2n tedge=1n\n"
+        ".subckt other p q\n"
+        "R1 p q 1k\n"
+        ".ends other\n"
+        ".end\n"
+    )
+    cc.verify_single_instantiation(deck, ["bhv_comparator_clocked_v1"])

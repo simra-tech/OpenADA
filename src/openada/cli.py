@@ -75,7 +75,11 @@ from .block_library import (
     load_block_library,
     parse_blocks_selection,
 )
-from .cosim_compile import CosimCompileError, compose_blocks_cosim
+from .cosim_compile import (
+    CosimCompileError,
+    compose_blocks_cosim,
+    verify_single_instantiation,
+)
 
 
 class _RequestParseError(Exception):
@@ -2294,6 +2298,27 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                             args,
                             f"--output-dir {output_dir} cannot hold the cosim "
                             f"build tree: {exc}",
+                        )
+                    # The shim hosts exactly one d_cosim instance per run, so
+                    # the deck is checked BEFORE the (slow) Verilator compile:
+                    # a deck that would crash the simulator is refused, not
+                    # built.
+                    try:
+                        deck_probe = Path(source).expanduser().read_text(
+                            encoding="utf-8", errors="replace"
+                        )
+                    except OSError:
+                        deck_probe = None
+                    if deck_probe is not None:
+                        # An unknown block contributes no wrapper here; the
+                        # compose below is the authority that refuses it.
+                        verify_single_instantiation(
+                            deck_probe,
+                            [
+                                block_library.blocks[block].wrapper
+                                for block in selection
+                                if block in block_library.blocks
+                            ],
                         )
                     composed_cosim = compose_blocks_cosim(
                         block_library, selection, output_dir / "cosim-build"
