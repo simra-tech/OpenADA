@@ -5,7 +5,7 @@
     "extraction": {
       "extensions": {},
       "plot": null,
-      "request_sha256": "8c7cce13a24404fc3e0a6890ecf9548a2352817c170ebdc4edfddbd8d07a1c80",
+      "request_sha256": "d570fb957a0c487793e5cca53144f03ede2e40eae34be16c7e7330de00d106e1",
       "series": null,
       "source": {
         "analysis_type": "ac",
@@ -15,7 +15,7 @@
           "kind": "ngspice-raw",
           "path": "/evidence/provider-ac/work/ota_ac.raw",
           "role": "simulation.result",
-          "sha256": "2c1873a17b3a53cc6bf874752142d8f695ff7c0043d7e14f27f5cea57b19b4c5"
+          "sha256": "51a52b7005b5fa0eed6c9a038051b2b3aac125588b3cab2523a6a1b09d5cd813"
         },
         "backend": "ngspice",
         "binding": "not-established",
@@ -37,7 +37,7 @@
   "diagnostics": [
     {
       "code": "series.selector.missing",
-      "message": "At least one exact native vector selector is absent or ambiguous.",
+      "message": "Selector 'v(__openada_measurement_missing__)' names no native vector in the selected plot. Selectable signals: 'i(l6)', 'i(l13)', 'v(n.x1.xm1.nsg13_lv_pmos#gp)', 'v(n.x1.xm1.nsg13_lv_pmos#noi)', 'v(n.x1.xm1.nsg13_lv_pmos#si)', 'v(n.x1.xm2.nsg13_lv_pmos#gp)', 'v(n.x1.xm2.nsg13_lv_pmos#noi)', 'v(n.x1.xm2.nsg13_lv_pmos#si)', 'v(n.x1.xm3.nsg13_lv_nmos#gp)', 'v(n.x1.xm3.nsg13_lv_nmos#noi)', 'v(n.x1.xm3.nsg13_lv_nmos#si)', 'v(n.x1.xm4.nsg13_lv_nmos#gp)', 'v(n.x1.xm4.nsg13_lv_nmos#noi)', 'v(n.x1.xm4.nsg13_lv_nmos#si)', 'v(n.x1.xm5.nsg13_lv_pmos#gp)', 'v(n.x1.xm5.nsg13_lv_pmos#noi)', 'v(n.x1.xm5.nsg13_lv_pmos#si)', 'v(n.x1.xm6.nsg13_lv_nmos#gp)', 'v(n.x1.xm6.nsg13_lv_nmos#noi)', 'v(n.x1.xm6.nsg13_lv_nmos#si)', 'v(n.x1.xm7.nsg13_lv_pmos#gp)', 'v(n.x1.xm7.nsg13_lv_pmos#noi)', 'v(n.x1.xm7.nsg13_lv_pmos#si)', 'v(n.x1.xm9.nsg13_lv_pmos#gp)', ... (101 total). Axis vector: 'frequency'.",
       "severity": "error"
     }
   ],
@@ -58,12 +58,12 @@
       "kind": "ngspice-raw",
       "path": "/evidence/provider-ac/work/ota_ac.raw",
       "role": "simulation.result",
-      "sha256": "2c1873a17b3a53cc6bf874752142d8f695ff7c0043d7e14f27f5cea57b19b4c5"
+      "sha256": "51a52b7005b5fa0eed6c9a038051b2b3aac125588b3cab2523a6a1b09d5cd813"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-19T11:33:11.636943Z",
+    "created_at": "2026-08-03T07:55:50.256160Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

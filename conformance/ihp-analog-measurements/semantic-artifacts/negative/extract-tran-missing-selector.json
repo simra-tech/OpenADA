@@ -5,7 +5,7 @@
     "extraction": {
       "extensions": {},
       "plot": null,
-      "request_sha256": "c74756228cc08f383c0decc1577be602c98520a60971f0f263303d6704af4796",
+      "request_sha256": "9bf0d70b6a8886863f2880d06f6dceb20511a2546e195576b31df95abacd728d",
       "series": null,
       "source": {
         "analysis_type": "tran",
@@ -15,7 +15,7 @@
           "kind": "ngspice-raw",
           "path": "/evidence/provider-tran/work/inverter_spectral.raw",
           "role": "simulation.result",
-          "sha256": "cb0c3550fd5936c2df25b63c3cc5afc5a5a9e139821338280a4e19ef93e8b667"
+          "sha256": "6dbea3e6b0fd68bbbd8d43c1e5ffee2367a21a0b9425c927869b41ab901c0a58"
         },
         "backend": "ngspice",
         "binding": "not-established",
@@ -37,7 +37,7 @@
   "diagnostics": [
     {
       "code": "series.selector.missing",
-      "message": "At least one exact native vector selector is absent or ambiguous.",
+      "message": "Selector 'v(__openada_measurement_missing__)' names no native vector in the selected plot. Selectable signals: 'v(n.x1.xm1.nsg13_lv_nmos#gp)', 'v(n.x1.xm1.nsg13_lv_nmos#noi)', 'v(n.x1.xm1.nsg13_lv_nmos#si)', 'v(n.x1.xm2.nsg13_lv_pmos#gp)', 'v(n.x1.xm2.nsg13_lv_pmos#noi)', 'v(n.x1.xm2.nsg13_lv_pmos#si)', 'i(v1)', 'i(v2)', 'v(vdd)', 'v(vin)', 'v(vout)'. Axis vector: 'time'.",
       "severity": "error"
     }
   ],
@@ -58,12 +58,12 @@
       "kind": "ngspice-raw",
       "path": "/evidence/provider-tran/work/inverter_spectral.raw",
       "role": "simulation.result",
-      "sha256": "cb0c3550fd5936c2df25b63c3cc5afc5a5a9e139821338280a4e19ef93e8b667"
+      "sha256": "6dbea3e6b0fd68bbbd8d43c1e5ffee2367a21a0b9425c927869b41ab901c0a58"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-19T11:33:12.249803Z",
+    "created_at": "2026-08-03T07:55:51.781540Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
