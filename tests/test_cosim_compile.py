@@ -796,3 +796,60 @@ def test_named_missing_ngspice_is_refused_rather_than_falling_back():
     with pytest.raises(cc.CosimCompileError) as caught:
         cc.resolve_cosim_shim_dir(ngspice_bin="/nonexistent/ngspice")
     assert caught.value.code == "cosim.shim.unavailable"
+
+
+@toolchain
+def test_two_shim_instances_are_isolated(tmp_path):
+    """The corrected shim must host two instances with nothing shared.
+
+    ngspice itself cannot yet run two d_cosim instances (see
+    UPSTREAM-NGSPICE-DCOSIM-SHIM-UAF.md), so this asserts the property at the
+    SHIM boundary: dlopen the compiled object, call Cosim_setup twice, and
+    require distinct handles, a cleanup hook on each, and a clean release.
+    The shipped ngspice shim segfaults on exactly this sequence.
+    """
+
+    import ctypes
+
+    module = cc.compile_verilog_digital(
+        CORE_V.read_text(), CORE_MODULE, CORE_INPUTS, CORE_OUTPUTS, tmp_path
+    )
+
+    class CoInfo(ctypes.Structure):
+        _fields_ = [
+            ("in_count", ctypes.c_uint),
+            ("out_count", ctypes.c_uint),
+            ("inout_count", ctypes.c_uint),
+            ("cleanup", ctypes.c_void_p),
+            ("step", ctypes.c_void_p),
+            ("in_fn", ctypes.c_void_p),
+            ("out_fn", ctypes.c_void_p),
+            ("handle", ctypes.c_void_p),
+            ("vtime", ctypes.c_double),
+            ("method", ctypes.c_int),
+            ("lib_argc", ctypes.c_uint),
+            ("sim_argc", ctypes.c_uint),
+            ("lib_argv", ctypes.c_void_p),
+            ("sim_argv", ctypes.c_void_p),
+            ("dlopen_fn", ctypes.c_void_p),
+        ]
+
+    library = ctypes.CDLL(str(module.so_path))
+    setup = library.Cosim_setup
+    setup.argtypes = [ctypes.POINTER(CoInfo)]
+    setup.restype = None
+
+    first, second = CoInfo(), CoInfo()
+    setup(ctypes.byref(first))
+    setup(ctypes.byref(second))
+
+    assert first.handle and second.handle
+    assert first.handle != second.handle, "instances must not share state"
+    assert first.cleanup and second.cleanup, "cleanup hook must be set"
+    assert first.in_count == len(CORE_INPUTS)
+    assert first.out_count == len(CORE_OUTPUTS)
+
+    release = ctypes.CFUNCTYPE(None, ctypes.POINTER(CoInfo))(first.cleanup)
+    release(ctypes.byref(first))
+    release(ctypes.byref(second))
+    assert not first.handle and not second.handle, "cleanup must release"
