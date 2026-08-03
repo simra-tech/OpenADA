@@ -922,8 +922,21 @@ def _resolve_model_source(
     configuration: list[dict[str, Any]],
     deck_text: str | None = None,
     expected_models_sha256: str | None = None,
+    permitted_executable_models: Sequence[str] = (),
 ) -> tuple[ResolvedPdkBinding | None, str | None]:
     """Resolve at most one model source, or raise a typed refusal."""
+
+    # The executable-model allowance exists ONLY for reviewed, digest-pinned
+    # block compositions: the permitted names are meaningless without the
+    # digest that binds them to the reviewed bytes, so an unpinned allowance
+    # is refused as an internal contract violation rather than honored.
+    if permitted_executable_models and expected_models_sha256 is None:
+        raise SimulationRequestError(
+            "simulation.models.allowance_unbound",
+            "permitted executable models were named without a pinned "
+            "composition digest; the allowance only exists for digest-bound "
+            "reviewed compositions.",
+        )
 
     if (
         pdk is not None or resolved_pdk_binding is not None
@@ -1020,7 +1033,12 @@ def _resolve_model_source(
     model_prelude: str | None = None
     if models_file is not None:
         try:
-            model_prelude, models_record = load_model_prelude(models_file)
+            model_prelude, models_record = load_model_prelude(
+                models_file,
+                permitted_executable_models=frozenset(
+                    name.lower() for name in permitted_executable_models
+                ),
+            )
         except SimraArtifactError as exc:
             raise SimulationRequestError(exc.code, exc.message, hint=exc.hint) from exc
         # The tamper check lives INSIDE the operation boundary, immediately
@@ -1076,6 +1094,7 @@ def simulate(
     extra_input_records: Sequence[Mapping[str, Any]] = (),
     extra_data_extensions: Mapping[str, Any] | None = None,
     expected_models_sha256: str | None = None,
+    permitted_executable_models: Sequence[str] = (),
 ) -> dict[str, Any]:
     """Run one circuit simulation, whatever shape the request arrived in.
 
@@ -1198,6 +1217,7 @@ def simulate(
             configuration=configuration,
             deck_text=deck_probe_text,
             expected_models_sha256=expected_models_sha256,
+            permitted_executable_models=permitted_executable_models,
         )
     except SimulationRequestError as exc:
         return refuse(

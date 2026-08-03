@@ -75,6 +75,7 @@ from .block_library import (
     load_block_library,
     parse_blocks_selection,
 )
+from .cosim_compile import CosimCompileError, compose_blocks_cosim
 
 
 class _RequestParseError(Exception):
@@ -464,6 +465,18 @@ def build_parser() -> argparse.ArgumentParser:
             "digest with their dependency closure. The deck instantiates the "
             "public bhv_<block>_v<abi> wrappers. Mutually exclusive with "
             "--models and --pdk."
+        ),
+    )
+    simulate.add_argument(
+        "--cosim",
+        action="store_true",
+        help=(
+            "Execute the selected blocks through their mixed-signal "
+            "xspice-cosim backend instead of the ngspice-native one: each "
+            "block's reviewed digital core is compiled with Verilator into a "
+            "digest-bound d_cosim object and its reviewed analog wrapper is "
+            "composed around it. Requires --blocks; every selected block must "
+            "declare an xspice-cosim backend."
         ),
     )
     simulate.add_argument(
@@ -2237,6 +2250,13 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
         # composed prelude is materialized as retained evidence, and the
         # existing bounded model path carries it unchanged.
         composed_blocks = None
+        composed_cosim = None
+        if args.cosim and args.blocks is None:
+            return _simulation_cli_invalid(
+                args,
+                "--cosim requires --blocks: it selects the mixed-signal "
+                "backend of a reviewed block composition.",
+            )
         if args.blocks is not None:
             if args.backend is not None and args.backend != "ngspice":
                 # Mirrors pdk.backend.unsupported: the composed prelude is
@@ -2262,8 +2282,27 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             try:
                 library_id, selection = parse_blocks_selection(args.blocks)
                 block_library = load_block_library(library_id)
-                composed_blocks = compose_blocks(block_library, selection)
+                if args.cosim:
+                    # The cosim compose COMPILES the reviewed cores, so its
+                    # build tree lives inside the evidence directory: the
+                    # compiled object a run binds is retained next to the run
+                    # that executed it, never in a shared mutable cache.
+                    try:
+                        output_dir.mkdir(parents=True, exist_ok=True)
+                    except OSError as exc:
+                        return _simulation_cli_invalid(
+                            args,
+                            f"--output-dir {output_dir} cannot hold the cosim "
+                            f"build tree: {exc}",
+                        )
+                    composed_cosim = compose_blocks_cosim(
+                        block_library, selection, output_dir / "cosim-build"
+                    )
+                else:
+                    composed_blocks = compose_blocks(block_library, selection)
             except BlockLibraryError as exc:
+                return _simulation_cli_invalid(args, f"{exc.code}: {exc.message}")
+            except CosimCompileError as exc:
                 return _simulation_cli_invalid(args, f"{exc.code}: {exc.message}")
         # Which path honours the request is decided by what the request needs,
         # never by the caller guessing. A published artifact, a PDK binding or a
@@ -2281,6 +2320,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             or args.pdk is not None
             or args.models is not None
             or composed_blocks is not None
+            or composed_cosim is not None
             or target_kind == "simra-artifact"
         )
         # ``--analysis`` belongs to the semantic operation, and asking for it
@@ -2346,6 +2386,19 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 blocks_extensions = {
                     "org.openada.behavioral-blocks": composed_blocks.record()
                 }
+            elif composed_cosim is not None:
+                models_file = output_dir / "behavioral-blocks-cosim.model.spice"
+                materialization_error = _materialize_exclusive(
+                    models_file, composed_cosim.text, composed_cosim.text_sha256
+                )
+                if materialization_error is not None:
+                    return _simulation_cli_invalid(args, materialization_error)
+                # Same provenance authority as the native composition; the
+                # record additionally binds each compiled core (source digest,
+                # object digest, compiler version, shim digest).
+                blocks_extensions = {
+                    "org.openada.behavioral-blocks": composed_cosim.record()
+                }
             simulation = simulate(
                 source,
                 output_dir,
@@ -2370,7 +2423,17 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 expected_models_sha256=(
                     composed_blocks.text_sha256
                     if composed_blocks is not None
+                    else composed_cosim.text_sha256
+                    if composed_cosim is not None
                     else None
+                ),
+                # The executable-model allowance names EXACTLY the generated
+                # d_cosim binding cards of this digest-pinned composition;
+                # everything else in the models role stays refused.
+                permitted_executable_models=(
+                    composed_cosim.model_names
+                    if composed_cosim is not None
+                    else ()
                 ),
             )
             return simulation
