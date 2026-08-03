@@ -247,6 +247,11 @@ def test_validate_preload_accepts_a_pre_osdi_only_control_block(tmp_path):
         "pre_osdi /x.osdi\nsource /etc/passwd\n", # arbitrary source
         "pre_osdi /x.osdi\nrun\n",                # a stray analysis run
         "op\n",                                    # no pre_osdi at all, bare cmd
+        "pre_osdi /x.osdi\n+ shell id\n",         # `+` continuation smuggling
+        "pre_osdi /x.osdi ; shell id\n",          # inline `;` command after path
+        "pre_osdi /x.osdi shell id\n",            # extra tokens after the path
+        "PRE_OSDI /x.osdi\nSHELL id\n",           # case-variant keywords
+        "echo hi\npre_osdi /x.osdi\n",            # command before the load
     ],
 )
 def test_validate_preload_refuses_arbitrary_control_commands(control_body):
