@@ -61,6 +61,44 @@ than one co-simulated instance exists in a circuit:
 * in the inout branch of `accept_input()`, `topp->name | (1 << (msb - index));`
   is a statement with no effect — `|=` was clearly intended.
 
+### Direct reproducer, with ngspice entirely out of the picture
+
+The defect can be shown without ngspice, `d_cosim`, or `cm_irreversible()` —
+just `dlopen` the built object and call `Cosim_setup` twice, as any host with
+two instances would:
+
+```cpp
+    void *h = dlopen(argv[1], RTLD_NOW | RTLD_GLOBAL);
+    void (*setup)(struct co_info *) =
+        (void (*)(struct co_info *))dlsym(h, "Cosim_setup");
+
+    struct co_info a = {}, b = {};
+    a.out_fn = out_fn; b.out_fn = out_fn;
+    setup(&a); setup(&b);                 /* two instances */
+    Digital_t one = {ONE, STRONG};
+    (*a.in_fn)(&a, 0, &one);
+    (*a.step)(&a);
+    (*b.step)(&b);
+```
+
+Built against the **shipped** `verilator_shim.cpp`, this **segfaults**. Built
+against the corrected shim, the same harness prints:
+
+```
+handle A       = 0x562976578b30
+handle B       = 0x562976594df0
+distinct       = yes
+cleanup set    = yes
+in/out counts  = 2/1
+stepped both, no crash
+cleanup A/B    = released
+dlclose after cleanup: ok
+```
+
+This isolates defect (1) completely from defects (2) and (3): the shim itself
+is perfectly capable of hosting multiple instances once its state is
+per-instance and its context is owned.
+
 **Fix:** own the context for the model's lifetime and make all mutable state
 per-instance. OpenADA now compiles its own corrected shim; it is available at
 `runtime/cosim/openada_verilator_shim.cpp` in the OpenADA repository and is
