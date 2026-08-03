@@ -36,12 +36,12 @@
     "normalized": {
       "bytes": 11933,
       "repository_path": "conformance/ihp-sar-rtl/semantic-normalized.json",
-      "sha256": "83454729e52695ab7c9c4bdf41970a9a02caef37253a6dab211053ba62093a2a"
+      "sha256": "40ac0b511a577dd53af0dabbb5c35b65a57a86bf8718dba9d75c551374e9ebf4"
     },
     "oracle": {
       "bytes": 7072,
       "repository_path": "conformance/ihp-sar-rtl/semantic-oracle.json",
-      "sha256": "158546bfab0e9439b46ba862e402dc886d5257a722febe34ac827ee86303a566"
+      "sha256": "abf15036d1b0c523603aa3cfac6bb6da714dfe84c24549156dc83458cf210f61"
     },
     "tamper_replay": {
       "bytes": 724,

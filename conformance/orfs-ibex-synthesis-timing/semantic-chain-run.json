@@ -24,7 +24,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/synthesis/synthesize.result.json",
       "role": "native-artifact",
-      "sha256": "0a028994135bf4592cac7152ebbe45be228df1c36767b95a501767fbbffe47db",
+      "sha256": "def7c873f7493f00f330bfca6c5a5618ad70f193a983e0bb251fb606a5c1173d",
       "source_output": "synthesis-synthesize-result-json",
       "source_step": "synthesize-ibex"
     },
@@ -96,7 +96,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/timing/timing-analyze.result.json",
       "role": "native-artifact",
-      "sha256": "3f41e67f238fa79c98663bccc766569125aa12e599981667e6f8ce63a37b60b1",
+      "sha256": "ad2217288b9c1bd2a1b7117142d801cf225266e23b9d2510e9560d02aa2a9bd5",
       "source_output": "timing-timing-analyze-result-json",
       "source_step": "analyze-ibex-timing"
     },
@@ -150,7 +150,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/negative/synthesize.result.json",
       "role": "native-artifact",
-      "sha256": "67608a3bcb77f9760bde7fcb037d214971c47eabd69ee1e42b322aa3f5a96341",
+      "sha256": "6f73db6c846675fca6746dc897da76edafe1fce2ab57499497f5cc10ea9b8088",
       "source_output": "negative-synthesize-result-json",
       "source_step": "synthesis-missing-top"
     },
@@ -177,7 +177,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-artifacts/run.json",
       "role": "native-artifact",
-      "sha256": "8e7bc516952db4ec31681ab8872acf0ff4908a38183e7cc9da7a044e13331fdf",
+      "sha256": "a6f0369b944f03d1c09f3f7a7af84fa90ffe3c48249172652c1ceb6221a41cc9",
       "source_output": "run-json",
       "source_step": "synthesize-ibex"
     },
@@ -186,7 +186,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-oracle.json",
       "role": "independent-oracle",
-      "sha256": "5cabf4f6857686a57223d9fb0b23e6f906bd0fcf722448cdaa37d8dda6404c85",
+      "sha256": "857ba3a5618659f49cb0c899fb38bac61fe1255614cf5ef67b8b7be55651f2b1",
       "source_output": "independent-oracle-verdict",
       "source_step": "independent-verifier"
     },
@@ -195,7 +195,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-normalized.json",
       "role": "normalized-evidence",
-      "sha256": "9b3ee4a26da1381b4ec11a18e61ab41e41f9571956943162c3ae69e2e81818ac",
+      "sha256": "2d2daaa5c14978eeec067fbdb07d5eaa4e6ca0cfd2cc2c2d0b6a28c15c416ec8",
       "source_output": "normalized-digital-evidence",
       "source_step": "normalize-digital-evidence"
     },
@@ -204,7 +204,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-decision.json",
       "role": "downstream-decision",
-      "sha256": "05be0b8ab3a7d93e4dc644450bfb78aa06f74440fbf8bfe0b6dfc4ef6dc91be6",
+      "sha256": "374ab904bf3ac86cd893ce39796f5dd761a5bd40f2b3d55f8190d77059774489",
       "source_output": "downstream-digital-decision",
       "source_step": "engineering-decision"
     },
@@ -213,7 +213,7 @@
       "replay_id": null,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-evidence.json",
       "role": "agent-visible-evidence",
-      "sha256": "628e7f4de5cdc84f74f9b7c23ee29918b70cf2d2b3333b4d20c2a46b75bb67e1",
+      "sha256": "a979e198c70778fdf6e467795f11948ca24b7d5beb24b960437db769477856d0",
       "source_output": "agent-visible-digital-evidence",
       "source_step": "agent-evidence"
     },
@@ -255,7 +255,7 @@
     }
   ],
   "chain_id": "openada.chain/orfs-ibex-synthesis-timing/v1",
-  "chain_manifest_sha256": "6eeb37f00238046b07c2719726bafdcd66085a82a8a0c685b116a827f953e1bd",
+  "chain_manifest_sha256": "2d12765bf2db67e8e1bf43b3793a3e1deed04a1f2481ab5bb233d702ba195e41",
   "checks": {
     "agent_visible_evidence": true,
     "contract_test": true,
@@ -274,15 +274,15 @@
     }
   },
   "schema": "openada.semantic-chain-run/v0alpha1",
-  "semantic_subject_sha256": "4cc127802e72d32da0304819de19386f22177475b9bda13b76dfbaac1a43cea0",
+  "semantic_subject_sha256": "5a267d4dc3c142a56dd68046da0df37b5a7d97a5af56b67dd7b28a4f39897ae3",
   "source_attestation": {
     "clean_after": true,
     "clean_before": true,
     "extensions": {},
     "receipt_class": "release",
-    "repository_revision": "773a2a808c8f9a9a763cfeadf86d84d5c0e343f7",
-    "repository_tree": "0f36b8dcb5ae4a5e4b5cb6e0e330d495ffd17094",
-    "semantic_subject_sha256": "4cc127802e72d32da0304819de19386f22177475b9bda13b76dfbaac1a43cea0",
+    "repository_revision": "5b6e7c41873826565b23a54c912dc5f5c0b5917c",
+    "repository_tree": "3053753411e4c77177dd62c51feaecfe9e6b635b",
+    "semantic_subject_sha256": "5a267d4dc3c142a56dd68046da0df37b5a7d97a5af56b67dd7b28a4f39897ae3",
     "state_unchanged": true
   },
   "status": "pass"
