@@ -23,7 +23,9 @@ Abrg [bhv_sw_bbm_pair_ci] [bhv_sw_bbm_pair_dc] bhv_sw_bbm_pair_adc
 .model bhv_sw_bbm_pair_adc adc_bridge(in_low={vth*0.9} in_high={vth*1.1} rise_delay=1p fall_delay=1p)
 Ainv bhv_sw_bbm_pair_dc bhv_sw_bbm_pair_dcb bhv_sw_bbm_pair_inv
 .model bhv_sw_bbm_pair_inv d_inverter(rise_delay=1p fall_delay=1p)
-* break-before-make: every turn-ON is delayed by tdead, turn-OFF is immediate
+* break-before-make: every turn-ON is delayed by tdead, turn-OFF by 1ps.
+* The contract floors tdead at 2ps for exactly this reason: at or below the
+* 1ps turn-OFF delay the two conduction commands would overlap.
 Adhi bhv_sw_bbm_pair_dc bhv_sw_bbm_pair_dhi bhv_sw_bbm_pair_dly
 Adlo bhv_sw_bbm_pair_dcb bhv_sw_bbm_pair_dlo bhv_sw_bbm_pair_dly
 .model bhv_sw_bbm_pair_dly d_buffer(rise_delay={tdead} fall_delay=1p)

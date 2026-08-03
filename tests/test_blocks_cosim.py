@@ -99,7 +99,7 @@ def test_cosim_backend_reproduces_golden_case(case_path, tmp_path, tmp_path_fact
         backend="ngspice",
         models_file=models_file,
         expected_models_sha256=composition.text_sha256,
-        permitted_executable_models=composition.model_names,
+        permitted_executable_models=composition.executable_allowance(),
     )
     assert payload["execution"]["status"] == "completed", payload["diagnostics"]
     assert payload["engineering"]["status"] == "pass", payload["diagnostics"]

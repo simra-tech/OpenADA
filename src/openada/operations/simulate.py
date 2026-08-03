@@ -922,21 +922,43 @@ def _resolve_model_source(
     configuration: list[dict[str, Any]],
     deck_text: str | None = None,
     expected_models_sha256: str | None = None,
-    permitted_executable_models: Sequence[str] = (),
+    permitted_executable_models: Mapping[str, tuple[str, str]] | None = None,
 ) -> tuple[ResolvedPdkBinding | None, str | None]:
-    """Resolve at most one model source, or raise a typed refusal."""
+    """Resolve at most one model source, or raise a typed refusal.
 
+    ``permitted_executable_models`` maps a generated ``d_cosim`` binding-card
+    name to the ``(absolute object path, sha256)`` of the compiled object that
+    card must load. The allowance is honored only alongside a pinned
+    composition digest, and every named object's bytes are re-read and
+    verified HERE -- inside the operation boundary, after the model library is
+    loaded and before any native launch -- then recorded as a bound input, so
+    the retained provenance describes the bytes the simulator actually loaded
+    rather than the bytes some earlier step happened to compile.
+    """
+
+    permitted = dict(permitted_executable_models or {})
     # The executable-model allowance exists ONLY for reviewed, digest-pinned
     # block compositions: the permitted names are meaningless without the
     # digest that binds them to the reviewed bytes, so an unpinned allowance
     # is refused as an internal contract violation rather than honored.
-    if permitted_executable_models and expected_models_sha256 is None:
+    if permitted and expected_models_sha256 is None:
         raise SimulationRequestError(
             "simulation.models.allowance_unbound",
             "permitted executable models were named without a pinned "
             "composition digest; the allowance only exists for digest-bound "
             "reviewed compositions.",
         )
+    for name, declared in permitted.items():
+        if (
+            not isinstance(declared, tuple)
+            or len(declared) != 2
+            or not all(isinstance(part, str) for part in declared)
+        ):
+            raise SimulationRequestError(
+                "simulation.models.allowance_unbound",
+                f"the executable-model allowance for {name!r} must declare "
+                "(object_path, sha256); an unverifiable allowance is refused.",
+            )
 
     if (
         pdk is not None or resolved_pdk_binding is not None
@@ -1035,9 +1057,10 @@ def _resolve_model_source(
         try:
             model_prelude, models_record = load_model_prelude(
                 models_file,
-                permitted_executable_models=frozenset(
-                    name.lower() for name in permitted_executable_models
-                ),
+                permitted_executable_models={
+                    name.lower(): object_path
+                    for name, (object_path, _digest) in permitted.items()
+                },
             )
         except SimraArtifactError as exc:
             raise SimulationRequestError(exc.code, exc.message, hint=exc.hint) from exc
@@ -1067,6 +1090,48 @@ def _resolve_model_source(
                 "identity": "content-digest",
             }
         )
+        # Every admitted executable object is verified against its declared
+        # digest HERE -- after the model text is bound, before any launch --
+        # and recorded, so the retained evidence names the exact bytes ngspice
+        # will dlopen instead of merely the bytes something once compiled.
+        for name in sorted(permitted):
+            object_path, object_sha256 = permitted[name]
+            candidate = Path(object_path)
+            try:
+                object_bytes = candidate.read_bytes()
+            except OSError as exc:
+                raise SimulationRequestError(
+                    "simulation.models.executable_unverifiable",
+                    f"the compiled object {object_path} bound by the model "
+                    f"card {name!r} could not be read for verification: {exc}; "
+                    "no simulator was launched.",
+                ) from exc
+            observed = hashlib.sha256(object_bytes).hexdigest()
+            if observed != object_sha256:
+                raise SimulationRequestError(
+                    "simulation.models.executable_tampered",
+                    f"the compiled object {object_path} bound by the model "
+                    f"card {name!r} hashes to {observed}, not the declared "
+                    f"{object_sha256}; the object changed after composition, "
+                    "so no simulator was launched and no result was retained.",
+                )
+            record = {
+                "kind": "xspice-cosim-object",
+                "role": "model-implementation",
+                "path": str(candidate),
+                "bytes": len(object_bytes),
+                "sha256": observed,
+            }
+            inputs.append(record)
+            configuration.append(
+                {
+                    "role": "xspice-cosim-object",
+                    "path": str(candidate),
+                    "sha256": observed,
+                    "bytes": len(object_bytes),
+                    "identity": "content-digest",
+                }
+            )
     return resolved, model_prelude
 
 
@@ -1094,7 +1159,7 @@ def simulate(
     extra_input_records: Sequence[Mapping[str, Any]] = (),
     extra_data_extensions: Mapping[str, Any] | None = None,
     expected_models_sha256: str | None = None,
-    permitted_executable_models: Sequence[str] = (),
+    permitted_executable_models: Mapping[str, tuple[str, str]] | None = None,
 ) -> dict[str, Any]:
     """Run one circuit simulation, whatever shape the request arrived in.
 

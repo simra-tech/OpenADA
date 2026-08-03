@@ -33,7 +33,9 @@ Abrg [bhv_sw_bbm_pair_ci] [bhv_sw_bbm_pair_dc] bhv_sw_bbm_pair_adc
 * compiled complementary drive core: ports bind in the declared core order
 * (c) -> (chi, clo); the compile refuses any Verilated reordering.
 Acore [bhv_sw_bbm_pair_dc] [bhv_sw_bbm_pair_dhc bhv_sw_bbm_pair_dlc] bhv_sw_bbm_pair_cosim
-* break-before-make: every turn-ON is delayed by tdead, turn-OFF is immediate
+* break-before-make: every turn-ON is delayed by tdead, turn-OFF by 1ps.
+* The contract floors tdead at 2ps for exactly this reason: at or below the
+* 1ps turn-OFF delay the two conduction commands would overlap.
 Adhi bhv_sw_bbm_pair_dhc bhv_sw_bbm_pair_dhi bhv_sw_bbm_pair_dly
 Adlo bhv_sw_bbm_pair_dlc bhv_sw_bbm_pair_dlo bhv_sw_bbm_pair_dly
 .model bhv_sw_bbm_pair_dly d_buffer(rise_delay={tdead} fall_delay=1p)

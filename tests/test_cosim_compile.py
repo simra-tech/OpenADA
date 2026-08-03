@@ -251,12 +251,12 @@ def test_models_role_accepts_only_the_named_permitted_card(tmp_path):
     text = '.model bhv_x_cosim d_cosim(simulation="/tmp/x.so" delay=1p)\n'
     path = _models_file(tmp_path, text)
     prelude, _record = load_model_prelude(
-        path, permitted_executable_models=frozenset({"bhv_x_cosim"})
+        path, permitted_executable_models={"bhv_x_cosim": "/tmp/x.so"}
     )
     assert prelude == text
     with pytest.raises(SimraArtifactError) as caught:
         load_model_prelude(
-            path, permitted_executable_models=frozenset({"bhv_other_cosim"})
+            path, permitted_executable_models={"bhv_other_cosim": "/tmp/x.so"}
         )
     assert caught.value.code == "configuration.models.executable_model"
 
@@ -349,7 +349,7 @@ def test_permitted_name_does_not_admit_a_different_executable_type(tmp_path):
     )
     with pytest.raises(SimraArtifactError) as caught:
         load_model_prelude(
-            path, permitted_executable_models=frozenset({"bhv_x_cosim"})
+            path, permitted_executable_models={"bhv_x_cosim": "/tmp/x.so"}
         )
     assert caught.value.code == "configuration.models.executable_model"
 
@@ -361,7 +361,7 @@ def test_permitted_name_matching_is_case_insensitive(tmp_path):
         tmp_path, '.MODEL BHV_X_COSIM D_COSIM(simulation="/tmp/x.so")\n'
     )
     prelude, _record = load_model_prelude(
-        path, permitted_executable_models=frozenset({"bhv_x_cosim"})
+        path, permitted_executable_models={"bhv_x_cosim": "/tmp/x.so"}
     )
     assert "BHV_X_COSIM" in prelude
 
@@ -421,3 +421,152 @@ def test_single_top_level_instantiation_with_parameters_is_accepted():
         ".end\n"
     )
     cc.verify_single_instantiation(deck, ["bhv_comparator_clocked_v1"])
+
+
+# ---------------------------------------------------------------------------
+# Adversarial-review regressions (Codex round 1)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("control", ["\x0c", "\x0b", "\r", "\x85", " "])
+def test_models_role_refuses_line_splitting_control_bytes(tmp_path, control):
+    # Python's splitlines() breaks on these; ngspice treats them as ordinary
+    # token whitespace, so a card split only Python sees would be scanned as
+    # two harmless fragments and parsed by the simulator as one d_cosim card.
+    path = _models_file(
+        tmp_path, f'.model evil{control}d_cosim(simulation="/tmp/evil.so")\n'
+    )
+    with pytest.raises(SimraArtifactError) as caught:
+        load_model_prelude(path)
+    assert caught.value.code == "configuration.models.control_character"
+
+
+@pytest.mark.parametrize(
+    "card",
+    [
+        '.model tt xfer file="/etc/passwd" span=9',
+        '.model tt s_xfer file="/tmp/t.s2p"',
+        '.model tt table3d file="/tmp/t.dat"',
+        '.model tt nmos filename="/tmp/x"',
+    ],
+)
+def test_models_role_refuses_file_backed_parameters_on_any_type(tmp_path, card):
+    # A type denylist alone missed these: xfer/s_xfer/table have legitimate
+    # file-free forms but read mutable external input through file=.
+    path = _models_file(tmp_path, card + "\n")
+    with pytest.raises(SimraArtifactError) as caught:
+        load_model_prelude(path)
+    assert caught.value.code in (
+        "configuration.models.external_collateral",
+        "configuration.models.executable_model",
+    )
+
+
+def test_permitted_card_must_bind_the_declared_object(tmp_path):
+    # The allowance names ONE object: the same permitted card pointing
+    # somewhere else is refused, so hashing a hostile models file is not
+    # enough to load an arbitrary shared object.
+    path = _models_file(
+        tmp_path, '.model bhv_x_cosim d_cosim(simulation="/tmp/evil.so")\n'
+    )
+    with pytest.raises(SimraArtifactError) as caught:
+        load_model_prelude(
+            path, permitted_executable_models={"bhv_x_cosim": "/tmp/good.so"}
+        )
+    assert caught.value.code == "configuration.models.executable_model"
+
+
+def test_permitted_card_may_not_also_name_external_collateral(tmp_path):
+    path = _models_file(
+        tmp_path,
+        '.model bhv_x_cosim d_cosim(simulation="/tmp/x.so" file="/etc/passwd")\n',
+    )
+    with pytest.raises(SimraArtifactError) as caught:
+        load_model_prelude(
+            path, permitted_executable_models={"bhv_x_cosim": "/tmp/x.so"}
+        )
+    assert caught.value.code == "configuration.models.executable_model"
+
+
+def test_wrapper_symbols_folds_continuations():
+    # A continuation-split .model defines a symbol the simulator sees; missing
+    # it would miss a collision with a generated binding card.
+    source = ".subckt w a b\n.model\n+ bhv_w_cosim d_buffer(rise_delay=1p)\n.ends w\n"
+    assert cc._wrapper_symbols(source) == ("w", "bhv_w_cosim")
+
+
+@toolchain
+def test_compile_refuses_a_source_whose_top_is_not_the_declared_module(tmp_path):
+    # Without --top-module Verilator infers a top, so a source containing only
+    # `module other` would compile and be RECORDED as the contract's module.
+    source = (
+        "`timescale 1ps/1ps\n"
+        "module other(input clk, input din, output reg q);\n"
+        "  initial q = 0;\n"
+        "  always @(posedge clk) q <= din;\n"
+        "endmodule\n"
+    )
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.compile_verilog_digital(
+            source, CORE_MODULE, CORE_INPUTS, CORE_OUTPUTS, tmp_path
+        )
+    assert caught.value.code == "cosim.compile.failed"
+
+
+@toolchain
+def test_operation_refuses_an_object_swapped_after_composition(tmp_path):
+    # The composition text digest cannot see the object's bytes; the operation
+    # re-verifies them itself, inside its own boundary, before any launch.
+    from openada.block_library import load_block_library
+    from openada.discovery import DiscoveryManager
+    from openada.operations.simulate import simulate
+
+    library = load_block_library("bhv-core")
+    composition = cc.compose_blocks_cosim(
+        library, ("comparator_clocked",), tmp_path
+    )
+    models = tmp_path / "models.spice"
+    models.write_text(composition.text, encoding="utf-8")
+    deck = tmp_path / "deck.cir"
+    deck.write_text(
+        "* swap probe\n"
+        "Vclk clk 0 PULSE(0 1 0 1n 1n 48n 100n)\n"
+        "Vinp inp 0 DC 0.8\n"
+        "Vinn inn 0 DC 0.2\n"
+        "Rl out 0 10k\n"
+        "X1 inp inn clk out 0 bhv_comparator_clocked_v1\n"
+        ".save v(out)\n.tran 2n 200n\n.end\n",
+        encoding="utf-8",
+    )
+    composition.modules[0].so_path.write_bytes(b"hostile")
+    payload = simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=DiscoveryManager(),
+        backend="ngspice",
+        models_file=models,
+        expected_models_sha256=composition.text_sha256,
+        permitted_executable_models=composition.executable_allowance(),
+    )
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "simulation.models.executable_tampered"
+
+
+def test_allowance_without_a_pinned_digest_is_refused(tmp_path):
+    from openada.discovery import DiscoveryManager
+    from openada.operations.simulate import simulate
+
+    models = tmp_path / "models.spice"
+    models.write_text(".model nfet nmos(level=1)\n", encoding="utf-8")
+    deck = tmp_path / "deck.cir"
+    deck.write_text("* t\nR1 a 0 1k\n.op\n.end\n", encoding="utf-8")
+    payload = simulate(
+        deck,
+        tmp_path / "evidence",
+        discovery=DiscoveryManager(),
+        backend="ngspice",
+        models_file=models,
+        permitted_executable_models={"bhv_x_cosim": ("/tmp/x.so", "0" * 64)},
+    )
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "simulation.models.allowance_unbound"

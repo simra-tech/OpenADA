@@ -99,12 +99,44 @@ EXECUTABLE_MODEL_TYPES = frozenset(
         "table3d",
     }
 )
+#: Parameter spellings through which ANY code model can name a file, a
+#: process, or a loadable object. A type denylist alone missed these: ngspice
+#: ships ``xfer``/``s_xfer``/``table`` models whose file-free forms are
+#: legitimate but whose ``file=`` form reads mutable, unrecorded external
+#: input. The parameter gate is therefore type-independent and complements
+#: the type list rather than duplicating it.
+EXTERNAL_MODEL_PARAMETERS = frozenset(
+    {
+        "file",
+        "filename",
+        "input_file",
+        "output_file",
+        "state_file",
+        "process_file",
+        "process",
+        "simulation",
+    }
+)
 #: The ONLY executable model type a reviewed block composition ever
-#: generates. The allowance is exact in both name and type, so a permitted
-#: name can never admit a process- or file-backed model instead.
+#: generates. The allowance is exact in name, type, AND referenced object, so
+#: a permitted name can never admit a process- or file-backed model instead.
 PERMITTED_EXECUTABLE_MODEL_TYPE = "d_cosim"
 _MODEL_CARD_RE = re.compile(
     r"^\s*\.model\s+(?P<name>\S+)\s+(?P<type>[a-z_][a-z0-9_]*)", re.IGNORECASE
+)
+#: ``<param> = "value"`` / ``<param>=value`` inside a model card body.
+_MODEL_PARAMETER_RE = re.compile(
+    r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?P<value>\"[^\"]*\"|'[^']*'|\S+)"
+)
+#: Control bytes a self-contained model library may contain: newline and tab.
+#: Everything else in the C0/C1 range is refused BEFORE any line scanning,
+#: because Python's ``splitlines()`` breaks on form-feed, vertical-tab, lone
+#: carriage-return, NEL, and the Unicode separators, while ngspice treats
+#: those bytes as ordinary token whitespace -- so a card split across a
+#: "line" boundary that only Python sees would be scanned as two harmless
+#: fragments and parsed by the simulator as one executable model card.
+_FORBIDDEN_CONTROL_RE = re.compile(
+    r"[\x00-\x08\x0b-\x1f\x7f-\x9f  ]"
 )
 _PATH_COMPONENT_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 _NET_NAME_RE = re.compile(r"^[A-Za-z0-9_.:+$\[\]-]{1,256}$")
@@ -2375,6 +2407,12 @@ def load_simra_testbench(descriptor_file: str | Path) -> SimraTestbench:
     )
 
 
+def _strip_model_quotes(value: str) -> str:
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        return value[1:-1]
+    return value.rstrip(")")
+
+
 def _deck_lines(deck_text: str) -> list[str]:
     return deck_text.splitlines(keepends=True)
 
@@ -2382,7 +2420,7 @@ def _deck_lines(deck_text: str) -> list[str]:
 def load_model_prelude(
     models_file: str | Path,
     *,
-    permitted_executable_models: frozenset[str] = frozenset(),
+    permitted_executable_models: Mapping[str, str] | None = None,
 ) -> tuple[str, dict[str, Any]]:
     """Return one self-contained model-card prelude and its retained record.
 
@@ -2393,12 +2431,20 @@ def load_model_prelude(
     than silently escalated to an uninspected include chain.
 
     Self-contained also means no card reaching outside the deck through an
-    XSPICE code model: any ``.model`` whose type is in
-    :data:`EXECUTABLE_MODEL_TYPES` is refused unless its exact (case-folded)
-    name is listed in ``permitted_executable_models`` -- the closed set of
-    binding cards a reviewed, digest-pinned block composition generated. The
-    caller that passes the set MUST also pin the composition digest, so the
-    permitted names can only ever bind the reviewed bytes.
+    XSPICE code model. Two independent gates enforce that: any ``.model``
+    whose type is in :data:`EXECUTABLE_MODEL_TYPES`, and any ``.model`` of
+    ANY type carrying one of :data:`EXTERNAL_MODEL_PARAMETERS`, is refused.
+
+    ``permitted_executable_models`` is the one sanctioned exception: a
+    mapping from the (case-folded) model name a reviewed block composition
+    generated to the ABSOLUTE object path that card must reference. A
+    permitted card is accepted only when its type is exactly
+    :data:`PERMITTED_EXECUTABLE_MODEL_TYPE` AND its ``simulation=`` path
+    equals the declared one, so the allowance names one specific object and
+    can never be reused to admit a different one, a different type, or a
+    file-backed parameter. The caller that passes the mapping MUST also pin
+    the composition digest and verify the object's bytes (see
+    ``_resolve_model_source``).
     """
 
     path = Path(models_file).expanduser()
@@ -2407,12 +2453,29 @@ def load_model_prelude(
             "configuration.models.invalid",
             f"The model-library locator must be an absolute path: {path}",
         )
+    permitted = {
+        name.lower(): declared
+        for name, declared in (permitted_executable_models or {}).items()
+    }
     text, _digest, record = _read_text_file(
         path,
         kind="spice-model-library",
         role="model-library",
         maximum_bytes=MAX_MODELS_BYTES,
     )
+    # Refuse smuggled line-boundary bytes BEFORE any line scanning: every
+    # check below reasons in Python lines, and the simulator does not.
+    control = _FORBIDDEN_CONTROL_RE.search(text)
+    if control is not None:
+        raise SimraArtifactError(
+            "configuration.models.control_character",
+            f"{path} contains the control character {control.group(0)!r} at "
+            f"offset {control.start()}; a self-contained model library may "
+            "contain only printable text, newlines, and tabs, because every "
+            "other control byte splits a Python line without splitting a "
+            "simulator card.",
+            hint="Rewrite the model library with plain newlines.",
+        )
     for number, line in enumerate(text.splitlines(), start=1):
         if MODELS_FORBIDDEN_RE.match(line):
             raise SimraArtifactError(
@@ -2434,33 +2497,79 @@ def load_model_prelude(
             statements[-1] = (first, body + " " + stripped[1:].strip())
             continue
         statements.append((number, line))
+    hint = (
+        "Executable code models are only accepted as the generated, "
+        "digest-pinned binding cards of a reviewed block composition "
+        "(openada simulate --blocks ... --cosim)."
+    )
     for number, statement in statements:
         card = _MODEL_CARD_RE.match(statement)
         if card is None:
             continue
         model_type = card.group("type").lower()
-        if model_type not in EXECUTABLE_MODEL_TYPES:
-            continue
         model_name = card.group("name").lower()
-        # The allowance is name AND type exact: the only card a reviewed block
-        # composition ever generates is a d_cosim binding, so a permitted name
-        # can never be reused to admit a process- or file-backed model.
-        if model_type == PERMITTED_EXECUTABLE_MODEL_TYPE and (
-            model_name in permitted_executable_models
-        ):
+        parameters = {
+            match.group("name").lower(): _strip_model_quotes(match.group("value"))
+            for match in _MODEL_PARAMETER_RE.finditer(statement[card.end("type") :])
+        }
+        external = sorted(set(parameters) & EXTERNAL_MODEL_PARAMETERS)
+        sanctioned = False
+        if model_name in permitted:
+            # The allowance is exact in name, TYPE, and referenced object: the
+            # only card a reviewed composition generates is a d_cosim binding
+            # to one specific compiled object, so a permitted name can never
+            # be reused for another type, another object, or a file parameter.
+            declared_object = permitted[model_name]
+            if model_type != PERMITTED_EXECUTABLE_MODEL_TYPE:
+                raise SimraArtifactError(
+                    "configuration.models.executable_model",
+                    f"{path}:{number}: the permitted binding name "
+                    f"{model_name!r} is declared as a {model_type} model; the "
+                    f"allowance covers {PERMITTED_EXECUTABLE_MODEL_TYPE} only.",
+                    hint=hint,
+                )
+            if parameters.get("simulation") != declared_object:
+                raise SimraArtifactError(
+                    "configuration.models.executable_model",
+                    f"{path}:{number}: the permitted binding {model_name!r} "
+                    f"references {parameters.get('simulation')!r}, not the "
+                    f"declared compiled object {declared_object!r}.",
+                    hint=hint,
+                )
+            if set(external) - {"simulation"}:
+                raise SimraArtifactError(
+                    "configuration.models.executable_model",
+                    f"{path}:{number}: the permitted binding {model_name!r} "
+                    f"also names external collateral via {external!r}.",
+                    hint=hint,
+                )
+            sanctioned = True
+        if sanctioned:
             continue
-        raise SimraArtifactError(
-            "configuration.models.executable_model",
-            f"{path}:{number} declares a {model_type} model card; this XSPICE "
-            "code model reaches outside the deck (an executable object, a "
-            "process, or a file) and is outside the self-contained "
-            "model-library role.",
-            hint=(
-                "Executable code models are only accepted as the generated, "
-                "digest-pinned binding cards of a reviewed block composition "
-                "(openada simulate --blocks ... --cosim)."
-            ),
-        )
+        if model_type in EXECUTABLE_MODEL_TYPES:
+            raise SimraArtifactError(
+                "configuration.models.executable_model",
+                f"{path}:{number} declares a {model_type} model card; this "
+                "XSPICE code model reaches outside the deck (an executable "
+                "object, a process, or a file) and is outside the "
+                "self-contained model-library role.",
+                hint=hint,
+            )
+        if external:
+            # Type-independent: ngspice ships models (xfer, s_xfer, table)
+            # whose file-free forms are legitimate but whose file= form reads
+            # mutable, unrecorded external input.
+            raise SimraArtifactError(
+                "configuration.models.external_collateral",
+                f"{path}:{number}: the {model_type} model {model_name!r} names "
+                f"external collateral through {', '.join(external)}; a "
+                "self-contained model library may not read files the "
+                "operation never bound.",
+                hint=(
+                    "Supply the model's data inline, or bind the collateral "
+                    "through a reviewed PDK binding."
+                ),
+            )
     if not text.endswith("\n"):
         text += "\n"
     return text, record

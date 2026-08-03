@@ -2463,12 +2463,13 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                     else None
                 ),
                 # The executable-model allowance names EXACTLY the generated
-                # d_cosim binding cards of this digest-pinned composition;
+                # d_cosim binding cards of this digest-pinned composition,
+                # together with the object each one binds and its digest;
                 # everything else in the models role stays refused.
                 permitted_executable_models=(
-                    composed_cosim.model_names
+                    composed_cosim.executable_allowance()
                     if composed_cosim is not None
-                    else ()
+                    else None
                 ),
             )
             return simulation

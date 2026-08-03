@@ -11,7 +11,7 @@ module bhv_sw_bbm_pair_v1(ctl, ctlref, nhi, nsw, nlo);
   electrical ctl, ctlref, nhi, nsw, nlo;
 
   parameter real vth = 0.5;
-  parameter real tdead = 10n from [0:inf);
+  parameter real tdead = 10n from [2p:inf);   // see block.json: 1 ps turn-OFF floor
   parameter real tedge = 2n from (0:inf);
   parameter real ron = 50m from (0:inf);
   parameter real roff = 100e6 from (0:inf);

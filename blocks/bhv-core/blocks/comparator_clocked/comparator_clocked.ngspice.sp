@@ -13,7 +13,10 @@
 *   clock adc_bridge event delay 1ps + d_dff clk_delay (ngspice adds the
 *   1ps rise/fall delay to clk_delay, leaving a ~1ps residual inside the
 *   declared 2ps bound) + dac 50% ramp tedge/2 = td, hence
-*   clk_delay = td - tedge/2 - 1ps. The contract requires td > tedge/2 + 2ps.
+*   clk_delay = td - tedge/2 - 1ps. This backend needs only td > tedge/2 +
+*   2ps; the CONTRACT declares the stricter td > tedge/2 + 7ps so the same
+*   parameterization also holds on the xspice-cosim backend (whose compiled
+*   core adds a 5ps event-bridge residual).
 *
 .subckt bhv_comparator_clocked_v1 inp inn clk out vss
 + vhi=1 vlo=0 td=2n tedge=1n vhyst=0 vth_clk=0.5 clk_band=10m dif_band=1u rout=100

@@ -439,6 +439,12 @@ def compile_verilog_digital(
             str(obj_dir),
             "--prefix",
             "Vlng",
+            # Bind the compiled top to the module the contract PROMISES: without
+            # it Verilator picks a top by inference, so a source whose only
+            # module is named something else would compile and be recorded
+            # under the contract's module name.
+            "--top-module",
+            core_module,
             "--CFLAGS",
             "-fpic",
             "--cc",
@@ -476,6 +482,8 @@ def compile_verilog_digital(
             str(obj_dir),
             "--prefix",
             "Vlng",
+            "--top-module",
+            core_module,
             "--CFLAGS",
             f"-I{shim_dir}",
             "--CFLAGS",
@@ -578,6 +586,20 @@ class CosimComposition:
     text_sha256: str
     modules: tuple[CosimModule, ...]
     model_names: tuple[str, ...]
+
+    def executable_allowance(self) -> dict[str, tuple[str, str]]:
+        """The generated binding cards as ``{model name: (object path, sha256)}``.
+
+        This is the exact shape the simulate operation's sanctioned
+        executable-model allowance takes: naming a card is never enough, the
+        caller must also declare WHICH object it binds and what those bytes
+        hash to, and the operation re-verifies both before launching.
+        """
+
+        return {
+            name: (str(module.so_path), module.so_sha256)
+            for name, module in zip(self.model_names, self.modules)
+        }
 
     def verify_objects(self) -> None:
         """Re-verify every compiled object against its recorded digest.
@@ -845,14 +867,27 @@ def verify_single_instantiation(deck_text: str, wrappers: Sequence[str]) -> None
 
 
 def _wrapper_symbols(source_text: str) -> tuple[str, ...]:
-    """The simulator symbols (.subckt/.model names) a wrapper source defines."""
+    """The simulator symbols (.subckt/.model names) a wrapper source defines.
 
-    symbols: list[str] = []
+    Continuations are FOLDED before the name is read: ngspice (and the block
+    library's own validator) treat ``.model\\n+ <name> <type>`` as one card, so
+    reading raw lines and skipping ``+`` continuations would miss a symbol the
+    simulator does define -- and a missed symbol is a missed collision with a
+    generated binding card.
+    """
+
+    statements: list[str] = []
     for raw in source_text.splitlines():
         stripped = raw.strip()
-        if not stripped or stripped.startswith("*") or stripped.startswith("+"):
+        if not stripped or stripped.startswith("*"):
             continue
-        fields = stripped.split()
+        if stripped.startswith("+") and statements:
+            statements[-1] = statements[-1] + " " + stripped[1:].strip()
+            continue
+        statements.append(stripped)
+    symbols: list[str] = []
+    for statement in statements:
+        fields = statement.split()
         token = fields[0].lower()
         if token in (".subckt", ".model") and len(fields) >= 2:
             symbols.append(fields[1].lower())

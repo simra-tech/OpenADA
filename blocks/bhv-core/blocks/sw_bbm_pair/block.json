@@ -16,7 +16,7 @@
   ],
   "parameters": [
     {"name": "vth", "type": "real", "default": 0.5, "units": "V", "scope": "contract", "description": "Control threshold against ctlref; ambiguity band is 0.9*vth..1.1*vth."},
-    {"name": "tdead", "type": "real", "default": 1e-8, "units": "s", "scope": "contract", "range": {"minimum": 0.0}, "description": "Break-before-make dead time from opposite turn-OFF command to this switch's turn-ON command."},
+    {"name": "tdead", "type": "real", "default": 1e-8, "units": "s", "scope": "contract", "range": {"minimum": 2e-12}, "description": "Break-before-make dead time from opposite turn-OFF command to this switch's turn-ON command. The floor is 2 ps, not zero: every executable backend issues the turn-OFF command through a 1 ps delay stage, so a dead time at or below 1 ps would let the two conduction commands overlap and silently break this block's one structural guarantee."},
     {"name": "tedge", "type": "real", "default": 2e-9, "units": "s", "scope": "contract", "range": {"minimum": 1e-12}, "description": "Drive edge shaping duration; conduction transitions are smooth over this window."},
     {"name": "ron", "type": "real", "default": 0.05, "units": "ohm", "scope": "contract", "range": {"minimum": 1e-6, "exclusive_minimum": true}, "description": "Closed-switch resistance."},
     {"name": "roff", "type": "real", "default": 1e8, "units": "ohm", "scope": "contract", "range": {"minimum": 1.0}, "description": "Open-switch resistance."},
