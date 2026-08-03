@@ -339,3 +339,28 @@ def test_verify_objects_refuses_swapped_artifact(tmp_path):
     with pytest.raises(cc.CosimCompileError) as caught:
         composition.verify_objects()
     assert caught.value.code == "cosim.materialize.tampered"
+
+
+def test_permitted_name_does_not_admit_a_different_executable_type(tmp_path):
+    # The allowance is name AND type exact: reusing a permitted binding name
+    # for a process-backed model must still be refused.
+    path = _models_file(
+        tmp_path, '.model bhv_x_cosim d_process(process="/bin/sh")\n'
+    )
+    with pytest.raises(SimraArtifactError) as caught:
+        load_model_prelude(
+            path, permitted_executable_models=frozenset({"bhv_x_cosim"})
+        )
+    assert caught.value.code == "configuration.models.executable_model"
+
+
+def test_permitted_name_matching_is_case_insensitive(tmp_path):
+    # ngspice resolves model names case-insensitively, so the gate must too:
+    # an upper-cased spelling of a permitted card is the SAME card.
+    path = _models_file(
+        tmp_path, '.MODEL BHV_X_COSIM D_COSIM(simulation="/tmp/x.so")\n'
+    )
+    prelude, _record = load_model_prelude(
+        path, permitted_executable_models=frozenset({"bhv_x_cosim"})
+    )
+    assert "BHV_X_COSIM" in prelude

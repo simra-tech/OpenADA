@@ -99,6 +99,10 @@ EXECUTABLE_MODEL_TYPES = frozenset(
         "table3d",
     }
 )
+#: The ONLY executable model type a reviewed block composition ever
+#: generates. The allowance is exact in both name and type, so a permitted
+#: name can never admit a process- or file-backed model instead.
+PERMITTED_EXECUTABLE_MODEL_TYPE = "d_cosim"
 _MODEL_CARD_RE = re.compile(
     r"^\s*\.model\s+(?P<name>\S+)\s+(?P<type>[a-z_][a-z0-9_]*)", re.IGNORECASE
 )
@@ -2438,7 +2442,12 @@ def load_model_prelude(
         if model_type not in EXECUTABLE_MODEL_TYPES:
             continue
         model_name = card.group("name").lower()
-        if model_name in permitted_executable_models:
+        # The allowance is name AND type exact: the only card a reviewed block
+        # composition ever generates is a d_cosim binding, so a permitted name
+        # can never be reused to admit a process- or file-backed model.
+        if model_type == PERMITTED_EXECUTABLE_MODEL_TYPE and (
+            model_name in permitted_executable_models
+        ):
             continue
         raise SimraArtifactError(
             "configuration.models.executable_model",
