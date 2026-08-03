@@ -259,16 +259,15 @@ def resolve_cosim_abi_dir(*, ngspice_bin: str | None = None) -> Path:
             "cosim.shim.unavailable",
             f"ngspice binary {resolved!r} could not be resolved: {exc}",
         ) from exc
-    candidates = [
-        prefix / "share" / "ngspice" / "scripts" / "src",
-        Path("/usr/share/ngspice/scripts/src"),
-        Path("/usr/local/share/ngspice/scripts/src"),
-    ]
-    for candidate in candidates:
-        if not (candidate / _ABI_HEADER).is_file():
-            continue
-        if not (candidate / _COSIM_HEADER).is_file():
-            continue
+    # Same-prefix only.  The standard ``/usr/bin`` -> ``/usr/share`` and
+    # ``/usr/local/bin`` -> ``/usr/local/share`` layouts already fall out of
+    # the resolved binary's own prefix, so the historical ``/usr`` and
+    # ``/usr/local`` fallbacks bought nothing but the risk of compiling a
+    # named custom-prefix ngspice against SOME OTHER installation's d_cosim
+    # ABI headers.  A named ngspice whose own prefix lacks the headers is
+    # refused rather than compiled against a foreign ABI.
+    candidate = prefix / "share" / "ngspice" / "scripts" / "src"
+    if (candidate / _ABI_HEADER).is_file() and (candidate / _COSIM_HEADER).is_file():
         if not _PATH_SAFE_RE.fullmatch(str(candidate)):
             raise CosimCompileError(
                 "cosim.shim.unsafe_path",
@@ -280,9 +279,10 @@ def resolve_cosim_abi_dir(*, ngspice_bin: str | None = None) -> Path:
     raise CosimCompileError(
         "cosim.shim.unavailable",
         "the ngspice d_cosim ABI headers (ngspice/cmtypes.h and "
-        f"ngspice/cosim.h) were not found next to the resolved ngspice "
-        f"installation ({resolved}); this ngspice cannot host compiled cosim "
-        "cores.",
+        f"ngspice/cosim.h) were not found under the resolved ngspice "
+        f"installation's own prefix ({candidate}); this ngspice cannot host "
+        "compiled cosim cores. A named ngspice is never compiled against a "
+        "different installation's ABI headers.",
     )
 
 

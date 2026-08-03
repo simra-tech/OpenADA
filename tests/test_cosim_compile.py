@@ -822,6 +822,27 @@ def test_named_missing_ngspice_is_refused_rather_than_falling_back():
     assert caught.value.code == "cosim.shim.unavailable"
 
 
+def test_named_ngspice_without_headers_under_its_own_prefix_is_refused(tmp_path):
+    """Same-prefix-only: a named, EXISTING ngspice whose own prefix lacks the
+    d_cosim ABI headers must be refused rather than compiled against a foreign
+    installation's headers (e.g. the old /usr/share fallback).
+
+    Host-independent: the fake binary has no ``share/ngspice/scripts/src`` at
+    all, so the resolution can only pass by falling back off-prefix -- which is
+    exactly what this tightening removes.
+    """
+
+    fake_bin = tmp_path / "opt" / "ngspice" / "bin" / "ngspice"
+    fake_bin.parent.mkdir(parents=True)
+    fake_bin.write_text("#!/bin/sh\nexit 0\n")
+    fake_bin.chmod(0o755)
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.resolve_cosim_abi_dir(ngspice_bin=str(fake_bin))
+    assert caught.value.code == "cosim.shim.unavailable"
+    # The diagnostic must name the binary's OWN prefix, not a global path.
+    assert "opt/ngspice/share/ngspice/scripts/src" in str(caught.value)
+
+
 @toolchain
 def test_two_shim_instances_are_isolated(tmp_path):
     """The corrected shim must host two instances with nothing shared.
