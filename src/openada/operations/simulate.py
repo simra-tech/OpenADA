@@ -1609,6 +1609,14 @@ def simulate(
                 timeout=timeout,
                 request_id=correlation_id,
                 parameters=parameters,
+                # For the sanctioned OSDI preload, the run deck carries a reviewed
+                # `.control pre_osdi` block the initial shared profile forbids;
+                # profile-check the caller's own control-free deck instead.
+                inspection_source=(
+                    selected.path
+                    if osdi_preload_text is not None and selected.kind == "deck"
+                    else None
+                ),
             )
 
         # Apply caller-owned provenance before either a per-analysis child or

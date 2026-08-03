@@ -909,10 +909,26 @@ def simulate_circuit_profile(
     timeout: float = 120.0,
     request_id: str | None = None,
     parameters: Mapping[str, object] | None = None,
+    inspection_source: str | Path | None = None,
 ) -> dict:
-    """Execute one closed circuit.simulate analysis through a selected driver."""
+    """Execute one closed circuit.simulate analysis through a selected driver.
+
+    ``inspection_source`` lets the profile-compliance inspection (the analysis
+    directive and the forbidden-directive/`.include` scan) run against the
+    CALLER's own deck while the DIFFERENT ``spice_file`` is what actually runs.
+    It exists for the sanctioned behavioral-block OSDI path: the run deck carries
+    a reviewed `.control pre_osdi .endc` preload (which the initial shared profile
+    would otherwise reject as an unsupported directive), but the caller's deck —
+    the thing being profile-checked — is control-free. Defaults to ``spice_file``
+    so every other caller is unchanged.
+    """
 
     source = Path(spice_file).expanduser().resolve()
+    inspected = (
+        Path(inspection_source).expanduser().resolve()
+        if inspection_source is not None
+        else source
+    )
     request_id_error: str | None = None
     if request_id is None:
         correlation_id = str(uuid.uuid4())
@@ -929,7 +945,7 @@ def simulate_circuit_profile(
             else:
                 correlation_id = request_id
     driver = builtin_driver(backend)
-    deck = inspect_simulation_deck(source)
+    deck = inspect_simulation_deck(inspected)
     requested: dict[str, object] | None = None
     parameter_error: str | None = None
     if parameters is None:
