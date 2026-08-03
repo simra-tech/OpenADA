@@ -325,3 +325,85 @@ def osdi_preload_prelude(
         )
     preload_lines.append(".endc")
     return "\n".join(preload_lines + wrapper_lines) + "\n"
+
+
+@dataclass(frozen=True)
+class OsdiComposition:
+    """A compiled OSDI preload for a set of blocks, with per-block provenance."""
+
+    library_id: str
+    requested: tuple[str, ...]
+    prelude_text: str
+    modules: tuple[OsdiModule, ...]
+
+
+def _block_interface(block: object, block_id: str) -> tuple[list[str], dict[str, object]]:
+    contract = getattr(block, "contract", None)
+    if not isinstance(contract, Mapping):
+        raise OsdiCompileError("osdi.block.invalid", f"block {block_id!r} has no contract.")
+    ports = [p["name"] for p in contract.get("ports", []) if isinstance(p, Mapping) and "name" in p]
+    parameters = {
+        p["name"]: p.get("default")
+        for p in contract.get("parameters", [])
+        if isinstance(p, Mapping) and "name" in p and "default" in p
+    }
+    return ports, parameters
+
+
+def compose_blocks_osdi(
+    library: object,
+    block_ids: Sequence[str],
+    work_dir: Path,
+    *,
+    openvaf_bin: str | None = None,
+) -> OsdiComposition:
+    """Compile the verilog-a backend of each requested block to OSDI and emit the
+    preload prelude (drop-in for the ngspice-native composition).
+
+    The block's declared ports (in order) and parameter defaults come from its
+    reviewed contract, so the generated wrapper's interface is exactly the
+    contract's — the same interface the ngspice-native backend exposes. A block
+    without a verilog-a backend is refused: OSDI is not a silent fallback.
+    """
+
+    blocks = getattr(library, "blocks", None)
+    if not isinstance(blocks, Mapping):
+        raise OsdiCompileError("osdi.library.invalid", "library exposes no blocks mapping.")
+    requested = tuple(block_ids)
+    if not requested:
+        raise OsdiCompileError("osdi.compose.empty", "no blocks requested.")
+    triples: list[tuple[OsdiModule, Sequence[str], Mapping[str, object]]] = []
+    modules: list[OsdiModule] = []
+    seen: set[str] = set()
+    for block_id in requested:
+        if block_id in seen:
+            raise OsdiCompileError("osdi.compose.duplicate", f"block {block_id!r} requested twice.")
+        seen.add(block_id)
+        block = blocks.get(block_id)
+        if block is None:
+            raise OsdiCompileError("osdi.compose.unknown", f"block {block_id!r} is not in the library.")
+        veriloga = getattr(block, "veriloga", None)
+        if veriloga is None:
+            raise OsdiCompileError(
+                "osdi.compose.no_veriloga",
+                f"block {block_id!r} has no verilog-a backend to compile to OSDI.",
+            )
+        module = compile_verilog_a(
+            veriloga.source_text, veriloga.wrapper, work_dir, openvaf_bin=openvaf_bin
+        )
+        # The compiled bytes must be exactly the reviewed, digest-bound source.
+        if module.source_sha256 != veriloga.source_sha256:
+            raise OsdiCompileError(
+                "osdi.compose.tampered",
+                f"block {block_id!r} verilog-a source digest changed before compile.",
+            )
+        ports, parameters = _block_interface(block, block_id)
+        triples.append((module, ports, parameters))
+        modules.append(module)
+    prelude = osdi_preload_prelude(triples)
+    return OsdiComposition(
+        library_id=str(getattr(library, "library_id", "")),
+        requested=requested,
+        prelude_text=prelude,
+        modules=tuple(modules),
+    )

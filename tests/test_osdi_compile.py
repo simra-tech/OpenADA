@@ -164,3 +164,52 @@ def test_compile_refuses_non_text_source():
     with pytest.raises(oc.OsdiCompileError) as caught:
         oc.compile_verilog_a(b"module x; endmodule", "bhv_x_v1", Path(tempfile.mkdtemp()))
     assert caught.value.code == "osdi.source.invalid"
+
+
+# --- library -> OSDI composition (the OSDI analog of compose_blocks) ---
+
+def _load_bhv_core():
+    from openada.block_library import load_block_library
+    return load_block_library("bhv-core")
+
+
+@native
+def test_compose_opamp_block_to_osdi_matches_native_physics():
+    lib = _load_bhv_core()
+    comp = oc.compose_blocks_osdi(lib, ["opamp_1p"], Path(tempfile.mkdtemp()))
+    assert comp.library_id == "bhv-core"
+    assert [m.module_name for m in comp.modules] == ["bhv_opamp_1p_v1"]
+    deck = (
+        "* composed\n" + comp.prelude_text
+        + "X1 inp inn out 0 bhv_opamp_1p_v1\n"
+        + "vinp inp 0 0.01\nvinn inn 0 0\nrl out 0 1meg\n"
+        + ".control\nop\nprint v(out)\n.endc\n.end\n"
+    )
+    p = Path(tempfile.mktemp(suffix=".cir")); p.write_text(deck)
+    r = subprocess.run([NGSPICE, "-b", str(p)], capture_output=True, text=True, timeout=60)
+    m = re.search(r"v\(out\)\s*=\s*([-\d.eE+]+)", r.stdout + r.stderr)
+    assert m and abs(float(m.group(1)) - 1.6498) < 0.01
+
+
+@native
+def test_compose_refuses_block_whose_veriloga_openvaf_cannot_compile():
+    # sw_bbm_pair uses transition() (unsupported by OpenVAF) — fail closed.
+    lib = _load_bhv_core()
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.compose_blocks_osdi(lib, ["sw_bbm_pair"], Path(tempfile.mkdtemp()))
+    assert caught.value.code == "osdi.compile.failed"
+
+
+@pytest.mark.parametrize(
+    "block_ids, code",
+    [
+        ([], "osdi.compose.empty"),
+        (["no_such_block"], "osdi.compose.unknown"),
+        (["opamp_1p", "opamp_1p"], "osdi.compose.duplicate"),
+    ],
+)
+def test_compose_input_refusals(block_ids, code):
+    lib = _load_bhv_core()
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.compose_blocks_osdi(lib, block_ids, Path(tempfile.mkdtemp()))
+    assert caught.value.code == code

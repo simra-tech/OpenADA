@@ -196,6 +196,7 @@ class Block:
     wrapper: str
     depends: tuple[str, ...]
     native: BlockBackend | None
+    veriloga: BlockBackend | None = None
 
 
 @dataclass(frozen=True)
@@ -1075,6 +1076,41 @@ def _bind_block(
         )
     else:
         external_references = ()
+
+    # The verilog-a backend is the reviewed source the OSDI compile path
+    # (osdi_compile.py) consumes. It is loaded digest-bound the same way, but
+    # its body is validated by the compiler, not the SPICE grammar, so it carries
+    # no element-family/ABI check here. Its declared wrapper (the module name)
+    # must still equal the block's public wrapper.
+    veriloga: BlockBackend | None = None
+    declared_veriloga = backends.get("verilog-a")
+    if declared_veriloga is not None:
+        # The verilog-a backend names its top module (which is the block's public
+        # wrapper), not a subckt wrapper; the compiled OSDI module carries that
+        # exact name so the preload can bind it.
+        va_wrapper = declared_veriloga["module"]
+        if va_wrapper != expected_wrapper:
+            raise BlockLibraryError(
+                "blocks.block.wrapper_mismatch",
+                f"{block_id}: the verilog-a module must be {expected_wrapper!r}, "
+                f"not {va_wrapper!r}.",
+            )
+        va_rel = f"blocks/{block_id}/{declared_veriloga['file']}"
+        va_record = file_records.get(va_rel)
+        if va_record is None or va_record["role"] != "verilog-a":
+            raise BlockLibraryError(
+                "blocks.block.source_missing",
+                f"{block_id}: verilog-a source {va_rel} is not enumerated with "
+                "role verilog-a.",
+            )
+        veriloga = BlockBackend(
+            kind="verilog-a",
+            file=va_rel,
+            wrapper=va_wrapper,
+            source_text=verified_text[va_rel],
+            source_sha256=va_record["sha256"],
+        )
+
     return (
         Block(
             block_id=block_id,
@@ -1085,6 +1121,7 @@ def _bind_block(
             wrapper=expected_wrapper,
             depends=depends,
             native=native,
+            veriloga=veriloga,
         ),
         external_references,
     )
