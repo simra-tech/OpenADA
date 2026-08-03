@@ -214,6 +214,12 @@ class DerivedDeck:
     analysis: dict[str, Any]
     text: str
     sha256: str
+    # The exact bytes the CALLER wrote, before any reviewed model prelude was
+    # spliced in. The hand-bound-collateral check runs on this (never on the
+    # injected prelude, which is self-contained cards or a sanctioned, digest-
+    # bound OSDI preload by construction). Defaults to ``text`` when there was
+    # no splice, so every existing construction keeps its current behavior.
+    collateral_text: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

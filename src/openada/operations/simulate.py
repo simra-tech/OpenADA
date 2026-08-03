@@ -922,17 +922,27 @@ def _resolve_model_source(
     configuration: list[dict[str, Any]],
     deck_text: str | None = None,
     expected_models_sha256: str | None = None,
+    osdi_preload_text: str | None = None,
+    osdi_preload_sha256: str | None = None,
 ) -> tuple[ResolvedPdkBinding | None, str | None]:
     """Resolve at most one model source, or raise a typed refusal."""
 
-    if (
-        pdk is not None or resolved_pdk_binding is not None
-    ) and models_file is not None:
+    model_source_count = sum(
+        1
+        for present in (
+            models_file is not None,
+            pdk is not None or resolved_pdk_binding is not None,
+            osdi_preload_text is not None,
+        )
+        if present
+    )
+    if model_source_count > 1:
         raise SimulationRequestError(
             "simulation.models.ambiguous",
-            "Both a PDK binding and a self-contained model-card file were "
-            "supplied; exactly one model source may bind a deck.",
-            hint="Pass --pdk for an installed PDK, or --models for flattened cards.",
+            "Exactly one model source may bind a deck: a self-contained "
+            "model-card file (--models), a PDK binding (--pdk), or a reviewed "
+            "behavioral-block OSDI preload (--blocks --osdi).",
+            hint="Pass one of --models, --pdk, or --blocks --osdi.",
         )
     if corner is not None and pdk is None and resolved_pdk_binding is None:
         raise SimulationRequestError(
@@ -1049,6 +1059,34 @@ def _resolve_model_source(
                 "identity": "content-digest",
             }
         )
+    elif osdi_preload_text is not None:
+        # A behavioral-block OSDI preload is a reviewed, digest-bound composition
+        # (osdi_compile.compose_blocks_osdi): a `.control pre_osdi .endc` block
+        # plus wrapper subcircuits. It deliberately does NOT go through
+        # load_model_prelude's self-contained gate (it must carry a control
+        # block to load OSDI) and its `pre_osdi` cards are exempt from the
+        # hand-bound-collateral refusal because they are library-owned and
+        # verified here by digest, never hand-written by the caller.
+        encoded = osdi_preload_text.encode("utf-8")
+        actual = hashlib.sha256(encoded).hexdigest()
+        if osdi_preload_sha256 is not None and actual != osdi_preload_sha256:
+            raise SimulationRequestError(
+                "blocks.materialize.tampered",
+                "The behavioral-block OSDI preload for this run does not hash to "
+                f"the reviewed composition digest {osdi_preload_sha256}; the "
+                "composition changed after verification, so no simulator was "
+                "launched and no result was retained.",
+            )
+        model_prelude = osdi_preload_text
+        configuration.append(
+            {
+                "role": "osdi-block-preload",
+                "path": None,
+                "sha256": actual,
+                "bytes": len(encoded),
+                "identity": "content-digest",
+            }
+        )
     return resolved, model_prelude
 
 
@@ -1076,6 +1114,8 @@ def simulate(
     extra_input_records: Sequence[Mapping[str, Any]] = (),
     extra_data_extensions: Mapping[str, Any] | None = None,
     expected_models_sha256: str | None = None,
+    osdi_preload_text: str | None = None,
+    osdi_preload_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Run one circuit simulation, whatever shape the request arrived in.
 
@@ -1198,6 +1238,8 @@ def simulate(
             configuration=configuration,
             deck_text=deck_probe_text,
             expected_models_sha256=expected_models_sha256,
+            osdi_preload_text=osdi_preload_text,
+            osdi_preload_sha256=osdi_preload_sha256,
         )
     except SimulationRequestError as exc:
         return refuse(
@@ -1284,6 +1326,11 @@ def simulate(
                 f"{selected.path} could not be content-bound: {exc}",
                 inputs=input_records,
             )
+        # The bytes the caller actually wrote, kept for the hand-bound-collateral
+        # check: a reviewed model prelude (self-contained cards, or a sanctioned
+        # digest-bound OSDI preload) is spliced below but must not be scanned as
+        # if the caller hand-bound it.
+        user_deck_text = deck_text
         if model_prelude is not None:
             # A model-card file is composed after the title line, which is the
             # one line SPICE never reads as a directive.
@@ -1301,6 +1348,7 @@ def simulate(
                 analysis={},
                 text=deck_text,
                 sha256=hashlib.sha256(deck_text.encode("utf-8")).hexdigest(),
+                collateral_text=user_deck_text,
             ),
         )
         bound_saved_nets = normalized_saved_nets or ()
@@ -1407,7 +1455,7 @@ def simulate(
     advisories: list[dict[str, Any]] = []
     for deck in decks:
         errors, notes = _collateral_diagnostics(
-            deck.text,
+            deck.collateral_text if deck.collateral_text is not None else deck.text,
             workdir=run_directory if selected.kind == "deck" else None,
             bound_pdk=resolved_pdk.pdk_id if resolved_pdk is not None else None,
             unmanaged=unmanaged_collateral,
