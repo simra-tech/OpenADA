@@ -56,6 +56,16 @@
       "file": "sw_bbm_pair.va",
       "module": "bhv_sw_bbm_pair_v1",
       "feature_profile": ["event-initial-step", "event-cross", "transition", "hidden-state"]
+    },
+    "xspice-cosim": {
+      "file": "sw_bbm_pair.cosim.sp",
+      "wrapper": "bhv_sw_bbm_pair_v1",
+      "element_families": ["b-source", "xspice-bridge", "xspice-digital", "xspice-analog", "diode"],
+      "core_file": "sw_bbm_pair.cosim.v",
+      "core_module": "bhv_sw_bbm_pair_v1_core",
+      "core_inputs": ["c"],
+      "core_outputs": ["chi", "clo"],
+      "notes": "The compiled 2-state core holds its last value while the control bridge output is UNKNOWN, so inside the declared band (vth*0.9 .. vth*1.1) the drive commands switch at the band-exit crossing instead of ramping through a midpoint; both behaviors lie inside the declared-unspecified band. The core adds a fixed ~6 ps event delay symmetrically to both drive commands, which cancels in the break-before-make interval arithmetic."
     }
   },
   "golden_cases": ["buck-sync", "bbm-conductance"]

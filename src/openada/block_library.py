@@ -187,6 +187,32 @@ class BlockBackend:
 
 
 @dataclass(frozen=True)
+class CosimBlockBackend:
+    """The mixed-signal (XSPICE + d_cosim) backend of a block.
+
+    ``source_text`` is the reviewed analog wrapper subcircuit (validated by
+    the same closed SPICE grammar as the native backend, plus exactly one
+    permitted external model reference -- the composer-generated ``d_cosim``
+    binding).  ``core_source_text`` is the reviewed digital Verilog core that
+    :mod:`openada.cosim_compile` compiles; its declared port order is the
+    a-device binding order and is re-verified against the compiled artifact
+    on every compose.
+    """
+
+    kind: str
+    file: str
+    wrapper: str
+    source_text: str
+    source_sha256: str
+    core_file: str
+    core_module: str
+    core_source_text: str
+    core_source_sha256: str
+    core_inputs: tuple[str, ...]
+    core_outputs: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class Block:
     block_id: str
     contract: Mapping[str, Any]
@@ -197,6 +223,7 @@ class Block:
     depends: tuple[str, ...]
     native: BlockBackend | None
     veriloga: BlockBackend | None = None
+    cosim: CosimBlockBackend | None = None
 
 
 @dataclass(frozen=True)
@@ -1111,6 +1138,90 @@ def _bind_block(
             source_sha256=va_record["sha256"],
         )
 
+    # The xspice-cosim backend is the mixed-signal path for event/clocked
+    # blocks (openada.cosim_compile).  Its analog wrapper is SPICE text that
+    # WILL reach a composed deck, so it is held to the exact native grammar,
+    # ABI check, and closed model-type allowlist -- plus exactly one permitted
+    # external model reference: the composer-generated d_cosim binding card,
+    # whose name is reserved and may never be defined by the source itself.
+    cosim: CosimBlockBackend | None = None
+    declared_cosim = backends.get("xspice-cosim")
+    if declared_cosim is not None:
+        cs_wrapper = declared_cosim["wrapper"]
+        if cs_wrapper != expected_wrapper:
+            raise BlockLibraryError(
+                "blocks.block.wrapper_mismatch",
+                f"{block_id}: the cosim wrapper must be {expected_wrapper!r}, "
+                f"not {cs_wrapper!r}.",
+            )
+        expected_core = f"{expected_wrapper}_core"
+        if declared_cosim["core_module"] != expected_core:
+            raise BlockLibraryError(
+                "blocks.block.wrapper_mismatch",
+                f"{block_id}: the cosim core module must be {expected_core!r}, "
+                f"not {declared_cosim['core_module']!r}.",
+            )
+        cs_rel = f"blocks/{block_id}/{declared_cosim['file']}"
+        cs_record = file_records.get(cs_rel)
+        if cs_record is None or cs_record["role"] != "xspice-cosim":
+            raise BlockLibraryError(
+                "blocks.block.source_missing",
+                f"{block_id}: cosim wrapper {cs_rel} is not enumerated with "
+                "role xspice-cosim.",
+            )
+        core_rel = f"blocks/{block_id}/{declared_cosim['core_file']}"
+        core_record = file_records.get(core_rel)
+        if core_record is None or core_record["role"] != "verilog-cosim-core":
+            raise BlockLibraryError(
+                "blocks.block.source_missing",
+                f"{block_id}: cosim core {core_rel} is not enumerated with "
+                "role verilog-cosim-core.",
+            )
+        cs_text = verified_text[cs_rel]
+        binding_model = f"bhv_{block_id}_cosim"
+        cosim_external = _validate_native_source(
+            block_id,
+            cs_wrapper,
+            cs_text,
+            cs_rel,
+            declared_cosim["element_families"],
+            external_models=frozenset({binding_model}),
+        )
+        if cosim_external:
+            number, reference = cosim_external[0]
+            raise BlockLibraryError(
+                "blocks.source.reference_unresolved",
+                f"{cs_rel}:{number}: a cosim wrapper may not reference the "
+                f"external subcircuit {reference!r}; cross-block dependencies "
+                "are outside the cosim composition of this revision.",
+            )
+        _check_wrapper_abi(block_id, cs_wrapper, cs_text, cs_rel, contract)
+        core_inputs = tuple(declared_cosim["core_inputs"])
+        core_outputs = tuple(declared_cosim["core_outputs"])
+        seen_ports: set[str] = set()
+        for port in core_inputs + core_outputs:
+            key = _casefold_key(port)
+            if key in seen_ports:
+                raise BlockLibraryError(
+                    "blocks.block.contract_invalid",
+                    f"{block_id}: cosim core port {port!r} is declared more "
+                    "than once.",
+                )
+            seen_ports.add(key)
+        cosim = CosimBlockBackend(
+            kind="xspice-cosim",
+            file=cs_rel,
+            wrapper=cs_wrapper,
+            source_text=cs_text,
+            source_sha256=cs_record["sha256"],
+            core_file=core_rel,
+            core_module=declared_cosim["core_module"],
+            core_source_text=verified_text[core_rel],
+            core_source_sha256=core_record["sha256"],
+            core_inputs=core_inputs,
+            core_outputs=core_outputs,
+        )
+
     return (
         Block(
             block_id=block_id,
@@ -1122,6 +1233,7 @@ def _bind_block(
             depends=depends,
             native=native,
             veriloga=veriloga,
+            cosim=cosim,
         ),
         external_references,
     )
@@ -1278,12 +1390,19 @@ def _validate_native_source(
     text: str,
     source_rel: str,
     element_families: list[str],
+    external_models: frozenset[str] = frozenset(),
 ) -> tuple[tuple[int, str], ...]:
     """Validate one native source; return its external X-card references.
 
     Every ``.model`` reference must resolve inside this same source; X-card
     children that do not resolve here are returned for the caller to bind
     against the exact public wrappers of the declared dependencies.
+
+    ``external_models`` is the one sanctioned exception, used by the
+    xspice-cosim wrapper grammar: a closed set of model names the COMPOSER
+    generates (the digest-bound ``d_cosim`` binding cards).  A listed name may
+    be referenced without being defined here, and may NOT be defined here --
+    the source defining it would collide with the generated card.
     """
 
     if len(text.encode("utf-8")) > MAX_SOURCE_BYTES:
@@ -1381,6 +1500,13 @@ def _validate_native_source(
                         "blocks.source.symbol_unprefixed",
                         f"{source_rel}:{number}: model {name!r} must carry the "
                         f"{prefix!r} namespace.",
+                    )
+                if _casefold_key(name) in external_models:
+                    raise BlockLibraryError(
+                        "blocks.source.model_reserved",
+                        f"{source_rel}:{number}: model name {name!r} is "
+                        "reserved for the composer-generated binding card and "
+                        "may not be defined by a block source.",
                     )
                 model_type = _model_type_token(fields, source_rel, number)
                 if model_type not in allowed_model_types:
@@ -1523,7 +1649,10 @@ def _validate_native_source(
     # exact public wrappers of the declared dependencies once every block in
     # the library is known.
     for number, reference in model_references:
-        if _casefold_key(reference) not in defined_models:
+        folded = _casefold_key(reference)
+        if folded in external_models:
+            continue
+        if folded not in defined_models:
             raise BlockLibraryError(
                 "blocks.source.reference_unresolved",
                 f"{source_rel}:{number}: model reference {reference!r} does not "

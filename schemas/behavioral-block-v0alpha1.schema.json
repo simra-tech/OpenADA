@@ -268,6 +268,76 @@
             }
           }
         },
+        "xspice-cosim": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "file",
+            "wrapper",
+            "element_families",
+            "core_file",
+            "core_module",
+            "core_inputs",
+            "core_outputs"
+          ],
+          "properties": {
+            "file": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+\\.sp$",
+              "description": "The reviewed analog wrapper subcircuit; held to the full native SPICE grammar plus the one composer-generated d_cosim binding reference."
+            },
+            "wrapper": {
+              "type": "string",
+              "pattern": "^bhv_[a-z0-9_]+_v[0-9]+$"
+            },
+            "element_families": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "spice-primitive",
+                  "b-source",
+                  "switch",
+                  "diode",
+                  "xspice-analog",
+                  "xspice-digital",
+                  "xspice-bridge"
+                ]
+              },
+              "uniqueItems": true,
+              "description": "Simulator capability families the analog wrapper needs; drives capability probing."
+            },
+            "core_file": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+\\.v$",
+              "description": "The reviewed digital Verilog core compiled by Verilator into the d_cosim shared object."
+            },
+            "core_module": {
+              "type": "string",
+              "pattern": "^bhv_[a-z0-9_]+_v[0-9]+_core$"
+            },
+            "core_inputs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "uniqueItems": true,
+              "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+              "description": "Scalar core input ports in the exact order the compiled shim binds them (the Verilated header order, not necessarily declaration order); re-verified against the compiled artifact on every compose."
+            },
+            "core_outputs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "uniqueItems": true,
+              "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+              "description": "Scalar core output ports in shim binding order; re-verified on every compose."
+            },
+            "notes": {
+              "type": "string",
+              "maxLength": 4000,
+              "description": "Reviewed deviations of the mixed-signal realization from the native event graph (e.g. crisp ambiguity-band resolution before the 2-state core)."
+            }
+          }
+        },
         "verilog-a": {
           "type": "object",
           "additionalProperties": false,

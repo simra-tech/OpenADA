@@ -34,8 +34,8 @@
     {
       "path": "blocks/comparator_clocked/block.json",
       "role": "contract",
-      "bytes": 5433,
-      "sha256": "6e145ac0e7c040c33b7a51a0f8c6a24496000f67a079c15276bbcd692128a62c"
+      "bytes": 6375,
+      "sha256": "2d28308b9ea407faed2e5b3797c4ae10474724fc36134dc02117eea7be6b939e"
     },
     {
       "path": "blocks/comparator_clocked/cases/ambiguity-low.json",
@@ -54,6 +54,18 @@
       "role": "golden-case",
       "bytes": 1275,
       "sha256": "1a2eb73ac6efbf7474f858089cd51e305562365ddc9472f788166c40a64d4b68"
+    },
+    {
+      "path": "blocks/comparator_clocked/comparator_clocked.cosim.sp",
+      "role": "xspice-cosim",
+      "bytes": 4049,
+      "sha256": "63929e33756065df835d24078517dd61f295f89ceae1e46a556459ee474d9a72"
+    },
+    {
+      "path": "blocks/comparator_clocked/comparator_clocked.cosim.v",
+      "role": "verilog-cosim-core",
+      "bytes": 1043,
+      "sha256": "718648213b0b7add018023e655431eed738a28bb6b4af5fd6a51519e27758262"
     },
     {
       "path": "blocks/comparator_clocked/comparator_clocked.ngspice.sp",
@@ -100,8 +112,8 @@
     {
       "path": "blocks/sw_bbm_pair/block.json",
       "role": "contract",
-      "bytes": 5757,
-      "sha256": "f1e40e2fe436c16ca4ab6664dca7796e41d3aa30f554bd635e0e68eff3c999f4"
+      "bytes": 6563,
+      "sha256": "110e15ad18a562b7908f54a10d85f40efd309b35b4083b70ddc017d3aa31daa8"
     },
     {
       "path": "blocks/sw_bbm_pair/cases/bbm-conductance.json",
@@ -114,6 +126,18 @@
       "role": "golden-case",
       "bytes": 2747,
       "sha256": "e60e516b12f708752019a6dd9d2df49d936778078aee06d6886a7d7502c59763"
+    },
+    {
+      "path": "blocks/sw_bbm_pair/sw_bbm_pair.cosim.sp",
+      "role": "xspice-cosim",
+      "bytes": 3500,
+      "sha256": "5553c6c4d9d83135a1e36d3379325a82a0c9850219e4485a9c5b4811414b72a6"
+    },
+    {
+      "path": "blocks/sw_bbm_pair/sw_bbm_pair.cosim.v",
+      "role": "verilog-cosim-core",
+      "bytes": 683,
+      "sha256": "c2f0015fad23338bf8b332bede9d01fd108086544a96e2d2be6ea89b936cfccc"
     },
     {
       "path": "blocks/sw_bbm_pair/sw_bbm_pair.ngspice.sp",
