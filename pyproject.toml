@@ -99,8 +99,11 @@ where = ["src"]
   "blocks/bhv-core/blocks/comparator_clocked/block.json",
   "blocks/bhv-core/blocks/comparator_clocked/comparator_clocked.ngspice.sp",
   "blocks/bhv-core/blocks/comparator_clocked/comparator_clocked.va",
+  "blocks/bhv-core/blocks/comparator_clocked/comparator_clocked.cosim.sp",
+  "blocks/bhv-core/blocks/comparator_clocked/comparator_clocked.cosim.v",
 ]
 "share/openada/blocks/bhv-core/blocks/comparator_clocked/cases" = [
+  "blocks/bhv-core/blocks/comparator_clocked/cases/ambiguity-low.json",
   "blocks/bhv-core/blocks/comparator_clocked/cases/decide-basic.json",
   "blocks/bhv-core/blocks/comparator_clocked/cases/hysteresis-band.json",
 ]
@@ -117,6 +120,8 @@ where = ["src"]
   "blocks/bhv-core/blocks/sw_bbm_pair/block.json",
   "blocks/bhv-core/blocks/sw_bbm_pair/sw_bbm_pair.ngspice.sp",
   "blocks/bhv-core/blocks/sw_bbm_pair/sw_bbm_pair.va",
+  "blocks/bhv-core/blocks/sw_bbm_pair/sw_bbm_pair.cosim.sp",
+  "blocks/bhv-core/blocks/sw_bbm_pair/sw_bbm_pair.cosim.v",
 ]
 "share/openada/blocks/bhv-core/blocks/sw_bbm_pair/cases" = [
   "blocks/bhv-core/blocks/sw_bbm_pair/cases/bbm-conductance.json",
