@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
+import hashlib
 import math
 from pathlib import Path
 import re
@@ -259,6 +260,11 @@ def inspect_simulation_deck(path: str | Path) -> dict[str, object]:
     source_too_large = False
     source_unstable = False
     analysis_lines: list[str] = []
+    # Hash exactly the raw bytes inspected, so a caller can content-bind the
+    # launch to the same bytes this inspection validated (closing the
+    # inspect->launch window). Only trustworthy when the whole file was read;
+    # a too-large/unstable deck is refused before the digest is used.
+    hasher = hashlib.sha256()
     try:
         with stable_regular_file(source) as (handle, opened):
             if opened.st_size > MAX_SOURCE_BYTES:
@@ -270,6 +276,7 @@ def inspect_simulation_deck(path: str | Path) -> dict[str, object]:
                     raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
                     if not raw_line:
                         break
+                    hasher.update(raw_line)
                     source_bytes += len(raw_line)
                     if source_bytes > MAX_SOURCE_BYTES:
                         source_too_large = True
@@ -279,6 +286,7 @@ def inspect_simulation_deck(path: str | Path) -> dict[str, object]:
                         line_too_long = True
                         while raw_line and not raw_line.endswith(b"\n"):
                             raw_line = handle.readline(MAX_SOURCE_LINE_BYTES + 1)
+                            hasher.update(raw_line)
                             source_bytes += len(raw_line)
                             if source_bytes > MAX_SOURCE_BYTES:
                                 source_too_large = True
@@ -318,6 +326,11 @@ def inspect_simulation_deck(path: str | Path) -> dict[str, object]:
         "source_too_large": source_too_large,
         "source_unstable": source_unstable,
         "parameters": parameters,
+        "sha256": (
+            hasher.hexdigest()
+            if not source_too_large and not source_unstable
+            else None
+        ),
     }
 
 
@@ -961,11 +974,14 @@ def simulate_circuit_profile(
     (``expected_source_sha256`` + ``pinned_inputs``), the optional control-free
     ``inspection_source`` (so the profile gate inspects the caller's own deck
     while the composed ``spice_file`` runs), the managed ``init_file``, and the
-    run's ``provenance_limitations``. It defaults to a plain unbound batch launch,
-    so every non-behavioral-block caller is unchanged. Replacing the former
-    arbitrary ``native_control_run`` callable with this closed type is what lets
-    the driver's content-identity contract apply to EVERY OpenADA-derived deck
-    (batch and control alike), not just the PDK and OSDI paths.
+    run's ``provenance_limitations``. It defaults to a plain batch launch that is
+    STILL content-bound: when no ``expected_source_sha256`` is named and the
+    profile inspected ``spice_file`` itself, the launch binds to the digest of
+    exactly those inspected bytes, so even an unnamed caller cannot launch a deck
+    swapped between inspection and launch. Replacing the former arbitrary
+    ``native_control_run`` callable with this closed type is what lets the
+    driver's content-identity contract apply to EVERY OpenADA-derived deck (batch
+    and control alike), not just the PDK and OSDI paths.
     """
 
     if execution is not None and not isinstance(execution, NgspiceProfileExecution):
@@ -1012,6 +1028,20 @@ def simulate_circuit_profile(
         invalid = ("driver.unsupported", f"Unknown built-in driver selector: {backend!r}.")
     elif request_id_error is not None:
         invalid = ("simulation.request.invalid", request_id_error)
+    elif (
+        exec_spec.inspection_source is not None
+        and exec_spec.expected_source_sha256 is None
+    ):
+        # Inspecting a different (control-free) deck than the one launched is only
+        # honest when the caller also binds the launch: otherwise the profile
+        # validates deck A while the driver runs deck B with no bound relationship
+        # between them. Require the launch digest for a split inspection.
+        invalid = (
+            "simulation.request.invalid",
+            "An execution that inspects a separate deck (inspection_source) must "
+            "also name expected_source_sha256, so the validated deck and the "
+            "launched deck are the same bytes.",
+        )
     elif not source.is_file():
         invalid = ("input.missing", f"File not found: {source}")
     elif deck["source_unstable"]:
@@ -1085,6 +1115,21 @@ def simulate_circuit_profile(
         # deck, so a sanctioned control-mode run is validated by exactly the same
         # rules as a batch run; only the launch differs. The driver re-verifies
         # the deck digest and every pinned object immediately before run_process.
+        #
+        # This exported primitive is content-bound BY DEFAULT: a caller that did
+        # not name an expected digest still gets the launch bound to the digest
+        # of exactly the bytes THIS inspection read (`deck["sha256"]`), so a deck
+        # swapped between inspection and launch is refused rather than run under
+        # the inspected deck's validation. Only the default case (the profile
+        # inspected `source` itself, i.e. no separate inspection_source) can reuse
+        # that digest; a named digest (the main operation's derived/bare deck) is
+        # used as-is. An advanced caller that inspects a different control-free
+        # deck but names no launch digest gets the driver's own entry recheck.
+        effective_source_sha256 = exec_spec.expected_source_sha256
+        if effective_source_sha256 is None and exec_spec.inspection_source is None:
+            inspected_sha256 = deck.get("sha256")
+            if isinstance(inspected_sha256, str):
+                effective_source_sha256 = inspected_sha256
         payload = implementation.simulate(  # type: ignore[attr-defined]
             source,
             output_dir,
@@ -1092,7 +1137,7 @@ def simulate_circuit_profile(
             execution_mode=exec_spec.execution_mode,
             init_file=exec_spec.init_file,
             timeout=timeout,
-            expected_source_sha256=exec_spec.expected_source_sha256,
+            expected_source_sha256=effective_source_sha256,
             pinned_inputs=exec_spec.pinned_inputs,
         )
     else:

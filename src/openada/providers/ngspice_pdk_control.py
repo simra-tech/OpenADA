@@ -1096,6 +1096,24 @@ def invoke(request: Mapping[str, Any]) -> dict[str, Any]:
     )
     configuration_records.append(executable_snapshot_record)
 
+    # Bind the launch to the request's reviewed target digest BEFORE ngspice
+    # runs, so a target swapped between resolution and launch is refused rather
+    # than executed and only downgraded afterwards. The post-launch stability
+    # check below still runs (it also covers configuration/PDK/destination
+    # identity). Guarded: a malformed locator leaves the pre-launch bind off and
+    # the post-launch comparison unchanged.
+    _reviewed_target = request.get("target")
+    _reviewed_locator = (
+        _reviewed_target.get("locator") if isinstance(_reviewed_target, dict) else None
+    )
+    _reviewed_digest = (
+        _reviewed_locator.get("sha256") if isinstance(_reviewed_locator, dict) else None
+    )
+    pre_launch_target_digest = (
+        _reviewed_digest
+        if isinstance(_reviewed_digest, str) and len(_reviewed_digest) == 64
+        else None
+    )
     native = NgspiceDriver(str(executable_snapshot_path)).simulate(
         target,
         output_dir,
@@ -1107,6 +1125,7 @@ def invoke(request: Mapping[str, Any]) -> dict[str, Any]:
         environment_overrides=environment,
         environment_mode="sanitized",
         timeout=timeout_ms / 1_000.0,
+        expected_source_sha256=pre_launch_target_digest,
     )
 
     existing_paths = {item["path"] for item in native.get("inputs", [])}

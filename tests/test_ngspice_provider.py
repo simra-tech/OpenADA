@@ -393,6 +393,9 @@ def test_provider_binds_closed_control_deck_and_all_configuration(
     assert observed["binary"] != str(paths["executable"])
     assert Path(str(observed["binary"])).name == "openada-native-ngspice"
     assert observed["environment_mode"] == "sanitized"
+    # The launch is content-bound to the request's reviewed target digest BEFORE
+    # ngspice runs, not merely compared afterwards.
+    assert observed["expected_source_sha256"] == request["target"]["locator"]["sha256"]
     assert payload["data"]["protocol"]["driver_id"] == provider.DRIVER_ID
     assert payload["data"]["extensions"]["org.openada"]["parameters"] == request[
         "parameters"

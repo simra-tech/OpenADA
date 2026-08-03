@@ -823,3 +823,148 @@ def _run_with_execution(tmp_path: Path, *, execution: NgspiceProfileExecution) -
         parameters=PARAMETERS["op"],
         execution=execution,
     )
+
+
+def test_profile_default_execution_binds_the_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The exported simulate_circuit_profile() is content-bound BY DEFAULT: a
+    # caller that passes no execution still cannot launch a file swapped between
+    # resolution and launch.
+    from openada.engines.spice import NgspiceDriver
+
+    import shutil
+
+    deck = tmp_path / "deck.cir"
+    shutil.copyfile(FIXTURES / FIXTURE_NAMES["op"], deck)
+    marker = tmp_path / "launched.marker"
+    discovery = _fake_ngspice(tmp_path, marker=marker)
+
+    original_simulate = NgspiceDriver.simulate
+
+    def swap_then_simulate(self, source, output_dir, **kwargs):
+        Path(source).write_text(
+            Path(source).read_text(encoding="utf-8") + "* raced\n", encoding="utf-8"
+        )
+        return original_simulate(self, source, output_dir, **kwargs)
+
+    monkeypatch.setattr(NgspiceDriver, "simulate", swap_then_simulate)
+
+    payload = simulate_circuit_profile(
+        deck,
+        tmp_path / "evidence",
+        backend="ngspice",
+        discovery=discovery,
+        parameters=PARAMETERS["op"],
+        # No execution: the default spec still binds the source.
+    )
+    assert payload["engineering"]["status"] != "pass"
+    assert "simulation.analysis.unproven" in [
+        d.get("code") for d in payload.get("diagnostics", [])
+    ], payload
+    assert not marker.exists()
+
+
+def test_legacy_native_binds_its_top_level_deck(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Even the no-semantic-claim native interface refuses a deck swapped between
+    # its collateral scan and launch.
+    from openada.engines.spice import NgspiceDriver
+    from openada.operations.simulate import simulate_legacy_native
+
+    import shutil
+
+    deck = tmp_path / "deck.cir"
+    shutil.copyfile(FIXTURES / FIXTURE_NAMES["op"], deck)
+    marker = tmp_path / "launched.marker"
+    discovery = _fake_ngspice(tmp_path, marker=marker)
+
+    original_simulate = NgspiceDriver.simulate
+
+    def swap_then_simulate(self, source, output_dir, **kwargs):
+        Path(source).write_text(
+            Path(source).read_text(encoding="utf-8") + "* raced\n", encoding="utf-8"
+        )
+        return original_simulate(self, source, output_dir, **kwargs)
+
+    monkeypatch.setattr(NgspiceDriver, "simulate", swap_then_simulate)
+
+    payload = simulate_legacy_native(
+        deck, tmp_path / "evidence", discovery=discovery, execution_mode="batch"
+    )
+    # The native interface returns the driver payload directly (no semantic
+    # decoration), so the raw driver refusal code surfaces.
+    assert payload["execution"]["status"] == "invalid_request"
+    codes = [d.get("code") for d in payload.get("diagnostics", [])]
+    assert "input.digest_mismatch" in codes, payload
+    assert not marker.exists()
+
+
+def test_profile_default_binds_inspected_bytes_not_relaunched(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The default bind uses the digest of the bytes the PROFILE INSPECTED, not a
+    # later re-read. A deck swapped AFTER inspection but before launch is refused
+    # -- so validated-A / launched-B evidence cannot be produced. (Under a launch-
+    # time re-hash this would pass, launching B.)
+    from openada.operations import circuit_simulate as cs
+
+    import shutil
+
+    deck = tmp_path / "deck.cir"
+    shutil.copyfile(FIXTURES / FIXTURE_NAMES["op"], deck)
+    marker = tmp_path / "launched.marker"
+    discovery = _fake_ngspice(tmp_path, marker=marker)
+
+    original_inspect = cs.inspect_simulation_deck
+    swapped = {"done": False}
+
+    def inspect_then_swap(path):
+        result = original_inspect(path)
+        if not swapped["done"] and Path(path).resolve() == deck.resolve():
+            deck.write_text(
+                deck.read_text(encoding="utf-8") + "* raced after inspection\n",
+                encoding="utf-8",
+            )
+            swapped["done"] = True
+        return result
+
+    monkeypatch.setattr(cs, "inspect_simulation_deck", inspect_then_swap)
+
+    payload = simulate_circuit_profile(
+        deck,
+        tmp_path / "evidence",
+        backend="ngspice",
+        discovery=discovery,
+        parameters=PARAMETERS["op"],
+    )
+    assert payload["engineering"]["status"] != "pass"
+    assert "simulation.analysis.unproven" in [
+        d.get("code") for d in payload.get("diagnostics", [])
+    ], payload
+    assert not marker.exists(), "a deck swapped after inspection must not launch"
+
+
+def test_split_inspection_without_a_digest_is_refused(tmp_path: Path) -> None:
+    # An execution that inspects a SEPARATE control-free deck must also name the
+    # launch digest; otherwise it would validate one deck and launch another.
+    import shutil
+
+    control_free = tmp_path / "control_free.cir"
+    shutil.copyfile(FIXTURES / FIXTURE_NAMES["op"], control_free)
+    run_deck = tmp_path / "run.cir"
+    shutil.copyfile(FIXTURES / FIXTURE_NAMES["op"], run_deck)
+
+    payload = simulate_circuit_profile(
+        run_deck,
+        tmp_path / "evidence",
+        backend="ngspice",
+        discovery=_fake_ngspice(tmp_path),
+        parameters=PARAMETERS["op"],
+        execution=NgspiceProfileExecution(inspection_source=control_free),
+    )
+    assert payload["engineering"]["status"] != "pass"
+    assert "simulation.request.invalid" in [
+        d.get("code") for d in payload.get("diagnostics", [])
+    ], payload

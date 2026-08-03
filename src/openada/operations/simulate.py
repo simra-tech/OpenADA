@@ -2498,10 +2498,21 @@ def simulate_legacy_native(
             ),
         )
 
+    # One raw capture: the SAME bytes drive the collateral scan and the launch
+    # digest, so the deck the driver is bound to is exactly the deck this scan
+    # reviewed. A read failure is a typed refusal rather than an empty scan +
+    # unbound launch.
     try:
-        deck_text = source.read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        deck_text = ""
+        raw_source_bytes = source.read_bytes()
+    except OSError as exc:
+        return _refusal(
+            request_id=str(uuid.uuid4()),
+            backend="ngspice",
+            code="input.missing",
+            message=f"{source} could not be read to content-bind the run: {exc}",
+        )
+    deck_text = raw_source_bytes.decode("utf-8", errors="replace")
+    source_digest = hashlib.sha256(raw_source_bytes).hexdigest()
     errors, advisories = _collateral_diagnostics(
         deck_text,
         workdir=run_directory,
@@ -2544,6 +2555,9 @@ def simulate_legacy_native(
             extra_diagnostics=errors[1:],
         )
 
+    # Bind the launch to the digest of the exact bytes collateral-scanned above
+    # (source_digest): the driver refuses if the file changed between that scan
+    # and launch.
     payload = NgspiceDriver(discovery=discovery).simulate(
         source,
         output_dir,
@@ -2554,6 +2568,7 @@ def simulate_legacy_native(
         init_file=init_file,
         system_init_file=system_init_file,
         timeout=timeout,
+        expected_source_sha256=source_digest,
     )
     if unmanaged_collateral:
         advisories.append(
