@@ -135,3 +135,32 @@ def test_preload_refuses_empty_module_set():
     with pytest.raises(oc.OsdiCompileError) as caught:
         oc.osdi_preload_prelude([])
     assert caught.value.code == "osdi.preload.empty"
+
+
+@pytest.mark.parametrize("bad_dir", ["/tmp/has space", "/tmp/has\nnewline", "/tmp/has\ttab"])
+def test_compile_refuses_workdir_that_would_break_the_pre_osdi_line(bad_dir):
+    # The compiled path is emitted onto a bare `pre_osdi <path>` line; a work_dir
+    # with whitespace/newline would split that command, so it is refused up front.
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.compile_verilog_a("module x; endmodule", "bhv_x_v1", Path(bad_dir))
+    assert caught.value.code == "osdi.workdir.unsafe"
+
+
+def test_preload_refuses_module_with_unsafe_osdi_path():
+    unsafe = oc.OsdiModule(
+        module_name="bhv_x_v1",
+        osdi_path=Path("/tmp/evil path/mod.osdi"),
+        source_sha256="0" * 64,
+        osdi_sha256="0" * 64,
+        compiler="openvaf",
+        compiler_version="test",
+    )
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.osdi_preload_prelude([(unsafe, ["a", "b"], {})])
+    assert caught.value.code == "osdi.preload.unsafe_path"
+
+
+def test_compile_refuses_non_text_source():
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.compile_verilog_a(b"module x; endmodule", "bhv_x_v1", Path(tempfile.mkdtemp()))
+    assert caught.value.code == "osdi.source.invalid"

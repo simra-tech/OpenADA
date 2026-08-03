@@ -53,6 +53,12 @@ _SPICE_SCALAR_RE = re.compile(
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 #: A Verilog-A module name as emitted by the block wrapper contract.
 _MODULE_RE = re.compile(r"^bhv_[A-Za-z0-9_]+_v[0-9]+$")
+#: Any whitespace (incl. newline/CR/tab) or C0/C1 control byte. A compiled OSDI
+#: path is written onto a bare ``pre_osdi <path>`` line inside a .control block;
+#: ngspice tokenizes on whitespace and breaks on newlines, so a work_dir with a
+#: space or newline would split that command (or smuggle a second one). The path
+#: is refused rather than quoted — ngspice ``pre_osdi`` has no quoting.
+_PATH_UNSAFE_RE = re.compile(r"[\s\x00-\x1f\x7f]")
 
 
 class OsdiCompileError(Exception):
@@ -143,6 +149,20 @@ def compile_verilog_a(
         raise OsdiCompileError(
             "osdi.module.invalid",
             f"module name {expected_module!r} is not a bhv_<block>_v<abi> wrapper.",
+        )
+    if not isinstance(source_text, str):
+        raise OsdiCompileError(
+            "osdi.source.invalid",
+            f"Verilog-A source must be text, not {type(source_text).__name__}.",
+        )
+    # The produced .osdi path is emitted verbatim onto a pre_osdi line; a
+    # work_dir carrying whitespace/newlines would break that deck command, so
+    # the destination is refused up front rather than after a wasted compile.
+    if _PATH_UNSAFE_RE.search(str(work_dir)):
+        raise OsdiCompileError(
+            "osdi.workdir.unsafe",
+            f"work_dir {str(work_dir)!r} contains whitespace or a control "
+            "character; the compiled OSDI path must sit on a bare pre_osdi line.",
         )
     encoded = source_text.encode("utf-8")
     if not 0 < len(encoded) <= MAX_VA_BYTES:
@@ -274,6 +294,12 @@ def osdi_preload_prelude(
                 "osdi.preload.duplicate", f"module {module.module_name} preloaded twice."
             )
         seen_modules.add(module.module_name)
+        if _PATH_UNSAFE_RE.search(str(module.osdi_path)):
+            raise OsdiCompileError(
+                "osdi.preload.unsafe_path",
+                f"OSDI path {str(module.osdi_path)!r} contains whitespace or a "
+                "control character and cannot sit on a bare pre_osdi line.",
+            )
         validated_ports = _validate_ports(ports)
         validated_params = _validate_parameters(parameters)
         preload_lines.append(f"pre_osdi {module.osdi_path}")
