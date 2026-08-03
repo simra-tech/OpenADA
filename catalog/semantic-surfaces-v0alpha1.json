@@ -433,6 +433,21 @@
               "note": "The --blocks selector composes a reviewed behavioral-block library into the model-library role of the shared circuit.simulate profile. The variant-level lifecycle override keeps this executable selector inventoried by the coverage verifier while exempting it from active release obligations until its evidence chain exists."
             }
           }
+        },
+        {
+          "variant_id": "behavioral-blocks-cosim",
+          "selector": {
+            "blocks": "<library>:<block>[,<block>...]",
+            "cosim": true
+          },
+          "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+          "provider_id": "org.openada.driver.ngspice",
+          "extensions": {
+            "org.openada.lifecycle": {
+              "lifecycle": "experimental-hidden",
+              "note": "The --blocks --cosim selector executes the selected blocks through their mixed-signal xspice-cosim backend: each reviewed digital core is compiled (Verilator -> d_cosim shared object, digest-bound) and its reviewed analog wrapper is composed into the model-library role, with the generated d_cosim binding cards admitted only through the digest-pinned executable-model allowance. Inventoried experimental-hidden until its evidence chain exists."
+            }
+          }
         }
       ],
       "extensions": {}

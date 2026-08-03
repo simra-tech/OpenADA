@@ -73,7 +73,7 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
         "shipped_provider_manifest_count": 1,
         "surface_count": 27,
     }
-    assert payload["summary"]["row_count"] == 188
+    assert payload["summary"]["row_count"] == 189
     assert payload["summary"]["active_row_count"] == 153
     # Receipt-bound expectations: these require the seven-receipt chain index
     # to be current for the semantic subject under test.
@@ -438,7 +438,7 @@ def test_untouched_hidden_variant_stays_hidden_without_issues() -> None:
     )
     assert row["lifecycle"] == "experimental-hidden"
     assert row["required_coverage_level"] is None
-    assert payload["summary"]["row_count"] == 188
+    assert payload["summary"]["row_count"] == 189
     assert payload["summary"]["active_row_count"] == 153
 
 

@@ -480,7 +480,20 @@ ALLOWED_HIDDEN_VARIANTS: dict[tuple[str, str], dict[str, Any]] = {
         "provider_id": "org.openada.driver.ngspice",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
         "selector": {"blocks": "<library>:<block>[,<block>...]"},
-    }
+    },
+    # The mixed-signal backend of the same reviewed block library: the
+    # --cosim selector compiles each block's digital core (Verilator ->
+    # d_cosim) and composes its analog wrapper, still through the one shared
+    # circuit.simulate profile and the ngspice provider. Frozen separately so
+    # neither hidden variant can widen the other's execution identity.
+    ("openada.surface/cli.simulate/v1", "behavioral-blocks-cosim"): {
+        "provider_id": "org.openada.driver.ngspice",
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "selector": {
+            "blocks": "<library>:<block>[,<block>...]",
+            "cosim": True,
+        },
+    },
 }
 
 
