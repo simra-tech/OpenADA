@@ -444,8 +444,8 @@
           "provider_id": "org.openada.driver.ngspice",
           "extensions": {
             "org.openada.lifecycle": {
-              "lifecycle": "experimental-hidden",
-              "note": "The --blocks --cosim selector executes the selected blocks through their mixed-signal xspice-cosim backend: each reviewed digital core is compiled (Verilator -> d_cosim shared object, digest-bound) and its reviewed analog wrapper is composed into the model-library role, with the generated d_cosim binding cards admitted only through the digest-pinned executable-model allowance. Inventoried experimental-hidden until its evidence chain exists."
+              "lifecycle": "experimental",
+              "note": "The --blocks --cosim selector executes the selected blocks through their mixed-signal xspice-cosim backend: each reviewed digital core is compiled (Verilator -> d_cosim shared object, digest-bound) and its reviewed analog wrapper is composed into the model-library role, with the generated d_cosim binding cards admitted only through the digest-pinned executable-model allowance. SINGLE-INSTANCE ONLY, enforced fail-closed: ngspice cannot host two d_cosim instances (it crashes on a duplicate irreversible place and, when that is avoided, returns results that depend on netlist card order with no diagnostic - see UPSTREAM-NGSPICE-DCOSIM-SHIM-UAF.md). That bound is an upstream-blocked defect, not an unfinished capability; the single-instance path itself is reviewed, digest-bound and golden-case validated on ngspice 45.2 and 46. Lifecycle is experimental rather than active because an agent-ready evidence chain cannot exist until ngspice is fixed - policy.active_lifecycles is [active], so experimental carries no release or evidence-chain obligation while remaining a visible, usable capability."
             }
           }
         }

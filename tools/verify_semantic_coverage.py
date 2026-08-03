@@ -456,9 +456,15 @@ def _profile_inventory(catalog: dict[str, Any], issues: list[str]) -> dict[str, 
 
 
 # A variant may carry its own lifecycle in the schema-supported variant
-# extensions record. "experimental-hidden" keeps the executable selector
-# inventoried (it still gets its coverage row and cannot silently drift or
-# vanish) while exempting only that variant from active release obligations.
+# extensions record. Any lifecycle outside policy.active_lifecycles keeps the
+# executable selector inventoried (it still gets its coverage row and cannot
+# silently drift or vanish) while exempting that variant from active release
+# obligations. Two such labels are in use and differ only in what they tell a
+# reader, never in what the verifier enforces:
+#   * "experimental-hidden" -- inventoried but not offered as a capability;
+#   * "experimental"        -- a visible, usable capability whose evidence
+#                             chain cannot exist yet (e.g. blocked on an
+#                             upstream defect), so it carries no obligation.
 #
 # The override is a self-downgrade lever, so it is gated by a frozen
 # in-verifier allowlist of (surface_id, variant_id) pairs: a catalog edit that
@@ -473,9 +479,13 @@ VARIANT_LIFECYCLES = frozenset(
 # below, and ONLY when the variant's execution identity matches the frozen
 # constants exactly. The identity is hardcoded here -- never derived from
 # sibling catalog variants -- so no coordinated catalog edit (e.g. re-pointing
-# every simulate variant at another provider) can widen what the hidden
-# variant is allowed to execute.
-ALLOWED_HIDDEN_VARIANTS: dict[tuple[str, str], dict[str, Any]] = {
+# every simulate variant at another provider) can widen what a self-downgraded
+# variant is allowed to execute. Membership is NOT about being hidden: it is
+# permission to declare one's own lifecycle at all, so a variant promoted from
+# "experimental-hidden" to "experimental" must STAY listed here -- dropping it
+# would silence the override, return the variant to the surface's "active"
+# lifecycle, and impose a release obligation it cannot meet.
+ALLOWED_VARIANT_LIFECYCLE_OVERRIDES: dict[tuple[str, str], dict[str, Any]] = {
     ("openada.surface/cli.simulate/v1", "behavioral-blocks"): {
         "provider_id": "org.openada.driver.ngspice",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
@@ -485,7 +495,10 @@ ALLOWED_HIDDEN_VARIANTS: dict[tuple[str, str], dict[str, Any]] = {
     # --cosim selector compiles each block's digital core (Verilator ->
     # d_cosim) and composes its analog wrapper, still through the one shared
     # circuit.simulate profile and the ngspice provider. Frozen separately so
-    # neither hidden variant can widen the other's execution identity.
+    # neither variant can widen the other's execution identity. Declared
+    # "experimental" (visible and usable, no release obligation) because its
+    # single-instance bound is an upstream ngspice defect, not an unfinished
+    # capability -- see UPSTREAM-NGSPICE-DCOSIM-SHIM-UAF.md.
     ("openada.surface/cli.simulate/v1", "behavioral-blocks-cosim"): {
         "provider_id": "org.openada.driver.ngspice",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
@@ -513,22 +526,22 @@ def _declared_variant_lifecycle(variant: dict[str, Any]) -> Any:
     return record.get("lifecycle", _LIFECYCLE_ABSENT)
 
 
-def _hidden_variant_identity_ok(
+def _override_variant_identity_ok(
     surface: dict[str, Any], variant: dict[str, Any]
 ) -> bool:
     """The allowlisted override is honored only under the FROZEN identity.
 
     The allowlist freezes a (surface_id, variant_id) pair together with the
-    exact provider and operation profile the hidden variant is allowed to
-    declare. Those constants live here in the verifier, never in the catalog
-    and never derived from sibling variants, so a catalog edit -- however
-    coordinated -- cannot re-point the hidden variant at another provider or
+    exact provider and operation profile the self-downgraded variant is
+    allowed to declare. Those constants live here in the verifier, never in
+    the catalog and never derived from sibling variants, so a catalog edit --
+    however coordinated -- cannot re-point the variant at another provider or
     operation. Any drift means the override is NOT honored: the variant keeps
     the surface lifecycle (active) and its full required coverage, and
     verification reports the drift as an issue.
     """
 
-    frozen = ALLOWED_HIDDEN_VARIANTS.get(
+    frozen = ALLOWED_VARIANT_LIFECYCLE_OVERRIDES.get(
         (surface.get("surface_id"), variant.get("variant_id"))
     )
     if frozen is None:
@@ -546,8 +559,8 @@ def _variant_lifecycle(surface: dict[str, Any], variant: dict[str, Any]) -> str:
         isinstance(declared, str)
         and declared in VARIANT_LIFECYCLES
         and (surface.get("surface_id"), variant.get("variant_id"))
-        in ALLOWED_HIDDEN_VARIANTS
-        and _hidden_variant_identity_ok(surface, variant)
+        in ALLOWED_VARIANT_LIFECYCLE_OVERRIDES
+        and _override_variant_identity_ok(surface, variant)
     ):
         return declared
     return surface["lifecycle"]
@@ -651,7 +664,7 @@ def _surface_inventory(
                 if (
                     carries_override
                     and (surface_id, variant.get("variant_id"))
-                    not in ALLOWED_HIDDEN_VARIANTS
+                    not in ALLOWED_VARIANT_LIFECYCLE_OVERRIDES
                 ):
                     issues.append(
                         f"surface {surface_id} variant "
@@ -660,7 +673,7 @@ def _surface_inventory(
                         "frozen in-verifier allowlist; the override is not "
                         "honored"
                     )
-                elif carries_override and not _hidden_variant_identity_ok(
+                elif carries_override and not _override_variant_identity_ok(
                     record, variant
                 ):
                     # Allowlisted pair, drifted identity: the catalog's

@@ -40,6 +40,20 @@ def _shim_available() -> bool:
     return True
 
 
+def _shim_source_dir():
+    """The packaged shim sources, WITHOUT probing ngspice.
+
+    ``resolve_cosim_shim_dir`` deliberately also resolves the ngspice ABI
+    headers so the compile path fails closed; assertions that only read our
+    own reviewed source must not inherit that tool requirement, or they ERROR
+    (rather than skip) wherever ngspice is absent.
+    """
+
+    from openada.provider_runtime import _installed_data_path
+
+    return _installed_data_path("runtime/cosim", cc.SHIM_SOURCES[0]).parent
+
+
 toolchain = pytest.mark.skipif(
     NGSPICE is None or VERILATOR is None or GXX is None or not _shim_available(),
     reason="cosim path needs ngspice (with shim sources), Verilator, and g++",
@@ -49,10 +63,6 @@ CORE_V = ROOT / "blocks/bhv-core/blocks/comparator_clocked/comparator_clocked.co
 CORE_MODULE = "bhv_comparator_clocked_v1_core"
 CORE_INPUTS = ["clk", "din"]
 CORE_OUTPUTS = ["q"]
-
-
-def _refuses(code):
-    return pytest.raises(cc.CosimCompileError, match=None)
 
 
 # ---------------------------------------------------------------------------
@@ -722,11 +732,15 @@ def test_operation_refuses_a_relative_or_symlinked_object(tmp_path):
 
 
 def test_shim_sources_are_openada_owned_and_digest_bound():
-    directory, digest = cc.resolve_cosim_shim_dir()
-    assert len(digest) == 64
+    directory = _shim_source_dir()
     for name in cc.SHIM_SOURCES:
         assert (directory / name).is_file(), name
-    # The digest must actually cover the bytes: perturbing a source changes it.
+
+
+@toolchain
+def test_shim_digest_covers_every_shim_source_byte():
+    directory, digest = cc.resolve_cosim_shim_dir()
+    assert len(digest) == 64
     import hashlib as _hashlib
 
     hasher = _hashlib.sha256()
@@ -745,7 +759,7 @@ def test_shim_owns_its_verilated_context_for_the_models_lifetime():
     context dies when Cosim_setup returns. Ours must own it per instance.
     """
 
-    directory, _digest = cc.resolve_cosim_shim_dir()
+    directory = _shim_source_dir()
     source = (directory / "openada_verilator_shim.cpp").read_text()
     # The file header deliberately QUOTES the upstream defect, so every
     # assertion below is scoped to the code, not the explanation.
@@ -774,6 +788,7 @@ def test_compiled_object_records_the_openada_shim_digest(tmp_path):
     assert module.shim_sha256 == digest
 
 
+@toolchain
 def test_missing_shim_source_is_a_typed_refusal_not_a_fallback():
     """A missing shim must never silently fall back to ngspice's (defective) one."""
 
@@ -790,6 +805,7 @@ def test_missing_shim_source_is_a_typed_refusal_not_a_fallback():
             path.write_bytes(backup)
 
 
+@toolchain
 def test_named_missing_ngspice_is_refused_rather_than_falling_back():
     # Otherwise the object is compiled against one ngspice's d_cosim ABI
     # headers and loaded by another.
