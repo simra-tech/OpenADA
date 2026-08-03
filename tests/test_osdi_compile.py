@@ -379,6 +379,188 @@ def test_simulate_blocks_osdi_operation_runs_control_mode_and_passes(tmp_path, c
     assert all(len(m["osdi_sha256"]) == 64 for m in osdi["modules"])
 
 
+def _publish_opamp_artifact(
+    directory: Path,
+    *,
+    deck_body: str,
+    analyses: list[dict[str, object]],
+) -> Path:
+    """Write a minimal-but-loadable Simra testbench artifact whose netlist
+    instantiates the behavioral opamp block.
+
+    `load_simra_testbench` reads the descriptor + the netlist + the typed view's
+    `testbench.analyses`/`save`; it does not require the full compiler view, so a
+    compact synthetic view is sufficient to exercise the artifact -> OSDI path.
+    The published netlist references `bhv_opamp_1p_v1`, which only the reviewed
+    OSDI preload defines -- exactly the artifact that needs behavioral-block
+    collateral to run.
+    """
+    import json
+
+    directory.mkdir(parents=True, exist_ok=True)
+    netlist = directory / "design.spice"
+    netlist.write_text(deck_body, encoding="utf-8")
+    view = directory / "schematic.simra.json"
+    view.write_text(
+        json.dumps(
+            {
+                "schema": "simra.schematic/v2",
+                "testbench": {"analyses": analyses, "save": []},
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    def _digest(path: Path) -> str:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    handoff = "direct" if len(analyses) == 1 else "split_required"
+    descriptor = directory / "schematic.artifact.json"
+    descriptor.write_text(
+        json.dumps(
+            {
+                "schema": "simra.schematic-artifact/v2",
+                "kind": "testbench",
+                "id": "opamp-osdi-artifact-e2e",
+                "label": "opamp OSDI artifact e2e",
+                "top": "OPAMP_OSDI_TB",
+                "netlist": "design.spice",
+                "view": "schematic.simra.json",
+                "netlistable": True,
+                "hashes": {
+                    "netlist_sha256": _digest(netlist),
+                    "view_sha256": _digest(view),
+                },
+                "validation": {
+                    "netlistable": True,
+                    "parameters": "resolved",
+                    # The behavioral block is external collateral, so the
+                    # published deck is not self-contained -- the OSDI preload
+                    # supplies what the artifact declares it needs.
+                    "simulation_ready": False,
+                    "simulation_handoff": handoff,
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return descriptor
+
+
+@native
+def test_simulate_blocks_osdi_artifact_op_runs_and_passes(tmp_path, capsys):
+    # The artifact-target counterpart of the bare-deck OSDI op test: a published
+    # testbench whose netlist instantiates the block runs the SAME control-mode
+    # OSDI launch, because `derive_single_analysis_decks` now emits a control-free
+    # per-analysis collateral deck for the profile gate to inspect.
+    import json
+    from openada.cli import main
+
+    descriptor = _publish_opamp_artifact(
+        tmp_path / "art",
+        deck_body=(
+            "* opamp OSDI op-point testbench (published artifact)\n"
+            "X1 inp inn out 0 bhv_opamp_1p_v1\n"
+            "vinp inp 0 0.01\n"
+            "vinn inn 0 0\n"
+            "rl out 0 1meg\n"
+            ".op\n"
+            ".end\n"
+        ),
+        analyses=[{"kind": "op"}],
+    )
+    out = tmp_path / "evidence"
+    exit_code = main(
+        [
+            "simulate",
+            str(descriptor),
+            "--blocks",
+            "bhv-core:opamp_1p",
+            "--osdi",
+            "--output-dir",
+            str(out),
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0, payload
+    assert payload["execution"]["status"] == "completed"
+    assert payload["engineering"]["status"] == "pass"
+
+    data = payload["data"]
+    assert data["analysis"]["type"] == "op"
+    assert data["analysis"]["finite_value_count"] >= 1
+    assert data["evidence"]["structure"] == "valid"
+    # The OSDI preload story rode through -- the artifact ran the composed deck,
+    # not a model-free one.
+    limitations = " ".join(data["evidence"]["provenance_limitations"])
+    assert "pre_osdi" in limitations
+    osdi = data["extensions"]["org.openada.behavioral-blocks-osdi"]
+    assert [m["module"] for m in osdi["modules"]] == ["bhv_opamp_1p_v1"]
+
+
+@native
+def test_simulate_blocks_osdi_artifact_multi_analysis_runs_and_passes(tmp_path, capsys):
+    # A split (multi-analysis) artifact: each declared analysis is derived into
+    # its own single-analysis deck, the OSDI preload is composed into each, and
+    # every one runs through the sanctioned control-mode launch.
+    import json
+    from openada.cli import main
+
+    descriptor = _publish_opamp_artifact(
+        tmp_path / "art",
+        deck_body=(
+            "* opamp OSDI multi-analysis testbench (published artifact)\n"
+            "X1 inp inn out 0 bhv_opamp_1p_v1\n"
+            "vinp inp 0 dc 0.01 ac 1\n"
+            "vinn inn 0 0\n"
+            "rl out 0 1meg\n"
+            ".op\n"
+            ".ac dec 5 1 1meg\n"
+            ".end\n"
+        ),
+        analyses=[{"kind": "op"}, {"kind": "ac"}],
+    )
+    out = tmp_path / "evidence"
+    exit_code = main(
+        [
+            "simulate",
+            str(descriptor),
+            "--blocks",
+            "bhv-core:opamp_1p",
+            "--osdi",
+            "--output-dir",
+            str(out),
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0, payload
+    assert payload["execution"]["status"] == "completed"
+    assert payload["engineering"]["status"] == "pass"
+    # Both analyses were derived, dispatched as their own OSDI control-mode runs,
+    # and passed -- the split path composed the preload into each per-analysis
+    # deck.
+    dispatch = payload["data"]["extensions"]["org.openada.simulation-dispatch"]
+    assert dispatch["mode"] == "split"
+    assert dispatch["declared_analysis_count"] == 2
+    assert dispatch["completed_analysis_count"] == 2
+    assert dispatch["passing_analysis_count"] == 2
+    # The per-analysis children were retained as their own result artifacts.
+    child_roles = [
+        a.get("role")
+        for a in payload.get("artifacts", [])
+        if a.get("role") == "simulation.analysis-result"
+    ]
+    assert len(child_roles) == 2, payload["artifacts"]
+
+
 def test_simulate_osdi_preload_digest_mismatch_refuses_before_launch(tmp_path):
     """The operation pins the OSDI preload to its reviewed composition digest: a
     preload that does not hash to the declared sha256 is a pre-launch

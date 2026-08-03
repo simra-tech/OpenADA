@@ -230,6 +230,52 @@ def test_model_prelude_is_composed_after_the_title_line() -> None:
         assert lines[-1] == ".END"
 
 
+def test_derivation_without_a_prelude_carries_no_collateral_text() -> None:
+    # The pure-caller artifact path is unchanged: `text` already IS the
+    # control-free deck, so `collateral_text` stays None and the gates fall back
+    # to `text` exactly as before.
+    testbench = load_simra_testbench(MODEL_FREE / "schematic.artifact.json")
+    for deck in derive_single_analysis_decks(testbench):
+        assert deck.collateral_text is None
+
+
+def test_prelude_derivation_emits_a_control_free_collateral_deck() -> None:
+    # When a model prelude is composed into the executable `text`, each derived
+    # deck also carries the caller's per-analysis bytes WITHOUT the prelude, so
+    # the collateral/profile gates inspect control-free bytes -- mirroring the
+    # bare-deck path. This is what lets an OSDI `.control pre_osdi` prelude run
+    # against a published artifact instead of being refused by the profile gate.
+    testbench = load_simra_testbench(NMOS_SOURCE / "schematic.artifact.json")
+    prelude, _record = load_model_prelude(NMOS_SOURCE / "nmos_lv.models")
+
+    decks = derive_single_analysis_decks(testbench, model_prelude=prelude)
+    for deck in decks:
+        assert deck.collateral_text is not None
+        # The prelude is present in the executable text but absent from the
+        # collateral text.
+        assert any(
+            line.startswith(".MODEL nmos_lv")
+            for line in deck.text.splitlines()
+        )
+        assert not any(
+            line.startswith(".MODEL nmos_lv")
+            for line in deck.collateral_text.splitlines()
+        )
+        # The collateral deck is exactly the derived deck for this analysis with
+        # the prelude lines removed: same title, same single analysis card, same
+        # circuit body, ending in `.END`.
+        collateral_lines = deck.collateral_text.splitlines()
+        assert collateral_lines[0] == deck.text.splitlines()[0]
+        assert collateral_lines[-1] == ".END"
+        cards = [
+            line
+            for line in collateral_lines
+            if line.upper().startswith((".OP", ".DC", ".AC", ".TRAN"))
+        ]
+        assert len(cards) == 1
+        assert cards[0].split()[0].upper() == f".{deck.kind.upper()}"
+
+
 def test_model_prelude_refuses_an_include_chain(tmp_path: Path) -> None:
     models = tmp_path / "pdk.spice"
     models.write_text(

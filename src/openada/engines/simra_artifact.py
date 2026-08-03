@@ -2624,9 +2624,20 @@ def derive_single_analysis_decks(
     for selected, (position, kind) in enumerate(card_positions):
         dropped = {other for other, _kind in card_positions} - {position}
         kept: list[str] = []
+        # The control-free counterpart of this derived deck: exactly the caller's
+        # per-analysis bytes with NO model prelude spliced in. When the prelude is
+        # a reviewed OSDI `.control pre_osdi` block, the executable `text` carries
+        # it (that IS the composed OSDI deck), but the profile/collateral gates
+        # must inspect the caller's own control-free bytes -- mirroring the bare-
+        # deck path where `collateral_text` is the pristine caller deck. Kept only
+        # when a prelude was composed; without one, `text` already IS control-free
+        # and `collateral_text` stays None so the pure-caller artifact path is byte
+        # identical to before.
+        collateral: list[str] = []
         for index, line in enumerate(lines):
             if index in dropped:
                 continue
+            collateral.append(line)
             kept.append(line)
             if index == 0 and prelude_lines:
                 if not line.endswith("\n"):
@@ -2635,6 +2646,11 @@ def derive_single_analysis_decks(
         text = "".join(kept)
         if not text.endswith("\n"):
             text += "\n"
+        collateral_text: str | None = None
+        if prelude_lines:
+            collateral_text = "".join(collateral)
+            if not collateral_text.endswith("\n"):
+                collateral_text += "\n"
         derived.append(
             DerivedDeck(
                 index=selected,
@@ -2642,6 +2658,7 @@ def derive_single_analysis_decks(
                 analysis=dict(testbench.analyses[selected]),
                 text=text,
                 sha256=hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                collateral_text=collateral_text,
             )
         )
     return tuple(derived)

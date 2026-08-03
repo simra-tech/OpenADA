@@ -1822,7 +1822,6 @@ def simulate(
             osdi_ready = (
                 osdi_preload_text is not None
                 and normalized_backend == "ngspice"
-                and selected.kind == "deck"
                 and deck.collateral_text is not None
             )
             if osdi_ready:
@@ -1833,9 +1832,14 @@ def simulate(
                 # an empty managed startup (no PDK) that disables the local/user
                 # `.spiceinit`. The profile gate still validates the caller's own
                 # control-free bytes — but the SAME bytes that were spliced into
-                # the run deck, re-read from a stable file we write here rather
-                # than re-opening the caller's path (which could change between
-                # the splice and the inspection). Only the launch differs; the
+                # the run deck, re-read from a stable file we write here. For a
+                # bare deck those are the pristine caller bytes; for a published
+                # artifact they are the per-analysis control-free deck the driver
+                # derived (`derive_single_analysis_decks` keeps the caller's cards
+                # WITHOUT the composed pre_osdi prelude). Either way the inspected
+                # bytes are exactly what was spliced into the run deck, re-read
+                # from a stable file rather than a path that could change between
+                # the splice and the inspection. Only the launch differs; the
                 # evidence's meaning does not.
                 osdi_run_dir = destination / stem
                 try:
