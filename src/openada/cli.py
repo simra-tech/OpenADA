@@ -80,6 +80,7 @@ from .cosim_compile import (
     compose_blocks_cosim,
     verify_single_instantiation,
 )
+from .osdi_compile import OsdiCompileError, compose_blocks_osdi
 
 
 class _RequestParseError(Exception):
@@ -481,6 +482,17 @@ def build_parser() -> argparse.ArgumentParser:
             "digest-bound d_cosim object and its reviewed analog wrapper is "
             "composed around it. Requires --blocks; every selected block must "
             "declare an xspice-cosim backend."
+        ),
+    )
+    simulate.add_argument(
+        "--osdi",
+        action="store_true",
+        help=(
+            "With --blocks, compile each selected block's reviewed Verilog-A "
+            "backend to an OSDI module with OpenVAF and preload it, instead of "
+            "composing the ngspice-native SPICE backend. ngspice-only; the deck "
+            "instantiates the same public wrappers. Blocks whose Verilog-A is "
+            "outside the OpenVAF subset (event/transition cells) are refused."
         ),
     )
     simulate.add_argument(
@@ -2255,12 +2267,24 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
         # existing bounded model path carries it unchanged.
         composed_blocks = None
         composed_cosim = None
+        composed_osdi = None
         cosim_wrappers: list[str] = []
+        if args.cosim and getattr(args, "osdi", False):
+            return _simulation_cli_invalid(
+                args,
+                "--cosim and --osdi select different block backends; choose one.",
+            )
         if args.cosim and args.blocks is None:
             return _simulation_cli_invalid(
                 args,
                 "--cosim requires --blocks: it selects the mixed-signal "
                 "backend of a reviewed block composition.",
+            )
+        if getattr(args, "osdi", False) and args.blocks is None:
+            return _simulation_cli_invalid(
+                args,
+                "--osdi selects the OSDI backend for --blocks; it requires "
+                "--blocks LIBRARY:BLOCK[,...].",
             )
         if args.blocks is not None:
             if args.backend is not None and args.backend != "ngspice":
@@ -2328,9 +2352,25 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                     composed_cosim = compose_blocks_cosim(
                         block_library, selection, output_dir / "cosim-build"
                     )
+                elif getattr(args, "osdi", False):
+                    # The OSDI backend compiles each block's reviewed Verilog-A to
+                    # a .osdi under the output dir and preloads it; the output dir
+                    # must exist first and carry no whitespace (it lands on a bare
+                    # pre_osdi line — osdi_compile enforces that).
+                    try:
+                        output_dir.mkdir(parents=True, exist_ok=True)
+                    except OSError as exc:
+                        return _simulation_cli_invalid(
+                            args,
+                            f"--output-dir {output_dir} cannot hold the compiled "
+                            f"OSDI modules: {exc}",
+                        )
+                    composed_osdi = compose_blocks_osdi(
+                        block_library, selection, output_dir
+                    )
                 else:
                     composed_blocks = compose_blocks(block_library, selection)
-            except BlockLibraryError as exc:
+            except (BlockLibraryError, OsdiCompileError) as exc:
                 return _simulation_cli_invalid(args, f"{exc.code}: {exc.message}")
             except CosimCompileError as exc:
                 return _simulation_cli_invalid(args, f"{exc.code}: {exc.message}")
@@ -2351,6 +2391,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             or args.models is not None
             or composed_blocks is not None
             or composed_cosim is not None
+            or composed_osdi is not None
             or target_kind == "simra-artifact"
         )
         # ``--analysis`` belongs to the semantic operation, and asking for it
@@ -2439,6 +2480,40 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 blocks_extensions = {
                     "org.openada.behavioral-blocks": composed_cosim.record()
                 }
+            osdi_preload_text = None
+            osdi_preload_sha256 = None
+            osdi_module_digests = None
+            if composed_osdi is not None:
+                # The .osdi modules are already compiled under output_dir by
+                # compose_blocks_osdi; the preload text (which references them by
+                # absolute path) is the reviewed, digest-bound model source.
+                osdi_preload_text = composed_osdi.prelude_text
+                osdi_preload_sha256 = hashlib.sha256(
+                    osdi_preload_text.encode("utf-8")
+                ).hexdigest()
+                # Pin every compiled .osdi to its reviewed compile digest so the
+                # operation re-verifies the module bytes on disk before ngspice
+                # maps them (the preload only names them by path).
+                osdi_module_digests = {
+                    str(m.osdi_path): m.osdi_sha256 for m in composed_osdi.modules
+                }
+                blocks_extensions = {
+                    "org.openada.behavioral-blocks-osdi": {
+                        "library": composed_osdi.library_id,
+                        "requested": list(composed_osdi.requested),
+                        "preload_sha256": osdi_preload_sha256,
+                        "modules": [
+                            {
+                                "module": m.module_name,
+                                "source_sha256": m.source_sha256,
+                                "osdi_sha256": m.osdi_sha256,
+                                "compiler": m.compiler,
+                                "compiler_version": m.compiler_version,
+                            }
+                            for m in composed_osdi.modules
+                        ],
+                    }
+                }
             simulation = simulate(
                 source,
                 output_dir,
@@ -2480,6 +2555,9 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 # The composition is the authority for its own deck-level
                 # rules (single instance + declared parameter constraints).
                 cosim_composition=composed_cosim,
+                osdi_preload_text=osdi_preload_text,
+                osdi_preload_sha256=osdi_preload_sha256,
+                osdi_module_digests=osdi_module_digests,
             )
             return simulation
         return simulate_legacy_native(

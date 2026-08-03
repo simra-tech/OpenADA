@@ -507,6 +507,18 @@ ALLOWED_VARIANT_LIFECYCLE_OVERRIDES: dict[tuple[str, str], dict[str, Any]] = {
             "cosim": True,
         },
     },
+    # The OSDI backend of the same reviewed block library: the --osdi selector
+    # compiles each block's Verilog-A to an OSDI module (OpenVAF) and preloads
+    # it through the sanctioned control-mode runner, still through the one
+    # shared circuit.simulate profile and the ngspice provider. Frozen
+    # separately so neither variant can widen the other's execution identity.
+    # Declared "experimental-hidden" (inventoried, no release obligation) until
+    # its evidence chain exists.
+    ("openada.surface/cli.simulate/v1", "behavioral-blocks-osdi"): {
+        "provider_id": "org.openada.driver.ngspice",
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "selector": {"blocks": "<library>:<block>[,<block>...]", "osdi": True},
+    },
 }
 
 

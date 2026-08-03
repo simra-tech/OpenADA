@@ -76,8 +76,14 @@ from ..pdk_bindings import (
     resolve_pdk_binding,
     simulatable_pdk_ids,
 )
+from ..osdi_compile import OsdiCompileError, validate_osdi_preload
 from ..pdk_collateral import blocking, inspect_deck_collateral
-from ..pdk_startup import MANAGED_STARTUP_PROVENANCE, write_managed_startup
+from ..pdk_startup import (
+    MANAGED_OSDI_STARTUP_PROVENANCE,
+    MANAGED_STARTUP_PROVENANCE,
+    write_managed_osdi_startup,
+    write_managed_startup,
+)
 from .circuit_simulate import (
     decorate_circuit_simulation_result,
     inspect_simulation_deck,
@@ -925,6 +931,9 @@ def _resolve_model_source(
     deck_text: str | None = None,
     expected_models_sha256: str | None = None,
     permitted_executable_models: Mapping[str, tuple[str, str]] | None = None,
+    osdi_preload_text: str | None = None,
+    osdi_preload_sha256: str | None = None,
+    osdi_module_digests: Mapping[str, str] | None = None,
 ) -> tuple[ResolvedPdkBinding | None, str | None]:
     """Resolve at most one model source, or raise a typed refusal.
 
@@ -962,14 +971,22 @@ def _resolve_model_source(
                 "(object_path, sha256); an unverifiable allowance is refused.",
             )
 
-    if (
-        pdk is not None or resolved_pdk_binding is not None
-    ) and models_file is not None:
+    model_source_count = sum(
+        1
+        for present in (
+            models_file is not None,
+            pdk is not None or resolved_pdk_binding is not None,
+            osdi_preload_text is not None,
+        )
+        if present
+    )
+    if model_source_count > 1:
         raise SimulationRequestError(
             "simulation.models.ambiguous",
-            "Both a PDK binding and a self-contained model-card file were "
-            "supplied; exactly one model source may bind a deck.",
-            hint="Pass --pdk for an installed PDK, or --models for flattened cards.",
+            "Exactly one model source may bind a deck: a self-contained "
+            "model-card file (--models), a PDK binding (--pdk), or a reviewed "
+            "behavioral-block OSDI preload (--blocks --osdi).",
+            hint="Pass one of --models, --pdk, or --blocks --osdi.",
         )
     if corner is not None and pdk is None and resolved_pdk_binding is None:
         raise SimulationRequestError(
@@ -1167,6 +1184,55 @@ def _resolve_model_source(
                     "identity": "content-digest",
                 }
             )
+    elif osdi_preload_text is not None:
+        # A behavioral-block OSDI preload is a reviewed, digest-bound composition
+        # (osdi_compile.compose_blocks_osdi): a `.control pre_osdi .endc` block
+        # plus wrapper subcircuits. It deliberately does NOT go through
+        # load_model_prelude's self-contained gate (it must carry a control
+        # block to load OSDI) and its `pre_osdi` cards are exempt from the
+        # hand-bound-collateral refusal because they are library-owned and
+        # verified here by digest, never hand-written by the caller.
+        encoded = osdi_preload_text.encode("utf-8")
+        actual = hashlib.sha256(encoded).hexdigest()
+        if osdi_preload_sha256 is not None and actual != osdi_preload_sha256:
+            raise SimulationRequestError(
+                "blocks.materialize.tampered",
+                "The behavioral-block OSDI preload for this run does not hash to "
+                f"the reviewed composition digest {osdi_preload_sha256}; the "
+                "composition changed after verification, so no simulator was "
+                "launched and no result was retained.",
+            )
+        # The preload is the ONE model source allowed to carry a `.control` block
+        # into the run deck, so it is authorized by SHAPE, not by the text hash
+        # above (which a caller could recompute): its control block may hold only
+        # `pre_osdi <path>` lines, and every referenced .osdi is re-hashed from
+        # disk here and (when a digest map is supplied) pinned to its reviewed
+        # compile digest, so a swapped module is refused before ngspice maps it.
+        try:
+            verified_preload = validate_osdi_preload(
+                osdi_preload_text, expected_osdi_sha256=osdi_module_digests
+            )
+        except OsdiCompileError as exc:
+            raise SimulationRequestError(exc.code, exc.message)
+        model_prelude = osdi_preload_text
+        configuration.append(
+            {
+                "role": "osdi-block-preload",
+                "path": None,
+                "sha256": actual,
+                "bytes": len(encoded),
+                "identity": "content-digest",
+            }
+        )
+        for module_path, module_sha256 in verified_preload.modules:
+            configuration.append(
+                {
+                    "role": "osdi-block-module",
+                    "path": module_path,
+                    "sha256": module_sha256,
+                    "identity": "content-digest",
+                }
+            )
     return resolved, model_prelude
 
 
@@ -1197,6 +1263,9 @@ def simulate(
     permitted_executable_models: Mapping[str, tuple[str, str]] | None = None,
     cosim_wrappers: Sequence[str] = (),
     cosim_composition: Any | None = None,
+    osdi_preload_text: str | None = None,
+    osdi_preload_sha256: str | None = None,
+    osdi_module_digests: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     """Run one circuit simulation, whatever shape the request arrived in.
 
@@ -1322,6 +1391,9 @@ def simulate(
             deck_text=deck_probe_text,
             expected_models_sha256=expected_models_sha256,
             permitted_executable_models=permitted_executable_models,
+            osdi_preload_text=osdi_preload_text,
+            osdi_preload_sha256=osdi_preload_sha256,
+            osdi_module_digests=osdi_module_digests,
         )
     except SimulationRequestError as exc:
         return refuse(
@@ -1409,6 +1481,10 @@ def simulate(
                 f"{selected.path} could not be content-bound: {exc}",
                 inputs=input_records,
             )
+        # The bytes the caller actually wrote, kept for the hand-bound-collateral
+        # check: a reviewed model prelude (self-contained cards, or a sanctioned
+        # digest-bound OSDI preload) is spliced below but must not be scanned as
+        # if the caller hand-bound it.
         caller_deck_text = deck_text
         if model_prelude is not None:
             # A model-card file is composed after the title line, which is the
@@ -1427,6 +1503,7 @@ def simulate(
                 analysis={},
                 text=deck_text,
                 sha256=hashlib.sha256(deck_text.encode("utf-8")).hexdigest(),
+                collateral_text=caller_deck_text,
             ),
         )
         bound_saved_nets = normalized_saved_nets or ()
@@ -1555,7 +1632,7 @@ def simulate(
     advisories: list[dict[str, Any]] = []
     for deck in decks:
         errors, notes = _collateral_diagnostics(
-            deck.text,
+            deck.collateral_text if deck.collateral_text is not None else deck.text,
             workdir=run_directory if selected.kind == "deck" else None,
             bound_pdk=resolved_pdk.pdk_id if resolved_pdk is not None else None,
             unmanaged=unmanaged_collateral,
@@ -1726,6 +1803,70 @@ def simulate(
                     extensions={TARGET_EXTENSION: target_facts},
                 )
         else:
+            osdi_control_run: Any = None
+            osdi_provenance: list[str] | None = None
+            osdi_inspection_source: Path | None = None
+            osdi_ready = (
+                osdi_preload_text is not None
+                and normalized_backend == "ngspice"
+                and selected.kind == "deck"
+                and deck.collateral_text is not None
+            )
+            if osdi_ready:
+                # The reviewed pre_osdi deck cannot run in the batch profile
+                # runner: batch refuses its `.control` block, and even in control
+                # mode a bare `.op`/`.tran` does not auto-run. So the OSDI path
+                # runs through ngspice control mode with a wrapper-owned raw and
+                # an empty managed startup (no PDK) that disables the local/user
+                # `.spiceinit`. The profile gate still validates the caller's own
+                # control-free bytes — but the SAME bytes that were spliced into
+                # the run deck, re-read from a stable file we write here rather
+                # than re-opening the caller's path (which could change between
+                # the splice and the inspection). Only the launch differs; the
+                # evidence's meaning does not.
+                osdi_run_dir = destination / stem
+                try:
+                    osdi_startup = write_managed_osdi_startup(osdi_run_dir)
+                    osdi_inspection_source = deck_directory / f"{stem}.caller.spice"
+                    osdi_inspection_source.write_text(
+                        deck.collateral_text or "", encoding="utf-8"
+                    )
+                except OSError as exc:
+                    return refuse(
+                        "simulation.destination.unusable",
+                        f"The OSDI run's managed startup or inspection deck could "
+                        f"not be retained: {exc}",
+                        inputs=input_records,
+                        execution_status="failed",
+                        extensions={TARGET_EXTENSION: target_facts},
+                    )
+                osdi_workdir = run_directory
+
+                def osdi_control_run(
+                    src: Path,
+                    out: Path,
+                    _startup: Path = osdi_startup,
+                    _workdir: Path = osdi_workdir,
+                ) -> dict[str, Any]:
+                    return NgspiceDriver(discovery=discovery).simulate(
+                        src,
+                        out,
+                        workdir=_workdir,
+                        execution_mode="control",
+                        init_file=_startup,
+                        timeout=timeout,
+                    )
+
+                osdi_provenance = [
+                    "The reviewed behavioral-block OSDI preload (the digest-bound "
+                    "pre_osdi cards and wrapper subckts) and the caller's "
+                    "control-free deck were composed into one deck, whose digest "
+                    "was verified before launch; every compiled .osdi module was "
+                    "re-hashed from disk against its reviewed OpenVAF compile "
+                    "digest before ngspice mapped it. Host runtime libraries and "
+                    "simulator defaults remain bounded provenance.",
+                    MANAGED_OSDI_STARTUP_PROVENANCE,
+                ]
             payload = simulate_circuit_profile(
                 deck_path,
                 destination / stem,
@@ -1735,6 +1876,13 @@ def simulate(
                 timeout=timeout,
                 request_id=correlation_id,
                 parameters=parameters,
+                # For the sanctioned OSDI preload, the run deck carries a reviewed
+                # `.control pre_osdi` block the initial shared profile forbids;
+                # profile-check the caller's own control-free deck (the exact
+                # bytes spliced, written to a stable file above) instead.
+                inspection_source=osdi_inspection_source,
+                native_control_run=osdi_control_run,
+                provenance_limitations=osdi_provenance,
             )
 
         # Apply caller-owned provenance before either a per-analysis child or

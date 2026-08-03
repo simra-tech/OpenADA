@@ -327,6 +327,157 @@ def osdi_preload_prelude(
     return "\n".join(preload_lines + wrapper_lines) + "\n"
 
 
+#: A sanctioned preload's `.control` block may contain exactly one kind of line:
+#: `pre_osdi <path>`. Anything else — `shell`, `system`, `source`, `run`, a bare
+#: expression — would be arbitrary control the exemption must never authorize.
+_PRE_OSDI_LINE_RE = re.compile(r"^pre_osdi\s+(\S+)$")
+
+
+@dataclass(frozen=True)
+class VerifiedOsdiPreload:
+    """The result of validating an OSDI preload's structure and its modules.
+
+    ``modules`` is the ordered ``(osdi_path, sha256)`` of every ``pre_osdi``
+    target, each re-hashed from disk at validation time so the caller can retain
+    them as content-bound inputs and the provenance's "compiled OSDI" claim is
+    backed by the bytes that were actually about to load.
+    """
+
+    modules: tuple[tuple[str, str], ...]
+
+
+def validate_osdi_preload(
+    text: str,
+    *,
+    expected_osdi_sha256: Mapping[str, str] | None = None,
+) -> VerifiedOsdiPreload:
+    """Fail-closed structural gate for a behavioral-block OSDI preload.
+
+    The OSDI preload is the ONE model source allowed to carry a ``.control``
+    block into a run deck (it must, to ``pre_osdi``-load the module). That
+    exemption is dangerous if authorized by opaque text, so it is authorized
+    here by SHAPE instead: the single ``.control`` block may contain nothing but
+    ``pre_osdi <path>`` lines, every referenced ``.osdi`` must exist and (when a
+    digest map is supplied) hash to its reviewed value, and the wrapper section
+    below ``.endc`` may hold only ``.subckt``/``.model``/``N…``/``.ends`` cards
+    for ``bhv_<block>_v<abi>`` modules. Any ``shell``/``system``/``source``/bare
+    directive — inside or outside the control block — is refused. A validated
+    preload therefore cannot execute anything but the reviewed module loads,
+    whoever composed the text.
+    """
+
+    if not isinstance(text, str):
+        raise OsdiCompileError("osdi.preload.invalid", "preload must be text.")
+    lines = text.splitlines()
+    state = "pre-control"  # -> "in-control" -> "wrapper"
+    seen_control = False
+    modules: list[tuple[str, str]] = []
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("*"):
+            continue
+        lowered = line.lower()
+        if state == "pre-control":
+            if lowered == ".control":
+                if seen_control:
+                    raise OsdiCompileError(
+                        "osdi.preload.unsafe_control",
+                        "an OSDI preload declares more than one .control block.",
+                    )
+                seen_control = True
+                state = "in-control"
+                continue
+            raise OsdiCompileError(
+                "osdi.preload.unsafe_control",
+                f"an OSDI preload must open with its .control block; got {line!r}.",
+            )
+        if state == "in-control":
+            if lowered == ".endc":
+                state = "wrapper"
+                continue
+            if lowered == ".control":
+                raise OsdiCompileError(
+                    "osdi.preload.unsafe_control",
+                    "an OSDI preload nests a second .control block.",
+                )
+            match = _PRE_OSDI_LINE_RE.match(line)
+            if match is None:
+                raise OsdiCompileError(
+                    "osdi.preload.unsafe_control",
+                    "an OSDI preload's control block may contain only "
+                    f"`pre_osdi <path>` lines; refused {line!r}.",
+                )
+            path = match.group(1)
+            if _PATH_UNSAFE_RE.search(path):
+                raise OsdiCompileError(
+                    "osdi.preload.unsafe_path",
+                    f"OSDI path {path!r} carries whitespace or a control character.",
+                )
+            modules.append((path, ""))
+            continue
+        # state == "wrapper": ordinary SPICE subckt cards only. A second
+        # .control here would re-enter control mode with arbitrary content.
+        if lowered.startswith(".control") or lowered.startswith("pre_osdi"):
+            raise OsdiCompileError(
+                "osdi.preload.unsafe_control",
+                f"an OSDI preload places control content below .endc: {line!r}.",
+            )
+        first = lowered.split(None, 1)[0]
+        if first not in {".subckt", ".model", ".ends"} and not first.startswith("n"):
+            raise OsdiCompileError(
+                "osdi.preload.unsafe_control",
+                "an OSDI preload's wrapper section may hold only "
+                f".subckt/.model/N/.ends cards; refused {line!r}.",
+            )
+    if not seen_control:
+        raise OsdiCompileError(
+            "osdi.preload.unsafe_control", "an OSDI preload declares no .control block."
+        )
+    if state == "in-control":
+        raise OsdiCompileError(
+            "osdi.preload.unsafe_control", "an OSDI preload's .control block is unterminated."
+        )
+    if not modules:
+        raise OsdiCompileError(
+            "osdi.preload.empty", "an OSDI preload loads no module."
+        )
+
+    # Content-bind every referenced .osdi from disk, and (when given) verify it
+    # against the reviewed compile digest — so a module swapped after compose is
+    # refused before ngspice ever maps it.
+    verified: list[tuple[str, str]] = []
+    for path, _ in modules:
+        try:
+            data = Path(path).read_bytes()
+        except OSError as exc:
+            raise OsdiCompileError(
+                "osdi.preload.missing_module",
+                f"the OSDI module {path!r} could not be read for content binding: {exc}.",
+            )
+        if len(data) > MAX_OSDI_BYTES:
+            raise OsdiCompileError(
+                "osdi.preload.missing_module",
+                f"the OSDI module {path!r} exceeds the {MAX_OSDI_BYTES}-byte ceiling.",
+            )
+        actual = _sha256_bytes(data)
+        if expected_osdi_sha256 is not None:
+            expected = expected_osdi_sha256.get(path)
+            if expected is None:
+                raise OsdiCompileError(
+                    "osdi.preload.unbound_module",
+                    f"the OSDI module {path!r} has no reviewed digest to bind against.",
+                )
+            if actual != expected:
+                raise OsdiCompileError(
+                    "blocks.materialize.tampered",
+                    f"the OSDI module {path!r} does not hash to its reviewed compile "
+                    f"digest {expected}; it changed after composition, so no simulator "
+                    "was launched.",
+                )
+        verified.append((path, actual))
+    return VerifiedOsdiPreload(modules=tuple(verified))
+
+
 @dataclass(frozen=True)
 class OsdiComposition:
     """A compiled OSDI preload for a set of blocks, with per-block provenance."""
