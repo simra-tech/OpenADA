@@ -814,12 +814,23 @@ def verify_single_instantiation(deck_text: str, wrappers: Sequence[str]) -> None
     wanted = {name.lower() for name in wrappers}
     if not wanted:
         return
-    depth = 0
-    total = 0
+    # Continuations are FOLDED first: `X1 a b c d e\n+ bhv_x_v1` is ONE card to
+    # the simulator, and reading raw lines would see neither an X-card naming
+    # the wrapper nor anything to count -- which let a second instance through
+    # (self-review finding, same class as the wrapper-symbol fold).
+    statements: list[tuple[int, str]] = []
     for number, raw in enumerate(deck_text.splitlines(), start=1):
         stripped = raw.strip()
-        if not stripped or stripped.startswith("*") or stripped.startswith("+"):
+        if not stripped or stripped.startswith("*"):
             continue
+        if stripped.startswith("+") and statements:
+            first, body = statements[-1]
+            statements[-1] = (first, body + " " + stripped[1:].strip())
+            continue
+        statements.append((number, stripped))
+    depth = 0
+    total = 0
+    for number, stripped in statements:
         fields = stripped.split()
         token = fields[0].lower()
         if token == ".subckt":

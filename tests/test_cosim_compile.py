@@ -570,3 +570,24 @@ def test_allowance_without_a_pinned_digest_is_refused(tmp_path):
     )
     assert payload["execution"]["status"] == "invalid_request"
     assert payload["diagnostics"][0]["code"] == "simulation.models.allowance_unbound"
+
+
+def test_instance_gate_folds_x_card_continuations():
+    # Self-review finding: `X1 ...\n+ <wrapper>` is one card to the simulator.
+    # Reading raw lines counted zero instances for it, so a SECOND instance
+    # slipped through the gate and reached ngspice.
+    deck = (
+        "* continuation\n"
+        "X1 a b c d 0\n"
+        "+ BHV_COMPARATOR_CLOCKED_V1\n"
+        "X2 a b c e 0 bhv_comparator_clocked_v1\n"
+        ".end\n"
+    )
+    with pytest.raises(cc.CosimCompileError) as caught:
+        cc.verify_single_instantiation(deck, ["bhv_comparator_clocked_v1"])
+    assert caught.value.code == "cosim.deck.multi_instance"
+
+
+def test_instance_gate_counts_a_continued_card_as_one_instance():
+    deck = "* one\nX1 a b c d 0\n+ bhv_comparator_clocked_v1 td=2n\n.end\n"
+    cc.verify_single_instantiation(deck, ["bhv_comparator_clocked_v1"])
