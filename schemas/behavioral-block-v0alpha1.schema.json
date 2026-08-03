@@ -1,0 +1,322 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openada.contract/behavioral-block/v0alpha1",
+  "title": "Behavioral block contract",
+  "description": "One reviewed behavioral block: a closed, versioned electrical/event contract with per-backend implementations. The public authority is the wrapper subcircuit named bhv_<name>_v<major>; every backend hides its mechanics behind that exact interface.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "block_id",
+    "contract_version",
+    "abi_version",
+    "implementation_version",
+    "title",
+    "category",
+    "description",
+    "ports",
+    "parameters",
+    "state",
+    "analyses",
+    "regularization",
+    "limitations",
+    "backends",
+    "golden_cases"
+  ],
+  "properties": {
+    "schema": {"const": "openada.behavioral-block/v0alpha1"},
+    "block_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,47}$",
+      "description": "Globally stable lowercase identity; never reused for a different contract."
+    },
+    "contract_version": {"$ref": "#/$defs/semver"},
+    "abi_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Major ABI ordinal carried in the public wrapper name bhv_<block_id>_v<abi_version>."
+    },
+    "implementation_version": {"$ref": "#/$defs/semver"},
+    "title": {"type": "string", "minLength": 1, "maxLength": 120},
+    "category": {
+      "enum": [
+        "infrastructure",
+        "switching",
+        "amplification",
+        "sampling",
+        "quantization",
+        "timing",
+        "oscillation",
+        "arithmetic"
+      ]
+    },
+    "description": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "ports": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ordinal",
+          "name",
+          "domain",
+          "role",
+          "reference_port",
+          "input_loading",
+          "output_drive"
+        ],
+        "properties": {
+          "ordinal": {"type": "integer", "minimum": 0},
+          "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,23}$"},
+          "domain": {"enum": ["electrical", "event-binary"]},
+          "role": {"enum": ["signal", "supply", "reference", "clock", "reset"]},
+          "reference_port": {
+            "type": ["string", "null"],
+            "description": "Name of the port this port's voltages are defined against; null only for the reference port itself."
+          },
+          "input_loading": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "rin_ohm": {"type": ["number", "string"]},
+              "cin_farad": {"type": ["number", "string"]},
+              "infinite": {"type": "boolean"}
+            }
+          },
+          "output_drive": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "kind": {"enum": ["thevenin", "norton", "switched-resistance"]},
+              "rout_ohm": {"type": ["number", "string"]},
+              "current_limit_amp": {"type": ["number", "string", "null"]},
+              "edge_convention": {
+                "type": "string",
+                "description": "How tr/tf parameters map to threshold crossings."
+              }
+            }
+          },
+          "range": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "minimum": {"type": ["number", "string"]},
+              "maximum": {"type": ["number", "string"]}
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "type", "default", "units", "scope", "description"],
+        "properties": {
+          "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,23}$"},
+          "type": {"enum": ["real", "integer", "boolean-as-integer"]},
+          "default": {"type": ["number", "integer"]},
+          "units": {"type": "string", "maxLength": 16},
+          "scope": {
+            "enum": ["contract", "tuning"],
+            "description": "contract parameters change declared behavior; tuning parameters only trade accuracy for cost within the declared error bound."
+          },
+          "range": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "minimum": {"type": ["number", "null"]},
+              "maximum": {"type": ["number", "null"]},
+              "exclusive_minimum": {"type": "boolean"}
+            }
+          },
+          "description": {"type": "string", "minLength": 1, "maxLength": 400}
+        }
+      }
+    },
+    "state": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "init_policy", "value_before_first_event"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 48},
+          "init_policy": {
+            "enum": [
+              "parameter",
+              "reset-input",
+              "op-derived",
+              "deterministic-default",
+              "simulator-determined"
+            ]
+          },
+          "value_before_first_event": {"type": "string", "maxLength": 200},
+          "reset": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "port": {"type": "string"},
+              "active_high": {"type": "boolean"},
+              "synchronous": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "analyses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["supported", "unsupported"],
+      "properties": {
+        "supported": {
+          "type": "array",
+          "items": {"enum": ["op", "dc", "ac", "tran"]},
+          "uniqueItems": true
+        },
+        "unsupported": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["analysis", "behavior"],
+            "properties": {
+              "analysis": {"type": "string"},
+              "behavior": {
+                "type": "string",
+                "description": "What actually happens if requested (e.g. 'noise contributions are absent, not zero-modeled; report unavailable')."
+              }
+            }
+          }
+        }
+      }
+    },
+    "regularization": {
+      "type": "array",
+      "description": "Implementation-only convergence/regularization aids, separated from normative nonidealities.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "magnitude", "scaling_rule", "tested_error_bound"],
+        "properties": {
+          "name": {"type": "string", "maxLength": 64},
+          "magnitude": {"type": "string", "maxLength": 120},
+          "scaling_rule": {"type": "string", "maxLength": 200},
+          "tested_error_bound": {"type": "string", "maxLength": 200}
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "maxLength": 300}
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Event-timing contract for hybrid blocks.",
+      "properties": {
+        "ambiguity_window": {
+          "type": "string",
+          "description": "Declared input band and time window inside which event ordering is unspecified."
+        },
+        "latency_definition": {
+          "type": "string",
+          "description": "Exact measurable definition of every declared delay parameter (threshold-to-threshold)."
+        }
+      }
+    },
+    "depends": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,47}$"},
+      "uniqueItems": true,
+      "description": "Other block_ids whose sources must be composed before this block."
+    },
+    "backends": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "ngspice-native": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "wrapper", "element_families"],
+          "properties": {
+            "file": {"type": "string", "pattern": "^[a-z0-9_.-]+\\.sp$"},
+            "wrapper": {
+              "type": "string",
+              "pattern": "^bhv_[a-z0-9_]+_v[0-9]+$"
+            },
+            "element_families": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "spice-primitive",
+                  "b-source",
+                  "switch",
+                  "diode",
+                  "xspice-analog",
+                  "xspice-digital",
+                  "xspice-bridge"
+                ]
+              },
+              "uniqueItems": true,
+              "description": "Simulator capability families this implementation needs; drives capability probing."
+            }
+          }
+        },
+        "verilog-a": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "module", "feature_profile"],
+          "properties": {
+            "file": {"type": "string", "pattern": "^[a-z0-9_.-]+\\.va$"},
+            "module": {"type": "string", "pattern": "^bhv_[a-z0-9_]+_v[0-9]+$"},
+            "feature_profile": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "contribution-resistive",
+                  "contribution-reactive",
+                  "ddt",
+                  "idt",
+                  "event-initial-step",
+                  "event-cross",
+                  "event-timer",
+                  "event-above",
+                  "transition",
+                  "slew",
+                  "absdelay",
+                  "laplace",
+                  "analog-function",
+                  "arrays",
+                  "loops",
+                  "hidden-state",
+                  "temperature",
+                  "noise"
+                ]
+              },
+              "description": "Machine-readable list of required Verilog-A features; linted against compiler/transpiler subsets instead of a stale compilable boolean."
+            }
+          }
+        }
+      }
+    },
+    "golden_cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{1,47}$"},
+      "description": "Case identities under cases/; each case contract is a backend-neutral stimulus/observation/relations document."
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    }
+  }
+}

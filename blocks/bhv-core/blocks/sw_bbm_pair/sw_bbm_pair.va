@@ -1,0 +1,46 @@
+// bhv_sw_bbm_pair_v1 -- Verilog-A reference implementation.
+// Required feature profile: event-cross, event-timer-free delay via
+// transition, hidden-state. Antiparallel diodes are part of the declared
+// topology when body_diodes=1 (see the native source's topology note).
+// NOT claimed executable until a provenance-bound compile path exists.
+`include "disciplines.vams"
+`include "constants.vams"
+
+module bhv_sw_bbm_pair_v1(ctl, ctlref, nhi, nsw, nlo);
+  inout ctl, ctlref, nhi, nsw, nlo;
+  electrical ctl, ctlref, nhi, nsw, nlo;
+
+  parameter real vth = 0.5;
+  parameter real tdead = 10n from [0:inf);
+  parameter real tedge = 2n from (0:inf);
+  parameter real ron = 50m from (0:inf);
+  parameter real roff = 100e6 from (0:inf);
+  parameter real vdio = 0.7 from (0:inf);
+  parameter integer body_diodes = 1 from [0:1];
+
+  real cmd;          // raw control state in {0,1}
+  real hi_drive, lo_drive;
+  real ghi, glo;
+
+  analog begin
+    @(initial_step) cmd = (V(ctl, ctlref) > vth) ? 1.0 : 0.0;
+    @(cross(V(ctl, ctlref) - vth, 0)) cmd = (V(ctl, ctlref) > vth) ? 1.0 : 0.0;
+
+    // Turn-ON is delayed by tdead, turn-OFF is immediate: the rising drive
+    // uses delay tdead while the falling drive uses zero delay, which is the
+    // event-domain equivalent of the native rise-delayed buffers.
+    hi_drive = transition(cmd,        cmd > 0.5 ? tdead : 0.0, tedge, tedge);
+    lo_drive = transition(1.0 - cmd,  cmd > 0.5 ? 0.0 : tdead, tedge, tedge);
+
+    // log-interpolated conductance between on and off, matching aswitch
+    ghi = pow(1.0/ron, hi_drive) * pow(1.0/roff, 1.0 - hi_drive);
+    glo = pow(1.0/ron, lo_drive) * pow(1.0/roff, 1.0 - lo_drive);
+    I(nhi, nsw) <+ ghi * V(nhi, nsw);
+    I(nsw, nlo) <+ glo * V(nsw, nlo);
+
+    if (body_diodes) begin
+      I(nsw, nhi) <+ exp(-vdio/0.02585) * (limexp(V(nsw, nhi)/0.02585) - 1.0);
+      I(nlo, nsw) <+ exp(-vdio/0.02585) * (limexp(V(nlo, nsw)/0.02585) - 1.0);
+    end
+  end
+endmodule

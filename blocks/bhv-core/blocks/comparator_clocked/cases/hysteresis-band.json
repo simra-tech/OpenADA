@@ -1,0 +1,21 @@
+{
+  "schema": "openada.behavioral-block-case/v0alpha1",
+  "case_id": "hysteresis-band",
+  "description": "With vhyst=0.2 and the retained decision low, a +0.08 V differential (below the +0.1 V shifted threshold) must NOT flip the decision; a +0.12 V differential must flip it. Verified by sampling out after two clock edges with different inputs.",
+  "analysis": {"type": "tran", "tstep": "1n", "tstop": "2.5u", "uic": false},
+  "fixtures": [
+    "Vinp inp 0 PWL(0 0.08 0.9u 0.08 1.1u 0.12 2.5u 0.12)",
+    "Vinn inn 0 DC 0",
+    "Vclk clk 0 PULSE(0 1 0.5u 1n 1n 48n 1u)",
+    "Rload out 0 10k"
+  ],
+  "dut": "X1 inp inn clk out 0 bhv_comparator_clocked_v1 td=2n tedge=1n vhyst=0.2",
+  "observations": [
+    {"id": "after-first-clk", "signal": "v(out)", "kind": "value_at", "time": 0.9e-6},
+    {"id": "after-second-clk", "signal": "v(out)", "kind": "value_at", "time": 1.9e-6}
+  ],
+  "relations": [
+    {"id": "below-band-holds", "observation": "after-first-clk", "expect": 0.0, "atol": 0.02, "derivation": "0.08 V differential < vhyst/2 = 0.1 V shifted threshold, decision stays low."},
+    {"id": "above-band-flips", "observation": "after-second-clk", "expect": 1.0, "atol": 0.02, "derivation": "0.12 V differential > 0.1 V shifted threshold, decision flips high."}
+  ]
+}

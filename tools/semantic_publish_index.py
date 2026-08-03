@@ -12,7 +12,9 @@ import sys
 from typing import Any
 
 from semantic_receipts import (
+    MAX_JSON_DEPTH,
     SemanticReceiptError,
+    _max_json_depth_within,
     atomic_write_text,
     semantic_subject,
     sha256_file,
@@ -92,14 +94,22 @@ def _load_json(path: Path, *, label: str) -> dict[str, Any]:
     ):
         raise IndexError(f"{label} is not one nonempty regular file: {path}")
     try:
+        decoded = path.read_text(encoding="utf-8")
+        # Refuse stack-exhausting nesting BEFORE json.loads recurses into it —
+        # a deep chain receipt would crash the index build with an uncaught
+        # RecursionError, the same class guarded in verify_semantic_coverage.
+        if not _max_json_depth_within(decoded, MAX_JSON_DEPTH):
+            raise IndexError(
+                f"{label} nests deeper than {MAX_JSON_DEPTH} levels: {path}"
+            )
         value = json.loads(
-            path.read_text(encoding="utf-8"),
+            decoded,
             object_pairs_hook=_strict_object,
             parse_constant=lambda token: (_ for _ in ()).throw(
                 ValueError(f"non-finite number {token!r}")
             ),
         )
-    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError, RecursionError) as exc:
         raise IndexError(f"cannot parse {label} {path}: {exc}") from exc
     if not isinstance(value, dict):
         raise IndexError(f"{label} root is not an object: {path}")

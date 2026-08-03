@@ -43,14 +43,61 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+#: Deepest object/array nesting a provider manifest may carry before it is
+#: refused. A tiny manifest can nest brackets thousands deep — enough to crash
+#: json.loads on the way in or json.dumps (canonical_sha256) on the way out with
+#: an uncaught RecursionError. This path reads provider bytes directly, so it
+#: does NOT go through verify_semantic_coverage._load_json's guard; it enforces
+#: its own. 64 is a generous ceiling for a real manifest.
+MAX_JSON_DEPTH = 64
+
+
+def _max_json_depth_within(text: str, limit: int) -> bool:
+    """True when no object/array nests deeper than ``limit`` brackets.
+
+    String-aware: brackets inside a JSON string literal (and any escaped quote)
+    are not structure, so a legal deep-looking string value is never miscounted.
+    Never raises — malformed JSON is left for ``json.loads`` to reject typed.
+    """
+
+    depth = 0
+    in_string = False
+    escaped = False
+    for ch in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch in "{[":
+            depth += 1
+            if depth > limit:
+                return False
+        elif ch in "}]":
+            depth -= 1
+    return True
+
+
 def canonical_sha256(value: object) -> str:
-    encoded = json.dumps(
-        value,
-        allow_nan=False,
-        ensure_ascii=False,
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode("utf-8")
+    try:
+        encoded = json.dumps(
+            value,
+            allow_nan=False,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    except RecursionError as exc:
+        # Deep nesting overflows the encoder's C recursion the same way the
+        # decoder does; fail closed with a typed error rather than a traceback.
+        raise SemanticReceiptError(
+            "value nests too deeply to canonically hash"
+        ) from exc
     return hashlib.sha256(encoded).hexdigest()
 
 
@@ -58,8 +105,20 @@ def provider_manifest_semantic_sha256_bytes(encoded: bytes) -> str:
     """Hash provider semantics while detaching only the receipt back-reference."""
 
     try:
-        manifest = json.loads(encoded.decode("utf-8"))
-    except (UnicodeError, ValueError, json.JSONDecodeError) as exc:
+        decoded = encoded.decode("utf-8")
+    except UnicodeError as exc:
+        raise SemanticReceiptError(f"cannot parse provider manifest semantics: {exc}") from exc
+    # Refuse stack-exhausting nesting BEFORE json.loads recurses into it — deep
+    # brackets crash the parser here and the encoder in canonical_sha256 below
+    # with an uncaught RecursionError, and this direct-bytes path has no other
+    # depth guard.
+    if not _max_json_depth_within(decoded, MAX_JSON_DEPTH):
+        raise SemanticReceiptError(
+            f"provider manifest nests deeper than {MAX_JSON_DEPTH} levels"
+        )
+    try:
+        manifest = json.loads(decoded)
+    except (UnicodeError, ValueError, json.JSONDecodeError, RecursionError) as exc:
         raise SemanticReceiptError(f"cannot parse provider manifest semantics: {exc}") from exc
     if not isinstance(manifest, dict):
         raise SemanticReceiptError("provider manifest semantic root must be an object")

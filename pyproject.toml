@@ -64,6 +64,8 @@ where = ["src"]
   "schemas/semantic-chain-manifest-v0alpha1.schema.json",
   "schemas/semantic-chain-run-v0alpha1.schema.json",
   "schemas/semantic-surface-catalog-v0alpha1.schema.json",
+  "schemas/behavioral-block-v0alpha1.schema.json",
+  "schemas/behavioral-block-library-v0alpha1.schema.json",
 ]
 "share/openada/catalog" = [
   "catalog/semantic-surfaces-v0alpha1.json",
@@ -85,6 +87,36 @@ where = ["src"]
 "share/openada/providers/ngspice-pdk-control" = [
   "providers/ngspice-pdk-control/driver-manifest.json",
   "providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
+]
+"share/openada/blocks/bhv-core" = [
+  "blocks/bhv-core/library-manifest.json",
+]
+"share/openada/blocks/bhv-core/blocks/comparator_clocked" = [
+  "blocks/bhv-core/blocks/comparator_clocked/block.json",
+  "blocks/bhv-core/blocks/comparator_clocked/comparator_clocked.ngspice.sp",
+  "blocks/bhv-core/blocks/comparator_clocked/comparator_clocked.va",
+]
+"share/openada/blocks/bhv-core/blocks/comparator_clocked/cases" = [
+  "blocks/bhv-core/blocks/comparator_clocked/cases/decide-basic.json",
+  "blocks/bhv-core/blocks/comparator_clocked/cases/hysteresis-band.json",
+]
+"share/openada/blocks/bhv-core/blocks/opamp_1p" = [
+  "blocks/bhv-core/blocks/opamp_1p/block.json",
+  "blocks/bhv-core/blocks/opamp_1p/opamp_1p.ngspice.sp",
+  "blocks/bhv-core/blocks/opamp_1p/opamp_1p.va",
+]
+"share/openada/blocks/bhv-core/blocks/opamp_1p/cases" = [
+  "blocks/bhv-core/blocks/opamp_1p/cases/gain-gbw.json",
+  "blocks/bhv-core/blocks/opamp_1p/cases/slew-sat.json",
+]
+"share/openada/blocks/bhv-core/blocks/sw_bbm_pair" = [
+  "blocks/bhv-core/blocks/sw_bbm_pair/block.json",
+  "blocks/bhv-core/blocks/sw_bbm_pair/sw_bbm_pair.ngspice.sp",
+  "blocks/bhv-core/blocks/sw_bbm_pair/sw_bbm_pair.va",
+]
+"share/openada/blocks/bhv-core/blocks/sw_bbm_pair/cases" = [
+  "blocks/bhv-core/blocks/sw_bbm_pair/cases/bbm-conductance.json",
+  "blocks/bhv-core/blocks/sw_bbm_pair/cases/buck-sync.json",
 ]
 
 [tool.pytest.ini_options]

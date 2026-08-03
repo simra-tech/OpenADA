@@ -921,6 +921,7 @@ def _resolve_model_source(
     inputs: list[dict[str, Any]],
     configuration: list[dict[str, Any]],
     deck_text: str | None = None,
+    expected_models_sha256: str | None = None,
 ) -> tuple[ResolvedPdkBinding | None, str | None]:
     """Resolve at most one model source, or raise a typed refusal."""
 
@@ -1022,6 +1023,22 @@ def _resolve_model_source(
             model_prelude, models_record = load_model_prelude(models_file)
         except SimraArtifactError as exc:
             raise SimulationRequestError(exc.code, exc.message, hint=exc.hint) from exc
+        # The tamper check lives INSIDE the operation boundary, immediately
+        # after the bytes that will bind this run were read and BEFORE any
+        # native launch or result retention: when the caller pins the digest
+        # of a reviewed composition, a mismatch is the operation's own
+        # pre-launch refusal, never a post-hoc rewrite of a retained result.
+        if (
+            expected_models_sha256 is not None
+            and models_record.get("sha256") != expected_models_sha256
+        ):
+            raise SimulationRequestError(
+                "blocks.materialize.tampered",
+                "The model library read for this run does not hash to the "
+                f"reviewed composition digest {expected_models_sha256}; the "
+                "materialized file changed after verification, so no "
+                "simulator was launched and no result was retained.",
+            )
         inputs.append(models_record)
         configuration.append(
             {
@@ -1058,6 +1075,7 @@ def simulate(
     retained_current_sources: Sequence[str] | None = None,
     extra_input_records: Sequence[Mapping[str, Any]] = (),
     extra_data_extensions: Mapping[str, Any] | None = None,
+    expected_models_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Run one circuit simulation, whatever shape the request arrived in.
 
@@ -1069,7 +1087,10 @@ def simulate(
     ``retained_current_sources`` are the explicit observation binding for a
     caller-composed PDK deck; omitting them preserves the legacy behavior.
     Additive input records and data extensions are applied before any result
-    envelope is retained.
+    envelope is retained. ``expected_models_sha256`` pins ``models_file`` to a
+    reviewed digest: the bytes actually read are compared immediately after
+    loading and before any native launch, and a mismatch is this operation's
+    own ``blocks.materialize.tampered`` pre-launch refusal.
     """
 
     correlation_id, request_id_error = _correlation_id(request_id)
@@ -1176,6 +1197,7 @@ def simulate(
             inputs=input_records,
             configuration=configuration,
             deck_text=deck_probe_text,
+            expected_models_sha256=expected_models_sha256,
         )
     except SimulationRequestError as exc:
         return refuse(

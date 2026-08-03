@@ -1,0 +1,19 @@
+{
+  "schema": "openada.behavioral-block-case/v0alpha1",
+  "case_id": "gain-gbw",
+  "description": "Open-loop AC: DC gain av0 and unity crossing at gbw.",
+  "analysis": {"type": "ac", "variation": "dec", "points": 20, "fstart": 10, "fstop": 100e6},
+  "fixtures": [
+    "Vd ind 0 DC 0 AC 1",
+    "Rload out 0 1e6"
+  ],
+  "dut": "X1 ind 0 out 0 bhv_opamp_1p_v1",
+  "observations": [
+    {"id": "av0db", "signal": "vdb(out)", "kind": "max"},
+    {"id": "fu", "signal": "vdb(out)", "kind": "cross", "level": 0.0, "direction": "fall", "occurrence": 1, "axis": "frequency"}
+  ],
+  "relations": [
+    {"id": "dc-gain", "observation": "av0db", "expect": 100.0, "atol": 0.1, "derivation": "20*log10(av0=100k) = 100 dB; 0.1 dB covers the rout/rload divider."},
+    {"id": "unity-crossing", "observation": "fu", "expect": 1e7, "rtol": 0.005, "derivation": "gbw parameter = 10 MHz."}
+  ]
+}

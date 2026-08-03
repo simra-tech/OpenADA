@@ -1,0 +1,37 @@
+{
+  "schema": "openada.behavioral-block-case/v0alpha1",
+  "case_id": "decide-basic",
+  "description": "Ramp on inp crosses a 0.55 V reference at t=550 ns, midway between sampling edges; the decision must appear at the first later rising clock edge (t=600 ns) plus td, measured at the out 50% crossing. The reference sits between edges on purpose: a crossing coincident with an edge (the earlier 0.5 V form) is a race the contract does not adjudicate, and the real simulator decides it one cycle early.",
+  "analysis": {
+    "type": "tran",
+    "tstep": "0.5n",
+    "tstop": "1.2u",
+    "uic": false
+  },
+  "fixtures": [
+    "Vinp inp 0 PWL(0 0 1u 1)",
+    "Vinn inn 0 DC 0.55",
+    "Vclk clk 0 PULSE(0 1 0 1n 1n 48n 100n)",
+    "Rload out 0 10k"
+  ],
+  "dut": "X1 inp inn clk out 0 bhv_comparator_clocked_v1 td=2n tedge=1n",
+  "observations": [
+    {
+      "id": "tdecide",
+      "signal": "v(out)",
+      "kind": "cross",
+      "level": 0.5,
+      "direction": "rise",
+      "occurrence": 1
+    }
+  ],
+  "relations": [
+    {
+      "id": "decision-latency",
+      "observation": "tdecide",
+      "expect": 6.025e-07,
+      "atol": 2e-09,
+      "derivation": "clk PULSE rises 600..601 ns, crossing vth_clk=0.5 at 600.5 ns; + td=2 ns = 602.5 ns. atol covers clk_band traversal and residual bridge/dac delays (~0.25 ns measured); this case bounds the latency at the ns scale, not the ps regularization bound."
+    }
+  ]
+}

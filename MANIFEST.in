@@ -2,6 +2,7 @@ include CHANGELOG.md
 include CONTRIBUTING.md
 include SECURITY.md
 recursive-include bin *
+graft blocks
 recursive-include catalog *.json
 graft conformance
 recursive-include docs *.md

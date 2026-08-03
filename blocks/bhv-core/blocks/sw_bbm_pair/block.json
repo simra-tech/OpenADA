@@ -1,0 +1,62 @@
+{
+  "schema": "openada.behavioral-block/v0alpha1",
+  "block_id": "sw_bbm_pair",
+  "contract_version": "0.1.0",
+  "abi_version": 1,
+  "implementation_version": "0.1.0",
+  "title": "Synchronous switch pair with enforced break-before-make",
+  "category": "switching",
+  "description": "Complementary half-bridge switch pair: ctl high (against ctlref, threshold vth) conducts nhi-nsw and isolates nsw-nlo; ctl low does the reverse. Every turn-ON command is delayed by tdead after the opposite turn-OFF, so both conduction commands are never asserted together. When body_diodes=1 the block includes antiparallel ideal-diode freewheel paths (forward drop about vdio); this is a declared topology choice required for inductive commutation, not a hidden regularization.",
+  "ports": [
+    {"ordinal": 0, "name": "ctl", "domain": "electrical", "role": "signal", "reference_port": "ctlref", "input_loading": {"infinite": true}, "output_drive": null},
+    {"ordinal": 1, "name": "ctlref", "domain": "electrical", "role": "reference", "reference_port": null, "input_loading": null, "output_drive": null},
+    {"ordinal": 2, "name": "nhi", "domain": "electrical", "role": "signal", "reference_port": null, "input_loading": null, "output_drive": {"kind": "switched-resistance", "rout_ohm": "ron..roff", "current_limit_amp": null, "edge_convention": "conductance follows shaped drive edges of duration tedge"}},
+    {"ordinal": 3, "name": "nsw", "domain": "electrical", "role": "signal", "reference_port": null, "input_loading": null, "output_drive": {"kind": "switched-resistance", "rout_ohm": "ron..roff", "current_limit_amp": null, "edge_convention": "conductance follows shaped drive edges of duration tedge"}},
+    {"ordinal": 4, "name": "nlo", "domain": "electrical", "role": "signal", "reference_port": null, "input_loading": null, "output_drive": {"kind": "switched-resistance", "rout_ohm": "ron..roff", "current_limit_amp": null, "edge_convention": "conductance follows shaped drive edges of duration tedge"}}
+  ],
+  "parameters": [
+    {"name": "vth", "type": "real", "default": 0.5, "units": "V", "scope": "contract", "description": "Control threshold against ctlref; ambiguity band is 0.9*vth..1.1*vth."},
+    {"name": "tdead", "type": "real", "default": 1e-8, "units": "s", "scope": "contract", "range": {"minimum": 0.0}, "description": "Break-before-make dead time from opposite turn-OFF command to this switch's turn-ON command."},
+    {"name": "tedge", "type": "real", "default": 2e-9, "units": "s", "scope": "contract", "range": {"minimum": 1e-12}, "description": "Drive edge shaping duration; conduction transitions are smooth over this window."},
+    {"name": "ron", "type": "real", "default": 0.05, "units": "ohm", "scope": "contract", "range": {"minimum": 1e-6, "exclusive_minimum": true}, "description": "Closed-switch resistance."},
+    {"name": "roff", "type": "real", "default": 1e8, "units": "ohm", "scope": "contract", "range": {"minimum": 1.0}, "description": "Open-switch resistance."},
+    {"name": "vdio", "type": "real", "default": 0.7, "units": "V", "scope": "contract", "range": {"minimum": 0.05}, "description": "Forward drop of the declared freewheel diodes at approximately 1 A (exponential-ideal law around that point)."},
+    {"name": "body_diodes", "type": "boolean-as-integer", "default": 1, "units": "", "scope": "contract", "range": {"minimum": 0, "maximum": 1}, "description": "1 includes antiparallel freewheel diodes (topology choice); 0 removes them and the composition owes the freewheel path."}
+  ],
+  "state": [
+    {"name": "drive commands", "init_policy": "op-derived", "value_before_first_event": "The initial transient solution resolves both drives from the initial control level; the turn-ON delay applies from the first control edge, not at t=0."}
+  ],
+  "analyses": {
+    "supported": ["tran", "op"],
+    "unsupported": [
+      {"analysis": "ac", "behavior": "AC linearizes the switches at their OP conduction state; no switching behavior is represented."},
+      {"analysis": "noise", "behavior": "Noise contributions are absent, not zero-modeled; report noise as unavailable."}
+    ]
+  },
+  "regularization": [
+    {"name": "smooth conductance interpolation", "magnitude": "log-interpolated resistance between ron and roff over the drive band", "scaling_rule": "transition window fixed by tedge", "tested_error_bound": "plateau conduction error < 0.1% of ron/roff targets"},
+    {"name": "disabled-diode residue", "magnitude": "is=1e-30 A with emission coefficient 100 when body_diodes=0", "scaling_rule": "fixed", "tested_error_bound": "residual conduction < 1 pA for any forward drop under 40 V"}
+  ],
+  "limitations": [
+    "No charge storage, gate charge, or switching-loss model; commutation energy is not represented.",
+    "No shoot-through model: the contract guarantees the commands never overlap, so cross-conduction cannot be studied with this block.",
+    "Diode model is exponential-ideal: no reverse recovery, no breakdown."
+  ],
+  "timing": {
+    "ambiguity_window": "control band 0.9*vth..1.1*vth; conduction transitions occupy tedge.",
+    "latency_definition": "tdead = time from opposite turn-OFF command to turn-ON command, exact at the digital command layer; electrical conduction adds up to tedge of shaped edge."
+  },
+  "backends": {
+    "ngspice-native": {
+      "file": "sw_bbm_pair.ngspice.sp",
+      "wrapper": "bhv_sw_bbm_pair_v1",
+      "element_families": ["b-source", "xspice-bridge", "xspice-digital", "xspice-analog", "diode"]
+    },
+    "verilog-a": {
+      "file": "sw_bbm_pair.va",
+      "module": "bhv_sw_bbm_pair_v1",
+      "feature_profile": ["event-initial-step", "event-cross", "transition", "hidden-state"]
+    }
+  },
+  "golden_cases": ["buck-sync", "bbm-conductance"]
+}

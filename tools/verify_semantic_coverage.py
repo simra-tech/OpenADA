@@ -53,6 +53,15 @@ RUN_SCHEMA = ROOT / "schemas" / "semantic-chain-run-v0alpha1.schema.json"
 DESIGN_PROVENANCE_SCHEMA = ROOT / "schemas" / "design-provenance-v0alpha1.schema.json"
 
 MAX_JSON_BYTES = 16 * 1024 * 1024
+#: Deepest object/array nesting any semantic-catalog or chain-index file may
+#: carry. The catalog schema leaves extension bodies unconstrained, and a tiny
+#: file (well under MAX_JSON_BYTES) can nest brackets thousands deep — enough to
+#: blow Python's C recursion limit inside ``json.loads`` on the way in or
+#: ``json.dumps`` (``_canonical_sha256``) on the way back out, and neither raises
+#: a ValueError the loader catches: the process dies with an uncaught
+#: RecursionError. Real catalogs nest ~5 levels; 64 is a generous ceiling that
+#: turns a stack-exhausting file into a typed refusal, fail-closed.
+MAX_JSON_DEPTH = 64
 LEVELS = (
     "unverified",
     "contract-tested",
@@ -120,6 +129,8 @@ REQUIRED_EVIDENCE = {
 # catalog edit must never turn an EDA operation into an administrative row and
 # thereby weaken its release obligation.
 SURFACE_CLASSIFICATIONS: dict[tuple[str, ...], str] = {
+    ("blocks", "list"): "administrative",
+    ("blocks", "show"): "administrative",
     ("capabilities",): "discovery",
     ("doctor",): "discovery",
     ("drc",): "semantic-execution",
@@ -194,6 +205,40 @@ def _reject_constant(value: str) -> None:
     raise ValueError(f"non-finite JSON constant {value!r} is forbidden")
 
 
+def _max_json_depth_within(text: str, limit: int) -> bool:
+    """True when no object/array nests deeper than ``limit`` brackets.
+
+    A pre-scan run before ``json.loads`` so a stack-exhausting file is refused
+    typed rather than crashing the parser with an uncaught RecursionError. It is
+    string-aware — brackets inside a JSON string literal (and any escaped quote)
+    are not structure — so a legal deep-looking string value is never miscounted.
+    It never raises: malformed JSON (unbalanced or unterminated) is left for
+    ``json.loads`` to reject with its own typed diagnostic.
+    """
+
+    depth = 0
+    in_string = False
+    escaped = False
+    for ch in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch in "{[":
+            depth += 1
+            if depth > limit:
+                return False
+        elif ch in "}]":
+            depth -= 1
+    return True
+
+
 def _load_json(path: Path, *, label: str) -> dict[str, Any]:
     try:
         metadata = path.lstat()
@@ -209,8 +254,17 @@ def _load_json(path: Path, *, label: str) -> dict[str, Any]:
         encoded = path.read_bytes()
         if len(encoded) != metadata.st_size:
             raise CoverageInputError(f"{label} changed while being read: {path}")
+        decoded = encoded.decode("utf-8")
+        # Refuse stack-exhausting nesting BEFORE json.loads recurses into it —
+        # deep brackets crash both the parser here and json.dumps in
+        # _canonical_sha256 later with an uncaught RecursionError, and every
+        # value that reaches the canonical hash is loaded through this door.
+        if not _max_json_depth_within(decoded, MAX_JSON_DEPTH):
+            raise CoverageInputError(
+                f"{label} nests deeper than {MAX_JSON_DEPTH} levels: {path}"
+            )
         payload = json.loads(
-            encoded.decode("utf-8"),
+            decoded,
             object_pairs_hook=_closed_object,
             parse_constant=_reject_constant,
         )
@@ -230,13 +284,19 @@ def _sha256(path: Path) -> str:
 
 
 def _canonical_sha256(value: object) -> str:
-    encoded = json.dumps(
-        value,
-        allow_nan=False,
-        ensure_ascii=False,
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode("utf-8")
+    try:
+        encoded = json.dumps(
+            value,
+            allow_nan=False,
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    except RecursionError as exc:
+        # Callers pass values loaded through _load_json (depth-bounded), so this
+        # is defense-in-depth parity with semantic_receipts.canonical_sha256:
+        # never let a deep value fault the encoder into an uncaught traceback.
+        raise CoverageInputError("value nests too deeply to canonically hash") from exc
     return hashlib.sha256(encoded).hexdigest()
 
 
@@ -268,7 +328,14 @@ def _schema_issues(payload: object, schema_path: Path, *, label: str) -> list[st
 
 
 def _duplicates(values: Iterable[str]) -> list[str]:
-    counts = Counter(values)
+    # str() every value before counting: these ids/paths come from catalog and
+    # index JSON where the schema promises strings, but schema errors are
+    # RECORDED and processing continues, so a malformed value (e.g. a list
+    # variant_id) still arrives here. Counter would raise an uncaught
+    # "unhashable type" TypeError on it; coercing keeps duplicate detection
+    # exact for the normal string case and fail-closed for a malformed one
+    # (already reported as its own schema issue).
+    counts = Counter(str(value) for value in values)
     return sorted(value for value, count in counts.items() if count > 1)
 
 
@@ -388,6 +455,91 @@ def _profile_inventory(catalog: dict[str, Any], issues: list[str]) -> dict[str, 
     return inventory
 
 
+# A variant may carry its own lifecycle in the schema-supported variant
+# extensions record. "experimental-hidden" keeps the executable selector
+# inventoried (it still gets its coverage row and cannot silently drift or
+# vanish) while exempting only that variant from active release obligations.
+#
+# The override is a self-downgrade lever, so it is gated by a frozen
+# in-verifier allowlist of (surface_id, variant_id) pairs: a catalog edit that
+# stamps the extension onto any other variant is a verification issue and the
+# declared lifecycle is NOT honored -- the variant keeps its surface's
+# lifecycle and therefore its full required coverage.
+VARIANT_LIFECYCLE_EXTENSION = "org.openada.lifecycle"
+VARIANT_LIFECYCLES = frozenset(
+    {"active", "historical", "experimental", "experimental-hidden"}
+)
+# The override is honored ONLY for the frozen (surface_id, variant_id) keys
+# below, and ONLY when the variant's execution identity matches the frozen
+# constants exactly. The identity is hardcoded here -- never derived from
+# sibling catalog variants -- so no coordinated catalog edit (e.g. re-pointing
+# every simulate variant at another provider) can widen what the hidden
+# variant is allowed to execute.
+ALLOWED_HIDDEN_VARIANTS: dict[tuple[str, str], dict[str, Any]] = {
+    ("openada.surface/cli.simulate/v1", "behavioral-blocks"): {
+        "provider_id": "org.openada.driver.ngspice",
+        "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+        "selector": {"blocks": "<library>:<block>[,<block>...]"},
+    }
+}
+
+
+# Distinct from None, which is a legitimate absent-lifecycle result. An
+# override record that is present but carries an explicit ``null`` (or omits
+# the key) must be reported as invalid rather than mistaken for "no override".
+_LIFECYCLE_ABSENT = object()
+
+
+def _declared_variant_lifecycle(variant: dict[str, Any]) -> Any:
+    extensions = variant.get("extensions")
+    if not isinstance(extensions, dict):
+        return _LIFECYCLE_ABSENT
+    record = extensions.get(VARIANT_LIFECYCLE_EXTENSION)
+    if not isinstance(record, dict):
+        return _LIFECYCLE_ABSENT
+    return record.get("lifecycle", _LIFECYCLE_ABSENT)
+
+
+def _hidden_variant_identity_ok(
+    surface: dict[str, Any], variant: dict[str, Any]
+) -> bool:
+    """The allowlisted override is honored only under the FROZEN identity.
+
+    The allowlist freezes a (surface_id, variant_id) pair together with the
+    exact provider and operation profile the hidden variant is allowed to
+    declare. Those constants live here in the verifier, never in the catalog
+    and never derived from sibling variants, so a catalog edit -- however
+    coordinated -- cannot re-point the hidden variant at another provider or
+    operation. Any drift means the override is NOT honored: the variant keeps
+    the surface lifecycle (active) and its full required coverage, and
+    verification reports the drift as an issue.
+    """
+
+    frozen = ALLOWED_HIDDEN_VARIANTS.get(
+        (surface.get("surface_id"), variant.get("variant_id"))
+    )
+    if frozen is None:
+        return False
+    return (
+        variant.get("provider_id") == frozen["provider_id"]
+        and variant.get("operation_profile") == frozen["operation_profile"]
+        and variant.get("selector") == frozen["selector"]
+    )
+
+
+def _variant_lifecycle(surface: dict[str, Any], variant: dict[str, Any]) -> str:
+    declared = _declared_variant_lifecycle(variant)
+    if (
+        isinstance(declared, str)
+        and declared in VARIANT_LIFECYCLES
+        and (surface.get("surface_id"), variant.get("variant_id"))
+        in ALLOWED_HIDDEN_VARIANTS
+        and _hidden_variant_identity_ok(surface, variant)
+    ):
+        return declared
+    return surface["lifecycle"]
+
+
 def _surface_inventory(
     catalog: dict[str, Any],
     profiles: dict[str, dict[str, Any]],
@@ -460,6 +612,57 @@ def _surface_inventory(
                 issues.append(
                     f"surface {surface_id} variant references unknown profile {operation}"
                 )
+            if isinstance(variant, dict):
+                declared = _declared_variant_lifecycle(variant)
+                # The catalog schema leaves extension bodies unconstrained, so
+                # a lifecycle value may be a non-string (e.g. a list) or an
+                # explicit null. Anything present that is not an exact valid
+                # lifecycle string is an invalid override; the sentinel keeps a
+                # present-but-null value distinct from a genuinely absent one,
+                # and the isinstance guard avoids a TypeError from a frozenset
+                # membership test on an unhashable value.
+                if declared is not _LIFECYCLE_ABSENT and (
+                    not isinstance(declared, str)
+                    or declared not in VARIANT_LIFECYCLES
+                ):
+                    issues.append(
+                        f"surface {surface_id} variant "
+                        f"{variant.get('variant_id')} declares an invalid "
+                        f"lifecycle override: {declared!r}"
+                    )
+                variant_extensions = variant.get("extensions")
+                carries_override = (
+                    isinstance(variant_extensions, dict)
+                    and VARIANT_LIFECYCLE_EXTENSION in variant_extensions
+                )
+                if (
+                    carries_override
+                    and (surface_id, variant.get("variant_id"))
+                    not in ALLOWED_HIDDEN_VARIANTS
+                ):
+                    issues.append(
+                        f"surface {surface_id} variant "
+                        f"{variant.get('variant_id')} carries the "
+                        f"{VARIANT_LIFECYCLE_EXTENSION} override outside the "
+                        "frozen in-verifier allowlist; the override is not "
+                        "honored"
+                    )
+                elif carries_override and not _hidden_variant_identity_ok(
+                    record, variant
+                ):
+                    # Allowlisted pair, drifted identity: the catalog's
+                    # provider/operation values are cross-checked against the
+                    # FROZEN in-verifier constants, and a mismatch keeps the
+                    # variant active with its full required coverage.
+                    issues.append(
+                        f"surface {surface_id} variant "
+                        f"{variant.get('variant_id')} carries the "
+                        f"{VARIANT_LIFECYCLE_EXTENSION} override but its "
+                        f"provider {variant.get('provider_id')!r} or operation "
+                        f"profile {variant.get('operation_profile')!r} differs "
+                        "from the frozen in-verifier identity; the "
+                        "override is not honored"
+                    )
     bound_profiles = {
         binding
         for record in records
@@ -801,7 +1004,7 @@ def _coverage_rows(
                 _base_row(
                     f"surface-variant|{surface_id}|{variant['variant_id']}",
                     "surface-variant",
-                    lifecycle=surface["lifecycle"],
+                    lifecycle=_variant_lifecycle(surface, variant),
                     classification=surface["classification"],
                     policy=policy,
                     operation_profile=variant.get("operation_profile"),

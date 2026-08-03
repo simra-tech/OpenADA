@@ -97,6 +97,30 @@
   ],
   "surfaces": [
     {
+      "surface_id": "openada.surface/cli.blocks-list/v1",
+      "command_path": [
+        "blocks",
+        "list"
+      ],
+      "classification": "administrative",
+      "lifecycle": "experimental-hidden",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.blocks-show/v1",
+      "command_path": [
+        "blocks",
+        "show"
+      ],
+      "classification": "administrative",
+      "lifecycle": "experimental-hidden",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
       "surface_id": "openada.surface/cli.capabilities/v1",
       "command_path": [
         "capabilities"
@@ -395,6 +419,20 @@
           "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
           "provider_id": "org.openada.driver.xyce",
           "extensions": {}
+        },
+        {
+          "variant_id": "behavioral-blocks",
+          "selector": {
+            "blocks": "<library>:<block>[,<block>...]"
+          },
+          "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+          "provider_id": "org.openada.driver.ngspice",
+          "extensions": {
+            "org.openada.lifecycle": {
+              "lifecycle": "experimental-hidden",
+              "note": "The --blocks selector composes a reviewed behavioral-block library into the model-library role of the shared circuit.simulate profile. The variant-level lifecycle override keeps this executable selector inventoried by the coverage verifier while exempting it from active release obligations until its evidence chain exists."
+            }
+          }
         }
       ],
       "extensions": {}

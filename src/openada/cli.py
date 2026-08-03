@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Mapping
+import hashlib
 import json
 import math
 import os
@@ -67,6 +68,13 @@ from .provider_runtime import (
     load_operation_profile,
     load_provider_request,
 )
+from .block_library import (
+    BlockLibraryError,
+    compose_blocks,
+    list_block_libraries,
+    load_block_library,
+    parse_blocks_selection,
+)
 
 
 class _RequestParseError(Exception):
@@ -103,6 +111,7 @@ _COMMAND_OPERATIONS = {
     "profile": "profile",
     "evaluate": "specification.evaluate",
     "provider": "provider",
+    "blocks": "blocks",
     "drc": "drc",
     "drc-compare": "drc.compare",
     "drc-review": "drc.review",
@@ -447,6 +456,17 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     simulate.add_argument(
+        "--blocks",
+        metavar="LIBRARY:BLOCK[,BLOCK...]",
+        help=(
+            "Compose reviewed behavioral blocks from an installed block library "
+            "into the model prelude, selected by identity and bound by content "
+            "digest with their dependency closure. The deck instantiates the "
+            "public bhv_<block>_v<abi> wrappers. Mutually exclusive with "
+            "--models and --pdk."
+        ),
+    )
+    simulate.add_argument(
         "--pdk-root",
         help=(
             "Absolute path to the directory containing the installed PDK tree. "
@@ -785,6 +805,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="Emit one complete packaged operation profile.",
     )
     profile_show.add_argument("operation_profile")
+
+    blocks = commands.add_parser(
+        "blocks",
+        help="List or show installed behavioral block libraries.",
+    )
+    blocks_commands = blocks.add_subparsers(
+        dest="blocks_command",
+        required=True,
+    )
+    blocks_commands.add_parser(
+        "list",
+        help="List installed behavioral block library identities.",
+    )
+    blocks_show = blocks_commands.add_parser(
+        "show",
+        help="Emit one verified library catalog: blocks, contracts, digests.",
+    )
+    blocks_show.add_argument("library_id")
 
     drc = commands.add_parser(
         "drc",
@@ -1575,13 +1613,77 @@ def _experiment_pdk_root_argument(args: argparse.Namespace) -> Path | None:
 
 
 def _simulation_cli_invalid(args: argparse.Namespace, message: str) -> dict:
-    if args.backend is not None:
+    backend = args.backend
+    if backend is None and getattr(args, "blocks", None) is not None:
+        # --blocks selects the circuit-simulation semantic and defaults the
+        # backend to ngspice, so its failures must speak the same envelope a
+        # backend-spelled request would receive.
+        backend = "ngspice"
+    if backend is not None:
         return invalid_circuit_simulation_request(
             message,
-            backend=args.backend,
+            backend=backend,
             analysis_type=args.analysis,
         )
     return _invalid_request("simulate", message)
+
+
+def _materialize_exclusive(path: Path, text: str, expected_sha256: str) -> str | None:
+    """Create ``path`` exclusively, then verify the written bytes by digest.
+
+    Returns an error message instead of raising so the caller can wrap it in
+    the structured simulation refusal. ``O_EXCL`` refuses preplaced files and
+    symlinks outright; the bytes are then read back from the same descriptor
+    and re-hashed so what the simulator will execute is exactly the reviewed
+    composition, not whatever a concurrent writer substituted.
+    """
+
+    payload = text.encode("utf-8")
+    flags = (
+        os.O_CREAT
+        | os.O_EXCL
+        | os.O_RDWR
+        | getattr(os, "O_NOFOLLOW", 0)
+        | getattr(os, "O_CLOEXEC", 0)
+    )
+    try:
+        descriptor = os.open(path, flags, 0o644)
+    except FileExistsError:
+        return (
+            f"refusing to materialize {path}: the path already exists; remove "
+            "it or choose a fresh --output-dir."
+        )
+    except OSError as exc:
+        return f"could not create {path}: {exc}"
+    try:
+        view = memoryview(payload)
+        while view:
+            written = os.write(descriptor, view)
+            view = view[written:]
+        size = os.fstat(descriptor).st_size
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        chunks: list[bytes] = []
+        remaining = size + 1
+        while remaining > 0:
+            chunk = os.read(descriptor, min(65_536, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        readback = b"".join(chunks)
+    except OSError as exc:
+        return f"could not write {path}: {exc}"
+    finally:
+        os.close(descriptor)
+    if (
+        len(readback) != len(payload)
+        or hashlib.sha256(readback).hexdigest() != expected_sha256
+    ):
+        return (
+            f"{path} did not verify after writing: the captured bytes do not "
+            f"hash to the expected digest {expected_sha256}."
+        )
+    return None
 
 
 def _measurement_record(document: dict) -> dict:
@@ -1962,6 +2064,77 @@ def _provider_dispatch(args: argparse.Namespace) -> dict:
     )
 
 
+def _blocks_dispatch(args: argparse.Namespace) -> dict:
+    action = args.blocks_command
+    if action == "list":
+        identities = list_block_libraries()
+        return result(
+            "blocks.list",
+            tool=None,
+            execution=static_execution(),
+            engineering_status="pass",
+            summary=f"Listed {len(identities)} installed behavioral block libraries.",
+            data={"libraries": list(identities), "extensions": {}},
+        )
+    try:
+        library = load_block_library(args.library_id)
+    except BlockLibraryError as exc:
+        return result(
+            "blocks.show",
+            tool=None,
+            execution=static_execution("failed"),
+            engineering_status="fail",
+            summary="The behavioral block library could not be verified.",
+            diagnostics=[diagnostic("error", exc.code, exc.message)],
+            data={"library_id": args.library_id, "library": None, "extensions": {}},
+        )
+    catalog = []
+    for block_id in sorted(library.blocks):
+        block = library.blocks[block_id]
+        contract = block.contract
+        catalog.append(
+            {
+                "block_id": block_id,
+                "title": contract["title"],
+                "category": contract["category"],
+                "contract_version": contract["contract_version"],
+                "abi_version": block.abi_version,
+                "wrapper": block.wrapper,
+                "ports": [port["name"] for port in contract["ports"]],
+                "parameters": [
+                    parameter["name"] for parameter in contract["parameters"]
+                ],
+                "depends": list(block.depends),
+                "backends": sorted(contract["backends"]),
+                "golden_cases": list(contract["golden_cases"]),
+                "contract_sha256": block.contract_sha256,
+                "native_source_sha256": (
+                    block.native.source_sha256 if block.native else None
+                ),
+            }
+        )
+    return result(
+        "blocks.show",
+        tool=None,
+        execution=static_execution(),
+        engineering_status="pass",
+        summary=(
+            f"Verified library {library.library_id}@{library.library_version} "
+            f"with {len(catalog)} blocks."
+        ),
+        data={
+            "library_id": library.library_id,
+            "library": {
+                "library_version": library.library_version,
+                "library_digest": library.library_digest,
+                "backend_requirements": library.manifest["backend_requirements"],
+                "blocks": catalog,
+            },
+            "extensions": {},
+        },
+    )
+
+
 def _profile_dispatch(args: argparse.Namespace) -> dict:
     action = args.profile_command
     try:
@@ -2059,6 +2232,39 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             parameters = _simulation_profile_parameters(args)
         except ValueError as exc:
             return _simulation_cli_invalid(args, str(exc))
+        # Behavioral blocks are CLI sugar over the model-library role: the
+        # selection resolves against the installed reviewed library, the
+        # composed prelude is materialized as retained evidence, and the
+        # existing bounded model path carries it unchanged.
+        composed_blocks = None
+        if args.blocks is not None:
+            if args.backend is not None and args.backend != "ngspice":
+                # Mirrors pdk.backend.unsupported: the composed prelude is
+                # XSPICE-bearing ngspice-native source and has no reviewed
+                # translation for any other simulator.
+                return _simulation_cli_invalid(
+                    args,
+                    "behavioral blocks are ngspice-native in this revision; "
+                    f"backend {args.backend!r} has no reviewed block "
+                    "composition. Rerun with --backend ngspice.",
+                )
+            if args.models is not None:
+                return _simulation_cli_invalid(
+                    args,
+                    "--blocks and --models are mutually exclusive model sources.",
+                )
+            if args.pdk is not None:
+                return _simulation_cli_invalid(
+                    args,
+                    "--blocks cannot combine with --pdk in this profile revision; "
+                    "the behavioral composition occupies the model-library role.",
+                )
+            try:
+                library_id, selection = parse_blocks_selection(args.blocks)
+                block_library = load_block_library(library_id)
+                composed_blocks = compose_blocks(block_library, selection)
+            except BlockLibraryError as exc:
+                return _simulation_cli_invalid(args, f"{exc.code}: {exc.message}")
         # Which path honours the request is decided by what the request needs,
         # never by the caller guessing. A published artifact, a PDK binding or a
         # model-card file can only be honoured by the semantic operation, so a
@@ -2074,6 +2280,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             args.backend is not None
             or args.pdk is not None
             or args.models is not None
+            or composed_blocks is not None
             or target_kind == "simra-artifact"
         )
         # ``--analysis`` belongs to the semantic operation, and asking for it
@@ -2111,14 +2318,40 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                     "The circuit.simulate semantic does not accept native "
                     "ngspice option(s): " + ", ".join(profile_only_options),
                 )
-            return simulate(
+            models_file = (
+                Path(args.models).expanduser().resolve() if args.models else None
+            )
+            blocks_extensions = None
+            if composed_blocks is not None:
+                # The evidence directory is caller input, so its creation must
+                # speak the structured circuit-simulate refusal, never leak a
+                # raw traceback for an unwritable or non-directory target.
+                try:
+                    output_dir.mkdir(parents=True, exist_ok=True)
+                except OSError as exc:
+                    return _simulation_cli_invalid(
+                        args,
+                        f"--output-dir {output_dir} cannot hold the composed "
+                        f"model library: {exc}",
+                    )
+                models_file = output_dir / "behavioral-blocks.model.spice"
+                materialization_error = _materialize_exclusive(
+                    models_file, composed_blocks.text, composed_blocks.text_sha256
+                )
+                if materialization_error is not None:
+                    return _simulation_cli_invalid(args, materialization_error)
+                # The org.openada.behavioral-blocks extension inside the
+                # validated retained envelope is the provenance authority;
+                # no separate sidecar file is written.
+                blocks_extensions = {
+                    "org.openada.behavioral-blocks": composed_blocks.record()
+                }
+            simulation = simulate(
                 source,
                 output_dir,
                 discovery=discovery,
                 backend=args.backend or "ngspice",
-                models_file=(
-                    Path(args.models).expanduser().resolve() if args.models else None
-                ),
+                models_file=models_file,
                 pdk=args.pdk,
                 pdk_root=_pdk_root_argument(args),
                 corner=args.corner,
@@ -2127,7 +2360,20 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 timeout=timeout,
                 request_id=args.request_id,
                 unmanaged_collateral=args.unmanaged_collateral,
+                extra_data_extensions=blocks_extensions,
+                # The tamper check is the operation's own: simulate() compares
+                # the model-library bytes it actually read against the
+                # reviewed composition digest before any native launch, so a
+                # replaced file is a pre-launch blocks.materialize.tampered
+                # refusal under the original request id, never a post-hoc
+                # rewrite of a retained result.
+                expected_models_sha256=(
+                    composed_blocks.text_sha256
+                    if composed_blocks is not None
+                    else None
+                ),
             )
+            return simulation
         return simulate_legacy_native(
             source,
             output_dir,
@@ -2238,6 +2484,8 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
         return _provider_dispatch(args)
     if args.command == "profile":
         return _profile_dispatch(args)
+    if args.command == "blocks":
+        return _blocks_dispatch(args)
     if args.command == "drc":
         gds = Path(args.gds_file).expanduser().resolve()
         report = args.report

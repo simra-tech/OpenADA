@@ -1,0 +1,22 @@
+{
+  "schema": "openada.behavioral-block-case/v0alpha1",
+  "case_id": "slew-sat",
+  "description": "Unity buffer: 2 V input step must slew at the declared limit between the 10% and 90% output points; a DC input beyond vhi must clamp at vhi through the rout divider.",
+  "analysis": {"type": "tran", "tstep": "10n", "tstop": "30u", "uic": false},
+  "fixtures": [
+    "Vstep instep 0 PULSE(-1 1 1u 1n 1n 20u 40u)",
+    "Rlb outb 0 10k",
+    "Vbig inbig 0 DC 3",
+    "Rls outs 0 10k"
+  ],
+  "dut": "X2 instep outb outb 0 bhv_opamp_1p_v1\nX3 inbig outs outs 0 bhv_opamp_1p_v1",
+  "observations": [
+    {"id": "t10", "signal": "v(outb)", "kind": "cross", "level": -0.8, "direction": "rise", "occurrence": 1},
+    {"id": "t90", "signal": "v(outb)", "kind": "cross", "level": 0.8, "direction": "rise", "occurrence": 1},
+    {"id": "vsat", "signal": "v(outs)", "kind": "value_at", "time": 29e-6}
+  ],
+  "relations": [
+    {"id": "slew-rate", "observation": "t90", "expect_minus": "t10", "expect": 1.63e-7, "rtol": 0.05, "derivation": "1.6 V / 10 V/us = 160 ns ideal; tanh softening adds ~2%; measured 163 ns on both simulator versions."},
+    {"id": "clamp-level", "observation": "vsat", "expect": 1.6337, "rtol": 0.005, "derivation": "vhi=1.65 through rout=100 into 10k load: 1.65*10000/10100."}
+  ]
+}

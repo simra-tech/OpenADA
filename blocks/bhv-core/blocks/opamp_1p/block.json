@@ -1,0 +1,54 @@
+{
+  "schema": "openada.behavioral-block/v0alpha1",
+  "block_id": "opamp_1p",
+  "contract_version": "0.1.0",
+  "abi_version": 1,
+  "implementation_version": "0.1.0",
+  "title": "Single-pole opamp macromodel with slew limit and rail clamp",
+  "category": "amplification",
+  "description": "Differential DC gain av0 with one dominant pole placed so the unity-gain bandwidth is gbw; output rate of change is smoothly limited to slew; the output clamps to [vlo, vhi] against the vss reference behind a thevenin rout. Small-signal transconductance at balance is exact; the tanh input stage softens the slew corner.",
+  "ports": [
+    {"ordinal": 0, "name": "inp", "domain": "electrical", "role": "signal", "reference_port": "vss", "input_loading": {"infinite": true}, "output_drive": null},
+    {"ordinal": 1, "name": "inn", "domain": "electrical", "role": "signal", "reference_port": "vss", "input_loading": {"infinite": true}, "output_drive": null},
+    {"ordinal": 2, "name": "out", "domain": "electrical", "role": "signal", "reference_port": "vss", "input_loading": null, "output_drive": {"kind": "thevenin", "rout_ohm": "rout", "current_limit_amp": null, "edge_convention": "continuous; slew applies to the internal integrator node"}},
+    {"ordinal": 3, "name": "vss", "domain": "electrical", "role": "reference", "reference_port": null, "input_loading": null, "output_drive": null}
+  ],
+  "parameters": [
+    {"name": "av0", "type": "real", "default": 100000.0, "units": "V/V", "scope": "contract", "range": {"minimum": 1.0, "exclusive_minimum": true}, "description": "DC differential gain."},
+    {"name": "gbw", "type": "real", "default": 10000000.0, "units": "Hz", "scope": "contract", "range": {"minimum": 0.0, "exclusive_minimum": true}, "description": "Unity-gain bandwidth."},
+    {"name": "slew", "type": "real", "default": 10000000.0, "units": "V/s", "scope": "contract", "range": {"minimum": 0.0, "exclusive_minimum": true}, "description": "Large-signal output slew limit (smooth tanh corner)."},
+    {"name": "vhi", "type": "real", "default": 1.65, "units": "V", "scope": "contract", "description": "Upper output clamp against vss."},
+    {"name": "vlo", "type": "real", "default": -1.65, "units": "V", "scope": "contract", "description": "Lower output clamp against vss."},
+    {"name": "rout", "type": "real", "default": 100.0, "units": "ohm", "scope": "contract", "range": {"minimum": 1e-3}, "description": "Thevenin output resistance."}
+  ],
+  "state": [
+    {"name": "integrator node", "init_policy": "op-derived", "value_before_first_event": "The OP solution places the integrator at its balanced value for the applied differential input."}
+  ],
+  "analyses": {
+    "supported": ["op", "dc", "ac", "tran"],
+    "unsupported": [
+      {"analysis": "noise", "behavior": "Noise contributions are absent, not zero-modeled; report noise as unavailable."}
+    ]
+  },
+  "regularization": [
+    {"name": "fixed internal integrator capacitance", "magnitude": "1 nF internal c1x", "scaling_rule": "gm, tail current, and r1 are solved from av0/gbw/slew against fixed c1x", "tested_error_bound": "av0 and gbw each within 0.1% of declared values; slew within 3% (tanh softening)"}
+  ],
+  "limitations": [
+    "Single pole only: no second pole, no phase-margin model beyond the dominant pole.",
+    "No input offset, bias current, common-mode rejection, or supply-rejection model.",
+    "Clamp is a hard max/min on the internal node: recovery from deep saturation has no overload time constant."
+  ],
+  "backends": {
+    "ngspice-native": {
+      "file": "opamp_1p.ngspice.sp",
+      "wrapper": "bhv_opamp_1p_v1",
+      "element_families": ["b-source", "spice-primitive"]
+    },
+    "verilog-a": {
+      "file": "opamp_1p.va",
+      "module": "bhv_opamp_1p_v1",
+      "feature_profile": ["event-initial-step", "contribution-resistive", "contribution-reactive", "ddt", "hidden-state"]
+    }
+  },
+  "golden_cases": ["gain-gbw", "slew-sat"]
+}

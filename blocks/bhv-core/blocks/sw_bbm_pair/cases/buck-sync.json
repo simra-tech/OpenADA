@@ -1,0 +1,87 @@
+{
+  "schema": "openada.behavioral-block-case/v0alpha1",
+  "case_id": "buck-sync",
+  "description": "Synchronous buck VIN=5 D=0.4 fsw=1MHz L=10u C=22u R=2.5. Cycle-aligned window after settling (tau=2RC=110us). Mean VO reflects ideal D*VIN minus declared dead-time diode and ron losses; VSW must stay rail-bounded; inductor ripple must match the analytic value.",
+  "analysis": {
+    "type": "tran",
+    "tstep": "2n",
+    "tstop": "400u",
+    "uic": false
+  },
+  "fixtures": [
+    "Vin vin 0 DC 5",
+    "Vctl ctl 0 PULSE(0 1 0 2n 2n 398n 1000n)",
+    "L1 sw out 10u",
+    "C1 out 0 22u ic=2",
+    "Rload out 0 2.5"
+  ],
+  "dut": "X1 ctl 0 vin sw 0 bhv_sw_bbm_pair_v1 tdead=10n",
+  "observations": [
+    {
+      "id": "vomean",
+      "signal": "v(out)",
+      "kind": "avg",
+      "from": 0.000398,
+      "to": 0.0004
+    },
+    {
+      "id": "vswmax",
+      "signal": "v(sw)",
+      "kind": "max",
+      "from": 0.000398,
+      "to": 0.0004
+    },
+    {
+      "id": "vswmin",
+      "signal": "v(sw)",
+      "kind": "min",
+      "from": 0.000398,
+      "to": 0.0004
+    },
+    {
+      "id": "ilmax",
+      "signal": "i(l1)",
+      "kind": "max",
+      "from": 0.000398,
+      "to": 0.0004
+    },
+    {
+      "id": "ilmin",
+      "signal": "i(l1)",
+      "kind": "min",
+      "from": 0.000398,
+      "to": 0.0004
+    }
+  ],
+  "relations": [
+    {
+      "id": "vo-mean",
+      "observation": "vomean",
+      "expect": 1.886,
+      "rtol": 0.02,
+      "derivation": "D*VIN=2.0 minus: exact-ron conduction drop (Iload~0.754A x 50mOhm), dead-time diode conduction on BOTH edges, delayed high-side turn-on (tdead=10ns shortens the effective on interval, ~50mV at these values), and 4x2ns edge-interpolation intervals. Earlier drafts read ~1.925 because aswitch thresholds inside the drive range extrapolated ron ~1260x low; cntl thresholds now equal the drive rails so ron is exact. Measured 1.886 on ngspice 45.2."
+    },
+    {
+      "id": "vsw-rail-bounded-high",
+      "observation": "vswmax",
+      "expect": 5.0,
+      "atol": 0.05,
+      "derivation": "VSW never exceeds VIN beyond the smooth-switch residue; the 2*VIN commutation-spike class is structurally absent."
+    },
+    {
+      "id": "vsw-diode-clamp-low",
+      "observation": "vswmin",
+      "expect": -0.7,
+      "atol": 0.1,
+      "derivation": "one declared freewheel diode drop below ground during dead time."
+    },
+    {
+      "id": "il-ripple",
+      "observation": "ilmax",
+      "expect_minus": "ilmin",
+      "expect": 0.1246,
+      "rtol": 0.05,
+      "derivation": "(VIN-VO)*D/(L*fsw) with the measured VO=1.886: 3.114*0.4e-6/10e-6 = 0.1246 A analytic; measured 0.1210 (2.9% below, duty shortened by dead time and edge intervals). rtol 5% covers the correction."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "openada.behavioral-block-case/v0alpha1",
+  "case_id": "bbm-conductance",
+  "description": "Independent 1 V probe sources through 1-ohm resistors feed nhi and nlo; the pair drives a 10-ohm load with ron=1. Break-before-make is asserted on CONDUCTANCE: if both switches ever conducted, each probe would carry ~45 mA simultaneously; with BBM the smaller of the two currents never exceeds leakage. A plateau check also pins the closed-switch endpoint resistance at ron. body_diodes=0 so diode paths cannot mask switch conduction.",
+  "analysis": {"type": "tran", "tstep": "1n", "tstop": "5u", "uic": false},
+  "fixtures": [
+    "Vctl ctl 0 PULSE(0 1 0.2u 2n 2n 0.5u 1u)",
+    "Vp1 phi 0 DC 1",
+    "Vp2 plo 0 DC 1",
+    "Rp1 phi nhi 1",
+    "Rp2 plo nlo 1",
+    "Rsw sw 0 10"
+  ],
+  "dut": "X1 ctl 0 nhi sw nlo bhv_sw_bbm_pair_v1 tdead=20n tedge=2n ron=1 roff=1e6 body_diodes=0",
+  "observations": [
+    {"id": "overlap", "signal": "min(abs(i(vp1)),abs(i(vp2)))", "kind": "max", "from": 0.1e-6, "to": 5e-6},
+    {"id": "on_current", "signal": "i(vp1)", "kind": "value_at", "time": 0.5e-6}
+  ],
+  "relations": [
+    {"id": "never-both-conducting", "observation": "overlap", "expect": 0.0, "atol": 0.008, "derivation": "single-on probe current is 1V/(1+ron+10)=83.3 mA; simultaneous conduction would put ~45 mA through BOTH probes. The 8 mA bound is <10% of single-on and >1000x leakage (~1 uA at roff=1e6)."},
+    {"id": "on-resistance-endpoint", "observation": "on_current", "expect": -0.08333, "atol": 0.002, "derivation": "closed high-side switch at exactly ron=1: i(vp1) = -1V/(1+1+10) = -83.33 mA; verifies the aswitch rails are not extrapolated beyond ron."}
+  ]
+}

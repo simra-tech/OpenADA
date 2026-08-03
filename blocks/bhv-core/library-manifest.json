@@ -1,0 +1,131 @@
+{
+  "schema": "openada.behavioral-block-library/v0alpha1",
+  "library_id": "bhv-core",
+  "library_version": "0.1.0",
+  "title": "Core behavioral block library",
+  "description": "Reviewed technology-free behavioral blocks for functional circuit reconstruction: switching, amplification, sampling, quantization and timing cells with closed contracts, ngspice-native implementations behind stable bhv_<block>_v<abi> wrappers, and Verilog-A reference sources for the future compiled path.",
+  "backend_requirements": {
+    "simulators": [
+      {
+        "backend": "ngspice",
+        "capabilities": [
+          "xspice-analog",
+          "xspice-digital",
+          "xspice-bridge"
+        ]
+      }
+    ]
+  },
+  "blocks": [
+    {
+      "block_id": "comparator_clocked",
+      "contract": "blocks/comparator_clocked/block.json"
+    },
+    {
+      "block_id": "opamp_1p",
+      "contract": "blocks/opamp_1p/block.json"
+    },
+    {
+      "block_id": "sw_bbm_pair",
+      "contract": "blocks/sw_bbm_pair/block.json"
+    }
+  ],
+  "files": [
+    {
+      "path": "blocks/comparator_clocked/block.json",
+      "role": "contract",
+      "bytes": 5433,
+      "sha256": "6e145ac0e7c040c33b7a51a0f8c6a24496000f67a079c15276bbcd692128a62c"
+    },
+    {
+      "path": "blocks/comparator_clocked/cases/ambiguity-low.json",
+      "role": "golden-case",
+      "bytes": 1011,
+      "sha256": "f2d70bfb0613e1777a7ef1eeb28e7b56ed1684b1656ff40deba560bfee1d9418"
+    },
+    {
+      "path": "blocks/comparator_clocked/cases/decide-basic.json",
+      "role": "golden-case",
+      "bytes": 1419,
+      "sha256": "df9e74064d107ad413fbcd51cc283330411bef57fe459d14486db4b0265dce43"
+    },
+    {
+      "path": "blocks/comparator_clocked/cases/hysteresis-band.json",
+      "role": "golden-case",
+      "bytes": 1275,
+      "sha256": "1a2eb73ac6efbf7474f858089cd51e305562365ddc9472f788166c40a64d4b68"
+    },
+    {
+      "path": "blocks/comparator_clocked/comparator_clocked.ngspice.sp",
+      "role": "ngspice-native",
+      "bytes": 3088,
+      "sha256": "600c2e666a109c81851bf6b0f1b29f4e74ceed590107a5c759c3f97ddeeab2a6"
+    },
+    {
+      "path": "blocks/comparator_clocked/comparator_clocked.va",
+      "role": "verilog-a",
+      "bytes": 1475,
+      "sha256": "670a21f1f7145a59190253013d037c1d0951df2d58d5dd727a13c9b7adf5c4d4"
+    },
+    {
+      "path": "blocks/opamp_1p/block.json",
+      "role": "contract",
+      "bytes": 3944,
+      "sha256": "68b1c5cce0f1d8c0d6e6352606bbaef5fc60195a09e69ec87bb7bba4514e3be8"
+    },
+    {
+      "path": "blocks/opamp_1p/cases/gain-gbw.json",
+      "role": "golden-case",
+      "bytes": 877,
+      "sha256": "d5b61835db3d72405adf592091548c356fd9c475eedf7b845f584b558a75ed65"
+    },
+    {
+      "path": "blocks/opamp_1p/cases/slew-sat.json",
+      "role": "golden-case",
+      "bytes": 1294,
+      "sha256": "1b46c6eb3a424930be43edd3e4db964626add043e0616271251e59b15e922593"
+    },
+    {
+      "path": "blocks/opamp_1p/opamp_1p.ngspice.sp",
+      "role": "ngspice-native",
+      "bytes": 1166,
+      "sha256": "2fd1e37978a97bbb52fd222ba60b18c1cc10a2b66759632aaf0dcd464b45d76e"
+    },
+    {
+      "path": "blocks/opamp_1p/opamp_1p.va",
+      "role": "verilog-a",
+      "bytes": 1253,
+      "sha256": "ab309466305baf408fd03c643d73932f0972f5d2aab59f41b02700d16a117447"
+    },
+    {
+      "path": "blocks/sw_bbm_pair/block.json",
+      "role": "contract",
+      "bytes": 5757,
+      "sha256": "f1e40e2fe436c16ca4ab6664dca7796e41d3aa30f554bd635e0e68eff3c999f4"
+    },
+    {
+      "path": "blocks/sw_bbm_pair/cases/bbm-conductance.json",
+      "role": "golden-case",
+      "bytes": 1681,
+      "sha256": "c678db8975ff789dda77ac1313c83e0854919da80357b5808b4c0801f7d61594"
+    },
+    {
+      "path": "blocks/sw_bbm_pair/cases/buck-sync.json",
+      "role": "golden-case",
+      "bytes": 2747,
+      "sha256": "e60e516b12f708752019a6dd9d2df49d936778078aee06d6886a7d7502c59763"
+    },
+    {
+      "path": "blocks/sw_bbm_pair/sw_bbm_pair.ngspice.sp",
+      "role": "ngspice-native",
+      "bytes": 2843,
+      "sha256": "5d95789550b13dccf12fb1ad456b1ad570fb3ee327b98e2377aeeb3b9186979c"
+    },
+    {
+      "path": "blocks/sw_bbm_pair/sw_bbm_pair.va",
+      "role": "verilog-a",
+      "bytes": 1948,
+      "sha256": "91495f8585ad3d44eaa31683bd1c67386c1313b4b5b280f4199b569124bc1cbc"
+    }
+  ]
+}

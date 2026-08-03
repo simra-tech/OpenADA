@@ -1,0 +1,37 @@
+// bhv_opamp_1p_v1 -- Verilog-A reference implementation.
+// Required feature profile: contribution-resistive, contribution-reactive
+// (ddt), analog-function-free tanh core. This subset is expected to compile
+// with OpenVAF; the compiled path is only claimed once the provenance-bound
+// compile/load/simulate operation exists.
+`include "disciplines.vams"
+`include "constants.vams"
+
+module bhv_opamp_1p_v1(inp, inn, out, vss);
+  inout inp, inn, out, vss;
+  electrical inp, inn, out, vss;
+  electrical x; // internal integrator node, referenced to vss
+
+  parameter real av0 = 100e3 from (1:inf);
+  parameter real gbw = 10e6 from (0:inf);
+  parameter real slew = 10e6 from (0:inf);
+  parameter real vhi = 1.65;
+  parameter real vlo = -1.65;
+  parameter real rout = 100 from (0:inf);
+
+  real c1x, gmx, itx, r1x, vx, vclamp;
+
+  analog begin
+    @(initial_step) begin
+      c1x = 1e-9;
+      gmx = `M_TWO_PI * gbw * c1x;
+      itx = slew * c1x;
+      r1x = av0 / gmx;
+    end
+    I(vss, x) <+ itx * tanh((gmx/itx) * (V(inp, vss) - V(inn, vss)));
+    I(x, vss) <+ V(x, vss) / r1x;
+    I(x, vss) <+ ddt(c1x * V(x, vss));
+    vx = V(x, vss);
+    vclamp = vx > vhi ? vhi : (vx < vlo ? vlo : vx);
+    V(out, vss) <+ vclamp + rout * I(out, vss);
+  end
+endmodule

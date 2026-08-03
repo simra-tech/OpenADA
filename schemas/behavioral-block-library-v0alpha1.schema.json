@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openada.contract/behavioral-block-library/v0alpha1",
+  "title": "Behavioral block library manifest",
+  "description": "One versioned, digest-bound library of reviewed behavioral blocks. The manifest is the only discovery authority: a block file that is not enumerated here does not exist, and every enumerated file is bound by size and content digest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "library_id",
+    "library_version",
+    "title",
+    "description",
+    "backend_requirements",
+    "blocks",
+    "files"
+  ],
+  "properties": {
+    "schema": {"const": "openada.behavioral-block-library/v0alpha1"},
+    "library_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,31}$"},
+    "library_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "title": {"type": "string", "minLength": 1, "maxLength": 120},
+    "description": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "backend_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["simulators"],
+      "properties": {
+        "simulators": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["backend", "capabilities"],
+            "properties": {
+              "backend": {"enum": ["ngspice"]},
+              "capabilities": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "xspice-analog",
+                    "xspice-digital",
+                    "xspice-bridge",
+                    "osdi"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["block_id", "contract"],
+        "properties": {
+          "block_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,47}$"},
+          "contract": {
+            "type": "string",
+            "description": "Manifest-relative path of the block.json contract.",
+            "pattern": "^blocks/[a-z0-9_]+/block\\.json$"
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Complete closed file inventory. Normalized relative paths; no symlinks; case-folded uniqueness enforced by the loader.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "role", "bytes", "sha256"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^blocks/[a-z0-9_]+/[a-z0-9_./-]+$",
+            "description": "Manifest-relative POSIX path; must not contain '..' segments."
+          },
+          "role": {
+            "enum": ["contract", "ngspice-native", "verilog-a", "golden-case"]
+          },
+          "bytes": {"type": "integer", "minimum": 1, "maximum": 262144},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    }
+  }
+}

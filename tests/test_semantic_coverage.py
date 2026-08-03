@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+
+import pytest
 from pathlib import Path
 import subprocess
 import sys
@@ -53,30 +55,35 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     first = _run("--compact")
     second = _run("--compact")
 
-    assert first.returncode == 0, first.stderr
+    # Source-frozen expectations first: the inventory and the release matrix
+    # row counts are functions of the shipped source tree alone and must hold
+    # whether or not the chain receipts have been regenerated yet.
     assert first.stderr == ""
     assert first.stdout == second.stdout
     payload = json.loads(first.stdout)
-    assert payload["status"] == "pass"
-    assert payload["issues"] == []
     assert payload["inventory"] == {
         "active_profile_count": 9,
         "builtin_provider_mapping_count": 12,
-        "cli_leaf_count": 23,
+        "cli_leaf_count": 27,
         "preflight_assertion_count": 8,
-        "profile_count": 11,
-        "profile_feature_count": 31,
+        "profile_count": 12,
+        "profile_feature_count": 35,
         "provider_mapping_count": 13,
         "shipped_provider_capability_count": 1,
         "shipped_provider_manifest_count": 1,
-        "surface_count": 23,
+        "surface_count": 27,
     }
-    assert payload["summary"]["row_count"] == 167
-    assert payload["summary"]["active_row_count"] == 147
+    assert payload["summary"]["row_count"] == 188
+    assert payload["summary"]["active_row_count"] == 153
+    # Receipt-bound expectations: these require the seven-receipt chain index
+    # to be current for the semantic subject under test.
+    assert first.returncode == 0, first.stderr
+    assert payload["status"] == "pass"
+    assert payload["issues"] == []
     assert payload["summary"]["gap_count"] == 0
     assert payload["summary"]["rows_by_coverage_level"] == {
-        "agent-ready": 147,
-        "unverified": 20,
+        "agent-ready": 153,
+        "unverified": 35,
     }
     assert payload["gaps"] == []
 
@@ -166,12 +173,15 @@ def test_enforcement_modes_pass_only_after_every_active_row_is_agent_ready() -> 
         ("--mode", "release", "--compact"),
     ):
         completed = _run(*arguments)
-        assert completed.returncode == 0
         assert completed.stderr == ""
         payload = json.loads(completed.stdout)
+        # Source-frozen: the active obligation count holds with or without
+        # regenerated chain receipts.
+        assert payload["summary"]["active_row_count"] == 153
+        # Receipt-bound: passing requires a current seven-receipt index.
+        assert completed.returncode == 0
         assert payload["status"] == "pass"
         assert payload["issues"] == []
-        assert payload["summary"]["active_row_count"] == 147
         assert payload["summary"]["gap_count"] == 0
 
 
@@ -253,6 +263,183 @@ def test_release_policy_cannot_remove_every_active_obligation(tmp_path: Path) ->
     payload = json.loads(completed.stdout)
     assert payload["status"] == "invalid"
     assert any("active_lifecycles" in issue for issue in payload["issues"])
+
+
+def test_variant_lifecycle_override_outside_the_allowlist_is_an_issue(
+    tmp_path: Path,
+) -> None:
+    # Only the frozen in-verifier allowlist may use the experimental-hidden
+    # variant lifecycle. Stamping the extension onto any other active variant
+    # must surface as a verification issue AND leave that variant's required
+    # coverage untouched -- the catalog alone can never self-downgrade an
+    # active selector out of its release obligation.
+    catalog = _catalog()
+    simulate = next(
+        surface
+        for surface in catalog["surfaces"]
+        if surface["command_path"] == ["simulate"]
+    )
+    xyce = next(
+        variant
+        for variant in simulate["variants"]
+        if variant["variant_id"] == "shared-xyce"
+    )
+    xyce["extensions"]["org.openada.lifecycle"] = {
+        "lifecycle": "experimental-hidden"
+    }
+    path = _write_catalog(tmp_path, catalog)
+
+    completed = _run("--catalog", str(path), "--compact")
+
+    assert completed.returncode == 2
+    payload = json.loads(completed.stdout)
+    assert payload["status"] == "invalid"
+    assert any(
+        "shared-xyce" in issue and "allowlist" in issue
+        for issue in payload["issues"]
+    )
+    row = next(
+        row
+        for row in payload["rows"]
+        if row["row_id"]
+        == "surface-variant|openada.surface/cli.simulate/v1|shared-xyce"
+    )
+    assert row["lifecycle"] == "active"
+    assert row["required_coverage_level"] == "agent-ready"
+
+
+def _mutated_hidden_variant_catalog(field: str, value: str) -> dict:
+    catalog = _catalog()
+    simulate = next(
+        surface
+        for surface in catalog["surfaces"]
+        if surface["command_path"] == ["simulate"]
+    )
+    variant = next(
+        item
+        for item in simulate["variants"]
+        if item["variant_id"] == "behavioral-blocks"
+    )
+    variant[field] = value
+    return catalog
+
+
+def _assert_hidden_variant_drift_refused(payload: dict) -> None:
+    assert payload["status"] == "invalid"
+    assert any(
+        "behavioral-blocks" in issue
+        and "differs from the frozen in-verifier identity" in issue
+        and "override is not honored" in issue
+        for issue in payload["issues"]
+    )
+    row = next(
+        row
+        for row in payload["rows"]
+        if row["row_id"]
+        == "surface-variant|openada.surface/cli.simulate/v1|behavioral-blocks"
+    )
+    assert row["lifecycle"] == "active"
+    assert row["required_coverage_level"] == "agent-ready"
+
+
+def test_hidden_variant_provider_drift_is_an_issue_and_not_hidden(
+    tmp_path: Path,
+) -> None:
+    # The hidden variant's identity is FROZEN inside the verifier -- provider
+    # AND operation constants -- never derived from sibling catalog variants.
+    # Re-pointing behavioral-blocks at the Xyce provider (which a sibling
+    # simulate variant legitimately declares, so any sibling-derived check
+    # would wave it through) must surface as a verification issue AND keep the
+    # variant active with its full required coverage.
+    catalog = _mutated_hidden_variant_catalog(
+        "provider_id", "org.openada.driver.xyce"
+    )
+    path = _write_catalog(tmp_path, catalog)
+
+    completed = _run("--catalog", str(path), "--compact")
+
+    assert completed.returncode == 2
+    _assert_hidden_variant_drift_refused(json.loads(completed.stdout))
+
+
+def test_hidden_variant_operation_drift_is_an_issue_and_not_hidden(
+    tmp_path: Path,
+) -> None:
+    # Same freeze, other axis: re-pointing the hidden variant's operation
+    # profile away from the frozen circuit.simulate/v1alpha2 constant is a
+    # verification issue and the variant stays active with full coverage.
+    catalog = _mutated_hidden_variant_catalog(
+        "operation_profile", "openada.operation/circuit.simulate/v1alpha1"
+    )
+    path = _write_catalog(tmp_path, catalog)
+
+    completed = _run("--catalog", str(path), "--compact")
+
+    assert completed.returncode == 2
+    _assert_hidden_variant_drift_refused(json.loads(completed.stdout))
+
+
+def test_hidden_variant_selector_drift_is_an_issue_and_not_hidden(
+    tmp_path: Path,
+) -> None:
+    # The selector is part of the frozen identity: swapping the --blocks
+    # selector for arbitrary content must not retain the hidden lifecycle.
+    catalog = _mutated_hidden_variant_catalog("selector", {"banana": True})
+    path = _write_catalog(tmp_path, catalog)
+
+    completed = _run("--catalog", str(path), "--compact")
+
+    assert completed.returncode == 2
+    _assert_hidden_variant_drift_refused(json.loads(completed.stdout))
+
+
+@pytest.mark.parametrize("bad", (None, [], {"nested": 1}))
+def test_present_but_non_string_lifecycle_is_reported_not_crashed(
+    tmp_path: Path, bad
+) -> None:
+    # A present override whose lifecycle is explicit null, a list, or a dict is
+    # an invalid override -- never mistaken for an absent one and never a crash.
+    catalog = _catalog()
+    simulate = next(
+        surface
+        for surface in catalog["surfaces"]
+        if surface["command_path"] == ["simulate"]
+    )
+    variant = next(
+        item
+        for item in simulate["variants"]
+        if item["variant_id"] == "behavioral-blocks"
+    )
+    variant["extensions"]["org.openada.lifecycle"]["lifecycle"] = bad
+    path = _write_catalog(tmp_path, catalog)
+
+    completed = _run("--catalog", str(path), "--compact")
+
+    assert completed.returncode == 2
+    payload = json.loads(completed.stdout)
+    assert payload["status"] == "invalid"
+    assert any(
+        "behavioral-blocks" in issue and "invalid lifecycle override" in issue
+        for issue in payload["issues"]
+    )
+
+
+def test_untouched_hidden_variant_stays_hidden_without_issues() -> None:
+    # The shipped catalog matches the frozen identity exactly: the variant is
+    # inventoried as experimental-hidden, carries no release obligation, and
+    # raises no identity issue.
+    payload = json.loads(_run("--compact").stdout)
+    assert not any("behavioral-blocks" in issue for issue in payload["issues"])
+    row = next(
+        row
+        for row in payload["rows"]
+        if row["row_id"]
+        == "surface-variant|openada.surface/cli.simulate/v1|behavioral-blocks"
+    )
+    assert row["lifecycle"] == "experimental-hidden"
+    assert row["required_coverage_level"] is None
+    assert payload["summary"]["row_count"] == 188
+    assert payload["summary"]["active_row_count"] == 153
 
 
 def test_catalog_cannot_downgrade_semantic_cli_to_administrative(
@@ -1152,3 +1339,70 @@ def test_offline_release_verifier_is_hash_bound_and_must_pass(
     )
 
     assert any("offline release verifier failed with exit 7" in issue for issue in issues)
+
+
+@pytest.mark.parametrize(
+    "text, limit, expected",
+    [
+        # Legitimate shallow structure passes.
+        ('{"a":{"b":{"c":1}}}', 64, True),
+        # Exactly at the limit is allowed; one deeper is refused.
+        ("{" * 64 + "1" + "}" * 64, 64, True),
+        ("{" * 65 + "1" + "}" * 65, 64, False),
+        # Brackets INSIDE a string literal are text, not structure.
+        ('{"note":"' + "{" * 500 + "[" * 500 + '"}', 64, True),
+        # An escaped quote does not end the string, so its brackets stay text.
+        ('{"a":"q \\" ' + "{" * 200 + ' still"}', 64, True),
+        # Arrays nest just like objects.
+        ("[" * 65 + "1" + "]" * 65, 64, False),
+    ],
+)
+def test_json_depth_scan_is_string_aware(text, limit, expected):
+    verifier = _verifier_module()
+    assert verifier._max_json_depth_within(text, limit) is expected
+
+
+def test_load_json_refuses_stack_exhausting_nesting(tmp_path):
+    # A tiny file (well under MAX_JSON_BYTES) can nest brackets deep enough to
+    # crash json.loads / json.dumps with an uncaught RecursionError. The loader
+    # must turn that into a typed CoverageInputError, fail-closed — never a
+    # traceback and never a silent pass into the canonical hash.
+    verifier = _verifier_module()
+    depth = verifier.MAX_JSON_DEPTH + 200
+    deep = tmp_path / "deep.json"
+    deep.write_text(
+        '{"provider_mappings":[' + '{"k":' * depth + "1" + "}" * depth + "]}"
+    )
+    assert deep.stat().st_size < verifier.MAX_JSON_BYTES
+    with pytest.raises(verifier.CoverageInputError) as excinfo:
+        verifier._load_json(deep, label="catalog")
+    assert "nests deeper than" in str(excinfo.value)
+
+
+def test_duplicates_tolerates_unhashable_malformed_values():
+    # ids/paths come from catalog+index JSON where the schema promises strings,
+    # but schema errors are RECORDED and processing continues -- so a malformed
+    # value (e.g. a list variant_id) still reaches _duplicates. Counter would
+    # raise an uncaught "unhashable type" TypeError; coercion keeps it
+    # fail-closed while still detecting the genuine string duplicate.
+    verifier = _verifier_module()
+    out = verifier._duplicates(["a", [], "a", {}, "b"])
+    assert out == ["a"]
+
+
+def test_provider_manifest_hash_refuses_stack_exhausting_nesting():
+    # The provider-manifest semantic hash reads bytes directly and parses them
+    # itself, bypassing _load_json's depth guard; deep nesting there previously
+    # crashed json.loads / json.dumps with an uncaught RecursionError. It must
+    # now fail closed with a typed error (SemanticReceiptError, surfaced as
+    # CoverageInputError at the verifier boundary).
+    verifier = _verifier_module()
+    depth = 1100
+    deep = (
+        '{"conformance_records":[],"x":'
+        + "[" * depth + "0" + "]" * depth
+        + "}"
+    ).encode("utf-8")
+    with pytest.raises(verifier.CoverageInputError) as excinfo:
+        verifier._provider_manifest_semantic_sha256_bytes(deep)
+    assert "nests deeper than" in str(excinfo.value)

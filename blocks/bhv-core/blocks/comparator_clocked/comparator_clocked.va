@@ -1,0 +1,40 @@
+// bhv_comparator_clocked_v1 -- Verilog-A reference implementation.
+// This source is the language reference for the contract in block.json.
+// Required feature profile: event-cross, transition, hidden-state.
+// It is NOT claimed executable by the platform until a provenance-bound
+// compile/load/simulate operation exists (see the OpenVAF/OSDI step).
+`include "disciplines.vams"
+
+module bhv_comparator_clocked_v1(inp, inn, clk, out, vss);
+  inout inp, inn, clk, out, vss;
+  electrical inp, inn, clk, out, vss;
+
+  parameter real vhi = 1.0;
+  parameter real vlo = 0.0;
+  parameter real td = 2n from (0:inf);
+  parameter real tedge = 1n from (0:inf);
+  parameter real vhyst = 0.0 from [0:inf);
+  parameter real vth_clk = 0.5;
+  parameter real rout = 100 from (0:inf);
+
+  real decision;      // retained decision in {0,1}; deterministic-default 0
+  real vout_target;
+
+  analog begin
+    @(initial_step) begin
+      decision = 0.0;
+      vout_target = vlo;
+    end
+    @(cross(V(clk, vss) - vth_clk, +1)) begin
+      if ((V(inp, vss) - V(inn, vss) + vhyst * (decision - 0.5)) > 0.0)
+        decision = 1.0;
+      else
+        decision = 0.0;
+      vout_target = decision > 0.5 ? vhi : vlo;
+    end
+    // td is the clock-threshold to output-50% latency; transition's delay
+    // argument is therefore td - tedge/2, mirroring the native event chain.
+    V(out, vss) <+ transition(vout_target, td - tedge/2, tedge, tedge)
+                   + rout * I(out, vss);
+  end
+endmodule
