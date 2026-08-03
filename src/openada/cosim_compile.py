@@ -69,6 +69,9 @@ MAX_SO_BYTES = 16 * 1024 * 1024
 MAX_CORE_BYTES = 65_536
 #: Ceiling on ports per direction: reviewed cores are tiny.
 MAX_PORTS = 32
+#: Ceiling on the composed mixed-signal prelude, mirroring the native
+#: composition bound in block_library.
+MAX_COMPOSITION_BYTES = 2_097_152
 
 #: The compiled core module name promised by the block contract.
 _CORE_MODULE_RE = re.compile(r"^bhv_[a-z0-9_]+_v[0-9]+_core$")
@@ -565,6 +568,34 @@ class CosimComposition:
     modules: tuple[CosimModule, ...]
     model_names: tuple[str, ...]
 
+    def verify_objects(self) -> None:
+        """Re-verify every compiled object against its recorded digest.
+
+        The composition TEXT is digest-pinned inside the simulate operation,
+        but the text only carries the object PATHS; the bytes ngspice will
+        dlopen live on disk. Callers re-verify immediately before launching
+        the simulation so a compiled object replaced after compose is a typed
+        pre-launch refusal, narrowing the swap window to the same
+        verify-to-launch interval the model-file tamper check accepts.
+        """
+
+        for module in self.modules:
+            try:
+                data = module.so_path.read_bytes()
+            except OSError as exc:
+                raise CosimCompileError(
+                    "cosim.materialize.tampered",
+                    f"compiled object {module.so_path} could not be re-read "
+                    f"before launch: {exc}",
+                ) from exc
+            if _sha256_bytes(data) != module.so_sha256:
+                raise CosimCompileError(
+                    "cosim.materialize.tampered",
+                    f"compiled object {module.so_path} no longer hashes to the "
+                    "digest recorded at compile time; the file changed after "
+                    "composition, so no simulator is launched.",
+                )
+
     def record(self) -> dict[str, object]:
         """Provenance record for retained evidence and result extensions."""
 
@@ -704,6 +735,11 @@ def compose_blocks_cosim(
     text = "\n".join(lines)
     if not text.endswith("\n"):
         text += "\n"
+    if len(text.encode("utf-8")) > MAX_COMPOSITION_BYTES:
+        raise CosimCompileError(
+            "cosim.compose.oversize",
+            "The composed mixed-signal prelude exceeds the composition byte bound.",
+        )
     return CosimComposition(
         library_id=library_id,
         library_version=library_version,

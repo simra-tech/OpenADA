@@ -323,3 +323,19 @@ def test_compose_real_library_generates_binding_cards(tmp_path):
     core = record["cores"][0]
     assert core["source_sha256"] == composition.modules[0].source_sha256
     assert core["object_sha256"] == composition.modules[0].so_sha256
+
+
+@toolchain
+def test_verify_objects_refuses_swapped_artifact(tmp_path):
+    from openada.block_library import load_block_library
+
+    library = load_block_library("bhv-core")
+    composition = cc.compose_blocks_cosim(
+        library, ("comparator_clocked",), tmp_path
+    )
+    composition.verify_objects()  # pristine object passes
+    module = composition.modules[0]
+    module.so_path.write_bytes(b"not the compiled object")
+    with pytest.raises(cc.CosimCompileError) as caught:
+        composition.verify_objects()
+    assert caught.value.code == "cosim.materialize.tampered"

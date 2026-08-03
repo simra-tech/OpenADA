@@ -2393,6 +2393,16 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 )
                 if materialization_error is not None:
                     return _simulation_cli_invalid(args, materialization_error)
+                # The composition text is digest-pinned inside simulate(), but
+                # the compiled objects it references are separate bytes on
+                # disk; re-verify them immediately before launch so a swapped
+                # object is a typed refusal, not an executed library.
+                try:
+                    composed_cosim.verify_objects()
+                except CosimCompileError as exc:
+                    return _simulation_cli_invalid(
+                        args, f"{exc.code}: {exc.message}"
+                    )
                 # Same provenance authority as the native composition; the
                 # record additionally binds each compiled core (source digest,
                 # object digest, compiler version, shim digest).
