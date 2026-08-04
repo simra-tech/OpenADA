@@ -224,7 +224,22 @@
         "ddt",
         "hidden-state"
       ],
-      "notes": "The only backend: continuous Verilog-A compiled through the reviewed OSDI path (compiles on classic openvaf 23.5.0 and openvaf-r). The event-construct screen (osdi.source.event_constructs) passes this source by construction. Battery: tests/test_blocks_osdi_comparator.py."
+      "notes": "The only backend: continuous Verilog-A compiled through the reviewed OSDI path (compiles on classic openvaf 23.5.0 and openvaf-r). The event-construct screen (osdi.source.event_constructs) passes this source by construction. Battery: tests/test_blocks_osdi_comparator.py.",
+      "parameter_constraints": [
+        {
+          "id": "latency-headroom",
+          "left": "td",
+          "relation": ">",
+          "right_terms": [
+            {
+              "parameter": "tedge",
+              "coefficient": 0.5
+            }
+          ],
+          "right_constant": 7e-12,
+          "rationale": "The delay generator's ramp half-time is td - tedge/2 minus the acquisition compensation; at or below this bound the headroom is floored and the realized latency is no longer the declared td."
+        }
+      ]
     }
   },
   "golden_cases": [

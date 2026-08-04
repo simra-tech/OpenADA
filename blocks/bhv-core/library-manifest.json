@@ -86,8 +86,8 @@
     {
       "path": "blocks/comparator_clocked_phys/block.json",
       "role": "contract",
-      "bytes": 8646,
-      "sha256": "c7f3315494b8e5afefb9605d5ee377b418da0534ac0458f6ebc38bd1943f32bf"
+      "bytes": 9183,
+      "sha256": "b190cf6383be3ee62e0156aada82ab9bf9fe9752ee44490b68038073916bc424"
     },
     {
       "path": "blocks/comparator_clocked_phys/cases/ambiguity-low.json",

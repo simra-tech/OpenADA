@@ -375,3 +375,22 @@ def test_min_clock_pulse_width_limitation(prelude):
         "tran 0.01n 0.4u\nmeas tran omax MAX v(out) FROM=0.1u TO=0.4u\n",
     )
     assert narrow["omax"] < 0.1
+
+
+@native
+def test_relational_constraint_is_enforced_on_the_osdi_path(tmp_path):
+    # td <= tedge/2 + 7ps must be refused BEFORE any simulator launch, from
+    # the composition's own verify_deck (the same fail-closed rule as cosim)
+    from openada.block_library import load_block_library
+    from openada.osdi_compile import OsdiCompileError, compose_blocks_osdi
+
+    library = load_block_library("bhv-core")
+    composition = compose_blocks_osdi(
+        library, ["comparator_clocked_phys"], tmp_path
+    )
+    good = f"* ok\nX1 a b c d 0 {DUT} td=2n tedge=1n\n.end\n"
+    composition.verify_deck(good)  # must not raise
+    bad = f"* bad\nX1 a b c d 0 {DUT} td=0.4n tedge=1n\n.end\n"
+    with pytest.raises(OsdiCompileError) as caught:
+        composition.verify_deck(bad)
+    assert caught.value.code == "osdi.parameters.constraint_violated"

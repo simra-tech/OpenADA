@@ -516,6 +516,40 @@ class OsdiComposition:
     requested: tuple[str, ...]
     prelude_text: str
     modules: tuple[OsdiModule, ...]
+    #: Per requested block, in order: public wrapper name, declared relational
+    #: parameter constraints, and contract parameter defaults.
+    wrappers: tuple[str, ...] = ()
+    constraints: tuple[tuple[Mapping[str, object], ...], ...] = ()
+    defaults: tuple[Mapping[str, float], ...] = ()
+
+    def verify_deck(self, deck_text: str) -> None:
+        """Check each block's declared relational parameter constraints
+        against the effective parameters of the caller's instantiating cards
+        (the same fail-closed rule the cosim path applies): without this the
+        contract admits a parameterization the realization cannot honor and
+        the simulator silently returns a latency other than the declared one.
+        """
+
+        from .cosim_compile import (
+            CosimCompileError,
+            instantiation_parameters,
+            verify_parameter_constraints,
+        )
+
+        for wrapper, constraints, defaults in zip(
+            self.wrappers, self.constraints, self.defaults
+        ):
+            if not constraints:
+                continue
+            try:
+                effective = instantiation_parameters(deck_text, wrapper, defaults)
+                verify_parameter_constraints(
+                    constraints, effective, block_id=wrapper
+                )
+            except CosimCompileError as exc:
+                raise OsdiCompileError(
+                    exc.code.replace("cosim.", "osdi.", 1), exc.message
+                ) from exc
 
 
 def _block_interface(block: object, block_id: str) -> tuple[list[str], dict[str, object]]:
@@ -555,6 +589,9 @@ def compose_blocks_osdi(
         raise OsdiCompileError("osdi.compose.empty", "no blocks requested.")
     triples: list[tuple[OsdiModule, Sequence[str], Mapping[str, object]]] = []
     modules: list[OsdiModule] = []
+    wrappers: list[str] = []
+    constraints: list[tuple[Mapping[str, object], ...]] = []
+    defaults: list[Mapping[str, float]] = []
     seen: set[str] = set()
     for block_id in requested:
         if block_id in seen:
@@ -581,10 +618,18 @@ def compose_blocks_osdi(
         ports, parameters = _block_interface(block, block_id)
         triples.append((module, ports, parameters))
         modules.append(module)
+        wrappers.append(veriloga.wrapper)
+        constraints.append(tuple(getattr(veriloga, "parameter_constraints", ()) or ()))
+        defaults.append(
+            {str(k): float(v) for k, v in parameters.items() if isinstance(v, (int, float))}
+        )
     prelude = osdi_preload_prelude(triples)
     return OsdiComposition(
         library_id=str(getattr(library, "library_id", "")),
         requested=requested,
         prelude_text=prelude,
         modules=tuple(modules),
+        wrappers=tuple(wrappers),
+        constraints=tuple(constraints),
+        defaults=tuple(defaults),
     )

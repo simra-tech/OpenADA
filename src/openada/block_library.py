@@ -184,6 +184,10 @@ class BlockBackend:
     wrapper: str
     source_text: str
     source_sha256: str
+    #: Relational parameter constraints this realization requires, which a
+    #: per-parameter range cannot express (checked per instantiation by the
+    #: consuming compose path).
+    parameter_constraints: tuple[Mapping[str, Any], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1139,6 +1143,9 @@ def _bind_block(
             wrapper=va_wrapper,
             source_text=verified_text[va_rel],
             source_sha256=va_record["sha256"],
+            parameter_constraints=tuple(
+                declared_veriloga.get("parameter_constraints", ())
+            ),
         )
 
     # The xspice-cosim backend is the mixed-signal path for event/clocked
