@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import (
     Decimal,
     DecimalException,
@@ -64,7 +64,7 @@ from .simulate import simulate
 
 EXPERIMENT_SCHEMA = "simra.experiment/v1"
 EXPERIMENT_RUN_SCHEMA = "simra.experiment-run/v1"
-COMPOSER_VERSION = "openada.experiment.composer/v1"
+COMPOSER_VERSION = "openada.experiment.composer/v2"
 OPERATION_NAME = "experiment.run"
 EXPERIMENT_EXTENSION = "org.openada.experiment"
 
@@ -3100,18 +3100,38 @@ class _Validator:
             return None
         if "temperature_c" in pdk:
             temperature = _scalar(pdk.get("temperature_c"))
-            profile_temperature = _scalar(resolved.binding.simulation_temperature_c)
-            if (
-                temperature is None
-                or profile_temperature is None
-                or temperature.value != profile_temperature.value
+            if temperature is None:
+                self.add(
+                    "experiment.condition.invalid",
+                    "/conditions/pdk/temperature_c",
+                    "must be one strict finite SPICE numeric scalar in degC",
+                )
+                return None
+            if not (
+                Decimal("-273.15") < temperature.value <= Decimal("1000")
             ):
                 self.add(
                     "experiment.condition.temperature_unsupported",
                     "/conditions/pdk/temperature_c",
-                    (
-                        "v1 runs only at the binding profile temperature "
-                        f"{resolved.binding.simulation_temperature_c} degC"
+                    "must lie in (-273.15, 1000] degC",
+                )
+                return None
+            profile_temperature = _scalar(resolved.binding.simulation_temperature_c)
+            if (
+                profile_temperature is None
+                or temperature.value != profile_temperature.value
+            ):
+                # The declared temperature becomes THE binding temperature:
+                # every downstream consumer (the bound deck's .option temp
+                # line, its allowlist, binding facts, extraction conditions,
+                # the run manifest, and the off-reference advisory) reads
+                # resolved.binding.simulation_temperature_c, so there is
+                # exactly one authority and it is the value that simulates.
+                resolved = replace(
+                    resolved,
+                    binding=replace(
+                        resolved.binding,
+                        simulation_temperature_c=temperature.token,
                     ),
                 )
         return resolved

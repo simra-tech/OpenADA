@@ -57,7 +57,7 @@ from .specification_evaluate import (
 
 TEMPLATE_SCHEMA = "simra.experiment-template/v1"
 RECEIPT_SCHEMA = "simra.experiment-template-compile/v1"
-COMPILER_ID = "openada.experiment.template-compiler/v1"
+COMPILER_ID = "openada.experiment.template-compiler/v2"
 OPERATION_NAME = "experiment.compile"
 
 MAX_DECLARATIONS = 64

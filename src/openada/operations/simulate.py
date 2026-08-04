@@ -34,6 +34,7 @@ other.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from decimal import Decimal
 import hashlib
 import json
 import os
@@ -778,7 +779,21 @@ def _binding_advisories(
 
     tnom = facts.get("model_tnom_c")
     temperature = facts.get("simulation_temperature_c")
-    if tnom is not None and temperature is not None and str(tnom) != str(temperature):
+
+    def _numeric(value: object) -> Decimal | None:
+        try:
+            return Decimal(str(value))
+        except (ArithmeticError, ValueError):
+            return None
+
+    tnom_value = _numeric(tnom)
+    temperature_value = _numeric(temperature)
+    off_reference = (
+        tnom_value != temperature_value
+        if tnom_value is not None and temperature_value is not None
+        else str(tnom) != str(temperature)
+    )
+    if tnom is not None and temperature is not None and off_reference:
         notes.append(
             diagnostic(
                 "info",
