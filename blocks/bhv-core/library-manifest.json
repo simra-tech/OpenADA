@@ -34,8 +34,8 @@
     {
       "path": "blocks/comparator_clocked/block.json",
       "role": "contract",
-      "bytes": 9609,
-      "sha256": "b8f235150d00cb1e17d8217a8e2f2b88158a473215b7b366079788603c52bc22"
+      "bytes": 10059,
+      "sha256": "c5b28f7f972d80518c2a008f7da7741215219f4c6b33ccf774e0dcec2bd7654c"
     },
     {
       "path": "blocks/comparator_clocked/cases/ambiguity-low.json",
@@ -76,8 +76,8 @@
     {
       "path": "blocks/comparator_clocked/comparator_clocked.va",
       "role": "verilog-a",
-      "bytes": 4506,
-      "sha256": "230dbed96021633d92f19a0c544874a8d7e39f548699fdf3f0e027c1731f19ca"
+      "bytes": 5205,
+      "sha256": "8544f6e240aaa50809cb1785361ff54fc1df11fb7cf71fcb697f4d12ba22d3cf"
     },
     {
       "path": "blocks/opamp_1p/block.json",

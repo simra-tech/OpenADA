@@ -304,6 +304,41 @@ def test_min_clock_pulse_width_limitation(prelude):
 
 
 @native
+def test_retention_holds_indefinitely(prelude):
+    # the weak bistable regeneration on the slave (the continuous latch)
+    # restores the held decision against leakage/gmin: a decision taken at
+    # 1 us must still be at full level 400 us later with the clock low, EVEN
+    # after the input reverses at 5 us (the pre-fix decay collapsed the output
+    # at ~250 us)
+    m = _run(
+        prelude,
+        "X1 inp inn clk out 0 bhv_comparator_clocked_v1 td=2n tedge=1n\n"
+        "Vinp inp 0 PWL(0 0.7 4.9u 0.7 5u 0.3 500u 0.3)\nVinn inn 0 DC 0.55\n"
+        "Vclk clk 0 PULSE(0 1 1u 1n 1n 3u 1000u)\nRload out 0 10k\n",
+        "tran 50n 500u\n"
+        "meas tran o100u FIND v(out) AT=100u\n"
+        "meas tran o400u FIND v(out) AT=400u\n",
+    )
+    assert abs(m["o100u"] - 1.0) < 0.02
+    assert abs(m["o400u"] - 1.0) < 0.02
+
+
+@native
+def test_slow_clock_edge_keeps_the_latency_reference(prelude):
+    # a 100 ns clock edge (vs the 1 ns golden edges): the latency stays
+    # referenced to the vth_clk crossing because the sampling aperture is
+    # symmetric around it (threshold crossing at 550 ns here)
+    m = _run(
+        prelude,
+        "X1 inp inn clk out 0 bhv_comparator_clocked_v1 td=2n tedge=1n\n"
+        "Vinp inp 0 DC 0.7\nVinn inn 0 DC 0.55\n"
+        "Vclk clk 0 PULSE(0 1 500n 100n 100n 300n 1000n)\nRload out 0 10k\n",
+        "tran 0.1n 0.8u\nmeas tran t50 WHEN v(out)=0.5 RISE=1\n",
+    )
+    assert abs(m["t50"] - (550e-9 + 2e-9)) < 2e-10
+
+
+@native
 def test_clock_high_at_start_holds_the_default_low(prelude):
     # Contract-matching: when the clock is already high at t=0 there has been
     # no rising edge, and the master froze at its deterministic OP default

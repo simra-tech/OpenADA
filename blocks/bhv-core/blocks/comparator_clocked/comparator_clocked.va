@@ -60,14 +60,23 @@ module bhv_comparator_clocked_v1(inp, inn, clk, out, vss);
     dc   = 0.5*(1.0 + tanh(vind/(dif_band/8.0)));
 
     // 2: master (tracks while clk low, frozen while high) and slave (acquires
-    // while clk high, holds while low). The 1e-12/1e-6 leak ratio gives every
-    // node a DC path and sets the retention decay at ~1e6 * tau_trk.
+    // while clk high, holds while low).
+    // - The MASTER keeps a plain leak (unique equilibrium): whatever the OP
+    //   solver's stepping history, its final system has one root, so OP/DC
+    //   resolve the deterministic default LOW even with the clock parked high.
+    // - The SLAVE carries a WEAK REGENERATION term (a bistable restoring
+    //   force, stable near 0.0007/0.9993, unstable at 0.5 -- the continuous
+    //   latch that makes a real comparator hold): at 1% of tracking strength
+    //   it never disturbs acquisition, but it overwhelms leakage/gmin so the
+    //   retained decision holds INDEFINITELY while the clock is low. The one
+    //   traded-off deviation: a clock PARKED high couples the slave to the
+    //   leaking master, so the output sags after ~1e6*tau_trk (documented).
     tau_trk = td/8.0;
     I(qm, vss) <+ 1e-6 * glo * (mh - dc);
     I(qm, vss) <+ 1e-12 * mh;
     I(qm, vss) <+ 1e-6 * tau_trk * ddt(mh);
     I(qs, vss) <+ 1e-6 * ghi * (sh - mh);
-    I(qs, vss) <+ 1e-12 * sh;
+    I(qs, vss) <+ 1e-8 * (sh - 0.5*(1.0 + tanh(8.0*(sh - 0.5))));
     I(qs, vss) <+ 1e-6 * tau_trk * ddt(sh);
 
     // 3: delay ramp -- d(tmv)/dt = (2*sh-1)/td_ramp between soft clamps whose
