@@ -588,3 +588,54 @@ def test_success_payload_artifact_paths_point_at_the_published_dir(tmp_path):
         path = Path(record["path"])
         assert out_dir in path.parents or path.parent == out_dir
         assert path.is_file()
+
+
+def test_ipwl_sample_site_requires_amperes(tmp_path):
+    template = base_template()
+    template["constants"]["v_high"] = {"value": "1.2", "unit": "V"}
+    template["experiment"]["elements"].append(
+        {
+            "name": "I_RAMP",
+            "kind": "ipwl",
+            "plus": "OUT",
+            "minus": "0",
+            "parameters": {
+                "dc": "0",
+                "points": [["0", "0"], ["1u", {"$ref": "v_high"}]],
+            },
+        }
+    )
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.ref.unit_mismatch" in refusal_codes(payload)
+
+
+def test_substitution_as_a_whole_pwl_pair_is_refused(tmp_path):
+    template = base_template()
+    template["constants"]["t_step"] = {"value": "1u", "unit": "s"}
+    template["experiment"]["elements"].append(
+        {
+            "name": "V_RAMP",
+            "kind": "vpwl",
+            "plus": "OUT",
+            "minus": "0",
+            "parameters": {
+                "dc": "0",
+                "points": [["0", "0"], {"$ref": "t_step"}],
+            },
+        }
+    )
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.ref.site_invalid" in refusal_codes(payload)
+
+
+@requires_assets
+def test_exactly_representable_two_decimal_number_substitutes(tmp_path):
+    template = base_template()
+    template["constants"]["t_room"] = {"value": "27.50", "unit": "degC"}
+    template["experiment"]["conditions"]["pdk"]["temperature_c"] = {
+        "$number": "t_room"
+    }
+    payload, out_dir = compile_template(tmp_path, template)
+    assert payload["engineering"]["status"] == "pass", payload["data"]["refusals"]
+    experiment = json.loads((out_dir / "experiment.spec.json").read_text())
+    assert experiment["conditions"]["pdk"]["temperature_c"] == 27.5

@@ -151,3 +151,28 @@ def test_beyond_precision_temperature_bound_is_enforced(tmp_path):
         issue.code == "experiment.condition.temperature_unsupported"
         for issue in issues
     )
+
+
+@requires_assets
+def test_negative_zero_temperature_canonicalizes_to_plain_zero(tmp_path):
+    spec = gain_spec()
+    spec["conditions"]["pdk"]["temperature_c"] = "-0.0"
+    prepared, issues = _validate(tmp_path, spec)
+    assert not issues
+    assert prepared.resolved_pdk.binding.simulation_temperature_c == "0"
+
+
+def test_off_reference_advisory_does_not_claim_the_distance_is_small():
+    from openada.operations.simulate import _binding_advisories
+
+    notes = _binding_advisories(
+        {"model_tnom_c": "27", "simulation_temperature_c": "200"},
+        deck_text="",
+        corner="mos_tt",
+        default_corner="mos_tt",
+    )
+    advisory = next(
+        note for note in notes if note["code"] == "pdk.temperature.off_reference"
+    )
+    assert "distance is small" not in advisory["message"]
+    assert "extrapolated" in advisory["message"]

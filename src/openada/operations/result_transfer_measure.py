@@ -376,6 +376,22 @@ def _is_differential(request: Mapping[str, Any]) -> bool:
     )
 
 
+def _log10_span(low: float, high: float) -> float:
+    """log10(high) - log10(low) for 0 < low <= high, stably.
+
+    ``log1p((high - low) / low)`` keeps full precision when the two values
+    are arbitrarily close (where the plain difference of logarithms
+    catastrophically cancels); when that relative offset is not
+    representable — very wide spans — the plain difference is
+    well-conditioned and takes over.
+    """
+
+    offset = (high - low) / low
+    if math.isfinite(offset):
+        return math.log1p(offset) / math.log(10.0)
+    return math.log10(high) - math.log10(low)
+
+
 def _magnitude_db_at(
     frequencies: list[float], magnitudes_db: list[float], at: float
 ) -> float:
@@ -391,20 +407,14 @@ def _magnitude_db_at(
             return magnitudes_db[index]
         if frequency > at:
             f0, f1 = frequencies[index - 1], frequency
-            # Hybrid log10 spacing: the difference form is well-conditioned
-            # for ordinary and wide spans but catastrophically cancels for
-            # adjacent points whose logs round to the same double (near
-            # 1e300); the ratio form keeps that tiny spacing but its
-            # quotient overflows/underflows on very wide spans. Use the
-            # difference whenever it carries precision, the ratio otherwise.
-            log_f0 = math.log10(f0)
-            span = math.log10(f1) - log_f0
-            if span > 1e-6:
-                denominator = span
-                numerator = math.log10(at) - log_f0
-            else:
-                denominator = math.log10(f1 / f0)
-                numerator = math.log10(at / f0)
+            # Numerator and denominator each use the same stable per-pair
+            # log10 spacing: log1p of the relative offset is precise for
+            # arbitrarily close values, and the plain log difference takes
+            # over only when that relative offset is not representable
+            # (very wide spans). One formula per pair — no global branch,
+            # so an interior query can never collide with an endpoint that
+            # the denominator still resolves.
+            denominator = _log10_span(f0, f1)
             if denominator == 0.0:
                 raise _InvalidTransferRequest(
                     "transfer.domain.invalid",
@@ -412,7 +422,7 @@ def _magnitude_db_at(
                     "transfer.metric.at are not resolvable on the log10 "
                     "axis in double precision.",
                 )
-            fraction = numerator / denominator
+            fraction = _log10_span(f0, at) / denominator
             return magnitudes_db[index - 1] + fraction * (
                 magnitudes_db[index] - magnitudes_db[index - 1]
             )

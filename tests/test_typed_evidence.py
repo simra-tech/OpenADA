@@ -598,3 +598,17 @@ def test_unrepresentable_slope_overflow_is_a_typed_refusal() -> None:
     payload = measure_result(series, _request("slope", {}))
     assert payload["engineering"]["status"] == "unknown"
     assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"
+
+
+def test_rounded_to_zero_covariance_recovers_the_exact_finite_slope() -> None:
+    # The scaled covariance rounds to exactly 0.0 here, but the true OLS
+    # slope is finite and enormous; the exact rational fallback must
+    # return it rather than a false conclusive zero.
+    series = _series(
+        axis_values=[5e-324, 1e-323, 1.5e-323],
+        signal_values=[0.0, 1e308, 1e-16],
+    )
+    payload = measure_result(series, _request("slope", {}))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["value"] == pytest.approx(1.0120112665365531e307, rel=1e-9)

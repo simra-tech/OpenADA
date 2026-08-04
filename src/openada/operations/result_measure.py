@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from fractions import Fraction
 import hashlib
 import json
 import math
@@ -746,9 +747,23 @@ def measure_result(
                         suu = math.fsum(u * u for u in ux)
                         suv = math.fsum(u * v for u, v in zip(ux, uy))
                         if suv == 0.0:
-                            # A defined zero slope must not be destroyed by
-                            # an unrepresentable scale ratio (0 * inf).
-                            value = 0.0
+                            # Rounded-to-zero scaled covariance is not proof
+                            # of a zero slope: decide exactly. Doubles are
+                            # exact rationals, so the closed-form OLS slope
+                            # (n*Sxy - Sx*Sy) / (n*Sxx - Sx^2) over
+                            # Fractions is the true value; only a genuinely
+                            # unrepresentable magnitude remains a typed
+                            # refusal.
+                            n = Fraction(len(xs))
+                            sx = sum(Fraction(x) for x in xs)
+                            sy = sum(Fraction(y) for y in ys)
+                            sxy = sum(
+                                Fraction(x) * Fraction(y)
+                                for x, y in zip(xs, ys)
+                            )
+                            sxx = sum(Fraction(x) * Fraction(x) for x in xs)
+                            exact = (n * sxy - sx * sy) / (n * sxx - sx * sx)
+                            value = float(exact)
                         else:
                             value = (suv / suu) * (y_scale / x_scale)
                 except (OverflowError, ValueError, ZeroDivisionError) as exc:

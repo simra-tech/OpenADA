@@ -757,3 +757,36 @@ def test_ordinary_spacing_agrees_with_the_difference_form() -> None:
     assert payload["data"]["measurement"]["value"] == pytest.approx(
         expected, rel=1e-12
     )
+
+
+def test_interior_query_colliding_with_the_left_endpoint_log_is_resolved() -> None:
+    # The span is just above the former global branch threshold; a naive
+    # log difference makes the numerator exactly zero for this valid
+    # interior query. The per-pair log1p form resolves it.
+    f0 = 1e300
+    f1 = 1.0000023025900467e300
+    at = math.nextafter(f0, math.inf)
+    series = _series(
+        magnitudes_db=(0.0, 6.0), phases_deg=(0.0, 0.0), frequencies_hz=(f0, f1)
+    )
+    payload = measure_transfer(series, _at_request(at))
+    value = payload["data"]["measurement"]["value"]
+    assert payload["engineering"]["status"] == "pass"
+    assert value == pytest.approx(3.874815552109425e-10, rel=1e-6)
+    assert value > 0.0
+
+
+def test_span_just_below_the_former_threshold_agrees_continuously() -> None:
+    f0 = 1e300
+    f1 = 1.0000018420720744e300  # log10 span ~8e-7
+    at = math.nextafter(f0, math.inf)
+    series = _series(
+        magnitudes_db=(0.0, 6.0), phases_deg=(0.0, 0.0), frequencies_hz=(f0, f1)
+    )
+    payload = measure_transfer(series, _at_request(at))
+    expected = 6.0 * (
+        (math.log1p((at - f0) / f0)) / (math.log1p((f1 - f0) / f0))
+    )
+    assert payload["data"]["measurement"]["value"] == pytest.approx(
+        expected, rel=1e-6
+    )
