@@ -752,22 +752,27 @@ def measure_result(
                         uy = [(y - y_mean) / y_scale for y in ys]
                         suu = math.fsum(u * u for u in ux)
                         suv = math.fsum(u * v for u, v in zip(ux, uy))
-                        if suv == 0.0:
-                            # Rounded-to-zero scaled covariance is not proof
-                            # of a zero slope: decide exactly, within a
-                            # closed work bound. Every finite double is
-                            # num/2^k with k <= 1074, so scaling by 2^1074
-                            # turns the samples into exact integers and the
+                        if suv != 0.0:
+                            value = (suv / suu) * (y_scale / x_scale)
+                        if suv == 0.0 or value == 0.0:
+                            # A computed zero — whether the scaled
+                            # covariance rounded to zero or the fast-path
+                            # product underflowed — is not proof of a zero
+                            # slope: decide exactly, within a closed work
+                            # bound. Every finite double is num/2^k with
+                            # k <= 1074, so scaling by 2^1074 turns the
+                            # samples into exact integers and the
                             # closed-form OLS slope
                             # (n*Sxy - Sx*Sy) / (n*Sxx - Sx^2) into one
                             # exact big-integer ratio (the scale factors
                             # cancel). Only a genuinely unrepresentable
-                            # magnitude — overflow, or a nonzero slope that
-                            # underflows to zero — remains a typed refusal.
+                            # magnitude — overflow, or a nonzero slope
+                            # that underflows to zero — remains a typed
+                            # refusal.
                             if len(xs) > MAX_EXACT_SLOPE_SAMPLES:
                                 raise _InvalidRequest(
                                     "measurement.value.non_finite",
-                                    "The rounded-to-zero covariance cannot "
+                                    "The computed-zero slope cannot "
                                     "be decided within the closed "
                                     f"{MAX_EXACT_SLOPE_SAMPLES}-sample "
                                     "exact-arithmetic bound.",
@@ -797,8 +802,6 @@ def measure_result(
                                     "The least-squares slope underflows "
                                     "the finite result range.",
                                 )
-                        else:
-                            value = (suv / suu) * (y_scale / x_scale)
                 except _InvalidRequest:
                     raise
                 except (OverflowError, ValueError, ZeroDivisionError) as exc:

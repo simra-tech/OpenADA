@@ -645,3 +645,23 @@ def test_exact_slope_fallback_beyond_the_sample_bound_is_refused() -> None:
     assert payload["engineering"]["status"] == "unknown"
     assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"
     assert "8192" in payload["diagnostics"][0]["message"]
+
+
+@pytest.mark.parametrize(
+    "signal_values",
+    [[0.0, 5e-324, 1e-323], [1e-323, 5e-324, 0.0]],
+)
+def test_fast_path_underflow_to_zero_is_refused_in_both_signs(
+    signal_values,
+) -> None:
+    # The scaled covariance is nonzero here, but the fast-path product
+    # underflows to +/-0.0; the exact decision must refuse rather than
+    # report a passing zero.
+    series = _series(
+        axis_values=[0.0, 5e307, 1e308],
+        signal_values=signal_values,
+    )
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"
+    assert "underflows" in payload["diagnostics"][0]["message"]
