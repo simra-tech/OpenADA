@@ -642,6 +642,82 @@ def test_a_missing_selector_names_what_was_asked_for_and_what_is_available(
     assert refusal["message"] != misspelled["diagnostics"][0]["message"]
 
 
+def _duplicate_internal_name_case(tmp_path: Path) -> tuple[Path, dict]:
+    """A raw whose internal A-device vectors share one name.
+
+    ngspice's XSPICE ``dac_bridge`` writes each of its output branch currents
+    under the same variable name (``i(a.x1.adac)`` twice), so every
+    behavioral-block composition produced such a raw (SDC-BB blocks
+    comparison, 2026-08-04)."""
+    path = tmp_path / "blocks.raw"
+    variables = [
+        ("time", "time"),
+        ("v(out)", "voltage"),
+        ("i(a.x1.adac)", "current"),
+        ("i(a.x1.adac)", "current"),
+    ]
+    body = _binary_raw(
+        plotname="Transient Analysis",
+        numeric_type="real",
+        variables=variables,
+        rows=[[0.0, 0.0, 1.0, 2.0], [1e-6, 0.5, 1.0, 2.0], [2e-6, 1.0, 1.0, 2.0]],
+    )
+    artifact = _write_raw(path, body)
+    analysis = {"type": "tran", "step_s": 1e-6, "stop_s": 2e-6, "extensions": {}}
+    return path, _simulation_result(
+        artifact,
+        backend="ngspice",
+        analysis=analysis,
+        points=3,
+        dependent_variables=3,
+        finite_values=9,
+    )
+
+
+def test_duplicate_internal_names_do_not_block_an_unambiguous_selection(
+    tmp_path: Path,
+) -> None:
+    path, simulation = _duplicate_internal_name_case(tmp_path)
+    extracted = extract_result_series(
+        simulation,
+        path,
+        [
+            {
+                "native_name": "v(out)",
+                "output_name": "v(out)",
+                "unit": "V",
+                "component": "real",
+            }
+        ],
+        request_id=REQUEST_ID,
+    )
+    assert extracted["engineering"]["status"] == "pass"
+    signals = extracted["data"]["extraction"]["series"]["signals"]
+    assert [signal["name"] for signal in signals] == ["v(out)"]
+    assert list(SERIES_DATA_VALIDATOR.iter_errors(extracted["data"])) == []
+
+
+def test_a_selector_resolving_to_a_duplicated_name_still_refuses(
+    tmp_path: Path,
+) -> None:
+    path, simulation = _duplicate_internal_name_case(tmp_path)
+    ambiguous = extract_result_series(
+        simulation,
+        path,
+        [
+            {
+                "native_name": "i(a.x1.adac)",
+                "output_name": "iadac",
+                "unit": "A",
+                "component": "real",
+            }
+        ],
+    )
+    refusal = ambiguous["diagnostics"][0]
+    assert refusal["code"] == "series.selector.missing"
+    assert "'i(a.x1.adac)'" in refusal["message"]
+
+
 def test_engine_rejects_binary_xyce_and_selected_scalar_overflow(tmp_path: Path) -> None:
     path = tmp_path / "xyce.raw"
     body = _binary_raw(

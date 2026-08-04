@@ -1134,8 +1134,14 @@ def _selected_variable_indices(
     analysis_type: str,
     selected_names: Sequence[str],
 ) -> list[int]:
-    if len(set(header.variable_names)) != len(header.variable_names):
-        raise _InvalidOutput("raw.variable_names_ambiguous")
+    # Duplicate variable names in the raw are refused PER SELECTOR, not for
+    # the whole plot: ngspice's XSPICE ``dac_bridge`` A-device writes each of
+    # its output branch currents under one name (``i(a.x1.adac)`` twice), so
+    # any behavioral-block composition made every extraction of the raw
+    # impossible — including selections that never touch the duplicated
+    # internal vectors (SDC-BB blocks comparison, 2026-08-04). A selector that
+    # RESOLVES to a duplicated name still refuses below with
+    # ``selector_resolution: "ambiguous"``; unambiguous selections proceed.
     dependent_start = 0 if analysis_type == "op" else 1
     dependent_names = header.variable_names[dependent_start:]
     # For every analysis but ``op``, index 0 is the sweep axis. It is returned
