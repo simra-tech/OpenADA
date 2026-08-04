@@ -1276,6 +1276,7 @@ def simulate(
     permitted_executable_models: Mapping[str, tuple[str, str]] | None = None,
     cosim_wrappers: Sequence[str] = (),
     cosim_composition: Any | None = None,
+    osdi_composition: Any | None = None,
     osdi_preload_text: str | None = None,
     osdi_preload_sha256: str | None = None,
     osdi_module_digests: Mapping[str, str] | None = None,
@@ -1527,6 +1528,44 @@ def simulate(
     # instances). Enforcing it only in the CLI left the programmatic
     # compose->simulate path unchecked and mis-scanned an artifact descriptor
     # as if it were a deck.
+    # OSDI relational parameter constraints are enforced HERE, at the
+    # operation boundary on the resolved caller deck text (the CLI-side check
+    # sees only the original source, which for an artifact is a JSON
+    # descriptor, not the deck). A preload WITHOUT its composition is refused:
+    # a digest-bound prelude alone carries no constraint knowledge, so
+    # accepting it would silently skip relational enforcement.
+    if osdi_preload_text is not None and osdi_composition is None:
+        return refuse(
+            "osdi.composition.missing",
+            "an OSDI preload was supplied without its composition; the "
+            "composition object is required so the declared relational "
+            "parameter constraints are enforced before any launch.",
+            inputs=input_records,
+            extensions={TARGET_EXTENSION: _target_facts(selected)},
+        )
+    if (
+        osdi_composition is not None
+        and osdi_preload_text is not None
+        and getattr(osdi_composition, "prelude_text", None) != osdi_preload_text
+    ):
+        return refuse(
+            "osdi.composition.mismatch",
+            "the supplied OSDI preload text is not the composition's own "
+            "prelude; the two must be identical so the verified constraints "
+            "belong to the deck that runs.",
+            inputs=input_records,
+            extensions={TARGET_EXTENSION: _target_facts(selected)},
+        )
+    if osdi_composition is not None and caller_deck_text is not None:
+        try:
+            osdi_composition.verify_deck(caller_deck_text)
+        except OsdiCompileError as exc:
+            return refuse(
+                exc.code,
+                exc.message,
+                inputs=input_records,
+                extensions={TARGET_EXTENSION: _target_facts(selected)},
+            )
     if permitted and caller_deck_text is not None:
         try:
             if cosim_composition is not None:

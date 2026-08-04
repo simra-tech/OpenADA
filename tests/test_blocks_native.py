@@ -29,7 +29,18 @@ NGSPICE = shutil.which("ngspice")
 pytestmark = pytest.mark.skipif(NGSPICE is None, reason="native ngspice is not installed")
 
 ROOT = Path(__file__).parents[1]
-CASE_PATHS = sorted((ROOT / "blocks" / "bhv-core" / "blocks").glob("*/cases/*.json"))
+def _has_native_backend(case_path: Path) -> bool:
+    contract = case_path.parent.parent / "block.json"
+    return "ngspice-native" in json.loads(contract.read_text())["backends"]
+
+
+# Verilog-a-only blocks (comparator_clocked_phys) graduate through the OSDI
+# battery (tests/test_blocks_osdi_comparator.py), not the native runner.
+CASE_PATHS = sorted(
+    p
+    for p in (ROOT / "blocks" / "bhv-core" / "blocks").glob("*/cases/*.json")
+    if _has_native_backend(p)
+)
 
 # The one declared composite observation shape: a pointwise conductance
 # overlap witness built from two probe-source branch currents.
@@ -267,5 +278,8 @@ def test_the_case_inventory_is_the_declared_golden_case_set():
         for block_id, block in library.blocks.items()
         for case_id in block.contract["golden_cases"]
     }
-    on_disk = {(path.parent.parent.name, path.stem) for path in CASE_PATHS}
+    all_case_paths = sorted(
+        (ROOT / "blocks" / "bhv-core" / "blocks").glob("*/cases/*.json")
+    )
+    on_disk = {(path.parent.parent.name, path.stem) for path in all_case_paths}
     assert on_disk == declared

@@ -2368,6 +2368,19 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                     composed_osdi = compose_blocks_osdi(
                         block_library, selection, output_dir
                     )
+                    # Relational parameter constraints (e.g. td > tedge/2+7p)
+                    # are checked against the caller deck's instantiating
+                    # cards, same fail-closed rule as the cosim path.
+                    try:
+                        osdi_deck_probe = (
+                            Path(source).expanduser().read_text(
+                                encoding="utf-8", errors="replace"
+                            )
+                        )
+                    except OSError:
+                        osdi_deck_probe = None
+                    if osdi_deck_probe is not None:
+                        composed_osdi.verify_deck(osdi_deck_probe)
                 else:
                     composed_blocks = compose_blocks(block_library, selection)
             except (BlockLibraryError, OsdiCompileError) as exc:
@@ -2555,6 +2568,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 # The composition is the authority for its own deck-level
                 # rules (single instance + declared parameter constraints).
                 cosim_composition=composed_cosim,
+                osdi_composition=composed_osdi,
                 osdi_preload_text=osdi_preload_text,
                 osdi_preload_sha256=osdi_preload_sha256,
                 osdi_module_digests=osdi_module_digests,

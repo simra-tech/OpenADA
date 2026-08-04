@@ -516,6 +516,82 @@ class OsdiComposition:
     requested: tuple[str, ...]
     prelude_text: str
     modules: tuple[OsdiModule, ...]
+    #: Per requested block, in order: public wrapper name, declared relational
+    #: parameter constraints, and contract parameter defaults.
+    wrappers: tuple[str, ...] = ()
+    constraints: tuple[tuple[Mapping[str, object], ...], ...] = ()
+    defaults: tuple[Mapping[str, float], ...] = ()
+
+    def verify_deck(self, deck_text: str) -> None:
+        """Check each block's declared relational parameter constraints
+        against the effective parameters of the caller's instantiating cards
+        (the same fail-closed rule the cosim path applies): without this the
+        contract admits a parameterization the realization cannot honor and
+        the simulator silently returns a latency other than the declared one.
+        """
+
+        from .cosim_compile import (
+            CosimCompileError,
+            _folded_statements,
+            instantiation_parameter_maps,
+            verify_parameter_constraints,
+        )
+
+        # Wrapper-only use: the compiled OSDI module types and the prelude's
+        # model aliases must never be bound or instantiated by the caller
+        # directly -- a caller .model card or a direct N reference would
+        # bypass every per-instance constraint check below (reproduced in
+        # review: td<=tedge/2 accepted through a direct .model+N pair).
+        module_types = {m.module_name.lower() for m in self.modules}
+        aliases = {f"{m.module_name.lower()}__osdi" for m in self.modules}
+        # _folded_statements strips inline comments per PHYSICAL line before
+        # stitching '+' continuations, mirroring ngspice's parse order — so a
+        # protected name cannot hide behind a comment or a continuation.
+        for _number, statement in _folded_statements(deck_text):
+            fields = statement.split()
+            if not fields:
+                continue
+            lead = fields[0].lower()
+            if lead == ".model" and len(fields) >= 3:
+                if fields[2].split("(")[0].lower() in module_types:
+                    raise OsdiCompileError(
+                        "osdi.instantiation.direct",
+                        f"the caller deck binds the compiled OSDI module "
+                        f"{fields[2]!r} with its own .model card "
+                        f"({fields[1]!r}); composed blocks may only be "
+                        "instantiated through their public wrapper subckt, "
+                        "where the declared parameter constraints are "
+                        "checked.",
+                    )
+            elif lead.startswith("n") and any(
+                f.lower() in aliases or f.lower() in module_types
+                for f in fields[1:]
+            ):
+                raise OsdiCompileError(
+                    "osdi.instantiation.direct",
+                    f"the caller deck instantiates a composition-owned OSDI "
+                    f"model directly ({statement.split()[0]}); composed "
+                    "blocks may only be instantiated through their public "
+                    "wrapper subckt.",
+                )
+
+        for wrapper, constraints, defaults in zip(
+            self.wrappers, self.constraints, self.defaults
+        ):
+            if not constraints:
+                continue
+            try:
+                # EVERY instantiating card is checked individually; an
+                # uninstantiated block is checked at its contract defaults.
+                maps = instantiation_parameter_maps(deck_text, wrapper, defaults)
+                for effective in maps or [dict(defaults)]:
+                    verify_parameter_constraints(
+                        constraints, effective, block_id=wrapper
+                    )
+            except CosimCompileError as exc:
+                raise OsdiCompileError(
+                    exc.code.replace("cosim.", "osdi.", 1), exc.message
+                ) from exc
 
 
 def _block_interface(block: object, block_id: str) -> tuple[list[str], dict[str, object]]:
@@ -555,6 +631,9 @@ def compose_blocks_osdi(
         raise OsdiCompileError("osdi.compose.empty", "no blocks requested.")
     triples: list[tuple[OsdiModule, Sequence[str], Mapping[str, object]]] = []
     modules: list[OsdiModule] = []
+    wrappers: list[str] = []
+    constraints: list[tuple[Mapping[str, object], ...]] = []
+    defaults: list[Mapping[str, float]] = []
     seen: set[str] = set()
     for block_id in requested:
         if block_id in seen:
@@ -581,10 +660,18 @@ def compose_blocks_osdi(
         ports, parameters = _block_interface(block, block_id)
         triples.append((module, ports, parameters))
         modules.append(module)
+        wrappers.append(veriloga.wrapper)
+        constraints.append(tuple(getattr(veriloga, "parameter_constraints", ()) or ()))
+        defaults.append(
+            {str(k): float(v) for k, v in parameters.items() if isinstance(v, (int, float))}
+        )
     prelude = osdi_preload_prelude(triples)
     return OsdiComposition(
         library_id=str(getattr(library, "library_id", "")),
         requested=requested,
         prelude_text=prelude,
         modules=tuple(modules),
+        wrappers=tuple(wrappers),
+        constraints=tuple(constraints),
+        defaults=tuple(defaults),
     )

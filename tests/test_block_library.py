@@ -176,12 +176,17 @@ def test_load_happy_path_digests_are_stable_across_loads():
 
     assert sorted(first.blocks) == [
         "comparator_clocked",
+        "comparator_clocked_phys",
         "opamp_1p",
         "sw_bbm_pair",
     ]
     assert first.library_digest == second.library_digest
 
-    selection = tuple(sorted(first.blocks))
+    # native composition covers the blocks with native backends; the
+    # verilog-a-only block composes through the OSDI path instead
+    selection = tuple(
+        sorted(bid for bid, b in first.blocks.items() if b.native is not None)
+    )
     composed_first = compose_blocks(first, selection)
     composed_second = compose_blocks(second, selection)
     assert composed_first.text == composed_second.text
@@ -200,7 +205,12 @@ def test_load_happy_path_digests_are_stable_across_loads():
 
 def test_composed_text_passes_the_bounded_model_library_gate():
     library = load_block_library("bhv-core")
-    composed = compose_blocks(library, tuple(sorted(library.blocks)))
+    # native composition covers every block WITH a native backend; verilog-a-
+    # only blocks (comparator_clocked_phys) compose through the OSDI path
+    native_ids = tuple(
+        sorted(bid for bid, b in library.blocks.items() if b.native is not None)
+    )
+    composed = compose_blocks(library, native_ids)
 
     offending = [
         line for line in composed.text.splitlines() if MODELS_FORBIDDEN_RE.match(line)

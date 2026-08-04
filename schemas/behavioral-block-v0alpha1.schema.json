@@ -24,20 +24,30 @@
     "golden_cases"
   ],
   "properties": {
-    "schema": {"const": "openada.behavioral-block/v0alpha1"},
+    "schema": {
+      "const": "openada.behavioral-block/v0alpha1"
+    },
     "block_id": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9_]{1,47}$",
       "description": "Globally stable lowercase identity; never reused for a different contract."
     },
-    "contract_version": {"$ref": "#/$defs/semver"},
+    "contract_version": {
+      "$ref": "#/$defs/semver"
+    },
     "abi_version": {
       "type": "integer",
       "minimum": 1,
       "description": "Major ABI ordinal carried in the public wrapper name bhv_<block_id>_v<abi_version>."
     },
-    "implementation_version": {"$ref": "#/$defs/semver"},
-    "title": {"type": "string", "minLength": 1, "maxLength": 120},
+    "implementation_version": {
+      "$ref": "#/$defs/semver"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
     "category": {
       "enum": [
         "infrastructure",
@@ -50,7 +60,11 @@
         "arithmetic"
       ]
     },
-    "description": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
     "ports": {
       "type": "array",
       "minItems": 2,
@@ -67,32 +81,89 @@
           "output_drive"
         ],
         "properties": {
-          "ordinal": {"type": "integer", "minimum": 0},
-          "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,23}$"},
-          "domain": {"enum": ["electrical", "event-binary"]},
-          "role": {"enum": ["signal", "supply", "reference", "clock", "reset"]},
+          "ordinal": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,23}$"
+          },
+          "domain": {
+            "enum": [
+              "electrical",
+              "event-binary"
+            ]
+          },
+          "role": {
+            "enum": [
+              "signal",
+              "supply",
+              "reference",
+              "clock",
+              "reset"
+            ]
+          },
           "reference_port": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Name of the port this port's voltages are defined against; null only for the reference port itself."
           },
           "input_loading": {
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "additionalProperties": false,
             "minProperties": 1,
             "properties": {
-              "rin_ohm": {"type": ["number", "string"]},
-              "cin_farad": {"type": ["number", "string"]},
-              "infinite": {"type": "boolean"}
+              "rin_ohm": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "cin_farad": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "infinite": {
+                "type": "boolean"
+              }
             }
           },
           "output_drive": {
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "additionalProperties": false,
             "minProperties": 1,
             "properties": {
-              "kind": {"enum": ["thevenin", "norton", "switched-resistance"]},
-              "rout_ohm": {"type": ["number", "string"]},
-              "current_limit_amp": {"type": ["number", "string", "null"]},
+              "kind": {
+                "enum": [
+                  "thevenin",
+                  "norton",
+                  "switched-resistance"
+                ]
+              },
+              "rout_ohm": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "current_limit_amp": {
+                "type": [
+                  "number",
+                  "string",
+                  "null"
+                ]
+              },
               "edge_convention": {
                 "type": "string",
                 "description": "How tr/tf parameters map to threshold crossings."
@@ -103,8 +174,18 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "minimum": {"type": ["number", "string"]},
-              "maximum": {"type": ["number", "string"]}
+              "minimum": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "maximum": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              }
             }
           }
         }
@@ -115,26 +196,69 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "type", "default", "units", "scope", "description"],
+        "required": [
+          "name",
+          "type",
+          "default",
+          "units",
+          "scope",
+          "description"
+        ],
         "properties": {
-          "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,23}$"},
-          "type": {"enum": ["real", "integer", "boolean-as-integer"]},
-          "default": {"type": ["number", "integer"]},
-          "units": {"type": "string", "maxLength": 16},
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,23}$"
+          },
+          "type": {
+            "enum": [
+              "real",
+              "integer",
+              "boolean-as-integer"
+            ]
+          },
+          "default": {
+            "type": [
+              "number",
+              "integer"
+            ]
+          },
+          "units": {
+            "type": "string",
+            "maxLength": 16
+          },
           "scope": {
-            "enum": ["contract", "tuning"],
+            "enum": [
+              "contract",
+              "tuning"
+            ],
             "description": "contract parameters change declared behavior; tuning parameters only trade accuracy for cost within the declared error bound."
           },
           "range": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "minimum": {"type": ["number", "null"]},
-              "maximum": {"type": ["number", "null"]},
-              "exclusive_minimum": {"type": "boolean"}
+              "minimum": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "maximum": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "exclusive_minimum": {
+                "type": "boolean"
+              }
             }
           },
-          "description": {"type": "string", "minLength": 1, "maxLength": 400}
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
         }
       }
     },
@@ -143,9 +267,17 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "init_policy", "value_before_first_event"],
+        "required": [
+          "name",
+          "init_policy",
+          "value_before_first_event"
+        ],
         "properties": {
-          "name": {"type": "string", "minLength": 1, "maxLength": 48},
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 48
+          },
           "init_policy": {
             "enum": [
               "parameter",
@@ -155,14 +287,23 @@
               "simulator-determined"
             ]
           },
-          "value_before_first_event": {"type": "string", "maxLength": 200},
+          "value_before_first_event": {
+            "type": "string",
+            "maxLength": 200
+          },
           "reset": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "port": {"type": "string"},
-              "active_high": {"type": "boolean"},
-              "synchronous": {"type": "boolean"}
+              "port": {
+                "type": "string"
+              },
+              "active_high": {
+                "type": "boolean"
+              },
+              "synchronous": {
+                "type": "boolean"
+              }
             }
           }
         }
@@ -171,11 +312,21 @@
     "analyses": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["supported", "unsupported"],
+      "required": [
+        "supported",
+        "unsupported"
+      ],
       "properties": {
         "supported": {
           "type": "array",
-          "items": {"enum": ["op", "dc", "ac", "tran"]},
+          "items": {
+            "enum": [
+              "op",
+              "dc",
+              "ac",
+              "tran"
+            ]
+          },
           "uniqueItems": true
         },
         "unsupported": {
@@ -183,9 +334,14 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["analysis", "behavior"],
+            "required": [
+              "analysis",
+              "behavior"
+            ],
             "properties": {
-              "analysis": {"type": "string"},
+              "analysis": {
+                "type": "string"
+              },
               "behavior": {
                 "type": "string",
                 "description": "What actually happens if requested (e.g. 'noise contributions are absent, not zero-modeled; report unavailable')."
@@ -201,18 +357,39 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "magnitude", "scaling_rule", "tested_error_bound"],
+        "required": [
+          "name",
+          "magnitude",
+          "scaling_rule",
+          "tested_error_bound"
+        ],
         "properties": {
-          "name": {"type": "string", "maxLength": 64},
-          "magnitude": {"type": "string", "maxLength": 120},
-          "scaling_rule": {"type": "string", "maxLength": 200},
-          "tested_error_bound": {"type": "string", "maxLength": 200}
+          "name": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "magnitude": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "scaling_rule": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "tested_error_bound": {
+            "type": "string",
+            "maxLength": 200
+          }
         }
       }
     },
     "limitations": {
       "type": "array",
-      "items": {"type": "string", "minLength": 1, "maxLength": 300}
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      }
     },
     "timing": {
       "type": "object",
@@ -231,7 +408,10 @@
     },
     "depends": {
       "type": "array",
-      "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,47}$"},
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{1,47}$"
+      },
       "uniqueItems": true,
       "description": "Other block_ids whose sources must be composed before this block."
     },
@@ -243,9 +423,16 @@
         "ngspice-native": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["file", "wrapper", "element_families"],
+          "required": [
+            "file",
+            "wrapper",
+            "element_families"
+          ],
           "properties": {
-            "file": {"type": "string", "pattern": "^[a-z0-9_.-]+\\.sp$"},
+            "file": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+\\.sp$"
+            },
             "wrapper": {
               "type": "string",
               "pattern": "^bhv_[a-z0-9_]+_v[0-9]+$"
@@ -320,7 +507,10 @@
               "minItems": 1,
               "maxItems": 32,
               "uniqueItems": true,
-              "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
               "description": "Scalar core input ports in the exact order the compiled shim binds them (the Verilated header order, not necessarily declaration order); re-verified against the compiled artifact on every compose."
             },
             "core_outputs": {
@@ -328,7 +518,10 @@
               "minItems": 1,
               "maxItems": 32,
               "uniqueItems": true,
-              "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
               "description": "Scalar core output ports in shim binding order; re-verified on every compose."
             },
             "parameter_constraints": {
@@ -338,26 +531,58 @@
               "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["id", "left", "relation", "right_terms", "right_constant", "rationale"],
+                "required": [
+                  "id",
+                  "left",
+                  "relation",
+                  "right_terms",
+                  "right_constant",
+                  "rationale"
+                ],
                 "properties": {
-                  "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{1,47}$"},
-                  "left": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
-                  "relation": {"enum": [">", ">=" ]},
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]{1,47}$"
+                  },
+                  "left": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "relation": {
+                    "enum": [
+                      ">",
+                      ">="
+                    ]
+                  },
                   "right_terms": {
                     "type": "array",
                     "maxItems": 8,
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["parameter", "coefficient"],
+                      "required": [
+                        "parameter",
+                        "coefficient"
+                      ],
                       "properties": {
-                        "parameter": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
-                        "coefficient": {"type": "number"}
+                        "parameter": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]*$"
+                        },
+                        "coefficient": {
+                          "type": "number"
+                        }
                       }
                     }
                   },
-                  "right_constant": {"type": "number"},
-                  "rationale": {"type": "string", "minLength": 1, "maxLength": 1000}
+                  "right_constant": {
+                    "type": "number"
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
                 }
               }
             },
@@ -371,10 +596,20 @@
         "verilog-a": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["file", "module", "feature_profile"],
+          "required": [
+            "file",
+            "module",
+            "feature_profile"
+          ],
           "properties": {
-            "file": {"type": "string", "pattern": "^[a-z0-9_.-]+\\.va$"},
-            "module": {"type": "string", "pattern": "^bhv_[a-z0-9_]+_v[0-9]+$"},
+            "file": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+\\.va$"
+            },
+            "module": {
+              "type": "string",
+              "pattern": "^bhv_[a-z0-9_]+_v[0-9]+$"
+            },
             "feature_profile": {
               "type": "array",
               "uniqueItems": true,
@@ -401,6 +636,73 @@
                 ]
               },
               "description": "Machine-readable list of required Verilog-A features; linted against compiler/transpiler subsets instead of a stale compilable boolean."
+            },
+            "notes": {
+              "type": "string",
+              "maxLength": 4000,
+              "description": "Backend-specific semantics, measured regularization, and limitations documentation."
+            },
+            "parameter_constraints": {
+              "type": "array",
+              "maxItems": 16,
+              "description": "Relational constraints this backend's realization requires, which a per-parameter range cannot express (e.g. td > tedge/2 + 7 ps). Each is checked against the effective parameters of the instantiating card before any simulator launch.",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "left",
+                  "relation",
+                  "right_terms",
+                  "right_constant",
+                  "rationale"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]{1,47}$"
+                  },
+                  "left": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "relation": {
+                    "enum": [
+                      ">",
+                      ">="
+                    ]
+                  },
+                  "right_terms": {
+                    "type": "array",
+                    "maxItems": 8,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "parameter",
+                        "coefficient"
+                      ],
+                      "properties": {
+                        "parameter": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]*$"
+                        },
+                        "coefficient": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  },
+                  "right_constant": {
+                    "type": "number"
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                }
+              }
             }
           }
         }
@@ -409,7 +711,10 @@
     "golden_cases": {
       "type": "array",
       "minItems": 1,
-      "items": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{1,47}$"},
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]{1,47}$"
+      },
       "description": "Case identities under cases/; each case contract is a backend-neutral stimulus/observation/relations document."
     }
   },

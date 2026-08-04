@@ -99,6 +99,7 @@ def test_blocks_show_emits_one_verified_catalog(capsys):
     catalog = library["blocks"]
     assert [entry["block_id"] for entry in catalog] == [
         "comparator_clocked",
+        "comparator_clocked_phys",
         "opamp_1p",
         "sw_bbm_pair",
     ]

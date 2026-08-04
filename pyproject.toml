@@ -107,6 +107,15 @@ where = ["src"]
   "blocks/bhv-core/blocks/comparator_clocked/cases/decide-basic.json",
   "blocks/bhv-core/blocks/comparator_clocked/cases/hysteresis-band.json",
 ]
+"share/openada/blocks/bhv-core/blocks/comparator_clocked_phys" = [
+  "blocks/bhv-core/blocks/comparator_clocked_phys/block.json",
+  "blocks/bhv-core/blocks/comparator_clocked_phys/comparator_clocked_phys.va",
+]
+"share/openada/blocks/bhv-core/blocks/comparator_clocked_phys/cases" = [
+  "blocks/bhv-core/blocks/comparator_clocked_phys/cases/ambiguity-low.json",
+  "blocks/bhv-core/blocks/comparator_clocked_phys/cases/decide-basic.json",
+  "blocks/bhv-core/blocks/comparator_clocked_phys/cases/hysteresis-band.json",
+]
 "share/openada/blocks/bhv-core/blocks/opamp_1p" = [
   "blocks/bhv-core/blocks/opamp_1p/block.json",
   "blocks/bhv-core/blocks/opamp_1p/opamp_1p.ngspice.sp",
