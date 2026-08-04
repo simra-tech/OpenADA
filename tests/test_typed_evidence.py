@@ -559,3 +559,17 @@ def test_slope_single_sample_window_is_not_found() -> None:
     assert measured["unit"] == "V/s"
     assert measured["sample_count"] == 1
     assert measured["location"] is None
+
+
+def test_subnormal_axis_slope_is_finite_not_a_crash() -> None:
+    # Centered squares of subnormal coordinates underflow to zero; the
+    # scaled OLS keeps the mathematically defined slope of exactly 1.
+    series = _series(
+        axis_values=[5e-324, 1e-323],
+        signal_values=[5e-324, 1e-323],
+    )
+    payload = measure_result(series, _request("slope", {}))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["status"] == "measured"
+    assert measured["value"] == pytest.approx(1.0)

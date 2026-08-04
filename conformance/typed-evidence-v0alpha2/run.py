@@ -27,7 +27,10 @@ from openada.operations import (  # noqa: E402
 )
 from openada.operations.result_measure import (  # noqa: E402
     IMPLEMENTATION_ID,
-    IMPLEMENTATION_VERSION,
+    IMPLEMENTATION_VERSION as MEASUREMENT_VERSION,
+)
+from openada.operations.specification_evaluate import (  # noqa: E402
+    IMPLEMENTATION_VERSION as SPECIFICATION_VERSION,
 )
 from verify import load_cases, load_manifest, verify_evidence  # noqa: E402
 
@@ -132,7 +135,8 @@ def run_suite(manifest_path: Path = DEFAULT_MANIFEST) -> dict[str, Any]:
         "conformance_id": manifest["id"],
         "implementation": {
             "id": IMPLEMENTATION_ID,
-            "version": IMPLEMENTATION_VERSION,
+            "measurement_version": MEASUREMENT_VERSION,
+            "specification_version": SPECIFICATION_VERSION,
         },
         "fixture_sha256": manifest["fixture"]["sha256"],
         "measurements": measurement_records,

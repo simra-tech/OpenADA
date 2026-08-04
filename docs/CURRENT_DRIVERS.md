@@ -235,10 +235,13 @@ downstream assertion remains explicitly unverified; retaining the extraction
 envelope preserves the upstream native binding.
 
 `measure` has the closed kinds sample-at, min/max, mean, RMS, crossing,
-rise/fall time, and settling time. Every coordinate or threshold uses an exact
+rise/fall time, settling time, and slope (least-squares signal-versus-axis
+slope in the literal composed unit `signal_unit/axis_unit`). Every coordinate or threshold uses an exact
 declared unit. Its structured maturity, together with `evaluate`, is backed by
 the
-[network-free typed-evidence conformance bundle](../conformance/typed-evidence-v0alpha1/README.md).
+[network-free typed-evidence conformance bundle](../conformance/typed-evidence-v0alpha2/README.md)
+(v0alpha2; the v0alpha1 record remains immutable historical evidence for
+the v1alpha1 profile).
 The newer extraction, spectral, and transfer kernels have focused profile and
 algorithm tests but are not added retroactively to that immutable conformance
 record.
@@ -290,7 +293,8 @@ Inspect the complete packaged ontology without guessing IDs:
 ```
 
 The catalog contains nine active profiles plus the immutable historical
-`circuit.simulate/v1alpha1` profile. Catalog presence is not an
+`circuit.simulate/v1alpha1`, `result.measure/v1alpha1`, and
+`result.transfer.measure/v1alpha1` profiles. Catalog presence is not an
 external-provider capability.
 
 ## Explicit external-provider runtime

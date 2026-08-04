@@ -1426,3 +1426,18 @@ def test_provider_manifest_hash_refuses_stack_exhausting_nesting():
     with pytest.raises(verifier.CoverageInputError) as excinfo:
         verifier._provider_manifest_semantic_sha256_bytes(deep)
     assert "nests deeper than" in str(excinfo.value)
+
+
+def test_experiment_compile_is_an_artifact_kernel_surface() -> None:
+    # The compile verb is semantic execution over typed documents, not an
+    # administrative listing; misclassification would silently waive its
+    # coverage obligation once the surface goes active.
+    payload = json.loads(_run("--compact").stdout)
+    row = next(
+        row
+        for row in payload["rows"]
+        if row["row_id"].startswith("surface|openada.surface/cli.experiment-compile")
+    )
+    assert row["execution_class"] == "artifact-kernel"
+    assert row["lifecycle"] == "experimental"
+    assert not any("experiment compile" in issue for issue in payload["issues"])

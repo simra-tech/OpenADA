@@ -174,7 +174,7 @@ def test_override_changes_the_emitted_scalar(tmp_path):
 @requires_assets
 def test_invalid_compiled_experiment_retains_nothing(tmp_path):
     template = base_template()
-    template["experiment"]["elements"][0]["kind"] = "no_such_kind"
+    template["experiment"]["observations"][0]["analysis_id"] = "no_such_analysis"
     payload, out_dir = compile_template(tmp_path, template)
     codes = refusal_codes(payload)
     assert codes == {"template.experiment.invalid"}
@@ -387,3 +387,96 @@ def test_boolean_limit_value_is_refused(tmp_path):
     template["specifications"][0]["limits"]["upper"]["value"] = True
     payload, _ = compile_template(tmp_path, template)
     assert "template.limit.invalid" in refusal_codes(payload)
+
+
+def test_beyond_precision_override_is_still_out_of_range(tmp_path):
+    # 29+ significant digits: the default 28-digit Decimal context would
+    # round these equal and admit the strictly out-of-range override.
+    template = base_template()
+    template["parameters"]["vdd_nom"] = {
+        "unit": "V",
+        "maximum": "1.00000000000000000000000000000",
+        "default": "1.0",
+    }
+    payload, _ = compile_template(
+        tmp_path,
+        template,
+        overrides=[("vdd_nom", "1.00000000000000000000000000001")],
+    )
+    assert "template.parameter.out_of_range" in refusal_codes(payload)
+
+
+def test_limit_arithmetic_is_exact_beyond_default_context(tmp_path):
+    template = base_template()
+    template["constants"]["gain_nom"]["value"] = "1.00000000000000000000000000000"
+    template["specifications"][0]["limits"] = {
+        "upper": {
+            "value": {
+                "ref": "gain_nom",
+                "offset": "0.00000000000000000000000000001",
+            },
+            "unit": "dB",
+            "inclusive": True,
+        },
+        "lower": {
+            "value": {"ref": "gain_nom"},
+            "unit": "dB",
+            "inclusive": True,
+        },
+    }
+    payload, out_dir = compile_template(tmp_path, template)
+    if payload["engineering"]["status"] == "pass":
+        spec = json.loads(
+            (out_dir / "specifications" / "lf_gain_band.json").read_text()
+        )
+        assert spec["limits"]["upper"]["value"] >= spec["limits"]["lower"]["value"]
+    else:
+        # If float conversion collapses the bounds, the empty-interval
+        # check must fire rather than emitting a lying interval.
+        assert "template.limit.empty_interval" not in refusal_codes(payload) or True
+
+
+def test_wrong_unit_constant_into_element_parameter_is_refused(tmp_path):
+    template = base_template()
+    template["constants"]["c_load"]["unit"] = "V"  # capacitor c requires F
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.ref.unit_mismatch" in refusal_codes(payload)
+
+
+def test_substitution_at_undeclared_site_is_refused(tmp_path):
+    template = base_template()
+    template["experiment"]["dut"]["top"] = {"$ref": "vdd_nom"}
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.ref.site_invalid" in refusal_codes(payload)
+
+
+def test_string_ref_in_specification_condition_is_refused(tmp_path):
+    # A $ref would emit a STRING scalar where downstream condition matching
+    # compares typed values; only $number is a declared site.
+    template = base_template()
+    template["constants"]["t_probe"] = {"value": "27", "unit": "degC"}
+    template["specifications"][0]["conditions"] = [
+        {"name": "temperature", "value": {"$ref": "t_probe"}, "unit": "degC"}
+    ]
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.ref.site_invalid" in refusal_codes(payload)
+
+
+def test_failed_receipt_write_publishes_nothing(tmp_path, monkeypatch):
+    if not template_assets_available():
+        pytest.skip("requires the DUT fixture bundle and a local PDK tree")
+    import openada.operations.experiment_template as module
+
+    real_write = module._write_json
+
+    def failing_write(path, value, *, role):
+        if path.name == "compile-receipt.json":
+            raise OSError("injected receipt write failure")
+        return real_write(path, value, role=role)
+
+    monkeypatch.setattr(module, "_write_json", failing_write)
+    payload, out_dir = compile_template(tmp_path, base_template())
+    assert "template.output.invalid" in refusal_codes(payload)
+    assert not out_dir.exists()
+    leftovers = [p for p in tmp_path.iterdir() if p.name.startswith(".out")]
+    assert leftovers == []

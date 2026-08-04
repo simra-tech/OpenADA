@@ -175,7 +175,7 @@ NATIVE_EDA_SURFACES = frozenset(
     }
 )
 ARTIFACT_KERNEL_SURFACES = frozenset(
-    {"evaluate", "extract", "measure", "spectral", "transfer"}
+    {"evaluate", "experiment-compile", "extract", "measure", "spectral", "transfer"}
 )
 NATIVE_EDA_OPERATIONS = frozenset(
     {

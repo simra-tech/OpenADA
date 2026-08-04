@@ -688,3 +688,32 @@ def test_ac_magnitude_request_digest_includes_at() -> None:
         a["data"]["measurement"]["request_sha256"]
         != b["data"]["measurement"]["request_sha256"]
     )
+
+
+def test_unrepresentable_integer_at_is_an_invalid_request() -> None:
+    request = _at_request(100.0)
+    request["metric"]["at"]["value"] = 10**309
+    payload = measure_transfer(_series(), request)
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "transfer.request.invalid"
+
+
+def test_log_colliding_adjacent_frequencies_still_interpolate() -> None:
+    # Adjacent frequencies near 1e300 whose log10 values round to the same
+    # double: the difference form divides by zero; the log-RATIO form keeps
+    # the tiny nonzero spacing and interpolation stays defined.
+    f0 = 1e300
+    f1 = 1e300 * (1.0 + 8e-16)
+    at = 1e300 * (1.0 + 4e-16)
+    assert f0 < at < f1
+    series = _series(
+        magnitudes_db=(0.0, 6.0),
+        phases_deg=(0.0, 0.0),
+        frequencies_hz=(f0, f1),
+    )
+    payload = measure_transfer(series, _at_request(at))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert math.isfinite(measured["value"])
+    assert 0.0 <= measured["value"] <= 6.0

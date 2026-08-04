@@ -172,7 +172,7 @@ numbers out of a log:
 ```text
 circuit.simulate/v1alpha2
   -> result.series.extract/v1alpha1
-  -> result.measure/v1alpha1
+  -> result.measure/v1alpha2
      or result.spectral.measure/v1alpha1
      or result.transfer.measure/v1alpha1
   -> specification.evaluate/v1alpha1
@@ -281,7 +281,7 @@ adjacent command or be waived through prose.
 
 | Contract layer | Current checkout | Protocol target |
 |---|---|---|
-| Agent intent | Sixteen CLI command families; eight fixed scoped-preflight assertions; nine active typed operation profiles plus one historical simulation profile; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
+| Agent intent | Sixteen CLI command families; eight fixed scoped-preflight assertions; nine active typed operation profiles plus three immutable historical profiles; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
 | Drivers | Eight open-source EDA drivers; circuit simulation, strict RTL lint, mapped synthesis, and synthesis-stage timing expose typed evidence at feature-specific maturity | Capability manifests and independently installable drivers |
 | Portability proof | Analysis-specific `circuit.simulate` requests have pinned native ngspice/Xyce success replay with independently parsed artifacts; the expanded replay does not yet cover every maturity outcome | More operations, open-source backends, runtime environments, and complete outcome corpora |

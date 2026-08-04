@@ -17,6 +17,7 @@ from decimal import (
     Decimal,
     DecimalException,
     ROUND_CEILING,
+    localcontext,
 )
 import hashlib
 import json
@@ -483,7 +484,14 @@ def _parse_scalar(value: object) -> Scalar:
                     f"[-{MAX_SCALAR_ADJUSTED_EXPONENT}, "
                     f"{MAX_SCALAR_ADJUSTED_EXPONENT}]"
                 )
-        parsed = number * scale
+        # The default 28-digit context would silently round a scalar with up
+        # to MAX_SCALAR_SIGNIFICANT_DIGITS digits, collapsing values that
+        # differ only beyond digit 28 (a strictly out-of-range bound could
+        # then compare equal to the bound). The widened context keeps the
+        # product exact for the entire admitted domain.
+        with localcontext() as context:
+            context.prec = MAX_SCALAR_SIGNIFICANT_DIGITS + 32
+            parsed = number * scale
     except _ScalarOutOfRange:
         raise
     except (DecimalException, KeyError, OverflowError, ValueError) as exc:
@@ -491,6 +499,21 @@ def _parse_scalar(value: object) -> Scalar:
     if not parsed.is_finite():
         raise _ScalarOutOfRange("the scalar is not finite")
     return Scalar(token=token, value=parsed)
+
+
+def _plain_decimal_token(value: Decimal) -> str:
+    """One canonical suffix-free plain-decimal spelling of ``value``.
+
+    Fixed-point, no exponent, no SPICE suffix, no trailing fractional
+    zeros — the same text is a valid SPICE scalar, a valid ngspice
+    ``.option temp=`` argument, and parses to the exact numeric value the
+    typed conditions record.
+    """
+
+    text = format(value, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text or "0"
 
 
 def _scalar(value: object) -> Scalar | None:
@@ -3116,24 +3139,25 @@ class _Validator:
                     "must lie in (-273.15, 1000] degC",
                 )
                 return None
-            profile_temperature = _scalar(resolved.binding.simulation_temperature_c)
-            if (
-                profile_temperature is None
-                or temperature.value != profile_temperature.value
-            ):
-                # The declared temperature becomes THE binding temperature:
-                # every downstream consumer (the bound deck's .option temp
-                # line, its allowlist, binding facts, extraction conditions,
-                # the run manifest, and the off-reference advisory) reads
-                # resolved.binding.simulation_temperature_c, so there is
-                # exactly one authority and it is the value that simulates.
-                resolved = replace(
-                    resolved,
-                    binding=replace(
-                        resolved.binding,
-                        simulation_temperature_c=temperature.token,
+            # The declared temperature becomes THE binding temperature:
+            # every downstream consumer (the bound deck's .option temp
+            # line, its allowlist, binding facts, extraction conditions,
+            # the run manifest, and the off-reference advisory) reads
+            # resolved.binding.simulation_temperature_c, so there is
+            # exactly one authority and it is the value that simulates.
+            # The token is canonicalized to a suffix-free plain-decimal
+            # spelling first: a SPICE-suffixed token like "27m" (0.027)
+            # would otherwise reach the deck verbatim while the typed
+            # extraction condition needs one exact numeric value.
+            resolved = replace(
+                resolved,
+                binding=replace(
+                    resolved.binding,
+                    simulation_temperature_c=_plain_decimal_token(
+                        temperature.value
                     ),
-                )
+                ),
+            )
         return resolved
 
 

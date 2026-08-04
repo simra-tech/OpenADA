@@ -290,17 +290,27 @@ def _normalize_request(value: object) -> dict[str, Any]:
                 "transfer.metric.at.unit must be exactly 'Hz'.",
             )
         at_value = at_item["value"]
-        if (
-            isinstance(at_value, bool)
-            or not isinstance(at_value, (int, float))
-            or not math.isfinite(at_value)
-            or at_value <= 0
-        ):
+        if isinstance(at_value, bool) or not isinstance(at_value, (int, float)):
             raise _InvalidTransferRequest(
                 "transfer.request.invalid",
                 "transfer.metric.at.value must be one finite positive number.",
             )
-        normalized_metric["at"] = {"value": float(at_value), "unit": "Hz"}
+        try:
+            at_number = float(at_value)
+        except OverflowError as exc:
+            # A JSON-schema-valid arbitrary-precision integer such as
+            # 10**309 is not representable; that is a request defect, not
+            # a completed non-finite calculation.
+            raise _InvalidTransferRequest(
+                "transfer.request.invalid",
+                "transfer.metric.at.value must be one finite positive number.",
+            ) from exc
+        if not math.isfinite(at_number) or at_number <= 0:
+            raise _InvalidTransferRequest(
+                "transfer.request.invalid",
+                "transfer.metric.at.value must be one finite positive number.",
+            )
+        normalized_metric["at"] = {"value": at_number, "unit": "Hz"}
     elif "at" in metric:
         raise _InvalidTransferRequest(
             "transfer.request.invalid",
@@ -381,9 +391,19 @@ def _magnitude_db_at(
             return magnitudes_db[index]
         if frequency > at:
             f0, f1 = frequencies[index - 1], frequency
-            fraction = (math.log10(at) - math.log10(f0)) / (
-                math.log10(f1) - math.log10(f0)
-            )
+            # Log-RATIO form: log10(f1) - log10(f0) catastrophically
+            # cancels for adjacent points whose logs round to the same
+            # double (e.g. near 1e300), while log10(f1 / f0) keeps the
+            # tiny but nonzero spacing.
+            denominator = math.log10(f1 / f0)
+            if denominator == 0.0:
+                raise _InvalidTransferRequest(
+                    "transfer.domain.invalid",
+                    "The adjacent simulated frequencies bracketing "
+                    "transfer.metric.at are not resolvable on the log10 "
+                    "axis in double precision.",
+                )
+            fraction = math.log10(at / f0) / denominator
             return magnitudes_db[index - 1] + fraction * (
                 magnitudes_db[index] - magnitudes_db[index - 1]
             )

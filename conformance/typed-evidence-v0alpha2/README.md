@@ -9,7 +9,8 @@ conformance identity is:
 That one record binds the exact `result.measure/v1alpha2` operation profile
 (which adds the closed `slope` measurement kind), the unchanged v1alpha1
 assertion and `specification.evaluate` identities, and every feature ID to
-`org.openada.kernel.typed-evidence` implementation version `1.1.0`. It
+`org.openada.kernel.typed-evidence` (measurement kernel `1.1.0`,
+specification kernel `1.0.0` — the evaluate semantics are unchanged). It
 succeeds the immutable `typed-evidence-measurement-specification-v0alpha1`
 record, which remains valid historical evidence for the v1alpha1 profile.
 
@@ -49,10 +50,10 @@ Install the repository's `conformance` extra. From the repository root, choose
 a path that does not already exist:
 
 ```bash
-python3 conformance/typed-evidence-v0alpha1/run.py \
+python3 conformance/typed-evidence-v0alpha2/run.py \
   --evidence-file /tmp/openada-typed-evidence.json
 
-python3 conformance/typed-evidence-v0alpha1/verify.py \
+python3 conformance/typed-evidence-v0alpha2/verify.py \
   /tmp/openada-typed-evidence.json
 ```
 
@@ -69,3 +70,8 @@ series and scalar limits only. It does not validate a native waveform parser,
 EDA model fidelity, unit conversion, complex-series transforms, statistical
 coverage, PDK conditions, or signoff suitability. Native-artifact lineage in
 the fixture is deliberately marked `unverified`.
+
+Re-running the suite is semantically reproducible: every verified fact
+is identical across runs, while child envelopes carry fresh
+`provenance.created_at` timestamps, so byte-identity of the evidence file
+is not a claim this bundle makes.

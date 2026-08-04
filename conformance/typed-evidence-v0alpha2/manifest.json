@@ -3,8 +3,9 @@
   "id": "typed-evidence-measurement-specification-v0alpha2",
   "implementation": {
     "id": "org.openada.kernel.typed-evidence",
-    "version": "1.1.0",
-    "runtime": "python"
+    "runtime": "python",
+    "measurement_version": "1.1.0",
+    "specification_version": "1.0.0"
   },
   "contracts": {
     "result_schema": {

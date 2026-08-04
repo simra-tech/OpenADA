@@ -723,14 +723,30 @@ def measure_result(
                 try:
                     x_mean = math.fsum(xs) / len(xs)
                     y_mean = math.fsum(ys) / len(ys)
-                    sxx = math.fsum((x - x_mean) ** 2 for x in xs)
-                    sxy = math.fsum(
-                        (x - x_mean) * (y - y_mean) for x, y in zip(xs, ys)
-                    )
-                    # The normalized axis is strictly increasing, so two or
-                    # more windowed samples guarantee sxx > 0.
-                    value = sxy / sxx
-                except (OverflowError, ValueError) as exc:
+                    # Center-and-scale before squaring: with subnormal or
+                    # hugely offset coordinates the centered squares can
+                    # underflow to exactly zero even though the axis is
+                    # strictly increasing, and the raw quotient would
+                    # divide by zero. The scaled deviations are O(1), the
+                    # scale ratio applies once at the end, and residual
+                    # overflow lands in the finite-result guard.
+                    x_scale = max(abs(x - x_mean) for x in xs)
+                    y_scale = max(abs(y - y_mean) for y in ys)
+                    if x_scale == 0.0:
+                        raise _InvalidRequest(
+                            "measurement.value.non_finite",
+                            "The windowed axis span is not resolvable in "
+                            "finite floating-point arithmetic.",
+                        )
+                    if y_scale == 0.0:
+                        value = 0.0
+                    else:
+                        ux = [(x - x_mean) / x_scale for x in xs]
+                        uy = [(y - y_mean) / y_scale for y in ys]
+                        suu = math.fsum(u * u for u in ux)
+                        suv = math.fsum(u * v for u, v in zip(ux, uy))
+                        value = (suv / suu) * (y_scale / x_scale)
+                except (OverflowError, ValueError, ZeroDivisionError) as exc:
                     raise _InvalidRequest(
                         "measurement.value.non_finite",
                         "The least-squares slope overflowed the finite result range.",

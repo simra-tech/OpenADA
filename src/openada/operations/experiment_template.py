@@ -24,10 +24,12 @@ the bound's declared unit, and no unit conversion is ever performed.
 from __future__ import annotations
 
 import math
+import os
 import shutil
+import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from decimal import Decimal, DecimalException
+from decimal import Decimal, DecimalException, localcontext
 from pathlib import Path
 from typing import Any
 
@@ -45,9 +47,12 @@ from .experiment import (
     _read_spec_bytes,
     _sha256_bytes,
     _write_json,
+    _INDEPENDENT_SOURCE_KINDS,
     _SLUG_RE,
     _ScalarOutOfRange,
+    _VOLTAGE_SOURCE_KINDS,
     EXPERIMENT_SCHEMA,
+    MAX_SCALAR_SIGNIFICANT_DIGITS,
 )
 from .specification_evaluate import (
     _InvalidRequest as _SpecificationInvalid,
@@ -332,11 +337,31 @@ class _TemplateValidator:
 
     # ------------------------------------------------------------------
     # substitution
+    #
+    # Substitution is site-addressed and fail-closed: a `$ref`/`$number`
+    # object is honored only at a site the compiler can type — an element
+    # parameter with a known unit, an analysis scalar, temperature_c, or
+    # the `value` member of a unit-bearing quantity/condition. Anywhere
+    # else it is a refusal, never a silent pass-through.
 
     def _resolve(
-        self, form: str, name: object, parts: tuple[object, ...], sibling_unit: str | None
+        self,
+        form: str,
+        name: object,
+        parts: tuple[object, ...],
+        *,
+        allowed_forms: frozenset[str],
+        expected_unit: str | None,
     ) -> object:
         path = _pointer(parts)
+        if form not in allowed_forms:
+            self.add(
+                "template.ref.site_invalid",
+                path,
+                f"{form} is not a valid substitution form at this site; "
+                f"allowed here: {', '.join(sorted(allowed_forms)) or 'none'}",
+            )
+            return None
         if not isinstance(name, str) or name not in self.bindings:
             self.add(
                 "template.ref.unknown",
@@ -346,12 +371,12 @@ class _TemplateValidator:
             return None
         binding = self.bindings[name]
         self.used.add(name)
-        if sibling_unit is not None and binding.unit != sibling_unit:
+        if expected_unit is not None and binding.unit != expected_unit:
             self.add(
                 "template.ref.unit_mismatch",
                 path,
-                f"{name!r} is declared in unit {binding.unit!r} but is substituted "
-                f"beside unit {sibling_unit!r}; no conversion is performed",
+                f"{name!r} is declared in unit {binding.unit!r} but this site "
+                f"requires unit {expected_unit!r}; no conversion is performed",
             )
             return None
         if form == "$ref":
@@ -366,18 +391,43 @@ class _TemplateValidator:
             return None
         return value
 
-    def substitute(
+    @staticmethod
+    def _substitution_form(node: object) -> str | None:
+        if isinstance(node, Mapping) and len(node) == 1:
+            key = next(iter(node))
+            if key in _REF_FORMS:
+                return key
+        return None
+
+    def _copy(
         self,
         node: object,
-        parts: tuple[object, ...] = (),
-        *,
-        sibling_unit: str | None = None,
+        parts: tuple[object, ...],
+        site: Any,
     ) -> object:
+        """Recursively copy ``node``, consulting ``site(parts)`` at each
+        substitution form. ``site`` returns ``(allowed_forms, expected_unit)``
+        or ``None`` when substitution is forbidden at that position."""
+
+        form = self._substitution_form(node)
+        if form is not None:
+            policy = site(parts)
+            if policy is None:
+                self.add(
+                    "template.ref.site_invalid",
+                    _pointer(parts),
+                    "substitution is not declared at this site",
+                )
+                return None
+            allowed_forms, expected_unit = policy
+            return self._resolve(
+                form,
+                node[form],  # type: ignore[index]
+                parts,
+                allowed_forms=allowed_forms,
+                expected_unit=expected_unit,
+            )
         if isinstance(node, Mapping):
-            keys = set(node)
-            if len(keys) == 1 and next(iter(keys)) in _REF_FORMS:
-                form = next(iter(keys))
-                return self._resolve(form, node[form], parts, sibling_unit)
             out: dict[str, Any] = {}
             for key, child in node.items():
                 if isinstance(key, str) and key.startswith("$"):
@@ -388,19 +438,148 @@ class _TemplateValidator:
                         f"{{'$ref': name}} and {{'$number': name}} objects are recognized",
                     )
                     continue
-                child_unit = None
-                if key == "value" and isinstance(node.get("unit"), str):
-                    child_unit = node["unit"]
-                out[key] = self.substitute(
-                    child, (*parts, key), sibling_unit=child_unit
-                )
+                out[key] = self._copy(child, (*parts, key), site)
             return out
         if isinstance(node, list):
             return [
-                self.substitute(child, (*parts, index))
+                self._copy(child, (*parts, index), site)
                 for index, child in enumerate(node)
             ]
         return node
+
+    @staticmethod
+    def _element_parameter_unit(kind: object, name: object) -> str | None:
+        source_unit = (
+            "V"
+            if kind in _VOLTAGE_SOURCE_KINDS
+            else "A"
+            if kind in _INDEPENDENT_SOURCE_KINDS
+            else None
+        )
+        table: dict[object, str | None] = {
+            "dc": source_unit,
+            "initial_value": source_unit,
+            "pulsed_value": source_unit,
+            "amplitude": source_unit,
+            "ac_mag": source_unit,
+            "ac_phase": "deg",
+            "delay_time": "s",
+            "rise_time": "s",
+            "fall_time": "s",
+            "pulse_width": "s",
+            "period": "s",
+            "delay": "s",
+            "freq": "Hz",
+            "damping": "1/s",
+        }
+        if kind == "resistor":
+            table = {"r": "Ohm"}
+        elif kind == "capacitor":
+            table = {"c": "F", "ic": "V"}
+        elif kind == "inductor":
+            table = {"l": "H"}
+        return table.get(name)
+
+    def substitute_experiment(self, body: Mapping[str, Any]) -> object:
+        elements = body.get("elements")
+        element_kinds: dict[str, object] = {}
+        if isinstance(elements, list):
+            for element in elements:
+                if isinstance(element, Mapping) and isinstance(
+                    element.get("name"), str
+                ):
+                    element_kinds[element["name"]] = element.get("kind")
+
+        def _analysis_scalar_unit(analysis: Mapping[str, Any], field: object) -> str | None:
+            kind = analysis.get("kind")
+            if kind == "ac" and field in {"start", "stop"}:
+                return "Hz"
+            if kind == "tran" and field in {"start", "step", "stop", "max_step"}:
+                return "s"
+            if kind == "dc" and field in {"start", "stop", "step"}:
+                source_kind = element_kinds.get(analysis.get("source"))
+                if source_kind in _VOLTAGE_SOURCE_KINDS:
+                    return "V"
+                if source_kind in _INDEPENDENT_SOURCE_KINDS:
+                    return "A"
+            return None
+
+        both = frozenset(_REF_FORMS)
+        ref_only = frozenset({"$ref"})
+        number_only = frozenset({"$number"})
+
+        def site(absolute: tuple[object, ...]):
+            # Positions are reported below /experiment; classify relative
+            # to the experiment body root.
+            parts = absolute[1:]
+            if (
+                len(parts) == 4
+                and parts[0] == "elements"
+                and parts[2] == "parameters"
+            ):
+                element = elements[parts[1]] if isinstance(elements, list) else None
+                kind = element.get("kind") if isinstance(element, Mapping) else None
+                unit = self._element_parameter_unit(kind, parts[3])
+                if unit is None:
+                    return None
+                return ref_only, unit
+            if len(parts) == 3 and parts[0] == "analyses":
+                analyses = body.get("analyses")
+                analysis = (
+                    analyses[parts[1]]
+                    if isinstance(analyses, list) and isinstance(parts[1], int)
+                    else None
+                )
+                if not isinstance(analysis, Mapping):
+                    return None
+                unit = _analysis_scalar_unit(analysis, parts[2])
+                if unit is None:
+                    return None
+                return both, unit
+            if parts == ("conditions", "pdk", "temperature_c"):
+                return both, "degC"
+            if (
+                len(parts) >= 3
+                and parts[0] == "measurements"
+                and parts[-1] == "value"
+            ):
+                container = body
+                for part in parts[:-1]:
+                    if isinstance(container, Mapping):
+                        container = container.get(part)
+                    elif isinstance(container, list) and isinstance(part, int):
+                        container = container[part]
+                    else:
+                        return None
+                if isinstance(container, Mapping) and isinstance(
+                    container.get("unit"), str
+                ):
+                    return number_only, container["unit"]
+                return None
+            return None
+
+        return self._copy(body, ("experiment",), site)
+
+    def substitute_condition_list(
+        self, conditions: object, base: tuple[object, ...]
+    ) -> object:
+        def site(parts: tuple[object, ...]):
+            if len(parts) == len(base) + 2 and parts[-1] == "value":
+                index = parts[len(base)]
+                if isinstance(conditions, list) and isinstance(index, int):
+                    entry = conditions[index]
+                    if isinstance(entry, Mapping) and isinstance(
+                        entry.get("unit"), str
+                    ):
+                        return frozenset({"$number"}), entry["unit"]
+            return None
+
+        # The walk below re-derives paths from the root so the site callback
+        # sees absolute positions; wrap the list at its base path.
+        return self._copy_with_base(conditions, base, site)
+
+    def _copy_with_base(self, node: object, base: tuple[object, ...], site: Any) -> object:
+        return self._copy(node, base, site)
 
     # ------------------------------------------------------------------
     # specifications
@@ -456,7 +635,11 @@ class _TemplateValidator:
                 factor = _parse_scalar(item["factor"]).value
             if "offset" in item:
                 offset = _parse_scalar(item["offset"]).value
-            computed = factor * binding.value + offset
+            # Exact for the whole admitted scalar domain; the default
+            # 28-digit context would silently round long-digit operands.
+            with localcontext() as context:
+                context.prec = 2 * MAX_SCALAR_SIGNIFICANT_DIGITS + 32
+                computed = factor * binding.value + offset
             value = float(computed)
         except (
             ValueError,
@@ -609,7 +792,7 @@ class _TemplateValidator:
                     f"must be an array of at most {MAX_CONDITIONS} entries",
                 )
                 continue
-            substituted = self.substitute(
+            substituted = self.substitute_condition_list(
                 conditions, ("specifications", index, "conditions")
             )
             document = {
@@ -754,7 +937,7 @@ def compile_experiment_template(
         return _refusal_payload(
             validator.issues, "OpenADA refused the experiment template."
         )
-    compiled_experiment = validator.substitute(experiment_body, ("experiment",))
+    compiled_experiment = validator.substitute_experiment(experiment_body)
 
     specifications = validator.compile_specifications(
         root, _measurement_ids(compiled_experiment)
@@ -774,49 +957,44 @@ def compile_experiment_template(
         )
 
     # ------------------------------------------------------------------
-    # output phase: nothing above touched the filesystem
+    # output phase: nothing above touched the filesystem. Everything below
+    # is written into a fresh staging directory beside the target and
+    # published with one atomic rename after full validation, so a refusal
+    # or an interrupted write can never leave partial compile output at
+    # the caller-visible path.
 
-    created_dir = False
-    if out_dir.exists():
-        if not out_dir.is_dir() or any(out_dir.iterdir()):
-            return _refusal_payload(
-                [
-                    ExperimentIssue(
-                        "template.output.not_empty",
-                        "",
-                        f"{out_dir} must be an absent or empty directory",
-                    )
-                ],
-                "OpenADA refused to overwrite existing compile output.",
-            )
-    else:
-        try:
-            out_dir.mkdir(parents=True)
-            created_dir = True
-        except OSError as exc:
-            return _refusal_payload(
-                [
-                    ExperimentIssue(
-                        "template.output.invalid",
-                        "",
-                        f"could not create {out_dir}: {exc}",
-                    )
-                ],
-                "OpenADA could not create the compile output directory.",
-            )
+    if out_dir.exists() and (not out_dir.is_dir() or any(out_dir.iterdir())):
+        return _refusal_payload(
+            [
+                ExperimentIssue(
+                    "template.output.not_empty",
+                    "",
+                    f"{out_dir} must be an absent or empty directory",
+                )
+            ],
+            "OpenADA refused to overwrite existing compile output.",
+        )
+    try:
+        out_dir.parent.mkdir(parents=True, exist_ok=True)
+        stage = Path(
+            tempfile.mkdtemp(prefix=f".{out_dir.name}.compile-", dir=out_dir.parent)
+        )
+    except OSError as exc:
+        return _refusal_payload(
+            [
+                ExperimentIssue(
+                    "template.output.invalid",
+                    "",
+                    f"could not create a staging directory beside {out_dir}: {exc}",
+                )
+            ],
+            "OpenADA could not create the compile output directory.",
+        )
 
     def _cleanup() -> None:
-        if created_dir:
-            shutil.rmtree(out_dir, ignore_errors=True)
-        else:
-            for child in ("experiment.spec.json",):
-                try:
-                    (out_dir / child).unlink()
-                except OSError:
-                    pass
-            shutil.rmtree(out_dir / "specifications", ignore_errors=True)
+        shutil.rmtree(stage, ignore_errors=True)
 
-    spec_path = out_dir / "experiment.spec.json"
+    spec_path = stage / "experiment.spec.json"
     try:
         experiment_record = _write_json(
             spec_path, compiled_experiment, role="template.experiment"
@@ -864,7 +1042,7 @@ def compile_experiment_template(
     for spec in specifications:
         rel = f"specifications/{spec['specification_id']}.json"
         try:
-            record = _write_json(out_dir / rel, spec, role="template.specification")
+            record = _write_json(stage / rel, spec, role="template.specification")
         except (FileRecordError, OSError) as exc:
             _cleanup()
             return _refusal_payload(
@@ -917,7 +1095,7 @@ def compile_experiment_template(
     }
     try:
         receipt_record = _write_json(
-            out_dir / "compile-receipt.json", receipt, role="template.receipt"
+            stage / "compile-receipt.json", receipt, role="template.receipt"
         )
     except (FileRecordError, OSError) as exc:
         _cleanup()
@@ -932,6 +1110,25 @@ def compile_experiment_template(
             "OpenADA could not retain the compile receipt.",
         )
     artifacts.append(receipt_record)
+
+    try:
+        if out_dir.exists():
+            out_dir.rmdir()
+        os.rename(stage, out_dir)
+    except OSError as exc:
+        _cleanup()
+        return _refusal_payload(
+            [
+                ExperimentIssue(
+                    "template.output.invalid",
+                    "",
+                    f"could not publish the staged compile output to {out_dir}: {exc}",
+                )
+            ],
+            "OpenADA could not publish the compile output.",
+        )
+    for record in artifacts:
+        record["path"] = str(out_dir / Path(record["path"]).relative_to(stage))
 
     return result(
         OPERATION_NAME,

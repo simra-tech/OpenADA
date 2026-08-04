@@ -182,8 +182,9 @@ def load_manifest(path: Path = DEFAULT_MANIFEST) -> dict[str, Any]:
         manifest["implementation"],
         {
             "id": "org.openada.kernel.typed-evidence",
-            "version": "1.1.0",
             "runtime": "python",
+            "measurement_version": "1.1.0",
+            "specification_version": "1.0.0",
         },
         "manifest.implementation",
     )
@@ -644,7 +645,11 @@ def verify_evidence(
     _expect(evidence["conformance_id"], manifest["id"], "evidence.conformance_id")
     _expect(
         evidence["implementation"],
-        {"id": manifest["implementation"]["id"], "version": manifest["implementation"]["version"]},
+        {
+            "id": manifest["implementation"]["id"],
+            "measurement_version": manifest["implementation"]["measurement_version"],
+            "specification_version": manifest["implementation"]["specification_version"],
+        },
         "evidence.implementation",
     )
     _expect(evidence["fixture_sha256"], manifest["fixture"]["sha256"], "evidence.fixture_sha256")
@@ -694,7 +699,8 @@ def verify_evidence(
         "conformance_id": manifest["id"],
         "implementation": {
             "id": manifest["implementation"]["id"],
-            "version": manifest["implementation"]["version"],
+            "measurement_version": manifest["implementation"]["measurement_version"],
+            "specification_version": manifest["implementation"]["specification_version"],
         },
         "features": {
             "measurement": list(MEASUREMENT_FEATURES),

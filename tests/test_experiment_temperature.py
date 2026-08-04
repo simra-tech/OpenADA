@@ -123,3 +123,31 @@ def test_experiment_runs_at_the_declared_temperature(tmp_path):
     )
     conditions = extraction["data"]["extraction"]["series"]["conditions"]
     assert {"name": "temperature", "value": 85.0, "unit": "degC"} in conditions
+
+
+@requires_assets
+def test_suffixed_temperature_token_is_canonicalized(tmp_path):
+    # "27m" is the SPICE scalar 0.027 degC; the binding token must be the
+    # canonical suffix-free spelling so the deck and the typed conditions
+    # carry one identical numeric value.
+    spec = gain_spec()
+    spec["conditions"]["pdk"]["temperature_c"] = "27m"
+    prepared, issues = _validate(tmp_path, spec)
+    assert not issues
+    assert prepared.resolved_pdk.binding.simulation_temperature_c == "0.027"
+
+
+@requires_assets
+def test_beyond_precision_temperature_bound_is_enforced(tmp_path):
+    # Would round to exactly 1000 under the default 28-digit context and
+    # slip past the closed upper bound.
+    spec = gain_spec()
+    spec["conditions"]["pdk"]["temperature_c"] = (
+        "1000.0000000000000000000000000001"
+    )
+    prepared, issues = _validate(tmp_path, spec)
+    assert prepared is None
+    assert any(
+        issue.code == "experiment.condition.temperature_unsupported"
+        for issue in issues
+    )
