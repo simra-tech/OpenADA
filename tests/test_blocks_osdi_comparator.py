@@ -492,3 +492,69 @@ def test_short_low_phase_limits_master_tracking(prelude):
         "tran 0.05n 0.71u\nmeas tran t50 WHEN v(out)=0.5 RISE=1\n",
     )
     assert abs(tracked["t50"] - (700.5e-9 + 2e-9)) < LATENCY_BOUND(2e-9)
+
+
+@native
+def test_direct_osdi_binding_is_refused(tmp_path):
+    # binding the compiled module with a caller .model card (or a direct N
+    # reference) would bypass every per-instance constraint check
+    from openada.block_library import load_block_library
+    from openada.osdi_compile import OsdiCompileError, compose_blocks_osdi
+
+    library = load_block_library("bhv-core")
+    composition = compose_blocks_osdi(library, ["comparator_clocked_phys"], tmp_path)
+    model_bypass = (
+        f"* direct model\n.model evil {DUT} td=0.4n tedge=1n\n"
+        "N1 a b c d 0 evil\n.end\n"
+    )
+    alias_bypass = f"* direct alias\nN1 a b c d 0 {DUT}__osdi\n.end\n"
+    for deck in (model_bypass, alias_bypass):
+        with pytest.raises(OsdiCompileError) as caught:
+            composition.verify_deck(deck)
+        assert caught.value.code == "osdi.instantiation.direct"
+
+
+@native
+def test_operation_boundary_enforces_composition(tmp_path):
+    # simulate() itself must (a) refuse a preload without its composition and
+    # (b) refuse an invalid instantiation BEFORE any simulator launch
+    from openada.block_library import load_block_library
+    from openada.discovery import DiscoveryManager
+    from openada.operations.simulate import simulate
+    from openada.osdi_compile import compose_blocks_osdi
+
+    library = load_block_library("bhv-core")
+    composition = compose_blocks_osdi(library, ["comparator_clocked_phys"], tmp_path)
+    deck = tmp_path / "bad.cir"
+    deck.write_text(
+        f"* invalid instance\nX1 inp inn clk out 0 {DUT} td=0.4n tedge=1n\n"
+        "Vinp inp 0 DC 0.7\nVinn inn 0 DC 0.55\nVclk clk 0 DC 0\nRl out 0 10k\n"
+        ".op\n.end\n"
+    )
+    without = simulate(
+        deck,
+        tmp_path / "ev1",
+        discovery=DiscoveryManager(),
+        backend="ngspice",
+        osdi_preload_text=composition.prelude_text,
+    )
+    assert without["execution"]["status"] == "invalid_request"
+    assert any(
+        d.get("code") == "osdi.composition.missing" for d in without["diagnostics"]
+    )
+    with_comp = simulate(
+        deck,
+        tmp_path / "ev2",
+        discovery=DiscoveryManager(),
+        backend="ngspice",
+        osdi_preload_text=composition.prelude_text,
+        osdi_composition=composition,
+    )
+    assert with_comp["execution"]["status"] == "invalid_request"
+    assert any(
+        d.get("code") == "osdi.parameters.constraint_violated"
+        for d in with_comp["diagnostics"]
+    )
+    # no launch happened for either refusal
+    assert without["execution"]["command"] == []
+    assert with_comp["execution"]["command"] == []

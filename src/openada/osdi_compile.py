@@ -532,9 +532,43 @@ class OsdiComposition:
 
         from .cosim_compile import (
             CosimCompileError,
+            _folded_statements,
             instantiation_parameter_maps,
             verify_parameter_constraints,
         )
+
+        # Wrapper-only use: the compiled OSDI module types and the prelude's
+        # model aliases must never be bound or instantiated by the caller
+        # directly -- a caller .model card or a direct N reference would
+        # bypass every per-instance constraint check below (reproduced in
+        # review: td<=tedge/2 accepted through a direct .model+N pair).
+        module_types = {m.module_name.lower() for m in self.modules}
+        aliases = {f"{m.module_name.lower()}__osdi" for m in self.modules}
+        for _number, statement in _folded_statements(deck_text):
+            fields = statement.split()
+            lead = fields[0].lower()
+            if lead == ".model" and len(fields) >= 3:
+                if fields[2].split("(")[0].lower() in module_types:
+                    raise OsdiCompileError(
+                        "osdi.instantiation.direct",
+                        f"the caller deck binds the compiled OSDI module "
+                        f"{fields[2]!r} with its own .model card "
+                        f"({fields[1]!r}); composed blocks may only be "
+                        "instantiated through their public wrapper subckt, "
+                        "where the declared parameter constraints are "
+                        "checked.",
+                    )
+            elif lead.startswith("n") and any(
+                f.lower() in aliases or f.lower() in module_types
+                for f in fields[1:]
+            ):
+                raise OsdiCompileError(
+                    "osdi.instantiation.direct",
+                    f"the caller deck instantiates a composition-owned OSDI "
+                    f"model directly ({statement.split()[0]}); composed "
+                    "blocks may only be instantiated through their public "
+                    "wrapper subckt.",
+                )
 
         for wrapper, constraints, defaults in zip(
             self.wrappers, self.constraints, self.defaults
