@@ -745,7 +745,12 @@ def measure_result(
                         uy = [(y - y_mean) / y_scale for y in ys]
                         suu = math.fsum(u * u for u in ux)
                         suv = math.fsum(u * v for u, v in zip(ux, uy))
-                        value = (suv / suu) * (y_scale / x_scale)
+                        if suv == 0.0:
+                            # A defined zero slope must not be destroyed by
+                            # an unrepresentable scale ratio (0 * inf).
+                            value = 0.0
+                        else:
+                            value = (suv / suu) * (y_scale / x_scale)
                 except (OverflowError, ValueError, ZeroDivisionError) as exc:
                     raise _InvalidRequest(
                         "measurement.value.non_finite",

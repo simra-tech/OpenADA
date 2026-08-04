@@ -174,7 +174,7 @@ circuit.simulate/v1alpha2
   -> result.series.extract/v1alpha1
   -> result.measure/v1alpha2
      or result.spectral.measure/v1alpha1
-     or result.transfer.measure/v1alpha1
+     or result.transfer.measure/v1alpha2
   -> specification.evaluate/v1alpha1
 ```
 
@@ -500,9 +500,9 @@ same reviewed commit rather than mixing runtime and skill revisions.
 | `simulate --backend ngspice` | ngspice | structured OP/DC/AC; workflow-validated TRAN | Run one self-contained OP, DC, AC, or transient analysis and emit typed `circuit.simulate` facts |
 | `simulate --backend xyce` | Xyce | structured DC/AC; workflow-validated TRAN | Run one self-contained DC, AC, or transient analysis; OP is explicitly unsupported |
 | `extract` | deterministic Spice3 kernel | structured alpha | Verify one exact passing shared-simulation artifact and project explicit real/imaginary native vector components into a canonical real series |
-| `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar from a canonical-digest-bound normalized real inline series using a closed algorithm kind |
+| `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar (including a least-squares signal-versus-axis slope) from a canonical-digest-bound normalized real inline series using a closed algorithm kind |
 | `spectral` | deterministic OpenADA kernel | structured alpha | Derive coherent single-tone SNR, SINAD, signed-dB THD, or SFDR from one fully declared hashed bin partition |
-| `transfer` | deterministic OpenADA kernel | structured alpha | Derive first-positive-frequency gain, unique falling −3 dB bandwidth, unity-gain frequency, or explicitly declared negative-feedback phase margin; retain the complete magnitude/phase trace |
+| `transfer` | deterministic OpenADA kernel | structured alpha | Derive first-positive-frequency gain, dB magnitude at one declared in-domain frequency, unique falling −3 dB bandwidth, unity-gain frequency, or explicitly declared negative-feedback phase margin; retain the complete magnitude/phase trace |
 | `evaluate` | deterministic OpenADA kernel | structured alpha | Read a complete ordinary, spectral, or transfer measurement envelope, then compare its typed scalar with exact-unit bounds and explicit condition bindings |
 | `profile list/show` | installed contracts | preview | List packaged operation/assertion/feature IDs or emit one complete schema-bearing operation profile from any working directory |
 | `provider validate/list/invoke` | external local CLI | structured runtime boundary | Validate one explicit v0alpha1 manifest/request and invoke one active `circuit.simulate/v1alpha2` JSON-stdio wait capability; snapshot canonical request inputs within fixed target/configuration/aggregate bounds, and enforce status/evidence truth, artifact identity, zero transport exit, and descendant cleanup |

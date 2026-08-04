@@ -280,9 +280,10 @@ standards contexts are candidate mappings rather than IEEE conformity claims.
 
 `transfer` constructs output/input from four distinct same-unit Cartesian AC
 series on a positive-Hz axis. It reports the first simulated-frequency gain,
-the unique falling first-point-minus-3 dB crossing, the unique falling 0 dB
-crossing, or—only for explicitly declared negative-feedback loop gain—phase
-margin. It does not call the first point DC, infer gain margin, choose among
+the ratio's dB magnitude at one caller-declared in-domain frequency
+(`ac_magnitude_at_frequency`), the unique falling first-point-minus-3 dB
+crossing, the unique falling 0 dB crossing, or—only for explicitly declared
+negative-feedback loop gain—phase margin. It does not call the first point DC, infer gain margin, choose among
 multiple crossings, or make a general stability claim.
 
 Inspect the complete packaged ontology without guessing IDs:

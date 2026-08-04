@@ -406,7 +406,10 @@ def test_beyond_precision_override_is_still_out_of_range(tmp_path):
     assert "template.parameter.out_of_range" in refusal_codes(payload)
 
 
-def test_limit_arithmetic_is_exact_beyond_default_context(tmp_path):
+def test_unrepresentable_computed_limit_is_refused_not_rounded(tmp_path):
+    # 1.0 + 1e-29 computes exactly in decimal but collapses to 1.0 as a
+    # JSON number; publishing the collapsed bound would silently change
+    # the declared interval, so the compile must refuse.
     template = base_template()
     template["constants"]["gain_nom"]["value"] = "1.00000000000000000000000000000"
     template["specifications"][0]["limits"] = {
@@ -424,16 +427,98 @@ def test_limit_arithmetic_is_exact_beyond_default_context(tmp_path):
             "inclusive": True,
         },
     }
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.limit.inexact" in refusal_codes(payload)
+
+
+def test_unrepresentable_number_substitution_is_refused(tmp_path):
+    # Through $number this would round to 1000.0 and slip past the closed
+    # temperature bound; the compiler must refuse the lossy conversion.
+    template = base_template()
+    template["constants"]["t_hot"] = {
+        "value": "1000.0000000000000000000000000001",
+        "unit": "degC",
+    }
+    template["experiment"]["conditions"]["pdk"]["temperature_c"] = {
+        "$number": "t_hot"
+    }
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.ref.inexact" in refusal_codes(payload)
+
+
+def test_wrong_unit_constant_into_vdc_dc_is_refused(tmp_path):
+    template = base_template()
+    template["constants"]["vdd_farads"] = {"value": "1.2", "unit": "F"}
+    template["experiment"]["elements"][0]["parameters"]["dc"] = {
+        "$ref": "vdd_farads"
+    }
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.ref.unit_mismatch" in refusal_codes(payload)
+
+
+def test_wrong_unit_constant_into_temperature_is_refused(tmp_path):
+    template = base_template()
+    template["constants"]["t_wrong"] = {"value": "85", "unit": "F"}
+    template["experiment"]["conditions"]["pdk"]["temperature_c"] = {
+        "$ref": "t_wrong"
+    }
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.ref.unit_mismatch" in refusal_codes(payload)
+
+
+@requires_assets
+def test_pwl_point_sites_accept_typed_refs(tmp_path):
+    template = base_template()
+    template["constants"]["t_step"] = {"value": "1u", "unit": "s"}
+    template["constants"]["v_high"] = {"value": "1.2", "unit": "V"}
+    template["experiment"]["elements"].extend(
+        [
+            {
+                "name": "V_RAMP",
+                "kind": "vpwl",
+                "plus": "NRAMP",
+                "minus": "0",
+                "parameters": {
+                    "dc": "0",
+                    "points": [
+                        ["0", "0"],
+                        [{"$ref": "t_step"}, {"$ref": "v_high"}],
+                    ],
+                },
+            },
+            {
+                "name": "R_RAMP",
+                "kind": "resistor",
+                "plus": "NRAMP",
+                "minus": "0",
+                "parameters": {"r": "1k"},
+            },
+        ]
+    )
     payload, out_dir = compile_template(tmp_path, template)
-    if payload["engineering"]["status"] == "pass":
-        spec = json.loads(
-            (out_dir / "specifications" / "lf_gain_band.json").read_text()
-        )
-        assert spec["limits"]["upper"]["value"] >= spec["limits"]["lower"]["value"]
-    else:
-        # If float conversion collapses the bounds, the empty-interval
-        # check must fire rather than emitting a lying interval.
-        assert "template.limit.empty_interval" not in refusal_codes(payload) or True
+    assert payload["engineering"]["status"] == "pass", payload["data"]["refusals"]
+    experiment = json.loads((out_dir / "experiment.spec.json").read_text())
+    ramp = next(e for e in experiment["elements"] if e["name"] == "V_RAMP")
+    assert ramp["parameters"]["points"][1] == ["1u", "1.2"]
+
+
+def test_pwl_time_site_enforces_seconds(tmp_path):
+    template = base_template()
+    template["constants"]["v_high"] = {"value": "1.2", "unit": "V"}
+    template["experiment"]["elements"].append(
+        {
+            "name": "V_RAMP",
+            "kind": "vpwl",
+            "plus": "NRAMP",
+            "minus": "0",
+            "parameters": {
+                "dc": "0",
+                "points": [["0", "0"], [{"$ref": "v_high"}, "1.2"]],
+            },
+        }
+    )
+    payload, _ = compile_template(tmp_path, template)
+    assert "template.ref.unit_mismatch" in refusal_codes(payload)
 
 
 def test_wrong_unit_constant_into_element_parameter_is_refused(tmp_path):
@@ -480,3 +565,26 @@ def test_failed_receipt_write_publishes_nothing(tmp_path, monkeypatch):
     assert not out_dir.exists()
     leftovers = [p for p in tmp_path.iterdir() if p.name.startswith(".out")]
     assert leftovers == []
+
+
+@requires_assets
+def test_success_publishes_into_a_pre_existing_empty_dir_without_stale_stage(
+    tmp_path,
+):
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    payload, _ = compile_template(tmp_path, base_template())
+    assert payload["engineering"]["status"] == "pass"
+    assert (out_dir / "compile-receipt.json").is_file()
+    hidden = [p for p in tmp_path.iterdir() if p.name.startswith(".out")]
+    assert hidden == []
+
+
+@requires_assets
+def test_success_payload_artifact_paths_point_at_the_published_dir(tmp_path):
+    payload, out_dir = compile_template(tmp_path, base_template())
+    assert payload["engineering"]["status"] == "pass"
+    for record in payload["artifacts"]:
+        path = Path(record["path"])
+        assert out_dir in path.parents or path.parent == out_dir
+        assert path.is_file()

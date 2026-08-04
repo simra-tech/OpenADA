@@ -389,6 +389,19 @@ class _TemplateValidator:
                 f"{name!r} does not resolve to a finite JSON number",
             )
             return None
+        if Decimal(repr(value)) != binding.value:
+            # The exact declared value does not survive the JSON-number
+            # boundary; emitting the nearest double would silently change
+            # what downstream validation compares (e.g. a bound-straddling
+            # temperature). Refuse rather than round.
+            self.add(
+                "template.ref.inexact",
+                path,
+                f"{name!r} ({binding.token}) is not exactly representable "
+                "as a JSON number; use a representable value or a $ref "
+                "token site",
+            )
+            return None
         return value
 
     @staticmethod
@@ -523,6 +536,25 @@ class _TemplateValidator:
                 if unit is None:
                     return None
                 return ref_only, unit
+            if (
+                len(parts) == 6
+                and parts[0] == "elements"
+                and parts[2] == "parameters"
+                and parts[3] == "points"
+                and parts[5] in (0, 1)
+            ):
+                # One PWL [time, value] pair entry: index 0 is the time
+                # coordinate in seconds, index 1 the sample in the source's
+                # own unit.
+                element = elements[parts[1]] if isinstance(elements, list) else None
+                kind = element.get("kind") if isinstance(element, Mapping) else None
+                if parts[5] == 0:
+                    return ref_only, "s"
+                if kind in _VOLTAGE_SOURCE_KINDS:
+                    return ref_only, "V"
+                if kind in _INDEPENDENT_SOURCE_KINDS:
+                    return ref_only, "A"
+                return None
             if len(parts) == 3 and parts[0] == "analyses":
                 analyses = body.get("analyses")
                 analysis = (
@@ -655,6 +687,15 @@ class _TemplateValidator:
             return None
         if not math.isfinite(value):
             self.add("template.limit.non_finite", path, "the computed limit is not finite")
+            return None
+        if Decimal(repr(value)) != computed:
+            self.add(
+                "template.limit.inexact",
+                path,
+                "the computed limit is not exactly representable as a JSON "
+                "number; adjust the expression so the published bound equals "
+                "the declared arithmetic exactly",
+            )
             return None
         return value
 

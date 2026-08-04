@@ -717,3 +717,43 @@ def test_log_colliding_adjacent_frequencies_still_interpolate() -> None:
     assert payload["engineering"]["status"] == "pass"
     assert math.isfinite(measured["value"])
     assert 0.0 <= measured["value"] <= 6.0
+
+
+def test_close_collision_interpolation_matches_the_expected_fraction() -> None:
+    f0 = 1e300
+    f1 = 1e300 * (1.0 + 8e-16)
+    at = 1e300 * (1.0 + 4e-16)
+    series = _series(
+        magnitudes_db=(0.0, 6.0), phases_deg=(0.0, 0.0), frequencies_hz=(f0, f1)
+    )
+    payload = measure_transfer(series, _at_request(at))
+    expected = 6.0 * (math.log10(at / f0) / math.log10(f1 / f0))
+    assert payload["data"]["measurement"]["value"] == pytest.approx(
+        expected, rel=1e-6
+    )
+
+
+def test_wide_span_interpolation_does_not_overflow() -> None:
+    # The pure ratio form overflows f1/f0 here and silently returned the
+    # left endpoint; the hybrid must interpolate the true midpoint.
+    series = _series(
+        magnitudes_db=(0.0, 6.0),
+        phases_deg=(0.0, 0.0),
+        frequencies_hz=(1e-300, 1e300),
+    )
+    payload = measure_transfer(series, _at_request(1.0))
+    assert payload["data"]["measurement"]["value"] == pytest.approx(3.0)
+
+
+def test_ordinary_spacing_agrees_with_the_difference_form() -> None:
+    f0, f1, at = 10.0, 100.0, 31.622776601683793
+    series = _series(
+        magnitudes_db=(0.0, 6.0), phases_deg=(0.0, 0.0), frequencies_hz=(f0, f1)
+    )
+    payload = measure_transfer(series, _at_request(at))
+    expected = 6.0 * (
+        (math.log10(at) - math.log10(f0)) / (math.log10(f1) - math.log10(f0))
+    )
+    assert payload["data"]["measurement"]["value"] == pytest.approx(
+        expected, rel=1e-12
+    )

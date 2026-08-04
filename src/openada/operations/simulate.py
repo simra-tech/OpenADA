@@ -801,8 +801,9 @@ def _binding_advisories(
                 (
                     f"The deck states .option temp={temperature} C and {pdk_id}'s "
                     f"model cards are extracted at tnom={tnom} C, so the models "
-                    "are being extrapolated. The distance is small; it is stated "
-                    "because it differs between PDKs and is otherwise invisible."
+                    "are being extrapolated away from their extraction "
+                    "temperature. It is stated because it differs between PDKs "
+                    "and requested temperatures and is otherwise invisible."
                 ),
             )
         )

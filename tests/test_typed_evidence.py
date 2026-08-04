@@ -573,3 +573,28 @@ def test_subnormal_axis_slope_is_finite_not_a_crash() -> None:
     assert payload["engineering"]["status"] == "pass"
     assert measured["status"] == "measured"
     assert measured["value"] == pytest.approx(1.0)
+
+
+def test_zero_covariance_slope_at_extreme_scales_is_exactly_zero() -> None:
+    # Covariance is exactly zero while y_scale/x_scale would overflow to
+    # infinity; the defined zero slope must not become 0 * inf.
+    series = _series(
+        axis_values=[5e-324, 1e-323, 1.5e-323],
+        signal_values=[1e308, -1e308, 1e308],
+    )
+    payload = measure_result(series, _request("slope", {}))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["value"] == 0.0
+
+
+def test_unrepresentable_slope_overflow_is_a_typed_refusal() -> None:
+    # A genuinely unrepresentable nonzero slope overflows to infinity and
+    # must land in the typed non-finite refusal, not escape.
+    series = _series(
+        axis_values=[5e-324, 1e-323],
+        signal_values=[-1e308, 1e308],
+    )
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"

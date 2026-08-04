@@ -510,10 +510,12 @@ def _plain_decimal_token(value: Decimal) -> str:
     typed conditions record.
     """
 
+    if value == 0:
+        return "0"  # one spelling; format() would keep a "-0" sign
     text = format(value, "f")
     if "." in text:
         text = text.rstrip("0").rstrip(".")
-    return text or "0"
+    return text
 
 
 def _scalar(value: object) -> Scalar | None:

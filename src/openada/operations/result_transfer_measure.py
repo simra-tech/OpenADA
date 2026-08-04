@@ -391,11 +391,20 @@ def _magnitude_db_at(
             return magnitudes_db[index]
         if frequency > at:
             f0, f1 = frequencies[index - 1], frequency
-            # Log-RATIO form: log10(f1) - log10(f0) catastrophically
-            # cancels for adjacent points whose logs round to the same
-            # double (e.g. near 1e300), while log10(f1 / f0) keeps the
-            # tiny but nonzero spacing.
-            denominator = math.log10(f1 / f0)
+            # Hybrid log10 spacing: the difference form is well-conditioned
+            # for ordinary and wide spans but catastrophically cancels for
+            # adjacent points whose logs round to the same double (near
+            # 1e300); the ratio form keeps that tiny spacing but its
+            # quotient overflows/underflows on very wide spans. Use the
+            # difference whenever it carries precision, the ratio otherwise.
+            log_f0 = math.log10(f0)
+            span = math.log10(f1) - log_f0
+            if span > 1e-6:
+                denominator = span
+                numerator = math.log10(at) - log_f0
+            else:
+                denominator = math.log10(f1 / f0)
+                numerator = math.log10(at / f0)
             if denominator == 0.0:
                 raise _InvalidTransferRequest(
                     "transfer.domain.invalid",
@@ -403,7 +412,7 @@ def _magnitude_db_at(
                     "transfer.metric.at are not resolvable on the log10 "
                     "axis in double precision.",
                 )
-            fraction = math.log10(at / f0) / denominator
+            fraction = numerator / denominator
             return magnitudes_db[index - 1] + fraction * (
                 magnitudes_db[index] - magnitudes_db[index - 1]
             )
