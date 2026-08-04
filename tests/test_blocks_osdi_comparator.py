@@ -631,3 +631,24 @@ def test_direct_binding_refused_through_continuations_and_slash_comments(tmp_pat
         with pytest.raises(OsdiCompileError) as caught:
             composition.verify_deck(deck)
         assert caught.value.code == "osdi.instantiation.direct", deck
+
+
+@native
+def test_direct_binding_refused_through_comment_lines_and_comma_dollar(tmp_path):
+    # ngspice SKIPS physical lines starting with '$' or '#' while keeping the
+    # previous card open for '+' continuations, and '$' after a comma starts
+    # an inline comment — all three must not hide a protected name
+    from openada.block_library import load_block_library
+    from openada.osdi_compile import OsdiCompileError, compose_blocks_osdi
+
+    library = load_block_library("bhv-core")
+    composition = compose_blocks_osdi(library, ["comparator_clocked_phys"], tmp_path)
+    decks = (
+        f"* dollar line\n.model evil\n$ ignored\n+ {DUT}\nN1 a b c d 0 evil\n.end\n",
+        f"* hash line\n.model evil\n# ignored\n+ {DUT}\nN1 a b c d 0 evil\n.end\n",
+        f"* comma dollar\n.model evil,$ ignored\n+ {DUT}\nN1 a b c d 0 evil\n.end\n",
+    )
+    for deck in decks:
+        with pytest.raises(OsdiCompileError) as caught:
+            composition.verify_deck(deck)
+        assert caught.value.code == "osdi.instantiation.direct", deck

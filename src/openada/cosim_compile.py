@@ -1076,7 +1076,7 @@ def instantiation_parameter_maps(
 #: ``//``, and a whitespace-preceded ``$``. Stripping must happen pre-fold —
 #: post-fold stripping lets ``.model evil ; x`` + a ``+`` continuation hide a
 #: protected name from verification while ngspice still binds it.
-_INLINE_COMMENT_RE = re.compile(r";.*|//.*|\s\$.*")
+_INLINE_COMMENT_RE = re.compile(r";.*|//.*|[\s,]\$.*")
 
 
 def _folded_statements(deck_text: str) -> list[tuple[int, str]]:
@@ -1088,6 +1088,13 @@ def _folded_statements(deck_text: str) -> list[tuple[int, str]]:
 
     statements: list[tuple[int, str]] = []
     for number, raw in enumerate(deck_text.splitlines(), start=1):
+        # full-line comments: '*', and physical lines beginning with '$' or
+        # '#', are SKIPPED with the preceding card left open, so a following
+        # '+' continuation still stitches to it (ngspice inpcom.c behavior);
+        # '$' also starts an inline comment after whitespace OR a comma
+        leading = raw.lstrip()
+        if leading.startswith(("$", "#")):
+            continue
         stripped = _INLINE_COMMENT_RE.sub("", raw).strip()
         if not stripped or stripped.startswith("*"):
             continue
