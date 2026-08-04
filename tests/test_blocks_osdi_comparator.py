@@ -558,3 +558,54 @@ def test_operation_boundary_enforces_composition(tmp_path):
     # no launch happened for either refusal
     assert without["execution"]["command"] == []
     assert with_comp["execution"]["command"] == []
+
+
+@native
+def test_direct_binding_refused_despite_inline_comments(tmp_path):
+    # ngspice starts inline comments at ';' (no whitespace needed) and at a
+    # whitespace-preceded '$'; the screen must see through both
+    from openada.block_library import load_block_library
+    from openada.osdi_compile import OsdiCompileError, compose_blocks_osdi
+
+    library = load_block_library("bhv-core")
+    composition = compose_blocks_osdi(library, ["comparator_clocked_phys"], tmp_path)
+    decks = (
+        f"* semi\n.model evil {DUT};comment\nN1 a b c d 0 evil\n.end\n",
+        f"* semi-alias\nN1 a b c d 0 {DUT}__osdi;comment\n.end\n",
+        f"* dollar\n.model evil {DUT} $ comment\nN1 a b c d 0 evil\n.end\n",
+        f"* direct type\nN1 a b c d 0 {DUT}\n.end\n",
+    )
+    for deck in decks:
+        with pytest.raises(OsdiCompileError) as caught:
+            composition.verify_deck(deck)
+        assert caught.value.code == "osdi.instantiation.direct", deck
+
+
+@native
+def test_preload_composition_mismatch_is_refused(tmp_path):
+    from openada.block_library import load_block_library
+    from openada.discovery import DiscoveryManager
+    from openada.operations.simulate import simulate
+    from openada.osdi_compile import compose_blocks_osdi
+
+    library = load_block_library("bhv-core")
+    composition = compose_blocks_osdi(library, ["comparator_clocked_phys"], tmp_path)
+    deck = tmp_path / "ok.cir"
+    deck.write_text(
+        f"* valid deck\nX1 inp inn clk out 0 {DUT} td=2n tedge=1n\n"
+        "Vinp inp 0 DC 0.7\nVinn inn 0 DC 0.55\nVclk clk 0 DC 0\nRl out 0 10k\n"
+        ".op\n.end\n"
+    )
+    result = simulate(
+        deck,
+        tmp_path / "ev",
+        discovery=DiscoveryManager(),
+        backend="ngspice",
+        osdi_preload_text=composition.prelude_text + "* tampered\n",
+        osdi_composition=composition,
+    )
+    assert result["execution"]["status"] == "invalid_request"
+    assert any(
+        d.get("code") == "osdi.composition.mismatch" for d in result["diagnostics"]
+    )
+    assert result["execution"]["command"] == []

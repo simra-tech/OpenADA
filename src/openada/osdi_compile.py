@@ -545,7 +545,15 @@ class OsdiComposition:
         module_types = {m.module_name.lower() for m in self.modules}
         aliases = {f"{m.module_name.lower()}__osdi" for m in self.modules}
         for _number, statement in _folded_statements(deck_text):
+            # ngspice starts an inline comment at ';' (no whitespace needed)
+            # and at a whitespace-preceded '$'; strip BOTH before tokenizing,
+            # or '.model evil <module>;x' hides the protected type from an
+            # exact token match while ngspice still binds it.
+            statement = statement.split(";", 1)[0]
+            statement = re.split(r"\s\$", statement, maxsplit=1)[0]
             fields = statement.split()
+            if not fields:
+                continue
             lead = fields[0].lower()
             if lead == ".model" and len(fields) >= 3:
                 if fields[2].split("(")[0].lower() in module_types:
