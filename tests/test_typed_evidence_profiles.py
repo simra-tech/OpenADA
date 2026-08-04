@@ -33,10 +33,10 @@ SCHEMAS = ROOT / "schemas"
 PROFILES = ROOT / "profiles"
 V0ALPHA1 = SCHEMAS / "operation-profile-v0alpha1.schema.json"
 V0ALPHA2 = SCHEMAS / "operation-profile-v0alpha2.schema.json"
-MEASUREMENT_PROFILE = PROFILES / "result.measure-v1alpha1.json"
+MEASUREMENT_PROFILE = PROFILES / "result.measure-v1alpha2.json"
 SERIES_PROFILE = PROFILES / "result.series.extract-v1alpha1.json"
 SPECTRAL_PROFILE = PROFILES / "result.spectral.measure-v1alpha1.json"
-TRANSFER_PROFILE = PROFILES / "result.transfer.measure-v1alpha1.json"
+TRANSFER_PROFILE = PROFILES / "result.transfer.measure-v1alpha2.json"
 SPECIFICATION_PROFILE = PROFILES / "specification.evaluate-v1alpha1.json"
 CIRCUIT_PROFILE = PROFILES / "circuit.simulate-v1alpha1.json"
 DIGITAL_PROFILES = (
@@ -119,7 +119,7 @@ def test_module_profile_and_skills_share_exact_public_intent_ids() -> None:
     transfer = _load(TRANSFER_PROFILE)
     specification = _load(SPECIFICATION_PROFILE)
 
-    assert MEASUREMENT_OPERATION == "openada.operation/result.measure/v1alpha1"
+    assert MEASUREMENT_OPERATION == "openada.operation/result.measure/v1alpha2"
     assert MEASUREMENT_ASSERTION == "openada.assertion/measurement.valid/v1alpha1"
     assert SPECIFICATION_OPERATION == (
         "openada.operation/specification.evaluate/v1alpha1"
@@ -136,7 +136,7 @@ def test_module_profile_and_skills_share_exact_public_intent_ids() -> None:
         "openada.assertion/spectral.measurement.valid/v1alpha1"
     )
     assert TRANSFER_OPERATION == (
-        "openada.operation/result.transfer.measure/v1alpha1"
+        "openada.operation/result.transfer.measure/v1alpha2"
     )
     assert TRANSFER_ASSERTION == (
         "openada.assertion/transfer.measurement.valid/v1alpha1"

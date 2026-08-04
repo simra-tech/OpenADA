@@ -14,7 +14,7 @@ from openada.contract import file_record, result, static_execution
 import openada.operations.experiment as experiment_operation
 
 
-ORDINARY_PROFILE = "openada.operation/result.measure/v1alpha1"
+ORDINARY_PROFILE = "openada.operation/result.measure/v1alpha2"
 
 
 def _sha256(body: bytes) -> str:

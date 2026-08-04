@@ -79,7 +79,7 @@ of the current working directory:
 ```bash
 openada profile list
 openada profile show openada.operation/result.series.extract/v1alpha1
-openada profile show openada.operation/result.transfer.measure/v1alpha1
+openada profile show openada.operation/result.transfer.measure/v1alpha2
 ```
 
 Preflight intentionally leaves `pdk.selected` and startup `selected_files`
@@ -305,10 +305,10 @@ openada measure \
 ```
 
 Advertised kinds are `sample_at`, `minimum`, `maximum`, `mean`, `rms`,
-`crossing`, `rise_time`, `fall_time`, and `settling_time`. Inspect
-the installed profile with `openada profile show
-openada.operation/result.measure/v1alpha1` for the exact unit-bearing parameter
-shape. Do not use native `.measure` or an arbitrary expression as a substitute.
+`crossing`, `rise_time`, `fall_time`, `settling_time`, and `slope`
+(least-squares slope vs the axis, unit `signal_unit/axis_unit`). Inspect the
+profile via `openada profile show openada.operation/result.measure/v1alpha2`
+for the exact unit-bearing parameter shape. Do not use native `.measure` or an arbitrary expression as a substitute.
 
 For a uniformly sampled coherent single-tone record, inspect the packaged
 spectral profile, write its complete method, and run:
@@ -323,7 +323,7 @@ openada spectral \
 The alpha supports only SNR, SINAD, signed-dB THD, and SFDR under its fixed power-of-two
 rectangular coherent-bin method. A candidate IEEE context records scope, not conformity.
 
-For an AC analysis, inspect `openada.operation/result.transfer.measure/v1alpha1` and run:
+For an AC analysis, inspect `openada.operation/result.transfer.measure/v1alpha2` and run:
 
 ```bash
 openada transfer \

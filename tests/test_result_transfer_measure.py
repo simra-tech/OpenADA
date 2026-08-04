@@ -24,7 +24,7 @@ PROFILE_SCHEMA = json.loads(
     )
 )
 TRANSFER_PROFILE = json.loads(
-    (ROOT / "profiles" / "result.transfer.measure-v1alpha1.json").read_text(
+    (ROOT / "profiles" / "result.transfer.measure-v1alpha2.json").read_text(
         encoding="utf-8"
     )
 )
@@ -108,6 +108,7 @@ def _request(
     units = {
         "low_frequency_gain_db": "dB",
         "low_frequency_impedance": "Ohm",
+        "ac_magnitude_at_frequency": "dB",
         "bandwidth_3db": "Hz",
         "unity_gain_frequency": "Hz",
         "phase_margin": "deg",
@@ -607,3 +608,83 @@ def test_every_advertised_metric_kind_has_a_declared_feature_and_unit() -> None:
     }
     assert declared == set(TRANSFER_METRIC_KINDS)
     assert set(_METRIC_UNITS) == set(TRANSFER_METRIC_KINDS)
+
+
+def _at_request(at_hz: float) -> dict:
+    request = _request("ac_magnitude_at_frequency")
+    request["metric"]["at"] = {"value": at_hz, "unit": "Hz"}
+    return request
+
+
+def test_ac_magnitude_exact_axis_hit_returns_simulated_value() -> None:
+    payload = measure_transfer(_series(), _at_request(100.0))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["value"] == pytest.approx(-5.0)
+    assert measured["unit"] == "dB"
+    assert measured["location"] == {"value": 100.0, "unit": "Hz"}
+    _assert_envelope(payload)
+
+
+def test_ac_magnitude_interpolates_db_over_log10_frequency() -> None:
+    # The log midpoint of 10 and 100 Hz interpolates the dB midpoint of
+    # 15 and -5 dB, exactly as the frozen method's interpolation declares.
+    payload = measure_transfer(_series(), _at_request(math.sqrt(10.0 * 100.0)))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["value"] == pytest.approx(5.0)
+    _assert_envelope(payload)
+
+
+def test_ac_magnitude_domain_endpoints_are_in_domain() -> None:
+    for at_hz, expected_db in ((1.0, 20.0), (1000.0, -20.0)):
+        payload = measure_transfer(_series(), _at_request(at_hz))
+        assert payload["engineering"]["status"] == "pass"
+        assert payload["data"]["measurement"]["value"] == pytest.approx(expected_db)
+
+
+@pytest.mark.parametrize("at_hz", [0.5, 2000.0])
+def test_ac_magnitude_out_of_domain_is_invalid_not_not_found(at_hz: float) -> None:
+    payload = measure_transfer(_series(), _at_request(at_hz))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "transfer.domain.invalid"
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda request: request["metric"].pop("at"),
+        lambda request: request["metric"]["at"].update({"unit": "kHz"}),
+        lambda request: request["metric"]["at"].update({"value": 0.0}),
+        lambda request: request["metric"]["at"].update({"value": -10.0}),
+        lambda request: request["metric"]["at"].update({"value": True}),
+    ],
+)
+def test_ac_magnitude_malformed_at_is_refused(mutate) -> None:
+    request = _at_request(100.0)
+    mutate(request)
+    payload = measure_transfer(_series(), request)
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] in {
+        "transfer.request.invalid",
+        "transfer.unit.mismatch",
+    }
+
+
+def test_at_is_forbidden_for_every_other_metric_kind() -> None:
+    request = _request("low_frequency_gain_db")
+    request["metric"]["at"] = {"value": 100.0, "unit": "Hz"}
+    payload = measure_transfer(_series(), request)
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "transfer.request.invalid"
+
+
+def test_ac_magnitude_request_digest_includes_at() -> None:
+    a = measure_transfer(_series(), _at_request(100.0))
+    b = measure_transfer(_series(), _at_request(10.0))
+    assert (
+        a["data"]["measurement"]["request_sha256"]
+        != b["data"]["measurement"]["request_sha256"]
+    )

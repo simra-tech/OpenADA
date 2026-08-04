@@ -15,15 +15,16 @@ from .result_measure import _InvalidRequest as _SeriesInvalidRequest
 from .result_measure import _normalize_series
 
 
-OPERATION_PROFILE = "openada.operation/result.transfer.measure/v1alpha1"
+OPERATION_PROFILE = "openada.operation/result.transfer.measure/v1alpha2"
 ASSERTION_PROFILE = "openada.assertion/transfer.measurement.valid/v1alpha1"
 IMPLEMENTATION_ID = "org.openada.kernel.transfer-evidence"
-IMPLEMENTATION_VERSION = "1.0.0"
+IMPLEMENTATION_VERSION = "1.1.0"
 METHOD_ID = "openada.method/ac-complex-ratio-log-interpolation/v1alpha1"
 
 TRANSFER_METRIC_KINDS = (
     "low_frequency_gain_db",
     "low_frequency_impedance",
+    "ac_magnitude_at_frequency",
     "bandwidth_3db",
     "unity_gain_frequency",
     "phase_margin",
@@ -31,6 +32,7 @@ TRANSFER_METRIC_KINDS = (
 _METRIC_UNITS = {
     "low_frequency_gain_db": "dB",
     "low_frequency_impedance": "Ohm",
+    "ac_magnitude_at_frequency": "dB",
     "bandwidth_3db": "Hz",
     "unity_gain_frequency": "Hz",
     "phase_margin": "deg",
@@ -253,7 +255,9 @@ def _normalize_request(value: object) -> dict[str, Any]:
     for name, expected in expected_method.items():
         _expect(method[name], expected, f"transfer.method.{name}")
 
-    metric = _closed_object(root["metric"], "transfer.metric", required={"kind", "unit"})
+    metric = _closed_object(
+        root["metric"], "transfer.metric", required={"kind", "unit"}, optional={"at"}
+    )
     kind = _text(metric["kind"], "transfer.metric.kind", limit=48)
     if kind not in _METRIC_UNITS:
         raise _InvalidTransferRequest(
@@ -270,6 +274,39 @@ def _normalize_request(value: object) -> dict[str, Any]:
             "transfer.phase_margin.invalid_context",
             "phase_margin requires interpretation 'loop-gain-negative-feedback'.",
         )
+    normalized_metric: dict[str, Any] = {"kind": kind, "unit": expected_unit}
+    if kind == "ac_magnitude_at_frequency":
+        if "at" not in metric:
+            raise _InvalidTransferRequest(
+                "transfer.request.invalid",
+                "transfer.metric.at is required for 'ac_magnitude_at_frequency'.",
+            )
+        at_item = _closed_object(
+            metric["at"], "transfer.metric.at", required={"value", "unit"}
+        )
+        if at_item["unit"] != "Hz":
+            raise _InvalidTransferRequest(
+                "transfer.unit.mismatch",
+                "transfer.metric.at.unit must be exactly 'Hz'.",
+            )
+        at_value = at_item["value"]
+        if (
+            isinstance(at_value, bool)
+            or not isinstance(at_value, (int, float))
+            or not math.isfinite(at_value)
+            or at_value <= 0
+        ):
+            raise _InvalidTransferRequest(
+                "transfer.request.invalid",
+                "transfer.metric.at.value must be one finite positive number.",
+            )
+        normalized_metric["at"] = {"value": float(at_value), "unit": "Hz"}
+    elif "at" in metric:
+        raise _InvalidTransferRequest(
+            "transfer.request.invalid",
+            "transfer.metric.at is only declared for 'ac_magnitude_at_frequency', "
+            f"not {kind!r}.",
+        )
 
     return {
         "measurement_id": measurement_id,
@@ -277,7 +314,7 @@ def _normalize_request(value: object) -> dict[str, Any]:
         "output": output_pair,
         "interpretation": interpretation,
         "method": expected_method,
-        "metric": {"kind": kind, "unit": expected_unit},
+        "metric": normalized_metric,
         "extensions": {},
     }
 
@@ -326,6 +363,33 @@ def _operand_phasors(
 def _is_differential(request: Mapping[str, Any]) -> bool:
     return any(
         "negative_real" in request[side] for side in ("input", "output")
+    )
+
+
+def _magnitude_db_at(
+    frequencies: list[float], magnitudes_db: list[float], at: float
+) -> float:
+    """dB magnitude at one in-domain frequency, interpolated per the method.
+
+    The frozen method declares linear-value-over-log10-frequency
+    interpolation between adjacent simulated points; an exact axis hit
+    returns the simulated value. Callers must have verified the domain.
+    """
+
+    for index, frequency in enumerate(frequencies):
+        if frequency == at:
+            return magnitudes_db[index]
+        if frequency > at:
+            f0, f1 = frequencies[index - 1], frequency
+            fraction = (math.log10(at) - math.log10(f0)) / (
+                math.log10(f1) - math.log10(f0)
+            )
+            return magnitudes_db[index - 1] + fraction * (
+                magnitudes_db[index] - magnitudes_db[index - 1]
+            )
+    raise _UnresolvedTransfer(  # pragma: no cover - domain is pre-checked
+        "transfer.value.non_finite",
+        "The requested frequency was not bracketed by the simulated axis.",
     )
 
 
@@ -673,6 +737,16 @@ def measure_transfer(
             # ohms, and 20*log10 of a V/A ratio is a number with no name.
             value = abs(ratios[0])
             location_hz = frequencies[0]
+        elif kind == "ac_magnitude_at_frequency":
+            at_frequency = request["metric"]["at"]["value"]
+            if not frequencies[0] <= at_frequency <= frequencies[-1]:
+                raise _InvalidTransferRequest(
+                    "transfer.domain.invalid",
+                    "transfer.metric.at lies outside the simulated frequency domain "
+                    f"[{frequencies[0]}, {frequencies[-1]}] Hz.",
+                )
+            value = _magnitude_db_at(frequencies, magnitudes_db, at_frequency)
+            location_hz = at_frequency
         elif kind == "bandwidth_3db":
             selected_crossing = bandwidth_record
             value = (

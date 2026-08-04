@@ -136,13 +136,13 @@ def _derivation_spec() -> dict[str, Any]:
             {
                 "id": "input_crossing",
                 "analysis_id": "edge",
-                "operation_profile": "openada.operation/result.measure/v1alpha1",
+                "operation_profile": "openada.operation/result.measure/v1alpha2",
                 "request": _crossing_request("input_crossing", "input_v", 0.9),
             },
             {
                 "id": "output_crossing",
                 "analysis_id": "edge",
-                "operation_profile": "openada.operation/result.measure/v1alpha1",
+                "operation_profile": "openada.operation/result.measure/v1alpha2",
                 "request": _crossing_request("output_crossing", "output_v", 0.24),
             },
         ],

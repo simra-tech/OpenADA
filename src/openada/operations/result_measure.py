@@ -13,10 +13,10 @@ import uuid
 from ..contract import diagnostic, result, static_execution
 
 
-OPERATION_PROFILE = "openada.operation/result.measure/v1alpha1"
+OPERATION_PROFILE = "openada.operation/result.measure/v1alpha2"
 ASSERTION_PROFILE = "openada.assertion/measurement.valid/v1alpha1"
 IMPLEMENTATION_ID = "org.openada.kernel.typed-evidence"
-IMPLEMENTATION_VERSION = "1.0.0"
+IMPLEMENTATION_VERSION = "1.1.0"
 MAX_POINTS = 100_000
 MAX_SIGNALS = 32
 MAX_CONDITIONS = 64
@@ -33,6 +33,7 @@ MEASUREMENT_KINDS = (
     "rise_time",
     "fall_time",
     "settling_time",
+    "slope",
 )
 _KINDS = frozenset(MEASUREMENT_KINDS)
 
@@ -698,6 +699,45 @@ def measure_result(
                 value = crossings[occurrence - 1]
                 location = value
             unit = axis_unit
+        elif kind == "slope":
+            params = _closed_object(
+                parameters,
+                "measurement.parameters",
+                required=set(),
+                optional={"window"},
+            )
+            window = _window(params["window"], axis_unit) if "window" in params else None
+            indices = _indices_in_window(x_values, window)
+            used_count = len(indices)
+            # A slope is a derived per-axis-unit quantity; the unit is the
+            # literal composition of the two declared units, never converted.
+            unit = f"{signal_unit}/{axis_unit}"
+            if len(unit) > 64:
+                raise _InvalidRequest(
+                    "measurement.request.invalid",
+                    "The composed slope unit exceeds 64 characters.",
+                )
+            if len(indices) >= 2:
+                xs = [x_values[index] for index in indices]
+                ys = [y_values[index] for index in indices]
+                try:
+                    x_mean = math.fsum(xs) / len(xs)
+                    y_mean = math.fsum(ys) / len(ys)
+                    sxx = math.fsum((x - x_mean) ** 2 for x in xs)
+                    sxy = math.fsum(
+                        (x - x_mean) * (y - y_mean) for x, y in zip(xs, ys)
+                    )
+                    # The normalized axis is strictly increasing, so two or
+                    # more windowed samples guarantee sxx > 0.
+                    value = sxy / sxx
+                except (OverflowError, ValueError) as exc:
+                    raise _InvalidRequest(
+                        "measurement.value.non_finite",
+                        "The least-squares slope overflowed the finite result range.",
+                    ) from exc
+            not_found_message = (
+                "The declared window does not contain at least two axis samples."
+            )
         elif kind in {"rise_time", "fall_time"}:
             params = _closed_object(
                 parameters,

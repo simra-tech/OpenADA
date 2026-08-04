@@ -42,6 +42,12 @@
     },
     {
       "repository_path": "profiles/result.measure-v1alpha1.json",
+      "lifecycle": "historical",
+      "dispatchable": false,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.measure-v1alpha2.json",
       "lifecycle": "active",
       "dispatchable": true,
       "extensions": {}
@@ -60,6 +66,12 @@
     },
     {
       "repository_path": "profiles/result.transfer.measure-v1alpha1.json",
+      "lifecycle": "historical",
+      "dispatchable": false,
+      "extensions": {}
+    },
+    {
+      "repository_path": "profiles/result.transfer.measure-v1alpha2.json",
       "lifecycle": "active",
       "dispatchable": true,
       "extensions": {}
@@ -200,8 +212,8 @@
       "profile_bindings": [
         "openada.operation/circuit.simulate/v1alpha2",
         "openada.operation/result.series.extract/v1alpha1",
-        "openada.operation/result.measure/v1alpha1",
-        "openada.operation/result.transfer.measure/v1alpha1",
+        "openada.operation/result.measure/v1alpha2",
+        "openada.operation/result.transfer.measure/v1alpha2",
         "openada.operation/result.spectral.measure/v1alpha1"
       ],
       "variants": [],
@@ -252,7 +264,7 @@
       "classification": "semantic-execution",
       "lifecycle": "active",
       "profile_bindings": [
-        "openada.operation/result.measure/v1alpha1"
+        "openada.operation/result.measure/v1alpha2"
       ],
       "variants": [],
       "extensions": {}
@@ -560,7 +572,7 @@
       "classification": "semantic-execution",
       "lifecycle": "active",
       "profile_bindings": [
-        "openada.operation/result.transfer.measure/v1alpha1"
+        "openada.operation/result.transfer.measure/v1alpha2"
       ],
       "variants": [],
       "extensions": {}
@@ -835,7 +847,7 @@
       "provider_id": "org.openada.kernel.transfer-evidence",
       "provider_kind": "evidence-kernel",
       "native_product": null,
-      "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+      "operation_profile": "openada.operation/result.transfer.measure/v1alpha2",
       "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
       "operation_maturity": null,
       "features": [
@@ -847,6 +859,12 @@
         },
         {
           "id": "openada.feature/transfer.low-frequency-impedance/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [],
           "extensions": {}
@@ -882,7 +900,7 @@
       "provider_id": "org.openada.kernel.typed-evidence",
       "provider_kind": "evidence-kernel",
       "native_product": null,
-      "operation_profile": "openada.operation/result.measure/v1alpha1",
+      "operation_profile": "openada.operation/result.measure/v1alpha2",
       "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
       "operation_maturity": null,
       "features": [
@@ -890,7 +908,7 @@
           "id": "openada.feature/measurement.sample-at/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         },
@@ -898,7 +916,7 @@
           "id": "openada.feature/measurement.minimum/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         },
@@ -906,7 +924,7 @@
           "id": "openada.feature/measurement.maximum/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         },
@@ -914,7 +932,7 @@
           "id": "openada.feature/measurement.mean/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         },
@@ -922,7 +940,7 @@
           "id": "openada.feature/measurement.rms/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         },
@@ -930,7 +948,7 @@
           "id": "openada.feature/measurement.crossing/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         },
@@ -938,7 +956,7 @@
           "id": "openada.feature/measurement.rise-time/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         },
@@ -946,7 +964,7 @@
           "id": "openada.feature/measurement.fall-time/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         },
@@ -954,7 +972,15 @@
           "id": "openada.feature/measurement.settling-time/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/measurement.slope/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         }
@@ -973,7 +999,7 @@
           "id": "openada.feature/specification.bound-evaluation/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         },
@@ -981,7 +1007,7 @@
           "id": "openada.feature/specification.condition-binding/v1alpha1",
           "implementation_maturity": "structured",
           "conformance_ids": [
-            "typed-evidence-measurement-specification-v0alpha1"
+            "typed-evidence-measurement-specification-v0alpha2"
           ],
           "extensions": {}
         }

@@ -22,7 +22,7 @@ waveform artifact authoritative.
   `openada.operation/result.spectral.measure/v1alpha1` and
   `openada.assertion/spectral.measurement.valid/v1alpha1`.
 - Use ordinary time-domain scalar algorithms through
-  `openada.operation/result.measure/v1alpha1` and
+  `openada.operation/result.measure/v1alpha2` and
   `openada.assertion/measurement.valid/v1alpha1`.
 - Evaluate declared limits with
   `openada.operation/specification.evaluate/v1alpha1` and

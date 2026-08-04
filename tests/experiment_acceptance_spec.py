@@ -137,7 +137,7 @@ def gain_spec() -> dict[str, Any]:
                 "id": "low_frequency_gain",
                 "analysis_id": "ac_gain",
                 "operation_profile": (
-                    "openada.operation/result.transfer.measure/v1alpha1"
+                    "openada.operation/result.transfer.measure/v1alpha2"
                 ),
                 "request": {
                     "measurement_id": "low_frequency_gain",

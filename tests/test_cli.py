@@ -159,7 +159,7 @@ def test_capabilities_exposes_semantic_provider_records(capsys):
     measurement = next(
         record
         for record in records
-        if record["operation_profile"] == "openada.operation/result.measure/v1alpha1"
+        if record["operation_profile"] == "openada.operation/result.measure/v1alpha2"
     )
     assert measurement["operation_profile_schema"] == (
         "openada.operation-profile/v0alpha2"
@@ -172,7 +172,7 @@ def test_capabilities_exposes_semantic_provider_records(capsys):
         conformance_id
         for feature in measurement["features"]
         for conformance_id in feature["conformance_ids"]
-    } == {"typed-evidence-measurement-specification-v0alpha1"}
+    } == {"typed-evidence-measurement-specification-v0alpha2"}
 
     specification = next(
         record
@@ -183,7 +183,7 @@ def test_capabilities_exposes_semantic_provider_records(capsys):
     assert all(feature["maturity"] == "structured" for feature in specification["features"])
     assert all(
         feature["conformance_ids"]
-        == ["typed-evidence-measurement-specification-v0alpha1"]
+        == ["typed-evidence-measurement-specification-v0alpha2"]
         for feature in specification["features"]
     )
     extraction = next(
@@ -210,11 +210,12 @@ def test_capabilities_exposes_semantic_provider_records(capsys):
         record
         for record in records
         if record["operation_profile"]
-        == "openada.operation/result.transfer.measure/v1alpha1"
+        == "openada.operation/result.transfer.measure/v1alpha2"
     )
     assert {feature["id"] for feature in transfer["features"]} == {
         "openada.feature/transfer.low-frequency-gain/v1alpha1",
         "openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
         "openada.feature/transfer.bandwidth-3db/v1alpha1",
         "openada.feature/transfer.unity-gain-frequency/v1alpha1",
         "openada.feature/transfer.phase-margin/v1alpha1",
@@ -1089,7 +1090,7 @@ def test_profile_cli_lists_and_shows_packaged_contracts(capsys) -> None:
     }
 
     assert list_exit == 0
-    assert "openada.operation/result.transfer.measure/v1alpha1" in profile_ids
+    assert "openada.operation/result.transfer.measure/v1alpha2" in profile_ids
     assert "openada.operation/result.spectral.measure/v1alpha1" in profile_ids
 
     show_exit = main(
@@ -1097,14 +1098,14 @@ def test_profile_cli_lists_and_shows_packaged_contracts(capsys) -> None:
             "--compact",
             "profile",
             "show",
-            "openada.operation/result.transfer.measure/v1alpha1",
+            "openada.operation/result.transfer.measure/v1alpha2",
         ]
     )
     shown = json.loads(capsys.readouterr().out)
 
     assert show_exit == 0
     assert shown["data"]["profile"]["operation"]["id"] == (
-        "openada.operation/result.transfer.measure/v1alpha1"
+        "openada.operation/result.transfer.measure/v1alpha2"
     )
 
 
@@ -1204,7 +1205,7 @@ def test_measurement_envelope_validation_is_closed(tamper) -> None:
         ),
         (
             "result.transfer.measure",
-            "openada.operation/result.transfer.measure/v1alpha1",
+            "openada.operation/result.transfer.measure/v1alpha2",
             "openada.assertion/transfer.measurement.valid/v1alpha1",
             "org.openada.kernel.transfer-evidence",
             "transfer",

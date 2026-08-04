@@ -805,6 +805,7 @@ def build_parser() -> argparse.ArgumentParser:
             "transfer.metric.kind must be one of:\n"
             "  low_frequency_gain_db     dB    output/input, identical operand units\n"
             "  low_frequency_impedance   Ohm   output in V over input in A\n"
+            "  ac_magnitude_at_frequency dB    ratio magnitude at metric.at {value, unit: Hz}\n"
             "  bandwidth_3db             Hz    unique falling reference-minus-3 dB crossing\n"
             "  unity_gain_frequency      Hz    unique falling 0 dB crossing\n"
             "  phase_margin              deg   requires interpretation 'loop-gain-negative-feedback'\n\n"
@@ -1069,7 +1070,7 @@ def _overrides(values: list[str]) -> dict[str, str]:
 
 def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
     conformance_id = "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
-    typed_conformance_id = "typed-evidence-measurement-specification-v0alpha1"
+    typed_conformance_id = "typed-evidence-measurement-specification-v0alpha2"
     records: list[dict] = []
     for alias, driver in sorted(BUILTIN_DRIVERS.items()):
         tool = tools.get(driver.native_tool)
@@ -1129,11 +1130,11 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
             },
             {
                 "provider_id": "org.openada.kernel.typed-evidence",
-                "provider_version": "1.0.0",
+                "provider_version": "1.1.0",
                 "provider_kind": "evidence-kernel",
                 "availability": "available",
                 "native_product": None,
-                "operation_profile": "openada.operation/result.measure/v1alpha1",
+                "operation_profile": "openada.operation/result.measure/v1alpha2",
                 "operation_profile_schema": "openada.operation-profile/v0alpha2",
                 "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
                 "result_schema": "openada.result/v0alpha1",
@@ -1178,12 +1179,12 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
             },
             {
                 "provider_id": "org.openada.kernel.transfer-evidence",
-                "provider_version": "1.0.0",
+                "provider_version": "1.1.0",
                 "provider_kind": "evidence-kernel",
                 "availability": "available",
                 "native_product": None,
                 "operation_profile": (
-                    "openada.operation/result.transfer.measure/v1alpha1"
+                    "openada.operation/result.transfer.measure/v1alpha2"
                 ),
                 "operation_profile_schema": "openada.operation-profile/v0alpha2",
                 "assertion_profile": (
@@ -1197,6 +1198,7 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                         "id": {
                             "low_frequency_gain_db": "openada.feature/transfer.low-frequency-gain/v1alpha1",
                             "low_frequency_impedance": "openada.feature/transfer.low-frequency-impedance/v1alpha1",
+                            "ac_magnitude_at_frequency": "openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
                             "bandwidth_3db": "openada.feature/transfer.bandwidth-3db/v1alpha1",
                             "unity_gain_frequency": "openada.feature/transfer.unity-gain-frequency/v1alpha1",
                             "phase_margin": "openada.feature/transfer.phase-margin/v1alpha1",
@@ -1894,12 +1896,12 @@ def _measurement_record(document: dict) -> dict:
     ):
         raise ValueError("the transfer measurement evidence record is incomplete")
     profile_id = {
-        "result.measure": "openada.operation/result.measure/v1alpha1",
+        "result.measure": "openada.operation/result.measure/v1alpha2",
         "result.spectral.measure": (
             "openada.operation/result.spectral.measure/v1alpha1"
         ),
         "result.transfer.measure": (
-            "openada.operation/result.transfer.measure/v1alpha1"
+            "openada.operation/result.transfer.measure/v1alpha2"
         ),
     }[envelope_operation]
     profile = load_operation_profile(profile_id)
@@ -1931,7 +1933,7 @@ def _measurement_record(document: dict) -> dict:
         raise ValueError("the result.measure envelope protocol record is incomplete")
     expected_protocol = {
         "result.measure": {
-            "operation_profile": "openada.operation/result.measure/v1alpha1",
+            "operation_profile": "openada.operation/result.measure/v1alpha2",
             "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
             "implementation_id": "org.openada.kernel.typed-evidence",
         },
@@ -1941,7 +1943,7 @@ def _measurement_record(document: dict) -> dict:
             "implementation_id": "org.openada.kernel.spectral-evidence",
         },
         "result.transfer.measure": {
-            "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+            "operation_profile": "openada.operation/result.transfer.measure/v1alpha2",
             "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
             "implementation_id": "org.openada.kernel.transfer-evidence",
         },

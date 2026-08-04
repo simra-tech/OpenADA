@@ -115,7 +115,7 @@ semantic-operation substitute.
 | `openada` | Execution and evidence adapter | preview | Current CLI and result contract |
 | `review-circuit-simulation` | Tool-independent engineering workflow | experimental | `circuit.simulate/v1alpha2` |
 | `characterize-analog-block` | Application-aware workflow coordinator | experimental | Immutable intent-ledger composition from simulation through verified series, ordinary/spectral/AC-transfer measurement, and specification |
-| `analyze-feedback-stability` | Feedback-loop evidence workflow | experimental | AC Cartesian extraction → `result.transfer.measure/v1alpha1` for first-frequency gain, -3 dB bandwidth, unity frequency, and explicitly declared negative-feedback phase margin |
+| `analyze-feedback-stability` | Feedback-loop evidence workflow | experimental | AC Cartesian extraction → `result.transfer.measure/v1alpha2` for first-frequency gain, -3 dB bandwidth, unity frequency, and explicitly declared negative-feedback phase margin |
 | `analyze-spectral-linearity` | Waveform-derived spectral review | experimental | `circuit.simulate/v1alpha2` → `result.series.extract/v1alpha1` → coherent `result.spectral.measure/v1alpha1` → specification |
 | `assess-pvt-and-yield` | PVT/statistical campaign workflow | experimental | Repeated capability-gated simulation → verified series extraction → ordinary/spectral/AC-transfer measurement → specification intents |
 | `review-rtl-architecture` | RTL evidence and architecture-review workflow | experimental | Strict `rtl.lint/v1alpha1` plus the existing separate structural-check assertion; unsupported CDC, formal, simulation, and equivalence claims remain not evaluated |

@@ -24,7 +24,7 @@ RESULT_SCHEMA = json.loads(
 )
 RESULT_VALIDATOR = Draft202012Validator(RESULT_SCHEMA, format_checker=FormatChecker())
 MEASUREMENT_PROFILE = json.loads(
-    (ROOT / "profiles" / "result.measure-v1alpha1.json").read_text(encoding="utf-8")
+    (ROOT / "profiles" / "result.measure-v1alpha2.json").read_text(encoding="utf-8")
 )
 SPECIFICATION_PROFILE = json.loads(
     (ROOT / "profiles" / "specification.evaluate-v1alpha1.json").read_text(
@@ -129,6 +129,18 @@ def _assert_operation_data(payload: dict, validator: Draft202012Validator) -> No
         ("maximum", {}, 1.0, "V"),
         ("mean", {}, 0.5, "V"),
         ("rms", {}, math.sqrt(2.75 / 7.0), "V"),
+        ("slope", {}, 2.0 / 28.0, "V/s"),
+        (
+            "slope",
+            {
+                "window": {
+                    "start": {"value": 2.0, "unit": "s"},
+                    "stop": {"value": 6.0, "unit": "s"},
+                }
+            },
+            0.0,
+            "V/s",
+        ),
         (
             "crossing",
             {
@@ -174,7 +186,7 @@ def test_closed_measurement_vocabulary_returns_typed_values(
     assert measured["status"] == "measured"
     assert measured["value"] == pytest.approx(expected)
     assert measured["unit"] == unit
-    assert measured["algorithm"]["version"] == "1.0.0"
+    assert measured["algorithm"]["version"] == "1.1.0"
     assert len(measured["request_sha256"]) == 64
     assert measured["source"]["artifact_sha256"] == measured["source"]["series_sha256"]
     assert measured["source"]["lineage"]["binding"] == "unverified"
@@ -497,6 +509,7 @@ def test_typed_evidence_capability_metadata_is_closed() -> None:
         "rise_time",
         "fall_time",
         "settling_time",
+        "slope",
     )
     assert SPECIFICATION_LIMIT_KINDS == ("lower", "upper")
 
@@ -511,3 +524,38 @@ def test_specification_input_is_not_mutated() -> None:
 
     assert measurement == before_measurement
     assert specification == before_specification
+
+
+def test_slope_composed_unit_over_64_characters_is_refused() -> None:
+    wide_unit = "V" * 40
+    series = _series()
+    series["axis"]["unit"] = wide_unit
+    series["signals"][0]["unit"] = wide_unit
+    series["source"]["artifact_sha256"] = _canonical_digest(
+        series["axis"], series["signals"], series["conditions"]
+    )
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "measurement.request.invalid"
+
+
+def test_slope_single_sample_window_is_not_found() -> None:
+    payload = measure_result(
+        _request_payload_series := _series(),
+        _request(
+            "slope",
+            {
+                "window": {
+                    "start": {"value": 0.9, "unit": "s"},
+                    "stop": {"value": 1.1, "unit": "s"},
+                }
+            },
+        ),
+    )
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "fail"
+    assert measured["status"] == "not_found"
+    assert measured["unit"] == "V/s"
+    assert measured["sample_count"] == 1
+    assert measured["location"] is None

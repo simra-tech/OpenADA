@@ -44,7 +44,7 @@ def _ordinary_measurement(
     return {
         "id": identifier,
         "analysis_id": "ac_gain",
-        "operation_profile": "openada.operation/result.measure/v1alpha1",
+        "operation_profile": "openada.operation/result.measure/v1alpha2",
         "request": {
             "measurement_id": identifier,
             "kind": kind,

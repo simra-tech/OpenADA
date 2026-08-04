@@ -158,13 +158,13 @@ _INDEPENDENT_SOURCE_KINDS = frozenset(
     ("vdc", "idc", "vpulse", "ipulse", "vsin", "isin", "vpwl", "ipwl")
 )
 _SUPPORTED_MEASUREMENT_PROFILES = {
-    "openada.operation/result.measure/v1alpha1": ("measurement", "measure"),
-    "openada.operation/result.transfer.measure/v1alpha1": ("transfer", "transfer"),
+    "openada.operation/result.measure/v1alpha2": ("measurement", "measure"),
+    "openada.operation/result.transfer.measure/v1alpha2": ("transfer", "transfer"),
     "openada.operation/result.spectral.measure/v1alpha1": ("spectral", "spectral"),
 }
 _MEASUREMENT_RESULT_OPERATIONS = {
-    "openada.operation/result.measure/v1alpha1": "result.measure",
-    "openada.operation/result.transfer.measure/v1alpha1": (
+    "openada.operation/result.measure/v1alpha2": "result.measure",
+    "openada.operation/result.transfer.measure/v1alpha2": (
         "result.transfer.measure"
     ),
     "openada.operation/result.spectral.measure/v1alpha1": (
@@ -174,6 +174,7 @@ _MEASUREMENT_RESULT_OPERATIONS = {
 _TRANSFER_UNITS = {
     "low_frequency_gain_db": "dB",
     "low_frequency_impedance": "Ohm",
+    "ac_magnitude_at_frequency": "dB",
     "bandwidth_3db": "Hz",
     "unity_gain_frequency": "Hz",
     "phase_margin": "deg",
@@ -2682,7 +2683,7 @@ class _Validator:
                 return None
             return item
 
-        if profile.endswith("/result.measure/v1alpha1"):
+        if profile.endswith("/result.measure/v1alpha2"):
             selected = observation(request.get("signal"), "/signal")
             if selected is None:
                 return None
@@ -2696,13 +2697,15 @@ class _Validator:
                     signal_unit=selected.unit,
                     path=path + "/parameters",
                 )
+            if kind == "slope":
+                return f"{selected.unit}/{_analysis_axis_unit(analysis)}"
             return (
                 _analysis_axis_unit(analysis)
                 if kind in {"crossing", "rise_time", "fall_time", "settling_time"}
                 else selected.unit
             )
 
-        if profile.endswith("/result.transfer.measure/v1alpha1"):
+        if profile.endswith("/result.transfer.measure/v1alpha2"):
             if analysis.kind != "ac":
                 self.add(
                     "experiment.measurement.analysis_incompatible",
@@ -2866,7 +2869,7 @@ class _Validator:
 
         if kind == "sample_at":
             quantity("at", axis_unit)
-        elif kind in {"minimum", "maximum", "mean", "rms"}:
+        elif kind in {"minimum", "maximum", "mean", "rms", "slope"}:
             window()
         elif kind == "crossing":
             quantity("threshold", signal_unit)
@@ -2999,7 +3002,7 @@ class _Validator:
                         )
                     if any(
                         entry.operation_profile
-                        != "openada.operation/result.measure/v1alpha1"
+                        != "openada.operation/result.measure/v1alpha2"
                         or entry.request.get("kind") != "crossing"
                         for entry in selected
                     ):
@@ -4533,12 +4536,12 @@ def _run_experiment_impl(
                 role="measurement.request",
             )
             artifacts.append(request_record)
-            if measurement.operation_profile.endswith("/result.measure/v1alpha1"):
+            if measurement.operation_profile.endswith("/result.measure/v1alpha2"):
                 measured = measure_result(
                     series, retained_request, request_id=str(uuid.uuid4())
                 )
             elif measurement.operation_profile.endswith(
-                "/result.transfer.measure/v1alpha1"
+                "/result.transfer.measure/v1alpha2"
             ):
                 measured = measure_transfer(
                     series, retained_request, request_id=str(uuid.uuid4())

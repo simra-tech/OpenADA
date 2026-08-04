@@ -286,7 +286,7 @@ Inspect the complete packaged ontology without guessing IDs:
 
 ```bash
 ./bin/openada profile list
-./bin/openada profile show openada.operation/result.transfer.measure/v1alpha1
+./bin/openada profile show openada.operation/result.transfer.measure/v1alpha2
 ```
 
 The catalog contains nine active profiles plus the immutable historical
