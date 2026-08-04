@@ -532,7 +532,7 @@ class OsdiComposition:
 
         from .cosim_compile import (
             CosimCompileError,
-            instantiation_parameters,
+            instantiation_parameter_maps,
             verify_parameter_constraints,
         )
 
@@ -542,10 +542,13 @@ class OsdiComposition:
             if not constraints:
                 continue
             try:
-                effective = instantiation_parameters(deck_text, wrapper, defaults)
-                verify_parameter_constraints(
-                    constraints, effective, block_id=wrapper
-                )
+                # EVERY instantiating card is checked individually; an
+                # uninstantiated block is checked at its contract defaults.
+                maps = instantiation_parameter_maps(deck_text, wrapper, defaults)
+                for effective in maps or [dict(defaults)]:
+                    verify_parameter_constraints(
+                        constraints, effective, block_id=wrapper
+                    )
             except CosimCompileError as exc:
                 raise OsdiCompileError(
                     exc.code.replace("cosim.", "osdi.", 1), exc.message

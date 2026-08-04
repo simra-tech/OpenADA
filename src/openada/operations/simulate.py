@@ -1276,6 +1276,7 @@ def simulate(
     permitted_executable_models: Mapping[str, tuple[str, str]] | None = None,
     cosim_wrappers: Sequence[str] = (),
     cosim_composition: Any | None = None,
+    osdi_composition: Any | None = None,
     osdi_preload_text: str | None = None,
     osdi_preload_sha256: str | None = None,
     osdi_module_digests: Mapping[str, str] | None = None,
@@ -1527,6 +1528,20 @@ def simulate(
     # instances). Enforcing it only in the CLI left the programmatic
     # compose->simulate path unchecked and mis-scanned an artifact descriptor
     # as if it were a deck.
+    # OSDI relational parameter constraints are enforced HERE, at the
+    # operation boundary on the resolved caller deck text (the CLI-side check
+    # sees only the original source, which for an artifact is a JSON
+    # descriptor, not the deck).
+    if osdi_composition is not None and caller_deck_text is not None:
+        try:
+            osdi_composition.verify_deck(caller_deck_text)
+        except OsdiCompileError as exc:
+            return refuse(
+                exc.code,
+                exc.message,
+                inputs=input_records,
+                extensions={TARGET_EXTENSION: _target_facts(selected)},
+            )
     if permitted and caller_deck_text is not None:
         try:
             if cosim_composition is not None:

@@ -2568,6 +2568,7 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
                 # The composition is the authority for its own deck-level
                 # rules (single instance + declared parameter constraints).
                 cosim_composition=composed_cosim,
+                osdi_composition=composed_osdi,
                 osdi_preload_text=osdi_preload_text,
                 osdi_preload_sha256=osdi_preload_sha256,
                 osdi_module_digests=osdi_module_digests,

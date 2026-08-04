@@ -394,3 +394,101 @@ def test_relational_constraint_is_enforced_on_the_osdi_path(tmp_path):
     with pytest.raises(OsdiCompileError) as caught:
         composition.verify_deck(bad)
     assert caught.value.code == "osdi.parameters.constraint_violated"
+
+
+@native
+def test_constraint_checked_per_instance_both_orders(tmp_path):
+    # the overlay bug: an invalid instance must be refused regardless of
+    # whether a valid instance FOLLOWS or precedes it
+    from openada.block_library import load_block_library
+    from openada.osdi_compile import OsdiCompileError, compose_blocks_osdi
+
+    library = load_block_library("bhv-core")
+    composition = compose_blocks_osdi(library, ["comparator_clocked_phys"], tmp_path)
+    invalid_then_valid = (
+        f"* order A\nX1 a b c d 0 {DUT} td=0.4n tedge=1n\n"
+        f"X2 e f g h 0 {DUT} td=2n tedge=1n\n.end\n"
+    )
+    valid_then_invalid = (
+        f"* order B\nX1 a b c d 0 {DUT} td=2n tedge=1n\n"
+        f"X2 e f g h 0 {DUT} td=0.4n tedge=1n\n.end\n"
+    )
+    for deck in (invalid_then_valid, valid_then_invalid):
+        with pytest.raises(OsdiCompileError) as caught:
+            composition.verify_deck(deck)
+        assert caught.value.code == "osdi.parameters.constraint_violated"
+    # vhi > vlo is also machine-enforced
+    with pytest.raises(OsdiCompileError) as caught:
+        composition.verify_deck(f"* swap\nX1 a b c d 0 {DUT} vhi=0 vlo=1\n.end\n")
+    assert caught.value.code == "osdi.parameters.constraint_violated"
+
+
+@native
+def test_data_setup_window_is_contractual(prelude):
+    # input switching to qualifying overdrive only 0.05*td before the clock
+    # crossing is inside the declared setup window: the decision must NOT
+    # appear at the declared latency (it is late or missed) -- while the same
+    # overdrive stable from >= td before the crossing decides on time
+    late = _run(
+        prelude,
+        f"X1 inp inn clk out 0 {DUT} td=2n tedge=1n\n"
+        "Vinp inp 0 PWL(0 0.4 600.3n 0.4 600.4n 0.7 2u 0.7)\nVinn inn 0 DC 0.55\n"
+        "Vclk clk 0 PULSE(0 1 600n 1n 1n 300n 600n)\nRload out 0 10k\n",
+        "tran 0.02n 0.607u\nmeas tran omax MAX v(out) FROM=600n TO=602.56n\n",
+    )
+    assert late["omax"] < 0.5  # not decided at the declared 602.5n
+    ontime = _run(
+        prelude,
+        f"X1 inp inn clk out 0 {DUT} td=2n tedge=1n\n"
+        "Vinp inp 0 PWL(0 0.4 597n 0.4 598n 0.7 2u 0.7)\nVinn inn 0 DC 0.55\n"
+        "Vclk clk 0 PULSE(0 1 600n 1n 1n 300n 600n)\nRload out 0 10k\n",
+        "tran 0.02n 0.61u\nmeas tran t50 WHEN v(out)=0.5 RISE=1\n",
+    )
+    assert abs(ontime["t50"] - (600.5e-9 + 2e-9)) < LATENCY_BOUND(2e-9)
+
+
+@native
+def test_dc_sweep_and_perturbed_start_hold_low(prelude):
+    # actual DC (not just OP): sweeping the input with the clock low never
+    # decides; and a small physical perturbation of the start (clock at
+    # 0.2 V, inside neither rail nor band) still resolves LOW
+    m = _run(
+        prelude,
+        f"X1 inp inn clk out 0 {DUT} td=2n tedge=1n\n"
+        "Vinp inp 0 DC 0\nVinn inn 0 DC 0.3\nVclk clk 0 DC 0\nRload out 0 10k\n",
+        "dc Vinp 0 1 0.05\nmeas dc omax MAX v(out) FROM=0 TO=1\n",
+    )
+    assert m["omax"] < 1e-3
+    p = _run(
+        prelude,
+        f"X1 inp inn clk out 0 {DUT} td=2n tedge=1n\n"
+        "Vinp inp 0 DC 0.7\nVinn inn 0 DC 0.55\nVclk clk 0 DC 0.2\nRload out 0 10k\n",
+        "tran 0.05n 50n\nmeas tran omax MAX v(out) FROM=10n TO=50n\n",
+    )
+    assert p["omax"] < 0.02
+
+
+@native
+def test_short_low_phase_limits_master_tracking(prelude):
+    # the contract's phases >= td requirement also covers the LOW (master
+    # acquisition) phase: with the low phase only 0.1*td, the master cannot
+    # track a change that arrives during it, so the next edge samples stale
+    # data (decision stays low); a full-length low phase tracks it (decides)
+    stale = _run(
+        prelude,
+        f"X1 inp inn clk out 0 {DUT} td=2n tedge=1n\n"
+        "Vinp inp 0 PWL(0 0.4 649.5n 0.4 649.7n 0.7 2u 0.7)\nVinn inn 0 DC 0.55\n"
+        # low phase 0.2n: high 100..649.9n, low 649.9..650.1n, high again
+        "Vclk clk 0 PULSE(0 1 100n 0.1n 0.1n 549.8n 550n)\nRload out 0 10k\n",
+        "tran 0.02n 0.658u\nmeas tran omax MAX v(out) FROM=650n TO=655n\n",
+    )
+    assert stale["omax"] < 0.5
+    tracked = _run(
+        prelude,
+        f"X1 inp inn clk out 0 {DUT} td=2n tedge=1n\n"
+        "Vinp inp 0 PWL(0 0.4 620n 0.4 622n 0.7 2u 0.7)\nVinn inn 0 DC 0.55\n"
+        # low phase 100n (>= td), rising edge at 700n
+        "Vclk clk 0 PULSE(0 1 100n 1n 1n 499n 600n)\nRload out 0 10k\n",
+        "tran 0.05n 0.71u\nmeas tran t50 WHEN v(out)=0.5 RISE=1\n",
+    )
+    assert abs(tracked["t50"] - (700.5e-9 + 2e-9)) < LATENCY_BOUND(2e-9)
