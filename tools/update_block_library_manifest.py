@@ -20,6 +20,8 @@ from pathlib import Path
 _ROLE_BY_SHAPE = (
     ("block.json", "contract"),
     (".ngspice.sp", "ngspice-native"),
+    (".cosim.sp", "xspice-cosim"),
+    (".cosim.v", "verilog-cosim-core"),
     (".va", "verilog-a"),
     (".json", "golden-case"),
 )
