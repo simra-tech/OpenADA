@@ -59,6 +59,21 @@ _MODULE_RE = re.compile(r"^bhv_[A-Za-z0-9_]+_v[0-9]+$")
 #: space or newline would split that command (or smuggle a second one). The path
 #: is refused rather than quoted — ngspice ``pre_osdi`` has no quoting.
 _PATH_UNSAFE_RE = re.compile(r"[\s\x00-\x1f\x7f]")
+#: Verilog-A event/timing constructs the OSDI path must refuse. Classic
+#: openvaf 23.5.0 rejects them at compile; OpenVAF-Reloaded (openvaf-r, the
+#: prod-image compiler) COMPILES them but the event gating is silently not
+#: honored through OSDI/ngspice (measured 2026-08-04: an @(cross)-guarded
+#: assignment behaves as continuously evaluated — the sampled state follows
+#: the input after the edge instead of latching). Fail closed on the SOURCE so
+#: neither compiler generation can ship silently-wrong event semantics.
+#: (@(initial_step)/@(final_step) are NOT screened: both compilers support
+#: them and their run-at-analysis-start semantics need no event queue —
+#: opamp_1p relies on @(initial_step).)
+_EVENT_CONSTRUCT_RE = re.compile(
+    r"@\s*\(\s*(?:cross|above|timer)\b|\btransition\s*\(|\babsdelay\s*\("
+)
+_LINE_COMMENT_RE = re.compile(r"//[^\n]*")
+_BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
 
 
 class OsdiCompileError(Exception):
@@ -169,6 +184,21 @@ def compile_verilog_a(
         raise OsdiCompileError(
             "osdi.source.oversize",
             f"Verilog-A source is {len(encoded)} bytes, outside 1..{MAX_VA_BYTES}.",
+        )
+    # Event/timing constructs are refused BEFORE the compiler runs: classic
+    # openvaf rejects them anyway, and openvaf-r compiles them into OSDI whose
+    # event gating ngspice silently does not honor (continuously-evaluated
+    # bodies) — a wrong-answer trap, not a capability.
+    stripped = _BLOCK_COMMENT_RE.sub(" ", _LINE_COMMENT_RE.sub(" ", source_text))
+    event_hit = _EVENT_CONSTRUCT_RE.search(stripped)
+    if event_hit:
+        raise OsdiCompileError(
+            "osdi.source.event_constructs",
+            f"Verilog-A source for {expected_module} uses the event/timing "
+            f"construct {event_hit.group(0).strip()!r}; the OSDI path refuses "
+            "these because their sampled semantics are not honored through "
+            "OSDI/ngspice (silently continuous evaluation). Use a continuous "
+            "formulation or the block's native/cosim backend.",
         )
     source_sha256 = _sha256_bytes(encoded)
     binary, version = resolve_openvaf(override=openvaf_bin)

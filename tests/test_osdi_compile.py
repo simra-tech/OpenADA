@@ -192,12 +192,64 @@ def test_compose_opamp_block_to_osdi_matches_native_physics():
     assert m and abs(float(m.group(1)) - 1.6498) < 0.01
 
 
-@native
 def test_compose_refuses_block_whose_veriloga_openvaf_cannot_compile():
-    # sw_bbm_pair uses transition() (unsupported by OpenVAF) — fail closed.
+    # sw_bbm_pair uses @(cross)/transition(). Classic openvaf rejects them at
+    # compile; openvaf-r (the prod-image compiler) COMPILES them but ngspice
+    # silently does not honor the event gating (measured: continuously
+    # evaluated bodies). The source screen refuses them deterministically on
+    # both compiler generations, before any compiler runs — so this test is
+    # pure and needs no toolchain.
     lib = _load_bhv_core()
     with pytest.raises(oc.OsdiCompileError) as caught:
         oc.compose_blocks_osdi(lib, ["sw_bbm_pair"], Path(tempfile.mkdtemp()))
+    assert caught.value.code == "osdi.source.event_constructs"
+
+
+def test_compile_refuses_event_constructs_even_in_expressions():
+    # The screen catches transition()/@(cross)/absdelay outside comments;
+    # commented mentions must NOT trigger it (comparator_clocked's header
+    # names its feature profile in a comment).
+    ok_commented = (
+        '`include "disciplines.vams"\n'
+        "// feature profile: event-cross, transition, hidden-state\n"
+        "/* transition( absdelay( @(cross ... in a block comment */\n"
+        "module bhv_pure_v1(p, n);\n"
+        "  inout p, n; electrical p, n;\n"
+        "  analog V(p, n) <+ 1.0;\n"
+        "endmodule\n"
+    )
+    try:
+        # compiles on a native host; on a toolchain-less host it fails later
+        # (toolchain resolution) — either way the screen must not fire.
+        oc.compile_verilog_a(ok_commented, "bhv_pure_v1", Path(tempfile.mkdtemp()))
+    except oc.OsdiCompileError as exc:
+        assert exc.code != "osdi.source.event_constructs"
+    for construct in ("transition(vc, 1n, 1n)", "absdelay(V(p,n), 1n)"):
+        src = (
+            '`include "disciplines.vams"\n'
+            "module bhv_evexpr_v1(p, n);\n"
+            "  inout p, n; electrical p, n;\n"
+            "  real vc;\n"
+            f"  analog V(p, n) <+ {construct};\n"
+            "endmodule\n"
+        )
+        with pytest.raises(oc.OsdiCompileError) as caught:
+            oc.compile_verilog_a(src, "bhv_evexpr_v1", Path(tempfile.mkdtemp()))
+        assert caught.value.code == "osdi.source.event_constructs"
+
+
+@native
+def test_compile_fails_closed_on_source_no_compiler_accepts():
+    # Generation-independent fail-closed coverage: a syntactically broken
+    # source must be refused by every OpenVAF vintage.
+    broken = (
+        '`include "disciplines.vams"\n'
+        "module bhv_broken_v1(p);\n"
+        "  this is not verilog;\n"
+        "endmodule\n"
+    )
+    with pytest.raises(oc.OsdiCompileError) as caught:
+        oc.compile_verilog_a(broken, "bhv_broken_v1", Path(tempfile.mkdtemp()))
     assert caught.value.code == "osdi.compile.failed"
 
 
