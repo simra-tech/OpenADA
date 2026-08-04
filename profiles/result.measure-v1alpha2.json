@@ -562,7 +562,8 @@
       "series.source.artifact_sha256 must equal the implementation's canonical SHA-256 digest over the normalized axis, signals, and condition bindings; mismatches are invalid requests.",
       "Any upstream native artifact may be retained only as optional lineage whose binding is explicitly unverified by this operation.",
       "A slope request fits y = intercept + slope*x by unweighted ordinary least squares over every retained sample whose axis value lies in the optional closed window; no synthetic boundary samples are interpolated, every retained sample has equal weight even on an irregular axis, and fewer than two retained samples is a valid not_found outcome.",
-      "The slope result unit is the literal composition signal_unit + '/' + axis_unit with no reduction, conversion, or dimensional inference; a composed literal longer than 64 characters is an invalid request."
+      "The slope result unit is the literal composition signal_unit + '/' + axis_unit with no reduction, conversion, or dimensional inference; a composed literal longer than 64 characters is an invalid request.",
+      "A slope whose rounded scaled covariance is zero is decided by exact rational arithmetic over at most 8192 retained samples; beyond that closed bound, and for any nonzero exact slope whose magnitude is not representable as a finite double (overflow, or underflow to zero), the measurement is a typed non-finite refusal."
     ],
     "extensions": {}
   },

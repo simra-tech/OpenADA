@@ -612,3 +612,36 @@ def test_rounded_to_zero_covariance_recovers_the_exact_finite_slope() -> None:
     measured = payload["data"]["measurement"]
     assert payload["engineering"]["status"] == "pass"
     assert measured["value"] == pytest.approx(1.0120112665365531e307, rel=1e-9)
+
+
+@pytest.mark.parametrize(
+    ("signal_values", "sign"),
+    [([0.0, 1e308, 5e-324], 1), ([5e-324, 1e308, 0.0], -1)],
+)
+def test_nonzero_exact_slope_underflowing_to_zero_is_refused(
+    signal_values, sign
+) -> None:
+    # The exact slope is nonzero but below binary64 range; reporting a
+    # passing 0.0 would be a false conclusive zero in either direction.
+    series = _series(
+        axis_values=[0.0, 5e307, 1e308],
+        signal_values=signal_values,
+    )
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"
+    assert "underflows" in payload["diagnostics"][0]["message"]
+
+
+def test_exact_slope_fallback_beyond_the_sample_bound_is_refused() -> None:
+    # 8193 samples whose scaled covariance sums to exactly zero: deciding
+    # this window exactly would exceed the closed work bound, so the
+    # kernel refuses instead of buying unbounded big-integer arithmetic.
+    count = 8193
+    axis = [float(i) for i in range(count)]
+    values = [(5e-324 if i % 2 else -5e-324) for i in range(count)]
+    series = _series(axis_values=axis, signal_values=values)
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"
+    assert "8192" in payload["diagnostics"][0]["message"]

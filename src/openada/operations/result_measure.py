@@ -21,6 +21,12 @@ IMPLEMENTATION_VERSION = "1.1.0"
 MAX_POINTS = 100_000
 MAX_SIGNALS = 32
 MAX_CONDITIONS = 64
+#: Closed work bound for the exact-rational slope fallback. A window whose
+#: rounded scaled covariance is zero is decided exactly; beyond this many
+#: retained samples that decision is refused rather than letting one
+#: request (or an experiment's 128 measurements) buy unbounded big-integer
+#: work.
+MAX_EXACT_SLOPE_SAMPLES = 8_192
 
 _ROLE_RE = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -748,24 +754,53 @@ def measure_result(
                         suv = math.fsum(u * v for u, v in zip(ux, uy))
                         if suv == 0.0:
                             # Rounded-to-zero scaled covariance is not proof
-                            # of a zero slope: decide exactly. Doubles are
-                            # exact rationals, so the closed-form OLS slope
-                            # (n*Sxy - Sx*Sy) / (n*Sxx - Sx^2) over
-                            # Fractions is the true value; only a genuinely
-                            # unrepresentable magnitude remains a typed
-                            # refusal.
-                            n = Fraction(len(xs))
-                            sx = sum(Fraction(x) for x in xs)
-                            sy = sum(Fraction(y) for y in ys)
-                            sxy = sum(
-                                Fraction(x) * Fraction(y)
-                                for x, y in zip(xs, ys)
+                            # of a zero slope: decide exactly, within a
+                            # closed work bound. Every finite double is
+                            # num/2^k with k <= 1074, so scaling by 2^1074
+                            # turns the samples into exact integers and the
+                            # closed-form OLS slope
+                            # (n*Sxy - Sx*Sy) / (n*Sxx - Sx^2) into one
+                            # exact big-integer ratio (the scale factors
+                            # cancel). Only a genuinely unrepresentable
+                            # magnitude — overflow, or a nonzero slope that
+                            # underflows to zero — remains a typed refusal.
+                            if len(xs) > MAX_EXACT_SLOPE_SAMPLES:
+                                raise _InvalidRequest(
+                                    "measurement.value.non_finite",
+                                    "The rounded-to-zero covariance cannot "
+                                    "be decided within the closed "
+                                    f"{MAX_EXACT_SLOPE_SAMPLES}-sample "
+                                    "exact-arithmetic bound.",
+                                )
+                            one = 1 << 1074
+
+                            def _scaled(sample: float) -> int:
+                                numerator, denominator = (
+                                    sample.as_integer_ratio()
+                                )
+                                return numerator * (one // denominator)
+
+                            ix = [_scaled(x) for x in xs]
+                            iy = [_scaled(y) for y in ys]
+                            n = len(ix)
+                            sx = sum(ix)
+                            sy = sum(iy)
+                            sxy = sum(a * b for a, b in zip(ix, iy))
+                            sxx = sum(a * a for a in ix)
+                            exact = Fraction(
+                                n * sxy - sx * sy, n * sxx - sx * sx
                             )
-                            sxx = sum(Fraction(x) * Fraction(x) for x in xs)
-                            exact = (n * sxy - sx * sy) / (n * sxx - sx * sx)
                             value = float(exact)
+                            if exact != 0 and value == 0.0:
+                                raise _InvalidRequest(
+                                    "measurement.value.non_finite",
+                                    "The least-squares slope underflows "
+                                    "the finite result range.",
+                                )
                         else:
                             value = (suv / suu) * (y_scale / x_scale)
+                except _InvalidRequest:
+                    raise
                 except (OverflowError, ValueError, ZeroDivisionError) as exc:
                     raise _InvalidRequest(
                         "measurement.value.non_finite",

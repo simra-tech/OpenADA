@@ -17,7 +17,7 @@
       "operation_profile": "openada.operation/result.measure/v1alpha2",
       "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
       "repository_path": "profiles/result.measure-v1alpha2.json",
-      "sha256": "3b8bf696fcf6fa3f4ebbc5941ecd1fc364b2423c45ab19c9c5583b369b1602a1"
+      "sha256": "4ecd01c7e9fef6a77611dd009e46dbaf1854658d0bf159f985d32fb35b20f599"
     },
     "specification": {
       "operation_profile": "openada.operation/specification.evaluate/v1alpha1",
