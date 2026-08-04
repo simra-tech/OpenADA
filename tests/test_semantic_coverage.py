@@ -64,16 +64,16 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     assert payload["inventory"] == {
         "active_profile_count": 9,
         "builtin_provider_mapping_count": 12,
-        "cli_leaf_count": 27,
+        "cli_leaf_count": 28,
         "preflight_assertion_count": 8,
         "profile_count": 12,
         "profile_feature_count": 35,
         "provider_mapping_count": 13,
         "shipped_provider_capability_count": 1,
         "shipped_provider_manifest_count": 1,
-        "surface_count": 27,
+        "surface_count": 28,
     }
-    assert payload["summary"]["row_count"] == 190
+    assert payload["summary"]["row_count"] == 191
     assert payload["summary"]["active_row_count"] == 153
     # Receipt-bound expectations: these require the seven-receipt chain index
     # to be current for the semantic subject under test.
@@ -458,7 +458,7 @@ def test_untouched_hidden_variant_stays_hidden_without_issues() -> None:
     )
     assert cosim_row["lifecycle"] == "experimental"
     assert cosim_row["required_coverage_level"] is None
-    assert payload["summary"]["row_count"] == 190
+    assert payload["summary"]["row_count"] == 191
     assert payload["summary"]["active_row_count"] == 153
 
 

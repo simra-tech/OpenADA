@@ -58,6 +58,7 @@ from .operations.simulate import (
     simulate_legacy_native,
 )
 from .operations.experiment import run_experiment
+from .operations.experiment_template import compile_experiment_template
 from .pdk_bindings import available_pdk_ids, simulatable_pdk_ids
 from .preflight import PREFLIGHT_SPECS
 from .provider_runtime import (
@@ -643,6 +644,52 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-dir",
         required=True,
         help="Absent or empty directory that will retain the complete experiment chain.",
+    )
+    experiment_compile = experiment_commands.add_parser(
+        "compile",
+        help=(
+            "Compile one closed simra.experiment-template/v1 into a validated "
+            "experiment plus absolute specification.evaluate requests."
+        ),
+    )
+    experiment_compile.add_argument(
+        "template",
+        help="Path to one simra.experiment-template/v1 JSON template.",
+    )
+    experiment_compile.add_argument(
+        "--pdk",
+        required=True,
+        help=(
+            "Reviewed PDK binding id; must exactly equal conditions.pdk.id in "
+            "the compiled experiment."
+        ),
+    )
+    experiment_compile.add_argument(
+        "--pdk-root",
+        dest="experiment_pdk_root",
+        help=(
+            "Absolute directory containing the selected PDK tree. Defaults to "
+            "PDK_ROOT; never comes from the template."
+        ),
+    )
+    experiment_compile.add_argument(
+        "--output-dir",
+        required=True,
+        help=(
+            "Absent or empty directory that will retain experiment.spec.json, "
+            "specifications/, and compile-receipt.json."
+        ),
+    )
+    experiment_compile.add_argument(
+        "--set",
+        dest="template_set",
+        action="append",
+        default=[],
+        metavar="NAME=VALUE",
+        help=(
+            "Bind one declared template parameter to a strict SPICE numeric "
+            "scalar. Repeatable; every parameter without a default must be set."
+        ),
     )
 
     measure = commands.add_parser(
@@ -1641,6 +1688,18 @@ def _experiment_pdk_root_argument(args: argparse.Namespace) -> Path | None:
     return None
 
 
+def _template_overrides(values: list[str]) -> list[tuple[str, str]]:
+    overrides: list[tuple[str, str]] = []
+    for raw in values:
+        name, separator, token = raw.partition("=")
+        if not separator or not name or not token:
+            raise ValueError(
+                f"--set expects NAME=VALUE with a non-empty name and value; got {raw!r}"
+            )
+        overrides.append((name, token))
+    return overrides
+
+
 def _simulation_cli_invalid(args: argparse.Namespace, message: str) -> dict:
     backend = args.backend
     if backend is None and getattr(args, "blocks", None) is not None:
@@ -2603,6 +2662,18 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             request_id=args.request_id,
         )
     if args.command == "experiment":
+        if args.experiment_command == "compile":
+            try:
+                overrides = _template_overrides(args.template_set)
+            except ValueError as exc:
+                return _invalid_request("experiment.compile", str(exc))
+            return compile_experiment_template(
+                Path(args.template).expanduser().resolve(),
+                Path(args.output_dir).expanduser().resolve(),
+                pdk=args.pdk,
+                pdk_root=_experiment_pdk_root_argument(args),
+                overrides=overrides,
+            )
         if args.experiment_command != "run":  # pragma: no cover - argparse owns this
             raise ValueError(f"unknown experiment command: {args.experiment_command}")
         return run_experiment(
@@ -2855,6 +2926,8 @@ def _requested_operation(argv: list[str]) -> str:
             continue
         if token.startswith("-"):
             return "openada.invalid_request"
+        if token == "experiment" and "compile" in argv[index + 1 : index + 2]:
+            return "experiment.compile"
         return _COMMAND_OPERATIONS.get(token, "openada.invalid_request")
     return "openada.invalid_request"
 
@@ -2924,6 +2997,29 @@ def _requested_shared_simulation(
 
 
 def _invalid_request(operation: str, message: str) -> dict:
+    if operation == "experiment.compile":
+        return result(
+            "experiment.compile",
+            tool=None,
+            execution=static_execution("invalid_request"),
+            engineering_status="unknown",
+            summary="OpenADA could not parse the template compile request.",
+            diagnostics=[
+                diagnostic("error", "template.document.invalid", message)
+            ],
+            data={
+                "schema": "simra.experiment-template-compile/v1",
+                "refusals": [
+                    {
+                        "code": "template.document.invalid",
+                        "path": "",
+                        "message": message,
+                    }
+                ],
+                "receipt": None,
+                "extensions": {},
+            },
+        )
     if operation == "experiment.run":
         return result(
             "experiment.run",

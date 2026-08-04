@@ -176,6 +176,20 @@
       "extensions": {}
     },
     {
+      "surface_id": "openada.surface/cli.experiment-compile/v1",
+      "command_path": [
+        "experiment",
+        "compile"
+      ],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": [
+        "openada.operation/specification.evaluate/v1alpha1"
+      ],
+      "variants": [],
+      "extensions": {}
+    },
+    {
       "surface_id": "openada.surface/cli.experiment-run/v1",
       "command_path": [
         "experiment",

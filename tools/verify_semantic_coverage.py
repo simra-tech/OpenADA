@@ -136,6 +136,7 @@ SURFACE_CLASSIFICATIONS: dict[tuple[str, ...], str] = {
     ("drc",): "semantic-execution",
     ("drc-compare",): "semantic-execution",
     ("drc-review",): "semantic-execution",
+    ("experiment", "compile"): "semantic-execution",
     ("experiment", "run"): "semantic-execution",
     ("evaluate",): "semantic-execution",
     ("extract",): "semantic-execution",
