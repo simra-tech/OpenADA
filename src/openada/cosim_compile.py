@@ -1071,12 +1071,24 @@ def instantiation_parameter_maps(
     return maps
 
 
+#: Inline comment forms ngspice strips from each PHYSICAL line before
+#: stitching ``+`` continuations (inpcom.c): ``;`` (no whitespace required),
+#: ``//``, and a whitespace-preceded ``$``. Stripping must happen pre-fold —
+#: post-fold stripping lets ``.model evil ; x`` + a ``+`` continuation hide a
+#: protected name from verification while ngspice still binds it.
+_INLINE_COMMENT_RE = re.compile(r";.*|//.*|\s\$.*")
+
+
 def _folded_statements(deck_text: str) -> list[tuple[int, str]]:
-    """Deck statements with ``+`` continuations folded and comments dropped."""
+    """Deck statements with ``+`` continuations folded and comments dropped.
+
+    Mirrors ngspice's parse order: inline comments are removed from each
+    physical line FIRST, then continuations are stitched.
+    """
 
     statements: list[tuple[int, str]] = []
     for number, raw in enumerate(deck_text.splitlines(), start=1):
-        stripped = raw.strip()
+        stripped = _INLINE_COMMENT_RE.sub("", raw).strip()
         if not stripped or stripped.startswith("*"):
             continue
         if stripped.startswith("+") and statements:

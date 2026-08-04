@@ -609,3 +609,25 @@ def test_preload_composition_mismatch_is_refused(tmp_path):
         d.get("code") == "osdi.composition.mismatch" for d in result["diagnostics"]
     )
     assert result["execution"]["command"] == []
+
+
+@native
+def test_direct_binding_refused_through_continuations_and_slash_comments(tmp_path):
+    # ngspice strips comments from each PHYSICAL line before stitching '+'
+    # continuations, so a protected name split behind a comment+continuation
+    # (or a '//' comment) still binds -- and must still be refused
+    from openada.block_library import load_block_library
+    from openada.osdi_compile import OsdiCompileError, compose_blocks_osdi
+
+    library = load_block_library("bhv-core")
+    composition = compose_blocks_osdi(library, ["comparator_clocked_phys"], tmp_path)
+    decks = (
+        "* continuation\n.model evil ; ignored\n"
+        f"+ {DUT}\nN1 a b c d 0 evil\n.end\n",
+        f"* slashes\n.model evil {DUT}//ignored\nN1 a b c d 0 evil\n.end\n",
+        f"* slashes-alias\nN1 a b c d 0 {DUT}__osdi//x\n.end\n",
+    )
+    for deck in decks:
+        with pytest.raises(OsdiCompileError) as caught:
+            composition.verify_deck(deck)
+        assert caught.value.code == "osdi.instantiation.direct", deck
