@@ -8,193 +8,37 @@
   "category": "quantization",
   "description": "On the rising clock crossing of vth_clk (ambiguity band clk_band), samples the sign of V(inp,vss)-V(inn,vss) with positive-feedback hysteresis vhyst, and drives out toward vhi or vlo so the 50% output crossing occurs td after the clock threshold crossing. Output is defined against the vss reference port behind a thevenin rout.",
   "ports": [
-    {
-      "ordinal": 0,
-      "name": "inp",
-      "domain": "electrical",
-      "role": "signal",
-      "reference_port": "vss",
-      "input_loading": {
-        "infinite": true
-      },
-      "output_drive": null
-    },
-    {
-      "ordinal": 1,
-      "name": "inn",
-      "domain": "electrical",
-      "role": "signal",
-      "reference_port": "vss",
-      "input_loading": {
-        "infinite": true
-      },
-      "output_drive": null
-    },
-    {
-      "ordinal": 2,
-      "name": "clk",
-      "domain": "electrical",
-      "role": "clock",
-      "reference_port": "vss",
-      "input_loading": {
-        "infinite": true
-      },
-      "output_drive": null
-    },
-    {
-      "ordinal": 3,
-      "name": "out",
-      "domain": "electrical",
-      "role": "signal",
-      "reference_port": "vss",
-      "input_loading": null,
-      "output_drive": {
-        "kind": "thevenin",
-        "rout_ohm": "rout",
-        "current_limit_amp": null,
-        "edge_convention": "t_rise/t_fall between vlo and vhi levels; td is measured clock-threshold to out 50% crossing"
-      }
-    },
-    {
-      "ordinal": 4,
-      "name": "vss",
-      "domain": "electrical",
-      "role": "reference",
-      "reference_port": null,
-      "input_loading": null,
-      "output_drive": null
-    }
+    {"ordinal": 0, "name": "inp", "domain": "electrical", "role": "signal", "reference_port": "vss", "input_loading": {"infinite": true}, "output_drive": null},
+    {"ordinal": 1, "name": "inn", "domain": "electrical", "role": "signal", "reference_port": "vss", "input_loading": {"infinite": true}, "output_drive": null},
+    {"ordinal": 2, "name": "clk", "domain": "electrical", "role": "clock", "reference_port": "vss", "input_loading": {"infinite": true}, "output_drive": null},
+    {"ordinal": 3, "name": "out", "domain": "electrical", "role": "signal", "reference_port": "vss", "input_loading": null, "output_drive": {"kind": "thevenin", "rout_ohm": "rout", "current_limit_amp": null, "edge_convention": "t_rise/t_fall between vlo and vhi levels; td is measured clock-threshold to out 50% crossing"}},
+    {"ordinal": 4, "name": "vss", "domain": "electrical", "role": "reference", "reference_port": null, "input_loading": null, "output_drive": null}
   ],
   "parameters": [
-    {
-      "name": "vhi",
-      "type": "real",
-      "default": 1.0,
-      "units": "V",
-      "scope": "contract",
-      "description": "Output high level against vss."
-    },
-    {
-      "name": "vlo",
-      "type": "real",
-      "default": 0.0,
-      "units": "V",
-      "scope": "contract",
-      "description": "Output low level against vss."
-    },
-    {
-      "name": "td",
-      "type": "real",
-      "default": 2e-09,
-      "units": "s",
-      "scope": "contract",
-      "range": {
-        "minimum": 1e-11,
-        "exclusive_minimum": true
-      },
-      "description": "Clock-threshold-crossing to output-50%-crossing latency. Must exceed tedge/2 + 7 ps: 7 ps is the largest fixed event-chain overhead across the executable backends (native needs 2 ps, xspice-cosim 7 ps), so every admitted parameterization yields the declared td on both."
-    },
-    {
-      "name": "tedge",
-      "type": "real",
-      "default": 1e-09,
-      "units": "s",
-      "scope": "contract",
-      "range": {
-        "minimum": 1e-12
-      },
-      "description": "Output rise/fall time between vlo and vhi."
-    },
-    {
-      "name": "vhyst",
-      "type": "real",
-      "default": 0.0,
-      "units": "V",
-      "scope": "contract",
-      "range": {
-        "minimum": 0.0
-      },
-      "description": "Full hysteresis width applied as +/-vhyst/2 threshold shift from the retained decision. Exactly zero disables hysteresis."
-    },
-    {
-      "name": "vth_clk",
-      "type": "real",
-      "default": 0.5,
-      "units": "V",
-      "scope": "contract",
-      "description": "Clock event threshold against vss."
-    },
-    {
-      "name": "clk_band",
-      "type": "real",
-      "default": 0.01,
-      "units": "V",
-      "scope": "tuning",
-      "range": {
-        "minimum": 1e-06
-      },
-      "description": "Declared clock ambiguity band; event ordering inside it is unspecified."
-    },
-    {
-      "name": "dif_band",
-      "type": "real",
-      "default": 1e-06,
-      "units": "V",
-      "scope": "tuning",
-      "range": {
-        "minimum": 1e-09
-      },
-      "description": "Declared decision ambiguity band around zero differential input."
-    },
-    {
-      "name": "rout",
-      "type": "real",
-      "default": 100.0,
-      "units": "ohm",
-      "scope": "contract",
-      "range": {
-        "minimum": 0.001
-      },
-      "description": "Thevenin output resistance."
-    }
+    {"name": "vhi", "type": "real", "default": 1.0, "units": "V", "scope": "contract", "description": "Output high level against vss."},
+    {"name": "vlo", "type": "real", "default": 0.0, "units": "V", "scope": "contract", "description": "Output low level against vss."},
+    {"name": "td", "type": "real", "default": 2e-9, "units": "s", "scope": "contract", "range": {"minimum": 1e-11, "exclusive_minimum": true}, "description": "Clock-threshold-crossing to output-50%-crossing latency. Must exceed tedge/2 + 7 ps: 7 ps is the largest fixed event-chain overhead across the executable backends (native needs 2 ps, xspice-cosim 7 ps), so every admitted parameterization yields the declared td on both."},
+    {"name": "tedge", "type": "real", "default": 1e-9, "units": "s", "scope": "contract", "range": {"minimum": 1e-12}, "description": "Output rise/fall time between vlo and vhi."},
+    {"name": "vhyst", "type": "real", "default": 0.0, "units": "V", "scope": "contract", "range": {"minimum": 0.0}, "description": "Full hysteresis width applied as +/-vhyst/2 threshold shift from the retained decision. Exactly zero disables hysteresis."},
+    {"name": "vth_clk", "type": "real", "default": 0.5, "units": "V", "scope": "contract", "description": "Clock event threshold against vss."},
+    {"name": "clk_band", "type": "real", "default": 0.01, "units": "V", "scope": "tuning", "range": {"minimum": 1e-6}, "description": "Declared clock ambiguity band; event ordering inside it is unspecified."},
+    {"name": "dif_band", "type": "real", "default": 1e-6, "units": "V", "scope": "tuning", "range": {"minimum": 1e-9}, "description": "Declared decision ambiguity band around zero differential input."},
+    {"name": "rout", "type": "real", "default": 100.0, "units": "ohm", "scope": "contract", "range": {"minimum": 1e-3}, "description": "Thevenin output resistance."}
   ],
   "state": [
-    {
-      "name": "decision",
-      "init_policy": "deterministic-default",
-      "value_before_first_event": "0 (out at vlo) until the first rising clock event"
-    }
+    {"name": "decision", "init_policy": "deterministic-default", "value_before_first_event": "0 (out at vlo) until the first rising clock event"}
   ],
   "analyses": {
-    "supported": [
-      "tran"
-    ],
+    "supported": ["tran"],
     "unsupported": [
-      {
-        "analysis": "ac",
-        "behavior": "No meaningful small-signal path exists through the event decision; AC results describe only the passive output stage."
-      },
-      {
-        "analysis": "noise",
-        "behavior": "Noise contributions are absent, not zero-modeled; report noise as unavailable."
-      },
-      {
-        "analysis": "op",
-        "behavior": "OP resolves the pre-first-event deterministic default, not a decision."
-      },
-      {
-        "analysis": "dc",
-        "behavior": "DC sweeps do not clock the decision element; the retained decision stays at its default."
-      }
+      {"analysis": "ac", "behavior": "No meaningful small-signal path exists through the event decision; AC results describe only the passive output stage."},
+      {"analysis": "noise", "behavior": "Noise contributions are absent, not zero-modeled; report noise as unavailable."},
+      {"analysis": "op", "behavior": "OP resolves the pre-first-event deterministic default, not a decision."},
+      {"analysis": "dc", "behavior": "DC sweeps do not clock the decision element; the retained decision stays at its default."}
     ]
   },
   "regularization": [
-    {
-      "name": "bridge event delays",
-      "magnitude": "1 ps on internal analog/digital bridges",
-      "scaling_rule": "fixed, subtracted inside the td latency arithmetic",
-      "tested_error_bound": "decision-time error < 2 ps against the declared td"
-    }
+    {"name": "bridge event delays", "magnitude": "1 ps on internal analog/digital bridges", "scaling_rule": "fixed, subtracted inside the td latency arithmetic", "tested_error_bound": "decision-time error < 2 ps against the declared td"}
   ],
   "limitations": [
     "No metastability model: inputs inside dif_band at the clock event resolve deterministically to the LOW decision (out at vlo, hysteresis state low).",
@@ -209,53 +53,27 @@
     "ngspice-native": {
       "file": "comparator_clocked.ngspice.sp",
       "wrapper": "bhv_comparator_clocked_v1",
-      "element_families": [
-        "b-source",
-        "xspice-bridge",
-        "xspice-digital",
-        "spice-primitive"
-      ]
+      "element_families": ["b-source", "xspice-bridge", "xspice-digital", "spice-primitive"]
     },
     "verilog-a": {
       "file": "comparator_clocked.va",
       "module": "bhv_comparator_clocked_v1",
-      "feature_profile": [
-        "contribution-resistive",
-        "contribution-reactive",
-        "ddt",
-        "hidden-state"
-      ],
-      "notes": "Continuous OSDI-compilable backend (no event constructs: the OSDI path refuses @(cross)/transition because ngspice does not honor their sampled semantics). The event contract is realized by continuous stages whose softness sits inside the contract's declared ambiguity bands: the clock gate's aperture spans ~clk_band around vth_clk; the decision boundary sits at +dif_band/2 with a tanh width of dif_band/8, so the dif_band interior resolves LOW deterministically. td and tedge are decoupled by a constant-rate ramp delay generator (soft-clamped integrator) feeding a threshold stage. Measured regularization (tests/test_blocks_osdi_comparator.py): |out-50% latency - td| <= 1% of td + 10 ps over the admitted space (worst measured 0.44%); 10-90 edge = 0.8*tedge within 15% (the native ramp's 10-90); decision-time timestep invariance < 100 ps over a 50x tstep range. Backend-specific limitations: the clk-high (and clk-low) phase must exceed ~td for declared-latency acquisition -- phases under ~0.09*td never decide (deterministic low), phases between decide late; the retained decision is held by a weak bistable regeneration term on the slave (the continuous latch), so it holds indefinitely while the clock is LOW even against leakage/gmin and input reversal (measured to 400 us); the held levels are ~0.0007/0.9993 of full scale, making the effective hysteresis shift 0.9986*vhyst/2; a clock PARKED high couples the slave to the leak-only master, so a decision sags after ~250 us * (td/2 ns) of continuous clk-high hold (the master stays leak-only so OP/DC deterministically resolve the default LOW even with the clock parked high); a clock already high at t=0 holds the deterministic default low until a real rising edge, matching the event backends."
+      "feature_profile": ["event-initial-step", "event-cross", "transition", "hidden-state"]
     },
     "xspice-cosim": {
       "file": "comparator_clocked.cosim.sp",
       "wrapper": "bhv_comparator_clocked_v1",
-      "element_families": [
-        "b-source",
-        "xspice-bridge",
-        "xspice-digital",
-        "spice-primitive"
-      ],
+      "element_families": ["b-source", "xspice-bridge", "xspice-digital", "spice-primitive"],
       "core_file": "comparator_clocked.cosim.v",
       "core_module": "bhv_comparator_clocked_v1_core",
-      "core_inputs": [
-        "clk",
-        "din"
-      ],
-      "core_outputs": [
-        "q"
-      ],
+      "core_inputs": ["clk", "din"],
+      "core_outputs": ["q"],
       "parameter_constraints": [
         {
           "id": "latency-headroom",
           "left": "td",
           "relation": ">",
-          "right_terms": [
-            {
-              "parameter": "tedge",
-              "coefficient": 0.5
-            }
-          ],
+          "right_terms": [{"parameter": "tedge", "coefficient": 0.5}],
           "right_constant": 7e-12,
           "rationale": "The delay stage realizing td is d_buffer(td - tedge/2 - 7p); at or below this bound ngspice would clamp a negative delay and silently return a latency other than the declared td."
         }
@@ -263,9 +81,5 @@
       "notes": "The compiled 2-state core holds its last value on a digital UNKNOWN, so the decision bridge is crisp at +dif_band/2 (same observable boundary as native; in-band inputs decide LOW at the bridge instead of via the dac out_undef mapping). The rising clock event fires at the clk_band in_high crossing, a deterministic choice inside the declared ambiguity band. Latency chain: adc 1p + d_cosim model delay 1p + event-bridge residual 5p + d_buffer (td - tedge/2 - 7p) + dac ramp tedge/2 = td; this backend therefore requires td > tedge/2 + 7 ps."
     }
   },
-  "golden_cases": [
-    "decide-basic",
-    "hysteresis-band",
-    "ambiguity-low"
-  ]
+  "golden_cases": ["decide-basic", "hysteresis-band", "ambiguity-low"]
 }

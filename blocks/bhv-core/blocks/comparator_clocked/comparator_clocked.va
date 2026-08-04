@@ -1,100 +1,44 @@
-// bhv_comparator_clocked_v1 -- continuous, OSDI-compilable Verilog-A backend.
-// No event constructs: the OSDI path refuses @(cross)/transition because
-// ngspice does not honor their sampled semantics (see osdi_compile.py); the
-// contract's event semantics are realized by continuous stages whose softness
-// sits inside the contract's own declared ambiguity bands.
-//
-// Topology (each stage is a transparent continuous equivalent of the physical
-// circuit it stands for):
-//   1. decision:   diff-pair tanh((vind - dif_band/2)/(dif_band/8)) -- the
-//                  boundary and its softness sit INSIDE the declared dif_band
-//                  ambiguity; zero differential resolves LOW deterministically.
-//   2. sampling:   master tracks the decision while clk is LOW and freezes at
-//                  the rising edge; slave acquires the frozen master while clk
-//                  is HIGH and holds while low (master/slave track-and-hold).
-//                  The smooth clock gate's aperture spans ~clk_band, the
-//                  declared clock ambiguity band.
-//   3. delay:      a constant-rate ramp integrator with diode-style soft
-//                  clamps at 0/1 (a current source charging a capacitor into
-//                  clamps -- the physical delay generator), rate set from td.
-//   4. edge/drive: a threshold stage on the ramp whose width realizes tedge,
-//                  behind the contract thevenin rout.
-// td and tedge are therefore independent, as the contract requires.
-//
-// Calibration: the out 50% crossing lands td after the clock threshold
-// crossing; the residual error and its admitted-range bound are MEASURED by
-// the OSDI backend test battery (tests/test_blocks_osdi_comparator.py), not
-// asserted here.
+// bhv_comparator_clocked_v1 -- Verilog-A reference implementation.
+// This source is the language reference for the contract in block.json.
+// Required feature profile: event-cross, transition, hidden-state.
+// It is NOT claimed executable by the platform until a provenance-bound
+// compile/load/simulate operation exists (see the OpenVAF/OSDI step).
 `include "disciplines.vams"
 
 module bhv_comparator_clocked_v1(inp, inn, clk, out, vss);
   inout inp, inn, clk, out, vss;
   electrical inp, inn, clk, out, vss;
-  electrical qm, qs, tm;
 
-  // contract parameters (ranges mirror block.json; the relational
-  // td > tedge/2 + 7 ps constraint is enforced by the block library)
-  parameter real vhi      = 1.0;
-  parameter real vlo      = 0.0;
-  parameter real td       = 2n   from (10p:inf);
-  parameter real tedge    = 1n   from [1p:inf);
-  parameter real vhyst    = 0.0  from [0:inf);
-  parameter real vth_clk  = 0.5;
-  parameter real clk_band = 0.01 from [1u:inf);
-  parameter real dif_band = 1u   from [1n:inf);
-  parameter real rout     = 100  from [1m:inf);
+  parameter real vhi = 1.0;
+  parameter real vlo = 0.0;
+  // The contract floors td at 10 ps AND requires td > tedge/2 + 7 ps (the
+  // largest fixed event-chain overhead across the executable backends). The
+  // relational half cannot be expressed as a parameter range; the block
+  // library enforces it against each instantiation's effective parameters.
+  parameter real td = 2n from (10p:inf);
+  parameter real tedge = 1n from [1p:inf);
+  parameter real vhyst = 0.0 from [0:inf);
+  parameter real vth_clk = 0.5;
+  parameter real rout = 100 from (0:inf);
 
-  real ghi, glo, mh, sh, tmv, vind, dc;
-  real tau_trk, td_ramp, w_tm, vout_tgt;
+  real decision;      // retained decision in {0,1}; deterministic-default 0
+  real vout_target;
 
   analog begin
-    ghi = 0.5*(1.0 + tanh(4.0*(V(clk, vss) - vth_clk)/clk_band));
-    glo = 1.0 - ghi;
-    mh  = V(qm, vss);
-    sh  = V(qs, vss);
-    tmv = V(tm, vss);
-
-    // 1: decision with hysteresis (+/- vhyst/2 shift from the retained
-    // decision) and the deterministic LOW resolution of the dif_band interior
-    vind = V(inp, vss) - V(inn, vss) + vhyst*(sh - 0.5) - dif_band/2.0;
-    dc   = 0.5*(1.0 + tanh(vind/(dif_band/8.0)));
-
-    // 2: master (tracks while clk low, frozen while high) and slave (acquires
-    // while clk high, holds while low).
-    // - The MASTER keeps a plain leak (unique equilibrium): whatever the OP
-    //   solver's stepping history, its final system has one root, so OP/DC
-    //   resolve the deterministic default LOW even with the clock parked high.
-    // - The SLAVE carries a WEAK REGENERATION term (a bistable restoring
-    //   force, stable near 0.0007/0.9993, unstable at 0.5 -- the continuous
-    //   latch that makes a real comparator hold): at 1% of tracking strength
-    //   it never disturbs acquisition, but it overwhelms leakage/gmin so the
-    //   retained decision holds INDEFINITELY while the clock is low. The one
-    //   traded-off deviation: a clock PARKED high couples the slave to the
-    //   leaking master, so the output sags after ~1e6*tau_trk (documented).
-    tau_trk = td/8.0;
-    I(qm, vss) <+ 1e-6 * glo * (mh - dc);
-    I(qm, vss) <+ 1e-12 * mh;
-    I(qm, vss) <+ 1e-6 * tau_trk * ddt(mh);
-    I(qs, vss) <+ 1e-6 * ghi * (sh - mh);
-    I(qs, vss) <+ 1e-8 * (sh - 0.5*(1.0 + tanh(8.0*(sh - 0.5))));
-    I(qs, vss) <+ 1e-6 * tau_trk * ddt(sh);
-
-    // 3: delay ramp -- d(tmv)/dt = (2*sh-1)/td_ramp between soft clamps whose
-    // equilibria are exactly 0 and 1; the 50% output crossing lands
-    // 0.5*td_ramp after the ramp leaves the clamp, so the half-time is td
-    // minus the measured acquisition and output-stage delays (calibrated
-    // constants; the battery measures the residual over the admitted range)
-    td_ramp = 2.0*(td - 1.43*tau_trk - tedge/27.0);
-    I(tm, vss) <+ 1e-6 * (td_ramp*ddt(tmv) - (2.0*sh - 1.0));
-    I(tm, vss) <+ 1e-6 * limexp((tmv - 1.0)/0.01);
-    I(tm, vss) <+ -1e-6 * limexp(-tmv/0.01);
-
-    // 4: threshold/edge stage (temporal 10-90 = 0.8*tedge, matching the
-    // native ramp's 10-90) behind the thevenin output; the output pole is
-    // kept fast so the edge is set by the threshold width, not the drive
-    w_tm = 0.364*tedge/td_ramp;
-    vout_tgt = vlo + (vhi - vlo)*0.5*(1.0 + tanh((tmv - 0.5)/w_tm));
-    I(out, vss) <+ (V(out, vss) - vout_tgt)/rout;
-    I(out, vss) <+ (tedge/30.0/rout) * ddt(V(out, vss));
+    @(initial_step) begin
+      decision = 0.0;
+      vout_target = vlo;
+    end
+    @(cross(V(clk, vss) - vth_clk, +1)) begin
+      if ((V(inp, vss) - V(inn, vss) + vhyst * (decision - 0.5)) > 0.0)
+        decision = 1.0;
+      else
+        decision = 0.0;
+      vout_target = decision > 0.5 ? vhi : vlo;
+    end
+    // td is the clock-threshold to output-50% latency; transition's delay
+    // argument is therefore td - tedge/2, mirroring the native event chain.
+    V(out, vss) <+ transition(vout_target, td - tedge/2, tedge, tedge)
+                   + rout * I(out, vss);
   end
 endmodule

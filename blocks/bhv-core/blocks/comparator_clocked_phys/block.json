@@ -1,0 +1,235 @@
+{
+  "schema": "openada.behavioral-block/v0alpha1",
+  "block_id": "comparator_clocked_phys",
+  "contract_version": "0.1.0",
+  "abi_version": 1,
+  "implementation_version": "0.1.0",
+  "title": "Clocked comparator, continuous-time physical macromodel",
+  "category": "quantization",
+  "description": "Continuous-time sibling of comparator_clocked with its OWN contract: a transparent track-and-hold macromodel (tanh diff-pair decision, master/slave sampling gated by a smooth clock, ramp delay generator, slew-limited edge, thevenin rout). It samples on the rising clock crossing of vth_clk with a FINITE acquisition aperture, exhibits overdrive-dependent decision time near the dif_band boundary (physical behavior), and holds the retained decision by weak regeneration. Choose comparator_clocked for ideal event semantics; choose this block for a transparent, OSDI-compilable, exportable continuous model.",
+  "ports": [
+    {
+      "ordinal": 0,
+      "name": "inp",
+      "domain": "electrical",
+      "role": "signal",
+      "reference_port": "vss",
+      "input_loading": {
+        "infinite": true
+      },
+      "output_drive": null
+    },
+    {
+      "ordinal": 1,
+      "name": "inn",
+      "domain": "electrical",
+      "role": "signal",
+      "reference_port": "vss",
+      "input_loading": {
+        "infinite": true
+      },
+      "output_drive": null
+    },
+    {
+      "ordinal": 2,
+      "name": "clk",
+      "domain": "electrical",
+      "role": "clock",
+      "reference_port": "vss",
+      "input_loading": {
+        "infinite": true
+      },
+      "output_drive": null
+    },
+    {
+      "ordinal": 3,
+      "name": "out",
+      "domain": "electrical",
+      "role": "signal",
+      "reference_port": "vss",
+      "input_loading": null,
+      "output_drive": {
+        "kind": "thevenin",
+        "rout_ohm": "rout",
+        "current_limit_amp": null,
+        "edge_convention": "t_rise/t_fall between vlo and vhi levels; td is measured clock-threshold to out 50% crossing"
+      }
+    },
+    {
+      "ordinal": 4,
+      "name": "vss",
+      "domain": "electrical",
+      "role": "reference",
+      "reference_port": null,
+      "input_loading": null,
+      "output_drive": null
+    }
+  ],
+  "parameters": [
+    {
+      "name": "vhi",
+      "type": "real",
+      "default": 1.0,
+      "units": "V",
+      "scope": "contract",
+      "description": "Output high level against vss."
+    },
+    {
+      "name": "vlo",
+      "type": "real",
+      "default": 0.0,
+      "units": "V",
+      "scope": "contract",
+      "description": "Output low level against vss."
+    },
+    {
+      "name": "td",
+      "type": "real",
+      "default": 2e-09,
+      "units": "s",
+      "scope": "contract",
+      "range": {
+        "minimum": 1e-11,
+        "exclusive_minimum": true
+      },
+      "description": "Clock-threshold-crossing to output-50%-crossing latency. Must exceed tedge/2 + 7 ps: 7 ps is the largest fixed event-chain overhead across the executable backends (native needs 2 ps, xspice-cosim 7 ps), so every admitted parameterization yields the declared td on both."
+    },
+    {
+      "name": "tedge",
+      "type": "real",
+      "default": 1e-09,
+      "units": "s",
+      "scope": "contract",
+      "range": {
+        "minimum": 1e-12
+      },
+      "description": "Output rise/fall time between vlo and vhi."
+    },
+    {
+      "name": "vhyst",
+      "type": "real",
+      "default": 0.0,
+      "units": "V",
+      "scope": "contract",
+      "range": {
+        "minimum": 0.0
+      },
+      "description": "Full hysteresis width applied as +/-vhyst/2 threshold shift from the retained decision. Exactly zero disables hysteresis."
+    },
+    {
+      "name": "vth_clk",
+      "type": "real",
+      "default": 0.5,
+      "units": "V",
+      "scope": "contract",
+      "description": "Clock event threshold against vss."
+    },
+    {
+      "name": "clk_band",
+      "type": "real",
+      "default": 0.01,
+      "units": "V",
+      "scope": "tuning",
+      "range": {
+        "minimum": 1e-06
+      },
+      "description": "Declared clock ambiguity band; event ordering inside it is unspecified."
+    },
+    {
+      "name": "dif_band",
+      "type": "real",
+      "default": 1e-06,
+      "units": "V",
+      "scope": "tuning",
+      "range": {
+        "minimum": 1e-09
+      },
+      "description": "Declared decision ambiguity band around zero differential input."
+    },
+    {
+      "name": "rout",
+      "type": "real",
+      "default": 100.0,
+      "units": "ohm",
+      "scope": "contract",
+      "range": {
+        "minimum": 0.001
+      },
+      "description": "Thevenin output resistance."
+    }
+  ],
+  "state": [
+    {
+      "name": "decision",
+      "init_policy": "deterministic-default",
+      "value_before_first_event": "held low (~0.0007 of full scale) until the first rising clock crossing; OP/DC resolve this default even with the clock parked high (leak-only master has a unique operating point)"
+    }
+  ],
+  "analyses": {
+    "supported": [
+      "tran",
+      "op",
+      "dc"
+    ],
+    "unsupported": [
+      {
+        "analysis": "ac",
+        "behavior": "No meaningful small-signal path through the sampled decision; AC describes only the passive output stage."
+      },
+      {
+        "analysis": "noise",
+        "behavior": "Noise contributions are absent, not zero-modeled; report noise as unavailable."
+      }
+    ]
+  },
+  "regularization": [
+    {
+      "name": "decision latency calibration",
+      "magnitude": "|out-50% latency - td| <= 3% of td + 10 ps",
+      "scaling_rule": "ramp half-time compensated for acquisition (tau_trk) and the tedge/2 slew delay; internal time constants scale with td and headroom",
+      "tested_error_bound": "worst 2.64% of td at the td~tedge/2 boundary, <=1% elsewhere (battery), at tstep <= td/10; coarser tstep adds ~tstep/2"
+    },
+    {
+      "name": "decision aperture and boundary softness",
+      "magnitude": "clock aperture ~clk_band; decision boundary +dif_band/2, tanh width dif_band/8",
+      "scaling_rule": "both sit inside the contract's declared ambiguity bands",
+      "tested_error_bound": "zero differential resolves low; overdrive >= 2*dif_band restores the declared latency (battery)"
+    },
+    {
+      "name": "edge realization",
+      "magnitude": "slew-limited output: linear ramp spanning tedge, 10-90 = 0.8*tedge within 15%",
+      "scaling_rule": "slew rate = (vhi-vlo)/tedge independent of td",
+      "tested_error_bound": "measured rising and falling on the tedge grid (battery)"
+    }
+  ],
+  "limitations": [
+    "Track-and-hold, not an ideal edge sampler: acquisition needs the clk-high (and clk-low) phase to exceed ~td for the declared latency; phases under ~0.09*td never decide (deterministic low) and intermediate phases decide late.",
+    "Decision time is overdrive-dependent near the dif_band boundary: differentials within ~2*dif_band above the boundary decide arbitrarily slowly (physical metastability analogue); the latency bound applies for overdrive >= 2*dif_band.",
+    "The retained decision holds indefinitely while the clock is LOW (weak regeneration); a clock PARKED high couples the slave to the leak-only master and the held output sags after ~250 us * (td/2 ns).",
+    "The clock must start at a rail (or below vth_clk - clk_band/2) at t=0; starting inside the clk_band aperture can resolve the current input decision at OP.",
+    "No metastability model beyond the deterministic-low dif_band interior; no kickback, input offset parameter, or supply-current model.",
+    "td must exceed tedge/2 + 7 ps (shared relational constraint); below it the delay-generator headroom is floored and td is not honored."
+  ],
+  "timing": {
+    "ambiguity_window": "clk_band around vth_clk; dif_band around zero differential; both declared parameters.",
+    "latency_definition": "td = time from clock crossing vth_clk (rising) to out crossing (vhi+vlo)/2, within the declared 3%+10ps regularization bound for overdrive >= 2*dif_band and clock phases >= td."
+  },
+  "backends": {
+    "verilog-a": {
+      "file": "comparator_clocked_phys.va",
+      "module": "bhv_comparator_clocked_phys_v1",
+      "feature_profile": [
+        "contribution-resistive",
+        "contribution-reactive",
+        "ddt",
+        "hidden-state"
+      ],
+      "notes": "The only backend: continuous Verilog-A compiled through the reviewed OSDI path (compiles on classic openvaf 23.5.0 and openvaf-r). The event-construct screen (osdi.source.event_constructs) passes this source by construction. Battery: tests/test_blocks_osdi_comparator.py."
+    }
+  },
+  "golden_cases": [
+    "decide-basic",
+    "hysteresis-band",
+    "ambiguity-low"
+  ]
+}

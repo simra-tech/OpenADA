@@ -1,0 +1,70 @@
+// bhv_comparator_clocked_phys_v1 -- continuous-time clocked comparator,
+// OSDI-compilable (no event constructs; the OSDI path refuses those because
+// ngspice does not honor their sampled semantics -- see osdi_compile.py).
+//
+// This block is the TRANSPARENT CONTINUOUS sibling of comparator_clocked: the
+// same interface, but its OWN contract, because a continuous track-and-hold
+// is not an ideal edge sampler. Its declared semantics (this contract, not
+// the event cell's): finite acquisition (setup ~ tau_trk = min(td/8,
+// headroom/6)), minimum clock phase for a decision, overdrive-dependent
+// decision time near the dif_band boundary (like a real comparator), a weak
+// regenerative hold (indefinite while clk is low), and a measured latency
+// bound of 3% of td + 10 ps over the admitted space.
+//
+// Topology (each stage the transparent continuous equivalent of the physical
+// circuit): tanh diff-pair decision (boundary +dif_band/2, width dif_band/8)
+// -> master/slave track-and-hold gated by a smooth clock (aperture ~clk_band)
+// -> constant-rate ramp delay generator with diode soft clamps -> sharp
+// threshold -> slew-limited output stage (linear ramp spanning tedge, 50% at
+// tedge/2 -- the same delay+ramp chain as the native event backend) -> pure
+// thevenin rout.
+`include "disciplines.vams"
+module bhv_comparator_clocked_phys_v1(inp, inn, clk, out, vss);
+  inout inp, inn, clk, out, vss;
+  electrical inp, inn, clk, out, vss;
+  electrical qm, qs, tm, sl;
+  parameter real vhi      = 1.0;
+  parameter real vlo      = 0.0;
+  parameter real td       = 2n   from (10p:inf);
+  parameter real tedge    = 1n   from [1p:inf);
+  parameter real vhyst    = 0.0  from [0:inf);
+  parameter real vth_clk  = 0.5;
+  parameter real clk_band = 0.01 from [1u:inf);
+  parameter real dif_band = 1u   from [1n:inf);
+  parameter real rout     = 100  from [1m:inf);
+  real ghi, glo, mh, sh, tmv, slv, vind, dc, q;
+  real hd, tau_trk, td_ramp, w_tm;
+  analog begin
+    ghi = 0.5*(1.0 + tanh(4.0*(V(clk, vss) - vth_clk)/clk_band));
+    glo = 1.0 - ghi;
+    mh  = V(qm, vss);
+    sh  = V(qs, vss);
+    tmv = V(tm, vss);
+    slv = V(sl, vss);
+    vind = V(inp, vss) - V(inn, vss) + vhyst*(sh - 0.5) - dif_band/2.0;
+    dc   = 0.5*(1.0 + tanh(vind/(dif_band/8.0)));
+    // headroom above the native chain's tedge/2; floored at the contract's 7ps
+    hd = (td - tedge/2.0 > 7p) ? td - tedge/2.0 : 7p;
+    tau_trk = (td/8.0 < hd/6.0) ? td/8.0 : hd/6.0;
+    I(qm, vss) <+ 1e-6 * glo * (mh - dc);
+    I(qm, vss) <+ 1e-12 * mh;
+    I(qm, vss) <+ 1e-6 * tau_trk * ddt(mh);
+    I(qs, vss) <+ 1e-6 * ghi * (sh - mh);
+    I(qs, vss) <+ 1e-8 * (sh - 0.5*(1.0 + tanh(8.0*(sh - 0.5))));
+    I(qs, vss) <+ 1e-6 * tau_trk * ddt(sh);
+    // delay ramp sized so 50%-out lands at td: ramp half-time = hd - cal*tau_trk
+    td_ramp = 2.0*(hd - 1.17*tau_trk);
+    I(tm, vss) <+ 1e-6 * (td_ramp*ddt(tmv) - (2.0*sh - 1.0));
+    I(tm, vss) <+ 1e-6 * limexp((tmv - 1.0)/0.01);
+    I(tm, vss) <+ -1e-6 * limexp(-tmv/0.01);
+    // sharp threshold (always saturates) -> slew-limited stage: linear ramp
+    // 0..1 in tedge (native dac-ramp equivalent), 50% at tedge/2
+    // threshold width: sharp enough to always saturate the rails, but never
+    // slower than the slew stage it feeds (temporal width <= ~0.4*tedge)
+    w_tm = (0.02 < 0.2*tedge/td_ramp) ? 0.02 : 0.2*tedge/td_ramp;
+    q = 0.5*(1.0 + tanh((tmv - 0.5)/w_tm));
+    I(sl, vss) <+ 1e-6 * (tedge*ddt(slv) - tanh(40.0*(q - slv)));
+    // pure thevenin output
+    I(out, vss) <+ (V(out, vss) - (vlo + (vhi - vlo)*slv))/rout;
+  end
+endmodule

@@ -1,9 +1,9 @@
 {
   "schema": "openada.behavioral-block-library/v0alpha1",
   "library_id": "bhv-core",
-  "library_version": "0.1.0",
+  "library_version": "0.2.0",
   "title": "Core behavioral block library",
-  "description": "Reviewed technology-free behavioral blocks for functional circuit reconstruction: switching, amplification, sampling, quantization and timing cells with closed contracts, ngspice-native implementations behind stable bhv_<block>_v<abi> wrappers, and Verilog-A reference sources for the future compiled path.",
+  "description": "Reviewed technology-free behavioral blocks for functional circuit reconstruction: switching, amplification, sampling, quantization and timing cells with closed contracts, ngspice-native implementations behind stable bhv_<block>_v<abi> wrappers, Verilog-A sources compiled through the reviewed OSDI path where continuous, and event-cell Verilog-A references for contracts whose sampled semantics the OSDI path cannot honor.",
   "backend_requirements": {
     "simulators": [
       {
@@ -22,6 +22,10 @@
       "contract": "blocks/comparator_clocked/block.json"
     },
     {
+      "block_id": "comparator_clocked_phys",
+      "contract": "blocks/comparator_clocked_phys/block.json"
+    },
+    {
       "block_id": "opamp_1p",
       "contract": "blocks/opamp_1p/block.json"
     },
@@ -34,8 +38,8 @@
     {
       "path": "blocks/comparator_clocked/block.json",
       "role": "contract",
-      "bytes": 10059,
-      "sha256": "c5b28f7f972d80518c2a008f7da7741215219f4c6b33ccf774e0dcec2bd7654c"
+      "bytes": 7019,
+      "sha256": "e9d87a413ad9df714e6d13c652621815e5dcebf96b0341d2abb229a4bbac8434"
     },
     {
       "path": "blocks/comparator_clocked/cases/ambiguity-low.json",
@@ -76,8 +80,38 @@
     {
       "path": "blocks/comparator_clocked/comparator_clocked.va",
       "role": "verilog-a",
-      "bytes": 5205,
-      "sha256": "8544f6e240aaa50809cb1785361ff54fc1df11fb7cf71fcb697f4d12ba22d3cf"
+      "bytes": 1779,
+      "sha256": "618e21d11c600385ca6a188afed5ef18209f4a28bec60e2a509825afc4e32656"
+    },
+    {
+      "path": "blocks/comparator_clocked_phys/block.json",
+      "role": "contract",
+      "bytes": 8646,
+      "sha256": "c7f3315494b8e5afefb9605d5ee377b418da0534ac0458f6ebc38bd1943f32bf"
+    },
+    {
+      "path": "blocks/comparator_clocked_phys/cases/ambiguity-low.json",
+      "role": "golden-case",
+      "bytes": 1109,
+      "sha256": "f008b17784d6b66a66c99c0ad8a1fbfe74cc2764270ff52c4a7c38b4e5ca3b59"
+    },
+    {
+      "path": "blocks/comparator_clocked_phys/cases/decide-basic.json",
+      "role": "golden-case",
+      "bytes": 1550,
+      "sha256": "34a56eedda446aaedb13f2372c87be01e2c966277accb8ca11a9b1a39e6e7cd9"
+    },
+    {
+      "path": "blocks/comparator_clocked_phys/cases/hysteresis-band.json",
+      "role": "golden-case",
+      "bytes": 1432,
+      "sha256": "9a98e8ddb5e5c11c590fdf8c071c68f0c39f8138189c2ad19476a0dc396492cb"
+    },
+    {
+      "path": "blocks/comparator_clocked_phys/comparator_clocked_phys.va",
+      "role": "verilog-a",
+      "bytes": 3578,
+      "sha256": "c9dc4707cf2036766229ea79d196ed0cb98c4a391d3e31b82332272bad6cda49"
     },
     {
       "path": "blocks/opamp_1p/block.json",
