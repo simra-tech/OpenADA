@@ -58,6 +58,7 @@ from .operations.simulate import (
     simulate_legacy_native,
 )
 from .operations.experiment import run_experiment
+from .operations.experiment_template import compile_experiment_template
 from .pdk_bindings import available_pdk_ids, simulatable_pdk_ids
 from .preflight import PREFLIGHT_SPECS
 from .provider_runtime import (
@@ -644,6 +645,52 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Absent or empty directory that will retain the complete experiment chain.",
     )
+    experiment_compile = experiment_commands.add_parser(
+        "compile",
+        help=(
+            "Compile one closed simra.experiment-template/v1 into a validated "
+            "experiment plus absolute specification.evaluate requests."
+        ),
+    )
+    experiment_compile.add_argument(
+        "template",
+        help="Path to one simra.experiment-template/v1 JSON template.",
+    )
+    experiment_compile.add_argument(
+        "--pdk",
+        required=True,
+        help=(
+            "Reviewed PDK binding id; must exactly equal conditions.pdk.id in "
+            "the compiled experiment."
+        ),
+    )
+    experiment_compile.add_argument(
+        "--pdk-root",
+        dest="experiment_pdk_root",
+        help=(
+            "Absolute directory containing the selected PDK tree. Defaults to "
+            "PDK_ROOT; never comes from the template."
+        ),
+    )
+    experiment_compile.add_argument(
+        "--output-dir",
+        required=True,
+        help=(
+            "Absent or empty directory that will retain experiment.spec.json, "
+            "specifications/, and compile-receipt.json."
+        ),
+    )
+    experiment_compile.add_argument(
+        "--set",
+        dest="template_set",
+        action="append",
+        default=[],
+        metavar="NAME=VALUE",
+        help=(
+            "Bind one declared template parameter to a strict SPICE numeric "
+            "scalar. Repeatable; every parameter without a default must be set."
+        ),
+    )
 
     measure = commands.add_parser(
         "measure",
@@ -758,6 +805,7 @@ def build_parser() -> argparse.ArgumentParser:
             "transfer.metric.kind must be one of:\n"
             "  low_frequency_gain_db     dB    output/input, identical operand units\n"
             "  low_frequency_impedance   Ohm   output in V over input in A\n"
+            "  ac_magnitude_at_frequency dB    ratio magnitude at metric.at {value, unit: Hz}\n"
             "  bandwidth_3db             Hz    unique falling reference-minus-3 dB crossing\n"
             "  unity_gain_frequency      Hz    unique falling 0 dB crossing\n"
             "  phase_margin              deg   requires interpretation 'loop-gain-negative-feedback'\n\n"
@@ -1022,7 +1070,7 @@ def _overrides(values: list[str]) -> dict[str, str]:
 
 def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
     conformance_id = "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
-    typed_conformance_id = "typed-evidence-measurement-specification-v0alpha1"
+    typed_conformance_id = "typed-evidence-measurement-specification-v0alpha2"
     records: list[dict] = []
     for alias, driver in sorted(BUILTIN_DRIVERS.items()):
         tool = tools.get(driver.native_tool)
@@ -1082,11 +1130,11 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
             },
             {
                 "provider_id": "org.openada.kernel.typed-evidence",
-                "provider_version": "1.0.0",
+                "provider_version": "1.1.0",
                 "provider_kind": "evidence-kernel",
                 "availability": "available",
                 "native_product": None,
-                "operation_profile": "openada.operation/result.measure/v1alpha1",
+                "operation_profile": "openada.operation/result.measure/v1alpha2",
                 "operation_profile_schema": "openada.operation-profile/v0alpha2",
                 "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
                 "result_schema": "openada.result/v0alpha1",
@@ -1131,12 +1179,12 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
             },
             {
                 "provider_id": "org.openada.kernel.transfer-evidence",
-                "provider_version": "1.0.0",
+                "provider_version": "1.1.0",
                 "provider_kind": "evidence-kernel",
                 "availability": "available",
                 "native_product": None,
                 "operation_profile": (
-                    "openada.operation/result.transfer.measure/v1alpha1"
+                    "openada.operation/result.transfer.measure/v1alpha2"
                 ),
                 "operation_profile_schema": "openada.operation-profile/v0alpha2",
                 "assertion_profile": (
@@ -1150,6 +1198,7 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                         "id": {
                             "low_frequency_gain_db": "openada.feature/transfer.low-frequency-gain/v1alpha1",
                             "low_frequency_impedance": "openada.feature/transfer.low-frequency-impedance/v1alpha1",
+                            "ac_magnitude_at_frequency": "openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
                             "bandwidth_3db": "openada.feature/transfer.bandwidth-3db/v1alpha1",
                             "unity_gain_frequency": "openada.feature/transfer.unity-gain-frequency/v1alpha1",
                             "phase_margin": "openada.feature/transfer.phase-margin/v1alpha1",
@@ -1641,6 +1690,18 @@ def _experiment_pdk_root_argument(args: argparse.Namespace) -> Path | None:
     return None
 
 
+def _template_overrides(values: list[str]) -> list[tuple[str, str]]:
+    overrides: list[tuple[str, str]] = []
+    for raw in values:
+        name, separator, token = raw.partition("=")
+        if not separator or not name or not token:
+            raise ValueError(
+                f"--set expects NAME=VALUE with a non-empty name and value; got {raw!r}"
+            )
+        overrides.append((name, token))
+    return overrides
+
+
 def _simulation_cli_invalid(args: argparse.Namespace, message: str) -> dict:
     backend = args.backend
     if backend is None and getattr(args, "blocks", None) is not None:
@@ -1835,12 +1896,12 @@ def _measurement_record(document: dict) -> dict:
     ):
         raise ValueError("the transfer measurement evidence record is incomplete")
     profile_id = {
-        "result.measure": "openada.operation/result.measure/v1alpha1",
+        "result.measure": "openada.operation/result.measure/v1alpha2",
         "result.spectral.measure": (
             "openada.operation/result.spectral.measure/v1alpha1"
         ),
         "result.transfer.measure": (
-            "openada.operation/result.transfer.measure/v1alpha1"
+            "openada.operation/result.transfer.measure/v1alpha2"
         ),
     }[envelope_operation]
     profile = load_operation_profile(profile_id)
@@ -1872,7 +1933,7 @@ def _measurement_record(document: dict) -> dict:
         raise ValueError("the result.measure envelope protocol record is incomplete")
     expected_protocol = {
         "result.measure": {
-            "operation_profile": "openada.operation/result.measure/v1alpha1",
+            "operation_profile": "openada.operation/result.measure/v1alpha2",
             "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
             "implementation_id": "org.openada.kernel.typed-evidence",
         },
@@ -1882,7 +1943,7 @@ def _measurement_record(document: dict) -> dict:
             "implementation_id": "org.openada.kernel.spectral-evidence",
         },
         "result.transfer.measure": {
-            "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+            "operation_profile": "openada.operation/result.transfer.measure/v1alpha2",
             "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
             "implementation_id": "org.openada.kernel.transfer-evidence",
         },
@@ -2603,6 +2664,18 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             request_id=args.request_id,
         )
     if args.command == "experiment":
+        if args.experiment_command == "compile":
+            try:
+                overrides = _template_overrides(args.template_set)
+            except ValueError as exc:
+                return _invalid_request("experiment.compile", str(exc))
+            return compile_experiment_template(
+                Path(args.template).expanduser().resolve(),
+                Path(args.output_dir).expanduser().resolve(),
+                pdk=args.pdk,
+                pdk_root=_experiment_pdk_root_argument(args),
+                overrides=overrides,
+            )
         if args.experiment_command != "run":  # pragma: no cover - argparse owns this
             raise ValueError(f"unknown experiment command: {args.experiment_command}")
         return run_experiment(
@@ -2855,6 +2928,8 @@ def _requested_operation(argv: list[str]) -> str:
             continue
         if token.startswith("-"):
             return "openada.invalid_request"
+        if token == "experiment" and "compile" in argv[index + 1 : index + 2]:
+            return "experiment.compile"
         return _COMMAND_OPERATIONS.get(token, "openada.invalid_request")
     return "openada.invalid_request"
 
@@ -2924,6 +2999,29 @@ def _requested_shared_simulation(
 
 
 def _invalid_request(operation: str, message: str) -> dict:
+    if operation == "experiment.compile":
+        return result(
+            "experiment.compile",
+            tool=None,
+            execution=static_execution("invalid_request"),
+            engineering_status="unknown",
+            summary="OpenADA could not parse the template compile request.",
+            diagnostics=[
+                diagnostic("error", "template.document.invalid", message)
+            ],
+            data={
+                "schema": "simra.experiment-template-compile/v1",
+                "refusals": [
+                    {
+                        "code": "template.document.invalid",
+                        "path": "",
+                        "message": message,
+                    }
+                ],
+                "receipt": None,
+                "extensions": {},
+            },
+        )
     if operation == "experiment.run":
         return result(
             "experiment.run",

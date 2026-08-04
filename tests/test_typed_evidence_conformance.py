@@ -12,7 +12,7 @@ import pytest
 
 
 ROOT = Path(__file__).parents[1]
-BUNDLE = ROOT / "conformance" / "typed-evidence-v0alpha1"
+BUNDLE = ROOT / "conformance" / "typed-evidence-v0alpha2"
 
 
 def _load_verifier():
@@ -33,10 +33,10 @@ def test_manifest_binds_every_typed_evidence_feature() -> None:
     manifest = VERIFY.load_manifest()
     cases = VERIFY.load_cases(manifest)
 
-    assert manifest["id"] == "typed-evidence-measurement-specification-v0alpha1"
-    assert len(manifest["features"]["measurement"]) == 9
+    assert manifest["id"] == "typed-evidence-measurement-specification-v0alpha2"
+    assert len(manifest["features"]["measurement"]) == 10
     assert len(manifest["features"]["specification"]) == 2
-    assert len(cases["measurement_cases"]) == 10
+    assert len(cases["measurement_cases"]) == 13
     assert len(cases["specification_cases"]) == 7
 
 
@@ -66,7 +66,7 @@ def test_runner_record_passes_independent_verification_and_tamper_fails(
     verification = VERIFY.verify_evidence(evidence)
     assert verification["status"] == "pass"
     assert verification["verified_cases"] == {
-        "measurement": 10,
+        "measurement": 13,
         "specification": 7,
     }
 

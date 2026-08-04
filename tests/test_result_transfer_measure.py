@@ -24,7 +24,7 @@ PROFILE_SCHEMA = json.loads(
     )
 )
 TRANSFER_PROFILE = json.loads(
-    (ROOT / "profiles" / "result.transfer.measure-v1alpha1.json").read_text(
+    (ROOT / "profiles" / "result.transfer.measure-v1alpha2.json").read_text(
         encoding="utf-8"
     )
 )
@@ -108,6 +108,7 @@ def _request(
     units = {
         "low_frequency_gain_db": "dB",
         "low_frequency_impedance": "Ohm",
+        "ac_magnitude_at_frequency": "dB",
         "bandwidth_3db": "Hz",
         "unity_gain_frequency": "Hz",
         "phase_margin": "deg",
@@ -607,3 +608,185 @@ def test_every_advertised_metric_kind_has_a_declared_feature_and_unit() -> None:
     }
     assert declared == set(TRANSFER_METRIC_KINDS)
     assert set(_METRIC_UNITS) == set(TRANSFER_METRIC_KINDS)
+
+
+def _at_request(at_hz: float) -> dict:
+    request = _request("ac_magnitude_at_frequency")
+    request["metric"]["at"] = {"value": at_hz, "unit": "Hz"}
+    return request
+
+
+def test_ac_magnitude_exact_axis_hit_returns_simulated_value() -> None:
+    payload = measure_transfer(_series(), _at_request(100.0))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["value"] == pytest.approx(-5.0)
+    assert measured["unit"] == "dB"
+    assert measured["location"] == {"value": 100.0, "unit": "Hz"}
+    _assert_envelope(payload)
+
+
+def test_ac_magnitude_interpolates_db_over_log10_frequency() -> None:
+    # The log midpoint of 10 and 100 Hz interpolates the dB midpoint of
+    # 15 and -5 dB, exactly as the frozen method's interpolation declares.
+    payload = measure_transfer(_series(), _at_request(math.sqrt(10.0 * 100.0)))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["value"] == pytest.approx(5.0)
+    _assert_envelope(payload)
+
+
+def test_ac_magnitude_domain_endpoints_are_in_domain() -> None:
+    for at_hz, expected_db in ((1.0, 20.0), (1000.0, -20.0)):
+        payload = measure_transfer(_series(), _at_request(at_hz))
+        assert payload["engineering"]["status"] == "pass"
+        assert payload["data"]["measurement"]["value"] == pytest.approx(expected_db)
+
+
+@pytest.mark.parametrize("at_hz", [0.5, 2000.0])
+def test_ac_magnitude_out_of_domain_is_invalid_not_not_found(at_hz: float) -> None:
+    payload = measure_transfer(_series(), _at_request(at_hz))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "transfer.domain.invalid"
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda request: request["metric"].pop("at"),
+        lambda request: request["metric"]["at"].update({"unit": "kHz"}),
+        lambda request: request["metric"]["at"].update({"value": 0.0}),
+        lambda request: request["metric"]["at"].update({"value": -10.0}),
+        lambda request: request["metric"]["at"].update({"value": True}),
+    ],
+)
+def test_ac_magnitude_malformed_at_is_refused(mutate) -> None:
+    request = _at_request(100.0)
+    mutate(request)
+    payload = measure_transfer(_series(), request)
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] in {
+        "transfer.request.invalid",
+        "transfer.unit.mismatch",
+    }
+
+
+def test_at_is_forbidden_for_every_other_metric_kind() -> None:
+    request = _request("low_frequency_gain_db")
+    request["metric"]["at"] = {"value": 100.0, "unit": "Hz"}
+    payload = measure_transfer(_series(), request)
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "transfer.request.invalid"
+
+
+def test_ac_magnitude_request_digest_includes_at() -> None:
+    a = measure_transfer(_series(), _at_request(100.0))
+    b = measure_transfer(_series(), _at_request(10.0))
+    assert (
+        a["data"]["measurement"]["request_sha256"]
+        != b["data"]["measurement"]["request_sha256"]
+    )
+
+
+def test_unrepresentable_integer_at_is_an_invalid_request() -> None:
+    request = _at_request(100.0)
+    request["metric"]["at"]["value"] = 10**309
+    payload = measure_transfer(_series(), request)
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "transfer.request.invalid"
+
+
+def test_log_colliding_adjacent_frequencies_still_interpolate() -> None:
+    # Adjacent frequencies near 1e300 whose log10 values round to the same
+    # double: the difference form divides by zero; the log-RATIO form keeps
+    # the tiny nonzero spacing and interpolation stays defined.
+    f0 = 1e300
+    f1 = 1e300 * (1.0 + 8e-16)
+    at = 1e300 * (1.0 + 4e-16)
+    assert f0 < at < f1
+    series = _series(
+        magnitudes_db=(0.0, 6.0),
+        phases_deg=(0.0, 0.0),
+        frequencies_hz=(f0, f1),
+    )
+    payload = measure_transfer(series, _at_request(at))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert math.isfinite(measured["value"])
+    assert 0.0 <= measured["value"] <= 6.0
+
+
+def test_close_collision_interpolation_matches_the_expected_fraction() -> None:
+    f0 = 1e300
+    f1 = 1e300 * (1.0 + 8e-16)
+    at = 1e300 * (1.0 + 4e-16)
+    series = _series(
+        magnitudes_db=(0.0, 6.0), phases_deg=(0.0, 0.0), frequencies_hz=(f0, f1)
+    )
+    payload = measure_transfer(series, _at_request(at))
+    expected = 6.0 * (math.log10(at / f0) / math.log10(f1 / f0))
+    assert payload["data"]["measurement"]["value"] == pytest.approx(
+        expected, rel=1e-6
+    )
+
+
+def test_wide_span_interpolation_does_not_overflow() -> None:
+    # The pure ratio form overflows f1/f0 here and silently returned the
+    # left endpoint; the hybrid must interpolate the true midpoint.
+    series = _series(
+        magnitudes_db=(0.0, 6.0),
+        phases_deg=(0.0, 0.0),
+        frequencies_hz=(1e-300, 1e300),
+    )
+    payload = measure_transfer(series, _at_request(1.0))
+    assert payload["data"]["measurement"]["value"] == pytest.approx(3.0)
+
+
+def test_ordinary_spacing_agrees_with_the_difference_form() -> None:
+    f0, f1, at = 10.0, 100.0, 31.622776601683793
+    series = _series(
+        magnitudes_db=(0.0, 6.0), phases_deg=(0.0, 0.0), frequencies_hz=(f0, f1)
+    )
+    payload = measure_transfer(series, _at_request(at))
+    expected = 6.0 * (
+        (math.log10(at) - math.log10(f0)) / (math.log10(f1) - math.log10(f0))
+    )
+    assert payload["data"]["measurement"]["value"] == pytest.approx(
+        expected, rel=1e-12
+    )
+
+
+def test_interior_query_colliding_with_the_left_endpoint_log_is_resolved() -> None:
+    # The span is just above the former global branch threshold; a naive
+    # log difference makes the numerator exactly zero for this valid
+    # interior query. The per-pair log1p form resolves it.
+    f0 = 1e300
+    f1 = 1.0000023025900467e300
+    at = math.nextafter(f0, math.inf)
+    series = _series(
+        magnitudes_db=(0.0, 6.0), phases_deg=(0.0, 0.0), frequencies_hz=(f0, f1)
+    )
+    payload = measure_transfer(series, _at_request(at))
+    value = payload["data"]["measurement"]["value"]
+    assert payload["engineering"]["status"] == "pass"
+    assert value == pytest.approx(3.874815552109425e-10, rel=1e-6)
+    assert value > 0.0
+
+
+def test_span_just_below_the_former_threshold_agrees_continuously() -> None:
+    f0 = 1e300
+    f1 = 1.0000018420720744e300  # log10 span ~8e-7
+    at = math.nextafter(f0, math.inf)
+    series = _series(
+        magnitudes_db=(0.0, 6.0), phases_deg=(0.0, 0.0), frequencies_hz=(f0, f1)
+    )
+    payload = measure_transfer(series, _at_request(at))
+    expected = 6.0 * (
+        (math.log1p((at - f0) / f0)) / (math.log1p((f1 - f0) / f0))
+    )
+    assert payload["data"]["measurement"]["value"] == pytest.approx(
+        expected, rel=1e-6
+    )

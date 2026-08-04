@@ -12,11 +12,12 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import (
     Decimal,
     DecimalException,
     ROUND_CEILING,
+    localcontext,
 )
 import hashlib
 import json
@@ -64,7 +65,7 @@ from .simulate import simulate
 
 EXPERIMENT_SCHEMA = "simra.experiment/v1"
 EXPERIMENT_RUN_SCHEMA = "simra.experiment-run/v1"
-COMPOSER_VERSION = "openada.experiment.composer/v1"
+COMPOSER_VERSION = "openada.experiment.composer/v2"
 OPERATION_NAME = "experiment.run"
 EXPERIMENT_EXTENSION = "org.openada.experiment"
 
@@ -158,13 +159,13 @@ _INDEPENDENT_SOURCE_KINDS = frozenset(
     ("vdc", "idc", "vpulse", "ipulse", "vsin", "isin", "vpwl", "ipwl")
 )
 _SUPPORTED_MEASUREMENT_PROFILES = {
-    "openada.operation/result.measure/v1alpha1": ("measurement", "measure"),
-    "openada.operation/result.transfer.measure/v1alpha1": ("transfer", "transfer"),
+    "openada.operation/result.measure/v1alpha2": ("measurement", "measure"),
+    "openada.operation/result.transfer.measure/v1alpha2": ("transfer", "transfer"),
     "openada.operation/result.spectral.measure/v1alpha1": ("spectral", "spectral"),
 }
 _MEASUREMENT_RESULT_OPERATIONS = {
-    "openada.operation/result.measure/v1alpha1": "result.measure",
-    "openada.operation/result.transfer.measure/v1alpha1": (
+    "openada.operation/result.measure/v1alpha2": "result.measure",
+    "openada.operation/result.transfer.measure/v1alpha2": (
         "result.transfer.measure"
     ),
     "openada.operation/result.spectral.measure/v1alpha1": (
@@ -174,6 +175,7 @@ _MEASUREMENT_RESULT_OPERATIONS = {
 _TRANSFER_UNITS = {
     "low_frequency_gain_db": "dB",
     "low_frequency_impedance": "Ohm",
+    "ac_magnitude_at_frequency": "dB",
     "bandwidth_3db": "Hz",
     "unity_gain_frequency": "Hz",
     "phase_margin": "deg",
@@ -482,7 +484,14 @@ def _parse_scalar(value: object) -> Scalar:
                     f"[-{MAX_SCALAR_ADJUSTED_EXPONENT}, "
                     f"{MAX_SCALAR_ADJUSTED_EXPONENT}]"
                 )
-        parsed = number * scale
+        # The default 28-digit context would silently round a scalar with up
+        # to MAX_SCALAR_SIGNIFICANT_DIGITS digits, collapsing values that
+        # differ only beyond digit 28 (a strictly out-of-range bound could
+        # then compare equal to the bound). The widened context keeps the
+        # product exact for the entire admitted domain.
+        with localcontext() as context:
+            context.prec = MAX_SCALAR_SIGNIFICANT_DIGITS + 32
+            parsed = number * scale
     except _ScalarOutOfRange:
         raise
     except (DecimalException, KeyError, OverflowError, ValueError) as exc:
@@ -490,6 +499,23 @@ def _parse_scalar(value: object) -> Scalar:
     if not parsed.is_finite():
         raise _ScalarOutOfRange("the scalar is not finite")
     return Scalar(token=token, value=parsed)
+
+
+def _plain_decimal_token(value: Decimal) -> str:
+    """One canonical suffix-free plain-decimal spelling of ``value``.
+
+    Fixed-point, no exponent, no SPICE suffix, no trailing fractional
+    zeros — the same text is a valid SPICE scalar, a valid ngspice
+    ``.option temp=`` argument, and parses to the exact numeric value the
+    typed conditions record.
+    """
+
+    if value == 0:
+        return "0"  # one spelling; format() would keep a "-0" sign
+    text = format(value, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text
 
 
 def _scalar(value: object) -> Scalar | None:
@@ -2682,7 +2708,7 @@ class _Validator:
                 return None
             return item
 
-        if profile.endswith("/result.measure/v1alpha1"):
+        if profile.endswith("/result.measure/v1alpha2"):
             selected = observation(request.get("signal"), "/signal")
             if selected is None:
                 return None
@@ -2696,13 +2722,15 @@ class _Validator:
                     signal_unit=selected.unit,
                     path=path + "/parameters",
                 )
+            if kind == "slope":
+                return f"{selected.unit}/{_analysis_axis_unit(analysis)}"
             return (
                 _analysis_axis_unit(analysis)
                 if kind in {"crossing", "rise_time", "fall_time", "settling_time"}
                 else selected.unit
             )
 
-        if profile.endswith("/result.transfer.measure/v1alpha1"):
+        if profile.endswith("/result.transfer.measure/v1alpha2"):
             if analysis.kind != "ac":
                 self.add(
                     "experiment.measurement.analysis_incompatible",
@@ -2866,7 +2894,7 @@ class _Validator:
 
         if kind == "sample_at":
             quantity("at", axis_unit)
-        elif kind in {"minimum", "maximum", "mean", "rms"}:
+        elif kind in {"minimum", "maximum", "mean", "rms", "slope"}:
             window()
         elif kind == "crossing":
             quantity("threshold", signal_unit)
@@ -2999,7 +3027,7 @@ class _Validator:
                         )
                     if any(
                         entry.operation_profile
-                        != "openada.operation/result.measure/v1alpha1"
+                        != "openada.operation/result.measure/v1alpha2"
                         or entry.request.get("kind") != "crossing"
                         for entry in selected
                     ):
@@ -3097,20 +3125,41 @@ class _Validator:
             return None
         if "temperature_c" in pdk:
             temperature = _scalar(pdk.get("temperature_c"))
-            profile_temperature = _scalar(resolved.binding.simulation_temperature_c)
-            if (
-                temperature is None
-                or profile_temperature is None
-                or temperature.value != profile_temperature.value
+            if temperature is None:
+                self.add(
+                    "experiment.condition.invalid",
+                    "/conditions/pdk/temperature_c",
+                    "must be one strict finite SPICE numeric scalar in degC",
+                )
+                return None
+            if not (
+                Decimal("-273.15") < temperature.value <= Decimal("1000")
             ):
                 self.add(
                     "experiment.condition.temperature_unsupported",
                     "/conditions/pdk/temperature_c",
-                    (
-                        "v1 runs only at the binding profile temperature "
-                        f"{resolved.binding.simulation_temperature_c} degC"
-                    ),
+                    "must lie in (-273.15, 1000] degC",
                 )
+                return None
+            # The declared temperature becomes THE binding temperature:
+            # every downstream consumer (the bound deck's .option temp
+            # line, its allowlist, binding facts, extraction conditions,
+            # the run manifest, and the off-reference advisory) reads
+            # resolved.binding.simulation_temperature_c, so there is
+            # exactly one authority and it is the value that simulates.
+            # The token is canonicalized to a suffix-free plain-decimal
+            # spelling first: a SPICE-suffixed token like "27m" (0.027)
+            # would otherwise reach the deck verbatim while the typed
+            # extraction condition needs one exact numeric value.
+            resolved = replace(
+                resolved,
+                binding=replace(
+                    resolved.binding,
+                    simulation_temperature_c=_plain_decimal_token(
+                        temperature.value
+                    ),
+                ),
+            )
         return resolved
 
 
@@ -4533,12 +4582,12 @@ def _run_experiment_impl(
                 role="measurement.request",
             )
             artifacts.append(request_record)
-            if measurement.operation_profile.endswith("/result.measure/v1alpha1"):
+            if measurement.operation_profile.endswith("/result.measure/v1alpha2"):
                 measured = measure_result(
                     series, retained_request, request_id=str(uuid.uuid4())
                 )
             elif measurement.operation_profile.endswith(
-                "/result.transfer.measure/v1alpha1"
+                "/result.transfer.measure/v1alpha2"
             ):
                 measured = measure_transfer(
                     series, retained_request, request_id=str(uuid.uuid4())

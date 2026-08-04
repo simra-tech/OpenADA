@@ -172,9 +172,9 @@ numbers out of a log:
 ```text
 circuit.simulate/v1alpha2
   -> result.series.extract/v1alpha1
-  -> result.measure/v1alpha1
+  -> result.measure/v1alpha2
      or result.spectral.measure/v1alpha1
-     or result.transfer.measure/v1alpha1
+     or result.transfer.measure/v1alpha2
   -> specification.evaluate/v1alpha1
 ```
 
@@ -281,7 +281,7 @@ adjacent command or be waived through prose.
 
 | Contract layer | Current checkout | Protocol target |
 |---|---|---|
-| Agent intent | Sixteen CLI command families; eight fixed scoped-preflight assertions; nine active typed operation profiles plus one historical simulation profile; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
+| Agent intent | Sixteen CLI command families; eight fixed scoped-preflight assertions; nine active typed operation profiles plus three immutable historical profiles; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
 | Drivers | Eight open-source EDA drivers; circuit simulation, strict RTL lint, mapped synthesis, and synthesis-stage timing expose typed evidence at feature-specific maturity | Capability manifests and independently installable drivers |
 | Portability proof | Analysis-specific `circuit.simulate` requests have pinned native ngspice/Xyce success replay with independently parsed artifacts; the expanded replay does not yet cover every maturity outcome | More operations, open-source backends, runtime environments, and complete outcome corpora |
@@ -500,9 +500,9 @@ same reviewed commit rather than mixing runtime and skill revisions.
 | `simulate --backend ngspice` | ngspice | structured OP/DC/AC; workflow-validated TRAN | Run one self-contained OP, DC, AC, or transient analysis and emit typed `circuit.simulate` facts |
 | `simulate --backend xyce` | Xyce | structured DC/AC; workflow-validated TRAN | Run one self-contained DC, AC, or transient analysis; OP is explicitly unsupported |
 | `extract` | deterministic Spice3 kernel | structured alpha | Verify one exact passing shared-simulation artifact and project explicit real/imaginary native vector components into a canonical real series |
-| `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar from a canonical-digest-bound normalized real inline series using a closed algorithm kind |
+| `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar (including a least-squares signal-versus-axis slope) from a canonical-digest-bound normalized real inline series using a closed algorithm kind |
 | `spectral` | deterministic OpenADA kernel | structured alpha | Derive coherent single-tone SNR, SINAD, signed-dB THD, or SFDR from one fully declared hashed bin partition |
-| `transfer` | deterministic OpenADA kernel | structured alpha | Derive first-positive-frequency gain, unique falling −3 dB bandwidth, unity-gain frequency, or explicitly declared negative-feedback phase margin; retain the complete magnitude/phase trace |
+| `transfer` | deterministic OpenADA kernel | structured alpha | Derive first-positive-frequency gain, dB magnitude at one declared in-domain frequency, unique falling −3 dB bandwidth, unity-gain frequency, or explicitly declared negative-feedback phase margin; retain the complete magnitude/phase trace |
 | `evaluate` | deterministic OpenADA kernel | structured alpha | Read a complete ordinary, spectral, or transfer measurement envelope, then compare its typed scalar with exact-unit bounds and explicit condition bindings |
 | `profile list/show` | installed contracts | preview | List packaged operation/assertion/feature IDs or emit one complete schema-bearing operation profile from any working directory |
 | `provider validate/list/invoke` | external local CLI | structured runtime boundary | Validate one explicit v0alpha1 manifest/request and invoke one active `circuit.simulate/v1alpha2` JSON-stdio wait capability; snapshot canonical request inputs within fixed target/configuration/aggregate bounds, and enforce status/evidence truth, artifact identity, zero transport exit, and descendant cleanup |

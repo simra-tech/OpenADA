@@ -55,7 +55,7 @@ profiles before constructing requests:
 
 ```bash
 openada profile show openada.operation/result.series.extract/v1alpha1
-openada profile show openada.operation/result.measure/v1alpha1
+openada profile show openada.operation/result.measure/v1alpha2
 openada profile show openada.operation/specification.evaluate/v1alpha1
 ```
 

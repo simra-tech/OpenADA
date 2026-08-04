@@ -381,7 +381,7 @@ unsupported, or over-limit evidence is `unknown`, never an engineering fail.
 
 ### `measure`
 
-`measure` implements `openada.operation/result.measure/v1alpha1` and
+`measure` implements `openada.operation/result.measure/v1alpha2` and
 `openada.assertion/measurement.valid/v1alpha1` without invoking an EDA:
 
 ```text
@@ -407,8 +407,11 @@ and normalization rules. Successful and conclusive not-found records also
 retain `data.measurement.request_sha256`, the canonical digest of the complete
 normalized measurement request.
 
-V1alpha1 has a closed scalar vocabulary: `sample_at`, `minimum`, `maximum`,
-`mean`, `rms`, `crossing`, `rise_time`, `fall_time`, and `settling_time`.
+V1alpha2 has a closed scalar vocabulary: `sample_at`, `minimum`, `maximum`,
+`mean`, `rms`, `crossing`, `rise_time`, `fall_time`, `settling_time`, and
+`slope` (the unweighted ordinary-least-squares slope of the signal versus the
+axis over an optional closed window, in the literal composed unit
+`signal_unit/axis_unit`, e.g. `V/s` or `V/degC`).
 Coordinates must use the exact axis unit; thresholds, targets, and tolerances
 must use the exact selected-signal unit. There is no implicit conversion,
 complex-series support, simulator expression, FFT, or arbitrary plugin
@@ -464,7 +467,7 @@ conformance. See [Measurement methods and standards](MEASUREMENT_METHODS.md).
 ### `transfer`
 
 `transfer` implements
-`openada.operation/result.transfer.measure/v1alpha1` and
+`openada.operation/result.transfer.measure/v1alpha2` and
 `openada.assertion/transfer.measurement.valid/v1alpha1`:
 
 ```text
@@ -495,9 +498,16 @@ expression. No scaling, common-mode operand, or three-terminal expression
 exists; a differential operand is exactly the difference declared.
 
 The closed metrics are `low_frequency_gain_db`, `low_frequency_impedance`,
-`bandwidth_3db`, `unity_gain_frequency`, and `phase_margin`. Every metric but
-`low_frequency_impedance` is a dB threshold on a dimensionless ratio and
-requires one identical unit across all declared components.
+`ac_magnitude_at_frequency`, `bandwidth_3db`, `unity_gain_frequency`, and
+`phase_margin`. Every metric but `low_frequency_impedance` is a dB threshold
+on a dimensionless ratio and requires one identical unit across all declared
+components. `ac_magnitude_at_frequency` reports the ratio's dB magnitude at
+one caller-declared frequency: the request's `metric.at` is exactly
+`{value, unit: "Hz"}`, the frequency must lie inside the closed simulated
+domain (an out-of-domain request is invalid, not `not_found`), an exact axis
+hit returns the simulated value, and an interior point interpolates dB
+magnitude linearly over log10 frequency — the same frozen interpolation the
+method declares for crossings.
 `low_frequency_impedance` is the one dimensional ratio: it requires every
 output component in `V` and every input component in `A`, and reports the
 **linear** magnitude at the reference frequency in `Ohm`. Hold a node with a

@@ -19,7 +19,7 @@ ANALOG_SKILLS = {
 ANALOG_CONTRACT_IDS = {
     "openada.operation/circuit.simulate/v1alpha2",
     "openada.assertion/simulation.evidence.valid/v1alpha1",
-    "openada.operation/result.measure/v1alpha1",
+    "openada.operation/result.measure/v1alpha2",
     "openada.assertion/measurement.valid/v1alpha1",
     "openada.operation/specification.evaluate/v1alpha1",
     "openada.assertion/specification.satisfied/v1alpha1",
@@ -105,7 +105,7 @@ def test_circuit_execution_reference_is_bounded_and_contract_complete():
     assert "spice-analysis-evidence-valid" in text
     assert "openada.operation/circuit.simulate/v1alpha2" in text
     assert "openada.operation/result.series.extract/v1alpha1" in text
-    assert "openada.operation/result.measure/v1alpha1" in text
+    assert "openada.operation/result.measure/v1alpha2" in text
     assert "openada.operation/specification.evaluate/v1alpha1" in text
     assert "execution.status=completed" in text
     assert "engineering.status=pass" in text

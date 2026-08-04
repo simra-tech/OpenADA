@@ -33,13 +33,18 @@ The published protocol documents are:
 - [`circuit.simulate/v1alpha2`](../profiles/circuit.simulate-v1alpha2.json), the
   active typed shared simulation profile;
 - [`result.measure/v1alpha1`](../profiles/result.measure-v1alpha1.json), the
-  canonical-digest-bound normalized-series measurement profile;
+  immutable historical measurement profile;
+- [`result.measure/v1alpha2`](../profiles/result.measure-v1alpha2.json), the
+  active canonical-digest-bound normalized-series measurement profile;
 - [`result.series.extract/v1alpha1`](../profiles/result.series.extract-v1alpha1.json),
   the exact native-artifact-to-normalized-series profile;
 - [`result.spectral.measure/v1alpha1`](../profiles/result.spectral.measure-v1alpha1.json),
   the coherent single-tone SNR, SINAD, THD, and SFDR profile;
 - [`result.transfer.measure/v1alpha1`](../profiles/result.transfer.measure-v1alpha1.json),
-  the same-unit AC complex-ratio and closed crossing-measurement profile; and
+  the immutable historical AC complex-ratio profile;
+- [`result.transfer.measure/v1alpha2`](../profiles/result.transfer.measure-v1alpha2.json),
+  the active same-unit AC complex-ratio and closed crossing-measurement
+  profile; and
 - [`specification.evaluate/v1alpha1`](../profiles/specification.evaluate-v1alpha1.json),
   the exact-unit specification profile; and
 - [`testbench.simulate/v1alpha1`](../profiles/testbench.simulate-v1alpha1.json),
@@ -152,9 +157,11 @@ version may instead require a new driver version and new conformance evidence.
 
 `circuit.simulate/v1alpha1` remains an immutable historical profile. Its
 additive `circuit.simulate/v1alpha2` successor continues to use the immutable
-v0alpha1 profile schema. The deterministic `result.measure/v1alpha1`,
+v0alpha1 profile schema. `result.measure/v1alpha1` and `result.transfer.measure/v1alpha1` are likewise
+immutable historical profiles with additive `v1alpha2` successors. The
+deterministic `result.measure/v1alpha2`,
 `result.series.extract/v1alpha1`, `result.spectral.measure/v1alpha1`,
-`result.transfer.measure/v1alpha1`, and `specification.evaluate/v1alpha1`
+`result.transfer.measure/v1alpha2`, and `specification.evaluate/v1alpha1`
 profiles use additive v0alpha2; they require semantic implementation mappings
 rather than pretending every evidence kernel is a native EDA backend. Their CLI
 bridges record profile and implementation identities in the existing

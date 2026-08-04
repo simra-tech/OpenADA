@@ -64,17 +64,17 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     assert payload["inventory"] == {
         "active_profile_count": 9,
         "builtin_provider_mapping_count": 12,
-        "cli_leaf_count": 27,
+        "cli_leaf_count": 28,
         "preflight_assertion_count": 8,
-        "profile_count": 12,
-        "profile_feature_count": 35,
+        "profile_count": 14,
+        "profile_feature_count": 52,
         "provider_mapping_count": 13,
         "shipped_provider_capability_count": 1,
         "shipped_provider_manifest_count": 1,
-        "surface_count": 27,
+        "surface_count": 28,
     }
-    assert payload["summary"]["row_count"] == 190
-    assert payload["summary"]["active_row_count"] == 153
+    assert payload["summary"]["row_count"] == 231
+    assert payload["summary"]["active_row_count"] == 159
     # Receipt-bound expectations: these require the seven-receipt chain index
     # to be current for the semantic subject under test.
     assert first.returncode == 0, first.stderr
@@ -82,7 +82,7 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     assert payload["issues"] == []
     assert payload["summary"]["gap_count"] == 0
     assert payload["summary"]["rows_by_coverage_level"] == {
-        "agent-ready": 153,
+        "agent-ready": 159,
         "unverified": 37,
     }
     assert payload["gaps"] == []
@@ -177,7 +177,7 @@ def test_enforcement_modes_pass_only_after_every_active_row_is_agent_ready() -> 
         payload = json.loads(completed.stdout)
         # Source-frozen: the active obligation count holds with or without
         # regenerated chain receipts.
-        assert payload["summary"]["active_row_count"] == 153
+        assert payload["summary"]["active_row_count"] == 159
         # Receipt-bound: passing requires a current seven-receipt index.
         assert completed.returncode == 0
         assert payload["status"] == "pass"
@@ -458,8 +458,8 @@ def test_untouched_hidden_variant_stays_hidden_without_issues() -> None:
     )
     assert cosim_row["lifecycle"] == "experimental"
     assert cosim_row["required_coverage_level"] is None
-    assert payload["summary"]["row_count"] == 190
-    assert payload["summary"]["active_row_count"] == 153
+    assert payload["summary"]["row_count"] == 231
+    assert payload["summary"]["active_row_count"] == 159
 
 
 def test_catalog_cannot_downgrade_semantic_cli_to_administrative(
@@ -1426,3 +1426,18 @@ def test_provider_manifest_hash_refuses_stack_exhausting_nesting():
     with pytest.raises(verifier.CoverageInputError) as excinfo:
         verifier._provider_manifest_semantic_sha256_bytes(deep)
     assert "nests deeper than" in str(excinfo.value)
+
+
+def test_experiment_compile_is_an_artifact_kernel_surface() -> None:
+    # The compile verb is semantic execution over typed documents, not an
+    # administrative listing; misclassification would silently waive its
+    # coverage obligation once the surface goes active.
+    payload = json.loads(_run("--compact").stdout)
+    row = next(
+        row
+        for row in payload["rows"]
+        if row["row_id"].startswith("surface|openada.surface/cli.experiment-compile")
+    )
+    assert row["execution_class"] == "artifact-kernel"
+    assert row["lifecycle"] == "experimental"
+    assert not any("experiment compile" in issue for issue in payload["issues"])

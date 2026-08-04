@@ -20,11 +20,11 @@ For every planned point, use:
    `openada.assertion/series.extraction.valid/v1alpha1` whenever a required
    scalar starts in a native waveform artifact;
 3. the smallest installed result operation: ordinary
-   `openada.operation/result.measure/v1alpha1` with
+   `openada.operation/result.measure/v1alpha2` with
    `openada.assertion/measurement.valid/v1alpha1`, coherent spectral
    `openada.operation/result.spectral.measure/v1alpha1` with
    `openada.assertion/spectral.measurement.valid/v1alpha1`, or AC transfer
-   `openada.operation/result.transfer.measure/v1alpha1` with
+   `openada.operation/result.transfer.measure/v1alpha2` with
    `openada.assertion/transfer.measurement.valid/v1alpha1`; and
 4. `openada.operation/specification.evaluate/v1alpha1` with
    `openada.assertion/specification.satisfied/v1alpha1` for each explicit

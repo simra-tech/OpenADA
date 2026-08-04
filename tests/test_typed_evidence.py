@@ -24,7 +24,7 @@ RESULT_SCHEMA = json.loads(
 )
 RESULT_VALIDATOR = Draft202012Validator(RESULT_SCHEMA, format_checker=FormatChecker())
 MEASUREMENT_PROFILE = json.loads(
-    (ROOT / "profiles" / "result.measure-v1alpha1.json").read_text(encoding="utf-8")
+    (ROOT / "profiles" / "result.measure-v1alpha2.json").read_text(encoding="utf-8")
 )
 SPECIFICATION_PROFILE = json.loads(
     (ROOT / "profiles" / "specification.evaluate-v1alpha1.json").read_text(
@@ -129,6 +129,18 @@ def _assert_operation_data(payload: dict, validator: Draft202012Validator) -> No
         ("maximum", {}, 1.0, "V"),
         ("mean", {}, 0.5, "V"),
         ("rms", {}, math.sqrt(2.75 / 7.0), "V"),
+        ("slope", {}, 2.0 / 28.0, "V/s"),
+        (
+            "slope",
+            {
+                "window": {
+                    "start": {"value": 2.0, "unit": "s"},
+                    "stop": {"value": 6.0, "unit": "s"},
+                }
+            },
+            0.0,
+            "V/s",
+        ),
         (
             "crossing",
             {
@@ -174,7 +186,7 @@ def test_closed_measurement_vocabulary_returns_typed_values(
     assert measured["status"] == "measured"
     assert measured["value"] == pytest.approx(expected)
     assert measured["unit"] == unit
-    assert measured["algorithm"]["version"] == "1.0.0"
+    assert measured["algorithm"]["version"] == "1.1.0"
     assert len(measured["request_sha256"]) == 64
     assert measured["source"]["artifact_sha256"] == measured["source"]["series_sha256"]
     assert measured["source"]["lineage"]["binding"] == "unverified"
@@ -497,6 +509,7 @@ def test_typed_evidence_capability_metadata_is_closed() -> None:
         "rise_time",
         "fall_time",
         "settling_time",
+        "slope",
     )
     assert SPECIFICATION_LIMIT_KINDS == ("lower", "upper")
 
@@ -511,3 +524,144 @@ def test_specification_input_is_not_mutated() -> None:
 
     assert measurement == before_measurement
     assert specification == before_specification
+
+
+def test_slope_composed_unit_over_64_characters_is_refused() -> None:
+    wide_unit = "V" * 40
+    series = _series()
+    series["axis"]["unit"] = wide_unit
+    series["signals"][0]["unit"] = wide_unit
+    series["source"]["artifact_sha256"] = _canonical_digest(
+        series["axis"], series["signals"], series["conditions"]
+    )
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "measurement.request.invalid"
+
+
+def test_slope_single_sample_window_is_not_found() -> None:
+    payload = measure_result(
+        _request_payload_series := _series(),
+        _request(
+            "slope",
+            {
+                "window": {
+                    "start": {"value": 0.9, "unit": "s"},
+                    "stop": {"value": 1.1, "unit": "s"},
+                }
+            },
+        ),
+    )
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "fail"
+    assert measured["status"] == "not_found"
+    assert measured["unit"] == "V/s"
+    assert measured["sample_count"] == 1
+    assert measured["location"] is None
+
+
+def test_subnormal_axis_slope_is_finite_not_a_crash() -> None:
+    # Centered squares of subnormal coordinates underflow to zero; the
+    # scaled OLS keeps the mathematically defined slope of exactly 1.
+    series = _series(
+        axis_values=[5e-324, 1e-323],
+        signal_values=[5e-324, 1e-323],
+    )
+    payload = measure_result(series, _request("slope", {}))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["status"] == "measured"
+    assert measured["value"] == pytest.approx(1.0)
+
+
+def test_zero_covariance_slope_at_extreme_scales_is_exactly_zero() -> None:
+    # Covariance is exactly zero while y_scale/x_scale would overflow to
+    # infinity; the defined zero slope must not become 0 * inf.
+    series = _series(
+        axis_values=[5e-324, 1e-323, 1.5e-323],
+        signal_values=[1e308, -1e308, 1e308],
+    )
+    payload = measure_result(series, _request("slope", {}))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["value"] == 0.0
+
+
+def test_unrepresentable_slope_overflow_is_a_typed_refusal() -> None:
+    # A genuinely unrepresentable nonzero slope overflows to infinity and
+    # must land in the typed non-finite refusal, not escape.
+    series = _series(
+        axis_values=[5e-324, 1e-323],
+        signal_values=[-1e308, 1e308],
+    )
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"
+
+
+def test_rounded_to_zero_covariance_recovers_the_exact_finite_slope() -> None:
+    # The scaled covariance rounds to exactly 0.0 here, but the true OLS
+    # slope is finite and enormous; the exact rational fallback must
+    # return it rather than a false conclusive zero.
+    series = _series(
+        axis_values=[5e-324, 1e-323, 1.5e-323],
+        signal_values=[0.0, 1e308, 1e-16],
+    )
+    payload = measure_result(series, _request("slope", {}))
+    measured = payload["data"]["measurement"]
+    assert payload["engineering"]["status"] == "pass"
+    assert measured["value"] == pytest.approx(1.0120112665365531e307, rel=1e-9)
+
+
+@pytest.mark.parametrize(
+    ("signal_values", "sign"),
+    [([0.0, 1e308, 5e-324], 1), ([5e-324, 1e308, 0.0], -1)],
+)
+def test_nonzero_exact_slope_underflowing_to_zero_is_refused(
+    signal_values, sign
+) -> None:
+    # The exact slope is nonzero but below binary64 range; reporting a
+    # passing 0.0 would be a false conclusive zero in either direction.
+    series = _series(
+        axis_values=[0.0, 5e307, 1e308],
+        signal_values=signal_values,
+    )
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"
+    assert "underflows" in payload["diagnostics"][0]["message"]
+
+
+def test_exact_slope_fallback_beyond_the_sample_bound_is_refused() -> None:
+    # 8193 samples whose scaled covariance sums to exactly zero: deciding
+    # this window exactly would exceed the closed work bound, so the
+    # kernel refuses instead of buying unbounded big-integer arithmetic.
+    count = 8193
+    axis = [float(i) for i in range(count)]
+    values = [(5e-324 if i % 2 else -5e-324) for i in range(count)]
+    series = _series(axis_values=axis, signal_values=values)
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"
+    assert "8192" in payload["diagnostics"][0]["message"]
+
+
+@pytest.mark.parametrize(
+    "signal_values",
+    [[0.0, 5e-324, 1e-323], [1e-323, 5e-324, 0.0]],
+)
+def test_fast_path_underflow_to_zero_is_refused_in_both_signs(
+    signal_values,
+) -> None:
+    # The scaled covariance is nonzero here, but the fast-path product
+    # underflows to +/-0.0; the exact decision must refuse rather than
+    # report a passing zero.
+    series = _series(
+        axis_values=[0.0, 5e307, 1e308],
+        signal_values=signal_values,
+    )
+    payload = measure_result(series, _request("slope", {}))
+    assert payload["engineering"]["status"] == "unknown"
+    assert payload["diagnostics"][0]["code"] == "measurement.value.non_finite"
+    assert "underflows" in payload["diagnostics"][0]["message"]

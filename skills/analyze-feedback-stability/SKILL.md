@@ -20,17 +20,17 @@ Use these exact layers:
   `openada.operation/result.series.extract/v1alpha1` and
   `openada.assertion/series.extraction.valid/v1alpha1`.
 - Derive the implemented loop metrics only through
-  `openada.operation/result.transfer.measure/v1alpha1` and
+  `openada.operation/result.transfer.measure/v1alpha2` and
   `openada.assertion/transfer.measurement.valid/v1alpha1`.
 - Derive ordinary time-domain or real-series scalars only through
-  `openada.operation/result.measure/v1alpha1` and
+  `openada.operation/result.measure/v1alpha2` and
   `openada.assertion/measurement.valid/v1alpha1`.
 - Judge an explicit stability limit only through
   `openada.operation/specification.evaluate/v1alpha1` and
   `openada.assertion/specification.satisfied/v1alpha1`.
 
 Inspect capability records, then run `openada profile show
-openada.operation/result.transfer.measure/v1alpha1` before constructing a
+openada.operation/result.transfer.measure/v1alpha2` before constructing a
 request. Do not invent a metric kind or fall back to a backend expression when
 the requested `result.transfer.measure` metric kind is not supported. Mark that
 metric **not evaluated**.

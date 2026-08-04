@@ -161,7 +161,7 @@ the result envelope. `result.series.extract/v1alpha1` binds selected normalized
 real series to one exact passing simulation result and one exact ngspice or
 Xyce waveform artifact. `result.spectral.measure/v1alpha1` binds a coherent
 single-tone FFT partition and the closed SNR, SINAD, THD, and SFDR vocabulary to
-one normalized time series. `result.transfer.measure/v1alpha1` binds a
+one normalized time series. `result.transfer.measure/v1alpha2` binds a
 same-unit Cartesian output-over-input AC ratio, deterministic phase unwrap,
 first-simulated-frequency reference, and closed falling-crossing metrics. The
 `measure`, `spectral`, and `transfer` commands may receive either a normalized
@@ -171,7 +171,7 @@ schema. Changing raw-format interpretation, projection, FFT partition, window,
 harmonic folding, ratio direction, crossing semantics, phase convention, or
 metric formulas requires a new implementation or profile identity as
 documented by the relevant profile.
-`result.measure/v1alpha1` is bound to the canonical SHA-256 digest of a bounded
+`result.measure/v1alpha2` is bound to the canonical SHA-256 digest of a bounded
 normalized real inline series and a closed scalar-algorithm vocabulary;
 `specification.evaluate/v1alpha1` uses exact units and explicit condition and
 limit records. Changing the digest algorithm, supported kind semantics, unit

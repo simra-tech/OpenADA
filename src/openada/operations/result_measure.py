@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from fractions import Fraction
 import hashlib
 import json
 import math
@@ -13,13 +14,19 @@ import uuid
 from ..contract import diagnostic, result, static_execution
 
 
-OPERATION_PROFILE = "openada.operation/result.measure/v1alpha1"
+OPERATION_PROFILE = "openada.operation/result.measure/v1alpha2"
 ASSERTION_PROFILE = "openada.assertion/measurement.valid/v1alpha1"
 IMPLEMENTATION_ID = "org.openada.kernel.typed-evidence"
-IMPLEMENTATION_VERSION = "1.0.0"
+IMPLEMENTATION_VERSION = "1.1.0"
 MAX_POINTS = 100_000
 MAX_SIGNALS = 32
 MAX_CONDITIONS = 64
+#: Closed work bound for the exact-rational slope fallback. A window whose
+#: rounded scaled covariance is zero is decided exactly; beyond this many
+#: retained samples that decision is refused rather than letting one
+#: request (or an experiment's 128 measurements) buy unbounded big-integer
+#: work.
+MAX_EXACT_SLOPE_SAMPLES = 8_192
 
 _ROLE_RE = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -33,6 +40,7 @@ MEASUREMENT_KINDS = (
     "rise_time",
     "fall_time",
     "settling_time",
+    "slope",
 )
 _KINDS = frozenset(MEASUREMENT_KINDS)
 
@@ -698,6 +706,112 @@ def measure_result(
                 value = crossings[occurrence - 1]
                 location = value
             unit = axis_unit
+        elif kind == "slope":
+            params = _closed_object(
+                parameters,
+                "measurement.parameters",
+                required=set(),
+                optional={"window"},
+            )
+            window = _window(params["window"], axis_unit) if "window" in params else None
+            indices = _indices_in_window(x_values, window)
+            used_count = len(indices)
+            # A slope is a derived per-axis-unit quantity; the unit is the
+            # literal composition of the two declared units, never converted.
+            unit = f"{signal_unit}/{axis_unit}"
+            if len(unit) > 64:
+                raise _InvalidRequest(
+                    "measurement.request.invalid",
+                    "The composed slope unit exceeds 64 characters.",
+                )
+            if len(indices) >= 2:
+                xs = [x_values[index] for index in indices]
+                ys = [y_values[index] for index in indices]
+                try:
+                    x_mean = math.fsum(xs) / len(xs)
+                    y_mean = math.fsum(ys) / len(ys)
+                    # Center-and-scale before squaring: with subnormal or
+                    # hugely offset coordinates the centered squares can
+                    # underflow to exactly zero even though the axis is
+                    # strictly increasing, and the raw quotient would
+                    # divide by zero. The scaled deviations are O(1), the
+                    # scale ratio applies once at the end, and residual
+                    # overflow lands in the finite-result guard.
+                    x_scale = max(abs(x - x_mean) for x in xs)
+                    y_scale = max(abs(y - y_mean) for y in ys)
+                    if x_scale == 0.0:
+                        raise _InvalidRequest(
+                            "measurement.value.non_finite",
+                            "The windowed axis span is not resolvable in "
+                            "finite floating-point arithmetic.",
+                        )
+                    if y_scale == 0.0:
+                        value = 0.0
+                    else:
+                        ux = [(x - x_mean) / x_scale for x in xs]
+                        uy = [(y - y_mean) / y_scale for y in ys]
+                        suu = math.fsum(u * u for u in ux)
+                        suv = math.fsum(u * v for u, v in zip(ux, uy))
+                        if suv != 0.0:
+                            value = (suv / suu) * (y_scale / x_scale)
+                        if suv == 0.0 or value == 0.0:
+                            # A computed zero — whether the scaled
+                            # covariance rounded to zero or the fast-path
+                            # product underflowed — is not proof of a zero
+                            # slope: decide exactly, within a closed work
+                            # bound. Every finite double is num/2^k with
+                            # k <= 1074, so scaling by 2^1074 turns the
+                            # samples into exact integers and the
+                            # closed-form OLS slope
+                            # (n*Sxy - Sx*Sy) / (n*Sxx - Sx^2) into one
+                            # exact big-integer ratio (the scale factors
+                            # cancel). Only a genuinely unrepresentable
+                            # magnitude — overflow, or a nonzero slope
+                            # that underflows to zero — remains a typed
+                            # refusal.
+                            if len(xs) > MAX_EXACT_SLOPE_SAMPLES:
+                                raise _InvalidRequest(
+                                    "measurement.value.non_finite",
+                                    "The computed-zero slope cannot "
+                                    "be decided within the closed "
+                                    f"{MAX_EXACT_SLOPE_SAMPLES}-sample "
+                                    "exact-arithmetic bound.",
+                                )
+                            one = 1 << 1074
+
+                            def _scaled(sample: float) -> int:
+                                numerator, denominator = (
+                                    sample.as_integer_ratio()
+                                )
+                                return numerator * (one // denominator)
+
+                            ix = [_scaled(x) for x in xs]
+                            iy = [_scaled(y) for y in ys]
+                            n = len(ix)
+                            sx = sum(ix)
+                            sy = sum(iy)
+                            sxy = sum(a * b for a, b in zip(ix, iy))
+                            sxx = sum(a * a for a in ix)
+                            exact = Fraction(
+                                n * sxy - sx * sy, n * sxx - sx * sx
+                            )
+                            value = float(exact)
+                            if exact != 0 and value == 0.0:
+                                raise _InvalidRequest(
+                                    "measurement.value.non_finite",
+                                    "The least-squares slope underflows "
+                                    "the finite result range.",
+                                )
+                except _InvalidRequest:
+                    raise
+                except (OverflowError, ValueError, ZeroDivisionError) as exc:
+                    raise _InvalidRequest(
+                        "measurement.value.non_finite",
+                        "The least-squares slope overflowed the finite result range.",
+                    ) from exc
+            not_found_message = (
+                "The declared window does not contain at least two axis samples."
+            )
         elif kind in {"rise_time", "fall_time"}:
             params = _closed_object(
                 parameters,

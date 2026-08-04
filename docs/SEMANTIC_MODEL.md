@@ -89,9 +89,9 @@ A versioned operation profile should define:
 Six published typed profiles are active:
 `openada.operation/circuit.simulate/v1alpha2`,
 `openada.operation/result.series.extract/v1alpha1`,
-`openada.operation/result.measure/v1alpha1`,
+`openada.operation/result.measure/v1alpha2`,
 `openada.operation/result.spectral.measure/v1alpha1`,
-`openada.operation/result.transfer.measure/v1alpha1`, and
+`openada.operation/result.transfer.measure/v1alpha2`, and
 `openada.operation/specification.evaluate/v1alpha1`. The historical
 `circuit.simulate/v1alpha1` profile remains packaged unchanged. The existing
 result envelope still emits short top-level operation names such as `simulate`,
@@ -324,7 +324,7 @@ prevents "the simulator exited successfully" from becoming "the design works."
 The implemented `result.series.extract/v1alpha1` verifies one exact passing
 shared-simulation artifact and projects explicitly selected voltage/current
 Cartesian components from ngspice or Xyce raw evidence. The implemented
-`result.measure/v1alpha1` then consumes its bounded normalized real inline
+`result.measure/v1alpha2` then consumes its bounded normalized real inline
 series, whose canonical digest binds axis, signals, and condition records.
 `measure`, `spectral`, and `transfer` accept either that normalized series
 document or a complete passing extraction envelope and unwrap only its verified
@@ -337,7 +337,7 @@ The implemented `result.spectral.measure/v1alpha1` adds a fixed coherent
 single-tone partition for SNR, SINAD, signed-dB THD, and SFDR. It is not a
 generic FFT expression surface or an IEEE conformance claim.
 
-The implemented `result.transfer.measure/v1alpha1` forms an AC complex ratio
+The implemented `result.transfer.measure/v1alpha2` forms an AC complex ratio
 from four distinct Cartesian real series on one positive-Hz axis. It supports
 first-simulated-frequency gain, one falling -3 dB crossing, one falling unity
 crossing, and phase margin for an explicitly declared negative-feedback loop.
