@@ -345,13 +345,17 @@ jobs:
                   name.endswith(f"/skills/{skill}/agents/openai.yaml")
                   for name in source_names
               ), skill
+          relative_members = {
+              name.split("/", 1)[1] for name in source_names if "/" in name
+          }
           for plugin_file in {
+              "plugin.json",
               ".codex-plugin/plugin.json",
               ".agents/plugins/marketplace.json",
               ".claude-plugin/plugin.json",
               ".claude-plugin/marketplace.json",
           }:
-              assert any(name.endswith("/" + plugin_file) for name in source_names), plugin_file
+              assert plugin_file in relative_members, plugin_file
           assert not any("/__pycache__/" in name for name in source_names)
           assert not any(name.endswith((".pyc", ".pyo")) for name in source_names)
           assert not any("/fixtures/evidence/" in name for name in source_names)

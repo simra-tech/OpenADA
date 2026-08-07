@@ -10,6 +10,20 @@ from openada import __version__
 ROOT = Path(__file__).parents[1]
 SKILLS_ROOT = ROOT / "skills"
 SKILL_NAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
+AGENT_PLUGINS_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+AGENT_PLUGINS_MANIFEST_FIELDS = {
+    "$schema",
+    "name",
+    "version",
+    "description",
+    "author",
+    "homepage",
+    "repository",
+    "license",
+    "keywords",
+    "extensions",
+}
+AGENT_PLUGINS_NAME = re.compile(r"[a-z0-9]+(?:[-.][a-z0-9]+)*\Z")
 ANALOG_SKILLS = {
     "characterize-analog-block",
     "analyze-feedback-stability",
@@ -114,6 +128,34 @@ def test_circuit_execution_reference_is_bounded_and_contract_complete():
     assert "direct simulator command" in text
 
 
+def test_root_manifest_conforms_to_agent_plugins_1_0_0():
+    manifest = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
+
+    assert manifest["$schema"] == AGENT_PLUGINS_SCHEMA
+    assert set(manifest) <= AGENT_PLUGINS_MANIFEST_FIELDS
+    assert manifest["name"] == "openada"
+    assert AGENT_PLUGINS_NAME.fullmatch(manifest["name"])
+    assert 1 <= len(manifest["name"]) <= 64
+    assert set(manifest["author"]) <= {"name", "email", "url"}
+    assert all(
+        isinstance(manifest[key], str)
+        for key in ("version", "description", "homepage", "repository", "license")
+    )
+    assert all(isinstance(keyword, str) for keyword in manifest["keywords"])
+
+
+def test_root_manifest_matches_the_claude_manifest_metadata():
+    root_manifest = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
+    claude_manifest = json.loads(
+        (ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
+    )
+
+    for key in ("name", "version", "description", "author", "homepage",
+                "repository", "license"):
+        assert root_manifest[key] == claude_manifest[key], key
+    assert set(root_manifest["keywords"]) >= set(claude_manifest["keywords"])
+
+
 def test_codex_manifest_discovers_the_shared_skills_directory():
     manifest = json.loads(
         (ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
@@ -162,12 +204,14 @@ def test_package_runtime_and_plugin_release_versions_match():
     claude_manifest = json.loads(
         (ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
     )
+    root_manifest = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))
 
     versions = {
         package_match.group(1),
         __version__,
         codex_manifest["version"],
         claude_manifest["version"],
+        root_manifest["version"],
     }
     assert versions == {__version__}
     assert __version__ == "0.4.0"
@@ -175,6 +219,7 @@ def test_package_runtime_and_plugin_release_versions_match():
 
 def test_both_plugin_manifests_advertise_the_digital_connectors():
     for path in (
+        ROOT / "plugin.json",
         ROOT / ".codex-plugin" / "plugin.json",
         ROOT / ".claude-plugin" / "plugin.json",
     ):

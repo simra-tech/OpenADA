@@ -464,6 +464,16 @@ for skill in skills/*; do
 done
 ```
 
+### Agent Plugins standard clients
+
+The repository root is a conformant [Agent Plugins](https://agent-plugins.org/)
+1.0.0 package: `plugin.json` is the manifest and `skills/` holds the Agent
+Skills. Any client that implements the standard can install OpenADA directly
+from this repository with its own plugin mechanism — no OpenADA-specific
+adapter is involved. The `.claude-plugin/`, `.codex-plugin/`, and `.agents/`
+directories remain for clients with their own pre-standard discovery and carry
+the same skill tree and metadata.
+
 ### Other harnesses
 
 Make `bin/openada` available to the agent's terminal and register the desired

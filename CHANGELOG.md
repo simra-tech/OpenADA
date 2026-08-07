@@ -127,6 +127,14 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Added
 
+- The repository root is now a conformant [Agent Plugins](https://agent-plugins.org/)
+  1.0.0 package: a root `plugin.json` carries the standard `$schema` and the
+  same metadata as the client-specific manifests, and the existing `skills/`
+  tree is the standard's fixed skill discovery location. Clients implementing
+  the vendor-neutral standard can install OpenADA directly from the repository;
+  the `.claude-plugin/`, `.codex-plugin/`, and `.agents/` manifests are
+  unchanged and stay version-locked with the root manifest.
+
 - One canonical netlist, four PDKs. A published Simra deck now names a
   technology-independent *device role* (`nmos.core`, `pmos.core`, and
   `.lvt`/`.hvt`/`.io` variants) and SI geometry, and the binding profile
