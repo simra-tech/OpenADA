@@ -49,6 +49,7 @@ NEGATIVE_IDS = (
     "ngspice-analysis-mismatch", "extract-missing-selector",
     "admin-unknown-profile", "admin-invalid-provider",
 )
+NEGATIVE_SIMULATION_IDS = NEGATIVE_IDS[:3]
 TAMPER_IDS = (
     "request-contract-byte", "public-source-byte", "derived-deck-byte",
     "native-raw-byte", "simulation-analysis-type", "simulation-backend-id",
@@ -926,6 +927,17 @@ def _verify_negatives(manifest: dict[str, Any], evidence: Path) -> dict[str, dic
         required = declarations[identifier]["required_diagnostic"]
         if codes.count(required) != 1:
             _fail("conformance.negative.tampered", f"negative {identifier} lacks exactly one {required}")
+        if identifier in NEGATIVE_SIMULATION_IDS:
+            retained = _result_document(
+                evidence / "negative-native" / identifier / "simulate.result.json",
+                code="conformance.negative.tampered",
+            )
+            _expect(
+                retained,
+                result,
+                f"negative.{identifier}.retained_result",
+                code="conformance.negative.tampered",
+            )
         results[identifier] = result
     return results
 
@@ -1065,6 +1077,10 @@ def _expected_files(*, require_chain_run: bool) -> set[str]:
             )
     files.update(f"results/admin/{identifier}.json" for identifier in ADMIN_IDS)
     files.update(f"results/negative/{identifier}.json" for identifier in NEGATIVE_IDS)
+    files.update(
+        f"negative-native/{identifier}/simulate.result.json"
+        for identifier in NEGATIVE_SIMULATION_IDS
+    )
     if require_chain_run:
         files.update(
             {"chain-run.json", "independent-verification.json", "contract-tests.json"}
