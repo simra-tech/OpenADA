@@ -1823,7 +1823,12 @@ def _ordinary_measurement(
         else:
             indices = list(range(len(axis)))
         if not indices:
-            return None, signal["unit"], None, 0
+            unit = (
+                f"{signal['unit']}/{series['axis']['unit']}"
+                if kind == "slope"
+                else signal["unit"]
+            )
+            return None, unit, None, 0
         samples = [values[index] for index in indices]
         if kind == "minimum":
             value = min(samples)

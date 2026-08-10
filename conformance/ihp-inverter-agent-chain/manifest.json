@@ -181,7 +181,7 @@
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "7a42feb94890cd0f19690c11a929d05ec35b51116ffac63f7ab8affe8006fe10",
+      "sha256": "bd18e9c771155b90e836159ef32f225b6332546f2b8a36dc04aad9b1bf04824f",
       "extensions": {}
     }
   ],
@@ -821,7 +821,7 @@
       "kind": "independent-oracle",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "7a42feb94890cd0f19690c11a929d05ec35b51116ffac63f7ab8affe8006fe10",
+        "sha256": "bd18e9c771155b90e836159ef32f225b6332546f2b8a36dc04aad9b1bf04824f",
         "extensions": {}
       },
       "native_execution": false,
@@ -854,7 +854,7 @@
       "kind": "independent-decision",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "7a42feb94890cd0f19690c11a929d05ec35b51116ffac63f7ab8affe8006fe10",
+        "sha256": "bd18e9c771155b90e836159ef32f225b6332546f2b8a36dc04aad9b1bf04824f",
         "extensions": {}
       },
       "native_execution": false,
@@ -1416,7 +1416,7 @@
   "release_verification": {
     "implementation": {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "7a42feb94890cd0f19690c11a929d05ec35b51116ffac63f7ab8affe8006fe10",
+      "sha256": "bd18e9c771155b90e836159ef32f225b6332546f2b8a36dc04aad9b1bf04824f",
       "extensions": {}
     },
     "arguments": [
