@@ -5,7 +5,7 @@
       "result": {
         "bytes": 15564,
         "path": "/evidence/results/spectral-sfdr.json",
-        "sha256": "7a3627cf8f0022a3e34a6f667584f64b2396f88460e30c44acaebf3125c36985"
+        "sha256": "2fb7173091782be543c849e1d71bc62349fd8aaea804dcae5bbb28af53001911"
       },
       "unit": "dB",
       "value": 9.598544308390958
@@ -14,7 +14,7 @@
       "result": {
         "bytes": 15567,
         "path": "/evidence/results/spectral-sinad.json",
-        "sha256": "69b431aa43f5abe935a95277919d0ed8b992a1bf6622a7a775c799f4aa161d1a"
+        "sha256": "2e1720fcc8e0fc3644aaff05ce40af9070ab68a6774c5958f56bb3e51f3063ff"
       },
       "unit": "dB",
       "value": 6.327655053654634
@@ -23,7 +23,7 @@
       "result": {
         "bytes": 15559,
         "path": "/evidence/results/spectral-snr.json",
-        "sha256": "fbfa931935a5e26d41dd92caa6271a271e858b823e9b1b337e5b04a6e91d22e9"
+        "sha256": "d839fd97a2a38661eef0de415492138c291cdcc98eee4f22c454e96f74b6d569"
       },
       "unit": "dB",
       "value": 93.28584204310002
@@ -32,7 +32,7 @@
       "result": {
         "bytes": 15560,
         "path": "/evidence/results/spectral-thd.json",
-        "sha256": "311f6f9c4d1ee05c4a77143ea22c2311b1ad35df8ec674a33a2d227727c13fb4"
+        "sha256": "4fd3c3d994eeddefc9a56fbe4c353b273c484b71fad727b0d22c713ccae1c9f7"
       },
       "unit": "dB",
       "value": -6.327655062403778
@@ -70,11 +70,20 @@
     "review_level": "public lifecycle and scope only; no licensed clause-level review"
   },
   "transfer": {
+    "ac_magnitude_at_frequency": {
+      "result": {
+        "bytes": 67826,
+        "path": "/evidence/results/transfer-ac_magnitude_at_frequency.json",
+        "sha256": "b45413368705387b3127a1341f407079d56179f7f514ba434a33ac11eb889c0e"
+      },
+      "unit": "dB",
+      "value": 68.18219791291199
+    },
     "bandwidth_3db": {
       "result": {
         "bytes": 67690,
         "path": "/evidence/results/transfer-bandwidth_3db.json",
-        "sha256": "93aae2420808b7de45ed6bad33f088b0b08b786be07747881cd899570a72d7a9"
+        "sha256": "232721306263158a52d6314edf744b05c2ebd35cdf23c8a9b012267b8d76731b"
       },
       "unit": "Hz",
       "value": 1332.3043851822767
@@ -83,16 +92,25 @@
       "result": {
         "bytes": 67706,
         "path": "/evidence/results/transfer-low_frequency_gain_db.json",
-        "sha256": "76e4f8e172d1ecae0e80ff7d92d504be59c4a840ec5d0a8fafffee9f08ba5eef"
+        "sha256": "306b773075d23110ec0ce6c4d792c4cbb82dcdda7f7a1342c513ead18ce9b7ab"
       },
       "unit": "dB",
       "value": 70.11974138671727
+    },
+    "low_frequency_impedance": {
+      "result": {
+        "bytes": 67085,
+        "path": "/evidence/results/transfer-low_frequency_impedance.json",
+        "sha256": "a39f13aa8befd1fd17acb104321f8894b6d6b9603aacf840eefc2ce5e6c8cce6"
+      },
+      "unit": "Ohm",
+      "value": 1416678492.999632
     },
     "phase_margin": {
       "result": {
         "bytes": 67706,
         "path": "/evidence/results/transfer-phase_margin.json",
-        "sha256": "a04bdd07a9b79bc185fe4d869885230000faf5a86473abb4b7247279d560462f"
+        "sha256": "05908749eba0f2863cf7eddd1f92dce294ceef2c0993ddf1fce9f2bdcf58f9a3"
       },
       "unit": "deg",
       "value": 61.42309151169668
@@ -101,7 +119,7 @@
       "result": {
         "bytes": 67718,
         "path": "/evidence/results/transfer-unity_gain_frequency.json",
-        "sha256": "737a04849ce9fa4ee6e40fdb04a177f28035f81d420ef33726a6940ed4c4fd98"
+        "sha256": "1008c0553372f8f3d1d23d051639c785e56deb3d361dc08f95775921f0125675"
       },
       "unit": "Hz",
       "value": 4157414.5570058133

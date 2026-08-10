@@ -5,7 +5,7 @@
     "extraction": {
       "extensions": {},
       "plot": null,
-      "request_sha256": "d570fb957a0c487793e5cca53144f03ede2e40eae34be16c7e7330de00d106e1",
+      "request_sha256": "e6635dda5fc1f7704a93295b09575ef027b7c7ff75380ff5da468c25464b1453",
       "series": null,
       "source": {
         "analysis_type": "ac",
@@ -15,7 +15,7 @@
           "kind": "ngspice-raw",
           "path": "/evidence/provider-ac/work/ota_ac.raw",
           "role": "simulation.result",
-          "sha256": "51a52b7005b5fa0eed6c9a038051b2b3aac125588b3cab2523a6a1b09d5cd813"
+          "sha256": "428ba73cb4c38ec7e4decf075a8d7b5cf92fdda7336ae9ff15adc3cb6ef997aa"
         },
         "backend": "ngspice",
         "binding": "not-established",
@@ -58,12 +58,12 @@
       "kind": "ngspice-raw",
       "path": "/evidence/provider-ac/work/ota_ac.raw",
       "role": "simulation.result",
-      "sha256": "51a52b7005b5fa0eed6c9a038051b2b3aac125588b3cab2523a6a1b09d5cd813"
+      "sha256": "428ba73cb4c38ec7e4decf075a8d7b5cf92fdda7336ae9ff15adc3cb6ef997aa"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-08-03T07:55:50.256160Z",
+    "created_at": "2026-08-10T09:01:49.781699Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -20,6 +20,10 @@
     "transfer:unity_gain_frequency:negative",
     "transfer:phase_margin",
     "transfer:phase_margin:negative",
+    "transfer:low_frequency_impedance",
+    "transfer:low_frequency_impedance:negative",
+    "transfer:ac_magnitude_at_frequency",
+    "transfer:ac_magnitude_at_frequency:negative",
     "spectral:snr",
     "spectral:snr:negative",
     "spectral:sinad",
@@ -35,12 +39,12 @@
     "inverter_raw": {
       "bytes": 98906,
       "path": "/evidence/provider-tran/work/inverter_spectral.raw",
-      "sha256": "6dbea3e6b0fd68bbbd8d43c1e5ffee2367a21a0b9425c927869b41ab901c0a58"
+      "sha256": "333ef46670de60c4c0b627e5e3a15f27938a74c9caff01de8644b288fa6ffc8b"
     },
     "ota_raw": {
       "bytes": 1147866,
       "path": "/evidence/provider-ac/work/ota_ac.raw",
-      "sha256": "51a52b7005b5fa0eed6c9a038051b2b3aac125588b3cab2523a6a1b09d5cd813"
+      "sha256": "428ba73cb4c38ec7e4decf075a8d7b5cf92fdda7336ae9ff15adc3cb6ef997aa"
     }
   },
   "network": "none",
@@ -283,6 +287,54 @@
       "/evidence/requests/transfer-phase_margin-negative.json",
       "--request-id",
       "25000000-0000-4000-8000-000000000004"
+    ],
+    [
+      "/openada/bin/openada",
+      "--tool-path",
+      "xschem=/foss/tools/xschem/bin/xschem",
+      "transfer",
+      "--series",
+      "/evidence/results/extract-ac.json",
+      "--measurement",
+      "/evidence/requests/transfer-low_frequency_impedance.json",
+      "--request-id",
+      "22000000-0000-4000-8000-000000000005"
+    ],
+    [
+      "/openada/bin/openada",
+      "--tool-path",
+      "xschem=/foss/tools/xschem/bin/xschem",
+      "transfer",
+      "--series",
+      "/evidence/results/extract-ac.json",
+      "--measurement",
+      "/evidence/requests/transfer-low_frequency_impedance-negative.json",
+      "--request-id",
+      "25000000-0000-4000-8000-000000000005"
+    ],
+    [
+      "/openada/bin/openada",
+      "--tool-path",
+      "xschem=/foss/tools/xschem/bin/xschem",
+      "transfer",
+      "--series",
+      "/evidence/results/extract-ac.json",
+      "--measurement",
+      "/evidence/requests/transfer-ac_magnitude_at_frequency.json",
+      "--request-id",
+      "22000000-0000-4000-8000-000000000006"
+    ],
+    [
+      "/openada/bin/openada",
+      "--tool-path",
+      "xschem=/foss/tools/xschem/bin/xschem",
+      "transfer",
+      "--series",
+      "/evidence/results/extract-ac.json",
+      "--measurement",
+      "/evidence/requests/transfer-ac_magnitude_at_frequency-negative.json",
+      "--request-id",
+      "25000000-0000-4000-8000-000000000006"
     ],
     [
       "/openada/bin/openada",
