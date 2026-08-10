@@ -2,20 +2,6 @@ name: Native semantic receipts
 
 on:
   workflow_dispatch:
-  # Bootstrap this workflow before it exists on the default branch. Remove this
-  # branch-only trigger after retrieving the first publication bundle.
-  push:
-    branches:
-      - hellno/debug-wheel-missing-script
-    paths:
-      - .github/workflows/native-semantic-receipts.yml
-      - conformance/ihp-analog-measurements/manifest.json
-      - conformance/ihp-inverter-agent-chain/manifest.json
-      - conformance/ihp-inverter-agent-chain/verify.py
-      - conformance/public-spice-portability/run.py
-      - conformance/public-spice-portability/verify.py
-      - conformance/ihp-sar-rtl/semantic-chain.json
-      - tests/test_ihp_sar_rtl_conformance.py
 
 permissions:
   contents: read
