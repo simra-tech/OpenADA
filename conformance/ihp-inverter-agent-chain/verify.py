@@ -1633,16 +1633,19 @@ def _static_protocol(result: dict[str, Any], *, operation: str, request_id: str)
             "openada.operation/result.series.extract/v1alpha1",
             "openada.assertion/series.extraction.valid/v1alpha1",
             "org.openada.kernel.spice3-series",
+            "1.0.0",
         ),
         "result.measure": (
-            "openada.operation/result.measure/v1alpha1",
+            "openada.operation/result.measure/v1alpha2",
             "openada.assertion/measurement.valid/v1alpha1",
             "org.openada.kernel.typed-evidence",
+            "1.1.0",
         ),
         "specification.evaluate": (
             "openada.operation/specification.evaluate/v1alpha1",
             "openada.assertion/specification.satisfied/v1alpha1",
             "org.openada.kernel.typed-evidence",
+            "1.0.0",
         ),
     }[operation]
     _expect(
@@ -1652,7 +1655,7 @@ def _static_protocol(result: dict[str, Any], *, operation: str, request_id: str)
             "operation_profile": expected[0],
             "assertion_profile": expected[1],
             "implementation_id": expected[2],
-            "implementation_version": "1.0.0",
+            "implementation_version": expected[3],
         },
         f"{operation}.protocol",
     )
@@ -1900,7 +1903,7 @@ def _expected_measurement(
                 "location": None,
                 "algorithm": {
                     "id": f"openada.algorithm/measurement.{request['kind'].replace('_', '-')}/v1",
-                    "version": "1.0.0",
+                    "version": "1.1.0",
                 },
                 "sample_count": 0,
                 "source": source,
@@ -1924,7 +1927,7 @@ def _expected_measurement(
         ),
         "algorithm": {
             "id": f"openada.algorithm/measurement.{request['kind'].replace('_', '-')}/v1",
-            "version": "1.0.0",
+            "version": "1.1.0",
         },
         "sample_count": sample_count,
         "source": source,
