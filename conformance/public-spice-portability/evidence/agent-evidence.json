@@ -5,9 +5,9 @@
       "id": "capabilities",
       "operation": "doctor",
       "result": {
-        "bytes": 20590,
+        "bytes": 21358,
         "path": "/evidence/results/admin/capabilities.json",
-        "sha256": "449e78fa54baf1f28b77c38f2e55c4e3c56e635ee766c5cc291570d1000963bd"
+        "sha256": "2c1989d5386866ff1a049c6a46dba9dd4a12d2c3b51a5400c0d105b51214d5f0"
       }
     },
     {
@@ -15,9 +15,9 @@
       "id": "doctor",
       "operation": "doctor",
       "result": {
-        "bytes": 20590,
+        "bytes": 21358,
         "path": "/evidence/results/admin/doctor.json",
-        "sha256": "956587c6682e42d7a8c79f74b140faac65ce9278b55cbc1a1ba874d0639bb4ce"
+        "sha256": "4f08b141c7d665d286efd8d7e7450ea760840d120e5d7aae67047d76a003e281"
       }
     },
     {
@@ -25,9 +25,9 @@
       "id": "profile-list",
       "operation": "profile.list",
       "result": {
-        "bytes": 5395,
+        "bytes": 7527,
         "path": "/evidence/results/admin/profile-list.json",
-        "sha256": "f4f1d86d95ad74e478cead4510e76a459d279ae21ca28fb4dd981f1d4c4e7a89"
+        "sha256": "058b0bce57a4a3314f8dbda1cc93c307c341ed735d89d9e11e803f6cc9e9351a"
       }
     },
     {
@@ -35,9 +35,9 @@
       "id": "profile-show",
       "operation": "profile.show",
       "result": {
-        "bytes": 46205,
+        "bytes": 58167,
         "path": "/evidence/results/admin/profile-show.json",
-        "sha256": "bffbf598e81b9d74b7780f6f34e73c732caecbe96763973c19f26791da6594ff"
+        "sha256": "c28e0ac833e77dbfc1bfeb1946f2aac3ab817b260339a3dd60f6a8beca5073ed"
       }
     },
     {
@@ -47,7 +47,7 @@
       "result": {
         "bytes": 2452,
         "path": "/evidence/results/admin/provider-list.json",
-        "sha256": "00e0942868d005a34e83cfed2136c703fb48d3529c6efcbf4dab8e7fd700829a"
+        "sha256": "16ef105d92dd8801421cff08fe48703f26d57ceabf8cb02b4a95bbb4a0d36285"
       }
     },
     {
@@ -57,7 +57,7 @@
       "result": {
         "bytes": 2478,
         "path": "/evidence/results/admin/provider-validate.json",
-        "sha256": "88b05c15bc69ee0ba3f30cf7c197fceb9cc3d2c9465900bdaf9b9c44f203303c"
+        "sha256": "c7b934a91185192bbd57033eb4e3517fe89035e1429d1591ed85e3aeb05875c7"
       }
     }
   ],
@@ -87,16 +87,16 @@
       "driver_version": "0.4.0",
       "engineering_status": "pass",
       "extraction_result": {
-        "bytes": 3848,
+        "bytes": 3872,
         "path": "/evidence/results/extract/ngspice-op.json",
-        "sha256": "f09590b9223e460b8358ff990d3187db56a8b2a28f674de4181adfdad1d4525a"
+        "sha256": "fe94b02f3ad6b04cfa37c74f5ed9769f081a58f8b4c0d878e0d92c643388a346"
       },
       "finite_value_count": 11,
       "id": "ngspice-op",
       "native_artifact": {
         "bytes": 668,
-        "path": "/evidence/sim/ngspice-op/inverter-op.raw",
-        "sha256": "08663aa8842593d07d309f8efaf1310503ed999cbddf52188ac5a6953d03da15"
+        "path": "/evidence/sim/ngspice-op/inverter-op/inverter-op.raw",
+        "sha256": "8567f3cb5736a6380ac909c8092dfef1503ce146f07286991d7c6148f1dcecab"
       },
       "point_count": 1,
       "selected_series": [
@@ -104,9 +104,9 @@
         "vout"
       ],
       "simulation_result": {
-        "bytes": 7184,
+        "bytes": 8516,
         "path": "/evidence/results/sim/ngspice-op.json",
-        "sha256": "da9551b28d25b0b19f6263bb6e0ffba3f17e22e7879690b7814d50a1a5bfecf3"
+        "sha256": "e0fec9774dcb55a86fd5efeaf1095507b22aa5e5c678480413cbd5533cf6beb9"
       }
     },
     {
@@ -117,16 +117,16 @@
       "driver_version": "0.4.0",
       "engineering_status": "pass",
       "extraction_result": {
-        "bytes": 4881,
+        "bytes": 4905,
         "path": "/evidence/results/extract/ngspice-dc.json",
-        "sha256": "224bc020b32075854d125efae9c72ad232ec08b7c074472b26e7121cc4504778"
+        "sha256": "7e2ccd9afae6725dfbd6fe53bcebefb836730ffe232dd963efc5c44306cd062d"
       },
       "finite_value_count": 143,
       "id": "ngspice-dc",
       "native_artifact": {
         "bytes": 1862,
-        "path": "/evidence/sim/ngspice-dc/inverter-dc.raw",
-        "sha256": "f0dff4c8e847aaf9849c7e3fc5cf3bc9a3734883eab4003f882e4ba7365bb9d1"
+        "path": "/evidence/sim/ngspice-dc/inverter-dc/inverter-dc.raw",
+        "sha256": "76f220116e3a2c62956d3ec22367383e284afd225565438eb190dcacae192ee6"
       },
       "point_count": 13,
       "selected_series": [
@@ -134,9 +134,9 @@
         "vout"
       ],
       "simulation_result": {
-        "bytes": 7349,
+        "bytes": 8718,
         "path": "/evidence/results/sim/ngspice-dc.json",
-        "sha256": "f0b337cb4ec6387b50ae426776d44fb3d15474a92f62839b795e09328f803c8c"
+        "sha256": "3ea46494bf620170ef436c8814e0a08351376cd2e0cc6df018d231aef92db9e5"
       }
     },
     {
@@ -147,16 +147,16 @@
       "driver_version": "0.4.0",
       "engineering_status": "pass",
       "extraction_result": {
-        "bytes": 8943,
+        "bytes": 8957,
         "path": "/evidence/results/extract/ngspice-ac.json",
-        "sha256": "f1764efdc418bb2f96431752f2be938dccc42e2218b739ca74e7bfedb60c6e3c"
+        "sha256": "1001cce0c29b0f57685de52a7a928f2bc7d9f2f9dff9bfdb0431c5e6bf412dd0"
       },
       "finite_value_count": 2856,
       "id": "ngspice-ac",
       "native_artifact": {
         "bytes": 24869,
-        "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
-        "sha256": "f04b2ab0bbfcf494aab5c493476a3ea71e0724b15c2bf1d5b696f20e34a581dc"
+        "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.raw",
+        "sha256": "39abbfa71c79c8b7e7fb33b21a7149495798c84a5cddffebf71eece202be2ac5"
       },
       "point_count": 51,
       "selected_series": [
@@ -164,9 +164,9 @@
         "vout.imaginary"
       ],
       "simulation_result": {
-        "bytes": 7391,
+        "bytes": 9052,
         "path": "/evidence/results/sim/ngspice-ac.json",
-        "sha256": "3132e0f37cc5b7198e81c856b17c59f34e95f3ba8489620020cbecb8e1ff0f63"
+        "sha256": "392df7daea0c633c46fc208dc2f336ca0fdba1dd72c5e8e9f6284a8a840ca08d"
       }
     },
     {
@@ -177,25 +177,25 @@
       "driver_version": "0.4.0",
       "engineering_status": "pass",
       "extraction_result": {
-        "bytes": 7247,
+        "bytes": 7263,
         "path": "/evidence/results/extract/xyce-dc.json",
-        "sha256": "87d444026af9404467d389cca44521bb469013010df6ac9aea7af2cea4b35c19"
+        "sha256": "1692634c55649d726a21c2290a9012f36789816c301be512b47c335edbf36848"
       },
       "finite_value_count": 202,
       "id": "xyce-dc",
       "native_artifact": {
         "bytes": 5535,
-        "path": "/evidence/sim/xyce-dc/xyce-dc.xyce.raw",
-        "sha256": "d3d60654e38e28a4e4854cdd1832622623cc086b259cbaa6de071995997cbd27"
+        "path": "/evidence/sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw",
+        "sha256": "c491544db45ed6e2d99e6fd3cbde8cec21613aa6c6198601441646312eae71d7"
       },
       "point_count": 101,
       "selected_series": [
         "v1"
       ],
       "simulation_result": {
-        "bytes": 8978,
+        "bytes": 10274,
         "path": "/evidence/results/sim/xyce-dc.json",
-        "sha256": "d954079f78f379878dccecdb81e14ecb6a3475a1834bf263dbce5eb485aebcab"
+        "sha256": "596f0fd9e4746d00042eeed448a6129c2fce80a80996086dbc33b3d153b184fd"
       }
     },
     {
@@ -206,16 +206,16 @@
       "driver_version": "0.4.0",
       "engineering_status": "pass",
       "extraction_result": {
-        "bytes": 7767,
+        "bytes": 7799,
         "path": "/evidence/results/extract/xyce-ac.json",
-        "sha256": "208e8b1fd6e5a27b342387ebe7eed425f29b266363d60fa9cb06e8939731f6e1"
+        "sha256": "41b62ee5429c23df7e72f36fcb4286f2b8f30b01c5c76bf3c0588355cadac70b"
       },
       "finite_value_count": 102,
       "id": "xyce-ac",
       "native_artifact": {
         "bytes": 3657,
-        "path": "/evidence/sim/xyce-ac/xyce-ac-derived.xyce.raw",
-        "sha256": "677466a3d4b293595b0ef40ed9b1746a47c7d6b7da79b633eef9fb35b7a2f402"
+        "path": "/evidence/sim/xyce-ac/xyce-ac-derived/xyce-ac-derived.xyce.raw",
+        "sha256": "d8e228494b90e2786d08dd3fb07d0243a0b07ba419813642dfabb48a4291053c"
       },
       "point_count": 51,
       "selected_series": [
@@ -223,9 +223,9 @@
         "v1.imaginary"
       ],
       "simulation_result": {
-        "bytes": 9064,
+        "bytes": 10700,
         "path": "/evidence/results/sim/xyce-ac.json",
-        "sha256": "d7e5c6df441a497f4ad8274438887aa456dd96348a71cd008f32b16cc635eeb1"
+        "sha256": "9757902758fb4da0b74892bff3f3c39d31c1aa78b583a772635fa468db337d9b"
       }
     },
     {
@@ -236,66 +236,69 @@
       "driver_version": "0.4.0",
       "engineering_status": "pass",
       "extraction_result": {
-        "bytes": 4417,
+        "bytes": 4437,
         "path": "/evidence/results/extract/xyce-tran.json",
-        "sha256": "f70d3e6ba3d0c198302215bc53ebac4f29fe2444a87425453a03bc972cd9c86a"
+        "sha256": "a772069443b7462a745481f6a688ca640d4764ec5986a4784280969c2642e515"
       },
       "finite_value_count": 36,
       "id": "xyce-tran",
       "native_artifact": {
         "bytes": 1151,
-        "path": "/evidence/sim/xyce-tran/xyce-tran.xyce.raw",
-        "sha256": "70ef50bae1becc63c94c463a30e5c967e797e12950067328d43b7fea9eafb738"
+        "path": "/evidence/sim/xyce-tran/xyce-tran/xyce-tran.xyce.raw",
+        "sha256": "669c5df6291f68c8a5f0dc127cc1fc8b8edba0887148d5030b5c70bb7e41b8ed"
       },
       "point_count": 18,
       "selected_series": [
         "v1"
       ],
       "simulation_result": {
-        "bytes": 9972,
+        "bytes": 11288,
         "path": "/evidence/results/sim/xyce-tran.json",
-        "sha256": "130137bc40ca7cb2f17d6560777787a01444a98f7a28f451827c462c34f45331"
+        "sha256": "be3f935421a178a54208c82dea060653b8b402e647d98c93a1b0599cf87540f0"
       }
     }
   ],
   "negative_replays": [
     {
       "diagnostic_codes": [
+        "claim.measurement.unsupported",
         "simulation.request.invalid"
       ],
       "engineering_status": "unknown",
       "id": "xyce-ac-presentation-rejected",
       "operation": "simulate",
       "result": {
-        "bytes": 2859,
+        "bytes": 3598,
         "path": "/evidence/results/negative/xyce-ac-presentation-rejected.json",
-        "sha256": "92a23ea05fae0c709fd3b8a8cff667e4398fbc883369983a5598ec009496fb39"
+        "sha256": "59bcb13170eaf8e951d130f47313485b225f6e7d611e588fec7a79d6ee38d6a0"
       }
     },
     {
       "diagnostic_codes": [
+        "claim.measurement.unsupported",
         "simulation.analysis.unsupported"
       ],
       "engineering_status": "unknown",
       "id": "xyce-op-unsupported",
       "operation": "simulate",
       "result": {
-        "bytes": 2706,
+        "bytes": 3450,
         "path": "/evidence/results/negative/xyce-op-unsupported.json",
-        "sha256": "fc8eb5a9440ea085ca0398456f674c2461be83a027d5f43cad1ce7bd28ee2bf9"
+        "sha256": "e0689de251fa048e89da085b399d5db9a29db54b9f5dcf27ad6b8f3a07cca724"
       }
     },
     {
       "diagnostic_codes": [
+        "claim.measurement.unsupported",
         "simulation.request.invalid"
       ],
       "engineering_status": "unknown",
       "id": "ngspice-analysis-mismatch",
       "operation": "simulate",
       "result": {
-        "bytes": 2869,
+        "bytes": 3607,
         "path": "/evidence/results/negative/ngspice-analysis-mismatch.json",
-        "sha256": "2ae972b8d9199a21c74d29e10f229afe0af2873871bc713a4472e02859302d02"
+        "sha256": "a1680e437dda117b3a2216e1a1b7d9291991c4809f9baf29460f84d341c66288"
       }
     },
     {
@@ -306,9 +309,9 @@
       "id": "extract-missing-selector",
       "operation": "result.series.extract",
       "result": {
-        "bytes": 2274,
+        "bytes": 2358,
         "path": "/evidence/results/negative/extract-missing-selector.json",
-        "sha256": "8f56e93d37c54e4a6a40d7a96b7d84aa700933def7647ae354c4bd921045167d"
+        "sha256": "f0f522c94dcf4847b3a5b8ae1558fc72316474a32ebe58b8290e775ecd9c9140"
       }
     },
     {
@@ -321,7 +324,7 @@
       "result": {
         "bytes": 859,
         "path": "/evidence/results/negative/admin-unknown-profile.json",
-        "sha256": "8132a20f01f79e6160a04264a4d37d279c3c232283a55db2bfce06aff22e7179"
+        "sha256": "0a10e9a9f6b7e44543da9f23e9a5a615312657246038a580877cb71f3cf684e5"
       }
     },
     {
@@ -334,7 +337,7 @@
       "result": {
         "bytes": 938,
         "path": "/evidence/results/negative/admin-invalid-provider.json",
-        "sha256": "cd6b7a344437bfa0ae6e328ce3aa7223cca8c874a549de99ad1bd5a587ef609c"
+        "sha256": "920db1052ffe4999aec5ada7f675915959e5cdc36b1636c03b645375ff3834c7"
       }
     }
   ],

@@ -192,65 +192,72 @@
         "features": [
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/measurement.sample-at/v1alpha1",
             "maturity": "structured"
           },
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/measurement.minimum/v1alpha1",
             "maturity": "structured"
           },
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/measurement.maximum/v1alpha1",
             "maturity": "structured"
           },
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/measurement.mean/v1alpha1",
             "maturity": "structured"
           },
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/measurement.rms/v1alpha1",
             "maturity": "structured"
           },
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/measurement.crossing/v1alpha1",
             "maturity": "structured"
           },
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/measurement.rise-time/v1alpha1",
             "maturity": "structured"
           },
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/measurement.fall-time/v1alpha1",
             "maturity": "structured"
           },
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/measurement.settling-time/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "typed-evidence-measurement-specification-v0alpha2"
+            ],
+            "id": "openada.feature/measurement.slope/v1alpha1",
             "maturity": "structured"
           }
         ],
@@ -258,11 +265,11 @@
           "artifact"
         ],
         "native_product": null,
-        "operation_profile": "openada.operation/result.measure/v1alpha1",
+        "operation_profile": "openada.operation/result.measure/v1alpha2",
         "operation_profile_schema": "openada.operation-profile/v0alpha2",
         "provider_id": "org.openada.kernel.typed-evidence",
         "provider_kind": "evidence-kernel",
-        "provider_version": "1.0.0",
+        "provider_version": "1.1.0",
         "result_schema": "openada.result/v0alpha1",
         "transports": [
           "local-cli",
@@ -320,6 +327,16 @@
           },
           {
             "conformance_ids": [],
+            "id": "openada.feature/transfer.low-frequency-impedance/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [],
             "id": "openada.feature/transfer.bandwidth-3db/v1alpha1",
             "maturity": "structured"
           },
@@ -332,17 +349,22 @@
             "conformance_ids": [],
             "id": "openada.feature/transfer.phase-margin/v1alpha1",
             "maturity": "structured"
+          },
+          {
+            "conformance_ids": [],
+            "id": "openada.feature/transfer.differential-operands/v1alpha1",
+            "maturity": "structured"
           }
         ],
         "locator_types": [
           "artifact"
         ],
         "native_product": null,
-        "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+        "operation_profile": "openada.operation/result.transfer.measure/v1alpha2",
         "operation_profile_schema": "openada.operation-profile/v0alpha2",
         "provider_id": "org.openada.kernel.transfer-evidence",
         "provider_kind": "evidence-kernel",
-        "provider_version": "1.0.0",
+        "provider_version": "1.1.0",
         "result_schema": "openada.result/v0alpha1",
         "transports": [
           "local-cli",
@@ -355,14 +377,14 @@
         "features": [
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/specification.bound-evaluation/v1alpha1",
             "maturity": "structured"
           },
           {
             "conformance_ids": [
-              "typed-evidence-measurement-specification-v0alpha1"
+              "typed-evidence-measurement-specification-v0alpha2"
             ],
             "id": "openada.feature/specification.condition-binding/v1alpha1",
             "maturity": "structured"
@@ -636,7 +658,7 @@
   "inputs": [],
   "operation": "doctor",
   "provenance": {
-    "created_at": "2026-07-19T11:37:25.651830Z",
+    "created_at": "2026-08-10T09:04:46.261391Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

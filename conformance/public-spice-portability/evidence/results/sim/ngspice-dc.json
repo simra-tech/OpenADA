@@ -1,20 +1,20 @@
 {
   "artifacts": [
     {
-      "bytes": 686,
+      "bytes": 685,
       "exists": true,
       "kind": "simulation-log",
-      "path": "/evidence/sim/ngspice-dc/inverter-dc.log",
+      "path": "/evidence/sim/ngspice-dc/inverter-dc/inverter-dc.log",
       "role": "simulation.log",
-      "sha256": "91599089d50844ac62ff12bdf49098f6e184921f47cfb201dbfc7d49cffe0bfc"
+      "sha256": "afd92e9c47e96913cd462cb8de6a5d54e134b7de659aa7d72c0dcb909c8fef4b"
     },
     {
       "bytes": 1862,
       "exists": true,
       "kind": "ngspice-raw",
-      "path": "/evidence/sim/ngspice-dc/inverter-dc.raw",
+      "path": "/evidence/sim/ngspice-dc/inverter-dc/inverter-dc.raw",
       "role": "simulation.result",
-      "sha256": "f0dff4c8e847aaf9849c7e3fc5cf3bc9a3734883eab4003f882e4ba7365bb9d1"
+      "sha256": "76f220116e3a2c62956d3ec22367383e284afd225565438eb190dcacae192ee6"
     }
   ],
   "data": {
@@ -79,12 +79,12 @@
           },
           "inputs_stable": true,
           "log_capture": {
-            "bytes": 686,
-            "path": "/evidence/sim/ngspice-dc/inverter-dc.log",
-            "sha256": "91599089d50844ac62ff12bdf49098f6e184921f47cfb201dbfc7d49cffe0bfc",
+            "bytes": 685,
+            "path": "/evidence/sim/ngspice-dc/inverter-dc/inverter-dc.log",
+            "sha256": "afd92e9c47e96913cd462cb8de6a5d54e134b7de659aa7d72c0dcb909c8fef4b",
             "status": "valid"
           },
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-_frzd2jy/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nNo. of Data Rows : 13\n\nTotal analysis time (seconds) = 0.00810699\n\nTotal elapsed time (seconds) = 0.023 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 10535.523 MB.\nMaximum ngspice program size =  531.707 MB.\nCurrent ngspice program size =   14.633 MB.\n\nShared ngspice pages =   11.340 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.191 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-9gvw2gr1/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nNo. of Data Rows : 13\n\nTotal analysis time (seconds) = 0.00647808\n\nTotal elapsed time (seconds) = 0.020 \n\nTotal DRAM available = 15989.707 MB.\nDRAM currently available =  411.387 MB.\nMaximum ngspice program size =  587.719 MB.\nCurrent ngspice program size =   15.844 MB.\n\nShared ngspice pages =   12.270 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =  116.195 MB.\n\n",
           "measurement_section_count": 0,
           "measurements": [],
           "measurements_truncated": false,
@@ -94,8 +94,8 @@
               "bytes": 1862,
               "kind": "raw",
               "origin": "wrapper",
-              "path": "/evidence/sim/ngspice-dc/inverter-dc.raw",
-              "sha256": "f0dff4c8e847aaf9849c7e3fc5cf3bc9a3734883eab4003f882e4ba7365bb9d1",
+              "path": "/evidence/sim/ngspice-dc/inverter-dc/inverter-dc.raw",
+              "sha256": "76f220116e3a2c62956d3ec22367383e284afd225565438eb190dcacae192ee6",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -151,6 +151,10 @@
           },
           "extensions": {}
         }
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/inverter-dc.spice"
       }
     },
     "protocol": {
@@ -158,10 +162,16 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "b6bd01a8-5eee-4b6a-bc0c-4296c1eca278"
+      "request_id": "37ff7865-447a-461d-9578-eff056a46cbc"
     }
   },
-  "diagnostics": [],
+  "diagnostics": [
+    {
+      "code": "claim.measurement.typed_chain",
+      "message": "The analysis completed, so a quantity may be reported as measured - but only once a typed measurement envelope carries it. A number parsed out of the raw file by hand is not one: nothing in the result contract binds it to this run. This envelope has been retained at /evidence/sim/ngspice-dc/simulate.result.json. The retained raw declares 'v(v-sweep)' as the axis - which must NOT appear in selectors - over the vectors v(vin), v(vdd), v(vout), i(v2), i(v1). Continue with: openada extract --simulation /evidence/sim/ngspice-dc/simulate.result.json --artifact /evidence/sim/ngspice-dc/inverter-dc/inverter-dc.raw --selection /evidence/sim/ngspice-dc/simulate.selection.json, then `openada measure` on the series it returns; its kinds are sample_at, minimum, maximum, mean, rms, crossing, rise_time, fall_time and settling_time, each reading ONE named signal. A ratio of two signals is not among them - for a gain, a differential gain or a driving-point impedance, run an AC analysis and use `openada transfer`. `openada spectral` covers snr, sinad, thd and sfdr on a coherent single tone.",
+      "severity": "info"
+    }
+  ],
   "engineering": {
     "status": "pass",
     "summary": "ngspice produced all required, structurally valid simulation evidence."
@@ -171,9 +181,9 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-_frzd2jy/simulation.raw",
+      "/tmp/openada-ngspice-9gvw2gr1/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-_frzd2jy/simulation.log",
+      "/tmp/openada-ngspice-9gvw2gr1/simulation.log",
       "/evidence/work/inverter-dc.spice"
     ],
     "cwd": "/evidence",
@@ -193,7 +203,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-19T11:37:16.566770Z",
+    "created_at": "2026-08-10T09:04:38.399268Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

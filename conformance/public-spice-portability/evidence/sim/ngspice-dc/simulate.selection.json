@@ -1,0 +1,36 @@
+{
+  "selectors": [
+    {
+      "native_name": "v(vin)",
+      "output_name": "v_vin",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "v(vdd)",
+      "output_name": "v_vdd",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "v(vout)",
+      "output_name": "v_vout",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "i(v2)",
+      "output_name": "i_v2",
+      "unit": "A",
+      "component": "real"
+    },
+    {
+      "native_name": "i(v1)",
+      "output_name": "i_v1",
+      "unit": "A",
+      "component": "real"
+    }
+  ],
+  "conditions": [],
+  "extensions": {}
+}

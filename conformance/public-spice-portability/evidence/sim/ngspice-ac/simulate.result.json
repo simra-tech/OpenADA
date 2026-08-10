@@ -1,0 +1,219 @@
+{
+  "schema": "openada.result/v0alpha1",
+  "operation": "simulate",
+  "tool": {
+    "name": "ngspice",
+    "path": "/foss/tools/ngspice/bin/ngspice",
+    "version": "** ngspice-46 : Circuit level simulation program"
+  },
+  "execution": {
+    "status": "completed",
+    "exit_code": 0,
+    "duration_ms": 64,
+    "command": [
+      "/foss/tools/ngspice/bin/ngspice",
+      "-b",
+      "-r",
+      "/tmp/openada-ngspice-k0sfp4gx/simulation.raw",
+      "-o",
+      "/tmp/openada-ngspice-k0sfp4gx/simulation.log",
+      "/evidence/work/ota-ac.spice"
+    ],
+    "cwd": "/evidence"
+  },
+  "engineering": {
+    "status": "pass",
+    "summary": "ngspice produced all required, structurally valid simulation evidence."
+  },
+  "inputs": [
+    {
+      "kind": "spice-netlist",
+      "role": "input",
+      "path": "/evidence/work/ota-ac.spice",
+      "exists": true,
+      "bytes": 390865,
+      "sha256": "33a9c3440008ca72cf8ba1e75911587433137437b5c3f452f90c3f18d9055e38"
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "simulation-log",
+      "role": "simulation.log",
+      "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.log",
+      "exists": true,
+      "bytes": 756,
+      "sha256": "cd7bbeac683d22a161ff9df002e427f4f46551dab21aeb47ea915343670da3f1"
+    },
+    {
+      "kind": "ngspice-raw",
+      "role": "simulation.result",
+      "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.raw",
+      "exists": true,
+      "bytes": 24869,
+      "sha256": "39abbfa71c79c8b7e7fb33b21a7149495798c84a5cddffebf71eece202be2ac5"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "info",
+      "code": "claim.measurement.typed_chain",
+      "message": "The analysis completed, so a quantity may be reported as measured - but only once a typed measurement envelope carries it. A number parsed out of the raw file by hand is not one: nothing in the result contract binds it to this run. This envelope has been retained at /evidence/sim/ngspice-ac/simulate.result.json. The retained raw declares 'frequency' as the axis - which must NOT appear in selectors - over the vectors v(vp), v(vdd), v(net1), v(vout), v(vm), v(x1.net1), v(x1.net2), i(l6), i(vdd), i(v1). Continue with: openada extract --simulation /evidence/sim/ngspice-ac/simulate.result.json --artifact /evidence/sim/ngspice-ac/ota-ac/ota-ac.raw --selection /evidence/sim/ngspice-ac/simulate.selection.json, then `openada transfer` on the series it returns. Its metric kinds are low_frequency_gain_db (dB), low_frequency_impedance (Ohm, output in V over input in A), bandwidth_3db, unity_gain_frequency and phase_margin. Each operand is a Cartesian {real, imaginary} pair and may add negative_real/negative_imaginary to become differential, which is how a differential gain and any other two-terminal ratio becomes one typed measurement instead of arithmetic in an answer. The amperes an impedance needs are the `i(<source>)` vectors already listed in the selection file: hold the node with a 1 V AC source and name that source's current as the input. Run `openada transfer --help` for the exact shape."
+    }
+  ],
+  "data": {
+    "protocol": {
+      "request_id": "86a587ac-538d-4ec5-b267-0800f4a7717b",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "driver_id": "org.openada.driver.ngspice",
+      "driver_version": "0.4.0"
+    },
+    "analysis": {
+      "type": "ac",
+      "completion": "completed",
+      "convergence": "converged",
+      "point_count": 51,
+      "dependent_variable_count": 28,
+      "finite_value_count": 2856,
+      "extensions": {}
+    },
+    "evidence": {
+      "request_binding": "exact",
+      "freshness": "fresh",
+      "structure": "valid",
+      "artifact_roles_present": [
+        "simulation.log",
+        "simulation.result"
+      ],
+      "provenance": "bounded",
+      "provenance_limitations": [
+        "Only the declared top-level model-free analysis deck and selected native executable were content-bound; host runtime libraries and simulator defaults remain bounded provenance."
+      ],
+      "extensions": {}
+    },
+    "extensions": {
+      "org.openada": {
+        "backend": "ngspice",
+        "parameters": {
+          "analysis": {
+            "type": "ac",
+            "extensions": {},
+            "sweep": "dec",
+            "points": 10,
+            "start_hz": 1.0,
+            "stop_hz": 100000.0
+          },
+          "extensions": {}
+        },
+        "native_data": {
+          "execution_mode": "batch",
+          "expected_outputs": [],
+          "working_directory": "/evidence",
+          "working_directory_is_sandbox": false,
+          "transitive_inputs_enumerated": false,
+          "requested_environment_overrides": {},
+          "transitive_include_detected": false,
+          "initialization": {
+            "policy": "native-default",
+            "file": null,
+            "local_user_spiceinit": "native-default",
+            "system_spinit": {
+              "policy": "native-default-unenumerated",
+              "file": null
+            },
+            "ambient_startup_files_enumerated": false
+          },
+          "environment_overrides": {},
+          "environment_policy": {
+            "mode": "inherit",
+            "ambient_inherited": true
+          },
+          "environment": {
+            "PDK": null,
+            "PDK_ROOT": "/foss/pdks",
+            "SPICE_ASCIIRAWFILE": null,
+            "SPICE_LIB_DIR": null,
+            "SPICE_SCRIPTS": null,
+            "NGSPICE_INPUT_DIR": null
+          },
+          "converged": true,
+          "measurements": [],
+          "measurements_truncated": false,
+          "missing_measurements": [],
+          "duplicate_measurements": [],
+          "measurement_section_count": 0,
+          "solver_warning_count": 0,
+          "solver_warning_examples": [],
+          "solver_warning_examples_truncated": false,
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-ota/ota_testbench.sch\n\nbinary raw file \"/tmp/openada-ngspice-k0sfp4gx/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\nNo. of Data Columns : 29  \n\nNo. of Data Rows : 51\n\nTotal analysis time (seconds) = 0.0152323\n\nTotal elapsed time (seconds) = 0.033 \n\nTotal DRAM available = 15989.707 MB.\nDRAM currently available =  411.387 MB.\nMaximum ngspice program size =  587.738 MB.\nCurrent ngspice program size =   15.805 MB.\n\nShared ngspice pages =   12.133 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =  116.215 MB.\n\n",
+          "log_capture": {
+            "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.log",
+            "status": "valid",
+            "bytes": 756,
+            "sha256": "cd7bbeac683d22a161ff9df002e427f4f46551dab21aeb47ea915343670da3f1"
+          },
+          "output_captures": [
+            {
+              "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.raw",
+              "status": "valid",
+              "bytes": 24869,
+              "sha256": "39abbfa71c79c8b7e7fb33b21a7149495798c84a5cddffebf71eece202be2ac5",
+              "validation": {
+                "valid": true,
+                "reason": "valid",
+                "metadata": {
+                  "format": "ngspice-raw",
+                  "bytes": 24869,
+                  "plot_count": 1,
+                  "analysis_plot_count": 1,
+                  "has_analysis_plot": true,
+                  "value_count": 1479,
+                  "numeric_scalar_count": 2958,
+                  "plots": [
+                    {
+                      "plotname": "AC Analysis",
+                      "encoding": "binary",
+                      "numeric_type": "complex",
+                      "variables": 29,
+                      "points": 51,
+                      "values": 1479,
+                      "unpadded": false,
+                      "independent_variable": "frequency",
+                      "axis_first": 1.0,
+                      "axis_last": 100000.00000000033,
+                      "axis_strictly_increasing": true,
+                      "axis_linear_step": null,
+                      "axis_log_ratio": 1.2589254117941673
+                    }
+                  ]
+                }
+              },
+              "kind": "raw",
+              "origin": "wrapper"
+            }
+          ],
+          "control_script_capture": null,
+          "analysis_evidence": {
+            "raw": true,
+            "completed_log_record": true
+          },
+          "inputs_stable": true
+        },
+        "native_diagnostics": []
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/ota-ac.spice"
+      }
+    }
+  },
+  "provenance": {
+    "openada_version": "0.4.0",
+    "created_at": "2026-08-10T09:04:38.680468Z",
+    "host": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "python": "3.12.3"
+    }
+  }
+}

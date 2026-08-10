@@ -1,0 +1,18 @@
+{
+  "selectors": [
+    {
+      "native_name": "V(1)",
+      "output_name": "V_1_re",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "V(1)",
+      "output_name": "V_1_im",
+      "unit": "V",
+      "component": "imaginary"
+    }
+  ],
+  "conditions": [],
+  "extensions": {}
+}

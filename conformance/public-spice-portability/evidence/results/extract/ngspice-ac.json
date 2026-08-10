@@ -13,7 +13,7 @@
         "plotname": "AC Analysis",
         "point_count": 51
       },
-      "request_sha256": "055f87be68700f41035ba0e8ae0dadc8820449d7a577a7ca7867046ae09c3fd4",
+      "request_sha256": "771cd1fc17c65012f30c838721d0d001214195e8b46554e5cde8659f8bca7553",
       "series": {
         "axis": {
           "name": "frequency",
@@ -211,10 +211,10 @@
           "artifact_sha256": "2d0b291a4b387ceaa15f0826c48856be1cba0dffac2b81ea7d4b8cff68da28b9",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "f04b2ab0bbfcf494aab5c493476a3ea71e0724b15c2bf1d5b696f20e34a581dc",
+            "artifact_sha256": "39abbfa71c79c8b7e7fb33b21a7149495798c84a5cddffebf71eece202be2ac5",
             "binding": "unverified",
             "operation": "circuit.simulate",
-            "request_id": "a99cd045-a2b2-40e7-bb4f-a96fab9b0a03"
+            "request_id": "86a587ac-538d-4ec5-b267-0800f4a7717b"
           },
           "operation": "openada.operation/result.series.extract/v1alpha1",
           "request_id": "21000000-0000-4000-8000-000000000003"
@@ -226,16 +226,16 @@
           "bytes": 24869,
           "exists": true,
           "kind": "ngspice-raw",
-          "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
+          "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.raw",
           "role": "simulation.result",
-          "sha256": "f04b2ab0bbfcf494aab5c493476a3ea71e0724b15c2bf1d5b696f20e34a581dc"
+          "sha256": "39abbfa71c79c8b7e7fb33b21a7149495798c84a5cddffebf71eece202be2ac5"
         },
         "backend": "ngspice",
         "binding": "verified",
         "driver_id": "org.openada.driver.ngspice",
         "driver_version": "0.4.0",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-        "request_id": "a99cd045-a2b2-40e7-bb4f-a96fab9b0a03"
+        "request_id": "86a587ac-538d-4ec5-b267-0800f4a7717b"
       },
       "status": "extracted"
     },
@@ -263,14 +263,14 @@
       "bytes": 24869,
       "exists": true,
       "kind": "ngspice-raw",
-      "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
+      "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.raw",
       "role": "simulation.result",
-      "sha256": "f04b2ab0bbfcf494aab5c493476a3ea71e0724b15c2bf1d5b696f20e34a581dc"
+      "sha256": "39abbfa71c79c8b7e7fb33b21a7149495798c84a5cddffebf71eece202be2ac5"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-19T11:37:21.425297Z",
+    "created_at": "2026-08-10T09:04:42.290083Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -44,6 +44,10 @@
           },
           "extensions": {}
         }
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/inverter-op.spice"
       }
     },
     "protocol": {
@@ -51,10 +55,16 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "e2713c14-aa2d-4d80-99cd-4f22e66f25c0"
+      "request_id": "c53b403b-6540-48b8-9c71-2f88e6bedab9"
     }
   },
   "diagnostics": [
+    {
+      "code": "claim.measurement.unsupported",
+      "hint": "Fix the reason named by the other diagnostics and re-run. A quantity becomes reportable only once an analysis completes and a typed measurement envelope carries it.",
+      "message": "This run establishes no measurable quantity: analysis completion is 'unproven' and engineering status is 'unknown'. No number derived from it - including one read out of a retained raw file - may be reported as measured, simulated or verified. Report it as an estimate, or say the simulation did not produce a usable result.",
+      "severity": "error"
+    },
     {
       "code": "simulation.request.invalid",
       "message": "The typed analysis parameters do not match the authoritative deck directive.",
@@ -83,7 +93,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-19T11:37:34.889961Z",
+    "created_at": "2026-08-10T09:04:54.732800Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

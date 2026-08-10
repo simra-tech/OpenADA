@@ -1,0 +1,12 @@
+{
+  "selectors": [
+    {
+      "native_name": "V(1)",
+      "output_name": "V_1",
+      "unit": "V",
+      "component": "real"
+    }
+  ],
+  "conditions": [],
+  "extensions": {}
+}

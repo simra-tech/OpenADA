@@ -1,20 +1,20 @@
 {
   "artifacts": [
     {
-      "bytes": 757,
+      "bytes": 756,
       "exists": true,
       "kind": "simulation-log",
-      "path": "/evidence/sim/ngspice-ac/ota-ac.log",
+      "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.log",
       "role": "simulation.log",
-      "sha256": "fb6dfd8caf2aefcec8fe47a9ebc365aee15dc3e2c98e50a0cd6cf9cd51e1342b"
+      "sha256": "cd7bbeac683d22a161ff9df002e427f4f46551dab21aeb47ea915343670da3f1"
     },
     {
       "bytes": 24869,
       "exists": true,
       "kind": "ngspice-raw",
-      "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
+      "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.raw",
       "role": "simulation.result",
-      "sha256": "f04b2ab0bbfcf494aab5c493476a3ea71e0724b15c2bf1d5b696f20e34a581dc"
+      "sha256": "39abbfa71c79c8b7e7fb33b21a7149495798c84a5cddffebf71eece202be2ac5"
     }
   ],
   "data": {
@@ -79,12 +79,12 @@
           },
           "inputs_stable": true,
           "log_capture": {
-            "bytes": 757,
-            "path": "/evidence/sim/ngspice-ac/ota-ac.log",
-            "sha256": "fb6dfd8caf2aefcec8fe47a9ebc365aee15dc3e2c98e50a0cd6cf9cd51e1342b",
+            "bytes": 756,
+            "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.log",
+            "sha256": "cd7bbeac683d22a161ff9df002e427f4f46551dab21aeb47ea915343670da3f1",
             "status": "valid"
           },
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-ota/ota_testbench.sch\n\nbinary raw file \"/tmp/openada-ngspice-pc7miy1k/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\nNo. of Data Columns : 29  \n\nNo. of Data Rows : 51\n\nTotal analysis time (seconds) = 0.0134295\n\nTotal elapsed time (seconds) = 0.034 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 10534.105 MB.\nMaximum ngspice program size =  531.730 MB.\nCurrent ngspice program size =   15.074 MB.\n\nShared ngspice pages =   11.566 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.215 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-ota/ota_testbench.sch\n\nbinary raw file \"/tmp/openada-ngspice-k0sfp4gx/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\nNo. of Data Columns : 29  \n\nNo. of Data Rows : 51\n\nTotal analysis time (seconds) = 0.0152323\n\nTotal elapsed time (seconds) = 0.033 \n\nTotal DRAM available = 15989.707 MB.\nDRAM currently available =  411.387 MB.\nMaximum ngspice program size =  587.738 MB.\nCurrent ngspice program size =   15.805 MB.\n\nShared ngspice pages =   12.133 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =  116.215 MB.\n\n",
           "measurement_section_count": 0,
           "measurements": [],
           "measurements_truncated": false,
@@ -94,8 +94,8 @@
               "bytes": 24869,
               "kind": "raw",
               "origin": "wrapper",
-              "path": "/evidence/sim/ngspice-ac/ota-ac.raw",
-              "sha256": "f04b2ab0bbfcf494aab5c493476a3ea71e0724b15c2bf1d5b696f20e34a581dc",
+              "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.raw",
+              "sha256": "39abbfa71c79c8b7e7fb33b21a7149495798c84a5cddffebf71eece202be2ac5",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -150,6 +150,10 @@
           },
           "extensions": {}
         }
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/ota-ac.spice"
       }
     },
     "protocol": {
@@ -157,10 +161,16 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "a99cd045-a2b2-40e7-bb4f-a96fab9b0a03"
+      "request_id": "86a587ac-538d-4ec5-b267-0800f4a7717b"
     }
   },
-  "diagnostics": [],
+  "diagnostics": [
+    {
+      "code": "claim.measurement.typed_chain",
+      "message": "The analysis completed, so a quantity may be reported as measured - but only once a typed measurement envelope carries it. A number parsed out of the raw file by hand is not one: nothing in the result contract binds it to this run. This envelope has been retained at /evidence/sim/ngspice-ac/simulate.result.json. The retained raw declares 'frequency' as the axis - which must NOT appear in selectors - over the vectors v(vp), v(vdd), v(net1), v(vout), v(vm), v(x1.net1), v(x1.net2), i(l6), i(vdd), i(v1). Continue with: openada extract --simulation /evidence/sim/ngspice-ac/simulate.result.json --artifact /evidence/sim/ngspice-ac/ota-ac/ota-ac.raw --selection /evidence/sim/ngspice-ac/simulate.selection.json, then `openada transfer` on the series it returns. Its metric kinds are low_frequency_gain_db (dB), low_frequency_impedance (Ohm, output in V over input in A), bandwidth_3db, unity_gain_frequency and phase_margin. Each operand is a Cartesian {real, imaginary} pair and may add negative_real/negative_imaginary to become differential, which is how a differential gain and any other two-terminal ratio becomes one typed measurement instead of arithmetic in an answer. The amperes an impedance needs are the `i(<source>)` vectors already listed in the selection file: hold the node with a 1 V AC source and name that source's current as the input. Run `openada transfer --help` for the exact shape.",
+      "severity": "info"
+    }
+  ],
   "engineering": {
     "status": "pass",
     "summary": "ngspice produced all required, structurally valid simulation evidence."
@@ -170,13 +180,13 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-pc7miy1k/simulation.raw",
+      "/tmp/openada-ngspice-k0sfp4gx/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-pc7miy1k/simulation.log",
+      "/tmp/openada-ngspice-k0sfp4gx/simulation.log",
       "/evidence/work/ota-ac.spice"
     ],
     "cwd": "/evidence",
-    "duration_ms": 65,
+    "duration_ms": 64,
     "exit_code": 0,
     "status": "completed"
   },
@@ -192,7 +202,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-19T11:37:16.955056Z",
+    "created_at": "2026-08-10T09:04:38.680468Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

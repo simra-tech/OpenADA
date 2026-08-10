@@ -1,0 +1,215 @@
+{
+  "schema": "openada.result/v0alpha1",
+  "operation": "simulate",
+  "tool": {
+    "name": "ngspice",
+    "path": "/foss/tools/ngspice/bin/ngspice",
+    "version": "** ngspice-46 : Circuit level simulation program"
+  },
+  "execution": {
+    "status": "completed",
+    "exit_code": 0,
+    "duration_ms": 32,
+    "command": [
+      "/foss/tools/ngspice/bin/ngspice",
+      "-b",
+      "-r",
+      "/tmp/openada-ngspice-g4a0qhg1/simulation.raw",
+      "-o",
+      "/tmp/openada-ngspice-g4a0qhg1/simulation.log",
+      "/evidence/work/inverter-op.spice"
+    ],
+    "cwd": "/evidence"
+  },
+  "engineering": {
+    "status": "pass",
+    "summary": "ngspice produced all required, structurally valid simulation evidence."
+  },
+  "inputs": [
+    {
+      "kind": "spice-netlist",
+      "role": "input",
+      "path": "/evidence/work/inverter-op.spice",
+      "exists": true,
+      "bytes": 390462,
+      "sha256": "a017954533340bf57ea8fb9e69c1a689477d5b89f92cae9ac388bf2799d53c43"
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "simulation-log",
+      "role": "simulation.log",
+      "path": "/evidence/sim/ngspice-op/inverter-op/inverter-op.log",
+      "exists": true,
+      "bytes": 684,
+      "sha256": "85c1ecba7bbc4207b34c6ece4e793844d111a3c42d630a5f22df816c37b4f6bb"
+    },
+    {
+      "kind": "ngspice-raw",
+      "role": "simulation.result",
+      "path": "/evidence/sim/ngspice-op/inverter-op/inverter-op.raw",
+      "exists": true,
+      "bytes": 668,
+      "sha256": "8567f3cb5736a6380ac909c8092dfef1503ce146f07286991d7c6148f1dcecab"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "info",
+      "code": "claim.measurement.typed_chain",
+      "message": "The analysis completed, so a quantity may be reported as measured - but only once a typed measurement envelope carries it. A number parsed out of the raw file by hand is not one: nothing in the result contract binds it to this run. This envelope has been retained at /evidence/sim/ngspice-op/simulate.result.json. The retained raw declares the vectors v(vin), v(vdd), v(vout), i(v2), i(v1); an operating point has no axis. Continue with: openada extract --simulation /evidence/sim/ngspice-op/simulate.result.json --artifact /evidence/sim/ngspice-op/inverter-op/inverter-op.raw --selection /evidence/sim/ngspice-op/simulate.selection.json, then `openada measure` on the series it returns; its kinds are sample_at, minimum, maximum, mean, rms, crossing, rise_time, fall_time and settling_time, each reading ONE named signal. A ratio of two signals is not among them - for a gain, a differential gain or a driving-point impedance, run an AC analysis and use `openada transfer`. `openada spectral` covers snr, sinad, thd and sfdr on a coherent single tone."
+    }
+  ],
+  "data": {
+    "protocol": {
+      "request_id": "3a29c95a-a93f-4695-a191-76741635cc6f",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "driver_id": "org.openada.driver.ngspice",
+      "driver_version": "0.4.0"
+    },
+    "analysis": {
+      "type": "op",
+      "completion": "completed",
+      "convergence": "converged",
+      "point_count": 1,
+      "dependent_variable_count": 11,
+      "finite_value_count": 11,
+      "extensions": {}
+    },
+    "evidence": {
+      "request_binding": "exact",
+      "freshness": "fresh",
+      "structure": "valid",
+      "artifact_roles_present": [
+        "simulation.log",
+        "simulation.result"
+      ],
+      "provenance": "bounded",
+      "provenance_limitations": [
+        "Only the declared top-level model-free analysis deck and selected native executable were content-bound; host runtime libraries and simulator defaults remain bounded provenance."
+      ],
+      "extensions": {}
+    },
+    "extensions": {
+      "org.openada": {
+        "backend": "ngspice",
+        "parameters": {
+          "analysis": {
+            "type": "op",
+            "extensions": {}
+          },
+          "extensions": {}
+        },
+        "native_data": {
+          "execution_mode": "batch",
+          "expected_outputs": [],
+          "working_directory": "/evidence",
+          "working_directory_is_sandbox": false,
+          "transitive_inputs_enumerated": false,
+          "requested_environment_overrides": {},
+          "transitive_include_detected": false,
+          "initialization": {
+            "policy": "native-default",
+            "file": null,
+            "local_user_spiceinit": "native-default",
+            "system_spinit": {
+              "policy": "native-default-unenumerated",
+              "file": null
+            },
+            "ambient_startup_files_enumerated": false
+          },
+          "environment_overrides": {},
+          "environment_policy": {
+            "mode": "inherit",
+            "ambient_inherited": true
+          },
+          "environment": {
+            "PDK": null,
+            "PDK_ROOT": "/foss/pdks",
+            "SPICE_ASCIIRAWFILE": null,
+            "SPICE_LIB_DIR": null,
+            "SPICE_SCRIPTS": null,
+            "NGSPICE_INPUT_DIR": null
+          },
+          "converged": true,
+          "measurements": [],
+          "measurements_truncated": false,
+          "missing_measurements": [],
+          "duplicate_measurements": [],
+          "measurement_section_count": 0,
+          "solver_warning_count": 0,
+          "solver_warning_examples": [],
+          "solver_warning_examples_truncated": false,
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-g4a0qhg1/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 11  \n\nNo. of Data Rows : 1\n\nTotal analysis time (seconds) = 0.00177953\n\nTotal elapsed time (seconds) = 0.015 \n\nTotal DRAM available = 15989.707 MB.\nDRAM currently available =  411.387 MB.\nMaximum ngspice program size =  587.723 MB.\nCurrent ngspice program size =   15.723 MB.\n\nShared ngspice pages =   12.152 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =  116.199 MB.\n\n",
+          "log_capture": {
+            "path": "/evidence/sim/ngspice-op/inverter-op/inverter-op.log",
+            "status": "valid",
+            "bytes": 684,
+            "sha256": "85c1ecba7bbc4207b34c6ece4e793844d111a3c42d630a5f22df816c37b4f6bb"
+          },
+          "output_captures": [
+            {
+              "path": "/evidence/sim/ngspice-op/inverter-op/inverter-op.raw",
+              "status": "valid",
+              "bytes": 668,
+              "sha256": "8567f3cb5736a6380ac909c8092dfef1503ce146f07286991d7c6148f1dcecab",
+              "validation": {
+                "valid": true,
+                "reason": "valid",
+                "metadata": {
+                  "format": "ngspice-raw",
+                  "bytes": 668,
+                  "plot_count": 1,
+                  "analysis_plot_count": 1,
+                  "has_analysis_plot": true,
+                  "value_count": 11,
+                  "numeric_scalar_count": 11,
+                  "plots": [
+                    {
+                      "plotname": "Operating Point",
+                      "encoding": "binary",
+                      "numeric_type": "real",
+                      "variables": 11,
+                      "points": 1,
+                      "values": 11,
+                      "unpadded": false,
+                      "independent_variable": "v(vin)",
+                      "axis_first": 0.0,
+                      "axis_last": 0.0,
+                      "axis_strictly_increasing": true,
+                      "axis_linear_step": null,
+                      "axis_log_ratio": null
+                    }
+                  ]
+                }
+              },
+              "kind": "raw",
+              "origin": "wrapper"
+            }
+          ],
+          "control_script_capture": null,
+          "analysis_evidence": {
+            "raw": true,
+            "completed_log_record": true
+          },
+          "inputs_stable": true
+        },
+        "native_diagnostics": []
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/inverter-op.spice"
+      }
+    }
+  },
+  "provenance": {
+    "openada_version": "0.4.0",
+    "created_at": "2026-08-10T09:04:38.149797Z",
+    "host": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "python": "3.12.3"
+    }
+  }
+}

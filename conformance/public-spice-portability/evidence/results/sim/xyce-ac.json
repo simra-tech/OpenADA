@@ -4,17 +4,17 @@
       "bytes": 3027,
       "exists": true,
       "kind": "xyce-log",
-      "path": "/evidence/sim/xyce-ac/xyce-ac-derived.xyce.log",
+      "path": "/evidence/sim/xyce-ac/xyce-ac-derived/xyce-ac-derived.xyce.log",
       "role": "simulation.log",
-      "sha256": "27d0a3d01bbe987804b9da6f9714682d902aafb1cb7a0ec29dc59537b0472465"
+      "sha256": "8396900253dcf2752366130855384d5113736a9d666fff868cabb7bf98df11da"
     },
     {
       "bytes": 3657,
       "exists": true,
       "kind": "xyce-raw",
-      "path": "/evidence/sim/xyce-ac/xyce-ac-derived.xyce.raw",
+      "path": "/evidence/sim/xyce-ac/xyce-ac-derived/xyce-ac-derived.xyce.raw",
       "role": "simulation.result",
-      "sha256": "677466a3d4b293595b0ef40ed9b1746a47c7d6b7da79b633eef9fb35b7a2f402"
+      "sha256": "d8e228494b90e2786d08dd3fb07d0243a0b07ba419813642dfabb48a4291053c"
     }
   ],
   "data": {
@@ -76,18 +76,18 @@
           "inputs_stable": true,
           "log_capture": {
             "bytes": 3027,
-            "path": "/evidence/sim/xyce-ac/xyce-ac-derived.xyce.log",
-            "sha256": "27d0a3d01bbe987804b9da6f9714682d902aafb1cb7a0ec29dc59537b0472465",
+            "path": "/evidence/sim/xyce-ac/xyce-ac-derived/xyce-ac-derived.xyce.log",
+            "sha256": "8396900253dcf2752366130855384d5113736a9d666fff868cabb7bf98df11da",
             "status": "valid"
           },
-          "log_tail": "\n*****\n***** Welcome to the Xyce(TM) Parallel Electronic Simulator\n*****\n***** This is version Xyce Release 7.10-opensource\n***** Date: Sun Jul 19 13:37:19 CEST 2026\n\n\n***** Executing netlist /evidence/work/xyce-ac-derived.cir\n\n***** Reading and parsing netlist...\nNetlist warning: No print specified\n***** Setting up topology...\n\n***** Device Count Summary ...\n       C level 1 (Capacitor)                  1\n       I level 1 (Independent Current Source) 1\n       R level 1 (Resistor)                   1\n       ----------------------------------------\n       Total Devices                          3\n***** Setting up matrix structure...\n***** Number of Unknowns = 1\n***** Initializing...\n\n\n***** Solution Summary *****\n\tNumber Successful Steps Taken:\t\t51\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t1\n\tNumber Linear Solves:\t\t\t1\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t3\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t4.50611e-05 seconds\n\tTotal Jacobian Load Time:\t\t8.82149e-06 seconds\n\tTotal Linear Solution Time:\t\t1.09673e-05 seconds\n\n\n***** Total Simulation Solvers Run Time: 0.00172305 seconds\n***** Total Elapsed Run Time:            0.00546503 seconds\n*****\n***** End of Xyce(TM) Simulation\n*****\n\nTiming summary of 1 processor\n                 Stats                   Count       CPU Time              Wall Time\n---------------------------------------- ----- --------------------- ---------------------\nXyce                                         1        0.018 (100.0%)        0.294 (100.0%)\n  Analysis                                   1        0.002 ( 9.08%)        0.002 ( 0.57%)\n    AC                                       1        0.002 ( 9.03%)        0.002 ( 0.56%)\n      DC Nonlinear Solve                     1        0.001 ( 3.10%)        0.001 ( 0.19%)\n        Residual                             3        0.000 ( 0.28%)        0.000 ( 0.02%)\n        Jacobian                             1        0.000 ( 0.06%)        0.000 (<0.01%)\n        Linear Solve                         1        0.000 ( 0.07%)        0.000 (<0.01%)\n      AC Linear Solve                       51        0.000 ( 2.36%)        0.000 ( 0.14%)\n        Linear Solve                        51        0.000 ( 1.78%)        0.000 ( 0.11%)\n  Netlist Import                             1        0.001 ( 3.89%)        0.002 ( 0.61%)\n    Parse Context                            1        0.000 ( 0.48%)        0.000 ( 0.08%)\n    Distribute Devices                       1        0.000 ( 0.87%)        0.000 ( 0.14%)\n    Verify Devices                           1        0.000 ( 0.02%)        0.000 (<0.01%)\n    Instantiate                              1        0.000 ( 0.30%)        0.000 ( 0.05%)\n  Late Initialization                        1        0.000 ( 1.76%)        0.001 ( 0.28%)\n    Global Indices                           1        0.000 ( 0.08%)        0.000 ( 0.01%)\n  Setup Matrix Structure                     1        0.000 ( 0.53%)        0.000 ( 0.08%)\n\n",
+          "log_tail": "\n*****\n***** Welcome to the Xyce(TM) Parallel Electronic Simulator\n*****\n***** This is version Xyce Release 7.10-opensource\n***** Date: Mon Aug 10 11:04:40 CEST 2026\n\n\n***** Executing netlist /evidence/work/xyce-ac-derived.cir\n\n***** Reading and parsing netlist...\nNetlist warning: No print specified\n***** Setting up topology...\n\n***** Device Count Summary ...\n       C level 1 (Capacitor)                  1\n       I level 1 (Independent Current Source) 1\n       R level 1 (Resistor)                   1\n       ----------------------------------------\n       Total Devices                          3\n***** Setting up matrix structure...\n***** Number of Unknowns = 1\n***** Initializing...\n\n\n***** Solution Summary *****\n\tNumber Successful Steps Taken:\t\t51\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t1\n\tNumber Linear Solves:\t\t\t1\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t3\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t5.81741e-05 seconds\n\tTotal Jacobian Load Time:\t\t6.91414e-06 seconds\n\tTotal Linear Solution Time:\t\t6.91414e-06 seconds\n\n\n***** Total Simulation Solvers Run Time: 0.00153303 seconds\n***** Total Elapsed Run Time:            0.00430202 seconds\n*****\n***** End of Xyce(TM) Simulation\n*****\n\nTiming summary of 1 processor\n                 Stats                   Count       CPU Time              Wall Time\n---------------------------------------- ----- --------------------- ---------------------\nXyce                                         1        0.012 (100.0%)        0.273 (100.0%)\n  Analysis                                   1        0.001 ( 9.69%)        0.001 ( 0.55%)\n    AC                                       1        0.001 ( 9.67%)        0.001 ( 0.54%)\n      DC Nonlinear Solve                     1        0.000 ( 1.51%)        0.000 ( 0.16%)\n        Residual                             3        0.000 ( 0.32%)        0.000 ( 0.02%)\n        Jacobian                             1        0.000 ( 0.08%)        0.000 (<0.01%)\n        Linear Solve                         1        0.000 ( 0.07%)        0.000 (<0.01%)\n      AC Linear Solve                       51        0.000 ( 3.38%)        0.000 ( 0.15%)\n        Linear Solve                        51        0.000 ( 2.45%)        0.000 ( 0.11%)\n  Netlist Import                             1        0.001 ( 8.60%)        0.001 ( 0.46%)\n    Parse Context                            1        0.000 ( 0.39%)        0.000 ( 0.06%)\n    Distribute Devices                       1        0.000 ( 2.30%)        0.000 ( 0.10%)\n    Verify Devices                           1        0.000 ( 0.07%)        0.000 (<0.01%)\n    Instantiate                              1        0.000 ( 1.04%)        0.000 ( 0.05%)\n  Late Initialization                        1        0.000 ( 0.36%)        0.001 ( 0.24%)\n    Global Indices                           1        0.000 ( 0.28%)        0.000 ( 0.02%)\n  Setup Matrix Structure                     1        0.000 ( 0.00%)        0.000 ( 0.07%)\n\n",
           "output_captures": [
             {
               "bytes": 3657,
               "kind": "raw",
               "origin": "wrapper",
-              "path": "/evidence/sim/xyce-ac/xyce-ac-derived.xyce.raw",
-              "sha256": "677466a3d4b293595b0ef40ed9b1746a47c7d6b7da79b633eef9fb35b7a2f402",
+              "path": "/evidence/sim/xyce-ac/xyce-ac-derived/xyce-ac-derived.xyce.raw",
+              "sha256": "d8e228494b90e2786d08dd3fb07d0243a0b07ba419813642dfabb48a4291053c",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -137,6 +137,10 @@
           },
           "extensions": {}
         }
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/xyce-ac-derived.cir"
       }
     },
     "protocol": {
@@ -144,10 +148,16 @@
       "driver_id": "org.openada.driver.xyce",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "19e909ef-cb08-4d69-961d-2cd98ab40de5"
+      "request_id": "c03b7dce-b295-4732-8e4b-7e7972a2f6c5"
     }
   },
-  "diagnostics": [],
+  "diagnostics": [
+    {
+      "code": "claim.measurement.typed_chain",
+      "message": "The analysis completed, so a quantity may be reported as measured - but only once a typed measurement envelope carries it. A number parsed out of the raw file by hand is not one: nothing in the result contract binds it to this run. This envelope has been retained at /evidence/sim/xyce-ac/simulate.result.json. The retained raw declares 'frequency' as the axis - which must NOT appear in selectors - over the vectors V(1). Continue with: openada extract --simulation /evidence/sim/xyce-ac/simulate.result.json --artifact /evidence/sim/xyce-ac/xyce-ac-derived/xyce-ac-derived.xyce.raw --selection /evidence/sim/xyce-ac/simulate.selection.json, then `openada transfer` on the series it returns. Its metric kinds are low_frequency_gain_db (dB), low_frequency_impedance (Ohm, output in V over input in A), bandwidth_3db, unity_gain_frequency and phase_margin. Each operand is a Cartesian {real, imaginary} pair and may add negative_real/negative_imaginary to become differential, which is how a differential gain and any other two-terminal ratio becomes one typed measurement instead of arithmetic in an answer. The amperes an impedance needs are the `i(<source>)` vectors already listed in the selection file: hold the node with a 1 V AC source and name that source's current as the input. Run `openada transfer --help` for the exact shape.",
+      "severity": "info"
+    }
+  ],
   "engineering": {
     "status": "pass",
     "summary": "Xyce produced fresh, structurally valid ac simulation evidence."
@@ -156,14 +166,14 @@
     "command": [
       "/foss/tools/xyce/bin/Xyce",
       "-l",
-      "/tmp/openada-xyce-dp5ookr6/simulation.log",
+      "/tmp/openada-xyce-vuon49tu/simulation.log",
       "-r",
-      "/tmp/openada-xyce-dp5ookr6/simulation.raw",
+      "/tmp/openada-xyce-vuon49tu/simulation.raw",
       "-a",
       "/evidence/work/xyce-ac-derived.cir"
     ],
     "cwd": "/evidence",
-    "duration_ms": 416,
+    "duration_ms": 365,
     "exit_code": 0,
     "status": "completed"
   },
@@ -179,7 +189,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-19T11:37:19.136851Z",
+    "created_at": "2026-08-10T09:04:40.569170Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

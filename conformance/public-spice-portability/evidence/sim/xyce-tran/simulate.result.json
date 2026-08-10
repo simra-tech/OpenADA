@@ -1,0 +1,202 @@
+{
+  "schema": "openada.result/v0alpha1",
+  "operation": "simulate",
+  "tool": {
+    "name": "xyce",
+    "path": "/foss/tools/xyce/bin/Xyce",
+    "version": "Xyce Release 7.10-opensource"
+  },
+  "execution": {
+    "status": "completed",
+    "exit_code": 0,
+    "duration_ms": 365,
+    "command": [
+      "/foss/tools/xyce/bin/Xyce",
+      "-l",
+      "/tmp/openada-xyce-igb93l0l/simulation.log",
+      "-r",
+      "/tmp/openada-xyce-igb93l0l/simulation.raw",
+      "-a",
+      "/evidence/work/xyce-tran.cir"
+    ],
+    "cwd": "/evidence"
+  },
+  "engineering": {
+    "status": "pass",
+    "summary": "Xyce produced fresh, structurally valid tran simulation evidence."
+  },
+  "inputs": [
+    {
+      "kind": "spice-netlist",
+      "role": "input",
+      "path": "/evidence/work/xyce-tran.cir",
+      "exists": true,
+      "bytes": 164,
+      "sha256": "484561fd3d74d6835f8570465f619e0ed138078214156fb3e5ff911d561fcf20"
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "xyce-log",
+      "role": "simulation.log",
+      "path": "/evidence/sim/xyce-tran/xyce-tran/xyce-tran.xyce.log",
+      "exists": true,
+      "bytes": 5948,
+      "sha256": "9a276fc4b31a1ca9a19f54c128fdb926799c6212b330564f1f3c37c6c857e92a"
+    },
+    {
+      "kind": "xyce-raw",
+      "role": "simulation.result",
+      "path": "/evidence/sim/xyce-tran/xyce-tran/xyce-tran.xyce.raw",
+      "exists": true,
+      "bytes": 1151,
+      "sha256": "669c5df6291f68c8a5f0dc127cc1fc8b8edba0887148d5030b5c70bb7e41b8ed"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "info",
+      "code": "claim.measurement.typed_chain",
+      "message": "The analysis completed, so a quantity may be reported as measured - but only once a typed measurement envelope carries it. A number parsed out of the raw file by hand is not one: nothing in the result contract binds it to this run. This envelope has been retained at /evidence/sim/xyce-tran/simulate.result.json. The retained raw declares 'time' as the axis - which must NOT appear in selectors - over the vectors V(1). Continue with: openada extract --simulation /evidence/sim/xyce-tran/simulate.result.json --artifact /evidence/sim/xyce-tran/xyce-tran/xyce-tran.xyce.raw --selection /evidence/sim/xyce-tran/simulate.selection.json, then `openada measure` on the series it returns; its kinds are sample_at, minimum, maximum, mean, rms, crossing, rise_time, fall_time and settling_time, each reading ONE named signal. A ratio of two signals is not among them - for a gain, a differential gain or a driving-point impedance, run an AC analysis and use `openada transfer`. `openada spectral` covers snr, sinad, thd and sfdr on a coherent single tone."
+    }
+  ],
+  "data": {
+    "protocol": {
+      "request_id": "8d645dfc-e6ad-4ea2-ab78-d0473a641860",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "driver_id": "org.openada.driver.xyce",
+      "driver_version": "0.4.0"
+    },
+    "analysis": {
+      "type": "tran",
+      "completion": "completed",
+      "convergence": "converged",
+      "point_count": 18,
+      "dependent_variable_count": 2,
+      "finite_value_count": 36,
+      "extensions": {}
+    },
+    "evidence": {
+      "request_binding": "exact",
+      "freshness": "fresh",
+      "structure": "valid",
+      "artifact_roles_present": [
+        "simulation.log",
+        "simulation.result"
+      ],
+      "provenance": "bounded",
+      "provenance_limitations": [
+        "Only the declared top-level model-free analysis deck and selected native executable were content-bound; host runtime libraries and simulator defaults remain bounded provenance."
+      ],
+      "extensions": {}
+    },
+    "extensions": {
+      "org.openada": {
+        "backend": "xyce",
+        "parameters": {
+          "analysis": {
+            "type": "tran",
+            "extensions": {},
+            "step_s": 1e-09,
+            "stop_s": 1e-08
+          },
+          "extensions": {}
+        },
+        "native_data": {
+          "analysis": {
+            "type": "tran",
+            "extensions": {},
+            "step_s": 1e-09,
+            "stop_s": 1e-08
+          },
+          "converged": true,
+          "inputs_stable": true,
+          "working_directory": "/evidence",
+          "working_directory_is_sandbox": false,
+          "transitive_inputs_enumerated": false,
+          "environment_overrides": {
+            "XYCE_NO_TRACKING": "1"
+          },
+          "deck_inspection": {
+            "analyses": [
+              "tran"
+            ],
+            "include_detected": false,
+            "unsupported_directives": [],
+            "line_too_long": false,
+            "source_too_large": false,
+            "source_unstable": false
+          },
+          "log_tail": "11:04:41 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 67.5 %\n***** Current system time: Mon Aug 10 11:04:41 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 75.5 %\n***** Current system time: Mon Aug 10 11:04:41 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 83.5 %\n***** Current system time: Mon Aug 10 11:04:41 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 91.5 %\n***** Current system time: Mon Aug 10 11:04:41 2026\n***** Estimated time to completion:  0 sec.\n\n***** Percent complete: 99.5 %\n***** Current system time: Mon Aug 10 11:04:41 2026\n***** Estimated time to completion:  0 sec.\n\n***** Problem read in and set up time: 0.00273299 seconds\n ***** DCOP time: 0.000760078 seconds.  Breakdown follows:\n\tNumber Successful Steps Taken:\t\t1\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t1\n\tNumber Linear Solves:\t\t\t1\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t3\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t3.09944e-05 seconds\n\tTotal Jacobian Load Time:\t\t7.86781e-06 seconds\n\tTotal Linear Solution Time:\t\t7.89165e-05 seconds\n\n ***** Transient Stepping time: 0.000828028 seconds.  Breakdown follows:\n\tNumber Successful Steps Taken:\t\t17\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t17\n\tNumber Linear Solves:\t\t\t17\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t34\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t0.000107527 seconds\n\tTotal Jacobian Load Time:\t\t3.43323e-05 seconds\n\tTotal Linear Solution Time:\t\t6.53267e-05 seconds\n\n\n***** Solution Summary *****\n\tNumber Successful Steps Taken:\t\t18\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t18\n\tNumber Linear Solves:\t\t\t18\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t37\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t0.000138521 seconds\n\tTotal Jacobian Load Time:\t\t4.22001e-05 seconds\n\tTotal Linear Solution Time:\t\t0.000144243 seconds\n\n\n***** Total Simulation Solvers Run Time: 0.00173306 seconds\n***** Total Elapsed Run Time:            0.00444794 seconds\n*****\n***** End of Xyce(TM) Simulation\n*****\n\nTiming summary of 1 processor\n                 Stats                   Count       CPU Time              Wall Time\n---------------------------------------- ----- --------------------- ---------------------\nXyce                                         1        0.024 (100.0%)        0.276 (100.0%)\n  Analysis                                   1        0.002 ( 7.15%)        0.002 ( 0.62%)\n    Transient                                1        0.002 ( 7.07%)        0.002 ( 0.61%)\n      Nonlinear Solve                       18        0.001 ( 3.89%)        0.001 ( 0.34%)\n        Residual                            37        0.000 ( 0.75%)        0.000 ( 0.07%)\n        Jacobian                            18        0.000 ( 0.27%)        0.000 ( 0.02%)\n        Linear Solve                        18        0.000 ( 0.70%)        0.000 ( 0.06%)\n      Successful DCOP Steps                  1        0.000 ( 0.92%)        0.000 ( 0.08%)\n      Successful Step                       17        0.000 ( 0.63%)        0.000 ( 0.06%)\n  Netlist Import                             1        0.001 ( 5.23%)        0.001 ( 0.45%)\n    Parse Context                            1        0.000 ( 0.75%)        0.000 ( 0.06%)\n    Distribute Devices                       1        0.000 ( 1.15%)        0.000 ( 0.10%)\n    Verify Devices                           1        0.000 ( 0.03%)        0.000 (<0.01%)\n    Instantiate                              1        0.000 ( 0.44%)        0.000 ( 0.04%)\n  Late Initialization                        1        0.001 ( 2.74%)        0.001 ( 0.24%)\n    Global Indices                           1        0.000 ( 0.15%)        0.000 ( 0.01%)\n  Setup Matrix Structure                     1        0.000 ( 0.76%)        0.000 ( 0.07%)\n\n",
+          "log_capture": {
+            "path": "/evidence/sim/xyce-tran/xyce-tran/xyce-tran.xyce.log",
+            "status": "valid",
+            "bytes": 5948,
+            "sha256": "9a276fc4b31a1ca9a19f54c128fdb926799c6212b330564f1f3c37c6c857e92a"
+          },
+          "output_captures": [
+            {
+              "path": "/evidence/sim/xyce-tran/xyce-tran/xyce-tran.xyce.raw",
+              "status": "valid",
+              "bytes": 1151,
+              "sha256": "669c5df6291f68c8a5f0dc127cc1fc8b8edba0887148d5030b5c70bb7e41b8ed",
+              "validation": {
+                "valid": true,
+                "reason": "valid",
+                "metadata": {
+                  "format": "xyce-raw",
+                  "bytes": 1151,
+                  "plot_count": 1,
+                  "analysis_plot_count": 1,
+                  "has_analysis_plot": true,
+                  "value_count": 54,
+                  "numeric_scalar_count": 54,
+                  "plots": [
+                    {
+                      "plotname": "Transient Analysis",
+                      "encoding": "ascii",
+                      "numeric_type": "real",
+                      "variables": 3,
+                      "points": 18,
+                      "values": 54,
+                      "unpadded": false,
+                      "independent_variable": "time",
+                      "axis_first": 0.0,
+                      "axis_last": 1e-08,
+                      "axis_strictly_increasing": true,
+                      "axis_linear_step": null,
+                      "axis_log_ratio": null
+                    }
+                  ]
+                }
+              },
+              "kind": "raw",
+              "origin": "wrapper"
+            }
+          ],
+          "analysis_evidence": {
+            "raw": true,
+            "point_count": 18,
+            "dependent_variable_count": 2,
+            "finite_value_count": 36
+          }
+        },
+        "native_diagnostics": []
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/xyce-tran.cir"
+      }
+    }
+  },
+  "provenance": {
+    "openada_version": "0.4.0",
+    "created_at": "2026-08-10T09:04:41.490523Z",
+    "host": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "python": "3.12.3"
+    }
+  }
+}
