@@ -39,7 +39,7 @@
     {
       "extensions": {},
       "repository_path": "tools/semantic_receipts.py",
-      "sha256": "0c8265710978ff1551a485e6e3044fee561aa5a5aa0ee4a98d1039e8f5fe6a1f"
+      "sha256": "240c577d58bb0e615f0b6d244a0dee6ea5e0b590b998f8dc15c6277368626c2e"
     },
     {
       "extensions": {},
@@ -89,7 +89,7 @@
     {
       "extensions": {},
       "repository_path": "tests/test_ngspice_provider.py",
-      "sha256": "bbe4dae8c3475dd45f7a900b58dbf601bfdea57c3aa62c8239b35aab827caed4"
+      "sha256": "bde696db37e08dd71115067c31f1b920f6a319f55560071a8bdeebc71745c1ed"
     },
     {
       "extensions": {},
