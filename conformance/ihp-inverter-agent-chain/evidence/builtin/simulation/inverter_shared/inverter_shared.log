@@ -1,0 +1,40 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: ** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch
+
+binary raw file "/tmp/openada-ngspice-f_v94iam/simulation.raw"
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+No. of Data Columns : 12  
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vin                                          0
+vdd                                        1.2
+vout                                       1.2
+v2#branch                         -3.10217e-10
+v1#branch                          8.18116e-11
+
+
+No. of Data Rows : 81
+
+Total analysis time (seconds) = 0.0212539
+
+Total elapsed time (seconds) = 0.035 
+
+Total DRAM available = 15989.707 MB.
+DRAM currently available =  368.809 MB.
+Maximum ngspice program size =  587.711 MB.
+Current ngspice program size =   15.484 MB.
+
+Shared ngspice pages =   11.922 MB.
+Text (code) pages =    5.875 MB.
+Stack = 0 bytes.
+Library pages =  116.188 MB.
+

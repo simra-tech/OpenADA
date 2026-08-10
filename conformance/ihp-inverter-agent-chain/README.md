@@ -17,12 +17,12 @@ The passing chain exercises:
 - Nine measurement kinds: sample-at, minimum, maximum, arithmetic mean,
   arithmetic RMS, crossing, rise time, fall time, and settling time.
 - Eighteen closed-bound specification decisions, one condition-binding
-  rejection, 15 negative replays, and 19 byte/lineage/value tamper replays.
+  rejection, 16 negative replays, and 20 byte/lineage/value tamper replays.
 - An independently recomputed agent evidence document that preserves the
   design conditions, native lineage, decision margins, failures, and known
   limitations.
 
-The manifest currently covers 57 exact semantic-surface rows. Each row is
+The manifest currently covers 60 exact semantic-surface rows. Each row is
 bound to the positive semantic command that exercised it; negative and tamper
 replays are additional evidence and cannot substitute for positive execution.
 
@@ -41,7 +41,7 @@ that both the OpenADA checkout and pinned design checkout remain clean and
 unchanged. A dirty OpenADA checkout intentionally prevents a passing receipt.
 
 The independent oracle in `verify.py` imports no `openada` implementation
-module. It reparses Spice3 raw bytes and reimplements extraction, all nine
+module. It reparses Spice3 raw bytes and reimplements extraction, all ten
 measurement algorithms, condition binding, and bound evaluation. It also
 reconstructs the deterministic shared-profile decks from the retained model
 closure, checks equality of the relevant built-in and external-provider
@@ -71,7 +71,7 @@ The evidence directory must not already exist and must be outside the OpenADA
 checkout, cache, and design checkout. A failure leaves the incomplete directory
 for diagnosis; never reuse it for another receipt.
 
-Independently verify a completed replay, including fresh execution of all 19
+Independently verify a completed replay, including fresh execution of all 20
 tamper probes:
 
 ```bash
@@ -99,7 +99,7 @@ locations or OCI clients.
 ## Agent-facing result
 
 `agent-evidence.json` is the compact decision input. It binds the exact native
-raw digest, normalized-series digest, nine measurement records, 18
+raw digest, normalized-series digest, ten measurement records, 20
 specification outcomes, negative cases, and limitations. The accompanying
 `chain-run.json` indexes exactly 40 distinct trust artifacts: one request
 contract, native artifact, independent oracle, normalized result, downstream

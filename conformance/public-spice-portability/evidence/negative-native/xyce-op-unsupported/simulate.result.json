@@ -1,0 +1,105 @@
+{
+  "schema": "openada.result/v0alpha1",
+  "operation": "simulate",
+  "tool": {
+    "name": "xyce",
+    "path": "/foss/tools/xyce/bin/Xyce",
+    "version": "Xyce Release 7.10-opensource"
+  },
+  "execution": {
+    "status": "invalid_request",
+    "exit_code": null,
+    "duration_ms": 0,
+    "command": []
+  },
+  "engineering": {
+    "status": "unknown",
+    "summary": "The circuit.simulate request is outside the initial shared profile."
+  },
+  "inputs": [
+    {
+      "kind": "spice-netlist",
+      "role": "input",
+      "path": "/evidence/work/xyce-op-unsupported.cir",
+      "exists": true,
+      "bytes": 146,
+      "sha256": "9d03d0ea3a52d2568de05646f7eb0eee3a537ed516232de992822d467700d674"
+    }
+  ],
+  "artifacts": [],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "claim.measurement.unsupported",
+      "message": "This run establishes no measurable quantity: analysis completion is 'unproven' and engineering status is 'unknown'. No number derived from it - including one read out of a retained raw file - may be reported as measured, simulated or verified. Report it as an estimate, or say the simulation did not produce a usable result.",
+      "hint": "Fix the reason named by the other diagnostics and re-run. A quantity becomes reportable only once an analysis completes and a typed measurement envelope carries it."
+    },
+    {
+      "severity": "error",
+      "code": "simulation.analysis.unsupported",
+      "message": "Driver org.openada.driver.xyce does not advertise the 'op' analysis feature."
+    }
+  ],
+  "data": {
+    "protocol": {
+      "request_id": "98316185-6dcb-4159-b85d-8a0b40575334",
+      "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
+      "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
+      "driver_id": "org.openada.driver.xyce",
+      "driver_version": "0.4.0"
+    },
+    "analysis": {
+      "type": "op",
+      "completion": "unproven",
+      "convergence": "not-established",
+      "point_count": null,
+      "dependent_variable_count": null,
+      "finite_value_count": null,
+      "extensions": {}
+    },
+    "evidence": {
+      "request_binding": "not-established",
+      "freshness": "not-established",
+      "structure": "not-established",
+      "artifact_roles_present": [],
+      "provenance": "incomplete",
+      "provenance_limitations": [
+        "Only the declared top-level model-free analysis deck and selected native executable were content-bound; host runtime libraries and simulator defaults remain bounded provenance."
+      ],
+      "extensions": {}
+    },
+    "extensions": {
+      "org.openada": {
+        "backend": "xyce",
+        "parameters": {
+          "analysis": {
+            "type": "op",
+            "extensions": {}
+          },
+          "extensions": {}
+        },
+        "native_data": {},
+        "native_diagnostics": [
+          {
+            "severity": "error",
+            "code": "simulation.analysis.unsupported",
+            "message": "Driver org.openada.driver.xyce does not advertise the 'op' analysis feature."
+          }
+        ]
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/xyce-op-unsupported.cir"
+      }
+    }
+  },
+  "provenance": {
+    "openada_version": "0.4.0",
+    "created_at": "2026-08-10T09:04:54.522728Z",
+    "host": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "python": "3.12.3"
+    }
+  }
+}

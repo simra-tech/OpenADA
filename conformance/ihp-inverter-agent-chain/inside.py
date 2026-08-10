@@ -437,7 +437,7 @@ def _negative_measurement(definition: dict[str, Any]) -> tuple[dict[str, Any], s
             "interpolation": "linear",
         }
         return request, "unknown", "measurement.domain.invalid", 2
-    if kind in {"minimum", "maximum", "mean", "rms"}:
+    if kind in {"minimum", "maximum", "mean", "rms", "slope"}:
         request["parameters"] = {
             "window": {
                 "start": {"value": 3e-6, "unit": "s"},

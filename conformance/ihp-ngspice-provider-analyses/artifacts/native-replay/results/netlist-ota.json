@@ -31,11 +31,11 @@
       "-q",
       "-x",
       "-o",
-      "/tmp/openada-xschem-w4fq4al0",
+      "/tmp/openada-xschem-q2sq1tby",
       "/design/modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch"
     ],
     "cwd": "/design/modules/module_1_bandgap_reference/part_1_OTA/testbenches",
-    "duration_ms": 115,
+    "duration_ms": 64,
     "exit_code": 0,
     "status": "completed"
   },
@@ -59,7 +59,7 @@
   ],
   "operation": "netlist",
   "provenance": {
-    "created_at": "2026-08-03T07:59:29.218487Z",
+    "created_at": "2026-08-10T09:02:30.597525Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

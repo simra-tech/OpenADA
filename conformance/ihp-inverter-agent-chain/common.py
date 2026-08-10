@@ -155,8 +155,9 @@ def load_manifest(path: Path) -> dict[str, Any]:
         "rise-time",
         "fall-time",
         "settling-time",
+        "slope",
     ]:
-        raise ConformanceError("chain manifest must declare the reviewed nine ordinary measurements")
+        raise ConformanceError("chain manifest must declare the reviewed ten ordinary measurements")
 
     for contract in document["contracts"]:
         candidate = REPOSITORY_ROOT / contract["repository_path"]

@@ -5,9 +5,9 @@
   "status": "pass",
   "suite": {
     "failed": 0,
-    "passed": 3,
+    "passed": 4,
     "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
-    "sha256": "8e2a5c1f9e8abd39f78126f90f77ee08c9d164b4d558ca4d0522d6ce78e149e5",
+    "sha256": "6eb315dc8e1be52dcf8e406f9eff875e5a1ad09fc97c457bfbbe407131b54254",
     "skipped": 1
   }
 }

@@ -68,6 +68,15 @@ def test_canonical_sha256_refuses_deep_value():
         canonical_sha256(value)
 
 
+def test_canonical_sha256_refuses_cyclic_value():
+    from tools.semantic_receipts import canonical_sha256
+
+    value: dict = {}
+    value["cycle"] = value
+    with pytest.raises(SemanticReceiptError, match="not strict canonical JSON"):
+        canonical_sha256(value)
+
+
 def test_max_json_depth_scan_is_string_aware():
     from tools.semantic_receipts import _max_json_depth_within
 

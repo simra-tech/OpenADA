@@ -52,7 +52,11 @@
         {"native_name": "v(vp)", "output_name": "vp.real", "unit": "V", "component": "real"},
         {"native_name": "v(vp)", "output_name": "vp.imag", "unit": "V", "component": "imaginary"},
         {"native_name": "v(vout)", "output_name": "vout.real", "unit": "V", "component": "real"},
-        {"native_name": "v(vout)", "output_name": "vout.imag", "unit": "V", "component": "imaginary"}
+        {"native_name": "v(vout)", "output_name": "vout.imag", "unit": "V", "component": "imaginary"},
+        {"native_name": "v(vout1)", "output_name": "vout1.real", "unit": "V", "component": "real"},
+        {"native_name": "v(vout1)", "output_name": "vout1.imag", "unit": "V", "component": "imaginary"},
+        {"native_name": "i(v1)", "output_name": "i_v1.real", "unit": "A", "component": "real"},
+        {"native_name": "i(v1)", "output_name": "i_v1.imag", "unit": "A", "component": "imaginary"}
       ],
       "conditions": [
         {"name": "temperature", "value": 27.0, "unit": "degC"},
@@ -93,7 +97,9 @@
       {"kind": "low_frequency_gain_db", "unit": "dB", "request_id": "22000000-0000-4000-8000-000000000001", "expected": 70.1197413867, "absolute_tolerance": 1e-8},
       {"kind": "bandwidth_3db", "unit": "Hz", "request_id": "22000000-0000-4000-8000-000000000002", "expected": 1332.304385, "absolute_tolerance": 0.001},
       {"kind": "unity_gain_frequency", "unit": "Hz", "request_id": "22000000-0000-4000-8000-000000000003", "expected": 4157414.557, "absolute_tolerance": 0.01},
-      {"kind": "phase_margin", "unit": "deg", "request_id": "22000000-0000-4000-8000-000000000004", "expected": 61.4230915, "absolute_tolerance": 1e-6}
+      {"kind": "phase_margin", "unit": "deg", "request_id": "22000000-0000-4000-8000-000000000004", "expected": 61.4230915, "absolute_tolerance": 1e-6},
+      {"kind": "low_frequency_impedance", "unit": "Ohm", "request_id": "22000000-0000-4000-8000-000000000005", "input": {"real": "i_v1.real", "imaginary": "i_v1.imag"}, "output": {"real": "vp.real", "imaginary": "vp.imag"}, "expected": 1416678492.999632, "absolute_tolerance": 10.0},
+      {"kind": "ac_magnitude_at_frequency", "unit": "dB", "request_id": "22000000-0000-4000-8000-000000000006", "at": {"value": 1000.0, "unit": "Hz"}, "output": {"real": "vout.real", "imaginary": "vout.imag", "negative_real": "vout1.real", "negative_imaginary": "vout1.imag"}, "expected": 68.1821979129, "absolute_tolerance": 1e-8}
     ]
   },
   "spectral": {

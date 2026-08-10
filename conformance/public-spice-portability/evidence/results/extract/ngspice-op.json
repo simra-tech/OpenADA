@@ -13,7 +13,7 @@
         "plotname": "Operating Point",
         "point_count": 1
       },
-      "request_sha256": "8c36dc8fe2f6de8a7b7f542ea27c3a585b2efec7f187e497045677805a9d7be8",
+      "request_sha256": "3a988e510b42b8aea0957b265a7d260c743fee3286bc5b7b105655c700dc620f",
       "series": {
         "axis": {
           "name": "sample",
@@ -61,10 +61,10 @@
           "artifact_sha256": "6a6913b057929b5b6f967c7a8093e1cb486b74a007a7c9965ea70dc42cc281ba",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "08663aa8842593d07d309f8efaf1310503ed999cbddf52188ac5a6953d03da15",
+            "artifact_sha256": "8567f3cb5736a6380ac909c8092dfef1503ce146f07286991d7c6148f1dcecab",
             "binding": "unverified",
             "operation": "circuit.simulate",
-            "request_id": "20702606-374e-4b20-a09a-17b5c6a46902"
+            "request_id": "3a29c95a-a93f-4695-a191-76741635cc6f"
           },
           "operation": "openada.operation/result.series.extract/v1alpha1",
           "request_id": "21000000-0000-4000-8000-000000000001"
@@ -76,16 +76,16 @@
           "bytes": 668,
           "exists": true,
           "kind": "ngspice-raw",
-          "path": "/evidence/sim/ngspice-op/inverter-op.raw",
+          "path": "/evidence/sim/ngspice-op/inverter-op/inverter-op.raw",
           "role": "simulation.result",
-          "sha256": "08663aa8842593d07d309f8efaf1310503ed999cbddf52188ac5a6953d03da15"
+          "sha256": "8567f3cb5736a6380ac909c8092dfef1503ce146f07286991d7c6148f1dcecab"
         },
         "backend": "ngspice",
         "binding": "verified",
         "driver_id": "org.openada.driver.ngspice",
         "driver_version": "0.4.0",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-        "request_id": "20702606-374e-4b20-a09a-17b5c6a46902"
+        "request_id": "3a29c95a-a93f-4695-a191-76741635cc6f"
       },
       "status": "extracted"
     },
@@ -113,14 +113,14 @@
       "bytes": 668,
       "exists": true,
       "kind": "ngspice-raw",
-      "path": "/evidence/sim/ngspice-op/inverter-op.raw",
+      "path": "/evidence/sim/ngspice-op/inverter-op/inverter-op.raw",
       "role": "simulation.result",
-      "sha256": "08663aa8842593d07d309f8efaf1310503ed999cbddf52188ac5a6953d03da15"
+      "sha256": "8567f3cb5736a6380ac909c8092dfef1503ce146f07286991d7c6148f1dcecab"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-19T11:37:20.818035Z",
+    "created_at": "2026-08-10T09:04:41.918198Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

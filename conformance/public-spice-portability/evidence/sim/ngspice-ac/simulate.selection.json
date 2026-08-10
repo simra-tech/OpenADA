@@ -1,0 +1,102 @@
+{
+  "selectors": [
+    {
+      "native_name": "v(vp)",
+      "output_name": "v_vp_re",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "v(vp)",
+      "output_name": "v_vp_im",
+      "unit": "V",
+      "component": "imaginary"
+    },
+    {
+      "native_name": "v(vdd)",
+      "output_name": "v_vdd_re",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "v(vdd)",
+      "output_name": "v_vdd_im",
+      "unit": "V",
+      "component": "imaginary"
+    },
+    {
+      "native_name": "v(net1)",
+      "output_name": "v_net1_re",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "v(net1)",
+      "output_name": "v_net1_im",
+      "unit": "V",
+      "component": "imaginary"
+    },
+    {
+      "native_name": "v(vout)",
+      "output_name": "v_vout_re",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "v(vout)",
+      "output_name": "v_vout_im",
+      "unit": "V",
+      "component": "imaginary"
+    },
+    {
+      "native_name": "v(vm)",
+      "output_name": "v_vm_re",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "v(vm)",
+      "output_name": "v_vm_im",
+      "unit": "V",
+      "component": "imaginary"
+    },
+    {
+      "native_name": "v(x1.net1)",
+      "output_name": "v_x1_net1_re",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "v(x1.net1)",
+      "output_name": "v_x1_net1_im",
+      "unit": "V",
+      "component": "imaginary"
+    },
+    {
+      "native_name": "v(x1.net2)",
+      "output_name": "v_x1_net2_re",
+      "unit": "V",
+      "component": "real"
+    },
+    {
+      "native_name": "v(x1.net2)",
+      "output_name": "v_x1_net2_im",
+      "unit": "V",
+      "component": "imaginary"
+    },
+    {
+      "native_name": "i(l6)",
+      "output_name": "i_l6_re",
+      "unit": "A",
+      "component": "real"
+    },
+    {
+      "native_name": "i(l6)",
+      "output_name": "i_l6_im",
+      "unit": "A",
+      "component": "imaginary"
+    }
+  ],
+  "conditions": [],
+  "extensions": {}
+}

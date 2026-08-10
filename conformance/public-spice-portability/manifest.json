@@ -73,21 +73,21 @@
     {"repository_path": "schemas/semantic-chain-manifest-v0alpha1.schema.json", "sha256": "dfe687c78b361b91600dcb1889f14d52301b4c1c8f200b7dacb6c96126f3f600", "extensions": {}},
     {"repository_path": "schemas/semantic-chain-run-v0alpha1.schema.json", "sha256": "c4916d3b4d3e63337d47da46a2e4aa94ea15fb41b755207f04a41907cc993613", "extensions": {}},
     {"repository_path": "schemas/design-provenance-v0alpha1.schema.json", "sha256": "0e3e3ba2c6fdce6f22e93f23a26bb8b3e286cacdf109dc25d8d51aefa418e745", "extensions": {}},
-    {"repository_path": "tools/semantic_receipts.py", "sha256": "0c8265710978ff1551a485e6e3044fee561aa5a5aa0ee4a98d1039e8f5fe6a1f", "extensions": {}},
-    {"repository_path": "tools/verify_semantic_coverage.py", "sha256": "cf090fcf62c66e5ecc0df06d2d400b546d2003b21edbbb9a55caa83f0936695c", "extensions": {}},
+    {"repository_path": "tools/semantic_receipts.py", "sha256": "240c577d58bb0e615f0b6d244a0dee6ea5e0b590b998f8dc15c6277368626c2e", "extensions": {}},
+    {"repository_path": "tools/verify_semantic_coverage.py", "sha256": "49d161af78f09610b91f8757eb27257b6fdfef262c46ee6c081d4d4af9982040", "extensions": {}},
     {"repository_path": "schemas/result-v0alpha1.schema.json", "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15", "extensions": {}},
     {"repository_path": "schemas/driver-manifest-v0alpha1.schema.json", "sha256": "6d4a7945d7c1abe053071c440639f68f54a86f7a204ac4bf159f323e0d9a57ec", "extensions": {}},
     {"repository_path": "profiles/circuit.simulate-v1alpha2.json", "sha256": "0f00b5ed8c85ee04a2d1295bf31c41209f8afa61a8891d2d66aeb42e116ebc03", "extensions": {}},
     {"repository_path": "profiles/result.series.extract-v1alpha1.json", "sha256": "6d2baf44313e97b5070b8e68afe529abfafec8b6ab0e7808941078a0dd201164", "extensions": {}},
-    {"repository_path": "catalog/semantic-surfaces-v0alpha1.json", "sha256": "d753048b1ce9e230d1386205d653410d0b169304c7fbf0cb6ee0ff7f9674d618", "extensions": {}},
+    {"repository_path": "catalog/semantic-surfaces-v0alpha1.json", "sha256": "a1cd24fbacd3072222dcb0181de4118d03ce4147d1a57e634c7295864e1485de", "extensions": {}},
     {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}},
     {"repository_path": "conformance/public-spice-portability/common.py", "sha256": "13a3375722d5542d20cf0b48a6713fe14dfbe683bb292fc86490c0807a7b35c8", "extensions": {}},
     {"repository_path": "conformance/ihp-inverter/common.py", "sha256": "068f6f84a6e94c7267474eb3f8f908144d610ba74f3e6b3c073651b1c2069cdd", "extensions": {}},
     {"repository_path": "conformance/public-spice-portability/inside.py", "sha256": "7831358cf2d0e0cd0f20693acd053408d6fa0930b8babe68081d05faa3079dec", "extensions": {}},
-    {"repository_path": "conformance/public-spice-portability/run.py", "sha256": "3e5f78bc310e019f3a5ba23df930185db632cf0b0893d807297da3aba1ee5fb8", "extensions": {}},
+    {"repository_path": "conformance/public-spice-portability/run.py", "sha256": "c6e9bd452e91c9e8563fb10101f735cd18e2d481a6a559794f4c0c70ae9b52b1", "extensions": {}},
     {"repository_path": "conformance/public-spice-portability/setup.py", "sha256": "f8b0ae35a9087100ba09712177f0b5e9b83d5e342311adf847ac2b1751265f9b", "extensions": {}},
     {"repository_path": "conformance/public-spice-portability/test_portability_chain.py", "sha256": "3fb66c4bfba4835ae2288b13f328f58d572f913504ab99cdaf266b7d1d027019", "extensions": {}},
-    {"repository_path": "conformance/public-spice-portability/verify.py", "sha256": "164fd143a53eb5dd0e85886c5c35f593fd24e6d0f1b6e4590d77143649ee1617", "extensions": {}}
+    {"repository_path": "conformance/public-spice-portability/verify.py", "sha256": "71ee4aef0b9c852aad206cacc18d35aeaf9c49d440be137ae8115ae2b13e8b38", "extensions": {}}
   ],
   "covers": [
     "feature|openada.operation/circuit.simulate/v1alpha2|openada.feature/simulation.analysis.op/v1alpha1",
@@ -141,8 +141,8 @@
     {"id": "profile-show", "kind": "semantic-command", "native_execution": false, "covers": ["surface|openada.surface/cli.profile-show/v1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["circuit-simulate-profile"], "produces": ["profile-show-result"], "extensions": {}},
     {"id": "provider-list", "kind": "semantic-command", "native_execution": false, "covers": ["surface|openada.surface/cli.provider-list/v1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["ngspice-provider-manifest"], "produces": ["provider-list-result"], "extensions": {}},
     {"id": "provider-validate", "kind": "semantic-command", "native_execution": false, "covers": ["surface|openada.surface/cli.provider-validate/v1"], "request": {"repository_path": "conformance/public-spice-portability/requests.json", "sha256": "123dd31d3627e07754aa72878a7f004649bc29dee51ddf0a03db344a4e2714d7", "extensions": {}}, "consumes": ["ngspice-provider-manifest"], "produces": ["provider-validation-decision"], "extensions": {}},
-    {"id": "independent-verifier", "kind": "independent-oracle", "native_execution": false, "covers": [], "implementation": {"repository_path": "conformance/public-spice-portability/verify.py", "sha256": "164fd143a53eb5dd0e85886c5c35f593fd24e6d0f1b6e4590d77143649ee1617", "extensions": {}}, "consumes": ["derivation-records", "ngspice-op-result", "ngspice-op-raw", "ngspice-dc-result", "ngspice-dc-raw", "ngspice-ac-result", "ngspice-ac-raw", "xyce-dc-result", "xyce-dc-raw", "xyce-ac-result", "xyce-ac-raw", "xyce-tran-result", "xyce-tran-raw", "legacy-ngspice-result", "legacy-ngspice-raw", "ngspice-op-series", "ngspice-dc-series", "ngspice-ac-series", "xyce-dc-series", "xyce-ac-series", "xyce-tran-series", "capabilities-result", "doctor-result", "profile-list-result", "profile-show-result", "provider-list-result", "provider-validation-decision"], "produces": ["independent-portability-verdict"], "extensions": {}},
-    {"id": "agent-decision", "kind": "independent-decision", "native_execution": false, "covers": [], "implementation": {"repository_path": "conformance/public-spice-portability/verify.py", "sha256": "164fd143a53eb5dd0e85886c5c35f593fd24e6d0f1b6e4590d77143649ee1617", "extensions": {}}, "consumes": ["independent-portability-verdict", "ngspice-op-series", "ngspice-dc-series", "ngspice-ac-series", "xyce-dc-series", "xyce-ac-series", "xyce-tran-series", "capabilities-result", "doctor-result", "profile-list-result", "profile-show-result", "provider-list-result", "provider-validation-decision"], "produces": ["agent-portability-evidence"], "extensions": {}},
+    {"id": "independent-verifier", "kind": "independent-oracle", "native_execution": false, "covers": [], "implementation": {"repository_path": "conformance/public-spice-portability/verify.py", "sha256": "71ee4aef0b9c852aad206cacc18d35aeaf9c49d440be137ae8115ae2b13e8b38", "extensions": {}}, "consumes": ["derivation-records", "ngspice-op-result", "ngspice-op-raw", "ngspice-dc-result", "ngspice-dc-raw", "ngspice-ac-result", "ngspice-ac-raw", "xyce-dc-result", "xyce-dc-raw", "xyce-ac-result", "xyce-ac-raw", "xyce-tran-result", "xyce-tran-raw", "legacy-ngspice-result", "legacy-ngspice-raw", "ngspice-op-series", "ngspice-dc-series", "ngspice-ac-series", "xyce-dc-series", "xyce-ac-series", "xyce-tran-series", "capabilities-result", "doctor-result", "profile-list-result", "profile-show-result", "provider-list-result", "provider-validation-decision"], "produces": ["independent-portability-verdict"], "extensions": {}},
+    {"id": "agent-decision", "kind": "independent-decision", "native_execution": false, "covers": [], "implementation": {"repository_path": "conformance/public-spice-portability/verify.py", "sha256": "71ee4aef0b9c852aad206cacc18d35aeaf9c49d440be137ae8115ae2b13e8b38", "extensions": {}}, "consumes": ["independent-portability-verdict", "ngspice-op-series", "ngspice-dc-series", "ngspice-ac-series", "xyce-dc-series", "xyce-ac-series", "xyce-tran-series", "capabilities-result", "doctor-result", "profile-list-result", "profile-show-result", "provider-list-result", "provider-validation-decision"], "produces": ["agent-portability-evidence"], "extensions": {}},
     {"id": "contract-tests", "kind": "independent-oracle", "native_execution": false, "covers": [], "implementation": {"repository_path": "conformance/public-spice-portability/test_portability_chain.py", "sha256": "3fb66c4bfba4835ae2288b13f328f58d572f913504ab99cdaf266b7d1d027019", "extensions": {}}, "consumes": ["contract-test-suite", "agent-portability-evidence"], "produces": ["contract-test-verdict"], "extensions": {}}
   ],
   "negative_replays": [
@@ -172,7 +172,7 @@
   "release_verification": {
     "implementation": {
       "repository_path": "conformance/public-spice-portability/verify.py",
-      "sha256": "164fd143a53eb5dd0e85886c5c35f593fd24e6d0f1b6e4590d77143649ee1617",
+      "sha256": "71ee4aef0b9c852aad206cacc18d35aeaf9c49d440be137ae8115ae2b13e8b38",
       "extensions": {}
     },
     "arguments": [

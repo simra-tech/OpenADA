@@ -280,6 +280,8 @@ def _artifact_inventory(root: Path) -> list[dict[str, Any]]:
         "bandwidth_3db",
         "unity_gain_frequency",
         "phase_margin",
+        "low_frequency_impedance",
+        "ac_magnitude_at_frequency",
     ):
         normalized.append(
             (
@@ -443,7 +445,7 @@ def _validate_temp_index(
     ]
     if incomplete:
         raise ConformanceError(
-            "temporary semantic index did not make all 47 rows agent-ready: "
+            "temporary semantic index did not make all 56 rows agent-ready: "
             + ", ".join(incomplete[:8])
         )
     return {

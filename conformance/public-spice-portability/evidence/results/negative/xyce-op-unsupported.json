@@ -39,6 +39,10 @@
           },
           "extensions": {}
         }
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/xyce-op-unsupported.cir"
       }
     },
     "protocol": {
@@ -46,10 +50,16 @@
       "driver_id": "org.openada.driver.xyce",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "b4ee213f-5a99-4a03-bda3-559a320ec37b"
+      "request_id": "98316185-6dcb-4159-b85d-8a0b40575334"
     }
   },
   "diagnostics": [
+    {
+      "code": "claim.measurement.unsupported",
+      "hint": "Fix the reason named by the other diagnostics and re-run. A quantity becomes reportable only once an analysis completes and a typed measurement envelope carries it.",
+      "message": "This run establishes no measurable quantity: analysis completion is 'unproven' and engineering status is 'unknown'. No number derived from it - including one read out of a retained raw file - may be reported as measured, simulated or verified. Report it as an estimate, or say the simulation did not produce a usable result.",
+      "severity": "error"
+    },
     {
       "code": "simulation.analysis.unsupported",
       "message": "Driver org.openada.driver.xyce does not advertise the 'op' analysis feature.",
@@ -78,7 +88,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-19T11:37:34.582588Z",
+    "created_at": "2026-08-10T09:04:54.522728Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

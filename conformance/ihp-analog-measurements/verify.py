@@ -279,11 +279,17 @@ def _verify_extraction(
         frequencies = [complex(value).real for value in _column(raw, "frequency")]
         vp = [complex(value) for value in _column(raw, "v(vp)")]
         vout = [complex(value) for value in _column(raw, "v(vout)")]
+        vout1 = [complex(value) for value in _column(raw, "v(vout1)")]
+        i_v1 = [complex(value) for value in _column(raw, "i(v1)")]
         expected = {
-            "vp.real": [value.real for value in vp],
-            "vp.imag": [value.imag for value in vp],
-            "vout.real": [value.real for value in vout],
-            "vout.imag": [value.imag for value in vout],
+            "vp.real": ("V", [value.real for value in vp]),
+            "vp.imag": ("V", [value.imag for value in vp]),
+            "vout.real": ("V", [value.real for value in vout]),
+            "vout.imag": ("V", [value.imag for value in vout]),
+            "vout1.real": ("V", [value.real for value in vout1]),
+            "vout1.imag": ("V", [value.imag for value in vout1]),
+            "i_v1.real": ("A", [value.real for value in i_v1]),
+            "i_v1.imag": ("A", [value.imag for value in i_v1]),
         }
         if series["axis"]["name"] != "frequency" or series["axis"]["unit"] != "Hz":
             raise ConformanceError("OTA extraction axis is not frequency/Hz")
@@ -293,15 +299,20 @@ def _verify_extraction(
         if raw["plotname"] != "Transient Analysis (linearized)" or raw["complex"]:
             raise ConformanceError("inverter raw is not the exact linearized transient plot")
         times = _real(_column(raw, "time"), label="inverter time")
-        expected = {"v(vout)": _real(_column(raw, "v(vout)"), label="inverter output")}
+        expected = {
+            "v(vout)": (
+                "V",
+                _real(_column(raw, "v(vout)"), label="inverter output"),
+            )
+        }
         if series["axis"]["name"] != "time" or series["axis"]["unit"] != "s":
             raise ConformanceError("inverter extraction axis is not time/s")
         if series["axis"]["values"] != times:
             raise ConformanceError("inverter extraction times differ from native raw")
     if set(signals) != set(expected):
         raise ConformanceError(f"{name} extraction signal selection drifted")
-    for signal_name, values in expected.items():
-        if signals[signal_name]["unit"] != "V" or signals[signal_name]["values"] != values:
+    for signal_name, (unit, values) in expected.items():
+        if signals[signal_name]["unit"] != unit or signals[signal_name]["values"] != values:
             raise ConformanceError(
                 f"{name} extraction signal {signal_name!r} differs from native raw"
             )
@@ -316,7 +327,9 @@ def _principal(value: complex) -> float:
 def _transfer_metrics(raw: dict[str, Any]) -> dict[str, float]:
     frequencies = [complex(value).real for value in _column(raw, "frequency")]
     output = [complex(value) for value in _column(raw, "v(vout)")]
+    output_negative = [complex(value) for value in _column(raw, "v(vout1)")]
     input_values = [complex(value) for value in _column(raw, "v(vp)")]
+    input_current = [complex(value) for value in _column(raw, "i(v1)")]
     ratios: list[complex] = []
     magnitudes: list[float] = []
     for index, (out, inp) in enumerate(zip(output, input_values, strict=True)):
@@ -358,11 +371,44 @@ def _transfer_metrics(raw: dict[str, Any]) -> dict[str, float]:
         raise ConformanceError(
             f"OTA trace has {len(bandwidth)} bandwidth and {len(unity)} unity crossings"
         )
+    if input_current[0] == 0j:
+        raise ConformanceError("undefined OTA input impedance at the first AC point")
+    differential_magnitudes: list[float] = []
+    for index, (positive, negative, inp) in enumerate(
+        zip(output, output_negative, input_values, strict=True)
+    ):
+        if positive - negative == 0j or inp == 0j:
+            raise ConformanceError(f"undefined differential OTA ratio at AC point {index}")
+        differential_magnitudes.append(
+            20.0 * math.log10(abs((positive - negative) / inp))
+        )
+
+    at_frequency = 1000.0
+    ac_magnitude: float | None = None
+    for index, frequency in enumerate(frequencies):
+        if frequency == at_frequency:
+            ac_magnitude = differential_magnitudes[index]
+            break
+        if frequency > at_frequency:
+            fraction = (
+                math.log10(at_frequency) - math.log10(frequencies[index - 1])
+            ) / (
+                math.log10(frequency) - math.log10(frequencies[index - 1])
+            )
+            ac_magnitude = differential_magnitudes[index - 1] + fraction * (
+                differential_magnitudes[index] - differential_magnitudes[index - 1]
+            )
+            break
+    if ac_magnitude is None:
+        raise ConformanceError("reviewed OTA AC magnitude frequency is out of domain")
+
     return {
         "low_frequency_gain_db": magnitudes[0],
         "bandwidth_3db": bandwidth[0][0],
         "unity_gain_frequency": unity[0][0],
         "phase_margin": 180.0 + unity[0][1],
+        "low_frequency_impedance": abs(input_values[0] / input_current[0]),
+        "ac_magnitude_at_frequency": ac_magnitude,
     }
 
 
@@ -453,6 +499,8 @@ NEGATIVES = {
     "transfer-bandwidth-unsupported-drop": ("transfer-bandwidth_3db.json", "unknown", "transfer.method.unsupported"),
     "transfer-unity-unsupported-policy": ("transfer-unity_gain_frequency.json", "unknown", "transfer.method.unsupported"),
     "transfer-phase-margin-invalid-context": ("transfer-phase_margin.json", "unknown", "transfer.phase_margin.invalid_context"),
+    "transfer-low-frequency-impedance-invalid-unit": ("transfer-low_frequency_impedance.json", "unknown", "transfer.unit.mismatch"),
+    "transfer-ac-magnitude-outside-domain": ("transfer-ac_magnitude_at_frequency.json", "unknown", "transfer.domain.invalid"),
     "spectral-snr-noncoherent": ("spectral-snr.json", "unknown", "spectral.coherence.not_established"),
     "spectral-sinad-record-length": ("spectral-sinad.json", "unknown", "spectral.method.record_length_mismatch"),
     "spectral-thd-unsupported-window": ("spectral-thd.json", "unknown", "spectral.method.unsupported"),
@@ -535,6 +583,57 @@ def _verify_measurement_results(
         value = measurement.get("value")
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ConformanceError(f"{family} {kind} value is not finite numeric evidence")
+        expected_unit = metric["unit"] if family == "transfer" else "dB"
+        if measurement.get("unit") != expected_unit:
+            raise ConformanceError(f"{family} {kind} unit differs from its request contract")
+        if family == "transfer":
+            request_metric = {"kind": kind, "unit": metric["unit"]}
+            if "at" in metric:
+                request_metric["at"] = deepcopy(metric["at"])
+            input_operand = deepcopy(metric.get("input", contract["input"]))
+            output_operand = deepcopy(metric.get("output", contract["output"]))
+            request = {
+                "measurement_id": f"ota.open-loop.{kind.replace('_', '-')}",
+                "input": input_operand,
+                "output": output_operand,
+                "interpretation": (
+                    "loop-gain-negative-feedback"
+                    if kind == "phase_margin"
+                    else "forward"
+                ),
+                "method": deepcopy(contract["method"]),
+                "metric": request_metric,
+                "extensions": {},
+            }
+            if measurement.get("request_sha256") != canonical_sha256(request):
+                raise ConformanceError(
+                    f"transfer {kind} does not bind the independently rebuilt request"
+                )
+            differential = any(
+                "negative_real" in operand
+                for operand in (input_operand, output_operand)
+            )
+            expected_signal = (
+                "complex-differential-output-over-input"
+                if differential
+                else "complex-output-over-input"
+            )
+            if measurement.get("signal") != expected_signal:
+                raise ConformanceError(
+                    f"transfer {kind} does not retain its operand expression"
+                )
+            expected_signals = {
+                "input": {
+                    **input_operand,
+                    "unit": "A" if kind == "low_frequency_impedance" else "V",
+                },
+                "output": {**output_operand, "unit": "V"},
+                "ratio": "output-over-input",
+            }
+            if result.get("data", {}).get("transfer", {}).get("signals") != expected_signals:
+                raise ConformanceError(
+                    f"transfer {kind} does not retain its typed operands"
+                )
         _close(
             float(value),
             independent[kind],

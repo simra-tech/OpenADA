@@ -13,7 +13,7 @@
         "plotname": "Transient Analysis",
         "point_count": 18
       },
-      "request_sha256": "ae2d3245d197548371d9bba368dcd4ea3a86bbf76a001577c9fc327042ea8008",
+      "request_sha256": "9211e0f94fc9b7e164d99ce27b8656ea555478ab8487d7cb4735531d374e5e63",
       "series": {
         "axis": {
           "name": "time",
@@ -83,10 +83,10 @@
           "artifact_sha256": "fcbf36fe76134d714b7ab18bc07e4ab783e75a0054abdea03aa36dbdeccbe479",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "70ef50bae1becc63c94c463a30e5c967e797e12950067328d43b7fea9eafb738",
+            "artifact_sha256": "669c5df6291f68c8a5f0dc127cc1fc8b8edba0887148d5030b5c70bb7e41b8ed",
             "binding": "unverified",
             "operation": "circuit.simulate",
-            "request_id": "2c32780e-3f20-4fe1-808d-edd3bf252206"
+            "request_id": "8d645dfc-e6ad-4ea2-ab78-d0473a641860"
           },
           "operation": "openada.operation/result.series.extract/v1alpha1",
           "request_id": "21000000-0000-4000-8000-000000000006"
@@ -98,16 +98,16 @@
           "bytes": 1151,
           "exists": true,
           "kind": "xyce-raw",
-          "path": "/evidence/sim/xyce-tran/xyce-tran.xyce.raw",
+          "path": "/evidence/sim/xyce-tran/xyce-tran/xyce-tran.xyce.raw",
           "role": "simulation.result",
-          "sha256": "70ef50bae1becc63c94c463a30e5c967e797e12950067328d43b7fea9eafb738"
+          "sha256": "669c5df6291f68c8a5f0dc127cc1fc8b8edba0887148d5030b5c70bb7e41b8ed"
         },
         "backend": "xyce",
         "binding": "verified",
         "driver_id": "org.openada.driver.xyce",
         "driver_version": "0.4.0",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-        "request_id": "2c32780e-3f20-4fe1-808d-edd3bf252206"
+        "request_id": "8d645dfc-e6ad-4ea2-ab78-d0473a641860"
       },
       "status": "extracted"
     },
@@ -135,14 +135,14 @@
       "bytes": 1151,
       "exists": true,
       "kind": "xyce-raw",
-      "path": "/evidence/sim/xyce-tran/xyce-tran.xyce.raw",
+      "path": "/evidence/sim/xyce-tran/xyce-tran/xyce-tran.xyce.raw",
       "role": "simulation.result",
-      "sha256": "70ef50bae1becc63c94c463a30e5c967e797e12950067328d43b7fea9eafb738"
+      "sha256": "669c5df6291f68c8a5f0dc127cc1fc8b8edba0887148d5030b5c70bb7e41b8ed"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-19T11:37:22.304033Z",
+    "created_at": "2026-08-10T09:04:42.845066Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -13,8 +13,10 @@
     "ota": {
       "decision": "Requirements and PVT/statistical review are required; this is not a design pass or signoff.",
       "metrics": {
+        "ac_magnitude_at_frequency": 68.18219791291199,
         "bandwidth_3db": 1332.3043851822767,
         "low_frequency_gain_db": 70.11974138671727,
+        "low_frequency_impedance": 1416678492.999632,
         "phase_margin": 61.42309151169668,
         "unity_gain_frequency": 4157414.5570058133
       },
@@ -28,89 +30,101 @@
     "Public IEEE pages were reviewed only for lifecycle and scope; no licensed clause-level review or standards-conformance claim was made."
   ],
   "lineage": {
-    "engineering_decision_sha256": "8315f513914c23df3dae97a5c546aed498d757ce64af6a65480290ba6a9024f0",
-    "inverter_raw_sha256": "6dbea3e6b0fd68bbbd8d43c1e5ffee2367a21a0b9425c927869b41ab901c0a58",
-    "oracle_sha256": "389332c07ab97665f33c52e804c4592319e95677ded83686567cf019010e5879",
-    "ota_raw_sha256": "51a52b7005b5fa0eed6c9a038051b2b3aac125588b3cab2523a6a1b09d5cd813"
+    "engineering_decision_sha256": "06a254304465de6095c66701606ec39ed7e7ab9a7e9bbdb4fbe14e4490f94cd9",
+    "inverter_raw_sha256": "333ef46670de60c4c0b627e5e3a15f27938a74c9caff01de8644b288fa6ffc8b",
+    "oracle_sha256": "e7f27f1b6774d4be8d07ea99c1972cd73d6187f0310b8f4e4a24437b4074f2bb",
+    "ota_raw_sha256": "428ba73cb4c38ec7e4decf075a8d7b5cf92fdda7336ae9ff15adc3cb6ef997aa"
   },
   "negative_replays": {
     "extract-ac-missing-selector": {
       "diagnostic": "series.selector.missing",
       "engineering_status": "unknown",
       "execution_status": "completed",
-      "result_sha256": "cd103f261a2de5a90a33921eb954823caf3e4d4bfc2f1aad6bae27fd3935b39c"
+      "result_sha256": "0e4f31bf4d0e98f651a60c8d6e44cf31b6e88340b0d0c66840c4bee512e7a712"
     },
     "extract-tran-missing-selector": {
       "diagnostic": "series.selector.missing",
       "engineering_status": "unknown",
       "execution_status": "completed",
-      "result_sha256": "e86be5f62f96e80285424499f59887d18e6b5303fae1acb864a7d45392c9a410"
+      "result_sha256": "3698f792e8a34b9174686d11812d7e0c29273d629e40e8992bee77b50c183cdc"
     },
     "netlist-missing-symbol": {
       "diagnostic": "xschem.missing_symbol",
       "engineering_status": "fail",
       "execution_status": "completed",
-      "result_sha256": "294e8139aacc79541411147d788132d19080877bab7b2dd52322261c0b0710d3"
+      "result_sha256": "a65a403998cf5d2adf86d93a0008e988a23cec437253bf36a9b7e52b89b7fb1f"
     },
     "provider-ac-parameter-mismatch": {
       "diagnostic": "simulation.request.invalid",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "14d7ca094c7088999ce1e9047c7da59ce6b930defff2b343491829c94657ce2d"
+      "result_sha256": "dbd28ff344813b88f85d1cd8085d229af62ccd360c792949cb245947e8b069e5"
     },
     "provider-tran-parameter-mismatch": {
       "diagnostic": "simulation.request.invalid",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "3da98fda4460b1c769dc25bba8ea0c354d878c634ddb30462679d97f2396bf33"
+      "result_sha256": "7133f5eb6475241dafa78418fdfb4d60db978d71790ddda627929084405a2c7c"
     },
     "spectral-sfdr-invalid-standard-context": {
       "diagnostic": "spectral.standard_context.invalid",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "3957feae9a4ed33436292896ae21e6807b8cbd4a653036e04e3046437afed406"
+      "result_sha256": "fcf64ba867c24b72480ef2ab93f8212b74f5047e50108e65af776978b80e490a"
     },
     "spectral-sinad-record-length": {
       "diagnostic": "spectral.method.record_length_mismatch",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "f32c5da23e7c5b4bfe276cf2ccd4967396f0b3d21d906d263dfe565b96791ab9"
+      "result_sha256": "97df434b50d1d9bf548d446996e1e39cc7cfd2ed1da4d5617dbeba183ea0f21d"
     },
     "spectral-snr-noncoherent": {
       "diagnostic": "spectral.coherence.not_established",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "92380a24f98dd43c835ae5694779a1fe53eabe7510a3d593860a8dfbe7f0e3a7"
+      "result_sha256": "85d236dbbe19f35df22d57b34cd854e51b2727cd516ed17603abd7a4714862d8"
     },
     "spectral-thd-unsupported-window": {
       "diagnostic": "spectral.method.unsupported",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "b7e1fe0bedaf1a958347fa9fdd6be790b1ac98dcc6653643ba6c1540894e99d5"
+      "result_sha256": "aeef420fdd161c3c61741634a23bb207ddc48a6d0c0c8ae573fb546ef4852281"
+    },
+    "transfer-ac-magnitude-outside-domain": {
+      "diagnostic": "transfer.domain.invalid",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "712b2d5d448f15d9ce523c013556cc6af08e79978f842a026803c054598ec8c6"
     },
     "transfer-bandwidth-unsupported-drop": {
       "diagnostic": "transfer.method.unsupported",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "b2c30a9e1c80eb512b3053f8888b65e79a011a526668a7348c588d6aa2b44619"
+      "result_sha256": "b90dde01343868f091371415b9042d4ccadc43ba06d237e004c52472af869795"
     },
     "transfer-low-frequency-gain-invalid-unit": {
       "diagnostic": "transfer.unit.mismatch",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "0f507eac6778fdd4625f45782c1c940d322047f80a2ac16d0e587a49c07f7f90"
+      "result_sha256": "c17617e5e6d5e6d2bddc4651db9e5bbf96671a52a3d0ce27bf3eb309d21183d4"
+    },
+    "transfer-low-frequency-impedance-invalid-unit": {
+      "diagnostic": "transfer.unit.mismatch",
+      "engineering_status": "unknown",
+      "execution_status": "invalid_request",
+      "result_sha256": "b429095311b60ffd59f0dc2afcdca5a8130f5887be07f92b8e421afde6282660"
     },
     "transfer-phase-margin-invalid-context": {
       "diagnostic": "transfer.phase_margin.invalid_context",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "719d12022f37f3dce66950f826756486abd5658f59ea8e07e1e5773ec19f345b"
+      "result_sha256": "77e03020d582c6f55aeaf028743dc1d8ddba7325217d9e8fe73c720fac4e2a90"
     },
     "transfer-unity-unsupported-policy": {
       "diagnostic": "transfer.method.unsupported",
       "engineering_status": "unknown",
       "execution_status": "invalid_request",
-      "result_sha256": "9ffe8e4042f79622edbc85dcc7cd92691499978752d23181a3316df3e034f0c0"
+      "result_sha256": "dd4267d66e3fc9aedea773beab80e003d77209dc5954c037ae3cedca8670fc57"
     }
   },
   "schema": "openada.ihp-analog-agent-evidence/v0alpha1",

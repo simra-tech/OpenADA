@@ -334,16 +334,16 @@ def test_semantic_run_binds_every_artifact_to_one_declared_step_or_replay() -> N
     assert run["chain_manifest_sha256"] == common.sha256_file(HERE / "semantic-chain.json")
     steps = {item["id"]: set(item["produces"]) for item in chain["steps"]}
     paths: set[str] = set()
-    digests: set[str] = set()
+    # Artifact identity is its bound path and declared origin. Independent trust
+    # documents are required to have distinct digests by semantic.py; two clean
+    # native transcripts may legitimately contain the same bytes.
     for artifact in run["artifacts"]:
         path = ROOT / artifact["repository_path"]
         assert path.is_file()
         assert artifact["bytes"] == path.stat().st_size
         assert artifact["sha256"] == common.sha256_file(path)
         assert artifact["repository_path"] not in paths
-        assert artifact["sha256"] not in digests
         paths.add(artifact["repository_path"])
-        digests.add(artifact["sha256"])
         if artifact["role"] in {"negative-replay", "tamper-replay"}:
             assert artifact["source_step"] is None
             assert artifact["source_output"] is None

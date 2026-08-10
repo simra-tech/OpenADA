@@ -8,8 +8,8 @@
     "closed IEEE scope-only context"
   ],
   "extensions": {},
-  "manifest_sha256": "5e7a2a87ffb1e4152f12c15f25dbe3de959e39cfc74bc28c83d9f994c23b4d8b",
-  "requests_sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+  "manifest_sha256": "6a93ed0975c2d73d9991d2ad5397c6fd7cccd0fc8ed783f29924517061c454d2",
+  "requests_sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
   "schema": "openada.ihp-analog-contract-test/v0alpha1",
   "status": "pass"
 }

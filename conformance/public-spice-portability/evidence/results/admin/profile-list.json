@@ -50,6 +50,23 @@
         "schema": "openada.operation-profile/v0alpha2"
       },
       {
+        "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/measurement.sample-at/v1alpha1",
+          "openada.feature/measurement.minimum/v1alpha1",
+          "openada.feature/measurement.maximum/v1alpha1",
+          "openada.feature/measurement.mean/v1alpha1",
+          "openada.feature/measurement.rms/v1alpha1",
+          "openada.feature/measurement.crossing/v1alpha1",
+          "openada.feature/measurement.rise-time/v1alpha1",
+          "openada.feature/measurement.fall-time/v1alpha1",
+          "openada.feature/measurement.settling-time/v1alpha1",
+          "openada.feature/measurement.slope/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/result.measure/v1alpha2",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
         "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
         "feature_ids": [],
         "operation_profile": "openada.operation/result.series.extract/v1alpha1",
@@ -70,11 +87,27 @@
         "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
         "feature_ids": [
           "openada.feature/transfer.low-frequency-gain/v1alpha1",
+          "openada.feature/transfer.low-frequency-impedance/v1alpha1",
+          "openada.feature/transfer.differential-operands/v1alpha1",
           "openada.feature/transfer.bandwidth-3db/v1alpha1",
           "openada.feature/transfer.unity-gain-frequency/v1alpha1",
           "openada.feature/transfer.phase-margin/v1alpha1"
         ],
         "operation_profile": "openada.operation/result.transfer.measure/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
+        "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/transfer.low-frequency-gain/v1alpha1",
+          "openada.feature/transfer.low-frequency-impedance/v1alpha1",
+          "openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+          "openada.feature/transfer.differential-operands/v1alpha1",
+          "openada.feature/transfer.bandwidth-3db/v1alpha1",
+          "openada.feature/transfer.unity-gain-frequency/v1alpha1",
+          "openada.feature/transfer.phase-margin/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/result.transfer.measure/v1alpha2",
         "schema": "openada.operation-profile/v0alpha2"
       },
       {
@@ -103,6 +136,15 @@
         "schema": "openada.operation-profile/v0alpha2"
       },
       {
+        "assertion_profile": "openada.assertion/testbench.analyses.evidence.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/testbench.analysis.split/v1alpha1",
+          "openada.feature/testbench.model.collateral/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/testbench.simulate/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
         "assertion_profile": "openada.assertion/timing.constraints-satisfied/v1alpha1",
         "feature_ids": [
           "openada.feature/timing.setup-hold/v1alpha1"
@@ -115,7 +157,7 @@
   "diagnostics": [],
   "engineering": {
     "status": "pass",
-    "summary": "Listed 11 packaged operation profiles."
+    "summary": "Listed 14 packaged operation profiles."
   },
   "execution": {
     "command": [],
@@ -126,7 +168,7 @@
   "inputs": [],
   "operation": "profile.list",
   "provenance": {
-    "created_at": "2026-07-19T11:37:27.964801Z",
+    "created_at": "2026-08-10T09:04:48.743251Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -1,0 +1,18 @@
+{
+  "extensions": {},
+  "kind": "slope",
+  "measurement_id": "inverter.vout.falling-edge-slope",
+  "parameters": {
+    "window": {
+      "start": {
+        "unit": "s",
+        "value": 4.9e-07
+      },
+      "stop": {
+        "unit": "s",
+        "value": 5.2e-07
+      }
+    }
+  },
+  "signal": "v(vout)"
+}

@@ -10,8 +10,12 @@ and one case) without updating the packaging table.
 """
 
 import json
-import tomllib
 from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on Python 3.10
+    import tomli as tomllib
 
 ROOT = Path(__file__).parents[1]
 

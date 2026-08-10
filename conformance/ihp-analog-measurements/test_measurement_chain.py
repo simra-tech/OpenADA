@@ -48,11 +48,11 @@ def test_manifest_has_exact_honest_surface_and_step_local_covers() -> None:
         or "cli.transfer" in row
     }
 
-    assert len(manifest["covers"]) == 47
-    assert len(measurement_rows) == 30
+    assert len(manifest["covers"]) == 56
+    assert len(measurement_rows) == 39
     assert set(manifest["covers"]) == exercised
     assert all(step["covers"] for step in semantic_steps)
-    assert len(manifest["negative_replays"]) == 13
+    assert len(manifest["negative_replays"]) == 15
     assert len(manifest["tamper_replays"]) == 5
     assert all(not step["native_execution"] for step in semantic_steps if step["id"].startswith(("transfer-", "spectral-", "extract-")))
     assert all(step["native_execution"] for step in semantic_steps if step["id"].startswith(("netlist-", "provider-")))
@@ -84,6 +84,8 @@ def test_provisional_receipt_is_independently_reproducible() -> None:
     report = verify.verify_evidence(HERE / "semantic-artifacts")
     assert report["status"] == "pass"
     assert report["oracle"]["transfer"]["metrics"]["low_frequency_gain_db"] == pytest.approx(70.1197413867)
+    assert report["oracle"]["transfer"]["metrics"]["low_frequency_impedance"] == pytest.approx(1416678492.999632)
+    assert report["oracle"]["transfer"]["metrics"]["ac_magnitude_at_frequency"] == pytest.approx(68.1821979129)
     assert report["oracle"]["spectral"]["metrics"]["snr"] == pytest.approx(93.2858420431)
     assert report["agent_evidence"]["status"] == "proceed-to-requirements-and-pvt-review"
     assert report["agent_evidence"]["standards"]["conformance_claim"] is False
@@ -93,8 +95,8 @@ def test_provisional_chain_run_passes_temporary_agent_ready_index(tmp_path: Path
     validation = run._validate_temp_index(
         HERE / "manifest.json", HERE / "semantic-chain-run.json"
     )
-    assert validation["chain_rows"] == 47
-    assert validation["chain_agent_ready_rows"] == 47
+    assert validation["chain_rows"] == 56
+    assert validation["chain_agent_ready_rows"] == 56
 
 
 def test_retained_tamper_receipts_are_unique_and_pass() -> None:

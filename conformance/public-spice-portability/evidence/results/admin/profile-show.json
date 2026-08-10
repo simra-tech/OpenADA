@@ -147,6 +147,216 @@
           "extensions": {},
           "next_action": "Declare or snapshot the missing material configuration when reproducibility requires it; retain the limitation in the result.",
           "severity": "warning"
+        },
+        {
+          "code": "input.missing",
+          "condition": "The named simulation target does not exist as a readable file.",
+          "extensions": {},
+          "next_action": "Correct the target path; do not invoke a simulator or substitute another file.",
+          "severity": "error"
+        },
+        {
+          "code": "simulation.backend.unsupported",
+          "condition": "The requested backend is not one of the reviewed simulation backends this operation implements.",
+          "extensions": {},
+          "next_action": "Select a reviewed backend; do not substitute a different simulator.",
+          "severity": "error"
+        },
+        {
+          "code": "simulation.models.ambiguous",
+          "condition": "Both a PDK binding and a self-contained model-card file were supplied; exactly one model source may bind a deck.",
+          "extensions": {},
+          "next_action": "Supply exactly one model source; do not merge two preludes.",
+          "severity": "error"
+        },
+        {
+          "code": "simulation.models.required",
+          "condition": "The target names device models it does not itself carry and no model source was supplied, so no evidence would describe the intended circuit.",
+          "extensions": {},
+          "next_action": "Bind an installed PDK, or supply a self-contained model-card file; do not run a deck with no devices.",
+          "severity": "error"
+        },
+        {
+          "code": "simulation.analyses.over_limit",
+          "condition": "The target declares more analyses than the bounded per-request dispatch ceiling.",
+          "extensions": {},
+          "next_action": "Split the request into separate targets; do not silently drop declared analyses.",
+          "severity": "error"
+        },
+        {
+          "code": "simulation.destination.unusable",
+          "condition": "The evidence destination could not be prepared, or a derived deck or per-analysis result could not be written there.",
+          "extensions": {},
+          "next_action": "Name a writable evidence destination; do not report evidence that was not retained.",
+          "severity": "error"
+        },
+        {
+          "code": "simulation.deck.unstable",
+          "condition": "A derived single-analysis deck does not hash to the digest derived for it, so what ran cannot be bound to what was derived.",
+          "extensions": {},
+          "next_action": "Rerun on a stable filesystem; do not bind evidence to an unverified deck.",
+          "severity": "error"
+        },
+        {
+          "code": "simulation.target.artifact",
+          "condition": "A published schematic artifact was handed to the native interface, which can verify no digest, split no declaration and bind no PDK.",
+          "extensions": {},
+          "next_action": "Dispatch the artifact through this operation; do not run it as an opaque deck.",
+          "severity": "error"
+        },
+        {
+          "code": "simulation.collateral.unmanaged",
+          "condition": "The deck binds collateral that no registered PDK profile describes, so the operation cannot state what technology bound the devices.",
+          "extensions": {},
+          "next_action": "Register a binding profile and select it, or accept the recorded provenance limitation; do not infer the technology.",
+          "severity": "warning"
+        },
+        {
+          "code": "simulation.collateral.unloadable",
+          "condition": "The simulator was asked to preload a model library it could not open. Severity is error when the analysis produced no structurally valid evidence and warning when it did, because a preload no device needed does not make a converged result unreadable.",
+          "extensions": {},
+          "next_action": "Identify the startup file that named the preload - SPICE_SCRIPTS, ./.spiceinit or $HOME/.spiceinit - and bind the technology with --pdk so the driver writes the startup file itself.",
+          "severity": "warning"
+        },
+        {
+          "code": "simulation.startup.failed",
+          "condition": "A simulator startup file reported an error before any deck was read. Severity is error when the analysis produced no structurally valid evidence and warning when it did.",
+          "extensions": {},
+          "next_action": "Correct or displace the startup file named by SPICE_SCRIPTS, ./.spiceinit or $HOME/.spiceinit; binding with --pdk makes the driver write it instead.",
+          "severity": "warning"
+        },
+        {
+          "code": "simulation.stimulus.absent",
+          "condition": "The deck declares an AC analysis and no independent source carries an AC magnitude, so every dependent vector is identically zero and the run answers no small-signal question.",
+          "extensions": {},
+          "next_action": "Give the stimulating source an AC magnitude and re-run; do not derive a gain, impedance or bandwidth from the existing result.",
+          "severity": "warning"
+        },
+        {
+          "code": "pdk.collateral.foreign",
+          "condition": "A reference sits inside one registered PDK's tree but names collateral another registered PDK ships: one PDK's incantation applied to another.",
+          "extensions": {},
+          "next_action": "Bind the PDK that owns the tree and let the driver emit its prelude; do not run collateral from a technology nobody selected.",
+          "severity": "error"
+        },
+        {
+          "code": "pdk.collateral.missing",
+          "condition": "A collateral reference names a file that does not exist, so the deck would simulate a circuit with no devices.",
+          "extensions": {},
+          "next_action": "Correct the reference or bind an installed PDK; do not run a deck that binds nothing.",
+          "severity": "error"
+        },
+        {
+          "code": "pdk.collateral.conflict",
+          "condition": "The deck binds PDK collateral by hand while also requesting a PDK binding; the driver owns the whole prelude and two preludes cannot be reconciled.",
+          "extensions": {},
+          "next_action": "Pass the model-free deck and let the binding own the prelude, or drop the binding; do not merge two preludes.",
+          "severity": "error"
+        },
+        {
+          "code": "pdk.collateral.hand_bound",
+          "condition": "The deck encodes a technology by hand - a Verilog-A preload, or a library or include reaching into a registered PDK's tree - so it can only ask its question in one technology.",
+          "extensions": {},
+          "next_action": "Pass the model-free deck with an explicit PDK binding; do not restate a technology inside a circuit.",
+          "severity": "error"
+        },
+        {
+          "code": "pdk.corner.unbound",
+          "condition": "A process corner was selected without a PDK binding, so no reviewed profile declares what that corner names.",
+          "extensions": {},
+          "next_action": "Select the corner together with its PDK; do not guess a corner's library entry point.",
+          "severity": "error"
+        },
+        {
+          "code": "pdk.corner.unknown",
+          "condition": "The selected PDK's reviewed binding profile declares no such corner.",
+          "extensions": {},
+          "next_action": "Select a declared corner; do not substitute the default corner for the requested one.",
+          "severity": "error"
+        },
+        {
+          "code": "pdk.backend.unsupported",
+          "condition": "PDK binding has no reviewed profile for the requested backend.",
+          "extensions": {},
+          "next_action": "Select a backend with a reviewed binding profile, or supply flattened model cards instead.",
+          "severity": "error"
+        },
+        {
+          "code": "pdk.root.required",
+          "condition": "A PDK binding was requested but no PDK root was supplied, by request field or by the PDK_ROOT environment variable.",
+          "extensions": {},
+          "next_action": "Name the directory containing the installed PDK tree; do not search the host for one.",
+          "severity": "error"
+        },
+        {
+          "code": "pdk.analog.unsupported",
+          "condition": "The selected PDK's reviewed binding profile states it cannot answer a transistor-level question.",
+          "extensions": {},
+          "next_action": "Select a PDK whose profile binds transistor-level devices; do not bind a digital-only collateral set to an analog deck.",
+          "severity": "error"
+        },
+        {
+          "code": "testbench.artifact.invalid",
+          "condition": "A published artifact document is not one valid, structurally acceptable JSON object of its declared role.",
+          "extensions": {},
+          "next_action": "Republish the artifact; do not interpret a malformed descriptor.",
+          "severity": "error"
+        },
+        {
+          "code": "testbench.artifact.digest_mismatch",
+          "condition": "A published artifact file does not hash to the digest its descriptor publishes.",
+          "extensions": {},
+          "next_action": "Republish the artifact; do not simulate content the descriptor does not bind.",
+          "severity": "error"
+        },
+        {
+          "code": "testbench.artifact.not_a_testbench",
+          "condition": "The published artifact is not a testbench, so it declares no analyses to dispatch.",
+          "extensions": {},
+          "next_action": "Supply a published testbench; do not infer an analysis the artifact does not declare.",
+          "severity": "error"
+        },
+        {
+          "code": "testbench.handoff.inconsistent",
+          "condition": "The artifact's simulation handoff state disagrees with the analyses it declares.",
+          "extensions": {},
+          "next_action": "Recompile the artifact so its handoff and declaration agree; do not resolve the disagreement by choosing one.",
+          "severity": "error"
+        },
+        {
+          "code": "testbench.parameters.unresolved",
+          "condition": "The artifact reports unresolved model, width, or length placeholders; this operation binds none of them.",
+          "extensions": {},
+          "next_action": "Re-author with explicit parameters and recompile; do not substitute a default device or geometry.",
+          "severity": "error"
+        },
+        {
+          "code": "testbench.deck.mismatch",
+          "condition": "The published deck's analysis cards do not match the artifact's typed declaration.",
+          "extensions": {},
+          "next_action": "Recompile so the emitted deck and its declaration agree; do not run one and report the other.",
+          "severity": "error"
+        },
+        {
+          "code": "configuration.models.not_self_contained",
+          "condition": "The supplied model-card file reaches outside itself through a directive this bounded profile cannot accept.",
+          "extensions": {},
+          "next_action": "Supply a flattened, self-contained model card set, or bind an installed PDK instead.",
+          "severity": "error"
+        },
+        {
+          "code": "claim.measurement.unsupported",
+          "condition": "The analysis did not complete, or the engineering assertion was not established, so the run supports no measured quantity at all.",
+          "extensions": {},
+          "next_action": "Report no quantity from this run as measured, simulated or verified; correct the named failure and re-run.",
+          "severity": "error"
+        },
+        {
+          "code": "claim.measurement.typed_chain",
+          "condition": "The analysis completed, so a quantity may become reportable - but only through a typed measurement envelope, never by parsing the retained raw file directly.",
+          "extensions": {},
+          "next_action": "Run result.series.extract against the retained result envelope, then result.measure, result.transfer.measure or result.spectral.measure.",
+          "severity": "info"
         }
       ],
       "evidence": {
@@ -1051,7 +1261,7 @@
   "inputs": [],
   "operation": "profile.show",
   "provenance": {
-    "created_at": "2026-07-19T11:37:29.644546Z",
+    "created_at": "2026-08-10T09:04:50.487628Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

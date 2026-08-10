@@ -15,6 +15,6 @@
     "failed": 0,
     "passed": 18,
     "suite": "tests/test_ihp_sar_rtl_conformance.py",
-    "suite_sha256": "ef7a6ad4a276fe3ac454c897e3b4a25fe0be32368828b43df8273571e257d584"
+    "suite_sha256": "cc4062c72fd82eac6e8aae91b4d92b4ddcb89374caaeccb978162caee3df8ac5"
   }
 }

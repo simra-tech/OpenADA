@@ -5,7 +5,7 @@
     "extraction": {
       "extensions": {},
       "plot": null,
-      "request_sha256": "64c0e1d39064d6e8abf3f0d5c20cb4d89d20779ac282fc8a8477a6ebf215a64c",
+      "request_sha256": "2963d4855ef92480abc3efe33c81a14ed23d1d958b219a728f1b2de5f0f97858",
       "series": null,
       "source": {
         "analysis_type": "dc",
@@ -13,16 +13,16 @@
           "bytes": 5535,
           "exists": true,
           "kind": "xyce-raw",
-          "path": "/evidence/sim/xyce-dc/xyce-dc.xyce.raw",
+          "path": "/evidence/sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw",
           "role": "simulation.result",
-          "sha256": "d3d60654e38e28a4e4854cdd1832622623cc086b259cbaa6de071995997cbd27"
+          "sha256": "c491544db45ed6e2d99e6fd3cbde8cec21613aa6c6198601441646312eae71d7"
         },
         "backend": "xyce",
         "binding": "not-established",
         "driver_id": "org.openada.driver.xyce",
         "driver_version": "0.4.0",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-        "request_id": "c5148ba2-fe69-4fcf-b48e-47457894950b"
+        "request_id": "097cd0a7-7caa-4d66-bc48-bcc0f250a9bb"
       },
       "status": "unknown"
     },
@@ -37,7 +37,7 @@
   "diagnostics": [
     {
       "code": "series.selector.missing",
-      "message": "At least one exact native vector selector is absent or ambiguous.",
+      "message": "Selector 'does_not_exist' names no native vector in the selected plot. Selectable signals: 'V(1)', 'V1#branch'. Axis vector: 'sweep'.",
       "severity": "error"
     }
   ],
@@ -56,14 +56,14 @@
       "bytes": 5535,
       "exists": true,
       "kind": "xyce-raw",
-      "path": "/evidence/sim/xyce-dc/xyce-dc.xyce.raw",
+      "path": "/evidence/sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw",
       "role": "simulation.result",
-      "sha256": "d3d60654e38e28a4e4854cdd1832622623cc086b259cbaa6de071995997cbd27"
+      "sha256": "c491544db45ed6e2d99e6fd3cbde8cec21613aa6c6198601441646312eae71d7"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-07-19T11:37:35.195567Z",
+    "created_at": "2026-08-10T09:04:54.916704Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -42,12 +42,12 @@ def test_manifest_closes_declared_positive_surface() -> None:
         row_id for step in semantic_steps for row_id in step["covers"]
     }
 
-    assert len(manifest["covers"]) == 57
+    assert len(manifest["covers"]) == 60
     assert set(manifest["covers"]) == exercised
     assert all(step["covers"] for step in semantic_steps)
-    assert len(manifest["steps"]) == 23
-    assert len(manifest["negative_replays"]) == 15
-    assert len(manifest["tamper_replays"]) == 19
+    assert len(manifest["steps"]) == 24
+    assert len(manifest["negative_replays"]) == 16
+    assert len(manifest["tamper_replays"]) == 20
     assert (
         manifest["extensions"]["org.openada"]["provider"]["driver_version"]
         == "0.5.0"
@@ -75,6 +75,19 @@ def test_runner_verifier_and_gate_bind_same_semantic_subject() -> None:
 
     assert chain_run._semantic_subject() == expected
     assert verify._semantic_subject() == expected
+
+
+def test_tamper_rejection_normalizes_resolved_temp_alias(tmp_path: Path) -> None:
+    real = tmp_path / "real"
+    real.mkdir()
+    alias = tmp_path / "alias"
+    alias.symlink_to(real, target_is_directory=True)
+
+    rejection = f"file[{alias.resolve()}/work/native.raw].sha256 differs"
+
+    assert verify._normalized_tamper_rejection(rejection, alias) == (
+        "file[/tampered-evidence/work/native.raw].sha256 differs"
+    )
 
 
 @pytest.mark.conformance
@@ -124,4 +137,4 @@ def test_real_replay(tmp_path: Path) -> None:
     assert independent.returncode == 0, independent.stdout + independent.stderr
     report = json.loads(independent.stdout)
     assert report["status"] == "pass"
-    assert len(report["tamper_replays"]) == 19
+    assert len(report["tamper_replays"]) == 20

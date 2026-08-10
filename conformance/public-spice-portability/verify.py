@@ -49,6 +49,7 @@ NEGATIVE_IDS = (
     "ngspice-analysis-mismatch", "extract-missing-selector",
     "admin-unknown-profile", "admin-invalid-provider",
 )
+NEGATIVE_SIMULATION_IDS = NEGATIVE_IDS[:3]
 TAMPER_IDS = (
     "request-contract-byte", "public-source-byte", "derived-deck-byte",
     "native-raw-byte", "simulation-analysis-type", "simulation-backend-id",
@@ -586,6 +587,59 @@ def _simulation_artifact(result: dict[str, Any], evidence: Path, *, legacy: bool
     return artifact, path
 
 
+def _expected_selection_template(
+    parsed: dict[str, Any], *, analysis_type: str
+) -> dict[str, Any]:
+    """Rebuild the simulator's bounded extraction handoff from native bytes."""
+
+    variables = [name for name, _native_type in parsed["variables"]]
+    candidates = variables if analysis_type == "op" else variables[1:]
+    signals = [name for name in candidates if "#" not in name]
+
+    def unit(name: str) -> str | None:
+        lowered = name.casefold()
+        if lowered.startswith("v("):
+            return "V"
+        if lowered.startswith(("i(", "@")):
+            return "A"
+        return None
+
+    unique: list[str] = []
+    for name in signals:
+        if unit(name) is not None and name not in unique:
+            unique.append(name)
+    if len(unique) > 8:
+        kept = unique[:8]
+        present = {unit(name) for name in kept}
+        missing = sorted({unit(name) for name in unique} - present)
+        for offset, missing_unit in enumerate(missing):
+            if offset >= len(kept):
+                break
+            kept[len(kept) - 1 - offset] = next(
+                name for name in unique if unit(name) == missing_unit
+            )
+        unique = kept
+
+    components = (
+        (("real", "_re"), ("imaginary", "_im"))
+        if analysis_type == "ac"
+        else (("real", ""),)
+    )
+    selectors = []
+    for name in unique:
+        stem = re.sub(r"[^A-Za-z0-9_]", "_", name).strip("_")
+        for component, suffix in components:
+            selectors.append(
+                {
+                    "native_name": name,
+                    "output_name": f"{stem}{suffix}",
+                    "unit": unit(name),
+                    "component": component,
+                }
+            )
+    return {"selectors": selectors, "conditions": [], "extensions": {}}
+
+
 def _result_document(path: Path, *, code: str) -> dict[str, Any]:
     result = _read_json(path, code=code)
     _validate_schema(
@@ -674,6 +728,26 @@ def _verify_simulations(
         )
         artifact, raw_path = _simulation_artifact(result, evidence)
         raw = _parse_spice3(raw_path)
+        retained = _result_document(
+            evidence / "sim" / identifier / "simulate.result.json",
+            code="conformance.analysis.tampered",
+        )
+        _expect(
+            retained,
+            result,
+            f"{identifier}.retained_result",
+            code="conformance.analysis.tampered",
+        )
+        selection = _read_json(
+            evidence / "sim" / identifier / "simulate.selection.json",
+            code="conformance.lineage.tampered",
+        )
+        _expect(
+            selection,
+            _expected_selection_template(raw, analysis_type=definition["analysis"]),
+            f"{identifier}.selection_template",
+            code="conformance.lineage.tampered",
+        )
         variables = len(raw["variables"])
         dependent = variables if definition["analysis"] == "op" else variables - 1
         finite = dependent * raw["point_count"] * (2 if raw["numeric_type"] == "complex" else 1)
@@ -853,6 +927,17 @@ def _verify_negatives(manifest: dict[str, Any], evidence: Path) -> dict[str, dic
         required = declarations[identifier]["required_diagnostic"]
         if codes.count(required) != 1:
             _fail("conformance.negative.tampered", f"negative {identifier} lacks exactly one {required}")
+        if identifier in NEGATIVE_SIMULATION_IDS:
+            retained = _result_document(
+                evidence / "negative-native" / identifier / "simulate.result.json",
+                code="conformance.negative.tampered",
+            )
+            _expect(
+                retained,
+                result,
+                f"negative.{identifier}.retained_result",
+                code="conformance.negative.tampered",
+            )
         results[identifier] = result
     return results
 
@@ -970,12 +1055,32 @@ def _expected_files(*, require_chain_run: bool) -> set[str]:
                 f"selections/{identifier}.json",
             }
         )
+        files.update(
+            {
+                f"sim/{identifier}/simulate.result.json",
+                f"sim/{identifier}/simulate.selection.json",
+            }
+        )
         if identifier.startswith("xyce"):
-            files.update({f"sim/{identifier}/{stem}.xyce.raw", f"sim/{identifier}/{stem}.xyce.log"})
+            files.update(
+                {
+                    f"sim/{identifier}/{stem}/{stem}.xyce.raw",
+                    f"sim/{identifier}/{stem}/{stem}.xyce.log",
+                }
+            )
         else:
-            files.update({f"sim/{identifier}/{stem}.raw", f"sim/{identifier}/{stem}.log"})
+            files.update(
+                {
+                    f"sim/{identifier}/{stem}/{stem}.raw",
+                    f"sim/{identifier}/{stem}/{stem}.log",
+                }
+            )
     files.update(f"results/admin/{identifier}.json" for identifier in ADMIN_IDS)
     files.update(f"results/negative/{identifier}.json" for identifier in NEGATIVE_IDS)
+    files.update(
+        f"negative-native/{identifier}/simulate.result.json"
+        for identifier in NEGATIVE_SIMULATION_IDS
+    )
     if require_chain_run:
         files.update(
             {"chain-run.json", "independent-verification.json", "contract-tests.json"}
@@ -1365,7 +1470,7 @@ def _run_tamper_probes(
                 path.write_bytes(path.read_bytes() + b"*tamper\n")
                 mutation = "append one derived-deck comment record"
             elif identifier == "native-raw-byte":
-                path = clone / "sim/xyce-dc/xyce-dc.xyce.raw"
+                path = clone / "sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw"
                 payload = bytearray(path.read_bytes())
                 payload[-2] ^= 1
                 path.write_bytes(payload)

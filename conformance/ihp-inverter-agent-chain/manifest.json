@@ -111,12 +111,12 @@
     },
     {
       "repository_path": "tools/semantic_receipts.py",
-      "sha256": "0c8265710978ff1551a485e6e3044fee561aa5a5aa0ee4a98d1039e8f5fe6a1f",
+      "sha256": "240c577d58bb0e615f0b6d244a0dee6ea5e0b590b998f8dc15c6277368626c2e",
       "extensions": {}
     },
     {
       "repository_path": "tools/verify_semantic_coverage.py",
-      "sha256": "cf090fcf62c66e5ecc0df06d2d400b546d2003b21edbbb9a55caa83f0936695c",
+      "sha256": "49d161af78f09610b91f8757eb27257b6fdfef262c46ee6c081d4d4af9982040",
       "extensions": {}
     },
     {
@@ -135,8 +135,8 @@
       "extensions": {}
     },
     {
-      "repository_path": "profiles/result.measure-v1alpha1.json",
-      "sha256": "0612a935cb7aa07736676b6bd63e5713473b5686f83280eb51ced0727c49b197",
+      "repository_path": "profiles/result.measure-v1alpha2.json",
+      "sha256": "5e430069faa8de50e41f71e9dc4cc0b3537000dad71776dcb0814e2402096e52",
       "extensions": {}
     },
     {
@@ -151,7 +151,7 @@
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/common.py",
-      "sha256": "3929ca867ad8f8c92be34e42106903c52e0abe9e9299d531255a0b776f4a1a59",
+      "sha256": "d7ea421b08634a6c7e2192fcb52b31bda3c9c31c3bec29e44df50f71d8d09eab",
       "extensions": {}
     },
     {
@@ -161,12 +161,12 @@
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/inside.py",
-      "sha256": "3aee3d87106729929a6f91d00aa5a90793f5df52c6cfc561ad65e913d98a0392",
+      "sha256": "baa7ef79a203b127845a3d1c321980eaedfc1aededaaa096db4e4cd007d31bc3",
       "extensions": {}
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/run.py",
-      "sha256": "2d8ba777362f6426bb2fd37f89c69246322356f57e90fbc4a9ba2455ed7249c6",
+      "sha256": "76e7380748893184ce73214a18400010118511a51159e75bc70dfb2a25d0b51c",
       "extensions": {}
     },
     {
@@ -176,12 +176,12 @@
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
-      "sha256": "8e2a5c1f9e8abd39f78126f90f77ee08c9d164b4d558ca4d0522d6ce78e149e5",
+      "sha256": "6eb315dc8e1be52dcf8e406f9eff875e5a1ad09fc97c457bfbbe407131b54254",
       "extensions": {}
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "dbb9356ff4b79ac573540bff87cf0f388ad42d8e042580dd00c213aa4c7e7e1c",
+      "sha256": "2ab90494c62c2bf2888067a703b8a0e0e61e2db79f2f1b464e5bac38d8b153be",
       "extensions": {}
     }
   ],
@@ -205,35 +205,38 @@
     "provider|org.openada.kernel.spice3-series|openada.operation/result.series.extract/v1alpha1|@operation",
     "native-mapping|openada.operation/result.series.extract/v1alpha1|org.openada.kernel.spice3-series|org.openada.format.ngspice-raw|analysis:tran",
     "surface|openada.surface/cli.measure/v1",
-    "profile|openada.operation/result.measure/v1alpha1",
-    "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
-    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
-    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1",
-    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
-    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
-    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1",
-    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
-    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
-    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1",
-    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
-    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
-    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1",
-    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
-    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
-    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1",
-    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
-    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
-    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1",
-    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
-    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
-    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1",
-    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
-    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
-    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1",
-    "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
-    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
-    "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1",
+    "profile|openada.operation/result.measure/v1alpha2",
+    "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.sample-at/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.sample-at/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.minimum/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.minimum/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.maximum/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.maximum/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.mean/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.mean/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rms/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rms/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.crossing/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.crossing/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rise-time/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rise-time/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.fall-time/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.fall-time/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.slope/v1alpha1",
     "surface|openada.surface/cli.evaluate/v1",
     "profile|openada.operation/specification.evaluate/v1alpha1",
     "assertion|openada.operation/specification.evaluate/v1alpha1|openada.assertion/specification.satisfied/v1alpha1",
@@ -478,11 +481,11 @@
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.sample-at/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.sample-at/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1"
       ],
       "consumes": [
         "normalized-vin-vout-series"
@@ -503,11 +506,11 @@
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.minimum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.minimum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1"
       ],
       "consumes": [
         "normalized-vin-vout-series"
@@ -528,11 +531,11 @@
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.maximum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.maximum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1"
       ],
       "consumes": [
         "normalized-vin-vout-series"
@@ -553,11 +556,11 @@
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.mean/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.mean/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1"
       ],
       "consumes": [
         "normalized-vin-vout-series"
@@ -578,11 +581,11 @@
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rms/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rms/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1"
       ],
       "consumes": [
         "normalized-vin-vout-series"
@@ -603,11 +606,11 @@
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.crossing/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.crossing/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1"
       ],
       "consumes": [
         "normalized-vin-vout-series"
@@ -628,11 +631,11 @@
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rise-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rise-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1"
       ],
       "consumes": [
         "normalized-vin-vout-series"
@@ -653,11 +656,11 @@
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.fall-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.fall-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1"
       ],
       "consumes": [
         "normalized-vin-vout-series"
@@ -678,17 +681,42 @@
       "native_execution": false,
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
       ],
       "consumes": [
         "normalized-vin-vout-series"
       ],
       "produces": [
         "measurement-settling-time"
+      ],
+      "extensions": {}
+    },
+    {
+      "id": "measure-slope",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.slope/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-slope"
       ],
       "extensions": {}
     },
@@ -721,10 +749,11 @@
         "measurement-crossing",
         "measurement-rise-time",
         "measurement-fall-time",
-        "measurement-settling-time"
+        "measurement-settling-time",
+        "measurement-slope"
       ],
       "produces": [
-        "nine-passing-specification-decisions"
+        "ten-passing-specification-decisions"
       ],
       "extensions": {}
     },
@@ -754,10 +783,11 @@
         "measurement-crossing",
         "measurement-rise-time",
         "measurement-fall-time",
-        "measurement-settling-time"
+        "measurement-settling-time",
+        "measurement-slope"
       ],
       "produces": [
-        "nine-failing-specification-decisions"
+        "ten-failing-specification-decisions"
       ],
       "extensions": {}
     },
@@ -791,7 +821,7 @@
       "kind": "independent-oracle",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "dbb9356ff4b79ac573540bff87cf0f388ad42d8e042580dd00c213aa4c7e7e1c",
+        "sha256": "2ab90494c62c2bf2888067a703b8a0e0e61e2db79f2f1b464e5bac38d8b153be",
         "extensions": {}
       },
       "native_execution": false,
@@ -810,8 +840,8 @@
         "builtin-partial-native-raw",
         "builtin-fail-result",
         "normalized-vin-vout-series",
-        "nine-passing-specification-decisions",
-        "nine-failing-specification-decisions",
+        "ten-passing-specification-decisions",
+        "ten-failing-specification-decisions",
         "condition-mismatch-decision"
       ],
       "produces": [
@@ -824,15 +854,15 @@
       "kind": "independent-decision",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "dbb9356ff4b79ac573540bff87cf0f388ad42d8e042580dd00c213aa4c7e7e1c",
+        "sha256": "2ab90494c62c2bf2888067a703b8a0e0e61e2db79f2f1b464e5bac38d8b153be",
         "extensions": {}
       },
       "native_execution": false,
       "covers": [],
       "consumes": [
         "independent-chain-verdict",
-        "nine-passing-specification-decisions",
-        "nine-failing-specification-decisions",
+        "ten-passing-specification-decisions",
+        "ten-failing-specification-decisions",
         "condition-mismatch-decision"
       ],
       "produces": [
@@ -845,7 +875,7 @@
       "kind": "independent-oracle",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
-        "sha256": "8e2a5c1f9e8abd39f78126f90f77ee08c9d164b4d558ca4d0522d6ce78e149e5",
+        "sha256": "6eb315dc8e1be52dcf8e406f9eff875e5a1ad09fc97c457bfbbe407131b54254",
         "extensions": {}
       },
       "native_execution": false,
@@ -919,11 +949,11 @@
       "id": "measure-sample-at",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.sample-at/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.sample-at/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "measurement.domain.invalid",
@@ -933,11 +963,11 @@
       "id": "measure-minimum",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.minimum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.minimum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1"
       ],
       "expected_status": "fail",
       "required_diagnostic": "measurement.value.not_found",
@@ -947,11 +977,11 @@
       "id": "measure-maximum",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.maximum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.maximum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1"
       ],
       "expected_status": "fail",
       "required_diagnostic": "measurement.value.not_found",
@@ -961,11 +991,11 @@
       "id": "measure-mean",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.mean/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.mean/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1"
       ],
       "expected_status": "fail",
       "required_diagnostic": "measurement.value.not_found",
@@ -975,11 +1005,11 @@
       "id": "measure-rms",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rms/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rms/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1"
       ],
       "expected_status": "fail",
       "required_diagnostic": "measurement.value.not_found",
@@ -989,11 +1019,11 @@
       "id": "measure-crossing",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.crossing/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.crossing/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1"
       ],
       "expected_status": "fail",
       "required_diagnostic": "measurement.value.not_found",
@@ -1003,11 +1033,11 @@
       "id": "measure-rise-time",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rise-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rise-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1"
       ],
       "expected_status": "fail",
       "required_diagnostic": "measurement.value.not_found",
@@ -1017,11 +1047,11 @@
       "id": "measure-fall-time",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.fall-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.fall-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1"
       ],
       "expected_status": "fail",
       "required_diagnostic": "measurement.value.not_found",
@@ -1031,11 +1061,25 @@
       "id": "measure-settling-time",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "measure-slope",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.slope/v1alpha1"
       ],
       "expected_status": "fail",
       "required_diagnostic": "measurement.value.not_found",
@@ -1188,11 +1232,11 @@
       "id": "measurement-sample-at-value",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.sample-at/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.sample-at/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.sample-at/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.sample-at/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "conformance.measurement.tampered",
@@ -1202,11 +1246,11 @@
       "id": "measurement-minimum-value",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.minimum/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.minimum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.minimum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.minimum/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "conformance.measurement.tampered",
@@ -1216,11 +1260,11 @@
       "id": "measurement-maximum-value",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.maximum/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.maximum/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.maximum/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.maximum/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "conformance.measurement.tampered",
@@ -1230,11 +1274,11 @@
       "id": "measurement-mean-value",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.mean/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.mean/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.mean/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.mean/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "conformance.measurement.tampered",
@@ -1244,11 +1288,11 @@
       "id": "measurement-rms-value",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rms/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rms/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rms/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rms/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "conformance.measurement.tampered",
@@ -1258,11 +1302,11 @@
       "id": "measurement-crossing-value",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.crossing/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.crossing/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.crossing/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.crossing/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "conformance.measurement.tampered",
@@ -1272,11 +1316,11 @@
       "id": "measurement-rise-time-value",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.rise-time/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rise-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.rise-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.rise-time/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "conformance.measurement.tampered",
@@ -1286,11 +1330,11 @@
       "id": "measurement-fall-time-value",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.fall-time/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.fall-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.fall-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.fall-time/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "conformance.measurement.tampered",
@@ -1300,11 +1344,25 @@
       "id": "measurement-settling-time-value",
       "covers": [
         "surface|openada.surface/cli.measure/v1",
-        "profile|openada.operation/result.measure/v1alpha1",
-        "assertion|openada.operation/result.measure/v1alpha1|openada.assertion/measurement.valid/v1alpha1",
-        "feature|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
-        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha1|openada.feature/measurement.settling-time/v1alpha1",
-        "native-mapping|openada.operation/result.measure/v1alpha1|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
+      "id": "measurement-slope-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.slope/v1alpha1"
       ],
       "expected_status": "unknown",
       "required_diagnostic": "conformance.measurement.tampered",
@@ -1358,7 +1416,7 @@
   "release_verification": {
     "implementation": {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "dbb9356ff4b79ac573540bff87cf0f388ad42d8e042580dd00c213aa4c7e7e1c",
+      "sha256": "2ab90494c62c2bf2888067a703b8a0e0e61e2db79f2f1b464e5bac38d8b153be",
       "extensions": {}
     },
     "arguments": [
@@ -1443,16 +1501,19 @@
           "deck": "/evidence/work/inverter_shared.spice",
           "output_dir": "/evidence/builtin/simulation",
           "workdir": "/evidence/builtin/work",
-          "raw_artifact": "/evidence/builtin/simulation/inverter_shared.raw",
-          "log_artifact": "/evidence/builtin/simulation/inverter_shared.log"
+          "raw_artifact": "/evidence/builtin/simulation/inverter_shared/inverter_shared.raw",
+          "log_artifact": "/evidence/builtin/simulation/inverter_shared/inverter_shared.log",
+          "retained_result": "/evidence/builtin/simulation/simulate.result.json",
+          "selection_template": "/evidence/builtin/simulation/simulate.selection.json"
         },
         "terminal_fail": {
           "result": "builtin-fail-result.json",
           "deck": "/evidence/work/inverter_shared_terminal_nonconvergence.spice",
           "output_dir": "/evidence/builtin-fail/simulation",
           "workdir": "/evidence/builtin-fail/work",
-          "raw_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
-          "log_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log"
+          "raw_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw",
+          "log_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log",
+          "retained_result": "/evidence/builtin-fail/simulation/simulate.result.json"
         },
         "extensions": {}
       },
@@ -1678,6 +1739,25 @@
           "interpretation": "Elapsed time from 1.5 us until every retained tail sample stays within 1.2 V +/- 0.1 V for at least 0.2 us.",
           "pass_limits": {"upper": {"value": 3e-7, "unit": "s", "inclusive": true}},
           "fail_limits": {"lower": {"value": 5e-7, "unit": "s", "inclusive": true}}
+        },
+        {
+          "id": "slope",
+          "request_id": "11000000-0000-4000-8000-000000000010",
+          "request": {
+            "measurement_id": "inverter.vout.falling-edge-slope",
+            "kind": "slope",
+            "signal": "v(vout)",
+            "parameters": {
+              "window": {
+                "start": {"value": 4.9e-7, "unit": "s"},
+                "stop": {"value": 5.2e-7, "unit": "s"}
+              }
+            },
+            "extensions": {}
+          },
+          "interpretation": "Ordinary least-squares slope of retained v(vout) samples across the first falling edge.",
+          "pass_limits": {"upper": {"value": -1e7, "unit": "V/s", "inclusive": true}},
+          "fail_limits": {"lower": {"value": 1e7, "unit": "V/s", "inclusive": true}}
         }
       ]
     }

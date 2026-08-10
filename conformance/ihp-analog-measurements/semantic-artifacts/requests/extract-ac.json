@@ -51,6 +51,30 @@
       "native_name": "v(vout)",
       "output_name": "vout.imag",
       "unit": "V"
+    },
+    {
+      "component": "real",
+      "native_name": "v(vout1)",
+      "output_name": "vout1.real",
+      "unit": "V"
+    },
+    {
+      "component": "imaginary",
+      "native_name": "v(vout1)",
+      "output_name": "vout1.imag",
+      "unit": "V"
+    },
+    {
+      "component": "real",
+      "native_name": "i(v1)",
+      "output_name": "i_v1.real",
+      "unit": "A"
+    },
+    {
+      "component": "imaginary",
+      "native_name": "i(v1)",
+      "output_name": "i_v1.imag",
+      "unit": "A"
     }
   ]
 }

@@ -271,12 +271,12 @@ def _write_chain_run(
     source_receipt: dict[str, Any],
 ) -> None:
     native_paths = {
-        "ngspice-op": "sim/ngspice-op/inverter-op.raw",
-        "ngspice-dc": "sim/ngspice-dc/inverter-dc.raw",
-        "ngspice-ac": "sim/ngspice-ac/ota-ac.raw",
-        "xyce-dc": "sim/xyce-dc/xyce-dc.xyce.raw",
-        "xyce-ac": "sim/xyce-ac/xyce-ac-derived.xyce.raw",
-        "xyce-tran": "sim/xyce-tran/xyce-tran.xyce.raw",
+        "ngspice-op": "sim/ngspice-op/inverter-op/inverter-op.raw",
+        "ngspice-dc": "sim/ngspice-dc/inverter-dc/inverter-dc.raw",
+        "ngspice-ac": "sim/ngspice-ac/ota-ac/ota-ac.raw",
+        "xyce-dc": "sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw",
+        "xyce-ac": "sim/xyce-ac/xyce-ac-derived/xyce-ac-derived.xyce.raw",
+        "xyce-tran": "sim/xyce-tran/xyce-tran/xyce-tran.xyce.raw",
     }
     artifacts = [
         _artifact(evidence, "contract-tests.json", "contract-test", source_step="contract-tests", source_output="contract-test-verdict"),

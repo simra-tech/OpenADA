@@ -6,7 +6,7 @@
     "converter_quality_metric": false,
     "decision": "Do not interpret SNR, SINAD, THD, or SFDR as ADC or DAC quality for this inverter waveform."
   },
-  "normalized_evidence_sha256": "5203d03ef2c6aff89e82794ab5fa177184d6ffa3272b5e68f6edc4b2e6fb9f37",
+  "normalized_evidence_sha256": "1ba28ad3d11c5c165df5af870b51ce80698eed0f1ad9a0d7b45a9e4733aea164",
   "ota": {
     "conclusion": "nominal-tt-open-loop-response-measured",
     "decision": "Do not claim a design pass; define requirements and review PVT and statistical coverage next.",

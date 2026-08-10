@@ -1,12 +1,12 @@
 {
   "chain_id": "openada.chain/ihp-inverter-agent-chain/v1",
-  "chain_manifest_sha256": "e77700c79f214997bb242b9dfb5fa901503842094a40d140342d78eae5c1ee7a",
+  "chain_manifest_sha256": "603785c06c75eed6508797625be4ccdacfdf3404295556a9a28491ebf959c645",
   "container_command": [
     "docker",
     "run",
     "--rm",
     "--name",
-    "openada-ihp-agent-1048401-4bc5bc40",
+    "openada-ihp-agent-5475-a3a4aeeb",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -20,7 +20,7 @@
     "--pids-limit",
     "512",
     "--user",
-    "1001:1002",
+    "1001:1001",
     "--env",
     "HOME=/tmp/openada-home",
     "--env",
@@ -32,11 +32,11 @@
     "--workdir",
     "/evidence",
     "--mount",
-    "type=bind,source=/home/specialpedrito/.codex/worktrees/d3e74bfb-7242-4055-9e5a-182ec885c4c2/openada,target=/openada,readonly",
+    "type=bind,source=/home/runner/work/OpenADA/OpenADA,target=/openada,readonly",
     "--mount",
-    "type=bind,source=/home/specialpedrito/.cache/openada/conformance/ihp-inverter/IHP-AnalogAcademy,target=/design,readonly",
+    "type=bind,source=/tmp/openada-native-cache/ihp/IHP-AnalogAcademy,target=/design,readonly",
     "--mount",
-    "type=bind,source=/tmp/openada-ihp-agent-provider-final.eJrS28/release,target=/evidence",
+    "type=bind,source=/tmp/openada-ihp-inverter-agent-release,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
@@ -46,7 +46,7 @@
     "--evidence",
     "/evidence"
   ],
-  "created_at": "2026-07-19T11:41:17.623288Z",
+  "created_at": "2026-08-10T09:04:23.485344Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "image": {
     "architecture": "amd64",
@@ -57,7 +57,7 @@
   "network": "none during EDA execution",
   "openada_checkout": {
     "after": {
-      "commit": "3dc05127ad637e670f3535a8acc7aa458d5f85d9",
+      "commit": "73b7b642a395838ae82eda2c4eb6a0200492c824",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -65,7 +65,7 @@
       "working_tree_modified": false
     },
     "before": {
-      "commit": "3dc05127ad637e670f3535a8acc7aa458d5f85d9",
+      "commit": "73b7b642a395838ae82eda2c4eb6a0200492c824",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -122,6 +122,10 @@
       "result.measure:settling-time:negative",
       "specification.evaluate:settling-time:pass",
       "specification.evaluate:settling-time:fail",
+      "result.measure:slope",
+      "result.measure:slope:negative",
+      "specification.evaluate:slope:pass",
+      "specification.evaluate:slope:fail",
       "agent.evidence"
     ],
     "openada_invocations": [
@@ -958,6 +962,78 @@
         ],
         "cwd": "/evidence",
         "operation": "specification.evaluate:settling-time:fail"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-slope.json",
+          "--request-id",
+          "11000000-0000-4000-8000-000000000010"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:slope"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "measure",
+          "--series",
+          "/evidence/extract.json",
+          "--measurement",
+          "/evidence/requests/measure-slope-negative.json",
+          "--request-id",
+          "16000000-0000-4000-8000-000000000010"
+        ],
+        "cwd": "/evidence",
+        "operation": "result.measure:slope:negative"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/slope.json",
+          "--specification",
+          "/evidence/requests/spec-slope-pass.json",
+          "--request-id",
+          "12000000-0000-4000-8000-000000000010"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:slope:pass"
+      },
+      {
+        "argv": [
+          "/usr/bin/python3",
+          "/openada/bin/openada",
+          "--profile",
+          "iic-osic-tools",
+          "--compact",
+          "evaluate",
+          "--measurement",
+          "/evidence/measurements/slope.json",
+          "--specification",
+          "/evidence/requests/spec-slope-fail.json",
+          "--request-id",
+          "13000000-0000-4000-8000-000000000010"
+        ],
+        "cwd": "/evidence",
+        "operation": "specification.evaluate:slope:fail"
       }
     ],
     "runtime_inputs": {
@@ -1005,7 +1081,7 @@
       "provider_manifest": {
         "bytes": 3480,
         "path": "/openada/providers/ngspice-pdk-control/driver-manifest.json",
-        "sha256": "a31f7fe2ecd6c9d9c7330101ca766a6df8889e2b4547fde4099405129bdfdf91"
+        "sha256": "ab143a6df21d8d40e1d513183d32e7a2d306da5716a097822ae93cdf53831947"
       },
       "psp103_osdi": {
         "bytes": 843184,

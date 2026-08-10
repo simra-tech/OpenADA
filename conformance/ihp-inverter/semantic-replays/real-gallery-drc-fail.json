@@ -10,7 +10,7 @@
       {
         "bytes": 17266,
         "filename": "drc-fail.json",
-        "sha256": "8cd84117861c6f5225c583a30a258ceb2c66199edbea01b6deb8a7e1d268bd2b"
+        "sha256": "39ee9f3845452158195b8eaf1ccd142217a4872e1ae79e26e537bfa76c18b478"
       },
       {
         "bytes": 123327,
@@ -34,7 +34,7 @@
     "run": {
       "bytes": 1739,
       "filename": "run.json",
-      "sha256": "e691f276f63a3656652ba592eeae1ded176e2a393b44bdc402ca1395d98bb476"
+      "sha256": "0249f397cebf8ae9135be125e8975e4a72ce933d72defdf832960ba430e680d4"
     }
   }
 }

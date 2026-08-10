@@ -1,20 +1,20 @@
 {
   "artifacts": [
     {
-      "bytes": 1089,
+      "bytes": 1088,
       "exists": true,
       "kind": "simulation-log",
-      "path": "/evidence/builtin/simulation/inverter_shared.log",
+      "path": "/evidence/builtin/simulation/inverter_shared/inverter_shared.log",
       "role": "simulation.log",
-      "sha256": "c1503aec665583cde1534bb0c8ab268b09314611357748f6836c704739cbce83"
+      "sha256": "6d1dd05ca8783092697c2ed48dafd24570bf22ca72376331125834ecc0b2fd4d"
     },
     {
       "bytes": 8391,
       "exists": true,
       "kind": "ngspice-raw",
-      "path": "/evidence/builtin/simulation/inverter_shared.raw",
+      "path": "/evidence/builtin/simulation/inverter_shared/inverter_shared.raw",
       "role": "simulation.result",
-      "sha256": "448f1b82eecbc4c367e26223afe401191cd4bfc90dde65c72bdb40de4e79ffdd"
+      "sha256": "92fa783ca04e83593866b19fa319a641e3dd3028b123982129d6649f3dd64d81"
     }
   ],
   "data": {
@@ -79,12 +79,12 @@
           },
           "inputs_stable": true,
           "log_capture": {
-            "bytes": 1089,
-            "path": "/evidence/builtin/simulation/inverter_shared.log",
-            "sha256": "c1503aec665583cde1534bb0c8ab268b09314611357748f6836c704739cbce83",
+            "bytes": 1088,
+            "path": "/evidence/builtin/simulation/inverter_shared/inverter_shared.log",
+            "sha256": "6d1dd05ca8783092697c2ed48dafd24570bf22ca72376331125834ecc0b2fd4d",
             "status": "valid"
           },
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-0ma7cjut/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvin                                          0\nvdd                                        1.2\nvout                                       1.2\nv2#branch                         -3.10217e-10\nv1#branch                          8.18116e-11\n\n\nNo. of Data Rows : 81\n\nTotal analysis time (seconds) = 0.0189294\n\nTotal elapsed time (seconds) = 0.034 \n\nTotal DRAM available = 32106.207 MB.\nDRAM currently available = 10472.461 MB.\nMaximum ngspice program size =  531.707 MB.\nCurrent ngspice program size =   14.633 MB.\n\nShared ngspice pages =   11.336 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.191 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /design/modules/module_0_foundations/inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-f_v94iam/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvin                                          0\nvdd                                        1.2\nvout                                       1.2\nv2#branch                         -3.10217e-10\nv1#branch                          8.18116e-11\n\n\nNo. of Data Rows : 81\n\nTotal analysis time (seconds) = 0.0212539\n\nTotal elapsed time (seconds) = 0.035 \n\nTotal DRAM available = 15989.707 MB.\nDRAM currently available =  368.809 MB.\nMaximum ngspice program size =  587.711 MB.\nCurrent ngspice program size =   15.484 MB.\n\nShared ngspice pages =   11.922 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =  116.188 MB.\n\n",
           "measurement_section_count": 0,
           "measurements": [],
           "measurements_truncated": false,
@@ -94,8 +94,8 @@
               "bytes": 8391,
               "kind": "raw",
               "origin": "wrapper",
-              "path": "/evidence/builtin/simulation/inverter_shared.raw",
-              "sha256": "448f1b82eecbc4c367e26223afe401191cd4bfc90dde65c72bdb40de4e79ffdd",
+              "path": "/evidence/builtin/simulation/inverter_shared/inverter_shared.raw",
+              "sha256": "92fa783ca04e83593866b19fa319a641e3dd3028b123982129d6649f3dd64d81",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -148,6 +148,10 @@
           },
           "extensions": {}
         }
+      },
+      "org.openada.simulation-target": {
+        "kind": "deck",
+        "path": "/evidence/work/inverter_shared.spice"
       }
     },
     "protocol": {
@@ -155,10 +159,16 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "97979c66-0a8d-4614-9aae-d6a920ba0b49"
+      "request_id": "b04423ca-bd12-4494-8cb3-a67aea05780a"
     }
   },
-  "diagnostics": [],
+  "diagnostics": [
+    {
+      "code": "claim.measurement.typed_chain",
+      "message": "The analysis completed, so a quantity may be reported as measured - but only once a typed measurement envelope carries it. A number parsed out of the raw file by hand is not one: nothing in the result contract binds it to this run. This envelope has been retained at /evidence/builtin/simulation/simulate.result.json. The retained raw declares 'time' as the axis - which must NOT appear in selectors - over the vectors v(vin), v(vdd), v(vout), i(v2), i(v1). Continue with: openada extract --simulation /evidence/builtin/simulation/simulate.result.json --artifact /evidence/builtin/simulation/inverter_shared/inverter_shared.raw --selection /evidence/builtin/simulation/simulate.selection.json, then `openada measure` on the series it returns; its kinds are sample_at, minimum, maximum, mean, rms, crossing, rise_time, fall_time and settling_time, each reading ONE named signal. A ratio of two signals is not among them - for a gain, a differential gain or a driving-point impedance, run an AC analysis and use `openada transfer`. `openada spectral` covers snr, sinad, thd and sfdr on a coherent single tone.",
+      "severity": "info"
+    }
+  ],
   "engineering": {
     "status": "pass",
     "summary": "ngspice produced all required, structurally valid simulation evidence."
@@ -168,13 +178,13 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-0ma7cjut/simulation.raw",
+      "/tmp/openada-ngspice-f_v94iam/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-0ma7cjut/simulation.log",
+      "/tmp/openada-ngspice-f_v94iam/simulation.log",
       "/evidence/work/inverter_shared.spice"
     ],
     "cwd": "/evidence/builtin/work",
-    "duration_ms": 65,
+    "duration_ms": 64,
     "exit_code": 0,
     "status": "completed"
   },
@@ -190,7 +200,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-07-19T11:40:11.982517Z",
+    "created_at": "2026-08-10T09:03:21.886027Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

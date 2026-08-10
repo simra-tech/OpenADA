@@ -5,7 +5,7 @@
     "measurement": {
       "algorithm": {
         "id": "openada.algorithm/measurement.minimum/v1",
-        "version": "1.0.0"
+        "version": "1.1.0"
       },
       "extensions": {},
       "kind": "minimum",
@@ -32,7 +32,7 @@
         "conditions_sha256": "11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c",
         "lineage": {
           "artifact_role": "simulation.result",
-          "artifact_sha256": "96d3cb80a6e27a9470c58ac6f8bbc279fb586b136c80b7ad3462bb1727800f1c",
+          "artifact_sha256": "fca43a74f1b652a7c8775c345e1b3a4e634a26abf3f629498f3625ca92b35290",
           "binding": "unverified",
           "operation": "circuit.simulate",
           "request_id": "10000000-0000-4000-8000-000000000001"
@@ -48,8 +48,8 @@
     "protocol": {
       "assertion_profile": "openada.assertion/measurement.valid/v1alpha1",
       "implementation_id": "org.openada.kernel.typed-evidence",
-      "implementation_version": "1.0.0",
-      "operation_profile": "openada.operation/result.measure/v1alpha1",
+      "implementation_version": "1.1.0",
+      "operation_profile": "openada.operation/result.measure/v1alpha2",
       "request_id": "16000000-0000-4000-8000-000000000002"
     }
   },
@@ -74,7 +74,7 @@
   "inputs": [],
   "operation": "result.measure",
   "provenance": {
-    "created_at": "2026-07-19T11:40:25.373185Z",
+    "created_at": "2026-08-10T09:03:33.112377Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

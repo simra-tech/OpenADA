@@ -347,7 +347,7 @@ def _verify_manifest(manifest: dict[str, Any], manifest_sha256: str) -> None:
     kinds = [item["request"]["kind"] for item in details["measurements"]]
     _expect(
         kinds,
-        ["sample_at", "minimum", "maximum", "mean", "rms", "crossing", "rise_time", "fall_time", "settling_time"],
+        ["sample_at", "minimum", "maximum", "mean", "rms", "crossing", "rise_time", "fall_time", "settling_time", "slope"],
         "manifest.measurement_kinds",
     )
     if "not a time-weighted electrical average" not in details["measurements"][3]["interpretation"]:
@@ -427,10 +427,13 @@ def _expected_evidence_files(manifest: dict[str, Any], require_chain_run: bool) 
         "runtime/sg13g2_moslv_parm.lib",
         "runtime/psp103.osdi",
         "runtime/shared.spiceinit",
-        "builtin/simulation/inverter_shared.raw",
-        "builtin/simulation/inverter_shared.log",
-        "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
-        "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log",
+        "builtin/simulation/inverter_shared/inverter_shared.raw",
+        "builtin/simulation/inverter_shared/inverter_shared.log",
+        "builtin/simulation/simulate.result.json",
+        "builtin/simulation/simulate.selection.json",
+        "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw",
+        "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log",
+        "builtin-fail/simulation/simulate.result.json",
         "provider/work/test_inverter.raw",
         "provider/work/openada-native-ngspice",
         "provider/simulation/inverter_tb.log",
@@ -1300,7 +1303,85 @@ def _verify_builtin_result(
             "builtin_fail.nonconvergence_diagnostic",
         )
         parsed = _parse_partial_failure_raw(raw_path)
+
+    retained_result = _read_json(
+        evidence / branch["retained_result"].removeprefix("/evidence/"),
+        label=f"retained built-in {expected_status} result",
+    )
+    _validate(
+        retained_result,
+        result_validator,
+        label=f"retained built-in {expected_status} result",
+    )
+    _expect(
+        retained_result,
+        result,
+        f"builtin_{expected_status}.retained_result",
+    )
+    if expected_status == "pass":
+        selection = _read_json(
+            evidence / branch["selection_template"].removeprefix("/evidence/"),
+            label="built-in selection template",
+        )
+        _expect(
+            selection,
+            _expected_selection_template(parsed, analysis_type="tran"),
+            "builtin_pass.selection_template",
+        )
     return raw_path, parsed
+
+
+def _expected_selection_template(
+    parsed: dict[str, Any], *, analysis_type: str
+) -> dict[str, Any]:
+    """Rebuild the simulator's bounded extraction handoff from native bytes."""
+
+    variables = [name for name, _native_type in parsed["variables"]]
+    candidates = variables if analysis_type == "op" else variables[1:]
+    signals = [name for name in candidates if "#" not in name]
+
+    def unit(name: str) -> str | None:
+        lowered = name.casefold()
+        if lowered.startswith("v("):
+            return "V"
+        if lowered.startswith(("i(", "@")):
+            return "A"
+        return None
+
+    unique: list[str] = []
+    for name in signals:
+        if unit(name) is not None and name not in unique:
+            unique.append(name)
+    if len(unique) > 8:
+        kept = unique[:8]
+        present = {unit(name) for name in kept}
+        missing = sorted({unit(name) for name in unique} - present)
+        for offset, missing_unit in enumerate(missing):
+            if offset >= len(kept):
+                break
+            kept[len(kept) - 1 - offset] = next(
+                name for name in unique if unit(name) == missing_unit
+            )
+        unique = kept
+
+    components = (
+        (("real", "_re"), ("imaginary", "_im"))
+        if analysis_type == "ac"
+        else (("real", ""),)
+    )
+    selectors = []
+    for name in unique:
+        stem = re.sub(r"[^A-Za-z0-9_]", "_", name).strip("_")
+        for component, suffix in components:
+            selectors.append(
+                {
+                    "native_name": name,
+                    "output_name": f"{stem}{suffix}",
+                    "unit": unit(name),
+                    "component": component,
+                }
+            )
+    return {"selectors": selectors, "conditions": [], "extensions": {}}
 
 
 def _verify_native_artifacts(
@@ -1552,16 +1633,19 @@ def _static_protocol(result: dict[str, Any], *, operation: str, request_id: str)
             "openada.operation/result.series.extract/v1alpha1",
             "openada.assertion/series.extraction.valid/v1alpha1",
             "org.openada.kernel.spice3-series",
+            "1.0.0",
         ),
         "result.measure": (
-            "openada.operation/result.measure/v1alpha1",
+            "openada.operation/result.measure/v1alpha2",
             "openada.assertion/measurement.valid/v1alpha1",
             "org.openada.kernel.typed-evidence",
+            "1.1.0",
         ),
         "specification.evaluate": (
             "openada.operation/specification.evaluate/v1alpha1",
             "openada.assertion/specification.satisfied/v1alpha1",
             "org.openada.kernel.typed-evidence",
+            "1.0.0",
         ),
     }[operation]
     _expect(
@@ -1571,7 +1655,7 @@ def _static_protocol(result: dict[str, Any], *, operation: str, request_id: str)
             "operation_profile": expected[0],
             "assertion_profile": expected[1],
             "implementation_id": expected[2],
-            "implementation_version": "1.0.0",
+            "implementation_version": expected[3],
         },
         f"{operation}.protocol",
     )
@@ -1731,7 +1815,7 @@ def _ordinary_measurement(
                     return y0 + (y1 - y0) * ((at - x0) / (x1 - x0)), signal["unit"], at, 1
                 return None, signal["unit"], None, 0
         return None, signal["unit"], None, 0
-    if kind in {"minimum", "maximum", "mean", "rms"}:
+    if kind in {"minimum", "maximum", "mean", "rms", "slope"}:
         if "window" in parameters:
             start = float(parameters["window"]["start"]["value"])
             stop = float(parameters["window"]["stop"]["value"])
@@ -1739,7 +1823,12 @@ def _ordinary_measurement(
         else:
             indices = list(range(len(axis)))
         if not indices:
-            return None, signal["unit"], None, 0
+            unit = (
+                f"{signal['unit']}/{series['axis']['unit']}"
+                if kind == "slope"
+                else signal["unit"]
+            )
+            return None, unit, None, 0
         samples = [values[index] for index in indices]
         if kind == "minimum":
             value = min(samples)
@@ -1749,7 +1838,26 @@ def _ordinary_measurement(
             return value, signal["unit"], axis[indices[samples.index(value)]], len(indices)
         if kind == "mean":
             return math.fsum(samples) / len(samples), signal["unit"], None, len(indices)
-        return math.sqrt(math.fsum(value * value for value in samples) / len(samples)), signal["unit"], None, len(indices)
+        if kind == "rms":
+            return math.sqrt(math.fsum(value * value for value in samples) / len(samples)), signal["unit"], None, len(indices)
+        if len(indices) < 2:
+            return None, f"{signal['unit']}/{series['axis']['unit']}", None, len(indices)
+        coordinates = [axis[index] for index in indices]
+        x_mean = math.fsum(coordinates) / len(coordinates)
+        y_mean = math.fsum(samples) / len(samples)
+        numerator = math.fsum(
+            (x - x_mean) * (y - y_mean)
+            for x, y in zip(coordinates, samples, strict=True)
+        )
+        denominator = math.fsum((x - x_mean) ** 2 for x in coordinates)
+        if denominator == 0.0:
+            raise ConformanceError("measurement.value.non_finite")
+        return (
+            numerator / denominator,
+            f"{signal['unit']}/{series['axis']['unit']}",
+            None,
+            len(indices),
+        )
     if kind == "crossing":
         crossings = _crossing_points(
             axis,
@@ -1819,7 +1927,7 @@ def _expected_measurement(
                 "location": None,
                 "algorithm": {
                     "id": f"openada.algorithm/measurement.{request['kind'].replace('_', '-')}/v1",
-                    "version": "1.0.0",
+                    "version": "1.1.0",
                 },
                 "sample_count": 0,
                 "source": source,
@@ -1843,7 +1951,7 @@ def _expected_measurement(
         ),
         "algorithm": {
             "id": f"openada.algorithm/measurement.{request['kind'].replace('_', '-')}/v1",
-            "version": "1.0.0",
+            "version": "1.1.0",
         },
         "sample_count": sample_count,
         "source": source,
@@ -1893,7 +2001,7 @@ def _negative_measurement_request(definition: dict[str, Any]) -> dict[str, Any]:
     kind = request["kind"]
     if kind == "sample_at":
         request["parameters"] = {"at": {"value": 3e-6, "unit": "s"}, "interpolation": "linear"}
-    elif kind in {"minimum", "maximum", "mean", "rms"}:
+    elif kind in {"minimum", "maximum", "mean", "rms", "slope"}:
         request["parameters"] = {
             "window": {
                 "start": {"value": 3e-6, "unit": "s"},
@@ -2212,7 +2320,7 @@ def _verify_agent_evidence(
         for item in evaluations
     ]
     _expect(agent["specifications"], {
-        "pass_count": 9, "fail_count": 9, "decisions": decisions,
+        "pass_count": 10, "fail_count": 10, "decisions": decisions,
     }, "agent_evidence.specifications")
     negative_expected = [
         {"id": "netlist-missing-symbol", "operation": "netlist", "engineering_status": "fail", "diagnostic": "xschem.missing_symbol"},
@@ -2284,6 +2392,7 @@ TAMPER_PROBE_IDS = (
     "measurement-rise-time-value",
     "measurement-fall-time-value",
     "measurement-settling-time-value",
+    "measurement-slope-value",
     "specification-margin",
     "specification-condition-binding",
 )
@@ -2304,8 +2413,8 @@ def _verification_report(
         "checks": [
             "native-artifact-reparsed",
             "lineage-recomputed",
-            "nine-measurements-recomputed",
-            "eighteen-specification-decisions-recomputed",
+            "ten-measurements-recomputed",
+            "twenty-specification-decisions-recomputed",
             "negative-replays-verified",
             "tamper-replays-rejected",
             "agent-evidence-cross-checked",
@@ -2424,7 +2533,7 @@ def _verify_chain_run(
             f"measure-{identifier}": f"negative/measure-{identifier}.json"
             for identifier in (
                 "sample-at", "minimum", "maximum", "mean", "rms", "crossing",
-                "rise-time", "fall-time", "settling-time",
+                "rise-time", "fall-time", "settling-time", "slope",
             )
         },
         "deliberately-violated-limits": "specifications/sample-at-fail.json",
@@ -2475,7 +2584,7 @@ def _verify_chain_run(
             "conformance/ihp-inverter-agent-chain/evidence/specifications/sample-at-pass.json",
             "downstream-decision",
             "evaluate-pass",
-            "nine-passing-specification-decisions",
+            "ten-passing-specification-decisions",
             None,
         ),
         (
@@ -2586,6 +2695,16 @@ def _mutate_json(path: Path, mutation: Callable[[dict[str, Any]], None]) -> None
     path.write_text(json.dumps(document, allow_nan=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _normalized_tamper_rejection(message: str, candidate: Path) -> str:
+    """Remove platform-specific temporary-directory spellings from a rejection."""
+
+    normalized = message
+    aliases = {str(candidate), str(candidate.resolve())}
+    for alias in sorted(aliases, key=len, reverse=True):
+        normalized = normalized.replace(alias, "/tampered-evidence")
+    return normalized[:2_000]
+
+
 def _run_tamper_probes(
     manifest: dict[str, Any], evidence: Path, manifest_sha256: str
 ) -> list[dict[str, Any]]:
@@ -2622,25 +2741,25 @@ def _run_tamper_probes(
         ),
         (
             "builtin-native-raw-byte",
-            "builtin/simulation/inverter_shared.raw",
-            lambda root: (root / "builtin/simulation/inverter_shared.raw").write_bytes(
-                (root / "builtin/simulation/inverter_shared.raw").read_bytes()[:-1]
-                + bytes([(root / "builtin/simulation/inverter_shared.raw").read_bytes()[-1] ^ 1])
+            "builtin/simulation/inverter_shared/inverter_shared.raw",
+            lambda root: (root / "builtin/simulation/inverter_shared/inverter_shared.raw").write_bytes(
+                (root / "builtin/simulation/inverter_shared/inverter_shared.raw").read_bytes()[:-1]
+                + bytes([(root / "builtin/simulation/inverter_shared/inverter_shared.raw").read_bytes()[-1] ^ 1])
             ),
         ),
         (
             "builtin-terminal-partial-raw-byte",
-            "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
-            lambda root: (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw").write_bytes(
-                (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw").read_bytes()[:-1]
-                + bytes([(root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw").read_bytes()[-1] ^ 1])
+            "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw",
+            lambda root: (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw").write_bytes(
+                (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw").read_bytes()[:-1]
+                + bytes([(root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw").read_bytes()[-1] ^ 1])
             ),
         ),
         (
             "builtin-terminal-native-log-byte",
-            "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log",
-            lambda root: (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log").write_bytes(
-                (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log").read_bytes()
+            "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log",
+            lambda root: (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log").write_bytes(
+                (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log").read_bytes()
                 + b"\nTAMPER\n"
             ),
         ),
@@ -2655,7 +2774,7 @@ def _run_tamper_probes(
     ]
     for identifier in (
         "sample-at", "minimum", "maximum", "mean", "rms", "crossing",
-        "rise-time", "fall-time", "settling-time",
+        "rise-time", "fall-time", "settling-time", "slope",
     ):
         relative = f"measurements/{identifier}.json"
         mutations.append(
@@ -2732,9 +2851,9 @@ def _run_tamper_probes(
                 )
             except ConformanceError as exc:
                 replay = declared[identifier]
-                rejection_message = str(exc).replace(
-                    str(candidate), "/tampered-evidence"
-                )[:2_000]
+                rejection_message = _normalized_tamper_rejection(
+                    str(exc), candidate
+                )
                 receipts.append(
                     {
                         "schema": "openada.tamper-replay/v0alpha1",

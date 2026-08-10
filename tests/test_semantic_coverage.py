@@ -83,7 +83,7 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     assert payload["summary"]["gap_count"] == 0
     assert payload["summary"]["rows_by_coverage_level"] == {
         "agent-ready": 159,
-        "unverified": 37,
+        "unverified": 72,
     }
     assert payload["gaps"] == []
 

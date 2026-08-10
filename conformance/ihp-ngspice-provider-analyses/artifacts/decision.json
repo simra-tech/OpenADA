@@ -23,7 +23,7 @@
         "log_sha256": "c0fb2c5e708e89bd616642a1a57eb15845544115388479dd07717429d218c892",
         "plotname": "DC transfer characteristic",
         "point_count": 121,
-        "raw_sha256": "af4129feb3aed888f608c097b98f2e87a0e1a0ba19a21f0835d7a14732f6be83",
+        "raw_sha256": "cfe50ac241430f4a9a03e41b24c4c678af159e18fdfc37eedce302056985859e",
         "request_id": "11000000-0000-4000-8000-000000000002"
       },
       "scope": "0 V to 1.2 V V1 sweep at nominal mos_tt only"
@@ -52,7 +52,7 @@
         "log_sha256": "6193cf7f5998a39a1e0fcd75220c8040f9288a502c4ab8744483ee7b755c0213",
         "plotname": "Transient Analysis (linearized)",
         "point_count": 1024,
-        "raw_sha256": "2e7cde2eb52d82b165d8c2c5ec5275d9b76aef98e56a8c311461dda0cf185e50",
+        "raw_sha256": "ed185da2eb851fb1fcf5aa5c5938f63f9976acbab27ebe16c7e8cbd3b3110330",
         "request_id": "11000000-0000-4000-8000-000000000004",
         "time_first_s": 5e-07,
         "time_last_s": 3.246875000000037e-05,
