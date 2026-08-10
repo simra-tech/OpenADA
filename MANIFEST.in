@@ -24,7 +24,7 @@ include fixtures/smoke/smoke_yosys.ys
 recursive-include schemas *.json
 recursive-include profiles *.json
 recursive-include providers *.json *.md
-recursive-include skills *.md *.yaml
+recursive-include skills *.md *.yaml *.rb
 recursive-include tools *.py
 recursive-include .agents *.json
 recursive-include .claude-plugin *.json

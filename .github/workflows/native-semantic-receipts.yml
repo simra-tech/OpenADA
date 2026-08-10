@@ -1,0 +1,224 @@
+name: Native semantic receipts
+
+on:
+  workflow_dispatch:
+  # Bootstrap this workflow before it exists on the default branch. Remove this
+  # branch-only trigger after retrieving the first publication bundle.
+  push:
+    branches:
+      - hellno/debug-wheel-missing-script
+    paths:
+      - .github/workflows/native-semantic-receipts.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-semantic-receipts-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Check out source freeze
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Reclaim disposable hosted-runner SDK space
+        shell: bash
+        run: |
+          set -euo pipefail
+          # This runner is fresh and single-use. These preinstalled SDKs are not
+          # used by the native EDA replay; removing them does not touch a Docker
+          # image, volume, cache, or project belonging to a developer machine.
+          for path in \
+            /usr/local/lib/android \
+            /usr/share/dotnet \
+            /opt/ghc \
+            /opt/hostedtoolcache/CodeQL
+          do
+            if [[ -e "$path" ]]; then
+              sudo rm -rf -- "$path"
+            fi
+          done
+          df -h /
+
+      - name: Install publication dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e '.[dev,conformance]'
+
+      - name: Fetch pinned native inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          ihp_cache=/tmp/openada-native-cache/ihp
+          orfs_cache=/tmp/openada-native-cache/orfs
+          python conformance/ihp-inverter/setup.py --cache-dir "$ihp_cache"
+          python conformance/ihp-analog-measurements/setup.py --cache-dir "$ihp_cache"
+          python conformance/ihp-inverter-agent-chain/setup.py --cache-dir "$ihp_cache"
+          python conformance/ihp-sar-rtl/setup.py --cache-dir "$ihp_cache"
+          python conformance/public-spice-portability/setup.py --cache-dir "$ihp_cache"
+          python conformance/orfs-ibex-synthesis-timing/setup.py --cache-dir "$orfs_cache"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          docker image inspect \
+            hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0 \
+            --format '{{.Id}} {{.Os}}/{{.Architecture}}'
+          df -h /
+
+      - name: Publish seven receipts in clean source order
+        shell: bash
+        run: |
+          set -euo pipefail
+          ihp_cache=/tmp/openada-native-cache/ihp
+          orfs_cache=/tmp/openada-native-cache/orfs
+          git config user.name "OpenADA native receipt bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          commit_receipt() {
+            local path="$1"
+            local message="$2"
+            git add -- "$path"
+            if git diff --cached --quiet; then
+              echo "Publication did not update $path" >&2
+              return 1
+            fi
+            git commit -m "$message"
+            test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          }
+
+          python conformance/ihp-inverter/run.py \
+            --cache-dir "$ihp_cache" \
+            --evidence-dir /tmp/openada-ihp-inverter-release \
+            --receipt-class release
+          python conformance/ihp-inverter/semantic.py \
+            --publish \
+            --native-evidence /tmp/openada-ihp-inverter-release
+          commit_receipt conformance/ihp-inverter \
+            "Refresh IHP inverter native receipt"
+
+          python conformance/ihp-analog-measurements/run.py \
+            --cache-dir "$ihp_cache" \
+            --evidence-dir /tmp/openada-ihp-analog-measurements-release \
+            --publish \
+            --receipt-class release
+          commit_receipt conformance/ihp-analog-measurements \
+            "Refresh IHP analog measurement native receipt"
+
+          python conformance/ihp-inverter-agent-chain/run.py \
+            --cache-dir "$ihp_cache" \
+            --evidence-dir /tmp/openada-ihp-inverter-agent-release \
+            --publish
+          commit_receipt conformance/ihp-inverter-agent-chain \
+            "Refresh IHP inverter agent-chain native receipt"
+
+          python conformance/ihp-ngspice-provider-analyses/replay.py \
+            --design-dir "$ihp_cache/IHP-AnalogAcademy" \
+            --evidence-dir /tmp/openada-ihp-provider-analyses-release \
+            --publish \
+            --receipt-class release
+          commit_receipt conformance/ihp-ngspice-provider-analyses \
+            "Refresh IHP ngspice provider native receipt"
+
+          python conformance/ihp-sar-rtl/run.py \
+            --cache-dir "$ihp_cache" \
+            --evidence-dir /tmp/openada-ihp-sar-rtl-release \
+            --receipt-class release
+          python conformance/ihp-sar-rtl/semantic.py \
+            --publish \
+            --evidence-dir /tmp/openada-ihp-sar-rtl-release
+          commit_receipt conformance/ihp-sar-rtl \
+            "Refresh IHP SAR RTL native receipt"
+
+          python conformance/public-spice-portability/run.py \
+            --cache-dir "$ihp_cache" \
+            --evidence-dir /tmp/openada-public-spice-portability-release \
+            --publish
+          commit_receipt conformance/public-spice-portability \
+            "Refresh public SPICE portability native receipt"
+
+          python conformance/orfs-ibex-synthesis-timing/run.py \
+            --cache-dir "$orfs_cache" \
+            --evidence-dir /tmp/openada-orfs-ibex-release \
+            --receipt-class release
+          python conformance/orfs-ibex-synthesis-timing/semantic.py \
+            --publish \
+            --evidence-dir /tmp/openada-orfs-ibex-release
+          commit_receipt conformance/orfs-ibex-synthesis-timing \
+            "Refresh ORFS Ibex synthesis and timing native receipt"
+
+      - name: Publish index and provider evidence binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/semantic_publish_index.py --write
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          manifest_path = Path("providers/ngspice-pdk-control/driver-manifest.json")
+          run_path = Path(
+              "conformance/ihp-ngspice-provider-analyses/semantic-chain-run.json"
+          )
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          digest = hashlib.sha256(run_path.read_bytes()).hexdigest()
+          records = manifest["conformance_records"]
+          matching = [
+              record
+              for record in records
+              if record["record_id"]
+              == "org.openada.conformance/ihp-analog-analyses-ngspice-provider/v1"
+          ]
+          if len(matching) != 1:
+              raise SystemExit("provider manifest does not have exactly one target record")
+          matching[0]["evidence"]["sha256"] = digest
+          manifest_path.write_text(
+              json.dumps(manifest, allow_nan=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          python tools/semantic_refresh_manifests.py
+          python tools/semantic_publish_index.py
+          python tools/verify_semantic_coverage.py --mode release --compact \
+            > /tmp/semantic-coverage.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("/tmp/semantic-coverage.json").read_text())
+          assert report["status"] == "pass", report
+          assert report["issues"] == [], report["issues"]
+          assert report["summary"]["row_count"] == 231, report["summary"]
+          assert report["summary"]["active_row_count"] == 159, report["summary"]
+          assert report["summary"]["gap_count"] == 0, report["summary"]
+          assert report["gaps"] == [], report["gaps"]
+          PY
+          git add -- \
+            conformance/semantic-chains/index.json \
+            providers/ngspice-pdk-control/driver-manifest.json
+          git commit -m "Publish refreshed native semantic receipt index"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Bundle evidence-only commits
+        shell: bash
+        run: |
+          set -euo pipefail
+          git log --oneline --decorate -9
+          git bundle create /tmp/openada-native-receipts.bundle HEAD
+          git bundle verify /tmp/openada-native-receipts.bundle
+
+      - name: Upload publication bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: openada-native-receipts-${{ github.run_id }}
+          path: /tmp/openada-native-receipts.bundle
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0

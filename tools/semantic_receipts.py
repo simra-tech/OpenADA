@@ -83,7 +83,38 @@ def _max_json_depth_within(text: str, limit: int) -> bool:
     return True
 
 
+def _python_json_depth_within(value: object, limit: int) -> bool:
+    """Return whether an in-memory JSON value stays within ``limit`` levels."""
+
+    pending: list[tuple[object, int, bool]] = [(value, 1, False)]
+    active: set[int] = set()
+    while pending:
+        item, depth, leaving = pending.pop()
+        identity = id(item)
+        if leaving:
+            active.remove(identity)
+            continue
+        if depth > limit:
+            return False
+        if isinstance(item, Mapping):
+            children = item.values()
+        elif isinstance(item, (list, tuple)):
+            children = item
+        else:
+            continue
+        if identity in active:
+            # Leave cycle/type reporting to json.dumps; this guard exists only
+            # to bound depth without recursing or looping forever.
+            continue
+        active.add(identity)
+        pending.append((item, depth, True))
+        pending.extend((child, depth + 1, False) for child in children)
+    return True
+
+
 def canonical_sha256(value: object) -> str:
+    if not _python_json_depth_within(value, MAX_JSON_DEPTH):
+        raise SemanticReceiptError("value nests too deeply to canonically hash")
     try:
         encoded = json.dumps(
             value,
@@ -92,11 +123,11 @@ def canonical_sha256(value: object) -> str:
             separators=(",", ":"),
             sort_keys=True,
         ).encode("utf-8")
-    except RecursionError as exc:
+    except (RecursionError, TypeError, ValueError) as exc:
         # Deep nesting overflows the encoder's C recursion the same way the
         # decoder does; fail closed with a typed error rather than a traceback.
         raise SemanticReceiptError(
-            "value nests too deeply to canonically hash"
+            "value is not strict canonical JSON"
         ) from exc
     return hashlib.sha256(encoded).hexdigest()
 

@@ -629,25 +629,30 @@ def compose_blocks_osdi(
     requested = tuple(block_ids)
     if not requested:
         raise OsdiCompileError("osdi.compose.empty", "no blocks requested.")
+    seen: set[str] = set()
+    validated: list[tuple[str, object]] = []
+    for block_id in requested:
+        if block_id in seen:
+            raise OsdiCompileError(
+                "osdi.compose.duplicate", f"block {block_id!r} requested twice."
+            )
+        seen.add(block_id)
+        block = blocks.get(block_id)
+        if block is None:
+            raise OsdiCompileError("osdi.compose.unknown", f"block {block_id!r} is not in the library.")
+        if getattr(block, "veriloga", None) is None:
+            raise OsdiCompileError(
+                "osdi.compose.no_veriloga",
+                f"block {block_id!r} has no verilog-a backend to compile to OSDI.",
+            )
+        validated.append((block_id, block))
     triples: list[tuple[OsdiModule, Sequence[str], Mapping[str, object]]] = []
     modules: list[OsdiModule] = []
     wrappers: list[str] = []
     constraints: list[tuple[Mapping[str, object], ...]] = []
     defaults: list[Mapping[str, float]] = []
-    seen: set[str] = set()
-    for block_id in requested:
-        if block_id in seen:
-            raise OsdiCompileError("osdi.compose.duplicate", f"block {block_id!r} requested twice.")
-        seen.add(block_id)
-        block = blocks.get(block_id)
-        if block is None:
-            raise OsdiCompileError("osdi.compose.unknown", f"block {block_id!r} is not in the library.")
-        veriloga = getattr(block, "veriloga", None)
-        if veriloga is None:
-            raise OsdiCompileError(
-                "osdi.compose.no_veriloga",
-                f"block {block_id!r} has no verilog-a backend to compile to OSDI.",
-            )
+    for block_id, block in validated:
+        veriloga = block.veriloga
         module = compile_verilog_a(
             veriloga.source_text, veriloga.wrapper, work_dir, openvaf_bin=openvaf_bin
         )

@@ -344,7 +344,10 @@ def test_reference_provider_closes_the_generic_transport_boundary(
     monkeypatch.setenv("PYTHONPATH", str(tmp_path / "hostile-python"))
     monkeypatch.setenv("HOME", str(tmp_path / "hostile-home"))
 
-    payload = invoke_local_provider(manifest, request, cwd=ROOT)
+    # Resolve the installed console entry point from this Python environment,
+    # not the source-tree ``bin`` wrapper whose env-based shebang may select a
+    # different system Python after the provider environment is sanitized.
+    payload = invoke_local_provider(manifest, request, cwd=tmp_path)
 
     assert payload["execution"]["status"] == "completed"
     assert payload["engineering"]["status"] == "pass"

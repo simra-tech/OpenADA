@@ -51,6 +51,7 @@ MAX_TOTAL_EVIDENCE_BYTES = (
     + MAX_RAW_EVIDENCE_BYTES
     + 8 * MAX_JSON_EVIDENCE_BYTES
 )
+MAX_JSON_STRUCTURE_DEPTH = 64
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _SIGNATURE_RE = re.compile(r"^[0-9a-f]{128}$")
@@ -188,7 +189,7 @@ def _strict_json(body: bytes, label: str) -> Mapping[str, Any]:
     while pending:
         item, depth = pending.pop()
         visited += 1
-        if visited > 1_000_000 or depth > 64:
+        if visited > 1_000_000 or depth > MAX_JSON_STRUCTURE_DEPTH:
             _fail(
                 "receipt.json.invalid",
                 f"{label} exceeds the JSON structure bound",
@@ -476,6 +477,32 @@ def _canonical_unsigned(receipt: Mapping[str, Any]) -> bytes:
 
 
 def _canonical_value_sha256(value: object, label: str) -> str:
+    pending: list[tuple[object, int, bool]] = [(value, 1, False)]
+    active: set[int] = set()
+    while pending:
+        item, depth, leaving = pending.pop()
+        identity = id(item)
+        if leaving:
+            active.remove(identity)
+            continue
+        if depth > MAX_JSON_STRUCTURE_DEPTH:
+            _fail(
+                "receipt.chain.invalid",
+                f"{label} exceeds the JSON structure bound",
+            )
+        if isinstance(item, Mapping):
+            children = item.values()
+        elif isinstance(item, (list, tuple)):
+            children = item
+        else:
+            continue
+        if identity in active:
+            # json.dumps below will reject the cycle with the stable typed
+            # receipt error; do not let the depth preflight loop forever.
+            continue
+        active.add(identity)
+        pending.append((item, depth, True))
+        pending.extend((child, depth + 1, False) for child in children)
     try:
         encoded = json.dumps(
             value,

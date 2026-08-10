@@ -111,12 +111,12 @@
     },
     {
       "repository_path": "tools/semantic_receipts.py",
-      "sha256": "0c8265710978ff1551a485e6e3044fee561aa5a5aa0ee4a98d1039e8f5fe6a1f",
+      "sha256": "240c577d58bb0e615f0b6d244a0dee6ea5e0b590b998f8dc15c6277368626c2e",
       "extensions": {}
     },
     {
       "repository_path": "tools/verify_semantic_coverage.py",
-      "sha256": "cf090fcf62c66e5ecc0df06d2d400b546d2003b21edbbb9a55caa83f0936695c",
+      "sha256": "49d161af78f09610b91f8757eb27257b6fdfef262c46ee6c081d4d4af9982040",
       "extensions": {}
     },
     {
