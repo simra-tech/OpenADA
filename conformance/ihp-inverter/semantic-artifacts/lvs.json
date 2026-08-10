@@ -242,7 +242,7 @@
       "-json"
     ],
     "cwd": "/evidence",
-    "duration_ms": 33,
+    "duration_ms": 32,
     "exit_code": 0,
     "status": "completed"
   },
@@ -282,7 +282,7 @@
   ],
   "operation": "lvs",
   "provenance": {
-    "created_at": "2026-08-03T07:47:58.954820Z",
+    "created_at": "2026-08-10T09:01:01.830197Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
