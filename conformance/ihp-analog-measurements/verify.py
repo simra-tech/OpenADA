@@ -583,7 +583,8 @@ def _verify_measurement_results(
         value = measurement.get("value")
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ConformanceError(f"{family} {kind} value is not finite numeric evidence")
-        if measurement.get("unit") != metric.get("unit"):
+        expected_unit = metric["unit"] if family == "transfer" else "dB"
+        if measurement.get("unit") != expected_unit:
             raise ConformanceError(f"{family} {kind} unit differs from its request contract")
         if family == "transfer":
             request_metric = {"kind": kind, "unit": metric["unit"]}

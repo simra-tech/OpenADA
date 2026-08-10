@@ -166,7 +166,7 @@
     },
     {
       "repository_path": "conformance/ihp-analog-measurements/verify.py",
-      "sha256": "619a5ed9bb0d7e5d7d9f02b6dfe848582284dc2dbe000ebe09e7bb9a24bc1459",
+      "sha256": "c88b976ea1ce2c9c348e7fc9c9476ba5df1ca0ddd71df259cc938d41d8cf45cb",
       "extensions": {}
     },
     {
@@ -489,7 +489,7 @@
       "extensions": {},
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/verify.py",
-        "sha256": "619a5ed9bb0d7e5d7d9f02b6dfe848582284dc2dbe000ebe09e7bb9a24bc1459",
+        "sha256": "c88b976ea1ce2c9c348e7fc9c9476ba5df1ca0ddd71df259cc938d41d8cf45cb",
         "extensions": {}
       }
     },
@@ -809,7 +809,7 @@
       "extensions": {},
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/verify.py",
-        "sha256": "619a5ed9bb0d7e5d7d9f02b6dfe848582284dc2dbe000ebe09e7bb9a24bc1459",
+        "sha256": "c88b976ea1ce2c9c348e7fc9c9476ba5df1ca0ddd71df259cc938d41d8cf45cb",
         "extensions": {}
       }
     }
@@ -1342,7 +1342,7 @@
   "release_verification": {
     "implementation": {
       "repository_path": "conformance/ihp-analog-measurements/verify.py",
-      "sha256": "619a5ed9bb0d7e5d7d9f02b6dfe848582284dc2dbe000ebe09e7bb9a24bc1459",
+      "sha256": "c88b976ea1ce2c9c348e7fc9c9476ba5df1ca0ddd71df259cc938d41d8cf45cb",
       "extensions": {}
     },
     "arguments": [
