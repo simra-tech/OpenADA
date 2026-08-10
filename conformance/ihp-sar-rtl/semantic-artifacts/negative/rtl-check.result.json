@@ -42,8 +42,8 @@
       "-s",
       "/evidence/negative/rtl-check.ys"
     ],
-    "cwd": "/evidence/negative/.openada-yosys-xya5uhks",
-    "duration_ms": 115,
+    "cwd": "/evidence/negative/.openada-yosys-l84blda9",
+    "duration_ms": 64,
     "exit_code": 1,
     "status": "completed"
   },
@@ -59,7 +59,7 @@
   ],
   "operation": "rtl-check",
   "provenance": {
-    "created_at": "2026-08-03T07:53:41.910516Z",
+    "created_at": "2026-08-10T09:04:32.879075Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
