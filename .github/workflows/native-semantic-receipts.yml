@@ -14,6 +14,8 @@ on:
       - conformance/ihp-inverter-agent-chain/verify.py
       - conformance/public-spice-portability/run.py
       - conformance/public-spice-portability/verify.py
+      - conformance/ihp-sar-rtl/semantic-chain.json
+      - tests/test_ihp_sar_rtl_conformance.py
 
 permissions:
   contents: read
