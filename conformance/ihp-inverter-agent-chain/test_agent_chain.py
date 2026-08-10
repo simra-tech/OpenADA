@@ -77,6 +77,19 @@ def test_runner_verifier_and_gate_bind_same_semantic_subject() -> None:
     assert verify._semantic_subject() == expected
 
 
+def test_tamper_rejection_normalizes_resolved_temp_alias(tmp_path: Path) -> None:
+    real = tmp_path / "real"
+    real.mkdir()
+    alias = tmp_path / "alias"
+    alias.symlink_to(real, target_is_directory=True)
+
+    rejection = f"file[{alias.resolve()}/work/native.raw].sha256 differs"
+
+    assert verify._normalized_tamper_rejection(rejection, alias) == (
+        "file[/tampered-evidence/work/native.raw].sha256 differs"
+    )
+
+
 @pytest.mark.conformance
 @pytest.mark.skipif(
     os.environ.get("OPENADA_RUN_IHP_AGENT_CHAIN") != "1",

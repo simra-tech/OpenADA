@@ -176,12 +176,12 @@
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
-      "sha256": "1b94e09211351a16183c955c585f0fb0191e559c3a1cb1d826be3e3ad2bed2bb",
+      "sha256": "6eb315dc8e1be52dcf8e406f9eff875e5a1ad09fc97c457bfbbe407131b54254",
       "extensions": {}
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "bd18e9c771155b90e836159ef32f225b6332546f2b8a36dc04aad9b1bf04824f",
+      "sha256": "2ab90494c62c2bf2888067a703b8a0e0e61e2db79f2f1b464e5bac38d8b153be",
       "extensions": {}
     }
   ],
@@ -821,7 +821,7 @@
       "kind": "independent-oracle",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "bd18e9c771155b90e836159ef32f225b6332546f2b8a36dc04aad9b1bf04824f",
+        "sha256": "2ab90494c62c2bf2888067a703b8a0e0e61e2db79f2f1b464e5bac38d8b153be",
         "extensions": {}
       },
       "native_execution": false,
@@ -854,7 +854,7 @@
       "kind": "independent-decision",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "bd18e9c771155b90e836159ef32f225b6332546f2b8a36dc04aad9b1bf04824f",
+        "sha256": "2ab90494c62c2bf2888067a703b8a0e0e61e2db79f2f1b464e5bac38d8b153be",
         "extensions": {}
       },
       "native_execution": false,
@@ -875,7 +875,7 @@
       "kind": "independent-oracle",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
-        "sha256": "1b94e09211351a16183c955c585f0fb0191e559c3a1cb1d826be3e3ad2bed2bb",
+        "sha256": "6eb315dc8e1be52dcf8e406f9eff875e5a1ad09fc97c457bfbbe407131b54254",
         "extensions": {}
       },
       "native_execution": false,
@@ -1416,7 +1416,7 @@
   "release_verification": {
     "implementation": {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "bd18e9c771155b90e836159ef32f225b6332546f2b8a36dc04aad9b1bf04824f",
+      "sha256": "2ab90494c62c2bf2888067a703b8a0e0e61e2db79f2f1b464e5bac38d8b153be",
       "extensions": {}
     },
     "arguments": [

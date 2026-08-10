@@ -2695,6 +2695,16 @@ def _mutate_json(path: Path, mutation: Callable[[dict[str, Any]], None]) -> None
     path.write_text(json.dumps(document, allow_nan=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _normalized_tamper_rejection(message: str, candidate: Path) -> str:
+    """Remove platform-specific temporary-directory spellings from a rejection."""
+
+    normalized = message
+    aliases = {str(candidate), str(candidate.resolve())}
+    for alias in sorted(aliases, key=len, reverse=True):
+        normalized = normalized.replace(alias, "/tampered-evidence")
+    return normalized[:2_000]
+
+
 def _run_tamper_probes(
     manifest: dict[str, Any], evidence: Path, manifest_sha256: str
 ) -> list[dict[str, Any]]:
@@ -2841,9 +2851,9 @@ def _run_tamper_probes(
                 )
             except ConformanceError as exc:
                 replay = declared[identifier]
-                rejection_message = str(exc).replace(
-                    str(candidate), "/tampered-evidence"
-                )[:2_000]
+                rejection_message = _normalized_tamper_rejection(
+                    str(exc), candidate
+                )
                 receipts.append(
                     {
                         "schema": "openada.tamper-replay/v0alpha1",
