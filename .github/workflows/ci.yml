@@ -326,6 +326,7 @@ jobs:
 
           expected_skills = {
               "openada",
+              "bootstrap-asic-project",
               "review-circuit-simulation",
               "characterize-analog-block",
               "analyze-feedback-stability",

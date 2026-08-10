@@ -1,9 +1,10 @@
 # IHP analog transfer and spectral semantic chain
 
 This bundle closes 47 exact semantic rows from public IHP schematics to an
-agent-facing engineering decision. Thirty rows are the complete
-`result.transfer.measure/v1alpha1` and `result.spectral.measure/v1alpha1`
-surfaces. The other 17 are the Xschem, external-provider, and Spice3-series
+agent-facing engineering decision. Thirty rows cover the four exercised
+`result.transfer.measure/v1alpha2` metrics and the complete
+`result.spectral.measure/v1alpha1` surface. The other 17 are the Xschem,
+external-provider, and Spice3-series
 prerequisites that this workflow actually invokes; they are included rather
 than mislabeling native acquisition as a measurement kernel.
 

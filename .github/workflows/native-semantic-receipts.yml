@@ -9,6 +9,7 @@ on:
       - hellno/debug-wheel-missing-script
     paths:
       - .github/workflows/native-semantic-receipts.yml
+      - conformance/ihp-analog-measurements/manifest.json
 
 permissions:
   contents: read
