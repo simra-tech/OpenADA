@@ -57,7 +57,13 @@ jobs:
           df -h /
 
       - name: Install publication dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -e '.[dev,conformance]'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes ngspice
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev,conformance]'
 
       - name: Fetch pinned native inputs
         shell: bash
