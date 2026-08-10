@@ -10,6 +10,10 @@ on:
     paths:
       - .github/workflows/native-semantic-receipts.yml
       - conformance/ihp-analog-measurements/manifest.json
+      - conformance/ihp-inverter-agent-chain/manifest.json
+      - conformance/ihp-inverter-agent-chain/verify.py
+      - conformance/public-spice-portability/run.py
+      - conformance/public-spice-portability/verify.py
 
 permissions:
   contents: read

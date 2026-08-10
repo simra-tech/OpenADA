@@ -181,7 +181,7 @@
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "dbb9356ff4b79ac573540bff87cf0f388ad42d8e042580dd00c213aa4c7e7e1c",
+      "sha256": "f9800c1fddc9f73cf1633a4a788ad9b5338b1aca6f8de9c9a405e4aac0b0dab5",
       "extensions": {}
     }
   ],
@@ -791,7 +791,7 @@
       "kind": "independent-oracle",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "dbb9356ff4b79ac573540bff87cf0f388ad42d8e042580dd00c213aa4c7e7e1c",
+        "sha256": "f9800c1fddc9f73cf1633a4a788ad9b5338b1aca6f8de9c9a405e4aac0b0dab5",
         "extensions": {}
       },
       "native_execution": false,
@@ -824,7 +824,7 @@
       "kind": "independent-decision",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "dbb9356ff4b79ac573540bff87cf0f388ad42d8e042580dd00c213aa4c7e7e1c",
+        "sha256": "f9800c1fddc9f73cf1633a4a788ad9b5338b1aca6f8de9c9a405e4aac0b0dab5",
         "extensions": {}
       },
       "native_execution": false,
@@ -1358,7 +1358,7 @@
   "release_verification": {
     "implementation": {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "dbb9356ff4b79ac573540bff87cf0f388ad42d8e042580dd00c213aa4c7e7e1c",
+      "sha256": "f9800c1fddc9f73cf1633a4a788ad9b5338b1aca6f8de9c9a405e4aac0b0dab5",
       "extensions": {}
     },
     "arguments": [
@@ -1443,16 +1443,19 @@
           "deck": "/evidence/work/inverter_shared.spice",
           "output_dir": "/evidence/builtin/simulation",
           "workdir": "/evidence/builtin/work",
-          "raw_artifact": "/evidence/builtin/simulation/inverter_shared.raw",
-          "log_artifact": "/evidence/builtin/simulation/inverter_shared.log"
+          "raw_artifact": "/evidence/builtin/simulation/inverter_shared/inverter_shared.raw",
+          "log_artifact": "/evidence/builtin/simulation/inverter_shared/inverter_shared.log",
+          "retained_result": "/evidence/builtin/simulation/simulate.result.json",
+          "selection_template": "/evidence/builtin/simulation/simulate.selection.json"
         },
         "terminal_fail": {
           "result": "builtin-fail-result.json",
           "deck": "/evidence/work/inverter_shared_terminal_nonconvergence.spice",
           "output_dir": "/evidence/builtin-fail/simulation",
           "workdir": "/evidence/builtin-fail/work",
-          "raw_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
-          "log_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log"
+          "raw_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw",
+          "log_artifact": "/evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log",
+          "retained_result": "/evidence/builtin-fail/simulation/simulate.result.json"
         },
         "extensions": {}
       },

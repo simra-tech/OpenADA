@@ -431,6 +431,7 @@ jobs:
           plugin_entries["openada"].load().register(plugin_context)
           assert {skill[0] for skill in plugin_context.skills} == {
               "openada",
+              "bootstrap-asic-project",
               "review-circuit-simulation",
               "characterize-analog-block",
               "analyze-feedback-stability",
@@ -439,6 +440,7 @@ jobs:
               "review-rtl-architecture",
               "assess-synthesis-and-inference",
               "assess-asic-timing",
+              "close-layout-incrementally",
           }
           for name, path, description, advertise, category in plugin_context.skills:
               assert path.is_file(), (name, path)

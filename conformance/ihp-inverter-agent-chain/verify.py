@@ -427,10 +427,13 @@ def _expected_evidence_files(manifest: dict[str, Any], require_chain_run: bool) 
         "runtime/sg13g2_moslv_parm.lib",
         "runtime/psp103.osdi",
         "runtime/shared.spiceinit",
-        "builtin/simulation/inverter_shared.raw",
-        "builtin/simulation/inverter_shared.log",
-        "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
-        "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log",
+        "builtin/simulation/inverter_shared/inverter_shared.raw",
+        "builtin/simulation/inverter_shared/inverter_shared.log",
+        "builtin/simulation/simulate.result.json",
+        "builtin/simulation/simulate.selection.json",
+        "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw",
+        "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log",
+        "builtin-fail/simulation/simulate.result.json",
         "provider/work/test_inverter.raw",
         "provider/work/openada-native-ngspice",
         "provider/simulation/inverter_tb.log",
@@ -1300,7 +1303,85 @@ def _verify_builtin_result(
             "builtin_fail.nonconvergence_diagnostic",
         )
         parsed = _parse_partial_failure_raw(raw_path)
+
+    retained_result = _read_json(
+        evidence / branch["retained_result"].removeprefix("/evidence/"),
+        label=f"retained built-in {expected_status} result",
+    )
+    _validate(
+        retained_result,
+        result_validator,
+        label=f"retained built-in {expected_status} result",
+    )
+    _expect(
+        retained_result,
+        result,
+        f"builtin_{expected_status}.retained_result",
+    )
+    if expected_status == "pass":
+        selection = _read_json(
+            evidence / branch["selection_template"].removeprefix("/evidence/"),
+            label="built-in selection template",
+        )
+        _expect(
+            selection,
+            _expected_selection_template(parsed, analysis_type="tran"),
+            "builtin_pass.selection_template",
+        )
     return raw_path, parsed
+
+
+def _expected_selection_template(
+    parsed: dict[str, Any], *, analysis_type: str
+) -> dict[str, Any]:
+    """Rebuild the simulator's bounded extraction handoff from native bytes."""
+
+    variables = [name for name, _native_type in parsed["variables"]]
+    candidates = variables if analysis_type == "op" else variables[1:]
+    signals = [name for name in candidates if "#" not in name]
+
+    def unit(name: str) -> str | None:
+        lowered = name.casefold()
+        if lowered.startswith("v("):
+            return "V"
+        if lowered.startswith(("i(", "@")):
+            return "A"
+        return None
+
+    unique: list[str] = []
+    for name in signals:
+        if unit(name) is not None and name not in unique:
+            unique.append(name)
+    if len(unique) > 8:
+        kept = unique[:8]
+        present = {unit(name) for name in kept}
+        missing = sorted({unit(name) for name in unique} - present)
+        for offset, missing_unit in enumerate(missing):
+            if offset >= len(kept):
+                break
+            kept[len(kept) - 1 - offset] = next(
+                name for name in unique if unit(name) == missing_unit
+            )
+        unique = kept
+
+    components = (
+        (("real", "_re"), ("imaginary", "_im"))
+        if analysis_type == "ac"
+        else (("real", ""),)
+    )
+    selectors = []
+    for name in unique:
+        stem = re.sub(r"[^A-Za-z0-9_]", "_", name).strip("_")
+        for component, suffix in components:
+            selectors.append(
+                {
+                    "native_name": name,
+                    "output_name": f"{stem}{suffix}",
+                    "unit": unit(name),
+                    "component": component,
+                }
+            )
+    return {"selectors": selectors, "conditions": [], "extensions": {}}
 
 
 def _verify_native_artifacts(
@@ -2622,25 +2703,25 @@ def _run_tamper_probes(
         ),
         (
             "builtin-native-raw-byte",
-            "builtin/simulation/inverter_shared.raw",
-            lambda root: (root / "builtin/simulation/inverter_shared.raw").write_bytes(
-                (root / "builtin/simulation/inverter_shared.raw").read_bytes()[:-1]
-                + bytes([(root / "builtin/simulation/inverter_shared.raw").read_bytes()[-1] ^ 1])
+            "builtin/simulation/inverter_shared/inverter_shared.raw",
+            lambda root: (root / "builtin/simulation/inverter_shared/inverter_shared.raw").write_bytes(
+                (root / "builtin/simulation/inverter_shared/inverter_shared.raw").read_bytes()[:-1]
+                + bytes([(root / "builtin/simulation/inverter_shared/inverter_shared.raw").read_bytes()[-1] ^ 1])
             ),
         ),
         (
             "builtin-terminal-partial-raw-byte",
-            "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw",
-            lambda root: (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw").write_bytes(
-                (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw").read_bytes()[:-1]
-                + bytes([(root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.raw").read_bytes()[-1] ^ 1])
+            "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw",
+            lambda root: (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw").write_bytes(
+                (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw").read_bytes()[:-1]
+                + bytes([(root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.raw").read_bytes()[-1] ^ 1])
             ),
         ),
         (
             "builtin-terminal-native-log-byte",
-            "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log",
-            lambda root: (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log").write_bytes(
-                (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence.log").read_bytes()
+            "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log",
+            lambda root: (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log").write_bytes(
+                (root / "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log").read_bytes()
                 + b"\nTAMPER\n"
             ),
         ),
