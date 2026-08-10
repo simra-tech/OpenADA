@@ -1470,7 +1470,7 @@ def _run_tamper_probes(
                 path.write_bytes(path.read_bytes() + b"*tamper\n")
                 mutation = "append one derived-deck comment record"
             elif identifier == "native-raw-byte":
-                path = clone / "sim/xyce-dc/xyce-dc.xyce.raw"
+                path = clone / "sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw"
                 payload = bytearray(path.read_bytes())
                 payload[-2] ^= 1
                 path.write_bytes(payload)
