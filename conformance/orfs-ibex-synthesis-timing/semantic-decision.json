@@ -32,12 +32,12 @@
     "normalized": {
       "bytes": 11715,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-normalized.json",
-      "sha256": "2d2daaa5c14978eeec067fbdb07d5eaa4e6ca0cfd2cc2c2d0b6a28c15c416ec8"
+      "sha256": "48fcf599afaaf5cfd1b7b6d9ea75796ea2dc3da396f3a81dd864334d13345bd5"
     },
     "oracle": {
       "bytes": 15660,
       "repository_path": "conformance/orfs-ibex-synthesis-timing/semantic-oracle.json",
-      "sha256": "857ba3a5618659f49cb0c899fb38bac61fe1255614cf5ef67b8b7be55651f2b1"
+      "sha256": "21514cdca2f7618dbefde75ea95bc3745d5c7122422c55d6544b5cce1e5bece6"
     },
     "tamper_replays": [
       {
