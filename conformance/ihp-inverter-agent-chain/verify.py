@@ -347,7 +347,7 @@ def _verify_manifest(manifest: dict[str, Any], manifest_sha256: str) -> None:
     kinds = [item["request"]["kind"] for item in details["measurements"]]
     _expect(
         kinds,
-        ["sample_at", "minimum", "maximum", "mean", "rms", "crossing", "rise_time", "fall_time", "settling_time"],
+        ["sample_at", "minimum", "maximum", "mean", "rms", "crossing", "rise_time", "fall_time", "settling_time", "slope"],
         "manifest.measurement_kinds",
     )
     if "not a time-weighted electrical average" not in details["measurements"][3]["interpretation"]:
@@ -1815,7 +1815,7 @@ def _ordinary_measurement(
                     return y0 + (y1 - y0) * ((at - x0) / (x1 - x0)), signal["unit"], at, 1
                 return None, signal["unit"], None, 0
         return None, signal["unit"], None, 0
-    if kind in {"minimum", "maximum", "mean", "rms"}:
+    if kind in {"minimum", "maximum", "mean", "rms", "slope"}:
         if "window" in parameters:
             start = float(parameters["window"]["start"]["value"])
             stop = float(parameters["window"]["stop"]["value"])
@@ -1833,7 +1833,26 @@ def _ordinary_measurement(
             return value, signal["unit"], axis[indices[samples.index(value)]], len(indices)
         if kind == "mean":
             return math.fsum(samples) / len(samples), signal["unit"], None, len(indices)
-        return math.sqrt(math.fsum(value * value for value in samples) / len(samples)), signal["unit"], None, len(indices)
+        if kind == "rms":
+            return math.sqrt(math.fsum(value * value for value in samples) / len(samples)), signal["unit"], None, len(indices)
+        if len(indices) < 2:
+            return None, f"{signal['unit']}/{series['axis']['unit']}", None, len(indices)
+        coordinates = [axis[index] for index in indices]
+        x_mean = math.fsum(coordinates) / len(coordinates)
+        y_mean = math.fsum(samples) / len(samples)
+        numerator = math.fsum(
+            (x - x_mean) * (y - y_mean)
+            for x, y in zip(coordinates, samples, strict=True)
+        )
+        denominator = math.fsum((x - x_mean) ** 2 for x in coordinates)
+        if denominator == 0.0:
+            raise ConformanceError("measurement.value.non_finite")
+        return (
+            numerator / denominator,
+            f"{signal['unit']}/{series['axis']['unit']}",
+            None,
+            len(indices),
+        )
     if kind == "crossing":
         crossings = _crossing_points(
             axis,
@@ -1977,7 +1996,7 @@ def _negative_measurement_request(definition: dict[str, Any]) -> dict[str, Any]:
     kind = request["kind"]
     if kind == "sample_at":
         request["parameters"] = {"at": {"value": 3e-6, "unit": "s"}, "interpolation": "linear"}
-    elif kind in {"minimum", "maximum", "mean", "rms"}:
+    elif kind in {"minimum", "maximum", "mean", "rms", "slope"}:
         request["parameters"] = {
             "window": {
                 "start": {"value": 3e-6, "unit": "s"},
@@ -2296,7 +2315,7 @@ def _verify_agent_evidence(
         for item in evaluations
     ]
     _expect(agent["specifications"], {
-        "pass_count": 9, "fail_count": 9, "decisions": decisions,
+        "pass_count": 10, "fail_count": 10, "decisions": decisions,
     }, "agent_evidence.specifications")
     negative_expected = [
         {"id": "netlist-missing-symbol", "operation": "netlist", "engineering_status": "fail", "diagnostic": "xschem.missing_symbol"},
@@ -2368,6 +2387,7 @@ TAMPER_PROBE_IDS = (
     "measurement-rise-time-value",
     "measurement-fall-time-value",
     "measurement-settling-time-value",
+    "measurement-slope-value",
     "specification-margin",
     "specification-condition-binding",
 )
@@ -2388,8 +2408,8 @@ def _verification_report(
         "checks": [
             "native-artifact-reparsed",
             "lineage-recomputed",
-            "nine-measurements-recomputed",
-            "eighteen-specification-decisions-recomputed",
+            "ten-measurements-recomputed",
+            "twenty-specification-decisions-recomputed",
             "negative-replays-verified",
             "tamper-replays-rejected",
             "agent-evidence-cross-checked",
@@ -2508,7 +2528,7 @@ def _verify_chain_run(
             f"measure-{identifier}": f"negative/measure-{identifier}.json"
             for identifier in (
                 "sample-at", "minimum", "maximum", "mean", "rms", "crossing",
-                "rise-time", "fall-time", "settling-time",
+                "rise-time", "fall-time", "settling-time", "slope",
             )
         },
         "deliberately-violated-limits": "specifications/sample-at-fail.json",
@@ -2559,7 +2579,7 @@ def _verify_chain_run(
             "conformance/ihp-inverter-agent-chain/evidence/specifications/sample-at-pass.json",
             "downstream-decision",
             "evaluate-pass",
-            "nine-passing-specification-decisions",
+            "ten-passing-specification-decisions",
             None,
         ),
         (
@@ -2739,7 +2759,7 @@ def _run_tamper_probes(
     ]
     for identifier in (
         "sample-at", "minimum", "maximum", "mean", "rms", "crossing",
-        "rise-time", "fall-time", "settling-time",
+        "rise-time", "fall-time", "settling-time", "slope",
     ):
         relative = f"measurements/{identifier}.json"
         mutations.append(

@@ -264,17 +264,20 @@ def _expect_result(
 
 
 def _transfer_request(contract: dict[str, Any], metric: dict[str, Any]) -> dict[str, Any]:
+    request_metric = {"kind": metric["kind"], "unit": metric["unit"]}
+    if "at" in metric:
+        request_metric["at"] = deepcopy(metric["at"])
     return {
         "measurement_id": f"ota.open-loop.{metric['kind'].replace('_', '-')}",
-        "input": deepcopy(contract["input"]),
-        "output": deepcopy(contract["output"]),
+        "input": deepcopy(metric.get("input", contract["input"])),
+        "output": deepcopy(metric.get("output", contract["output"])),
         "interpretation": (
             "loop-gain-negative-feedback"
             if metric["kind"] == "phase_margin"
             else "forward"
         ),
         "method": deepcopy(contract["method"]),
-        "metric": {"kind": metric["kind"], "unit": metric["unit"]},
+        "metric": request_metric,
         "extensions": {},
     }
 
@@ -298,9 +301,14 @@ def _negative_measurement_request(
 ) -> tuple[dict[str, Any], str]:
     mutated = deepcopy(request)
     if family == "transfer":
-        if kind == "low_frequency_gain_db":
-            mutated["metric"]["unit"] = "Hz"
+        if kind in {"low_frequency_gain_db", "low_frequency_impedance"}:
+            mutated["metric"]["unit"] = (
+                "Hz" if kind == "low_frequency_gain_db" else "dB"
+            )
             return mutated, "transfer.unit.mismatch"
+        if kind == "ac_magnitude_at_frequency":
+            mutated["metric"]["at"]["value"] = 1.0e12
+            return mutated, "transfer.domain.invalid"
         if kind == "bandwidth_3db":
             mutated["method"]["bandwidth_drop_db"] = 2.0
             return mutated, "transfer.method.unsupported"

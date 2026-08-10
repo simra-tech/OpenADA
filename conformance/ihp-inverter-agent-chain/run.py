@@ -435,7 +435,7 @@ def _write_chain_run(
             "specifications/sample-at-pass.json",
             "downstream-decision",
             source_step="evaluate-pass",
-            source_output="nine-passing-specification-decisions",
+            source_output="ten-passing-specification-decisions",
         ),
         _retained_artifact(
             evidence,
@@ -454,7 +454,7 @@ def _write_chain_run(
             f"measure-{identifier}": f"negative/measure-{identifier}.json"
             for identifier in (
                 "sample-at", "minimum", "maximum", "mean", "rms", "crossing",
-                "rise-time", "fall-time", "settling-time",
+                "rise-time", "fall-time", "settling-time", "slope",
             )
         },
         "deliberately-violated-limits": "specifications/sample-at-fail.json",

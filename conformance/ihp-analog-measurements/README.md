@@ -1,6 +1,6 @@
 # IHP analog transfer and spectral semantic chain
 
-This bundle closes 47 exact semantic rows from public IHP schematics to an
+This bundle closes 56 exact semantic rows from public IHP schematics to an
 agent-facing engineering decision. Thirty rows cover the four exercised
 `result.transfer.measure/v1alpha2` metrics and the complete
 `result.spectral.measure/v1alpha1` surface. The other 17 are the Xschem,
@@ -32,6 +32,8 @@ normalized protocol. `openada extract` projects the Cartesian components of
 - −3 dB bandwidth: 1332.3043851822767 Hz.
 - Unity-gain frequency: 4157414.5570058133 Hz.
 - Negative-feedback phase-margin convention: 61.42309151169668 degrees.
+- Input driving-point impedance: 1416678492.999632 ohms at 1 Hz.
+- Differential-output magnitude: 68.18219791291199 dB at 1 kHz.
 
 The inverter path starts from the public module-0 inverter testbench,
 schematic, and symbol. Its deterministic execution derivative preserves the

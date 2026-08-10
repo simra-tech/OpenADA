@@ -151,7 +151,7 @@
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/common.py",
-      "sha256": "3929ca867ad8f8c92be34e42106903c52e0abe9e9299d531255a0b776f4a1a59",
+      "sha256": "d7ea421b08634a6c7e2192fcb52b31bda3c9c31c3bec29e44df50f71d8d09eab",
       "extensions": {}
     },
     {
@@ -161,12 +161,12 @@
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/inside.py",
-      "sha256": "3aee3d87106729929a6f91d00aa5a90793f5df52c6cfc561ad65e913d98a0392",
+      "sha256": "baa7ef79a203b127845a3d1c321980eaedfc1aededaaa096db4e4cd007d31bc3",
       "extensions": {}
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/run.py",
-      "sha256": "2d8ba777362f6426bb2fd37f89c69246322356f57e90fbc4a9ba2455ed7249c6",
+      "sha256": "76e7380748893184ce73214a18400010118511a51159e75bc70dfb2a25d0b51c",
       "extensions": {}
     },
     {
@@ -176,12 +176,12 @@
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
-      "sha256": "8e2a5c1f9e8abd39f78126f90f77ee08c9d164b4d558ca4d0522d6ce78e149e5",
+      "sha256": "1b94e09211351a16183c955c585f0fb0191e559c3a1cb1d826be3e3ad2bed2bb",
       "extensions": {}
     },
     {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "ceb32bbe7701aaba2758a1437ddf40ce7e60614630f3928cfbe22e7797188d92",
+      "sha256": "7a42feb94890cd0f19690c11a929d05ec35b51116ffac63f7ab8affe8006fe10",
       "extensions": {}
     }
   ],
@@ -234,6 +234,9 @@
     "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
     "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
     "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1",
+    "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+    "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+    "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.slope/v1alpha1",
     "surface|openada.surface/cli.evaluate/v1",
     "profile|openada.operation/specification.evaluate/v1alpha1",
     "assertion|openada.operation/specification.evaluate/v1alpha1|openada.assertion/specification.satisfied/v1alpha1",
@@ -693,6 +696,31 @@
       "extensions": {}
     },
     {
+      "id": "measure-slope",
+      "kind": "semantic-command",
+      "request": {
+        "repository_path": "conformance/ihp-inverter-agent-chain/requests.json",
+        "sha256": "7eec44ac49d5d54b58b677a9634291dbdd36d4f8fd301af47284562622c1bbd4",
+        "extensions": {}
+      },
+      "native_execution": false,
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.slope/v1alpha1"
+      ],
+      "consumes": [
+        "normalized-vin-vout-series"
+      ],
+      "produces": [
+        "measurement-slope"
+      ],
+      "extensions": {}
+    },
+    {
       "id": "evaluate-pass",
       "kind": "semantic-command",
       "request": {
@@ -721,10 +749,11 @@
         "measurement-crossing",
         "measurement-rise-time",
         "measurement-fall-time",
-        "measurement-settling-time"
+        "measurement-settling-time",
+        "measurement-slope"
       ],
       "produces": [
-        "nine-passing-specification-decisions"
+        "ten-passing-specification-decisions"
       ],
       "extensions": {}
     },
@@ -754,10 +783,11 @@
         "measurement-crossing",
         "measurement-rise-time",
         "measurement-fall-time",
-        "measurement-settling-time"
+        "measurement-settling-time",
+        "measurement-slope"
       ],
       "produces": [
-        "nine-failing-specification-decisions"
+        "ten-failing-specification-decisions"
       ],
       "extensions": {}
     },
@@ -791,7 +821,7 @@
       "kind": "independent-oracle",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "ceb32bbe7701aaba2758a1437ddf40ce7e60614630f3928cfbe22e7797188d92",
+        "sha256": "7a42feb94890cd0f19690c11a929d05ec35b51116ffac63f7ab8affe8006fe10",
         "extensions": {}
       },
       "native_execution": false,
@@ -810,8 +840,8 @@
         "builtin-partial-native-raw",
         "builtin-fail-result",
         "normalized-vin-vout-series",
-        "nine-passing-specification-decisions",
-        "nine-failing-specification-decisions",
+        "ten-passing-specification-decisions",
+        "ten-failing-specification-decisions",
         "condition-mismatch-decision"
       ],
       "produces": [
@@ -824,15 +854,15 @@
       "kind": "independent-decision",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-        "sha256": "ceb32bbe7701aaba2758a1437ddf40ce7e60614630f3928cfbe22e7797188d92",
+        "sha256": "7a42feb94890cd0f19690c11a929d05ec35b51116ffac63f7ab8affe8006fe10",
         "extensions": {}
       },
       "native_execution": false,
       "covers": [],
       "consumes": [
         "independent-chain-verdict",
-        "nine-passing-specification-decisions",
-        "nine-failing-specification-decisions",
+        "ten-passing-specification-decisions",
+        "ten-failing-specification-decisions",
         "condition-mismatch-decision"
       ],
       "produces": [
@@ -845,7 +875,7 @@
       "kind": "independent-oracle",
       "implementation": {
         "repository_path": "conformance/ihp-inverter-agent-chain/test_agent_chain.py",
-        "sha256": "8e2a5c1f9e8abd39f78126f90f77ee08c9d164b4d558ca4d0522d6ce78e149e5",
+        "sha256": "1b94e09211351a16183c955c585f0fb0191e559c3a1cb1d826be3e3ad2bed2bb",
         "extensions": {}
       },
       "native_execution": false,
@@ -1036,6 +1066,20 @@
         "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
         "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.settling-time/v1alpha1",
         "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.settling-time/v1alpha1"
+      ],
+      "expected_status": "fail",
+      "required_diagnostic": "measurement.value.not_found",
+      "extensions": {}
+    },
+    {
+      "id": "measure-slope",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.slope/v1alpha1"
       ],
       "expected_status": "fail",
       "required_diagnostic": "measurement.value.not_found",
@@ -1311,6 +1355,20 @@
       "extensions": {}
     },
     {
+      "id": "measurement-slope-value",
+      "covers": [
+        "surface|openada.surface/cli.measure/v1",
+        "profile|openada.operation/result.measure/v1alpha2",
+        "assertion|openada.operation/result.measure/v1alpha2|openada.assertion/measurement.valid/v1alpha1",
+        "feature|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "provider|org.openada.kernel.typed-evidence|openada.operation/result.measure/v1alpha2|openada.feature/measurement.slope/v1alpha1",
+        "native-mapping|openada.operation/result.measure/v1alpha2|org.openada.kernel.typed-evidence|org.openada.core.runtime|openada.feature/measurement.slope/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "conformance.measurement.tampered",
+      "extensions": {}
+    },
+    {
       "id": "specification-margin",
       "covers": [
         "surface|openada.surface/cli.evaluate/v1",
@@ -1358,7 +1416,7 @@
   "release_verification": {
     "implementation": {
       "repository_path": "conformance/ihp-inverter-agent-chain/verify.py",
-      "sha256": "ceb32bbe7701aaba2758a1437ddf40ce7e60614630f3928cfbe22e7797188d92",
+      "sha256": "7a42feb94890cd0f19690c11a929d05ec35b51116ffac63f7ab8affe8006fe10",
       "extensions": {}
     },
     "arguments": [
@@ -1681,6 +1739,25 @@
           "interpretation": "Elapsed time from 1.5 us until every retained tail sample stays within 1.2 V +/- 0.1 V for at least 0.2 us.",
           "pass_limits": {"upper": {"value": 3e-7, "unit": "s", "inclusive": true}},
           "fail_limits": {"lower": {"value": 5e-7, "unit": "s", "inclusive": true}}
+        },
+        {
+          "id": "slope",
+          "request_id": "11000000-0000-4000-8000-000000000010",
+          "request": {
+            "measurement_id": "inverter.vout.falling-edge-slope",
+            "kind": "slope",
+            "signal": "v(vout)",
+            "parameters": {
+              "window": {
+                "start": {"value": 4.9e-7, "unit": "s"},
+                "stop": {"value": 5.2e-7, "unit": "s"}
+              }
+            },
+            "extensions": {}
+          },
+          "interpretation": "Ordinary least-squares slope of retained v(vout) samples across the first falling edge.",
+          "pass_limits": {"upper": {"value": -1e7, "unit": "V/s", "inclusive": true}},
+          "fail_limits": {"lower": {"value": 1e7, "unit": "V/s", "inclusive": true}}
         }
       ]
     }

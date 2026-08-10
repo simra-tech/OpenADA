@@ -64,9 +64,9 @@
           "path": "/foss/pdks/ihp-sg13g2/COMMIT",
           "sha256": "9d288516f92afa199f28b8541a42574112147c16b1cec1f4082b13c4e43163c5"
         },
-          "xschem_executable": {
-            "path": "/foss/tools/xschem/bin/xschem",
-            "sha256": "c960e786685939e03fb76619bad6aed886190b0d5d1eed2941b745565eb95c22"
+        "xschem_executable": {
+          "path": "/foss/tools/xschem/bin/xschem",
+          "sha256": "c960e786685939e03fb76619bad6aed886190b0d5d1eed2941b745565eb95c22"
         },
         "ngspice_executable": {
           "path": "/foss/tools/ngspice/bin/ngspice",
@@ -156,17 +156,17 @@
     },
     {
       "repository_path": "conformance/ihp-analog-measurements/requests.json",
-      "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+      "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
       "extensions": {}
     },
     {
       "repository_path": "conformance/ihp-analog-measurements/inside.py",
-      "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+      "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
       "extensions": {}
     },
     {
       "repository_path": "conformance/ihp-analog-measurements/verify.py",
-      "sha256": "b839078d446aa316e82ade1cc5d7a773139ca612e93003c56facb8011ef037b3",
+      "sha256": "619a5ed9bb0d7e5d7d9f02b6dfe848582284dc2dbe000ebe09e7bb9a24bc1459",
       "extensions": {}
     },
     {
@@ -181,7 +181,7 @@
     },
     {
       "repository_path": "conformance/ihp-analog-measurements/run.py",
-      "sha256": "a75151c2266934cb9726a9c23739c533a91c25c9fb0edaeefef09355d08ccbb1",
+      "sha256": "1b09b5d8ed87df87b1daa4197a8a437c0703b8c78ee6818dfab6c9f3eec60b16",
       "extensions": {}
     },
     {
@@ -191,7 +191,7 @@
     },
     {
       "repository_path": "conformance/ihp-analog-measurements/test_measurement_chain.py",
-      "sha256": "71ca97c70590641a05823179b094e8ee5f16ae17f5abf947050277ba886096a2",
+      "sha256": "ae3c0a8651f0e6a422db67928475753bd33bcb5fbc0b51f3fb07c2d80d48b834",
       "extensions": {}
     }
   ],
@@ -228,6 +228,15 @@
     "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
     "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
     "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+    "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+    "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+    "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+    "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+    "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+    "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+    "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+    "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+    "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.differential-operands/v1alpha1",
     "surface|openada.surface/cli.spectral/v1",
     "profile|openada.operation/result.spectral.measure/v1alpha1",
     "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
@@ -291,12 +300,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -322,12 +331,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -357,12 +366,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -392,12 +401,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -423,12 +432,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -454,12 +463,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -480,7 +489,7 @@
       "extensions": {},
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/verify.py",
-        "sha256": "b839078d446aa316e82ade1cc5d7a773139ca612e93003c56facb8011ef037b3",
+        "sha256": "619a5ed9bb0d7e5d7d9f02b6dfe848582284dc2dbe000ebe09e7bb9a24bc1459",
         "extensions": {}
       }
     },
@@ -506,12 +515,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -534,12 +543,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -562,12 +571,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -590,12 +599,71 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "transfer-low-frequency-impedance",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-impedance/v1alpha1"
+      ],
+      "consumes": [
+        "ota-ac-series",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "transfer-low_frequency_impedance-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
+        "extensions": {}
+      }
+    },
+    {
+      "id": "transfer-ac-magnitude-at-frequency",
+      "kind": "semantic-command",
+      "native_execution": false,
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.differential-operands/v1alpha1"
+      ],
+      "consumes": [
+        "ota-ac-series",
+        "independent-oracle-verdict"
+      ],
+      "produces": [
+        "transfer-ac_magnitude_at_frequency-result"
+      ],
+      "extensions": {},
+      "request": {
+        "repository_path": "conformance/ihp-analog-measurements/requests.json",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
+        "extensions": {}
+      },
+      "implementation": {
+        "repository_path": "conformance/ihp-analog-measurements/inside.py",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -621,12 +689,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -649,12 +717,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -677,12 +745,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -702,6 +770,8 @@
         "transfer-bandwidth_3db-result",
         "transfer-unity_gain_frequency-result",
         "transfer-phase_margin-result",
+        "transfer-low_frequency_impedance-result",
+        "transfer-ac_magnitude_at_frequency-result",
         "spectral-snr-result",
         "spectral-sinad-result",
         "spectral-thd-result"
@@ -714,12 +784,12 @@
       "extensions": {},
       "request": {
         "repository_path": "conformance/ihp-analog-measurements/requests.json",
-        "sha256": "e0a966dd97970a3219f17a32517b5481cc6bc7539797ca0afa7554808301b4ec",
+        "sha256": "658873bb8623a61b207c39d50367531a99af50ad58bed2f78c003c7bd73b5503",
         "extensions": {}
       },
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/inside.py",
-        "sha256": "28ddfa9a3074c5376eb69035753de2337add2eb4f69956ab4d0d2e7330a726c6",
+        "sha256": "e89fb204cba7ef973af6c11bf76d4556af25352707d6dbe168f64f77e690924d",
         "extensions": {}
       }
     },
@@ -739,7 +809,7 @@
       "extensions": {},
       "implementation": {
         "repository_path": "conformance/ihp-analog-measurements/verify.py",
-        "sha256": "b839078d446aa316e82ade1cc5d7a773139ca612e93003c56facb8011ef037b3",
+        "sha256": "619a5ed9bb0d7e5d7d9f02b6dfe848582284dc2dbe000ebe09e7bb9a24bc1459",
         "extensions": {}
       }
     }
@@ -859,6 +929,31 @@
       "extensions": {}
     },
     {
+      "id": "transfer-low-frequency-impedance-invalid-unit",
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-impedance/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "transfer.unit.mismatch",
+      "extensions": {}
+    },
+    {
+      "id": "transfer-ac-magnitude-outside-domain",
+      "covers": [
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.differential-operands/v1alpha1"
+      ],
+      "expected_status": "unknown",
+      "required_diagnostic": "transfer.domain.invalid",
+      "extensions": {}
+    },
+    {
       "id": "spectral-snr-noncoherent",
       "covers": [
         "surface|openada.surface/cli.spectral/v1",
@@ -942,6 +1037,15 @@
         "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.differential-operands/v1alpha1",
         "surface|openada.surface/cli.spectral/v1",
         "profile|openada.operation/result.spectral.measure/v1alpha1",
         "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
@@ -997,6 +1101,15 @@
         "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.differential-operands/v1alpha1",
         "surface|openada.surface/cli.spectral/v1",
         "profile|openada.operation/result.spectral.measure/v1alpha1",
         "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
@@ -1052,6 +1165,15 @@
         "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.differential-operands/v1alpha1",
         "surface|openada.surface/cli.spectral/v1",
         "profile|openada.operation/result.spectral.measure/v1alpha1",
         "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
@@ -1107,6 +1229,15 @@
         "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.differential-operands/v1alpha1",
         "surface|openada.surface/cli.spectral/v1",
         "profile|openada.operation/result.spectral.measure/v1alpha1",
         "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
@@ -1162,6 +1293,15 @@
         "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.phase-margin/v1alpha1",
         "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.phase-margin/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.low-frequency-impedance/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.ac-magnitude-at-frequency/v1alpha1",
+        "feature|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "provider|org.openada.kernel.transfer-evidence|openada.operation/result.transfer.measure/v1alpha2|openada.feature/transfer.differential-operands/v1alpha1",
+        "native-mapping|openada.operation/result.transfer.measure/v1alpha2|org.openada.kernel.transfer-evidence|org.openada.core.runtime|openada.feature/transfer.differential-operands/v1alpha1",
         "surface|openada.surface/cli.spectral/v1",
         "profile|openada.operation/result.spectral.measure/v1alpha1",
         "assertion|openada.operation/result.spectral.measure/v1alpha1|openada.assertion/spectral.measurement.valid/v1alpha1",
@@ -1202,7 +1342,7 @@
   "release_verification": {
     "implementation": {
       "repository_path": "conformance/ihp-analog-measurements/verify.py",
-      "sha256": "b839078d446aa316e82ade1cc5d7a773139ca612e93003c56facb8011ef037b3",
+      "sha256": "619a5ed9bb0d7e5d7d9f02b6dfe848582284dc2dbe000ebe09e7bb9a24bc1459",
       "extensions": {}
     },
     "arguments": [
