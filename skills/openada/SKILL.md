@@ -58,6 +58,7 @@ of the current working directory:
 openada profile list
 openada profile show openada.operation/result.series.extract/v1alpha1
 openada profile show openada.operation/result.transfer.measure/v1alpha2
+openada profile show openada.operation/result.osc.measure/v1alpha1
 ```
 
 Preflight intentionally leaves `pdk.selected` and startup `selected_files` unresolved. Identify exact project-specific source, PDK, model, rcfile, init, rule deck, setup, top cell, and output paths from explicit user/project context. If more than one candidate is plausible, ask the user which is authoritative. Never guess a conventional filename, inspect `$HOME` startup files, crawl a PDK tree, or substitute generic collateral.
@@ -218,8 +219,9 @@ openada extract \
   > evidence/series-extraction.json
 ```
 
-The later `measure`, `spectral`, and `transfer` commands accept this complete
-passing extraction envelope directly; `data.extraction.series` remains the
+The later `measure`, `spectral`, `transfer`, and transient `oscillator` commands
+accept this complete passing extraction envelope directly;
+`data.extraction.series` remains the
 embedded canonical series for programmatic use. Extraction requires the exact
 passing `circuit.simulate/v1alpha2` envelope and matching
 canonical path, byte count, and digest. Pass that envelope **whole**: it is
@@ -278,6 +280,47 @@ no kind for a gain, a differential gain or an impedance. Metrics: `low_frequency
 `phase_margin`; ambiguous crossings are rejected and gain margin is absent. An operand is `{real,
 imaginary}` plus optional `negative_real`/`negative_imaginary` for a differential terminal; for
 an output impedance name `v(node)` over `i(vsource)` from a 1 V AC source on that node.
+
+For an oscillator transient, first inspect the experimental
+`openada.operation/result.osc.measure/v1alpha1` profile and use one complete
+measurement request:
+
+```bash
+openada oscillator \
+  --series evidence/transient-series-extraction.json \
+  --measurement evidence/oscillator-transient-request.json \
+  > evidence/oscillator-transient-result.json
+```
+
+The request must explicitly name the differential terminals, VDD voltage and
+current signals, current orientation, late crop, hysteresis, cycle count,
+minimum amplitude, period-consistency tolerance, and startup hold interval.
+Keep period relative deviation at or below 0.05 and amplitude relative
+deviation at or below 0.20. Sustained evidence requires complete leading and
+trailing crop coverage; a missing hysteresis confirmation or partial terminal
+cycle is not collapse evidence.
+Frequency, peak-to-peak differential amplitude, and average supply power bind
+to the same source/window receipt. Treat `sustained` as the only verdict with a
+measured frequency. Keep `never_started`, `collapsed`, `not_sustained`, and
+`multimode` as typed non-results; beating or startup ringing is not permission
+to select a convenient interval or tone. The assertion is
+`openada.assertion/oscillator.measurement.valid/v1alpha1`.
+
+Grid and perturbation requests compose the transient receipts directly and do
+not take `--series`:
+
+```bash
+openada oscillator --measurement evidence/oscillator-grid-request.json \
+  > evidence/oscillator-grid-result.json
+```
+
+Require every control point. Read Kvco as the returned per-point endpoint-
+secant/unequal-spacing-central-difference curve alongside monotonicity and
+span, never as one fitted value. Verify each receipt's embedded request, fixed
+producer, and recomputable content hashes; those hashes provide integrity, not
+authorship authentication. A frequency-shift result retains signed and
+absolute supply/load perturbation shift. Phase noise and jitter are outside
+this profile and must remain not evaluated without a separate capability.
 
 Finally evaluate a scalar result only against an already supplied explicit
 limit and exact conditions:

@@ -86,26 +86,32 @@ A versioned operation profile should define:
 - capability requirements and permitted extensions;
 - explicit limitations and conclusions the operation cannot support.
 
-Six published typed profiles are active:
+Nine published typed profiles are active:
 `openada.operation/circuit.simulate/v1alpha2`,
+`openada.operation/logic.synthesize/v1alpha1`,
 `openada.operation/result.series.extract/v1alpha1`,
 `openada.operation/result.measure/v1alpha2`,
 `openada.operation/result.spectral.measure/v1alpha1`,
 `openada.operation/result.transfer.measure/v1alpha2`, and
-`openada.operation/specification.evaluate/v1alpha1`. The historical
-`circuit.simulate/v1alpha1` profile remains packaged unchanged. The existing
-result envelope still emits short top-level operation names such as `simulate`,
-`drc`, and `lvs`; typed bridges record full profile and implementation identity
-inside operation-owned data. `openada profile list` and `openada profile show`
-expose the packaged profile catalog without making those control-plane commands
-engineering operations.
+`openada.operation/rtl.lint/v1alpha1`,
+`openada.operation/specification.evaluate/v1alpha1`, and
+`openada.operation/timing.analyze/v1alpha1`. Two dispatchable profiles are
+explicitly experimental: `openada.operation/result.osc.measure/v1alpha1` and
+`openada.operation/rtl.test/v1alpha1`. Four historical or retired profiles
+remain packaged, including the immutable v1alpha1 predecessors for simulation,
+ordinary measurement, and AC transfer plus retired `testbench.simulate`.
+The existing result envelope still emits short top-level operation names such
+as `simulate`, `drc`, and `lvs`; typed bridges record full profile and
+implementation identity inside operation-owned data. `openada profile list`
+and `openada profile show` expose all 15 packaged profiles without making those
+control-plane commands engineering operations.
 
 `openada.operation-profile/v0alpha2` is additive and immutable beside
 v0alpha1. The historical `circuit.simulate/v1alpha1` profile remains unchanged;
 its additive v1alpha2 successor still uses the v0alpha1 profile schema. The
-measurement and specification profiles use v0alpha2 so one deterministic
-semantic kernel can bind feature IDs to versioned algorithms without inventing
-multiple native EDA mappings.
+measurement and specification profiles, including the separate oscillator
+family, use v0alpha2 so one deterministic semantic kernel can bind feature IDs
+to versioned algorithms without inventing multiple native EDA mappings.
 
 One invocation should evaluate one primary assertion. Workflows may compose
 several operations, but combining unrelated conclusions into one status makes
@@ -123,6 +129,7 @@ The preview already uses fixed assertion ideas including:
 - `spice-analysis-evidence-valid`;
 - `drc-clean`;
 - `lvs-match`;
+- `openada.assertion/oscillator.measurement.valid/v1alpha1`;
 - `rtl-structural-check-passes`.
 
 The next contract should make assertion identity and its versioned evidence
@@ -161,9 +168,10 @@ result validator. Operation-specific arguments remain the interface for all
 built-in operations. Nine active typed profiles implement simulation, native
 series extraction, ordinary, spectral, and AC-transfer measurement,
 specification evaluation, strict RTL lint, Liberty-mapped synthesis, and
-single-corner timing analysis. Automatic manifest discovery and transport-
-general dispatch remain future work. The request UUID is a correlation value,
-not a digest of the complete request.
+single-corner timing analysis. Experimental built-in dispatch additionally
+implements typed oscillator measurement and self-checking RTL test. Automatic
+manifest discovery and transport-general dispatch remain future work. The
+request UUID is a correlation value, not a digest of the complete request.
 
 ### Driver and capabilities
 
@@ -315,6 +323,7 @@ result.series.extract   -> verified native vectors and canonical real series
 result.measure          -> closed time/domain scalar
 result.spectral.measure -> closed coherent single-tone scalar
 result.transfer.measure -> closed AC complex-ratio scalar
+result.osc.measure      -> typed oscillator transient or receipt composition
 specification.evaluate  -> pass/fail against explicit limits
 ```
 
@@ -326,9 +335,10 @@ shared-simulation artifact and projects explicitly selected voltage/current
 Cartesian components from ngspice or Xyce raw evidence. The implemented
 `result.measure/v1alpha2` then consumes its bounded normalized real inline
 series, whose canonical digest binds axis, signals, and condition records.
-`measure`, `spectral`, and `transfer` accept either that normalized series
-document or a complete passing extraction envelope and unwrap only its verified
-embedded series. Ordinary scalar kinds are closed and unit checks are exact.
+`measure`, `spectral`, `transfer`, and transient `oscillator` accept either that
+normalized series document or a complete passing extraction envelope and
+unwrap only its verified embedded series. Ordinary scalar kinds are closed and
+unit checks are exact.
 Immutable result.measure still treats optional native lineage as unverified by
 that separate assertion; the extraction envelope retains the verified native
 binding.
@@ -343,6 +353,31 @@ first-simulated-frequency gain, one falling -3 dB crossing, one falling unity
 crossing, and phase margin for an explicitly declared negative-feedback loop.
 It does not claim true DC gain, gain margin, arbitrary crossing selection, or a
 general complex-expression language.
+
+The experimental dispatchable `result.osc.measure/v1alpha1` is a separate
+family because one oscillator verdict couples several signals and values to one
+declared waveform window. In `transient` mode it validates the canonical source,
+forms one differential signal, finds qualified hysteretic rising zero crossings
+after a declared settle crop, and requires minimum amplitude plus period
+consistency through a hold interval. Pending crossings cancel on a return
+through negative hysteresis; period/amplitude relative-deviation requests are
+capped at 0.05/0.20, and full crop-edge coverage is required without treating a
+partial tail as collapse. A sustained record reports frequency and
+period from the first `N + 1` qualified crossings for `N` cycles; late crossings
+remain quality-control evidence. Frequency, differential peak-to-peak amplitude,
+and trapezoidal average supply power cite one source and window digest. The
+receipt embeds its normalized request and fixed producer for independently
+recomputable request, method, window, and content hashes; these are integrity
+bindings rather than cryptographic authentication. The
+closed verdicts distinguish `sustained`, `never_started`, `collapsed`,
+`not_sustained`, `multimode`, and `unknown`; beating or multimode evidence is
+therefore QC `unknown`, not a selected dominant tone. `tuning_grid` composes all
+declared sustained receipts into endpoint secants and unequal-spacing central
+Kvco values at every interior point, checks monotonicity, and retains span.
+`frequency_shift` retains signed and absolute supply/load perturbation shift.
+The assertion is
+`openada.assertion/oscillator.measurement.valid/v1alpha1`. Phase noise and
+jitter are explicitly outside this profile.
 
 The implemented `specification.evaluate/v1alpha1` compares one typed finite
 measurement with explicit lower/upper limits, inclusive flags, and exact
@@ -381,6 +416,7 @@ not a list of accepted profile identifiers or a claim of current CLI support.
 | Evidence | `result.measure` | Was one requested time/domain scalar derived with exact units and source provenance? | `measure` implements a closed scalar vocabulary over canonical-digest-bound normalized real inline series or a passing extraction envelope. |
 | Evidence | `result.spectral.measure` | Was one coherent single-tone spectral scalar derived under the declared partition? | `spectral` implements fixed SNR, SINAD, signed-dB THD, and SFDR semantics. |
 | Evidence | `result.transfer.measure` | Was one AC complex-ratio scalar derived under the declared interpretation? | `transfer` implements first-frequency gain and bounded crossing-based bandwidth, unity-frequency, and phase-margin semantics. |
+| Evidence | `result.osc.measure` | Was the oscillator sustained under the declared hold/QC method, or was a typed non-result established? | Experimental `oscillator` couples differential frequency, amplitude, and power to one window and composes receipt-bound local Kvco, span, or perturbation shift without silently measuring multimode evidence. |
 | Evidence | `specification.evaluate` | Do declared measurements satisfy explicit limits? | `evaluate` implements exact-unit lower/upper bounds and explicit condition binding over one typed measurement. |
 | Inspection | `layout.inspect` | What bounded cells, hierarchy, layers, geometry summaries, and connectivity are observable? | Not yet implemented as a shared operation. |
 | Verification | `layout.drc` | Is the declared layout clean under the declared DRC setup? | `drc` through KLayout. |
@@ -499,7 +535,7 @@ The distinction between shipped behavior and intended protocol is material.
 |---|---|---|
 | Result envelope | Closed `openada.result/v0alpha1` with execution/engineering separation, bounded diagnostics, artifact records, and provenance. | New immutable result version linked to typed operation and assertion profiles, with multi-step driver identity where needed. |
 | Requests | Per-operation built-in CLI arguments plus explicit external invocation of one complete `openada.request/v0alpha1`. | Catalog/session/remote request dispatch over installed typed profiles. |
-| Operations | Nine active typed profiles cover simulation, verified series extraction, scalar/spectral/AC-transfer measurement, specification evaluation, strict RTL lint, Liberty-mapped synthesis, and single-corner timing; one historical simulation profile remains packaged. `profile list/show` provides local machine-readable inspection. | Independently versioned profiles for noise/campaign and remaining operations plus ecosystem discovery. |
+| Operations | Fifteen profiles are packaged: nine active, two dispatchable experimental (`result.osc.measure` and `rtl.test`), and four historical/retired. Active profiles cover simulation, verified series extraction, scalar/spectral/AC-transfer measurement, specification evaluation, strict RTL lint, Liberty-mapped synthesis, and single-corner timing; oscillator measurement adds an experimental typed path. `profile list/show` provides local machine-readable inspection. | Independently versioned profiles for noise/campaign and remaining operations plus ecosystem discovery. |
 | Drivers | Built-in discovery/static drivers plus explicit-manifest local JSON-stdio invocation for `circuit.simulate/v1alpha2`. | Trusted manifest discovery, deterministic catalog selection, more registered profiles, independent installation, sessions, and remote jobs. |
 | Portability proof | `circuit.simulate` maps one alpha profile to ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN, with pinned analysis-specific replay. | More operations, open-source backends, and runtime environments pass equivalent independently checked conformance. |
 | Artifacts | Declared files have roles, paths, sizes, and hashes; several drivers enforce fresh evidence. | Cross-run invocation and derivation lineage, including explicit incomplete-provenance records. |

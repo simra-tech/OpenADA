@@ -150,11 +150,16 @@ The analog workflows deliberately treat measurement and specification
 operations as capability-gated. Their plans remain useful when those profiles
 or a requested metric are unavailable, but the affected row stays `not
 evaluated`; skill prose cannot manufacture a semantic capability. For the
-implemented evidence path, `measure`, `spectral`, and `transfer` accept a
-complete passing extraction envelope directly, so a skill need not invent a
-second normalized-series serialization step. `openada profile list/show`
-provides the packaged identities; profile presence still does not imply an
-external-provider mapping.
+implemented evidence path, `measure`, `spectral`, `transfer`, and transient
+`oscillator` accept a complete passing extraction envelope directly, so a skill
+need not invent a second normalized-series serialization step. Experimental
+`openada.operation/result.osc.measure/v1alpha1` additionally composes its own
+fixed-producer, embedded-request transient receipts into local Kvco curves,
+span, and perturbation shift after recomputing their integrity hashes. A skill
+must not mistake those hashes for authorship authentication. Phase noise stays
+outside the capability. `openada profile
+list/show` provides the packaged identities; profile presence still does not
+imply an external-provider mapping.
 
 The feedback-stability skill must preserve the transfer profile's narrow
 semantics: “low-frequency gain” is the first positive simulated frequency,

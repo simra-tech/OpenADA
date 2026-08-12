@@ -229,6 +229,27 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   explicitly authorized native gap runs stay outside OpenADA result envelopes
   and foundry signoff is never inferred.
 
+- Experimental typed oscillator evidence through
+  `openada.operation/result.osc.measure/v1alpha1`,
+  `openada.assertion/oscillator.measurement.valid/v1alpha1`, and the
+  `openada oscillator` CLI. Transient requests bind hysteretic N-cycle
+  differential zero-cross frequency, peak-to-peak amplitude, and trapezoidal
+  supply power to one canonical late-window receipt, with a minimum-amplitude
+  and period-consistency hold gate that distinguishes `sustained`,
+  `never_started`, `collapsed`, `not_sustained`, `multimode`, and `unknown`
+  instead of emitting NaN or selecting startup ringing/beating. Crossing
+  candidates cancel on a return through negative hysteresis; 5% period and
+  20% amplitude-deviation caps prevent QC opt-out; partial tails remain typed
+  under-coverage rather than false collapse. Receipts embed the normalized
+  request and fixed producer so request/method/window/content hashes are
+  independently recomputable (content integrity, not authentication). Receipt
+  composition returns a local Kvco value at every declared control point using
+  endpoint secants and unequal-spacing central differences, retains
+  monotonicity and full-grid span, and reports signed plus absolute
+  supply/load perturbation shift. Deterministic synthetic fixtures cover clean,
+  decaying, collapsed, and two-tone waveforms. Phase noise is explicitly
+  excluded for a separate versioned method.
+
 - `result.series.extract/v1alpha1` and the `extract` CLI bridge. It consumes a
   complete passing `circuit.simulate/v1alpha2` envelope plus that result's exact
   retained raw artifact, rechecks canonical path/bytes/SHA-256 and file
@@ -285,7 +306,9 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   or signoff. The plugin adds senior RTL-architecture, synthesis/inference, and
   ASIC-timing skills that stay inside those evidence boundaries.
 - A closed semantic-surface catalog and non-waivable release ledger covering
-  all 147 active rows through seven pinned public-design chains. Each accepted
+  all 159 active rows through seven pinned public-design chains. The complete
+  audit inventory has 255 rows; 96 historical or experimental rows remain
+  explicitly unverified. Each accepted
   row now carries contract tests, a real native EDA run, independent artifact
   verification, normalized evidence, a downstream engineering decision,
   negative and tamper replays, agent-visible evidence, and clean-source
@@ -315,9 +338,9 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 - Extended `evaluate` to accept complete ordinary or spectral measurement
   envelopes, plus the new transfer measurement envelope, while preserving the unchanged
   `specification.evaluate/v1alpha1` typed measurement input.
-- Let `measure`, `spectral`, and `transfer` consume a complete passing
-  `result.series.extract` envelope directly, removing an undocumented manual
-  JSON handoff.
+- Let `measure`, `spectral`, `transfer`, and transient `oscillator` consume a
+  complete passing `result.series.extract` envelope directly, removing an
+  undocumented manual JSON handoff.
 - Advanced the Python package, Codex plugin, Claude plugin, and built-in driver
   identity to 0.4.0; packaged wheels now include every current analog,
   measurement, digital, and specification operation profile.
