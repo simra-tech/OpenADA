@@ -364,6 +364,101 @@ def _capture_dut(
     )
 
 
+def _assert_prepared_plan_unchanged(plan: PreparedTestbenchPlan) -> None:
+    """Bind every compiler-consumed typed mirror back to validated JSON.
+
+    ``frozen=True`` prevents rebinding dataclass fields, but nested mappings are
+    ordinary caller-owned Python objects.  The compiler therefore checks both
+    the submitted document digest and every independently materialized view it
+    consumes before it captures the DUT or emits a source.
+    """
+
+    root = plan.document
+
+    def require_equal(left: object, right: object, path: str) -> None:
+        try:
+            equal = _canonical_bytes(left) == _canonical_bytes(right)
+        except (TypeError, ValueError, OverflowError, RecursionError):
+            equal = False
+        if not equal:
+            _fail(
+                "testbench_plan.compiler.plan_changed",
+                path,
+                "validated plan state changed after preparation",
+            )
+
+    require_equal(plan.identifier, root["id"], "/id")
+    require_equal(
+        [
+            {
+                "id": item.identifier,
+                "positive": item.positive,
+                "negative": item.negative,
+                "voltage": item.voltage,
+            }
+            for item in plan.supplies
+        ],
+        root["supplies"],
+        "/supplies",
+    )
+    require_equal(list(plan.corner_bindings), root["corner_bindings"], "/corner_bindings")
+    require_equal([item.document for item in plan.stimuli], root["stimuli"], "/stimuli")
+    require_equal([item.document for item in plan.probes], root["probes"], "/probes")
+    for index, (typed, raw) in enumerate(zip(plan.stages, root["stages"])):
+        require_equal(typed.identifier, raw["id"], f"/stages/{index}/id")
+        require_equal(
+            list(typed.depends_on), raw["depends_on"], f"/stages/{index}/depends_on"
+        )
+        require_equal(
+            [item.document for item in typed.points],
+            raw["points"],
+            f"/stages/{index}/points",
+        )
+        require_equal(
+            [item.document for item in typed.reductions],
+            raw["reductions"],
+            f"/stages/{index}/reductions",
+        )
+    if len(plan.stages) != len(root["stages"]):
+        _fail(
+            "testbench_plan.compiler.plan_changed",
+            "/stages",
+            "validated plan state changed after preparation",
+        )
+    for index, (typed, raw) in enumerate(zip(plan.observables, root["observables"])):
+        require_equal(
+            {
+                "id": typed.identifier,
+                "source": typed.source,
+                "unit": typed.unit,
+                "shape": typed.shape,
+            },
+            {key: raw[key] for key in ("id", "source", "unit", "shape")},
+            f"/observables/{index}",
+        )
+    if len(plan.observables) != len(root["observables"]):
+        _fail(
+            "testbench_plan.compiler.plan_changed",
+            "/observables",
+            "validated plan state changed after preparation",
+        )
+    effective_dut = {
+        "artifact": plan.dut.artifact,
+        "sha256": plan.dut.sha256,
+        "namespace": plan.dut.namespace,
+        "top": plan.dut.top,
+        "ports": list(plan.dut.ports),
+        "connections": plan.dut.connections,
+        "immutable": True,
+    }
+    if _sha256(_canonical_bytes(effective_dut)) != plan.dut_binding_canonical_sha256:
+        _fail(
+            "testbench_plan.compiler.plan_changed",
+            "/dut",
+            "validated effective DUT binding changed after preparation",
+        )
+
+
 def prepare_testbench_plan_ngspice(
     plan: PreparedTestbenchPlan,
     *,
@@ -394,6 +489,7 @@ def prepare_testbench_plan_ngspice(
             "",
             "validated raw plan bytes changed after preparation",
         )
+    _assert_prepared_plan_unchanged(plan)
     sealed = _capture_dut(
         plan, dut_artifact=dut_artifact, dut_sha256=dut_sha256
     )

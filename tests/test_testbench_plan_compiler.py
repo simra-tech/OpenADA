@@ -250,3 +250,16 @@ def test_loop_contract_does_not_poison_supported_stages_and_refuses_typed_ac() -
         )
     assert caught.value.code == "testbench_plan.compiler.analysis_unsupported"
     assert caught.value.path.endswith("/analysis/kind")
+
+
+def test_compiler_rejects_mutated_prepared_typed_views() -> None:
+    prepared = _prepared()
+    prepared.dut.connections["UP"] = "UNDECLARED_COMMAND_NODE"
+
+    with pytest.raises(TestbenchPlanCompileError) as caught:
+        prepare_testbench_plan_ngspice(
+            prepared, corner="tt", stage_ids=("dc_characterize",)
+        )
+
+    assert caught.value.code == "testbench_plan.compiler.plan_changed"
+    assert caught.value.path == "/dut"
