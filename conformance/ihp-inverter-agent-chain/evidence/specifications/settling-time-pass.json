@@ -31,7 +31,7 @@
       },
       "measurement_id": "inverter.vout.final-high-settling-time",
       "source": {
-        "measurement_sha256": "751ad05e77e56b0627cfc55ef72e538195b78c9ccda3fe39afeb11959facdd8d",
+        "measurement_sha256": "ca5da38f3195d02982dea040c8ac3d3b850944b73189f7eae1e42d3ebb83cc45",
         "measurement_source": {
           "artifact_role": "measurement.source",
           "artifact_sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73",
@@ -50,7 +50,7 @@
           "conditions_sha256": "11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "fca43a74f1b652a7c8775c345e1b3a4e634a26abf3f629498f3625ca92b35290",
+            "artifact_sha256": "f184fd9cefcb9b8fdccbe59fb97f0ea03c8112e34153a43d1c6dd3ec9d0c011a",
             "binding": "unverified",
             "operation": "circuit.simulate",
             "request_id": "10000000-0000-4000-8000-000000000001"
@@ -111,7 +111,7 @@
   "inputs": [],
   "operation": "specification.evaluate",
   "provenance": {
-    "created_at": "2026-08-10T09:04:15.917610Z",
+    "created_at": "2026-08-12T09:11:00.149861Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
