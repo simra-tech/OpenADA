@@ -39,6 +39,19 @@ REFERENCE_WINDOW_START_S = 250e-9
 REFERENCE_WINDOW_STOP_S = 300e-9
 
 
+def test_oscillator_api_is_exported_from_operations_package() -> None:
+    import openada.operations as operations
+
+    expected = {
+        "OSCILLATION_STATUSES",
+        "OSCILLATOR_MEASUREMENT_KINDS",
+        "measure_oscillator",
+        "oscillator_receipt_sha256",
+    }
+    assert expected <= set(operations.__all__)
+    assert all(hasattr(operations, name) for name in expected)
+
+
 def _time_grid(
     frequency_hz: float,
     stop_s: float,

@@ -7,12 +7,7 @@ description: Discover, invoke, and interpret open-source EDA tools through OpenA
 
 Use the deterministic OpenADA CLI between agent reasoning and native EDA tools. Keep native design files, PDKs, and rule decks as the source of truth.
 
-This is the plugin's execution and evidence skill. It maps a bounded intent to
-OpenADA operations and interprets their versioned results. Higher-level
-engineering skills may compose these operations into review or diagnosis
-workflows, but they must not duplicate backend commands or redefine contract
-status. Keep tool-native safety policy here or in the deterministic driver;
-keep reusable engineering judgment in a separate sibling skill.
+This is the plugin's execution and evidence skill. It maps a bounded intent to OpenADA operations and interprets their versioned results. Higher-level engineering skills may compose these operations into review or diagnosis workflows, but they must not duplicate backend commands or redefine contract status. Keep tool-native safety policy here or in the deterministic driver; keep reusable engineering judgment in a separate sibling skill.
 
 ## Establish the workspace
 
@@ -24,24 +19,15 @@ keep reusable engineering judgment in a separate sibling skill.
 
 Prefer `openada` when it is on `PATH`.
 
-Agent plugin managers install this skill bundle, not the OpenADA Python package
-or its `jsonschema>=4.18` dependency. The recommended setup therefore installs
-the matching OpenADA Python release so `openada` is on `PATH`.
+Agent plugin managers install this skill bundle, not the OpenADA Python package or its `jsonschema>=4.18` dependency. The recommended setup therefore installs the matching OpenADA Python release so `openada` is on `PATH`.
 
-When this skill is loaded from a plugin checkout or cache, resolve the plugin
-root from this `SKILL.md` path and use `<plugin-root>/bin/openada` only if the
-command is not on `PATH` and that launcher's Python dependencies are available.
-Do not guess a different installation path. If a command returns
-`provider.validation.unavailable`, stop and tell the user to install the
-matching OpenADA Python release; do not present the failed profile/provider
-validation as an EDA result.
+When this skill is loaded from a plugin checkout or cache, resolve the plugin root from this `SKILL.md` path and use `<plugin-root>/bin/openada` only if the command is not on `PATH` and that launcher's Python dependencies are available. Do not guess a different installation path. If a command returns `provider.validation.unavailable`, stop and tell the user to install the matching OpenADA Python release; do not present the failed profile/provider validation as an EDA result.
 
 If neither entry point exists, stop the EDA operation and tell the user that the OpenADA executable is missing. Do not silently fall back to an unstructured raw-tool workflow while claiming OpenADA evidence.
 
 ## Inspect before executing
 
-For project work, map the user's immediate engineering intent to exactly one
-fixed assertion, then run one scoped preflight:
+For project work, map the user's immediate engineering intent to exactly one fixed assertion, then run one scoped preflight:
 
 ```bash
 openada doctor --project-root /absolute/project \
@@ -61,17 +47,9 @@ Use these one-to-one mappings:
 | Produce a complete Liberty-mapped ASIC netlist | `asic-netlist-synthesized` | Yosys `synthesize` |
 | Satisfy setup and hold constraints for one declared corner | `timing-constraints-satisfied` | OpenSTA `timing-analyze` |
 
-If the request spans a chain, preflight only the smallest next assertion whose
-result is needed before later work. Do not run several preflights or recommend
-a whole flow at once. `--project-root` and `--assertion` are paired; do not add
-`--tool` or `--require` because the assertion selects and requires one tool.
+If the request spans a chain, preflight only the smallest next assertion whose result is needed before later work. Do not run several preflights or recommend a whole flow at once. `--project-root` and `--assertion` are paired; do not add `--tool` or `--require` because the assertion selects and requires one tool.
 
-Read `data.preflight.target` as the one recommendation. A preflight `pass`
-only establishes point-in-time root and tool readiness:
-`data.preflight.assertion_evaluated` remains false. It does not inspect the
-project, choose a PDK, or run the engineering assertion. An empty `data.pdks`
-means `data.preflight.pdk.catalog_enumerated` is false, not that no PDK exists.
-Do not search recursively to compensate.
+Read `data.preflight.target` as the one recommendation. A preflight `pass` only establishes point-in-time root and tool readiness: `data.preflight.assertion_evaluated` remains false. It does not inspect the project, choose a PDK, or run the engineering assertion. An empty `data.pdks` means `data.preflight.pdk.catalog_enumerated` is false, not that no PDK exists. Do not search recursively to compensate.
 
 Inspect portable operation parameters from the installed catalog, independent
 of the current working directory:
@@ -82,12 +60,7 @@ openada profile show openada.operation/result.series.extract/v1alpha1
 openada profile show openada.operation/result.transfer.measure/v1alpha2
 ```
 
-Preflight intentionally leaves `pdk.selected` and startup `selected_files`
-unresolved. Identify exact project-specific source, PDK, model, rcfile, init,
-rule deck, setup, top cell, and output paths from explicit user/project context.
-If more than one candidate is plausible, ask the user which is authoritative.
-Never guess a conventional filename, inspect `$HOME` startup files, crawl a PDK
-tree, or substitute generic collateral.
+Preflight intentionally leaves `pdk.selected` and startup `selected_files` unresolved. Identify exact project-specific source, PDK, model, rcfile, init, rule deck, setup, top cell, and output paths from explicit user/project context. If more than one candidate is plausible, ask the user which is authoritative. Never guess a conventional filename, inspect `$HOME` startup files, crawl a PDK tree, or substitute generic collateral.
 
 For environment diagnosis outside a concrete project assertion, a focused
 legacy probe remains available:
@@ -170,46 +143,13 @@ openada timing-analyze evidence/synthesis/mapped.v --top top \
 
 Never substitute a generic DRC deck, LVS setup, PDK, model library, or top cell merely to obtain a passing result. Ask for the missing project-specific input.
 
-For digital commands, preserve source order, declared language dialect/revision, include
-directories, defines, top, Liberty, mapping policy, SDC, and tool identity as
-one comparison context. `rtl-lint` uses a strict policy: any recognized warning
-or error is an engineering `fail`. `synthesize` positively identifies and
-content-binds the exact external ABC executable under the same closed runtime
-environment as Yosys; operation-level evidence, not primary-tool preflight, is
-the authoritative ABC gate. `synthesize` passes only with fresh mapped
-netlist/statistics evidence, zero processes or memories after mapping, and no
-cell type outside the declared Liberty. Read `data.inference_stats` separately
-from `data.stats`; synthesis success does not establish behavioral equivalence,
-timing, area-budget, or power success. `timing-analyze` is intentionally one
-corner with ideal interconnect and no SPEF. A negative WNS is a trustworthy
-constraint failure only when `constraints_complete`, `reports_complete`,
-`inputs_stable`, `metric_consistency`, and path-report agreement establish
-complete evidence. Even a timing pass is not MCMM or physical signoff.
-The timing connector accepts only `openada-sdc-v1` declarative constraints and
-executes a fresh snapshot whose hash equals the declared SDC input; arbitrary
-Tcl, sourced files, environment access, and `read_spef` are unsupported.
-Its version probe and analysis share `closed-opensta-runtime-v1` rather than
-inheriting ambient loader, interpreter, Tcl, OpenSTA, or shell-control state.
+For digital commands, preserve source order, declared language dialect/revision, include directories, defines, top, Liberty, mapping policy, SDC, and tool identity as one comparison context. `rtl-lint` uses a strict policy: any recognized warning or error is an engineering `fail`. `synthesize` positively identifies and content-binds the exact external ABC executable under the same closed runtime environment as Yosys; operation-level evidence, not primary-tool preflight, is the authoritative ABC gate. `synthesize` passes only with fresh mapped netlist/statistics evidence, zero processes or memories after mapping, and no cell type outside the declared Liberty. Read `data.inference_stats` separately from `data.stats`; synthesis success does not establish behavioral equivalence, timing, area-budget, or power success.
 
-There is exactly one simulation operation,
-`openada.operation/circuit.simulate/v1alpha2`, and one verb, `openada simulate`.
-It accepts a bare deck or a published Simra artifact, detected by reading the
-file; it binds an installed PDK with `--pdk`; and when an artifact declares
-several analyses it derives one single-analysis deck per declaration, runs them
-all, and returns the weakest as one `circuit.simulate/v1alpha2` envelope, naming
-every analysis and its own retained result in
-`data.extensions["org.openada.simulation-dispatch"]`. `openada
-testbench-simulate` is a deprecated alias that emits
-`simulation.operation.deprecated` and delegates.
+`timing-analyze` is intentionally one corner with ideal interconnect and no SPEF. A negative WNS is a trustworthy constraint failure only when `constraints_complete`, `reports_complete`, `inputs_stable`, `metric_consistency`, and path-report agreement establish complete evidence. Even a timing pass is not MCMM or physical signoff. The timing connector accepts only `openada-sdc-v1` declarative constraints and executes a fresh snapshot whose hash equals the declared SDC input; arbitrary Tcl, sourced files, environment access, and `read_spef` are unsupported. Its version probe and analysis share `closed-opensta-runtime-v1` rather than inheriting ambient loader, interpreter, Tcl, OpenSTA, or shell-control state.
 
-A model-free deck must carry exactly one self-contained top-level `.op`, `.dc`,
-`.ac`, or `.tran` with parseable closed arguments, and no includes, native
-`.measure` directives, print directives, or control blocks. Require the selected
-driver's advertised feature: ngspice supports OP/DC/AC/TRAN; Xyce supports DC/AC/TRAN and
-rejects OP. Omitting `--backend` selects ngspice for an artifact, a `--pdk` or a
-`--models` request, and otherwise leaves the native ngspice interface active -
-which is a tool invocation, not a semantic claim, and reports no
-`operation_profile`.
+There is exactly one simulation operation, `openada.operation/circuit.simulate/v1alpha2`, and one verb, `openada simulate`. It accepts a bare deck or a published Simra artifact, detected by reading the file; it binds an installed PDK with `--pdk`; and when an artifact declares several analyses it derives one single-analysis deck per declaration, runs them all, and returns the weakest as one `circuit.simulate/v1alpha2` envelope, naming every analysis and its own retained result in `data.extensions["org.openada.simulation-dispatch"]`. `openada testbench-simulate` is a deprecated alias that emits `simulation.operation.deprecated` and delegates.
+
+A model-free deck must carry exactly one self-contained top-level `.op`, `.dc`, `.ac`, or `.tran` with parseable closed arguments, and no includes, native `.measure` directives, print directives, or control blocks. Require the selected driver's advertised feature: ngspice supports OP/DC/AC/TRAN; Xyce supports DC/AC/TRAN and rejects OP. Omitting `--backend` selects ngspice for an artifact, a `--pdk` or a `--models` request, and otherwise leaves the native ngspice interface active - which is a tool invocation, not a semantic claim, and reports no `operation_profile`.
 
 ## Name the technology; never write it into the deck
 
