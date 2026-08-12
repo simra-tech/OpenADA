@@ -1,9 +1,9 @@
 {
-  "chain_manifest_sha256": "0a1c2ed4d03d362716ced036afc0210e29cb29439eaa2e8016a361dd6c34ba8a",
+  "chain_manifest_sha256": "fbfae9f772def07d4847e21e86c2ee0824485392f141aa13d64ea555fa834a02",
   "checkout_before": {
     "clean": true,
-    "repository_revision": "50eed6966bbb2bf60749a859e68396d9bbc02f6d",
-    "repository_tree": "389490c9774b9be18efdf5103384c4dd1da71114",
+    "repository_revision": "6f83dd3c743da44f1b6335bc6ce037173af6245d",
+    "repository_tree": "a240888f186725f44c59aca5826834b0f5d3b7e7",
     "status_entry_count": 0,
     "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -12,7 +12,7 @@
     "run",
     "--rm",
     "--name",
-    "openada-ihp-analog-measurements-919998",
+    "openada-ihp-analog-measurements-1018022",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -46,17 +46,17 @@
     "--mount",
     "type=bind,source=/tmp/openada-native-cache/ihp/IHP-AnalogAcademy,target=/design,readonly",
     "--mount",
-    "type=bind,source=/tmp/openada-ihp-analog-measurements-osc-final2,target=/evidence",
+    "type=bind,source=/tmp/openada-ihp-analog-measurements-release-skill-final,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
     "/openada/conformance/ihp-analog-measurements/inside.py"
   ],
-  "created_at": "2026-08-12T09:08:04.965848Z",
+  "created_at": "2026-08-12T09:57:01.870254Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "extensions": {},
   "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
   "network": "none during all EDA execution",
   "schema": "openada.ihp-analog-measurement-run/v0alpha1",
-  "semantic_subject_before": "beb29e4fc1329c5594e9d165e89ba5ea92d9fae6fcf038f85c3ef312224dfdce"
+  "semantic_subject_before": "d4491756f98108b0a8fa5c8771ed096eb54254c0ff83cae97156027e5b586527"
 }
