@@ -63,17 +63,17 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     payload = json.loads(first.stdout)
     assert payload["inventory"] == {
         "active_profile_count": 9,
-        "builtin_provider_mapping_count": 12,
-        "cli_leaf_count": 28,
+        "builtin_provider_mapping_count": 13,
+        "cli_leaf_count": 32,
         "preflight_assertion_count": 8,
-        "profile_count": 14,
-        "profile_feature_count": 52,
-        "provider_mapping_count": 13,
+        "profile_count": 15,
+        "profile_feature_count": 58,
+        "provider_mapping_count": 14,
         "shipped_provider_capability_count": 1,
         "shipped_provider_manifest_count": 1,
-        "surface_count": 28,
+        "surface_count": 32,
     }
-    assert payload["summary"]["row_count"] == 231
+    assert payload["summary"]["row_count"] == 255
     assert payload["summary"]["active_row_count"] == 159
     # Receipt-bound expectations: these require the seven-receipt chain index
     # to be current for the semantic subject under test.
@@ -83,7 +83,7 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     assert payload["summary"]["gap_count"] == 0
     assert payload["summary"]["rows_by_coverage_level"] == {
         "agent-ready": 159,
-        "unverified": 72,
+        "unverified": 96,
     }
     assert payload["gaps"] == []
 
@@ -458,7 +458,7 @@ def test_untouched_hidden_variant_stays_hidden_without_issues() -> None:
     )
     assert cosim_row["lifecycle"] == "experimental"
     assert cosim_row["required_coverage_level"] is None
-    assert payload["summary"]["row_count"] == 231
+    assert payload["summary"]["row_count"] == 255
     assert payload["summary"]["active_row_count"] == 159
 
 
@@ -1441,3 +1441,38 @@ def test_experiment_compile_is_an_artifact_kernel_surface() -> None:
     assert row["execution_class"] == "artifact-kernel"
     assert row["lifecycle"] == "experimental"
     assert not any("experiment compile" in issue for issue in payload["issues"])
+
+
+def test_testbench_plan_surfaces_and_oracle_profile_are_experimental_and_typed() -> None:
+    payload = json.loads(_run("--compact").stdout)
+    rows = {row["row_id"]: row for row in payload["rows"]}
+
+    expected_execution = {
+        "compare": "artifact-kernel",
+        "compile": "artifact-kernel",
+        "run": "native-eda",
+        "validate": "artifact-kernel",
+    }
+    for leaf, execution_class in expected_execution.items():
+        row = rows[f"surface|openada.surface/cli.testbench-plan-{leaf}/v1"]
+        assert row["classification"] == "semantic-execution"
+        assert row["execution_class"] == execution_class
+        assert row["lifecycle"] == "experimental"
+        assert row["required_coverage_level"] is None
+
+    profile_id = "openada.operation/testbench.oracle.compare/v1alpha1"
+    profile = rows[f"profile|{profile_id}"]
+    assert profile["lifecycle"] == "experimental"
+    assert profile["execution_class"] == "artifact-kernel"
+    assert profile["required_coverage_level"] is None
+
+    provider_rows = [
+        row
+        for row in payload["rows"]
+        if row["kind"] == "provider-mapping"
+        and row["provider_id"] == "org.openada.kernel.testbench-oracle"
+    ]
+    assert len(provider_rows) == 6
+    assert all(row["operation_profile"] == profile_id for row in provider_rows)
+    assert all(row["execution_class"] == "artifact-kernel" for row in provider_rows)
+    assert all(row["required_coverage_level"] is None for row in provider_rows)
