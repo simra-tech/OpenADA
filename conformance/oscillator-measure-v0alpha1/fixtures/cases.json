@@ -1,0 +1,459 @@
+{
+  "schema": "openada.oscillator-measure-conformance-cases/v0alpha1",
+  "source": {
+    "operation": "result.series.extract",
+    "request_id": "11111111-1111-4111-8111-111111111111",
+    "artifact_role": "measurement.source",
+    "lineage": {
+      "operation": "circuit.simulate",
+      "request_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "artifact_role": "simulation.result",
+      "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "binding": "unverified"
+    }
+  },
+  "composition_series": {
+    "amplitude_v": 0.8,
+    "stop_s": 1.2e-8,
+    "samples_per_cycle": 8,
+    "supply_voltage_v": 1.2,
+    "supply_current_a": 0.0007,
+    "base_conditions": [
+      {"name": "temperature", "value": 27.0, "unit": "degC"},
+      {"name": "corner", "value": "tt", "unit": "1"}
+    ]
+  },
+  "transient_methods": {
+    "benchmark_late_100_cycles": {
+      "measurement_id": "vco.transient",
+      "kind": "transient",
+      "signals": {
+        "positive": "v(outp)",
+        "negative": "v(outn)",
+        "supply_voltage": "v(vdd)",
+        "supply_current": "i(vdd)"
+      },
+      "window": {
+        "start": {"value": 2.5e-7, "unit": "s"},
+        "stop": {"value": 3e-7, "unit": "s"},
+        "cycle_count": 100
+      },
+      "startup": {
+        "search_start": {"value": 0.0, "unit": "s"},
+        "hold_for": {"value": 5e-9, "unit": "s"},
+        "minimum_peak_to_peak": {"value": 0.8, "unit": "V"}
+      },
+      "crossing": {
+        "threshold": {"value": 0.0, "unit": "V"},
+        "hysteresis": {"value": 0.1, "unit": "V"},
+        "direction": "rising"
+      },
+      "quality": {
+        "maximum_period_relative_deviation": 0.002,
+        "maximum_amplitude_relative_deviation": 0.02,
+        "minimum_samples_per_cycle": 6
+      },
+      "power": {"current_orientation": "positive_into_load"},
+      "extensions": {}
+    },
+    "diagnostic_short": {
+      "measurement_id": "vco.transient",
+      "kind": "transient",
+      "signals": {
+        "positive": "v(outp)",
+        "negative": "v(outn)",
+        "supply_voltage": "v(vdd)",
+        "supply_current": "i(vdd)"
+      },
+      "window": {
+        "start": {"value": 2e-8, "unit": "s"},
+        "stop": {"value": 6e-8, "unit": "s"},
+        "cycle_count": 50
+      },
+      "startup": {
+        "search_start": {"value": 0.0, "unit": "s"},
+        "hold_for": {"value": 3e-9, "unit": "s"},
+        "minimum_peak_to_peak": {"value": 0.8, "unit": "V"}
+      },
+      "crossing": {
+        "threshold": {"value": 0.0, "unit": "V"},
+        "hysteresis": {"value": 0.1, "unit": "V"},
+        "direction": "rising"
+      },
+      "quality": {
+        "maximum_period_relative_deviation": 0.002,
+        "maximum_amplitude_relative_deviation": 0.02,
+        "minimum_samples_per_cycle": 6
+      },
+      "power": {"current_orientation": "positive_into_load"},
+      "extensions": {}
+    },
+    "composition_short": {
+      "measurement_id": "vco.transient",
+      "kind": "transient",
+      "signals": {
+        "positive": "v(outp)",
+        "negative": "v(outn)",
+        "supply_voltage": "v(vdd)",
+        "supply_current": "i(vdd)"
+      },
+      "window": {
+        "start": {"value": 2e-9, "unit": "s"},
+        "stop": {"value": 1.2e-8, "unit": "s"},
+        "cycle_count": 10
+      },
+      "startup": {
+        "search_start": {"value": 0.0, "unit": "s"},
+        "hold_for": {"value": 1.5e-9, "unit": "s"},
+        "minimum_peak_to_peak": {"value": 0.8, "unit": "V"}
+      },
+      "crossing": {
+        "threshold": {"value": 0.0, "unit": "V"},
+        "hysteresis": {"value": 0.1, "unit": "V"},
+        "direction": "rising"
+      },
+      "quality": {
+        "maximum_period_relative_deviation": 0.002,
+        "maximum_amplitude_relative_deviation": 0.02,
+        "minimum_samples_per_cycle": 6
+      },
+      "power": {"current_orientation": "positive_into_load"},
+      "extensions": {}
+    }
+  },
+  "waveforms": {
+    "clean_reference": {
+      "generator": "sine",
+      "frequency_hz": 2416800000.0,
+      "amplitude_v": 0.8,
+      "stop_s": 3e-7,
+      "samples_per_cycle": 8,
+      "supply_voltage_v": 1.2,
+      "supply_current_a": 0.0007,
+      "conditions": [
+        {"name": "temperature", "value": 27.0, "unit": "degC"},
+        {"name": "corner", "value": "tt", "unit": "1"},
+        {"name": "vctrl", "value": 0.6, "unit": "V"},
+        {"name": "vdd", "value": 1.2, "unit": "V"}
+      ]
+    },
+    "decaying_startup": {
+      "generator": "decaying_sine",
+      "frequency_hz": 2400000000.0,
+      "amplitude_v": 0.8,
+      "decay_time_s": 1e-9,
+      "stop_s": 6e-8,
+      "samples_per_cycle": 8,
+      "supply_voltage_v": 1.2,
+      "supply_current_a": 0.0007,
+      "conditions": [
+        {"name": "temperature", "value": 27.0, "unit": "degC"},
+        {"name": "corner", "value": "tt", "unit": "1"}
+      ]
+    },
+    "never_started": {
+      "generator": "flat",
+      "frequency_hz": 2400000000.0,
+      "amplitude_v": 0.0,
+      "stop_s": 6e-8,
+      "samples_per_cycle": 8,
+      "supply_voltage_v": 1.2,
+      "supply_current_a": 0.0007,
+      "conditions": [
+        {"name": "temperature", "value": 27.0, "unit": "degC"},
+        {"name": "corner", "value": "tt", "unit": "1"}
+      ]
+    },
+    "started_then_collapsed": {
+      "generator": "collapse_sine",
+      "frequency_hz": 2400000000.0,
+      "amplitude_v": 0.8,
+      "collapse_at_s": 3.5e-8,
+      "stop_s": 6e-8,
+      "samples_per_cycle": 8,
+      "supply_voltage_v": 1.2,
+      "supply_current_a": 0.0007,
+      "conditions": [
+        {"name": "temperature", "value": 27.0, "unit": "degC"},
+        {"name": "corner", "value": "tt", "unit": "1"}
+      ]
+    },
+    "beating_two_tone": {
+      "generator": "two_tone",
+      "frequency_hz": 2400000000.0,
+      "amplitude_v": 0.65,
+      "second_frequency_hz": 2250000000.0,
+      "second_amplitude_v": 0.25,
+      "stop_s": 6e-8,
+      "samples_per_cycle": 12,
+      "supply_voltage_v": 1.2,
+      "supply_current_a": 0.0007,
+      "conditions": [
+        {"name": "temperature", "value": 27.0, "unit": "degC"},
+        {"name": "corner", "value": "tt", "unit": "1"}
+      ]
+    }
+  },
+  "transient_cases": [
+    {
+      "id": "clean-sustained-reference",
+      "feature_ids": [
+        "openada.feature/oscillator.crossing-frequency/v1alpha1",
+        "openada.feature/oscillator.startup-hold/v1alpha1",
+        "openada.feature/oscillator.differential-amplitude/v1alpha1",
+        "openada.feature/oscillator.average-supply-power/v1alpha1"
+      ],
+      "request_id": "51000000-0000-4000-8000-000000000001",
+      "waveform": "clean_reference",
+      "method": "benchmark_late_100_cycles",
+      "expected": {
+        "engineering_status": "pass",
+        "oscillator_status": "sustained",
+        "frequency_hz": 2416800000.0,
+        "period_s": 4.137702747434624e-10,
+        "differential_peak_to_peak_v": 1.6,
+        "average_supply_power_w": 0.00084,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "decaying-startup-ringing",
+      "feature_ids": ["openada.feature/oscillator.startup-hold/v1alpha1"],
+      "request_id": "51000000-0000-4000-8000-000000000002",
+      "waveform": "decaying_startup",
+      "method": "diagnostic_short",
+      "expected": {
+        "engineering_status": "fail",
+        "oscillator_status": "not_sustained",
+        "frequency_hz": null,
+        "period_s": null,
+        "diagnostic_code": "oscillator.not_sustained"
+      }
+    },
+    {
+      "id": "never-started",
+      "feature_ids": ["openada.feature/oscillator.startup-hold/v1alpha1"],
+      "request_id": "51000000-0000-4000-8000-000000000003",
+      "waveform": "never_started",
+      "method": "diagnostic_short",
+      "expected": {
+        "engineering_status": "fail",
+        "oscillator_status": "never_started",
+        "frequency_hz": null,
+        "period_s": null,
+        "diagnostic_code": "oscillator.never_started"
+      }
+    },
+    {
+      "id": "started-then-collapsed",
+      "feature_ids": ["openada.feature/oscillator.startup-hold/v1alpha1"],
+      "request_id": "51000000-0000-4000-8000-000000000004",
+      "waveform": "started_then_collapsed",
+      "method": "diagnostic_short",
+      "expected": {
+        "engineering_status": "fail",
+        "oscillator_status": "collapsed",
+        "frequency_hz": null,
+        "period_s": null,
+        "diagnostic_code": "oscillator.collapsed"
+      }
+    },
+    {
+      "id": "beating-two-tone-qc",
+      "feature_ids": [
+        "openada.feature/oscillator.crossing-frequency/v1alpha1",
+        "openada.feature/oscillator.startup-hold/v1alpha1"
+      ],
+      "request_id": "51000000-0000-4000-8000-000000000005",
+      "waveform": "beating_two_tone",
+      "method": "diagnostic_short",
+      "expected": {
+        "engineering_status": "unknown",
+        "oscillator_status": "multimode",
+        "frequency_hz": null,
+        "period_s": null,
+        "diagnostic_code": "oscillator.quality.multimode"
+      }
+    }
+  ],
+  "grid_cases": [
+    {
+      "id": "benchmark-irregular-nine-point-grid",
+      "feature_ids": [
+        "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+        "openada.feature/oscillator.frequency-span/v1alpha1"
+      ],
+      "request_id": "52000000-0000-4000-8000-000000000001",
+      "method": "composition_short",
+      "measurement": {
+        "measurement_id": "vco.tuning",
+        "kind": "tuning_grid",
+        "control_condition": "vctrl",
+        "control_unit": "V",
+        "expected_monotonicity": "nondecreasing",
+        "extensions": {}
+      },
+      "points": [
+        {"control_v": 0.0, "frequency_hz": 2384700000.0, "generator": "sine"},
+        {"control_v": 0.2, "frequency_hz": 2391300000.0, "generator": "sine"},
+        {"control_v": 0.4, "frequency_hz": 2401400000.0, "generator": "sine"},
+        {"control_v": 0.5, "frequency_hz": 2408300000.0, "generator": "sine"},
+        {"control_v": 0.6, "frequency_hz": 2416800000.0, "generator": "sine"},
+        {"control_v": 0.7, "frequency_hz": 2427000000.0, "generator": "sine"},
+        {"control_v": 0.8, "frequency_hz": 2438700000.0, "generator": "sine"},
+        {"control_v": 1.0, "frequency_hz": 2464800000.0, "generator": "sine"},
+        {"control_v": 1.2, "frequency_hz": 2490600000.0, "generator": "sine"}
+      ],
+      "expected": {
+        "engineering_status": "pass",
+        "grid_status": "measured",
+        "observed_monotonicity": "nondecreasing",
+        "monotonicity_check": "pass",
+        "local_tuning_gain_hz_per_v": [
+          33000000.0,
+          41750000.0,
+          62833333.33333333,
+          77000000.0,
+          93500000.0,
+          109500000.0,
+          121500000.0,
+          129750000.0,
+          129000000.0
+        ],
+        "span_hz": 105900000.0,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "nonmonotonic-grid-qc",
+      "feature_ids": ["openada.feature/oscillator.local-tuning-gain/v1alpha1"],
+      "request_id": "52000000-0000-4000-8000-000000000002",
+      "method": "composition_short",
+      "measurement": {
+        "measurement_id": "vco.tuning.nonmonotonic",
+        "kind": "tuning_grid",
+        "control_condition": "vctrl",
+        "control_unit": "V",
+        "expected_monotonicity": "nondecreasing",
+        "extensions": {}
+      },
+      "points": [
+        {"control_v": 0.0, "frequency_hz": 2400000000.0, "generator": "sine"},
+        {"control_v": 0.5, "frequency_hz": 2450000000.0, "generator": "sine"},
+        {"control_v": 1.0, "frequency_hz": 2430000000.0, "generator": "sine"}
+      ],
+      "expected": {
+        "engineering_status": "pass",
+        "grid_status": "measured",
+        "observed_monotonicity": "non_monotonic",
+        "monotonicity_check": "fail",
+        "local_tuning_gain_hz_per_v": [100000000.0, 30000000.0, -40000000.0],
+        "span_hz": 50000000.0,
+        "diagnostic_code": "oscillator.grid.non_monotonic"
+      }
+    },
+    {
+      "id": "incomplete-grid-propagates-unknown",
+      "feature_ids": [
+        "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+        "openada.feature/oscillator.frequency-span/v1alpha1"
+      ],
+      "request_id": "52000000-0000-4000-8000-000000000003",
+      "method": "composition_short",
+      "measurement": {
+        "measurement_id": "vco.tuning.incomplete",
+        "kind": "tuning_grid",
+        "control_condition": "vctrl",
+        "control_unit": "V",
+        "expected_monotonicity": "nondecreasing",
+        "extensions": {}
+      },
+      "points": [
+        {"control_v": 0.0, "frequency_hz": 2400000000.0, "generator": "sine"},
+        {"control_v": 0.5, "frequency_hz": 2420000000.0, "generator": "flat"},
+        {"control_v": 1.0, "frequency_hz": 2440000000.0, "generator": "sine"}
+      ],
+      "expected": {
+        "engineering_status": "unknown",
+        "grid_status": "unknown",
+        "observed_monotonicity": "unknown",
+        "monotonicity_check": "unknown",
+        "local_tuning_gain_hz_per_v": [null, null, null],
+        "span_hz": null,
+        "diagnostic_code": "oscillator.grid.incomplete"
+      }
+    }
+  ],
+  "shift_cases": [
+    {
+      "id": "signed-supply-perturbation-shift",
+      "feature_ids": ["openada.feature/oscillator.perturbation-shift/v1alpha1"],
+      "request_id": "53000000-0000-4000-8000-000000000001",
+      "method": "composition_short",
+      "measurement": {
+        "measurement_id": "vco.supply_pushing",
+        "kind": "frequency_shift",
+        "perturbation_condition": "vdd",
+        "extensions": {}
+      },
+      "reference": {"condition_value": 1.2, "frequency_hz": 2439900000.0, "generator": "sine"},
+      "perturbed": {"condition_value": 1.26, "frequency_hz": 2432900000.0, "generator": "sine"},
+      "expected": {
+        "engineering_status": "pass",
+        "shift_status": "measured",
+        "signed_shift_hz": -7000000.0,
+        "absolute_shift_hz": 7000000.0,
+        "diagnostic_code": null
+      }
+    },
+    {
+      "id": "incomplete-shift-propagates-unknown",
+      "feature_ids": ["openada.feature/oscillator.perturbation-shift/v1alpha1"],
+      "request_id": "53000000-0000-4000-8000-000000000002",
+      "method": "composition_short",
+      "measurement": {
+        "measurement_id": "vco.load_pulling.incomplete",
+        "kind": "frequency_shift",
+        "perturbation_condition": "load_case",
+        "extensions": {}
+      },
+      "reference": {"condition_value": 0.0, "frequency_hz": 2439900000.0, "generator": "sine"},
+      "perturbed": {"condition_value": 1.0, "frequency_hz": 2350500000.0, "generator": "flat"},
+      "expected": {
+        "engineering_status": "unknown",
+        "shift_status": "unknown",
+        "signed_shift_hz": null,
+        "absolute_shift_hz": null,
+        "diagnostic_code": "oscillator.shift.incomplete"
+      }
+    }
+  ],
+  "receipt_rejection_cases": [
+    {
+      "id": "tampered-receipt-rejected",
+      "feature_ids": ["openada.feature/oscillator.local-tuning-gain/v1alpha1"],
+      "request_id": "54000000-0000-4000-8000-000000000001",
+      "method": "composition_short",
+      "mutation": "increment-frequency-value-without-rehash",
+      "measurement": {
+        "measurement_id": "vco.tuning.tampered",
+        "kind": "tuning_grid",
+        "control_condition": "vctrl",
+        "control_unit": "V",
+        "expected_monotonicity": "nondecreasing",
+        "extensions": {}
+      },
+      "points": [
+        {"control_v": 0.0, "frequency_hz": 2400000000.0, "generator": "sine"},
+        {"control_v": 0.5, "frequency_hz": 2420000000.0, "generator": "sine"},
+        {"control_v": 1.0, "frequency_hz": 2440000000.0, "generator": "sine"}
+      ],
+      "expected": {
+        "engineering_status": "unknown",
+        "execution_status": "invalid_request",
+        "measurement_status": "unknown",
+        "diagnostic_code": "oscillator.receipt.digest_mismatch"
+      }
+    }
+  ]
+}
