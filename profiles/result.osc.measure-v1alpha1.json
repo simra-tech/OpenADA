@@ -563,12 +563,12 @@
             "maximum_period_relative_deviation": {
               "type": "number",
               "minimum": 0,
-              "maximum": 1
+              "maximum": 0.05
             },
             "maximum_amplitude_relative_deviation": {
               "type": "number",
               "minimum": 0,
-              "maximum": 1
+              "maximum": 0.2
             },
             "minimum_samples_per_cycle": {
               "type": "integer",
@@ -634,6 +634,147 @@
             "extensions": {
               "$ref": "#/$defs/extensions"
             }
+          },
+          "additionalProperties": false
+        },
+        "boundWindowRequest": {
+          "type": "object",
+          "required": ["start", "stop", "cycle_count"],
+          "properties": {
+            "start": {"$ref": "#/$defs/quantitySeconds"},
+            "stop": {"$ref": "#/$defs/quantitySeconds"},
+            "cycle_count": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 100000
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundStartupRequest": {
+          "type": "object",
+          "required": ["search_start", "hold_for", "minimum_peak_to_peak"],
+          "properties": {
+            "search_start": {"$ref": "#/$defs/quantitySeconds"},
+            "hold_for": {
+              "allOf": [
+                {"$ref": "#/$defs/quantitySeconds"},
+                {"properties": {"value": {"exclusiveMinimum": 0}}}
+              ]
+            },
+            "minimum_peak_to_peak": {
+              "allOf": [
+                {"$ref": "#/$defs/quantityVolts"},
+                {"properties": {"value": {"exclusiveMinimum": 0}}}
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundCrossingRequest": {
+          "type": "object",
+          "required": ["threshold", "hysteresis", "direction"],
+          "properties": {
+            "threshold": {
+              "type": "object",
+              "required": ["value", "unit"],
+              "properties": {
+                "value": {"const": 0},
+                "unit": {"const": "V"}
+              },
+              "additionalProperties": false
+            },
+            "hysteresis": {
+              "allOf": [
+                {"$ref": "#/$defs/quantityVolts"},
+                {"properties": {"value": {"exclusiveMinimum": 0}}}
+              ]
+            },
+            "direction": {"const": "rising"}
+          },
+          "additionalProperties": false
+        },
+        "boundQualityRequest": {
+          "type": "object",
+          "required": [
+            "maximum_period_relative_deviation",
+            "maximum_amplitude_relative_deviation",
+            "minimum_samples_per_cycle"
+          ],
+          "properties": {
+            "maximum_period_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.05
+            },
+            "maximum_amplitude_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.2
+            },
+            "minimum_samples_per_cycle": {
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 100000
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundPowerRequest": {
+          "type": "object",
+          "required": ["current_orientation"],
+          "properties": {
+            "current_orientation": {
+              "enum": ["positive_into_load", "positive_into_source"]
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundTransientRequest": {
+          "type": "object",
+          "required": [
+            "measurement_id",
+            "kind",
+            "signals",
+            "window",
+            "startup",
+            "crossing",
+            "quality",
+            "power",
+            "extensions"
+          ],
+          "properties": {
+            "measurement_id": {"$ref": "#/$defs/role"},
+            "kind": {"const": "transient"},
+            "signals": {"$ref": "#/$defs/signals"},
+            "window": {"$ref": "#/$defs/boundWindowRequest"},
+            "startup": {"$ref": "#/$defs/boundStartupRequest"},
+            "crossing": {"$ref": "#/$defs/boundCrossingRequest"},
+            "quality": {"$ref": "#/$defs/boundQualityRequest"},
+            "power": {"$ref": "#/$defs/boundPowerRequest"},
+            "extensions": {"$ref": "#/$defs/extensions"}
+          },
+          "additionalProperties": false
+        },
+        "producer": {
+          "type": "object",
+          "required": [
+            "operation_profile",
+            "assertion_profile",
+            "implementation_id",
+            "implementation_version"
+          ],
+          "properties": {
+            "operation_profile": {
+              "const": "openada.operation/result.osc.measure/v1alpha1"
+            },
+            "assertion_profile": {
+              "const": "openada.assertion/oscillator.measurement.valid/v1alpha1"
+            },
+            "implementation_id": {
+              "const": "org.openada.kernel.oscillator-evidence"
+            },
+            "implementation_version": {"const": "1.0.0"}
           },
           "additionalProperties": false
         },
@@ -837,12 +978,12 @@
             "maximum_period_relative_deviation": {
               "type": "number",
               "minimum": 0,
-              "maximum": 1
+              "maximum": 0.05
             },
             "maximum_amplitude_relative_deviation": {
               "type": "number",
               "minimum": 0,
-              "maximum": 1
+              "maximum": 0.2
             },
             "minimum_samples_per_cycle_required": {
               "type": "integer",
@@ -877,8 +1018,10 @@
           "required": [
             "schema",
             "sha256",
+            "producer",
             "measurement_id",
             "status",
+            "request",
             "request_sha256",
             "method_sha256",
             "series_sha256",
@@ -900,11 +1043,17 @@
             "sha256": {
               "$ref": "#/$defs/sha256"
             },
+            "producer": {
+              "$ref": "#/$defs/producer"
+            },
             "measurement_id": {
               "$ref": "#/$defs/role"
             },
             "status": {
               "$ref": "#/$defs/oscillatorStatus"
+            },
+            "request": {
+              "$ref": "#/$defs/transientRequest"
             },
             "request_sha256": {
               "$ref": "#/$defs/sha256"
@@ -1067,16 +1216,17 @@
       "The late window is closed, stop is greater than start, both endpoints lie inside the source domain, startup.search_start is no later than window.start and inside the source domain, and startup.hold_for fits before window.stop.",
       "The oscillator signal is pointwise positive minus negative. Window boundary samples are inserted by linear interpolation; differential peak-to-peak is max minus min over that exact closed crop.",
       "A rising event arms only at or below threshold minus hysteresis, remembers the linearly interpolated threshold crossing on a rising segment, emits it only after reaching threshold plus hysteresis, and must re-arm before another event. Threshold is fixed at 0 V and hysteresis is positive.",
+      "A pending crossing is cancelled if the signal returns to or below threshold minus hysteresis before confirmation. Caller quality limits are bounded to maximum_period_relative_deviation <= 0.05 and maximum_amplitude_relative_deviation <= 0.20 so relaxed requests cannot silently admit beating or multimode behavior.",
       "Counting N cycles requires the first N+1 qualified rising events at or after window.start. Period is (t[N]-t[0])/N and frequency is N/(t[N]-t[0]); the late window may extend beyond the counted interval, and every late cycle through window.stop participates in quality and coverage assessment.",
-      "Every late-cycle amplitude must meet startup.minimum_peak_to_peak, relative period and amplitude deviations must not exceed their declared maxima, each cycle must meet the requested sample count, and the first and last late event must cover each crop edge within 1.5 mean periods for a sustained verdict.",
-      "Startup is the first sequence of at least three complete cycles lasting at least hold_for whose per-cycle amplitude, period consistency, amplitude consistency, and sample resolution all pass. A record with no amplitude-qualified activity is never_started; activity without a complete hold is not_sustained; a qualifying start that fails the late crop is collapsed; inconsistent period or amplitude after adequate late crossings is multimode; insufficient sampling is unknown.",
+      "Every complete late-cycle amplitude must meet startup.minimum_peak_to_peak, relative period and amplitude deviations must not exceed their declared maxima, each cycle must meet the requested sample count, the first late event must lie within one mean period of the crop start, and the last must lie within 1.1 mean periods of crop stop. The trailing allowance accounts only for hysteresis confirmation after a retained zero time; missing confirmation or a partial terminal cycle is insufficient coverage, not collapse evidence.",
+      "Startup is the first sequence of at least three complete cycles lasting at least hold_for whose per-cycle amplitude, period consistency, amplitude consistency, and sample resolution all pass. A record with no amplitude-qualified activity is never_started; activity without a complete hold, a late qualifying onset, or an under-covered/under-counted crop is not_sustained; a complete post-onset cycle below minimum amplitude, or amplitude loss after the final complete passing cycle, is collapsed; inconsistent period or amplitude after adequate late crossings is multimode; insufficient sampling is unknown.",
       "Frequency and period are measured only for sustained oscillation; otherwise each is null and repeats the transient verdict. Differential amplitude and average supply power remain measured waveform reducers for every structurally valid crop, independent of whether frequency is sustained.",
       "Instantaneous consumed supply power is supply_voltage times supply_current for positive_into_load and its negation for positive_into_source. Average supply power is the trapezoidal time integral divided by the exact crop duration, never an unweighted sample mean.",
       "window_sha256 is the canonical SHA-256 over series_sha256, start, stop, boundary_policy, and all four signal bindings. Frequency, period, amplitude, power, receipt, and window must carry that identical digest; their series identity must also agree.",
-      "A receipt sha256 is the canonical sorted-key compact UTF-8 JSON SHA-256 of the complete closed receipt after removing only its top-level sha256 member. request_sha256 covers the closed normalized measurement request and method_sha256 covers kind, signals, window, startup, crossing, quality, and power.",
+      "A receipt embeds the complete closed normalized transient request and the exact producing profile, assertion, implementation, and implementation version. Its sha256 is the canonical sorted-key compact UTF-8 JSON SHA-256 of the complete closed receipt after removing only its top-level sha256 member. request_sha256 is recomputed over the embedded request and method_sha256 is recomputed over kind, signals, window, startup, crossing, quality, and power.",
       "Tuning control coordinates are exact-unit V quantities, strictly increasing in request order, unique by receipt identity, and exactly equal the named numeric receipt condition. Every point must be sustained before any local tuning gain or span is returned.",
       "Endpoint local tuning gain is the adjacent one-sided secant. At interior i with h0=x[i]-x[i-1] and h1=x[i+1]-x[i], the unequal-spacing quadratic derivative is -h1*f[i-1]/(h0*(h0+h1)) + (h1-h0)*f[i]/(h0*h1) + h0*f[i+1]/(h1*(h0+h1)). Every per-point value is retained in Hz/V.",
-      "Observed grid monotonicity is nondecreasing when every adjacent frequency difference is nonnegative, nonincreasing when every difference is nonpositive, and non_monotonic otherwise. The check compares that value to expected_monotonicity without deleting or reordering points; span is max(f)-min(f) over the complete grid.",
+      "Observed grid monotonicity is constant when every adjacent frequency difference is zero, nondecreasing when every difference is otherwise nonnegative, nonincreasing when every difference is otherwise nonpositive, and non_monotonic otherwise. Constant passes either declared direction; the check never deletes or reorders points, and span is max(f)-min(f) over the complete grid.",
       "Frequency shift requires distinct sustained reference and perturbed receipts, exact equality of every condition other than the one named perturbation, matching perturbation units, and receipt condition values equal to the request. signed_shift is f(perturbed)-f(reference) and absolute_shift is abs(signed_shift)."
     ],
     "extensions": {}
@@ -1292,6 +1442,223 @@
               "type": "string",
               "format": "uuid"
             },
+            "operation_profile": {
+              "const": "openada.operation/result.osc.measure/v1alpha1"
+            },
+            "assertion_profile": {
+              "const": "openada.assertion/oscillator.measurement.valid/v1alpha1"
+            },
+            "implementation_id": {
+              "const": "org.openada.kernel.oscillator-evidence"
+            },
+            "implementation_version": {
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundWindowRequest": {
+          "type": "object",
+          "required": [
+            "start",
+            "stop",
+            "cycle_count"
+          ],
+          "properties": {
+            "start": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "stop": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "cycle_count": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 100000
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundStartupRequest": {
+          "type": "object",
+          "required": [
+            "search_start",
+            "hold_for",
+            "minimum_peak_to_peak"
+          ],
+          "properties": {
+            "search_start": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "hold_for": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/quantitySeconds"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "minimum_peak_to_peak": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/quantityVolts"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundCrossingRequest": {
+          "type": "object",
+          "required": [
+            "threshold",
+            "hysteresis",
+            "direction"
+          ],
+          "properties": {
+            "threshold": {
+              "type": "object",
+              "required": [
+                "value",
+                "unit"
+              ],
+              "properties": {
+                "value": {
+                  "const": 0
+                },
+                "unit": {
+                  "const": "V"
+                }
+              },
+              "additionalProperties": false
+            },
+            "hysteresis": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/quantityVolts"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "direction": {
+              "const": "rising"
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundQualityRequest": {
+          "type": "object",
+          "required": [
+            "maximum_period_relative_deviation",
+            "maximum_amplitude_relative_deviation",
+            "minimum_samples_per_cycle"
+          ],
+          "properties": {
+            "maximum_period_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.05
+            },
+            "maximum_amplitude_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.2
+            },
+            "minimum_samples_per_cycle": {
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 100000
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundPowerRequest": {
+          "type": "object",
+          "required": [
+            "current_orientation"
+          ],
+          "properties": {
+            "current_orientation": {
+              "enum": [
+                "positive_into_load",
+                "positive_into_source"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "boundTransientRequest": {
+          "type": "object",
+          "required": [
+            "measurement_id",
+            "kind",
+            "signals",
+            "window",
+            "startup",
+            "crossing",
+            "quality",
+            "power",
+            "extensions"
+          ],
+          "properties": {
+            "measurement_id": {
+              "$ref": "#/$defs/role"
+            },
+            "kind": {
+              "const": "transient"
+            },
+            "signals": {
+              "$ref": "#/$defs/signals"
+            },
+            "window": {
+              "$ref": "#/$defs/boundWindowRequest"
+            },
+            "startup": {
+              "$ref": "#/$defs/boundStartupRequest"
+            },
+            "crossing": {
+              "$ref": "#/$defs/boundCrossingRequest"
+            },
+            "quality": {
+              "$ref": "#/$defs/boundQualityRequest"
+            },
+            "power": {
+              "$ref": "#/$defs/boundPowerRequest"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "producer": {
+          "type": "object",
+          "required": [
+            "operation_profile",
+            "assertion_profile",
+            "implementation_id",
+            "implementation_version"
+          ],
+          "properties": {
             "operation_profile": {
               "const": "openada.operation/result.osc.measure/v1alpha1"
             },
@@ -1777,12 +2144,12 @@
             "maximum_period_relative_deviation": {
               "type": "number",
               "minimum": 0,
-              "maximum": 1
+              "maximum": 0.05
             },
             "maximum_amplitude_relative_deviation": {
               "type": "number",
               "minimum": 0,
-              "maximum": 1
+              "maximum": 0.2
             },
             "minimum_samples_per_cycle_required": {
               "type": "integer",
@@ -1877,8 +2244,10 @@
           "required": [
             "schema",
             "sha256",
+            "producer",
             "measurement_id",
             "status",
+            "request",
             "request_sha256",
             "method_sha256",
             "series_sha256",
@@ -1900,11 +2269,17 @@
             "sha256": {
               "$ref": "#/$defs/sha256"
             },
+            "producer": {
+              "$ref": "#/$defs/producer"
+            },
             "measurement_id": {
               "$ref": "#/$defs/role"
             },
             "status": {
               "$ref": "#/$defs/oscillatorStatus"
+            },
+            "request": {
+              "$ref": "#/$defs/boundTransientRequest"
             },
             "request_sha256": {
               "$ref": "#/$defs/sha256"
@@ -2045,6 +2420,7 @@
             },
             "observed_monotonicity": {
               "enum": [
+                "constant",
                 "nondecreasing",
                 "nonincreasing",
                 "non_monotonic",
@@ -2412,6 +2788,20 @@
       "extensions": {}
     },
     {
+      "code": "oscillator.source.invalid",
+      "severity": "error",
+      "condition": "The normalized waveform series violates the closed source shape, finite-value, ordering, unit, or provenance contract.",
+      "next_action": "Regenerate a finite time-domain normalized series with exact signal and source bindings.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.source.digest_mismatch",
+      "severity": "error",
+      "condition": "The normalized waveform series content does not match its declared canonical series digest.",
+      "next_action": "Reject the modified series and regenerate its provenance binding from the original waveform.",
+      "extensions": {}
+    },
+    {
       "code": "oscillator.signal.missing",
       "severity": "error",
       "condition": "A selected positive, negative, supply-voltage, or supply-current vector is absent.",
@@ -2457,7 +2847,7 @@
       "code": "oscillator.quality.invalid",
       "severity": "error",
       "condition": "A relative-deviation or minimum-sample declaration lies outside its closed bound.",
-      "next_action": "Use finite relative limits from zero through one and at least three samples per cycle.",
+      "next_action": "Use a period-deviation limit from zero through 0.05, an amplitude-deviation limit from zero through 0.20, and at least three samples per cycle.",
       "extensions": {}
     },
     {
@@ -2684,6 +3074,7 @@
       "limitations": [
         "Only one time-domain differential oscillator signal, one supply pair, rising zero crossings, symmetric hysteresis, and the declared bounded late crop are supported.",
         "Only transient startup and same-window reducers, receipt-composed tuning grids, and paired frequency shifts are implemented.",
+        "Canonical receipt hashes prove content identity and internal consistency, not cryptographic authorship. Callers that admit hostile receipt injection must authenticate the containing prior result envelope at their trust boundary.",
         "No phase noise, jitter, duty cycle, PSS, spectral density, fitting, extrapolation, cherry-cropping, specification verdict, or signoff claim is inferred."
       ],
       "extensions": {}

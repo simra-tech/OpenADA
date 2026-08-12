@@ -11,6 +11,9 @@ import pytest
 
 from openada.operations.result_measure import normalized_series_sha256
 from openada.operations.result_osc_measure import (
+    _average_power,
+    _hysteretic_crossings,
+    _startup_candidate,
     measure_oscillator,
     oscillator_receipt_sha256,
 )
@@ -402,9 +405,13 @@ def test_two_tone_beating_is_multimode_qc_and_frequency_is_withheld() -> None:
     secondary = 2.31e9
 
     def two_tone(time: float) -> float:
-        return 0.55 * math.sin(2.0 * math.pi * primary * time) + 0.25 * math.sin(
-            2.0 * math.pi * secondary * time
+        primary_tone = 0.55 * math.sin(2.0 * math.pi * primary * time)
+        secondary_tone = (
+            0.25 * math.sin(2.0 * math.pi * secondary * time)
+            if time >= 10e-9
+            else 0.0
         )
+        return primary_tone + secondary_tone
 
     payload = measure_oscillator(
         _series(
@@ -573,7 +580,7 @@ def test_insufficient_sampling_is_a_typed_unknown_not_a_frequency() -> None:
 @pytest.mark.parametrize(
     ("mutation", "expected_code"),
     [
-        ("series_digest", "measurement.source.digest_mismatch"),
+        ("series_digest", "oscillator.source.digest_mismatch"),
         ("axis_unit", "oscillator.unit.mismatch"),
         ("current_unit", "oscillator.unit.mismatch"),
     ],
@@ -899,3 +906,291 @@ def test_receipt_digest_tampering_is_rejected_and_helper_is_public() -> None:
     assert payload["diagnostics"][0]["code"] == (
         "oscillator.receipt.digest_mismatch"
     )
+
+
+def test_pending_hysteresis_candidate_is_cancelled_before_a_later_rise() -> None:
+    assert _hysteretic_crossings(
+        [0.0, 1.0, 2.0, 3.0, 4.0],
+        [-2.0, 0.5, -2.0, 2.0, -2.0],
+        threshold=0.0,
+        hysteresis=1.0,
+    ) == [pytest.approx(2.5)]
+
+
+def test_clean_but_under_counted_window_is_not_reported_as_collapse() -> None:
+    frequency = 100e6
+    payload = measure_oscillator(
+        _series(_sine(frequency), frequency_hz=frequency, stop_s=100e-9),
+        _request(
+            window_start_s=20e-9,
+            window_stop_s=100e-9,
+            cycle_count=50,
+            hold_for_s=20e-9,
+        ),
+    )
+
+    _assert_envelope(payload)
+    transient = payload["data"]["transient"]
+    assert transient["status"] == "not_sustained"
+    assert transient["startup"]["started_at"] is not None
+    assert transient["startup"]["collapse_at"] is None
+    assert transient["frequency"]["value"] is None
+    assert "late_crossings_insufficient" in transient["quality"]["flags"]
+
+
+@pytest.mark.parametrize("window_start_s", [40e-9, 41e-9, 44e-9])
+def test_partial_cycle_crop_is_never_positive_collapse_evidence(
+    window_start_s: float,
+) -> None:
+    frequency = 100e6
+    payload = measure_oscillator(
+        _series(
+            _sine(frequency),
+            frequency_hz=frequency,
+            stop_s=100e-9,
+            samples_per_cycle=100,
+        ),
+        _request(
+            window_start_s=window_start_s,
+            window_stop_s=window_start_s + 2e-9,
+            cycle_count=2,
+            hold_for_s=20e-9,
+            minimum_peak_to_peak_v=0.8,
+            minimum_samples_per_cycle=20,
+        ),
+    )
+    _assert_envelope(payload)
+    assert payload["data"]["transient"]["status"] == "not_sustained"
+    assert payload["data"]["transient"]["startup"]["collapse_at"] is None
+
+
+def test_high_hysteresis_missing_tail_confirmation_is_not_collapse() -> None:
+    frequency = 100e6
+    payload = measure_oscillator(
+        _series(
+            _sine(frequency),
+            frequency_hz=frequency,
+            stop_s=102e-9,
+            samples_per_cycle=400,
+        ),
+        _request(
+            window_start_s=20e-9,
+            window_stop_s=102e-9,
+            cycle_count=5,
+            hold_for_s=20e-9,
+            hysteresis_v=0.79,
+            minimum_samples_per_cycle=300,
+        ),
+    )
+    _assert_envelope(payload)
+    assert payload["data"]["transient"]["status"] == "not_sustained"
+    assert payload["data"]["transient"]["startup"]["collapse_at"] is None
+
+
+def test_late_growth_is_not_misclassified_as_a_pre_onset_collapse() -> None:
+    frequency = REFERENCE_FREQUENCY_HZ
+
+    def growing(time: float) -> float:
+        amplitude = 0.1 if time < 30e-9 else 0.8
+        return amplitude * math.sin(2.0 * math.pi * frequency * time)
+
+    payload = measure_oscillator(
+        _series(growing, stop_s=60e-9, samples_per_cycle=16),
+        _short_request(
+            cycle_count=50,
+            minimum_peak_to_peak_v=0.8,
+            minimum_samples_per_cycle=10,
+        ),
+    )
+
+    _assert_envelope(payload)
+    transient = payload["data"]["transient"]
+    assert transient["status"] == "not_sustained"
+    assert transient["startup"]["started_at"]["value"] >= 30e-9
+    assert transient["startup"]["collapse_at"] is None
+
+
+def test_startup_hold_requires_at_least_three_complete_cycles() -> None:
+    crossings = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+    started, activity = _startup_candidate(
+        crossings,
+        [0.0, 0.05, 0.0, -0.05, 1.0, -1.0],
+        crossings,
+        hold_for=0.5,
+        minimum_amplitude=0.5,
+        maximum_period_deviation=0.05,
+        maximum_amplitude_deviation=0.2,
+        minimum_samples=2,
+    )
+    assert activity
+    assert started is None
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda receipt: receipt["startup"].update(
+            started_at={"value": 20e-9, "unit": "s"},
+            time={"value": 20e-9, "unit": "s"},
+        ),
+        lambda receipt: receipt["quality"].update(
+            period_relative_deviation=0.9
+        ),
+        lambda receipt: receipt["differential_peak_to_peak"].update(value=0.01),
+        lambda receipt: receipt["quality"].update(flags=[{}]),
+    ],
+)
+def test_rehashed_semantically_forged_receipt_is_rejected(mutate) -> None:
+    receipts = [
+        _receipt_for(2.40e9, conditions=_conditions(control_v=0.0)),
+        _receipt_for(2.45e9, conditions=_conditions(control_v=0.5)),
+        _receipt_for(2.50e9, conditions=_conditions(control_v=1.0)),
+    ]
+    mutate(receipts[1])
+    receipts[1]["sha256"] = oscillator_receipt_sha256(receipts[1])
+    payload = measure_oscillator(
+        None,
+        {
+            "measurement_id": "vco.forged-grid",
+            "kind": "tuning_grid",
+            "control_condition": "vctrl",
+            "control_unit": "V",
+            "expected_monotonicity": "nondecreasing",
+            "points": [
+                {
+                    "control": {"value": control, "unit": "V"},
+                    "receipt": receipt,
+                }
+                for control, receipt in zip((0.0, 0.5, 1.0), receipts)
+            ],
+            "extensions": {},
+        },
+    )
+    _assert_envelope(payload)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "oscillator.receipt.invalid"
+
+
+def test_quality_caps_cannot_be_relaxed_to_hide_beating() -> None:
+    request = _short_request()
+    request["quality"]["maximum_period_relative_deviation"] = 0.051
+    request["quality"]["maximum_amplitude_relative_deviation"] = 0.201
+    payload = measure_oscillator(
+        _series(_sine(REFERENCE_FREQUENCY_HZ), stop_s=60e-9), request
+    )
+    _assert_envelope(payload)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "oscillator.quality.invalid"
+
+
+def test_extreme_finite_arithmetic_fails_typed_instead_of_escaping() -> None:
+    assert _average_power(
+        [0.0, 1.0, 2.0, 3.0],
+        [1.0, 1.0, 1.0, 1.0],
+        [1e308, 1e308, -1e308, -1e308],
+        "positive_into_load",
+    ) == pytest.approx(0.0)
+    assert _hysteretic_crossings(
+        [0.0, 1.0],
+        [-1e308, 1e308],
+        threshold=0.0,
+        hysteresis=1.0,
+    ) == [pytest.approx(0.5)]
+    assert _hysteretic_crossings(
+        [-1e308, 1e308],
+        [-1e308, 1e308],
+        threshold=0.0,
+        hysteresis=1.0,
+    ) == [pytest.approx(0.0)]
+
+
+def test_subnormal_control_spacing_returns_a_typed_nonfinite_result() -> None:
+    controls = (0.0, 5e-324, 1e-323)
+    receipts = [
+        _receipt_for(
+            frequency,
+            conditions=_conditions(control_v=control),
+        )
+        for control, frequency in zip(controls, (2.40e9, 2.45e9, 2.50e9))
+    ]
+    payload = measure_oscillator(
+        None,
+        {
+            "measurement_id": "vco.subnormal-grid",
+            "kind": "tuning_grid",
+            "control_condition": "vctrl",
+            "control_unit": "V",
+            "expected_monotonicity": "nondecreasing",
+            "points": [
+                {
+                    "control": {"value": control, "unit": "V"},
+                    "receipt": receipt,
+                }
+                for control, receipt in zip(controls, receipts)
+            ],
+            "extensions": {},
+        },
+    )
+    _assert_envelope(payload)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "oscillator.value.non_finite"
+
+
+def test_context_comparison_distinguishes_boolean_from_number() -> None:
+    conditions = _conditions(control_v=0.0)
+    conditions.append({"name": "enabled", "value": True, "unit": "1"})
+    first = _receipt_for(2.40e9, conditions=conditions)
+    numeric_conditions = _conditions(control_v=0.5)
+    numeric_conditions.append({"name": "enabled", "value": 1.0, "unit": "1"})
+    second = _receipt_for(2.45e9, conditions=numeric_conditions)
+    last_conditions = _conditions(control_v=1.0)
+    last_conditions.append({"name": "enabled", "value": True, "unit": "1"})
+    last = _receipt_for(2.50e9, conditions=last_conditions)
+    payload = measure_oscillator(
+        None,
+        {
+            "measurement_id": "vco.typed-context-grid",
+            "kind": "tuning_grid",
+            "control_condition": "vctrl",
+            "control_unit": "V",
+            "expected_monotonicity": "nondecreasing",
+            "points": [
+                {"control": {"value": 0.0, "unit": "V"}, "receipt": first},
+                {"control": {"value": 0.5, "unit": "V"}, "receipt": second},
+                {"control": {"value": 1.0, "unit": "V"}, "receipt": last},
+            ],
+            "extensions": {},
+        },
+    )
+    _assert_envelope(payload)
+    assert payload["execution"]["status"] == "invalid_request"
+    assert payload["diagnostics"][0]["code"] == "oscillator.condition.mismatch"
+
+
+def test_flat_grid_passes_either_monotonic_direction() -> None:
+    receipts = [
+        _receipt_for(2.40e9, conditions=_conditions(control_v=control))
+        for control in (0.0, 0.5, 1.0)
+    ]
+    payload = measure_oscillator(
+        None,
+        {
+            "measurement_id": "vco.flat-grid",
+            "kind": "tuning_grid",
+            "control_condition": "vctrl",
+            "control_unit": "V",
+            "expected_monotonicity": "nonincreasing",
+            "points": [
+                {
+                    "control": {"value": control, "unit": "V"},
+                    "receipt": receipt,
+                }
+                for control, receipt in zip((0.0, 0.5, 1.0), receipts)
+            ],
+            "extensions": {},
+        },
+    )
+    _assert_envelope(payload)
+    assert payload["engineering"]["status"] == "pass"
+    assert payload["data"]["grid"]["observed_monotonicity"] == "constant"
+    assert payload["data"]["grid"]["monotonicity_check"] == "pass"

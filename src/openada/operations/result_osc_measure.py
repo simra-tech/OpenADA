@@ -8,7 +8,7 @@ receipts rather than anonymous scalars.
 
 from __future__ import annotations
 
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from collections.abc import Mapping, Sequence
 import hashlib
 import json
@@ -49,6 +49,8 @@ OSCILLATION_STATUSES = (
 MAX_GRID_POINTS = 256
 MAX_RECEIPT_CROSSINGS = 100_001
 MAX_CONDITIONS = 64
+MAX_PERIOD_RELATIVE_DEVIATION = 0.05
+MAX_AMPLITUDE_RELATIVE_DEVIATION = 0.20
 _KINDS = frozenset(OSCILLATOR_MEASUREMENT_KINDS)
 _VERDICTS = frozenset(OSCILLATION_STATUSES)
 _ROLE_RE = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
@@ -205,7 +207,7 @@ def _request_id(value: str | None) -> str:
         return str(uuid.uuid4())
     try:
         parsed = uuid.UUID(value)
-    except (AttributeError, ValueError) as exc:
+    except (AttributeError, TypeError, ValueError) as exc:
         raise _InvalidOscillatorRequest(
             "oscillator.request.invalid", "request_id must be a canonical UUID."
         ) from exc
@@ -466,15 +468,15 @@ def _normalize_transient_request(value: Mapping[str, Any]) -> dict[str, Any]:
         quality["maximum_amplitude_relative_deviation"],
         "measurement.quality.maximum_amplitude_relative_deviation",
     )
-    if not 0 <= maximum_period_deviation <= 1:
+    if not 0 <= maximum_period_deviation <= MAX_PERIOD_RELATIVE_DEVIATION:
         raise _InvalidOscillatorRequest(
             "oscillator.quality.invalid",
-            "maximum_period_relative_deviation must be between zero and one.",
+            "maximum_period_relative_deviation must be between zero and 0.05.",
         )
-    if not 0 <= maximum_amplitude_deviation <= 1:
+    if not 0 <= maximum_amplitude_deviation <= MAX_AMPLITUDE_RELATIVE_DEVIATION:
         raise _InvalidOscillatorRequest(
             "oscillator.quality.invalid",
-            "maximum_amplitude_relative_deviation must be between zero and one.",
+            "maximum_amplitude_relative_deviation must be between zero and 0.20.",
         )
     minimum_samples = _integer(
         quality["minimum_samples_per_cycle"],
@@ -569,9 +571,9 @@ def _crop(
             "oscillator.window.invalid",
             "The closed oscillator window must lie inside the source time domain.",
         )
-    coordinates = [start]
-    coordinates.extend(value for value in axis if start < value < stop)
-    coordinates.append(stop)
+    first = bisect_right(axis, start)
+    last = bisect_left(axis, stop)
+    coordinates = [start, *axis[first:last], stop]
     cropped: list[list[float]] = []
     for values in vectors:
         cropped.append([_interpolated_value(axis, values, value) for value in coordinates])
@@ -606,10 +608,46 @@ def _hysteretic_crossings(
     for index in range(len(axis) - 1):
         x0, x1 = axis[index], axis[index + 1]
         y0, y1 = values[index], values[index + 1]
+        # A candidate is not hysteretic until it reaches the high threshold.
+        # Returning to the low threshold invalidates that candidate; retaining
+        # its old zero time would splice two unrelated excursions together.
+        if pending is not None and (y0 <= low or y1 <= low):
+            pending = None
+            armed = True
         if not armed and pending is None and (y0 <= low or y1 <= low):
             armed = True
         if armed and pending is None and y0 < threshold <= y1 and y1 > y0:
-            pending = x0 + (threshold - y0) * (x1 - x0) / (y1 - y0)
+            ordinate_scale = max(abs(y0), abs(y1), abs(threshold))
+            if ordinate_scale == 0 or not math.isfinite(ordinate_scale):
+                raise _InvalidOscillatorRequest(
+                    "oscillator.value.non_finite",
+                    "A hysteretic crossing could not be interpolated in finite range.",
+                )
+            fraction = (
+                threshold / ordinate_scale - y0 / ordinate_scale
+            ) / (y1 / ordinate_scale - y0 / ordinate_scale)
+            if not math.isfinite(fraction) or not 0.0 <= fraction <= 1.0:
+                raise _InvalidOscillatorRequest(
+                    "oscillator.value.non_finite",
+                    "A hysteretic crossing fraction is outside the finite source segment.",
+                )
+            span = x1 - x0
+            if math.isfinite(span):
+                pending = (
+                    x0 + fraction * span
+                    if fraction <= 0.5
+                    else x1 - (1.0 - fraction) * span
+                )
+            else:
+                # The convex form avoids an overflowing x1-x0 subtraction for
+                # finite endpoints with opposite, near-limit magnitudes.
+                pending = (1.0 - fraction) * x0 + fraction * x1
+            if not math.isfinite(pending):
+                raise _InvalidOscillatorRequest(
+                    "oscillator.value.non_finite",
+                    "A hysteretic crossing time is outside the finite source segment.",
+                )
+            pending = min(x1, max(x0, pending))
         if pending is not None and (y0 >= high or y1 >= high):
             found.append(pending)
             if len(found) > MAX_RECEIPT_CROSSINGS:
@@ -625,13 +663,22 @@ def _hysteretic_crossings(
 def _relative_deviation(values: Sequence[float]) -> float:
     if not values:
         return 0.0
-    mean = math.fsum(values) / len(values)
-    if mean <= 0 or not math.isfinite(mean):
+    scale = max(values)
+    if scale <= 0 or not math.isfinite(scale):
         raise _InvalidOscillatorRequest(
             "oscillator.value.non_finite",
             "A positive finite quality reference could not be established.",
         )
-    deviation = max(abs(value - mean) / mean for value in values)
+    try:
+        scaled_mean = math.fsum(value / scale for value in values) / len(values)
+        deviation = max(
+            abs(value / scale - scaled_mean) / scaled_mean for value in values
+        )
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise _InvalidOscillatorRequest(
+            "oscillator.value.non_finite",
+            "A quality deviation overflowed the finite result range.",
+        ) from exc
     if not math.isfinite(deviation):
         raise _InvalidOscillatorRequest(
             "oscillator.value.non_finite", "A quality deviation is not finite."
@@ -665,6 +712,95 @@ def _cycle_assessment(
     return periods, amplitudes, sample_counts
 
 
+_CycleStats = tuple[float, float, float, float, float, float, int, int]
+
+
+def _merge_cycle_stats(
+    left: _CycleStats | None,
+    right: _CycleStats | None,
+) -> _CycleStats | None:
+    if left is None:
+        return right
+    if right is None:
+        return left
+    amplitude_scale = max(left[4], right[4])
+    scaled_sum = (
+        left[5] * (left[4] / amplitude_scale)
+        + right[5] * (right[4] / amplitude_scale)
+        if amplitude_scale > 0
+        else 0.0
+    )
+    if not math.isfinite(scaled_sum):
+        raise _InvalidOscillatorRequest(
+            "oscillator.value.non_finite",
+            "A cycle-statistics reduction overflowed the finite result range.",
+        )
+    return (
+        min(left[0], right[0]),
+        max(left[1], right[1]),
+        min(left[2], right[2]),
+        max(left[3], right[3]),
+        amplitude_scale,
+        scaled_sum,
+        min(left[6], right[6]),
+        left[7] + right[7],
+    )
+
+
+def _cycle_stats_tree(
+    periods: Sequence[float],
+    amplitudes: Sequence[float],
+    sample_counts: Sequence[int],
+) -> tuple[int, list[_CycleStats | None]]:
+    size = 1
+    while size < len(periods):
+        size *= 2
+    tree: list[_CycleStats | None] = [None] * (2 * size)
+    for index, (period, amplitude, samples) in enumerate(
+        zip(periods, amplitudes, sample_counts)
+    ):
+        tree[size + index] = (
+            period,
+            period,
+            amplitude,
+            amplitude,
+            amplitude,
+            1.0 if amplitude > 0 else 0.0,
+            samples,
+            1,
+        )
+    for index in range(size - 1, 0, -1):
+        tree[index] = _merge_cycle_stats(tree[2 * index], tree[2 * index + 1])
+    return size, tree
+
+
+def _cycle_stats_range(
+    tree: Sequence[_CycleStats | None],
+    size: int,
+    start: int,
+    stop: int,
+) -> _CycleStats:
+    left: _CycleStats | None = None
+    right: _CycleStats | None = None
+    start += size
+    stop += size
+    while start < stop:
+        if start % 2:
+            left = _merge_cycle_stats(left, tree[start])
+            start += 1
+        if stop % 2:
+            stop -= 1
+            right = _merge_cycle_stats(tree[stop], right)
+        start //= 2
+        stop //= 2
+    combined = _merge_cycle_stats(left, right)
+    if combined is None:
+        raise _InvalidOscillatorRequest(
+            "oscillator.value.non_finite", "A startup cycle range is empty."
+        )
+    return combined
+
+
 def _startup_candidate(
     axis: list[float],
     differential: list[float],
@@ -681,21 +817,51 @@ def _startup_candidate(
         return None, activity
     periods, amplitudes, sample_counts = _cycle_assessment(axis, differential, crossings)
     activity = any(amplitude >= minimum_amplitude for amplitude in amplitudes)
-    for start_index in range(len(periods)):
-        for stop_index in range(start_index + 3, len(periods) + 1):
-            if crossings[stop_index] - crossings[start_index] < hold_for:
-                continue
-            selected_periods = periods[start_index:stop_index]
-            selected_amplitudes = amplitudes[start_index:stop_index]
-            selected_samples = sample_counts[start_index:stop_index]
-            if (
-                min(selected_amplitudes) >= minimum_amplitude
-                and min(selected_samples) >= minimum_samples
-                and _relative_deviation(selected_periods) <= maximum_period_deviation
-                and _relative_deviation(selected_amplitudes) <= maximum_amplitude_deviation
-            ):
-                return crossings[start_index], activity
+    if not activity:
+        return None, False
+    tree_size, stats_tree = _cycle_stats_tree(periods, amplitudes, sample_counts)
+    # Each candidate onset uses the shortest complete-cycle hold interval.
+    # Binary search plus a stable segment-tree reduction bounds the scan to
+    # O(cycles log cycles), including adversarial long holds and late failures.
+    for start_index in range(len(periods) - 2):
+        required_stop = crossings[start_index] + hold_for
+        stop_index = max(start_index + 3, bisect_left(crossings, required_stop))
+        if stop_index >= len(crossings):
             break
+        stats = _cycle_stats_range(
+            stats_tree, tree_size, start_index, stop_index
+        )
+        if (
+            stats[2] < minimum_amplitude
+            or stats[6] < minimum_samples
+        ):
+            continue
+        period_mean = (
+            crossings[stop_index] - crossings[start_index]
+        ) / stats[7]
+        amplitude_mean_scaled = stats[5] / stats[7]
+        if (
+            period_mean <= 0
+            or not math.isfinite(period_mean)
+            or amplitude_mean_scaled <= 0
+            or not math.isfinite(amplitude_mean_scaled)
+        ):
+            continue
+        period_deviation = max(
+            abs(stats[0] / period_mean - 1.0),
+            abs(stats[1] / period_mean - 1.0),
+        )
+        amplitude_deviation = max(
+            abs(stats[2] / stats[4] - amplitude_mean_scaled),
+            abs(stats[3] / stats[4] - amplitude_mean_scaled),
+        ) / amplitude_mean_scaled
+        if (
+            math.isfinite(period_deviation)
+            and math.isfinite(amplitude_deviation)
+            and period_deviation <= maximum_period_deviation
+            and amplitude_deviation <= maximum_amplitude_deviation
+        ):
+            return crossings[start_index], activity
     return None, activity
 
 
@@ -715,15 +881,20 @@ def _average_power(
                 "The pointwise supply-power product overflowed the finite result range.",
             )
         powers.append(product)
+    duration = axis[-1] - axis[0]
+    if duration <= 0 or not math.isfinite(duration):
+        raise _InvalidOscillatorRequest(
+            "oscillator.value.non_finite",
+            "The supply-power crop duration is not positive and finite.",
+        )
     try:
-        area = math.fsum(
-            (right_t - left_t) * (left_p + right_p) / 2.0
+        mean = math.fsum(
+            ((right_t - left_t) / duration) * (left_p / 2.0 + right_p / 2.0)
             for left_t, right_t, left_p, right_p in zip(
                 axis, axis[1:], powers, powers[1:]
             )
         )
-        mean = area / (axis[-1] - axis[0])
-    except (OverflowError, ZeroDivisionError) as exc:
+    except (OverflowError, ValueError, ZeroDivisionError) as exc:
         raise _InvalidOscillatorRequest(
             "oscillator.value.non_finite",
             "The trapezoidal average supply power overflowed the finite result range.",
@@ -769,6 +940,11 @@ def _measure_transient(
     crop_positive, crop_negative, crop_voltage, crop_current = cropped
     crop_differential = _differential(crop_positive, crop_negative)
     differential_peak_to_peak = max(crop_differential) - min(crop_differential)
+    if not math.isfinite(differential_peak_to_peak):
+        raise _InvalidOscillatorRequest(
+            "oscillator.value.non_finite",
+            "Differential peak-to-peak amplitude overflowed the finite result range.",
+        )
     average_supply_power = _average_power(
         crop_axis,
         crop_voltage,
@@ -834,53 +1010,148 @@ def _measure_transient(
     period_relative_deviation: float | None = None
     amplitude_relative_deviation: float | None = None
     observed_minimum_samples: int | None = None
+    collapse_at_value: float | None = None
     flags: list[str] = []
     verdict: str
 
-    if len(late_crossings) >= requested_cycles + 1:
+    enough_counted_cycles = len(late_crossings) >= requested_cycles + 1
+    if enough_counted_cycles:
         selected_crossings = late_crossings[: requested_cycles + 1]
         selected_periods = [
             right - left for left, right in zip(selected_crossings, selected_crossings[1:])
         ]
+
+    leading_covered = False
+    trailing_covered = False
+    tail_start = start
+    tail_amplitude = differential_peak_to_peak
+    failed_amplitude_times: list[float] = []
+    if len(late_crossings) >= 2:
         all_late_periods, all_late_amplitudes, all_late_samples = _cycle_assessment(
             crop_axis, crop_differential, late_crossings
         )
         period_relative_deviation = _relative_deviation(all_late_periods)
         amplitude_relative_deviation = _relative_deviation(all_late_amplitudes)
         observed_minimum_samples = min(all_late_samples)
-        mean_period = math.fsum(all_late_periods) / len(all_late_periods)
-        coverage_ok = (
-            late_crossings[0] - start <= 1.5 * mean_period
-            and stop - late_crossings[-1] <= 1.5 * mean_period
+        mean_period = (late_crossings[-1] - late_crossings[0]) / len(
+            all_late_periods
         )
+        if mean_period <= 0 or not math.isfinite(mean_period):
+            raise _InvalidOscillatorRequest(
+                "oscillator.value.non_finite",
+                "The late-cycle mean period is not positive and finite.",
+            )
+        leading_covered = late_crossings[0] - start <= mean_period
+        # The zero time is retained only after the waveform reaches +H.  A
+        # crop may therefore end after a genuine final zero but before its
+        # confirmation sample.  Ten percent is the closed v1alpha1 phase/
+        # interpolation allowance; the terminal-period amplitude gate below
+        # still rejects a real tail collapse.
+        trailing_covered = stop - late_crossings[-1] <= 1.1 * mean_period
+        tail_start = max(start, stop - mean_period)
+        _, (tail_values,) = _crop(
+            crop_axis, [crop_differential], tail_start, stop
+        )
+        tail_amplitude = max(tail_values) - min(tail_values)
+        if not math.isfinite(tail_amplitude):
+            raise _InvalidOscillatorRequest(
+                "oscillator.value.non_finite",
+                "The terminal differential amplitude overflowed the finite result range.",
+            )
         if period_relative_deviation > maximum_period_deviation:
             flags.append("period_inconsistent")
         if amplitude_relative_deviation > maximum_amplitude_deviation:
             flags.append("amplitude_inconsistent")
         if observed_minimum_samples < minimum_samples:
             flags.append("sampling_resolution_insufficient")
-        if differential_peak_to_peak < minimum_amplitude or (
-            all_late_amplitudes and min(all_late_amplitudes) < minimum_amplitude
-        ):
+        failed_amplitude_times = [
+            late_crossings[index]
+            for index, value in enumerate(all_late_amplitudes)
+            if value < minimum_amplitude
+        ]
+        if failed_amplitude_times or tail_amplitude < minimum_amplitude:
             flags.append("amplitude_below_minimum")
-        if not coverage_ok:
+        if not (leading_covered and trailing_covered):
             flags.append("window_not_fully_covered")
 
-        if "sampling_resolution_insufficient" in flags:
-            verdict = "unknown"
-        elif {"period_inconsistent", "amplitude_inconsistent"} & set(flags):
-            verdict = "multimode"
-        elif flags:
-            verdict = "collapsed" if started_at is not None else "not_sustained"
-        else:
-            verdict = "sustained"
-    elif started_at is not None:
-        verdict = "collapsed"
+    elif len(all_crossings) >= 2:
+        # With fewer than two late events, estimate one terminal cycle from
+        # the median observed hysteretic period.  This distinguishes a clean
+        # but under-counted crop from a post-start terminal amplitude loss.
+        search_periods = [
+            right - left for left, right in zip(all_crossings, all_crossings[1:])
+        ]
+        ordered_periods = sorted(search_periods)
+        mean_period = ordered_periods[len(ordered_periods) // 2]
+        tail_start = max(start, stop - mean_period)
+        _, (tail_values,) = _crop(
+            crop_axis, [crop_differential], tail_start, stop
+        )
+        tail_amplitude = max(tail_values) - min(tail_values)
+        leading_covered = bool(late_crossings) and (
+            late_crossings[0] - start <= mean_period
+        )
+        trailing_covered = bool(late_crossings) and (
+            stop - late_crossings[-1] <= 1.1 * mean_period
+        )
+        if tail_amplitude < minimum_amplitude:
+            flags.append("amplitude_below_minimum")
+        if not (leading_covered and trailing_covered):
+            flags.append("window_not_fully_covered")
+
+    if not enough_counted_cycles:
         flags.append("late_crossings_insufficient")
-    elif activity:
+
+    post_start_amplitude_failures = (
+        [value for value in failed_amplitude_times if value >= started_at]
+        if started_at is not None
+        else []
+    )
+    # Collapse requires positive evidence from a complete post-onset cycle.
+    # A missing final hysteresis confirmation or a partial-cycle crop is only
+    # insufficient coverage; phase and a high but valid H must not fabricate
+    # terminal amplitude loss.
+    stopped_after_complete_cycle = (
+        started_at is not None
+        and len(late_crossings) >= 2
+        and not trailing_covered
+        and tail_amplitude < minimum_amplitude
+        and all_late_amplitudes[-1] >= minimum_amplitude
+    )
+    terminal_failure = started_at is not None and (
+        bool(post_start_amplitude_failures) or stopped_after_complete_cycle
+    )
+    if terminal_failure:
+        failure_times = [*post_start_amplitude_failures]
+        if stopped_after_complete_cycle:
+            failure_times.append(tail_start)
+        collapse_at_value = min(
+            stop,
+            max(started_at, min(failure_times)),
+        )
+
+    if "sampling_resolution_insufficient" in flags:
+        verdict = "unknown"
+    elif started_at is None:
+        verdict = "not_sustained" if activity else "never_started"
+        if verdict == "not_sustained" and "startup_hold_not_met" not in flags:
+            flags.append("startup_hold_not_met")
+    elif terminal_failure:
+        verdict = "collapsed"
+    elif started_at > start or not leading_covered:
         verdict = "not_sustained"
-        flags.append("startup_hold_not_met")
+    elif not enough_counted_cycles:
+        verdict = "not_sustained"
+    elif not trailing_covered:
+        verdict = "not_sustained"
+    elif "amplitude_below_minimum" in flags:
+        verdict = "not_sustained"
+    elif {"period_inconsistent", "amplitude_inconsistent"} & set(flags):
+        verdict = "multimode"
     else:
+        verdict = "sustained"
+
+    if verdict == "never_started" and "oscillation_activity_absent" not in flags:
         verdict = "never_started"
         flags.append("oscillation_activity_absent")
 
@@ -922,9 +1193,11 @@ def _measure_transient(
         unit="W",
         window_sha256=window_sha256,
     )
+    if started_at is None and verdict == "not_sustained" and "startup_hold_not_met" not in flags:
+        flags.append("startup_hold_not_met")
     collapse_at = (
-        {"value": all_crossings[-1], "unit": "s"}
-        if started_at is not None and verdict == "collapsed" and all_crossings
+        {"value": collapse_at_value, "unit": "s"}
+        if verdict == "collapsed" and collapse_at_value is not None
         else None
     )
     startup = {
@@ -973,25 +1246,31 @@ def _measure_transient(
         "extensions": {},
     }
 
+    method = {
+        key: request[key]
+        for key in (
+            "kind",
+            "signals",
+            "window",
+            "startup",
+            "crossing",
+            "quality",
+            "power",
+        )
+    }
     request_sha256 = _canonical_sha256(request)
-    method_sha256 = _canonical_sha256(
-        {
-            key: request[key]
-            for key in (
-                "kind",
-                "signals",
-                "window",
-                "startup",
-                "crossing",
-                "quality",
-                "power",
-            )
-        }
-    )
+    method_sha256 = _canonical_sha256(method)
     receipt_without_hash: dict[str, object] = {
         "schema": RECEIPT_SCHEMA,
+        "producer": {
+            "operation_profile": OPERATION_PROFILE,
+            "assertion_profile": ASSERTION_PROFILE,
+            "implementation_id": IMPLEMENTATION_ID,
+            "implementation_version": IMPLEMENTATION_VERSION,
+        },
         "measurement_id": request["measurement_id"],
         "status": verdict,
+        "request": request,
         "request_sha256": request_sha256,
         "method_sha256": method_sha256,
         "series_sha256": source["series_sha256"],
@@ -1037,13 +1316,18 @@ def _measure_transient(
             )
         )
     elif verdict != "sustained":
+        non_sustained_message = (
+            "A qualifying startup was observed, but the declared late window did not contain enough fully covered cycles."
+            if verdict == "not_sustained" and started_at is not None
+            else "Oscillatory activity was observed but never satisfied the declared startup hold interval."
+        )
         diagnostics.append(
             diagnostic(
                 "error",
                 f"oscillator.{verdict}",
                 {
                     "never_started": "No amplitude-qualified hysteretic oscillation was observed.",
-                    "not_sustained": "Oscillatory activity was observed but never satisfied the declared startup hold interval.",
+                    "not_sustained": non_sustained_message,
                     "collapsed": "A qualifying startup interval was observed, but oscillation did not remain valid through the declared late window.",
                 }[verdict],
             )
@@ -1058,7 +1342,11 @@ def _measure_transient(
     summary = {
         "sustained": "Derived sustained oscillator frequency, differential amplitude, and supply power from one late window.",
         "never_started": "The waveform never established amplitude-qualified hysteretic oscillation.",
-        "not_sustained": "The waveform showed activity but did not satisfy the startup hold interval.",
+        "not_sustained": (
+            "The oscillator started, but the declared late window did not contain enough fully covered cycles."
+            if started_at is not None
+            else "The waveform showed activity but did not satisfy the startup hold interval."
+        ),
         "collapsed": "The oscillator started and then collapsed before completing the late-window assertion.",
         "multimode": "The waveform was flagged for beating or multimode QC; frequency was withheld.",
         "unknown": "The oscillator waveform resolution is insufficient for the declared method.",
@@ -1252,6 +1540,230 @@ def _public_receipt(receipt: Mapping[str, Any]) -> dict[str, object]:
     }
 
 
+def _receipt_nullable_quantity(
+    value: object,
+    label: str,
+    *,
+    unit: str,
+) -> dict[str, object] | None:
+    if value is None:
+        return None
+    return _quantity(value, label, unit)
+
+
+def _receipt_startup_and_quality(
+    *,
+    startup_value: object,
+    quality_value: object,
+    request: Mapping[str, Any],
+    status: str,
+    label: str,
+) -> None:
+    startup = _closed_object(
+        startup_value,
+        f"{label}.startup",
+        required={
+            "status",
+            "started_at",
+            "time",
+            "collapse_at",
+            "search_start",
+            "hold_for",
+            "minimum_peak_to_peak",
+            "extensions",
+        },
+    )
+    _extensions(startup["extensions"], f"{label}.startup.extensions")
+    if startup["status"] != status:
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.startup.status must match the receipt verdict.",
+        )
+    for field, unit in (
+        ("search_start", "s"),
+        ("hold_for", "s"),
+        ("minimum_peak_to_peak", "V"),
+    ):
+        observed = _quantity(
+            startup[field], f"{label}.startup.{field}", unit
+        )
+        if observed != request["startup"][field]:
+            raise _InvalidOscillatorRequest(
+                "oscillator.receipt.invalid",
+                f"{label}.startup.{field} differs from the bound request.",
+            )
+    started_at = _receipt_nullable_quantity(
+        startup["started_at"], f"{label}.startup.started_at", unit="s"
+    )
+    startup_time = _receipt_nullable_quantity(
+        startup["time"], f"{label}.startup.time", unit="s"
+    )
+    collapse_at = _receipt_nullable_quantity(
+        startup["collapse_at"], f"{label}.startup.collapse_at", unit="s"
+    )
+    if (started_at is None) != (startup_time is None):
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.startup started_at and time must be present together.",
+        )
+    if started_at is not None and startup_time is not None:
+        if not (
+            request["startup"]["search_start"]["value"]
+            <= started_at["value"]
+            <= request["window"]["stop"]["value"]
+        ):
+            raise _InvalidOscillatorRequest(
+                "oscillator.receipt.invalid",
+                f"{label}.startup.started_at lies outside the bound observation.",
+            )
+        if started_at["value"] > (
+            request["window"]["stop"]["value"]
+            - request["startup"]["hold_for"]["value"]
+        ):
+            raise _InvalidOscillatorRequest(
+                "oscillator.receipt.invalid",
+                f"{label}.startup onset leaves no complete bound hold interval.",
+            )
+        expected_time = started_at["value"] - request["startup"]["search_start"]["value"]
+        if expected_time < 0 or not math.isclose(
+            startup_time["value"], expected_time, rel_tol=1e-12, abs_tol=1e-18
+        ):
+            raise _InvalidOscillatorRequest(
+                "oscillator.receipt.invalid",
+                f"{label}.startup.time does not match started_at minus search_start.",
+            )
+    if (status == "collapsed") != (collapse_at is not None):
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.startup.collapse_at must be present exactly for collapsed status.",
+        )
+    if status == "never_started" and started_at is not None:
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.startup onset is incompatible with {status} status.",
+        )
+    if collapse_at is not None and (
+        started_at is None
+        or collapse_at["value"] < started_at["value"]
+        or collapse_at["value"] > request["window"]["stop"]["value"]
+    ):
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.startup.collapse_at must follow onset within the bound window.",
+        )
+    if status in {"sustained", "multimode"} and started_at is None:
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.startup must retain a qualifying onset for {status} status.",
+        )
+
+    quality = _closed_object(
+        quality_value,
+        f"{label}.quality",
+        required={
+            "status",
+            "period_relative_deviation",
+            "amplitude_relative_deviation",
+            "minimum_samples_per_cycle_observed",
+            "maximum_period_relative_deviation",
+            "maximum_amplitude_relative_deviation",
+            "minimum_samples_per_cycle_required",
+            "flags",
+            "extensions",
+        },
+    )
+    _extensions(quality["extensions"], f"{label}.quality.extensions")
+    expected_quality_status = (
+        "pass" if status == "sustained" else "unknown" if status == "unknown" else "fail"
+    )
+    if quality["status"] != expected_quality_status:
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.quality.status contradicts the receipt verdict.",
+        )
+    for field in (
+        "period_relative_deviation",
+        "amplitude_relative_deviation",
+    ):
+        if quality[field] is not None and _finite(
+            quality[field], f"{label}.quality.{field}"
+        ) < 0:
+            raise _InvalidOscillatorRequest(
+                "oscillator.receipt.invalid",
+                f"{label}.quality.{field} must be non-negative or null.",
+            )
+    observed_samples = quality["minimum_samples_per_cycle_observed"]
+    if observed_samples is not None:
+        _integer(
+            observed_samples,
+            f"{label}.quality.minimum_samples_per_cycle_observed",
+            minimum=0,
+            maximum=100_002,
+        )
+    if (
+        quality["maximum_period_relative_deviation"]
+        != request["quality"]["maximum_period_relative_deviation"]
+        or quality["maximum_amplitude_relative_deviation"]
+        != request["quality"]["maximum_amplitude_relative_deviation"]
+        or quality["minimum_samples_per_cycle_required"]
+        != request["quality"]["minimum_samples_per_cycle"]
+    ):
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.quality limits differ from the bound request.",
+        )
+    allowed_flags = {
+        "period_inconsistent",
+        "amplitude_inconsistent",
+        "sampling_resolution_insufficient",
+        "amplitude_below_minimum",
+        "window_not_fully_covered",
+        "late_crossings_insufficient",
+        "startup_hold_not_met",
+        "oscillation_activity_absent",
+    }
+    raw_flags = quality["flags"]
+    if (
+        not _is_sequence(raw_flags)
+        or len(raw_flags) > len(allowed_flags)
+        or any(not isinstance(flag, str) for flag in raw_flags)
+        or any(flag not in allowed_flags for flag in raw_flags)
+        or len(set(raw_flags)) != len(raw_flags)
+    ):
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid", f"{label}.quality.flags is invalid."
+        )
+    flags = set(raw_flags)
+    if status == "sustained" and flags:
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.quality.flags must be empty for sustained status.",
+        )
+    if status == "sustained" and (
+        quality["period_relative_deviation"] is None
+        or quality["amplitude_relative_deviation"] is None
+        or quality["minimum_samples_per_cycle_observed"] is None
+        or quality["period_relative_deviation"]
+        > request["quality"]["maximum_period_relative_deviation"]
+        or quality["amplitude_relative_deviation"]
+        > request["quality"]["maximum_amplitude_relative_deviation"]
+        or quality["minimum_samples_per_cycle_observed"]
+        < request["quality"]["minimum_samples_per_cycle"]
+    ):
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.quality does not satisfy the bound sustained limits.",
+        )
+    if status == "multimode" and not {
+        "period_inconsistent",
+        "amplitude_inconsistent",
+    } & flags:
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.quality must retain a consistency flag for multimode status.",
+        )
+
+
 def _receipt(value: object, label: str) -> dict[str, Any]:
     item = _closed_object(
         value,
@@ -1259,8 +1771,10 @@ def _receipt(value: object, label: str) -> dict[str, Any]:
         required={
             "schema",
             "sha256",
+            "producer",
             "measurement_id",
             "status",
+            "request",
             "request_sha256",
             "method_sha256",
             "series_sha256",
@@ -1293,9 +1807,58 @@ def _receipt(value: object, label: str) -> dict[str, Any]:
         raise _InvalidOscillatorRequest(
             "oscillator.receipt.invalid", f"{label}.status is not a typed oscillator verdict."
         )
-    _role(item["measurement_id"], f"{label}.measurement_id")
+    measurement_id = _role(item["measurement_id"], f"{label}.measurement_id")
     for field in ("request_sha256", "method_sha256", "series_sha256", "window_sha256"):
         _digest(item[field], f"{label}.{field}")
+    producer = _closed_object(
+        item["producer"],
+        f"{label}.producer",
+        required={
+            "operation_profile",
+            "assertion_profile",
+            "implementation_id",
+            "implementation_version",
+        },
+    )
+    expected_producer = {
+        "operation_profile": OPERATION_PROFILE,
+        "assertion_profile": ASSERTION_PROFILE,
+        "implementation_id": IMPLEMENTATION_ID,
+        "implementation_version": IMPLEMENTATION_VERSION,
+    }
+    if dict(producer) != expected_producer:
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.producer does not identify this exact oscillator implementation.",
+        )
+    try:
+        bound_request = _normalize_transient_request(item["request"])
+    except _InvalidOscillatorRequest as exc:
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.request is not a valid closed transient request: {exc}",
+        ) from exc
+    method = {
+        key: bound_request[key]
+        for key in (
+            "kind",
+            "signals",
+            "window",
+            "startup",
+            "crossing",
+            "quality",
+            "power",
+        )
+    }
+    if (
+        bound_request["measurement_id"] != measurement_id
+        or _canonical_sha256(bound_request) != item["request_sha256"]
+        or _canonical_sha256(method) != item["method_sha256"]
+    ):
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label} request and method digests do not match the retained request.",
+        )
 
     if status == "sustained":
         frequency_status = "measured"
@@ -1374,6 +1937,16 @@ def _receipt(value: object, label: str) -> dict[str, Any]:
         name: _text(signals[name], f"{label}.window.signals.{name}")
         for name in ("positive", "negative", "supply_voltage", "supply_current")
     }
+    if (
+        start != bound_request["window"]["start"]
+        or stop != bound_request["window"]["stop"]
+        or window["cycle_count"] != bound_request["window"]["cycle_count"]
+        or normalized_signals != bound_request["signals"]
+    ):
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.window differs from the retained request method.",
+        )
     expected_window_sha256 = _canonical_sha256(
         {
             "series_sha256": item["series_sha256"],
@@ -1429,6 +2002,13 @@ def _receipt(value: object, label: str) -> dict[str, Any]:
             f"{label}.differential_peak_to_peak must be non-negative.",
         )
     if status == "sustained" and (
+        amplitude_value < bound_request["startup"]["minimum_peak_to_peak"]["value"]
+    ):
+        raise _InvalidOscillatorRequest(
+            "oscillator.receipt.invalid",
+            f"{label}.differential_peak_to_peak is below the bound sustained minimum.",
+        )
+    if status == "sustained" and (
         period_value is None
         or period_value <= 0
         or not math.isclose(
@@ -1442,6 +2022,13 @@ def _receipt(value: object, label: str) -> dict[str, Any]:
             "oscillator.receipt.invalid",
             f"{label}.frequency and period are not reciprocal sustained metrics.",
         )
+    _receipt_startup_and_quality(
+        startup_value=item["startup"],
+        quality_value=item["quality"],
+        request=bound_request,
+        status=status,
+        label=label,
+    )
     return {
         **_public_receipt(item),
         "source": source,
@@ -1580,7 +2167,8 @@ def _normalize_grid_request(value: Mapping[str, Any]) -> dict[str, Any]:
         _receipt_context(point["receipt"], excluding=control_condition)
         for point in points
     ]
-    if any(context != contexts[0] for context in contexts[1:]):
+    context_sha256 = _canonical_sha256(contexts[0])
+    if any(_canonical_sha256(context) != context_sha256 for context in contexts[1:]):
         raise _InvalidOscillatorRequest(
             "oscillator.condition.mismatch",
             "Tuning-grid receipts differ in conditions other than the declared control condition.",
@@ -1597,22 +2185,30 @@ def _normalize_grid_request(value: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _local_tuning_gain(controls: Sequence[float], frequencies: Sequence[float]) -> list[float]:
-    output = [(frequencies[1] - frequencies[0]) / (controls[1] - controls[0])]
-    for index in range(1, len(controls) - 1):
-        h0 = controls[index] - controls[index - 1]
-        h1 = controls[index + 1] - controls[index]
-        left_secant = (frequencies[index] - frequencies[index - 1]) / h0
-        right_secant = (frequencies[index + 1] - frequencies[index]) / h1
-        # This is algebraically the derivative at x_i of the unique quadratic
-        # through the three neighboring points.  Expressing it as weighted
-        # secants avoids cancellation between three GHz-scale absolute values.
-        derivative = (
-            h1 * left_secant + h0 * right_secant
-        ) / (h0 + h1)
-        output.append(derivative)
-    output.append(
-        (frequencies[-1] - frequencies[-2]) / (controls[-1] - controls[-2])
-    )
+    try:
+        output = [(frequencies[1] - frequencies[0]) / (controls[1] - controls[0])]
+        for index in range(1, len(controls) - 1):
+            h0 = controls[index] - controls[index - 1]
+            h1 = controls[index + 1] - controls[index]
+            left_secant = (frequencies[index] - frequencies[index - 1]) / h0
+            right_secant = (frequencies[index + 1] - frequencies[index]) / h1
+            # This is algebraically the derivative at x_i of the unique
+            # quadratic through the three neighboring points.  Expressing it
+            # as weighted secants avoids cancellation between three GHz-scale
+            # absolute values.
+            derivative = (
+                h1 * left_secant + h0 * right_secant
+            ) / (h0 + h1)
+            output.append(derivative)
+        output.append(
+            (frequencies[-1] - frequencies[-2])
+            / (controls[-1] - controls[-2])
+        )
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise _InvalidOscillatorRequest(
+            "oscillator.value.non_finite",
+            "Local tuning-gain calculation overflowed the finite result range.",
+        ) from exc
     if any(not math.isfinite(value) for value in output):
         raise _InvalidOscillatorRequest(
             "oscillator.value.non_finite",
@@ -1709,13 +2305,19 @@ def _measure_grid(
             "unit": "Hz/V",
         }
     differences = [right - left for left, right in zip(frequencies, frequencies[1:])]
-    if all(value >= 0 for value in differences):
+    if all(value == 0 for value in differences):
+        observed = "constant"
+    elif all(value >= 0 for value in differences):
         observed = "nondecreasing"
     elif all(value <= 0 for value in differences):
         observed = "nonincreasing"
     else:
         observed = "non_monotonic"
-    check = "pass" if observed == request["expected_monotonicity"] else "fail"
+    check = (
+        "pass"
+        if observed in {"constant", request["expected_monotonicity"]}
+        else "fail"
+    )
     span_value = max(frequencies) - min(frequencies)
     span = _metric(status="measured", value=span_value, unit="Hz", window_sha256=None)
     grid = {
@@ -1823,9 +2425,11 @@ def _normalize_shift_request(value: Mapping[str, Any]) -> dict[str, Any]:
     # Conditions other than the named perturbation are the comparison context
     # and must be identical; this prevents a supply-pushing result from also
     # changing control, temperature, or load without declaring another pair.
-    if _receipt_context(
-        reference["receipt"], excluding=perturbation_condition
-    ) != _receipt_context(perturbed["receipt"], excluding=perturbation_condition):
+    if _canonical_sha256(
+        _receipt_context(reference["receipt"], excluding=perturbation_condition)
+    ) != _canonical_sha256(
+        _receipt_context(perturbed["receipt"], excluding=perturbation_condition)
+    ):
         raise _InvalidOscillatorRequest(
             "oscillator.condition.mismatch",
             "Frequency-shift receipts differ in conditions other than the declared perturbation.",
@@ -1975,7 +2579,13 @@ def measure_oscillator(
             try:
                 normalized = _normalize_series(series)
             except _SeriesInvalidRequest as exc:
-                raise _InvalidOscillatorRequest(exc.code, str(exc)) from exc
+                source_code = {
+                    "measurement.source.digest_mismatch": (
+                        "oscillator.source.digest_mismatch"
+                    ),
+                    "measurement.source.over_limit": "oscillator.source.over_limit",
+                }.get(exc.code, "oscillator.source.invalid")
+                raise _InvalidOscillatorRequest(source_code, str(exc)) from exc
             request = _normalize_transient_request(base)
             measured, transient, receipt, engineering, summary, diagnostics = (
                 _measure_transient(normalized, request)
