@@ -115,3 +115,76 @@ At 60 °C, the calculated magnitude `29.73935121790 mV` also predicts the
 measured control edge at `29.73935135 mV`; the roughly 0.13 nV difference is
 consistent with the internal `W1` node not being exactly at zero. The exact
 temperature zero lies inside every measured temperature bracket.
+
+## Candidate fix and validation
+
+The candidate patch adds `TLEVC=1` to the `dsubw` model cards in both the
+ordinary and mismatch high-voltage svaricap libraries. With that selector,
+ngspice uses
+
+```text
+DIOtJctPot = VJ - TPB * (T - 300.15 K)
+DIOtJctCap = CJO * (1 + CTA * (T - 300.15 K))
+```
+
+`TPB` defaults to zero, so the junction potential remains at the specified
+positive `VJ=0.1 V`. The library's existing `CTA=1e-6` becomes effective.
+This is preferable to an arbitrary numerical floor because it selects a
+documented diode temperature mode consistent with the coefficient already on
+the model card.
+
+Apply the candidate to an IHP-Open-PDK checkout from the directory containing
+`ihp-sg13g2/`:
+
+```console
+patch -p1 < ihp-sg13g2-dsubw-tlevc.patch
+```
+
+`run-patched.sh` instead copies the model directory and applies the patch in an
+ephemeral container directory; it never changes the installed `/foss` PDK:
+
+```console
+./run-patched.sh 60 0.3
+./run-patched.sh 125 0.3
+```
+
+The unmodified model fails at both points with one retained transient row and
+direct `dsubw` trouble. The patched model completes 20 ns at both points with
+232 rows.
+
+No OSDI rebuild is required: the changed `dsubw` card is parsed by ngspice at
+run time, outside `mosvar.osdi`. For completeness, the PDK's OSDI rebuild path
+in this image is:
+
+```console
+cd /foss/pdks/ihp-sg13g2/libs.tech/verilog-a
+./openvaf-compile-va.sh
+# mosvar command selected by that script:
+openvaf-r -D__NGSPICE__ -o ../ngspice/osdi/mosvar.osdi mosvar/mosvar.va
+```
+
+The compiler reports `OpenVAF-reloaded 20260616-2-gc592eed-dirty`, but its
+output is unchanged and is not on the defect path.
+
+### 27 °C small-signal behavior
+
+`compare-cv.sh` runs the original and patched libraries at 27 °C, a 0.3 V
+well bias, and 1 GHz. It measures
+`-imag(I(VEXC))/(2*pi*frequency)` at six gate biases:
+
+```console
+./compare-cv.sh
+```
+
+| Gate DC | Original | Patched | Difference |
+|---:|---:|---:|---:|
+| -3 V | 3.38256482194147288 fF | 3.38256482194147288 fF | 0 F |
+| -1 V | 3.63859470090025178 fF | 3.63859470090025178 fF | 0 F |
+| 0 V | 4.99091624602253584 fF | 4.99091624602253584 fF | 0 F |
+| 0.3 V | 5.82635999645297004 fF | 5.82635999645297004 fF | 0 F |
+| 1 V | 6.67836778773348438 fF | 6.67836778773348438 fF | 0 F |
+| 3 V | 7.04878532230716015 fF | 7.04878532230716015 fF | 0 F |
+
+Every original/patched `wrdata` file is byte-identical at 17-digit output
+precision. At the 27 °C reference temperature both temperature modes reduce
+algebraically to the same `VJ` and `CJO`, so this exact match is expected.

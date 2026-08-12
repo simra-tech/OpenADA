@@ -1,0 +1,20 @@
+* IHP SG13G2 sg13_hv_svaricap 27 C small-signal capacitance check
+.param ctrl_v=0.3
+.param gate_v=0
+.temp 27
+
+.lib cornerMOShv.lib mos_tt
+
+VCTRL ctrl 0 {ctrl_v}
+VEXC gate 0 DC {gate_v} AC 1
+XVAR gate ctrl 0 0 sg13_hv_svaricap l=300n w=3.74u Nx=1 Ny=1
+
+.control
+set numdgt=17
+set wr_singlescale
+set wr_vecnames
+ac lin 1 1GHz 1GHz
+let cgate=-imag(vexc#branch)/(2*pi*frequency)
+wrdata cv.dat cgate
+.endc
+.end

@@ -1,0 +1,12 @@
+diff --git a/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_svaricaphv_mod.lib b/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_svaricaphv_mod.lib
+--- a/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_svaricaphv_mod.lib
++++ b/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_svaricaphv_mod.lib
+@@ -82 +82 @@
+-.model dsubw d is = 2.45E-17 jsw = 5.959E-10 n = 4 ns = 1.029 cjo = 1.444E-15 vj = 0.1 m = 0.1052 cjp = 1.117E-09 php = 0.457 mjsw = 0.2595 fc = 0.95 cta = 1E-06
++.model dsubw d is = 2.45E-17 jsw = 5.959E-10 n = 4 ns = 1.029 cjo = 1.444E-15 vj = 0.1 m = 0.1052 cjp = 1.117E-09 php = 0.457 mjsw = 0.2595 fc = 0.95 cta = 1E-06 tlevc = 1
+diff --git a/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_svaricaphv_mod_mismatch.lib b/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_svaricaphv_mod_mismatch.lib
+--- a/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_svaricaphv_mod_mismatch.lib
++++ b/ihp-sg13g2/libs.tech/ngspice/models/sg13g2_svaricaphv_mod_mismatch.lib
+@@ -86 +86 @@
+-.model dsubw d is = 2.45E-17 jsw = 5.959E-10 n = 4 ns = 1.029 cjo = 1.444E-15 vj = 0.1 m = 0.1052 cjp = 1.117E-09 php = 0.457 mjsw = 0.2595 fc = 0.95 cta = 1E-06
++.model dsubw d is = 2.45E-17 jsw = 5.959E-10 n = 4 ns = 1.029 cjo = 1.444E-15 vj = 0.1 m = 0.1052 cjp = 1.117E-09 php = 0.457 mjsw = 0.2595 fc = 0.95 cta = 1E-06 tlevc = 1
