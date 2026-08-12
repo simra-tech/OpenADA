@@ -40,6 +40,12 @@ def _canonical_sha256(value: object) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _rehash_receipt(receipt: dict[str, Any]) -> None:
+    receipt["sha256"] = _canonical_sha256(
+        {key: value for key, value in receipt.items() if key != "sha256"}
+    )
+
+
 def _series(
     definition: dict[str, Any],
     source_definition: dict[str, Any],
@@ -64,9 +70,14 @@ def _series(
         elif generator == "collapse_sine":
             value = primary if coordinate < float(definition["collapse_at_s"]) else 0.0
         elif generator == "two_tone":
-            value = primary + float(definition["second_amplitude_v"]) * math.sin(
-                2.0 * math.pi * float(definition["second_frequency_hz"]) * coordinate
-            )
+            value = primary
+            if coordinate >= float(definition["second_tone_start_s"]):
+                value += float(definition["second_amplitude_v"]) * math.sin(
+                    2.0
+                    * math.pi
+                    * float(definition["second_frequency_hz"])
+                    * coordinate
+                )
         else:  # fixture validation rejects this before execution
             raise ValueError(f"unsupported deterministic generator {generator!r}")
         differential.append(value)
@@ -302,9 +313,22 @@ def run_suite(manifest_path: Path = DEFAULT_MANIFEST) -> dict[str, Any]:
     for case in cases["receipt_rejection_cases"]:
         original = _grid_receipts(cases, case)
         receipts = deepcopy(original)
-        if case["mutation"] != "increment-frequency-value-without-rehash":
+        if case["mutation"] == "increment-frequency-value-without-rehash":
+            receipts[0]["frequency"]["value"] += 1.0
+        elif case["mutation"] == "replace-producer-and-rehash":
+            receipts[0]["producer"]["implementation_id"] = (
+                "org.example.forged-oscillator-evidence"
+            )
+            _rehash_receipt(receipts[0])
+        elif case["mutation"] == "remove-sustained-startup-onset-and-rehash":
+            receipts[0]["startup"]["started_at"] = None
+            receipts[0]["startup"]["time"] = None
+            _rehash_receipt(receipts[0])
+        elif case["mutation"] == "contradict-quality-status-and-rehash":
+            receipts[0]["quality"]["status"] = "fail"
+            _rehash_receipt(receipts[0])
+        else:
             raise ValueError(f"unsupported receipt mutation {case['mutation']!r}")
-        receipts[0]["frequency"]["value"] += 1.0
         measurement = _grid_request(case, receipts)
         request = {"measurement": measurement, "extensions": {}}
         result = measure_oscillator(None, measurement, request_id=case["request_id"])
@@ -316,6 +340,33 @@ def run_suite(manifest_path: Path = DEFAULT_MANIFEST) -> dict[str, Any]:
                 "request_sha256": _canonical_sha256(request),
                 "original_receipt_sha256": [item["sha256"] for item in original],
                 "receipts": receipts,
+                "result": result,
+            }
+        )
+
+    request_rejection_records: list[dict[str, Any]] = []
+    for case in cases["request_rejection_cases"]:
+        series = _series(cases["waveforms"][case["waveform"]], cases["source"])
+        measurement = deepcopy(cases["transient_methods"][case["method"]])
+        if case["mutation"] == "set-maximum-period-relative-deviation-to-0.0500001":
+            measurement["quality"]["maximum_period_relative_deviation"] = 0.0500001
+        elif case["mutation"] == "set-maximum-amplitude-relative-deviation-to-0.2000001":
+            measurement["quality"]["maximum_amplitude_relative_deviation"] = 0.2000001
+        else:
+            raise ValueError(f"unsupported request mutation {case['mutation']!r}")
+        request = {"series": series, "measurement": measurement, "extensions": {}}
+        result = measure_oscillator(
+            series,
+            measurement,
+            request_id=case["request_id"],
+        )
+        request_rejection_records.append(
+            {
+                "id": case["id"],
+                "feature_ids": case["feature_ids"],
+                "mutation": case["mutation"],
+                "request_sha256": _canonical_sha256(request),
+                "series_sha256": series["source"]["artifact_sha256"],
                 "result": result,
             }
         )
@@ -332,6 +383,7 @@ def run_suite(manifest_path: Path = DEFAULT_MANIFEST) -> dict[str, Any]:
         "grids": grid_records,
         "shifts": shift_records,
         "receipt_rejections": rejection_records,
+        "request_rejections": request_rejection_records,
     }
 
 

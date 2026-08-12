@@ -184,6 +184,7 @@
       "amplitude_v": 0.65,
       "second_frequency_hz": 2250000000.0,
       "second_amplitude_v": 0.25,
+      "second_tone_start_s": 1e-8,
       "stop_s": 6e-8,
       "samples_per_cycle": 12,
       "supply_voltage_v": 1.2,
@@ -453,6 +454,114 @@
         "execution_status": "invalid_request",
         "measurement_status": "unknown",
         "diagnostic_code": "oscillator.receipt.digest_mismatch"
+      }
+    },
+    {
+      "id": "rehashed-forged-producer-rejected",
+      "feature_ids": ["openada.feature/oscillator.local-tuning-gain/v1alpha1"],
+      "request_id": "54000000-0000-4000-8000-000000000002",
+      "method": "composition_short",
+      "mutation": "replace-producer-and-rehash",
+      "measurement": {
+        "measurement_id": "vco.tuning.forged-producer",
+        "kind": "tuning_grid",
+        "control_condition": "vctrl",
+        "control_unit": "V",
+        "expected_monotonicity": "nondecreasing",
+        "extensions": {}
+      },
+      "points": [
+        {"control_v": 0.0, "frequency_hz": 2400000000.0, "generator": "sine"},
+        {"control_v": 0.5, "frequency_hz": 2420000000.0, "generator": "sine"},
+        {"control_v": 1.0, "frequency_hz": 2440000000.0, "generator": "sine"}
+      ],
+      "expected": {
+        "engineering_status": "unknown",
+        "execution_status": "invalid_request",
+        "measurement_status": "unknown",
+        "diagnostic_code": "oscillator.receipt.invalid"
+      }
+    },
+    {
+      "id": "rehashed-forged-startup-rejected",
+      "feature_ids": ["openada.feature/oscillator.local-tuning-gain/v1alpha1"],
+      "request_id": "54000000-0000-4000-8000-000000000003",
+      "method": "composition_short",
+      "mutation": "remove-sustained-startup-onset-and-rehash",
+      "measurement": {
+        "measurement_id": "vco.tuning.forged-startup",
+        "kind": "tuning_grid",
+        "control_condition": "vctrl",
+        "control_unit": "V",
+        "expected_monotonicity": "nondecreasing",
+        "extensions": {}
+      },
+      "points": [
+        {"control_v": 0.0, "frequency_hz": 2400000000.0, "generator": "sine"},
+        {"control_v": 0.5, "frequency_hz": 2420000000.0, "generator": "sine"},
+        {"control_v": 1.0, "frequency_hz": 2440000000.0, "generator": "sine"}
+      ],
+      "expected": {
+        "engineering_status": "unknown",
+        "execution_status": "invalid_request",
+        "measurement_status": "unknown",
+        "diagnostic_code": "oscillator.receipt.invalid"
+      }
+    },
+    {
+      "id": "rehashed-forged-quality-rejected",
+      "feature_ids": ["openada.feature/oscillator.local-tuning-gain/v1alpha1"],
+      "request_id": "54000000-0000-4000-8000-000000000004",
+      "method": "composition_short",
+      "mutation": "contradict-quality-status-and-rehash",
+      "measurement": {
+        "measurement_id": "vco.tuning.forged-quality",
+        "kind": "tuning_grid",
+        "control_condition": "vctrl",
+        "control_unit": "V",
+        "expected_monotonicity": "nondecreasing",
+        "extensions": {}
+      },
+      "points": [
+        {"control_v": 0.0, "frequency_hz": 2400000000.0, "generator": "sine"},
+        {"control_v": 0.5, "frequency_hz": 2420000000.0, "generator": "sine"},
+        {"control_v": 1.0, "frequency_hz": 2440000000.0, "generator": "sine"}
+      ],
+      "expected": {
+        "engineering_status": "unknown",
+        "execution_status": "invalid_request",
+        "measurement_status": "unknown",
+        "diagnostic_code": "oscillator.receipt.invalid"
+      }
+    }
+  ],
+  "request_rejection_cases": [
+    {
+      "id": "loose-period-qc-cap-rejected",
+      "feature_ids": ["openada.feature/oscillator.startup-hold/v1alpha1"],
+      "request_id": "55000000-0000-4000-8000-000000000001",
+      "waveform": "clean_reference",
+      "method": "diagnostic_short",
+      "mutation": "set-maximum-period-relative-deviation-to-0.0500001",
+      "expected": {
+        "engineering_status": "unknown",
+        "execution_status": "invalid_request",
+        "measurement_status": "unknown",
+        "diagnostic_code": "oscillator.quality.invalid"
+      }
+    },
+    {
+      "id": "loose-amplitude-qc-cap-rejected",
+      "feature_ids": ["openada.feature/oscillator.startup-hold/v1alpha1"],
+      "request_id": "55000000-0000-4000-8000-000000000002",
+      "waveform": "clean_reference",
+      "method": "diagnostic_short",
+      "mutation": "set-maximum-amplitude-relative-deviation-to-0.2000001",
+      "expected": {
+        "engineering_status": "unknown",
+        "execution_status": "invalid_request",
+        "measurement_status": "unknown",
+        "diagnostic_code": "oscillator.quality.invalid"
       }
     }
   ]

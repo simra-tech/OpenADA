@@ -29,7 +29,13 @@ Coverage includes:
   shift propagation to typed unknown results;
 - signed perturbed-minus-reference supply shift; and
 - rejection of a receipt whose frequency was changed without recomputing its
-  content digest.
+  content digest;
+- rejection of digest-valid forgeries with a foreign producer identity,
+  missing sustained-startup onset, or contradictory quality status;
+- independent recomputation of the retained full-request and method digests,
+  plus startup/quality cross-field invariant checks; and
+- rejection of period- and amplitude-consistency requests looser than the
+  closed 5% and 20% v1alpha1 QC caps.
 
 From the repository root, write one fresh evidence file and verify it in the
 same command:

@@ -9,6 +9,7 @@ synthetic waveform, and recomputes the reference oscillator math locally.
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_left, bisect_right
 from copy import deepcopy
 import hashlib
 import json
@@ -51,7 +52,16 @@ SHIFT_CASE_IDS = (
     "signed-supply-perturbation-shift",
     "incomplete-shift-propagates-unknown",
 )
-REJECTION_CASE_IDS = ("tampered-receipt-rejected",)
+REJECTION_CASE_IDS = (
+    "tampered-receipt-rejected",
+    "rehashed-forged-producer-rejected",
+    "rehashed-forged-startup-rejected",
+    "rehashed-forged-quality-rejected",
+)
+REQUEST_REJECTION_CASE_IDS = (
+    "loose-period-qc-cap-rejected",
+    "loose-amplitude-qc-cap-rejected",
+)
 
 
 class ConformanceError(RuntimeError):
@@ -191,6 +201,7 @@ def load_manifest(path: Path = DEFAULT_MANIFEST) -> dict[str, Any]:
             "grid": list(GRID_CASE_IDS),
             "shift": list(SHIFT_CASE_IDS),
             "receipt_rejection": list(REJECTION_CASE_IDS),
+            "request_rejection": list(REQUEST_REJECTION_CASE_IDS),
         },
         "manifest.cases",
     )
@@ -275,6 +286,7 @@ def load_cases(manifest: dict[str, Any]) -> dict[str, Any]:
             "grid_cases",
             "shift_cases",
             "receipt_rejection_cases",
+            "request_rejection_cases",
         },
         "fixture.keys",
     )
@@ -287,17 +299,29 @@ def load_cases(manifest: dict[str, Any]) -> dict[str, Any]:
         list(REJECTION_CASE_IDS),
         "fixture.receipt rejection ids",
     )
+    _expect(
+        _case_ids(cases, "request_rejection_cases"),
+        list(REQUEST_REJECTION_CASE_IDS),
+        "fixture.request rejection ids",
+    )
 
     all_case_ids = (
         _case_ids(cases, "transient_cases")
         + _case_ids(cases, "grid_cases")
         + _case_ids(cases, "shift_cases")
         + _case_ids(cases, "receipt_rejection_cases")
+        + _case_ids(cases, "request_rejection_cases")
     )
     if len(all_case_ids) != len(set(all_case_ids)):
         raise ConformanceError("fixture case identifiers must be globally unique")
     covered: set[str] = set()
-    for key in ("transient_cases", "grid_cases", "shift_cases", "receipt_rejection_cases"):
+    for key in (
+        "transient_cases",
+        "grid_cases",
+        "shift_cases",
+        "receipt_rejection_cases",
+        "request_rejection_cases",
+    ):
         for index, case in enumerate(cases[key]):
             features = case.get("feature_ids")
             if not isinstance(features, list) or not features:
@@ -377,9 +401,14 @@ def _series(
         elif generator == "collapse_sine":
             value = primary if coordinate < float(definition["collapse_at_s"]) else 0.0
         elif generator == "two_tone":
-            value = primary + float(definition["second_amplitude_v"]) * math.sin(
-                2.0 * math.pi * float(definition["second_frequency_hz"]) * coordinate
-            )
+            value = primary
+            if coordinate >= float(definition["second_tone_start_s"]):
+                value += float(definition["second_amplitude_v"]) * math.sin(
+                    2.0
+                    * math.pi
+                    * float(definition["second_frequency_hz"])
+                    * coordinate
+                )
         else:
             raise ConformanceError(f"unsupported fixture generator {generator!r}")
         if not math.isfinite(value):
@@ -454,9 +483,9 @@ def _crop(
 ) -> tuple[list[float], list[list[float]]]:
     if start < axis[0] or stop > axis[-1] or stop <= start:
         raise ConformanceError("invalid reference crop")
-    coordinates = [start]
-    coordinates.extend(value for value in axis if start < value < stop)
-    coordinates.append(stop)
+    first = bisect_right(axis, start)
+    last = bisect_left(axis, stop)
+    coordinates = [start, *axis[first:last], stop]
     return coordinates, [
         [_interpolate(axis, values, coordinate) for coordinate in coordinates]
         for values in vectors
@@ -474,10 +503,27 @@ def _crossings(
     for index in range(len(axis) - 1):
         x0, x1 = axis[index], axis[index + 1]
         y0, y1 = values[index], values[index + 1]
+        if pending is not None and (y0 <= low or y1 <= low):
+            pending = None
+            armed = True
         if not armed and pending is None and (y0 <= low or y1 <= low):
             armed = True
         if armed and pending is None and y0 < threshold <= y1 and y1 > y0:
-            pending = x0 + (threshold - y0) * (x1 - x0) / (y1 - y0)
+            ordinate_scale = max(abs(y0), abs(y1), abs(threshold))
+            if ordinate_scale == 0 or not math.isfinite(ordinate_scale):
+                raise ConformanceError("reference crossing ordinate scale is invalid")
+            fraction = (
+                threshold / ordinate_scale - y0 / ordinate_scale
+            ) / (y1 / ordinate_scale - y0 / ordinate_scale)
+            if not math.isfinite(fraction) or not 0.0 <= fraction <= 1.0:
+                raise ConformanceError("reference crossing fraction is invalid")
+            pending = (
+                x0 + fraction * (x1 - x0)
+                if fraction <= 0.5
+                else x1 - (1.0 - fraction) * (x1 - x0)
+            )
+            if not math.isfinite(pending) or pending < x0 or pending > x1:
+                raise ConformanceError("reference crossing time is invalid")
         if pending is not None and (y0 >= high or y1 >= high):
             found.append(pending)
             pending = None
@@ -488,8 +534,13 @@ def _crossings(
 def _relative_deviation(values: Sequence[float]) -> float:
     if not values:
         return 0.0
-    mean = math.fsum(values) / len(values)
-    return max(abs(value - mean) / mean for value in values)
+    scale = max(values)
+    if scale <= 0 or not math.isfinite(scale):
+        raise ConformanceError("reference quality scale is not positive and finite")
+    scaled_mean = math.fsum(value / scale for value in values) / len(values)
+    return max(
+        abs(value / scale - scaled_mean) / scaled_mean for value in values
+    )
 
 
 def _cycle_assessment(
@@ -504,6 +555,90 @@ def _cycle_assessment(
         amplitudes.append(max(cropped[0]) - min(cropped[0]))
         sample_counts.append(len(cycle_axis))
     return periods, amplitudes, sample_counts
+
+
+_CycleStats = tuple[float, float, float, float, float, float, int, int]
+
+
+def _merge_cycle_stats(
+    left: _CycleStats | None,
+    right: _CycleStats | None,
+) -> _CycleStats | None:
+    if left is None:
+        return right
+    if right is None:
+        return left
+    amplitude_scale = max(left[4], right[4])
+    scaled_sum = (
+        left[5] * (left[4] / amplitude_scale)
+        + right[5] * (right[4] / amplitude_scale)
+        if amplitude_scale > 0
+        else 0.0
+    )
+    if not math.isfinite(scaled_sum):
+        raise ConformanceError("reference startup statistics are not finite")
+    return (
+        min(left[0], right[0]),
+        max(left[1], right[1]),
+        min(left[2], right[2]),
+        max(left[3], right[3]),
+        amplitude_scale,
+        scaled_sum,
+        min(left[6], right[6]),
+        left[7] + right[7],
+    )
+
+
+def _cycle_stats_tree(
+    periods: Sequence[float],
+    amplitudes: Sequence[float],
+    sample_counts: Sequence[int],
+) -> tuple[int, list[_CycleStats | None]]:
+    size = 1
+    while size < len(periods):
+        size *= 2
+    tree: list[_CycleStats | None] = [None] * (2 * size)
+    for index, (period, amplitude, samples) in enumerate(
+        zip(periods, amplitudes, sample_counts)
+    ):
+        tree[size + index] = (
+            period,
+            period,
+            amplitude,
+            amplitude,
+            amplitude,
+            1.0 if amplitude > 0 else 0.0,
+            samples,
+            1,
+        )
+    for index in range(size - 1, 0, -1):
+        tree[index] = _merge_cycle_stats(tree[2 * index], tree[2 * index + 1])
+    return size, tree
+
+
+def _cycle_stats_range(
+    tree: Sequence[_CycleStats | None],
+    size: int,
+    start: int,
+    stop: int,
+) -> _CycleStats:
+    left: _CycleStats | None = None
+    right: _CycleStats | None = None
+    start += size
+    stop += size
+    while start < stop:
+        if start % 2:
+            left = _merge_cycle_stats(left, tree[start])
+            start += 1
+        if stop % 2:
+            stop -= 1
+            right = _merge_cycle_stats(tree[stop], right)
+        start //= 2
+        stop //= 2
+    combined = _merge_cycle_stats(left, right)
+    if combined is None:
+        raise ConformanceError("reference startup cycle range is empty")
+    return combined
 
 
 def _startup_candidate(
@@ -521,21 +656,43 @@ def _startup_candidate(
         return None, False
     periods, amplitudes, sample_counts = _cycle_assessment(axis, differential, crossings)
     activity = any(amplitude >= minimum_amplitude for amplitude in amplitudes)
-    for start_index in range(len(periods)):
-        for stop_index in range(start_index + 3, len(periods) + 1):
-            if crossings[stop_index] - crossings[start_index] < hold_for:
-                continue
-            selected_periods = periods[start_index:stop_index]
-            selected_amplitudes = amplitudes[start_index:stop_index]
-            selected_samples = sample_counts[start_index:stop_index]
-            if (
-                min(selected_amplitudes) >= minimum_amplitude
-                and min(selected_samples) >= minimum_samples
-                and _relative_deviation(selected_periods) <= maximum_period_deviation
-                and _relative_deviation(selected_amplitudes) <= maximum_amplitude_deviation
-            ):
-                return crossings[start_index], activity
+    if not activity:
+        return None, False
+    tree_size, stats_tree = _cycle_stats_tree(periods, amplitudes, sample_counts)
+    for start_index in range(len(periods) - 2):
+        required_stop = crossings[start_index] + hold_for
+        stop_index = max(start_index + 3, bisect_left(crossings, required_stop))
+        # The hold is valid only when a complete crossing-bounded interval
+        # remains in the observation after the candidate onset.
+        if stop_index >= len(crossings):
             break
+        stats = _cycle_stats_range(stats_tree, tree_size, start_index, stop_index)
+        if stats[2] < minimum_amplitude or stats[6] < minimum_samples:
+            continue
+        period_mean = (crossings[stop_index] - crossings[start_index]) / stats[7]
+        amplitude_mean_scaled = stats[5] / stats[7]
+        if (
+            period_mean <= 0
+            or not math.isfinite(period_mean)
+            or amplitude_mean_scaled <= 0
+            or not math.isfinite(amplitude_mean_scaled)
+        ):
+            continue
+        period_deviation = max(
+            abs(stats[0] / period_mean - 1.0),
+            abs(stats[1] / period_mean - 1.0),
+        )
+        amplitude_deviation = max(
+            abs(stats[2] / stats[4] - amplitude_mean_scaled),
+            abs(stats[3] / stats[4] - amplitude_mean_scaled),
+        ) / amplitude_mean_scaled
+        if (
+            math.isfinite(period_deviation)
+            and math.isfinite(amplitude_deviation)
+            and period_deviation <= maximum_period_deviation
+            and amplitude_deviation <= maximum_amplitude_deviation
+        ):
+            return crossings[start_index], activity
     return None, activity
 
 
@@ -572,12 +729,13 @@ def _reference_transient(
     powers = [left * right for left, right in zip(crop_voltage, crop_current)]
     if request["power"]["current_orientation"] == "positive_into_source":
         powers = [-value for value in powers]
+    duration = crop_axis[-1] - crop_axis[0]
     power_value = math.fsum(
-        (right_t - left_t) * (left_p + right_p) / 2.0
+        ((right_t - left_t) / duration) * (left_p / 2.0 + right_p / 2.0)
         for left_t, right_t, left_p, right_p in zip(
             crop_axis, crop_axis[1:], powers, powers[1:]
         )
-    ) / (crop_axis[-1] - crop_axis[0])
+    )
 
     search_axis, searched = _crop(axis, [positive, negative], search_start, stop)
     search_differential = [left - right for left, right in zip(searched[0], searched[1])]
@@ -631,46 +789,116 @@ def _reference_transient(
     period_deviation: float | None = None
     amplitude_deviation: float | None = None
     observed_minimum_samples: int | None = None
+    collapse_at_value: float | None = None
     flags: list[str] = []
-    if len(late_crossings) >= requested_cycles + 1:
+    enough_counted_cycles = len(late_crossings) >= requested_cycles + 1
+    if enough_counted_cycles:
         selected_crossings = late_crossings[: requested_cycles + 1]
         selected_periods = [right - left for left, right in zip(selected_crossings, selected_crossings[1:])]
+
+    leading_covered = False
+    trailing_covered = False
+    tail_start = start
+    tail_amplitude = amplitude_value
+    failed_amplitude_times: list[float] = []
+    if len(late_crossings) >= 2:
         all_late_periods, all_late_amplitudes, late_samples = _cycle_assessment(
             crop_axis, crop_differential, late_crossings
         )
         period_deviation = _relative_deviation(all_late_periods)
         amplitude_deviation = _relative_deviation(all_late_amplitudes)
         observed_minimum_samples = min(late_samples)
-        mean_period = math.fsum(all_late_periods) / len(all_late_periods)
-        coverage_ok = late_crossings[0] - start <= 1.5 * mean_period and stop - late_crossings[-1] <= 1.5 * mean_period
+        mean_period = (late_crossings[-1] - late_crossings[0]) / len(all_late_periods)
+        leading_covered = late_crossings[0] - start <= mean_period
+        trailing_covered = stop - late_crossings[-1] <= 1.1 * mean_period
+        tail_start = max(start, stop - mean_period)
+        _, tail_vectors = _crop(crop_axis, [crop_differential], tail_start, stop)
+        tail_amplitude = max(tail_vectors[0]) - min(tail_vectors[0])
         if period_deviation > maximum_period_deviation:
             flags.append("period_inconsistent")
         if amplitude_deviation > maximum_amplitude_deviation:
             flags.append("amplitude_inconsistent")
         if observed_minimum_samples < minimum_samples:
             flags.append("sampling_resolution_insufficient")
-        if amplitude_value < minimum_amplitude or (
-            all_late_amplitudes and min(all_late_amplitudes) < minimum_amplitude
-        ):
+        failed_amplitude_times = [
+            late_crossings[index]
+            for index, value in enumerate(all_late_amplitudes)
+            if value < minimum_amplitude
+        ]
+        if failed_amplitude_times or tail_amplitude < minimum_amplitude:
             flags.append("amplitude_below_minimum")
-        if not coverage_ok:
+        if not (leading_covered and trailing_covered):
             flags.append("window_not_fully_covered")
-        if "sampling_resolution_insufficient" in flags:
-            verdict = "unknown"
-        elif {"period_inconsistent", "amplitude_inconsistent"} & set(flags):
-            verdict = "multimode"
-        elif flags:
-            verdict = "collapsed" if started_at is not None else "not_sustained"
-        else:
-            verdict = "sustained"
-    elif started_at is not None:
-        verdict = "collapsed"
+
+    elif len(all_crossings) >= 2:
+        search_periods = [
+            right - left for left, right in zip(all_crossings, all_crossings[1:])
+        ]
+        ordered_periods = sorted(search_periods)
+        mean_period = ordered_periods[len(ordered_periods) // 2]
+        tail_start = max(start, stop - mean_period)
+        _, tail_vectors = _crop(crop_axis, [crop_differential], tail_start, stop)
+        tail_amplitude = max(tail_vectors[0]) - min(tail_vectors[0])
+        leading_covered = bool(late_crossings) and (
+            late_crossings[0] - start <= mean_period
+        )
+        trailing_covered = bool(late_crossings) and (
+            stop - late_crossings[-1] <= 1.1 * mean_period
+        )
+        if tail_amplitude < minimum_amplitude:
+            flags.append("amplitude_below_minimum")
+        if not (leading_covered and trailing_covered):
+            flags.append("window_not_fully_covered")
+
+    if not enough_counted_cycles:
         flags.append("late_crossings_insufficient")
-    elif activity:
+
+    post_start_amplitude_failures = (
+        [value for value in failed_amplitude_times if value >= started_at]
+        if started_at is not None
+        else []
+    )
+    stopped_after_complete_cycle = (
+        started_at is not None
+        and len(late_crossings) >= 2
+        and not trailing_covered
+        and tail_amplitude < minimum_amplitude
+        and all_late_amplitudes[-1] >= minimum_amplitude
+    )
+    terminal_failure = started_at is not None and (
+        bool(post_start_amplitude_failures) or stopped_after_complete_cycle
+    )
+    if terminal_failure:
+        candidates = [*post_start_amplitude_failures]
+        if stopped_after_complete_cycle:
+            candidates.append(tail_start)
+        collapse_at_value = min(
+            stop,
+            max(started_at, min(candidates)),
+        )
+
+    if "sampling_resolution_insufficient" in flags:
+        verdict = "unknown"
+    elif started_at is None:
+        verdict = "not_sustained" if activity else "never_started"
+        if verdict == "not_sustained" and "startup_hold_not_met" not in flags:
+            flags.append("startup_hold_not_met")
+    elif terminal_failure:
+        verdict = "collapsed"
+    elif started_at > start or not leading_covered:
         verdict = "not_sustained"
-        flags.append("startup_hold_not_met")
+    elif not enough_counted_cycles:
+        verdict = "not_sustained"
+    elif not trailing_covered:
+        verdict = "not_sustained"
+    elif "amplitude_below_minimum" in flags:
+        verdict = "not_sustained"
+    elif {"period_inconsistent", "amplitude_inconsistent"} & set(flags):
+        verdict = "multimode"
     else:
-        verdict = "never_started"
+        verdict = "sustained"
+
+    if verdict == "never_started" and "oscillation_activity_absent" not in flags:
         flags.append("oscillation_activity_absent")
 
     frequency_value: float | None = None
@@ -684,13 +912,19 @@ def _reference_transient(
     period = _metric(metric_status, period_value, "s", window_sha256)
     amplitude = _metric("measured", amplitude_value, "V", window_sha256)
     power = _metric("measured", power_value, "W", window_sha256)
+    if (
+        started_at is None
+        and verdict == "not_sustained"
+        and "startup_hold_not_met" not in flags
+    ):
+        flags.append("startup_hold_not_met")
     startup = {
         "status": verdict,
         "started_at": {"value": started_at, "unit": "s"} if started_at is not None else None,
         "time": {"value": started_at - search_start, "unit": "s"} if started_at is not None else None,
         "collapse_at": (
-            {"value": all_crossings[-1], "unit": "s"}
-            if started_at is not None and verdict == "collapsed" and all_crossings
+            {"value": collapse_at_value, "unit": "s"}
+            if verdict == "collapsed" and collapse_at_value is not None
             else None
         ),
         "search_start": request["startup"]["search_start"],
@@ -722,17 +956,23 @@ def _reference_transient(
         "window": window,
         "extensions": {},
     }
+    method = {
+        key: request[key]
+        for key in ("kind", "signals", "window", "startup", "crossing", "quality", "power")
+    }
     request_sha256 = _canonical_sha256(request)
-    method_sha256 = _canonical_sha256(
-        {
-            key: request[key]
-            for key in ("kind", "signals", "window", "startup", "crossing", "quality", "power")
-        }
-    )
+    method_sha256 = _canonical_sha256(method)
     receipt_without_hash = {
         "schema": "openada.oscillator-transient-receipt/v1alpha1",
+        "producer": {
+            "operation_profile": "openada.operation/result.osc.measure/v1alpha1",
+            "assertion_profile": "openada.assertion/oscillator.measurement.valid/v1alpha1",
+            "implementation_id": "org.openada.kernel.oscillator-evidence",
+            "implementation_version": "1.0.0",
+        },
         "measurement_id": request["measurement_id"],
         "status": verdict,
+        "request": request,
         "request_sha256": request_sha256,
         "method_sha256": method_sha256,
         "series_sha256": source["series_sha256"],
@@ -808,6 +1048,202 @@ def _verify_common_result(
 def _verify_receipt(actual: dict[str, Any], expected: dict[str, Any], location: str) -> None:
     if not isinstance(actual, dict):
         raise ConformanceError(f"{location} must be an object")
+    _expect(
+        set(actual),
+        {
+            "schema",
+            "sha256",
+            "producer",
+            "measurement_id",
+            "status",
+            "request",
+            "request_sha256",
+            "method_sha256",
+            "series_sha256",
+            "window_sha256",
+            "source",
+            "window",
+            "frequency",
+            "period",
+            "differential_peak_to_peak",
+            "average_supply_power",
+            "startup",
+            "quality",
+            "extensions",
+        },
+        f"{location}.keys",
+    )
+    _expect(
+        actual["producer"],
+        {
+            "operation_profile": "openada.operation/result.osc.measure/v1alpha1",
+            "assertion_profile": "openada.assertion/oscillator.measurement.valid/v1alpha1",
+            "implementation_id": "org.openada.kernel.oscillator-evidence",
+            "implementation_version": "1.0.0",
+        },
+        f"{location}.producer",
+    )
+    request = actual["request"]
+    if not isinstance(request, dict):
+        raise ConformanceError(f"{location}.request must be an object")
+    _expect(
+        set(request),
+        {
+            "measurement_id",
+            "kind",
+            "signals",
+            "window",
+            "startup",
+            "crossing",
+            "quality",
+            "power",
+            "extensions",
+        },
+        f"{location}.request.keys",
+    )
+    _expect(request["kind"], "transient", f"{location}.request.kind")
+    _expect(request["measurement_id"], actual["measurement_id"], f"{location}.request.measurement_id")
+    _expect(actual["request_sha256"], _canonical_sha256(request), f"{location}.request_sha256")
+    method = {
+        key: request[key]
+        for key in ("kind", "signals", "window", "startup", "crossing", "quality", "power")
+    }
+    _expect(actual["method_sha256"], _canonical_sha256(method), f"{location}.method_sha256")
+    period_cap = request["quality"]["maximum_period_relative_deviation"]
+    amplitude_cap = request["quality"]["maximum_amplitude_relative_deviation"]
+    if (
+        isinstance(period_cap, bool)
+        or not isinstance(period_cap, (int, float))
+        or not math.isfinite(float(period_cap))
+        or not 0 <= period_cap <= 0.05
+    ):
+        raise ConformanceError(f"{location}.request quality period cap is invalid")
+    if (
+        isinstance(amplitude_cap, bool)
+        or not isinstance(amplitude_cap, (int, float))
+        or not math.isfinite(float(amplitude_cap))
+        or not 0 <= amplitude_cap <= 0.20
+    ):
+        raise ConformanceError(f"{location}.request quality amplitude cap is invalid")
+
+    window = actual["window"]
+    _expect(window["start"], request["window"]["start"], f"{location}.window.start")
+    _expect(window["stop"], request["window"]["stop"], f"{location}.window.stop")
+    _expect(window["cycle_count"], request["window"]["cycle_count"], f"{location}.window.cycle_count")
+    _expect(window["signals"], request["signals"], f"{location}.window.signals")
+
+    status = actual["status"]
+    startup = actual["startup"]
+    _expect(startup["status"], status, f"{location}.startup.status")
+    for field in ("search_start", "hold_for", "minimum_peak_to_peak"):
+        _expect(startup[field], request["startup"][field], f"{location}.startup.{field}")
+    started_at = startup["started_at"]
+    startup_time = startup["time"]
+    collapse_at = startup["collapse_at"]
+    _expect(started_at is None, startup_time is None, f"{location}.startup onset pairing")
+    if started_at is not None:
+        started_at_value = float(started_at["value"])
+        search_start_value = float(request["startup"]["search_start"]["value"])
+        window_stop_value = float(request["window"]["stop"]["value"])
+        hold_for_value = float(request["startup"]["hold_for"]["value"])
+        if not search_start_value <= started_at_value <= window_stop_value:
+            raise ConformanceError(f"{location}.startup onset lies outside observation")
+        if started_at_value > window_stop_value - hold_for_value:
+            raise ConformanceError(f"{location}.startup onset leaves no complete hold")
+        expected_time = (
+            started_at_value
+            - search_start_value
+        )
+        _expect_close(startup_time["value"], expected_time, f"{location}.startup.time.value")
+        _expect(started_at["unit"], "s", f"{location}.startup.started_at.unit")
+        _expect(startup_time["unit"], "s", f"{location}.startup.time.unit")
+    _expect(collapse_at is not None, status == "collapsed", f"{location}.startup.collapse_at presence")
+    if collapse_at is not None:
+        _expect(collapse_at["unit"], "s", f"{location}.startup.collapse_at.unit")
+        if (
+            started_at is None
+            or float(collapse_at["value"]) < float(started_at["value"])
+            or float(collapse_at["value"]) > float(request["window"]["stop"]["value"])
+        ):
+            raise ConformanceError(f"{location}.startup collapse is outside bound window")
+    if status == "never_started" and started_at is not None:
+        raise ConformanceError(f"{location}.startup never-started receipt retains onset")
+    if status in {"sustained", "multimode"} and started_at is None:
+        raise ConformanceError(f"{location}.startup receipt lacks qualifying onset")
+
+    quality = actual["quality"]
+    expected_quality_status = (
+        "pass" if status == "sustained" else "unknown" if status == "unknown" else "fail"
+    )
+    _expect(quality["status"], expected_quality_status, f"{location}.quality.status")
+    _expect(
+        quality["maximum_period_relative_deviation"],
+        period_cap,
+        f"{location}.quality.maximum_period_relative_deviation",
+    )
+    _expect(
+        quality["maximum_amplitude_relative_deviation"],
+        amplitude_cap,
+        f"{location}.quality.maximum_amplitude_relative_deviation",
+    )
+    _expect(
+        quality["minimum_samples_per_cycle_required"],
+        request["quality"]["minimum_samples_per_cycle"],
+        f"{location}.quality.minimum_samples_per_cycle_required",
+    )
+    for field in ("period_relative_deviation", "amplitude_relative_deviation"):
+        value = quality[field]
+        if value is not None and (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(float(value))
+            or value < 0
+        ):
+            raise ConformanceError(f"{location}.quality.{field} is invalid")
+    observed_samples = quality["minimum_samples_per_cycle_observed"]
+    if observed_samples is not None and (
+        isinstance(observed_samples, bool)
+        or not isinstance(observed_samples, int)
+        or not 0 <= observed_samples <= 100_002
+    ):
+        raise ConformanceError(
+            f"{location}.quality.minimum_samples_per_cycle_observed is invalid"
+        )
+    allowed_flags = {
+        "period_inconsistent",
+        "amplitude_inconsistent",
+        "sampling_resolution_insufficient",
+        "amplitude_below_minimum",
+        "window_not_fully_covered",
+        "late_crossings_insufficient",
+        "startup_hold_not_met",
+        "oscillation_activity_absent",
+    }
+    flags = quality["flags"]
+    if (
+        not isinstance(flags, list)
+        or len(flags) != len(set(flags))
+        or any(flag not in allowed_flags for flag in flags)
+    ):
+        raise ConformanceError(f"{location}.quality.flags is invalid")
+    if status == "sustained" and flags:
+        raise ConformanceError(f"{location}.quality sustained receipt has flags")
+    if status == "sustained" and (
+        quality["period_relative_deviation"] is None
+        or quality["amplitude_relative_deviation"] is None
+        or quality["minimum_samples_per_cycle_observed"] is None
+        or quality["period_relative_deviation"] > period_cap
+        or quality["amplitude_relative_deviation"] > amplitude_cap
+        or quality["minimum_samples_per_cycle_observed"]
+        < request["quality"]["minimum_samples_per_cycle"]
+    ):
+        raise ConformanceError(f"{location}.quality violates sustained limits")
+    if status == "multimode" and not {
+        "period_inconsistent",
+        "amplitude_inconsistent",
+    } & set(flags):
+        raise ConformanceError(f"{location}.quality multimode receipt lacks consistency flag")
+
     supplied = actual.get("sha256")
     content = {key: value for key, value in actual.items() if key != "sha256"}
     _expect(supplied, _canonical_sha256(content), f"{location}.sha256")
@@ -945,11 +1381,9 @@ def _local_gains(controls: Sequence[float], frequencies: Sequence[float]) -> lis
     for index in range(1, len(controls) - 1):
         h0 = controls[index] - controls[index - 1]
         h1 = controls[index + 1] - controls[index]
-        output.append(
-            -h1 / (h0 * (h0 + h1)) * frequencies[index - 1]
-            + (h1 - h0) / (h0 * h1) * frequencies[index]
-            + h0 / (h1 * (h0 + h1)) * frequencies[index + 1]
-        )
+        left_secant = (frequencies[index] - frequencies[index - 1]) / h0
+        right_secant = (frequencies[index + 1] - frequencies[index]) / h1
+        output.append((h1 * left_secant + h0 * right_secant) / (h0 + h1))
     output.append((frequencies[-1] - frequencies[-2]) / (controls[-1] - controls[-2]))
     return output
 
@@ -1190,14 +1624,42 @@ def _verify_rejection_record(
     )
     _expect(record["id"], case["id"], f"{location}.id")
     _expect(record["feature_ids"], case["feature_ids"], f"{location}.feature_ids")
-    _expect(record["mutation"], "increment-frequency-value-without-rehash", f"{location}.mutation")
+    _expect(record["mutation"], case["mutation"], f"{location}.mutation")
     originals = _grid_expected_receipts(cases, case)
     _expect(record["original_receipt_sha256"], [item["sha256"] for item in originals], f"{location}.original_receipt_sha256")
     expected_mutated = deepcopy(originals)
-    expected_mutated[0]["frequency"]["value"] += 1.0
+    mutation = case["mutation"]
+    if mutation == "increment-frequency-value-without-rehash":
+        expected_mutated[0]["frequency"]["value"] += 1.0
+    elif mutation == "replace-producer-and-rehash":
+        expected_mutated[0]["producer"]["implementation_id"] = (
+            "org.example.forged-oscillator-evidence"
+        )
+        expected_mutated[0]["sha256"] = _canonical_sha256(
+            {key: value for key, value in expected_mutated[0].items() if key != "sha256"}
+        )
+    elif mutation == "remove-sustained-startup-onset-and-rehash":
+        expected_mutated[0]["startup"]["started_at"] = None
+        expected_mutated[0]["startup"]["time"] = None
+        expected_mutated[0]["sha256"] = _canonical_sha256(
+            {key: value for key, value in expected_mutated[0].items() if key != "sha256"}
+        )
+    elif mutation == "contradict-quality-status-and-rehash":
+        expected_mutated[0]["quality"]["status"] = "fail"
+        expected_mutated[0]["sha256"] = _canonical_sha256(
+            {key: value for key, value in expected_mutated[0].items() if key != "sha256"}
+        )
+    else:
+        raise ConformanceError(f"unsupported receipt rejection mutation {mutation!r}")
     _expect(record["receipts"], expected_mutated, f"{location}.receipts")
-    if _canonical_sha256({key: value for key, value in record["receipts"][0].items() if key != "sha256"}) == record["receipts"][0]["sha256"]:
-        raise ConformanceError(f"{location}.receipts[0] is not actually digest-invalid")
+    recomputed = _canonical_sha256(
+        {key: value for key, value in record["receipts"][0].items() if key != "sha256"}
+    )
+    if mutation == "increment-frequency-value-without-rehash":
+        if recomputed == record["receipts"][0]["sha256"]:
+            raise ConformanceError(f"{location}.receipts[0] is not actually digest-invalid")
+    else:
+        _expect(record["receipts"][0]["sha256"], recomputed, f"{location}.receipts[0].rehashed_sha256")
     measurement = _grid_request(case, expected_mutated)
     _expect(record["request_sha256"], _canonical_sha256({"measurement": measurement, "extensions": {}}), f"{location}.request_sha256")
     expected = case["expected"]
@@ -1221,13 +1683,73 @@ def _verify_rejection_record(
         _expect(data[key], None, f"{location}.{key}")
 
 
+def _verify_request_rejection_record(
+    record: dict[str, Any],
+    case: dict[str, Any],
+    cases: dict[str, Any],
+    *,
+    result_schema: dict[str, Any],
+    data_schema: dict[str, Any],
+    location: str,
+) -> None:
+    _expect(
+        set(record),
+        {"id", "feature_ids", "mutation", "request_sha256", "series_sha256", "result"},
+        f"{location}.keys",
+    )
+    _expect(record["id"], case["id"], f"{location}.id")
+    _expect(record["feature_ids"], case["feature_ids"], f"{location}.feature_ids")
+    _expect(record["mutation"], case["mutation"], f"{location}.mutation")
+    series, source = _series(cases["waveforms"][case["waveform"]], cases["source"])
+    measurement = deepcopy(cases["transient_methods"][case["method"]])
+    if case["mutation"] == "set-maximum-period-relative-deviation-to-0.0500001":
+        measurement["quality"]["maximum_period_relative_deviation"] = 0.0500001
+        _expect(
+            measurement["quality"]["maximum_period_relative_deviation"] > 0.05,
+            True,
+            f"{location}.period cap mutation",
+        )
+    elif case["mutation"] == "set-maximum-amplitude-relative-deviation-to-0.2000001":
+        measurement["quality"]["maximum_amplitude_relative_deviation"] = 0.2000001
+        _expect(
+            measurement["quality"]["maximum_amplitude_relative_deviation"] > 0.20,
+            True,
+            f"{location}.amplitude cap mutation",
+        )
+    else:
+        raise ConformanceError(f"unsupported request rejection mutation {case['mutation']!r}")
+    request = {"series": series, "measurement": measurement, "extensions": {}}
+    _expect(record["request_sha256"], _canonical_sha256(request), f"{location}.request_sha256")
+    _expect(record["series_sha256"], source["series_sha256"], f"{location}.series_sha256")
+    expected = case["expected"]
+    result = record["result"]
+    _verify_common_result(
+        result,
+        case=case,
+        engineering_status=expected["engineering_status"],
+        execution_status=expected["execution_status"],
+        result_schema=result_schema,
+        data_schema=data_schema,
+        location=f"{location}.result",
+    )
+    _expect(_diagnostic_code(result), expected["diagnostic_code"], f"{location}.diagnostic_code")
+    data = result["data"]
+    _expect(data["measurement"]["measurement_id"], measurement["measurement_id"], f"{location}.measurement_id")
+    _expect(data["measurement"]["kind"], "transient", f"{location}.kind")
+    _expect(data["measurement"]["status"], expected["measurement_status"], f"{location}.measurement.status")
+    _expect(data["measurement"]["request_sha256"], None, f"{location}.measurement.request_sha256")
+    _expect(data["measurement"]["source_count"], 0, f"{location}.measurement.source_count")
+    for key in ("transient", "grid", "shift", "receipt"):
+        _expect(data[key], None, f"{location}.{key}")
+
+
 def verify_evidence(path: Path, *, manifest_path: Path = DEFAULT_MANIFEST) -> dict[str, Any]:
     manifest = load_manifest(manifest_path)
     cases = load_cases(manifest)
     evidence = _read_json(path.resolve(), label="oscillator conformance evidence")
     _expect(
         set(evidence),
-        {"schema", "conformance_id", "implementation", "fixture_sha256", "transients", "grids", "shifts", "receipt_rejections"},
+        {"schema", "conformance_id", "implementation", "fixture_sha256", "transients", "grids", "shifts", "receipt_rejections", "request_rejections"},
         "evidence.keys",
     )
     _expect(evidence["schema"], "openada.oscillator-measure-conformance-run/v0alpha1", "evidence.schema")
@@ -1245,6 +1767,7 @@ def verify_evidence(path: Path, *, manifest_path: Path = DEFAULT_MANIFEST) -> di
         ("grids", "grid_cases", _verify_grid_record),
         ("shifts", "shift_cases", _verify_shift_record),
         ("receipt_rejections", "receipt_rejection_cases", _verify_rejection_record),
+        ("request_rejections", "request_rejection_cases", _verify_request_rejection_record),
     )
     for evidence_key, case_key, verifier in groups:
         records = evidence[evidence_key]
@@ -1276,6 +1799,7 @@ def verify_evidence(path: Path, *, manifest_path: Path = DEFAULT_MANIFEST) -> di
             "grid": len(cases["grid_cases"]),
             "shift": len(cases["shift_cases"]),
             "receipt_rejection": len(cases["receipt_rejection_cases"]),
+            "request_rejection": len(cases["request_rejection_cases"]),
         },
     }
 

@@ -15,13 +15,13 @@
     "oscillator": {
       "id": "openada.operation/result.osc.measure/v1alpha1",
       "repository_path": "profiles/result.osc.measure-v1alpha1.json",
-      "sha256": "01fb5884ce96fb0b9e52b7a23722cfd5c236471ba4bc64084efc19ca8f9bbda2"
+      "sha256": "43d11dc381e016cd4c6dc06f215865d96ae03dfc75ed74eb2483e3ad3c5841d4"
     }
   },
   "fixture": {
     "schema": "openada.oscillator-measure-conformance-cases/v0alpha1",
     "repository_path": "conformance/oscillator-measure-v0alpha1/fixtures/cases.json",
-    "sha256": "04c5c9b02c663dd3d1a452e33453d790ed1ef5467434f560e9c27f89228f0506",
+    "sha256": "ecf1971ec3c12402e7b30d6da7bd20239a5218278bae7ce6cb220effc1d4c5da",
     "license": "MIT"
   },
   "features": [
@@ -51,7 +51,14 @@
       "incomplete-shift-propagates-unknown"
     ],
     "receipt_rejection": [
-      "tampered-receipt-rejected"
+      "tampered-receipt-rejected",
+      "rehashed-forged-producer-rejected",
+      "rehashed-forged-startup-rejected",
+      "rehashed-forged-quality-rejected"
+    ],
+    "request_rejection": [
+      "loose-period-qc-cap-rejected",
+      "loose-amplitude-qc-cap-rejected"
     ]
   },
   "policy": {
