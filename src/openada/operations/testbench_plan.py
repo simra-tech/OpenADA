@@ -19,8 +19,6 @@ import re
 import sysconfig
 from typing import Any
 
-from jsonschema import Draft202012Validator, FormatChecker
-
 from ..contract import FileRecordError, stable_regular_file
 
 
@@ -30,6 +28,16 @@ MAX_PLAN_BYTES = 4 * 1024 * 1024
 _ID_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 _SPICE_NAME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,63}$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _jsonschema_types():
+    """Keep unrelated CLI leaves usable when site packages are hidden."""
+
+    try:
+        from jsonschema import Draft202012Validator, FormatChecker
+    except ImportError as exc:  # pragma: no cover - exercised through the -S CLI test
+        raise ValueError("testbench-plan validation requires jsonschema") from exc
+    return Draft202012Validator, FormatChecker
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,6 +182,7 @@ def load_testbench_plan_schema() -> dict[str, Any]:
     """Load and meta-validate the published plan schema."""
 
     try:
+        Draft202012Validator, _ = _jsonschema_types()
         body = _schema_path().read_bytes()
         document = json.loads(body.decode("utf-8"))
         if not isinstance(document, dict):
@@ -337,6 +346,7 @@ class _PlanValidator:
         except ValueError as exc:
             self.add("testbench_plan.contract.unavailable", "", str(exc))
             return None
+        Draft202012Validator, FormatChecker = _jsonschema_types()
         validator = Draft202012Validator(schema, format_checker=FormatChecker())
         self._schema_errors(validator.iter_errors(self.document), prefix="")
         if self.issues:
@@ -468,6 +478,7 @@ class _PlanValidator:
             "$defs": schema["$defs"],
             "$ref": "#/$defs/dut",
         }
+        Draft202012Validator, _ = _jsonschema_types()
         errors = list(Draft202012Validator(override_schema).iter_errors(captured))
         self._schema_errors(errors, prefix="/dut_override")
         if errors:
