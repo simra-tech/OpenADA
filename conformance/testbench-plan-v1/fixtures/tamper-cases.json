@@ -1,0 +1,51 @@
+{
+  "schema": "simra.testbench-plan-conformance-tampers/v1",
+  "cases": [
+    {
+      "id": "plan-binding",
+      "path": [
+        "validation",
+        "plan_canonical_sha256"
+      ],
+      "replacement": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "expected_message": "validation.plan_canonical_sha256"
+    },
+    {
+      "id": "compiled-deck",
+      "path": [
+        "compilation",
+        "conditions",
+        1,
+        "deck_sha256"
+      ],
+      "replacement": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "expected_message": "compilation.conditions"
+    },
+    {
+      "id": "waveform-receipt",
+      "path": [
+        "execution",
+        "receipt",
+        "attempts",
+        0,
+        "waveform_sha256"
+      ],
+      "replacement": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "expected_message": "execution.receipt_sha256"
+    },
+    {
+      "id": "observable-lineage",
+      "path": [
+        "execution",
+        "observables",
+        "metadata",
+        "lineage",
+        0,
+        "condition_ids",
+        0
+      ],
+      "replacement": "undeclared.condition",
+      "expected_message": "execution.observables_sha256"
+    }
+  ]
+}

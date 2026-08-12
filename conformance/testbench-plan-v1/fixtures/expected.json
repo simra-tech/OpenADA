@@ -1,0 +1,55 @@
+{
+  "schema": "simra.testbench-plan-conformance-expected/v1",
+  "plan_id": "conformance_rc_characterization",
+  "corner": "tt",
+  "compiler_id": "openada.testbench-plan.ngspice/v1",
+  "runner_id": "openada.testbench-plan.runner.ngspice/v1",
+  "plan_raw_sha256": "b1d78d923351a32c22c484d1bd9e471007ea1cc1c3e8645a3d1b1a5321b5bccd",
+  "plan_canonical_sha256": "27f7f105c7d8aa7794bf395cfca065e57318f9e9818dc8a9413d967a62e27e76",
+  "sealed_dut_sha256": "83e0aa15965c4e737863996f8203527e53034aba67cba9481ec2b709de7cec63",
+  "corner_canonical_sha256": "67a8ba3c2c581b80516c81368eb05a999578aea202349a15bcc67436f2440c39",
+  "closed_field_refusal_code": "testbench_plan.document.unknown_field",
+  "conditions": [
+    {
+      "id": "characterize.dc_response.dc_000000_5feceb66",
+      "stage_id": "characterize",
+      "point_id": "dc_response",
+      "analysis_kind": "dc_sweep",
+      "condition_sha256": "e134dc2b9362bf2bbf83be29830cf469a6a667854afb178facbadc14ab3e8195",
+      "deck_sha256": "a9f4babc678be30f285ea548b4fe813f370d3882f03120dba98a3c51fb1b7e45"
+    },
+    {
+      "id": "characterize.dc_response.dc_000001_b4af4e0d",
+      "stage_id": "characterize",
+      "point_id": "dc_response",
+      "analysis_kind": "dc_sweep",
+      "condition_sha256": "8d47305ad2e18c64e1031684815f5ea66936442c59e64111470eaf3f26f10f8a",
+      "deck_sha256": "0f023b6385d2991139a1001cd16c506e5c729e28b54a84c28562276cd079b267"
+    },
+    {
+      "id": "characterize.dc_response.dc_000002_77ac319b",
+      "stage_id": "characterize",
+      "point_id": "dc_response",
+      "analysis_kind": "dc_sweep",
+      "condition_sha256": "b20d0f306ed4625bd79b4d42fc726f81d6f1d69e62f0a5d6a299049d4f2f1518",
+      "deck_sha256": "8fd9b93adccea082dc6be44664a5e7aa04a4509fe639f290dcddeab3515f3247"
+    },
+    {
+      "id": "characterize.pulse_response",
+      "stage_id": "characterize",
+      "point_id": "pulse_response",
+      "analysis_kind": "pulse_train_transient",
+      "condition_sha256": "5f49da39c55f8b9503b5a2eca0e2cc12243594ac0ddc04f326e2e6cf49d97266",
+      "deck_sha256": "82aab98cbd77a9492f3dcde3a6c97cb2239bd61f78e59b988b89b91244cca273"
+    }
+  ],
+  "observables": [
+    "dc_curve",
+    "pulse_curve"
+  ],
+  "validity": {
+    "dc_finite": "VALID",
+    "pulse_finite": "VALID"
+  },
+  "simulator_identity_contains": "ngspice-"
+}

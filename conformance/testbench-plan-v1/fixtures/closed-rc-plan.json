@@ -1,0 +1,326 @@
+{
+  "schema": "simra.testbench-plan/v1",
+  "id": "conformance_rc_characterization",
+  "dut": {
+    "artifact": "/opt/openada-conformance/testbench-plan-v1/rc-dut.spice",
+    "sha256": "03a94eb0740e2bf85238964e8157b958992e14f2f55d59934c0a1a494cad49c7",
+    "namespace": "conformance_rc",
+    "top": "RC_DUT",
+    "ports": [
+      {
+        "name": "IN",
+        "direction": "input",
+        "internal_nodes": []
+      },
+      {
+        "name": "OUT",
+        "direction": "output",
+        "internal_nodes": []
+      },
+      {
+        "name": "VDD",
+        "direction": "supply",
+        "internal_nodes": []
+      },
+      {
+        "name": "VSS",
+        "direction": "reference",
+        "internal_nodes": []
+      }
+    ],
+    "connections": {
+      "IN": "IN",
+      "OUT": "OUT",
+      "VDD": "VDD",
+      "VSS": "0"
+    },
+    "immutable": true
+  },
+  "corner_bindings": [
+    {
+      "id": "tt",
+      "temperature": {
+        "value": 27,
+        "unit": "degC"
+      },
+      "values": [
+        {
+          "id": "vdd",
+          "value": {
+            "value": 1.2,
+            "unit": "V"
+          }
+        }
+      ]
+    }
+  ],
+  "supplies": [
+    {
+      "id": "core_supply",
+      "positive": "VDD",
+      "negative": "0",
+      "voltage": {
+        "kind": "corner_value",
+        "value_id": "vdd",
+        "unit": "V"
+      }
+    }
+  ],
+  "stimuli": [
+    {
+      "id": "input_dc",
+      "kind": "dc_state",
+      "target_port": "IN",
+      "supply_id": "core_supply",
+      "state": "low",
+      "level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 0
+      }
+    },
+    {
+      "id": "input_pulses",
+      "kind": "pulse_train",
+      "target_port": "IN",
+      "supply_id": "core_supply",
+      "polarity": "active_high",
+      "low_level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 0
+      },
+      "high_level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 1
+      },
+      "delay": {
+        "value": 2e-10,
+        "unit": "s"
+      },
+      "rise_time": {
+        "value": 1e-10,
+        "unit": "s"
+      },
+      "fall_time": {
+        "value": 1e-10,
+        "unit": "s"
+      },
+      "pulse_width": {
+        "value": 4e-10,
+        "unit": "s"
+      },
+      "period": {
+        "value": 1e-9,
+        "unit": "s"
+      },
+      "count": 2
+    }
+  ],
+  "probes": [
+    {
+      "id": "output_voltage",
+      "kind": "dut_port_voltage",
+      "unit": "V",
+      "port": "OUT",
+      "reference_port": "VSS"
+    }
+  ],
+  "stages": [
+    {
+      "id": "characterize",
+      "depends_on": [],
+      "inputs": [],
+      "points": [
+        {
+          "id": "dc_response",
+          "condition": {
+            "corner": "tt",
+            "temperature": {
+              "value": 27,
+              "unit": "degC"
+            },
+            "parameters": []
+          },
+          "state_policy": {
+            "kind": "fresh",
+            "initial_node_voltages": [
+              {
+                "kind": "port",
+                "port": "OUT",
+                "value": {
+                  "value": 0,
+                  "unit": "V"
+                }
+              }
+            ]
+          },
+          "settle_policy": {
+            "kind": "operating_point"
+          },
+          "active_stimulus_ids": [
+            "input_dc"
+          ],
+          "analysis": {
+            "kind": "dc_sweep",
+            "source_stimulus_id": "input_dc",
+            "start": {
+              "value": 0,
+              "unit": "V"
+            },
+            "stop": {
+              "value": 1.2,
+              "unit": "V"
+            },
+            "step": {
+              "value": 0.6,
+              "unit": "V"
+            }
+          },
+          "measurements": [
+            {
+              "id": "dc_curve",
+              "kind": "curve",
+              "unit": "V",
+              "probe_id": "output_voltage",
+              "axis": {
+                "kind": "analysis_axis"
+              }
+            }
+          ],
+          "validity_rules": [
+            {
+              "id": "dc_finite",
+              "kind": "finite",
+              "measurement_ids": [
+                "dc_curve"
+              ],
+              "on_fail": {
+                "verdict": "invalid",
+                "reason": "non_finite"
+              }
+            }
+          ]
+        },
+        {
+          "id": "pulse_response",
+          "condition": {
+            "corner": "tt",
+            "temperature": {
+              "value": 27,
+              "unit": "degC"
+            },
+            "parameters": []
+          },
+          "state_policy": {
+            "kind": "fresh",
+            "initial_node_voltages": [
+              {
+                "kind": "port",
+                "port": "OUT",
+                "value": {
+                  "value": 0,
+                  "unit": "V"
+                }
+              }
+            ]
+          },
+          "settle_policy": {
+            "kind": "fixed_time",
+            "duration": {
+              "value": 0,
+              "unit": "s"
+            }
+          },
+          "active_stimulus_ids": [
+            "input_pulses"
+          ],
+          "analysis": {
+            "kind": "pulse_train_transient",
+            "stimulus_id": "input_pulses",
+            "step": {
+              "value": 5e-11,
+              "unit": "s"
+            },
+            "stop": {
+              "value": 2.5e-9,
+              "unit": "s"
+            }
+          },
+          "measurements": [
+            {
+              "id": "pulse_curve",
+              "kind": "curve",
+              "unit": "V",
+              "probe_id": "output_voltage",
+              "axis": {
+                "kind": "analysis_axis"
+              }
+            }
+          ],
+          "validity_rules": [
+            {
+              "id": "pulse_finite",
+              "kind": "finite",
+              "measurement_ids": [
+                "pulse_curve"
+              ],
+              "on_fail": {
+                "verdict": "invalid",
+                "reason": "non_finite"
+              }
+            }
+          ]
+        }
+      ],
+      "reductions": [],
+      "validity_rules": []
+    }
+  ],
+  "bindings": [],
+  "observables": [
+    {
+      "id": "dc_curve",
+      "source": {
+        "kind": "measurement",
+        "stage_id": "characterize",
+        "point_id": "dc_response",
+        "measurement_id": "dc_curve"
+      },
+      "unit": "V",
+      "shape": "curve",
+      "lineage": {
+        "kind": "condition_receipt",
+        "required_digests": [
+          "plan_sha256",
+          "dut_sha256",
+          "compiled_deck_sha256",
+          "waveform_sha256"
+        ],
+        "one_per_condition": true
+      }
+    },
+    {
+      "id": "pulse_curve",
+      "source": {
+        "kind": "measurement",
+        "stage_id": "characterize",
+        "point_id": "pulse_response",
+        "measurement_id": "pulse_curve"
+      },
+      "unit": "V",
+      "shape": "curve",
+      "lineage": {
+        "kind": "condition_receipt",
+        "required_digests": [
+          "plan_sha256",
+          "dut_sha256",
+          "compiled_deck_sha256",
+          "waveform_sha256"
+        ],
+        "one_per_condition": true
+      }
+    }
+  ]
+}
