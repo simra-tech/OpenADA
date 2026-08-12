@@ -1,0 +1,1625 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/testbench-plan-v1.schema.json",
+  "title": "Simra closed testbench and measurement plan v1",
+  "description": "A bounded, inspectable testbench graph. It contains no SPICE text, directives, behavioral elements, simulator options, or untyped expressions.",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "dut",
+    "supplies",
+    "corner_bindings",
+    "stimuli",
+    "probes",
+    "stages",
+    "bindings",
+    "observables"
+  ],
+  "properties": {
+    "schema": {"const": "simra.testbench-plan/v1"},
+    "id": {"$ref": "#/$defs/id"},
+    "dut": {"$ref": "#/$defs/dut"},
+    "supplies": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {"$ref": "#/$defs/supply"}
+    },
+    "corner_bindings": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/cornerBinding"}
+    },
+    "stimuli": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/stimulus"}
+    },
+    "probes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/probe"}
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {"$ref": "#/$defs/stage"}
+    },
+    "bindings": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/binding"}
+    },
+    "observables": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {"$ref": "#/$defs/observable"}
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "boundedNumber": {
+      "type": "number",
+      "minimum": -1e300,
+      "maximum": 1e300
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "spiceName": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+    },
+    "netName": {
+      "oneOf": [
+        {"const": "0"},
+        {"$ref": "#/$defs/spiceName"}
+      ]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "unit": {
+      "enum": [
+        "1",
+        "V",
+        "A",
+        "s",
+        "C",
+        "degC",
+        "V/s",
+        "A/s",
+        "C/s",
+        "A/V",
+        "C/V",
+        "V/V"
+      ]
+    },
+    "quantity": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"$ref": "#/$defs/boundedNumber"},
+        "unit": {"$ref": "#/$defs/unit"}
+      },
+      "additionalProperties": false
+    },
+    "timeQuantity": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"$ref": "#/$defs/boundedNumber"},
+        "unit": {"const": "s"}
+      },
+      "additionalProperties": false
+    },
+    "voltageQuantity": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"$ref": "#/$defs/boundedNumber"},
+        "unit": {"const": "V"}
+      },
+      "additionalProperties": false
+    },
+    "valueSource": {
+      "oneOf": [
+        {"$ref": "#/$defs/quantity"},
+        {
+          "type": "object",
+          "required": ["input_id", "unit"],
+          "properties": {
+            "input_id": {"$ref": "#/$defs/id"},
+            "unit": {"$ref": "#/$defs/unit"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["input_id", "factor", "offset", "unit"],
+          "properties": {
+            "input_id": {"$ref": "#/$defs/id"},
+            "factor": {"$ref": "#/$defs/boundedNumber"},
+            "offset": {"$ref": "#/$defs/quantity"},
+            "unit": {"$ref": "#/$defs/unit"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "thresholdValue": {
+      "oneOf": [
+        {"$ref": "#/$defs/quantity"},
+        {"$ref": "#/$defs/scaledLevel"}
+      ]
+    },
+    "window": {
+      "type": "object",
+      "required": ["start", "stop"],
+      "properties": {
+        "start": {"$ref": "#/$defs/valueSource"},
+        "stop": {"$ref": "#/$defs/valueSource"}
+      },
+      "additionalProperties": false
+    },
+    "dutPort": {
+      "type": "object",
+      "required": ["name", "direction", "internal_nodes"],
+      "properties": {
+        "name": {"$ref": "#/$defs/spiceName"},
+        "direction": {
+          "enum": ["input", "output", "inout", "supply", "reference"]
+        },
+        "internal_nodes": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/spiceName"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "dut": {
+      "type": "object",
+      "required": [
+        "artifact",
+        "sha256",
+        "namespace",
+        "top",
+        "ports",
+        "connections",
+        "immutable"
+      ],
+      "properties": {
+        "artifact": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 4096,
+          "pattern": "^/(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+$"
+        },
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "namespace": {"$ref": "#/$defs/id"},
+        "top": {"$ref": "#/$defs/spiceName"},
+        "ports": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/dutPort"}
+        },
+        "connections": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 128,
+          "propertyNames": {"pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"},
+          "additionalProperties": {"$ref": "#/$defs/netName"}
+        },
+        "immutable": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "supply": {
+      "type": "object",
+      "required": ["id", "positive", "negative", "voltage"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "positive": {"$ref": "#/$defs/netName"},
+        "negative": {"$ref": "#/$defs/netName"},
+        "voltage": {
+          "type": "object",
+          "required": ["kind", "value_id", "unit"],
+          "properties": {
+            "kind": {"const": "corner_value"},
+            "value_id": {"$ref": "#/$defs/id"},
+            "unit": {"const": "V"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cornerValue": {
+      "type": "object",
+      "required": ["id", "value"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "value": {"$ref": "#/$defs/quantity"}
+      },
+      "additionalProperties": false
+    },
+    "cornerBinding": {
+      "type": "object",
+      "required": ["id", "temperature", "values"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "temperature": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {
+              "allOf": [
+                {"$ref": "#/$defs/boundedNumber"},
+                {"exclusiveMinimum": -273.15, "maximum": 1000}
+              ]
+            },
+            "unit": {"const": "degC"}
+          },
+          "additionalProperties": false
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/cornerValue"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "scaledLevel": {
+      "type": "object",
+      "required": ["kind", "supply_id", "fraction"],
+      "properties": {
+        "kind": {"const": "supply_scaled"},
+        "supply_id": {"$ref": "#/$defs/id"},
+        "fraction": {"$ref": "#/$defs/boundedFraction"}
+      },
+      "additionalProperties": false
+    },
+    "boundedFraction": {
+      "allOf": [
+        {"$ref": "#/$defs/boundedNumber"},
+        {"minimum": 0, "maximum": 1}
+      ]
+    },
+    "stimulusBase": {
+      "type": "object",
+      "required": ["id", "kind", "supply_id"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {
+          "enum": ["dc_state", "pulse_train", "phase_offset_pair"]
+        },
+        "supply_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "dcState": {
+      "allOf": [
+        {"$ref": "#/$defs/stimulusBase"},
+        {
+          "type": "object",
+          "required": ["target_port", "state", "level"],
+          "properties": {
+            "kind": {"const": "dc_state"},
+            "target_port": {"$ref": "#/$defs/spiceName"},
+            "state": {"enum": ["low", "high", "bias"]},
+            "level": {"$ref": "#/$defs/scaledLevel"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "pulseTrain": {
+      "allOf": [
+        {"$ref": "#/$defs/stimulusBase"},
+        {
+          "type": "object",
+          "required": [
+            "target_port",
+            "polarity",
+            "low_level",
+            "high_level",
+            "delay",
+            "rise_time",
+            "fall_time",
+            "pulse_width",
+            "period",
+            "count"
+          ],
+          "properties": {
+            "kind": {"const": "pulse_train"},
+            "target_port": {"$ref": "#/$defs/spiceName"},
+            "polarity": {"enum": ["active_high", "active_low"]},
+            "low_level": {"$ref": "#/$defs/scaledLevel"},
+            "high_level": {"$ref": "#/$defs/scaledLevel"},
+            "delay": {"$ref": "#/$defs/timeQuantity"},
+            "rise_time": {"$ref": "#/$defs/timeQuantity"},
+            "fall_time": {"$ref": "#/$defs/timeQuantity"},
+            "pulse_width": {"$ref": "#/$defs/timeQuantity"},
+            "period": {"$ref": "#/$defs/timeQuantity"},
+            "count": {"type": "integer", "minimum": 1, "maximum": 1000000}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "phaseOffsetPair": {
+      "allOf": [
+        {"$ref": "#/$defs/stimulusBase"},
+        {
+          "type": "object",
+          "required": [
+            "reference_port",
+            "offset_port",
+            "reference_polarity",
+            "offset_polarity",
+            "low_level",
+            "high_level",
+            "delay",
+            "rise_time",
+            "fall_time",
+            "pulse_width",
+            "period",
+            "phase_offset",
+            "wrap",
+            "count"
+          ],
+          "properties": {
+            "kind": {"const": "phase_offset_pair"},
+            "reference_port": {"$ref": "#/$defs/spiceName"},
+            "offset_port": {"$ref": "#/$defs/spiceName"},
+            "reference_polarity": {"enum": ["active_high", "active_low"]},
+            "offset_polarity": {"enum": ["active_high", "active_low"]},
+            "low_level": {"$ref": "#/$defs/scaledLevel"},
+            "high_level": {"$ref": "#/$defs/scaledLevel"},
+            "delay": {"$ref": "#/$defs/timeQuantity"},
+            "rise_time": {"$ref": "#/$defs/timeQuantity"},
+            "fall_time": {"$ref": "#/$defs/timeQuantity"},
+            "pulse_width": {"$ref": "#/$defs/timeQuantity"},
+            "period": {"$ref": "#/$defs/timeQuantity"},
+            "phase_offset": {"$ref": "#/$defs/valueSource"},
+            "wrap": {"const": "modulo_period"},
+            "count": {"type": "integer", "minimum": 1, "maximum": 1000000}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "stimulus": {
+      "oneOf": [
+        {"$ref": "#/$defs/dcState"},
+        {"$ref": "#/$defs/pulseTrain"},
+        {"$ref": "#/$defs/phaseOffsetPair"}
+      ]
+    },
+    "probeBase": {
+      "type": "object",
+      "required": ["id", "kind", "unit"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {
+          "enum": [
+            "dut_port_voltage",
+            "dut_port_current",
+            "dut_internal_node",
+            "stimulus_branch_current"
+          ]
+        },
+        "unit": {"enum": ["V", "A"]}
+      }
+    },
+    "dutPortVoltage": {
+      "allOf": [
+        {"$ref": "#/$defs/probeBase"},
+        {
+          "type": "object",
+          "required": ["port", "reference_port"],
+          "properties": {
+            "kind": {"const": "dut_port_voltage"},
+            "unit": {"const": "V"},
+            "port": {"$ref": "#/$defs/spiceName"},
+            "reference_port": {"$ref": "#/$defs/spiceName"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "dutPortCurrent": {
+      "allOf": [
+        {"$ref": "#/$defs/probeBase"},
+        {
+          "type": "object",
+          "required": ["port", "direction"],
+          "properties": {
+            "kind": {"const": "dut_port_current"},
+            "unit": {"const": "A"},
+            "port": {"$ref": "#/$defs/spiceName"},
+            "direction": {"enum": ["into_dut", "out_of_dut"]}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "dutInternalNode": {
+      "allOf": [
+        {"$ref": "#/$defs/probeBase"},
+        {
+          "type": "object",
+          "required": ["node", "reference_port"],
+          "properties": {
+            "kind": {"const": "dut_internal_node"},
+            "unit": {"const": "V"},
+            "node": {"$ref": "#/$defs/spiceName"},
+            "reference_port": {"$ref": "#/$defs/spiceName"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "stimulusBranchCurrent": {
+      "allOf": [
+        {"$ref": "#/$defs/probeBase"},
+        {
+          "type": "object",
+          "required": ["stimulus_id", "direction"],
+          "properties": {
+            "kind": {"const": "stimulus_branch_current"},
+            "unit": {"const": "A"},
+            "stimulus_id": {"$ref": "#/$defs/id"},
+            "direction": {
+              "enum": ["delivered_by_stimulus", "drawn_from_stimulus"]
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "probe": {
+      "oneOf": [
+        {"$ref": "#/$defs/dutPortVoltage"},
+        {"$ref": "#/$defs/dutPortCurrent"},
+        {"$ref": "#/$defs/dutInternalNode"},
+        {"$ref": "#/$defs/stimulusBranchCurrent"}
+      ]
+    },
+    "stageInput": {
+      "type": "object",
+      "required": ["id", "unit"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "unit": {"$ref": "#/$defs/unit"}
+      },
+      "additionalProperties": false
+    },
+    "conditionParameter": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": {
+        "name": {"$ref": "#/$defs/id"},
+        "value": {"$ref": "#/$defs/valueSource"}
+      },
+      "additionalProperties": false
+    },
+    "condition": {
+      "type": "object",
+      "required": ["corner", "temperature", "parameters"],
+      "properties": {
+        "corner": {"$ref": "#/$defs/id"},
+        "temperature": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {
+              "allOf": [
+                {"$ref": "#/$defs/boundedNumber"},
+                {"exclusiveMinimum": -273.15, "maximum": 1000}
+              ]
+            },
+            "unit": {"const": "degC"}
+          },
+          "additionalProperties": false
+        },
+        "parameters": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/conditionParameter"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "initialPortVoltage": {
+      "type": "object",
+      "required": ["kind", "port", "value"],
+      "properties": {
+        "kind": {"const": "port"},
+        "port": {"$ref": "#/$defs/spiceName"},
+        "value": {"$ref": "#/$defs/voltageQuantity"}
+      },
+      "additionalProperties": false
+    },
+    "initialInternalVoltage": {
+      "type": "object",
+      "required": ["kind", "node", "value"],
+      "properties": {
+        "kind": {"const": "internal_node"},
+        "node": {"$ref": "#/$defs/spiceName"},
+        "value": {"$ref": "#/$defs/voltageQuantity"}
+      },
+      "additionalProperties": false
+    },
+    "freshState": {
+      "type": "object",
+      "required": ["kind", "initial_node_voltages"],
+      "properties": {
+        "kind": {"const": "fresh"},
+        "initial_node_voltages": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "oneOf": [
+              {"$ref": "#/$defs/initialPortVoltage"},
+              {"$ref": "#/$defs/initialInternalVoltage"}
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "pointReference": {
+      "type": "object",
+      "required": ["stage_id", "point_id"],
+      "properties": {
+        "stage_id": {"$ref": "#/$defs/id"},
+        "point_id": {"$ref": "#/$defs/id"}
+      },
+      "additionalProperties": false
+    },
+    "carryoverState": {
+      "type": "object",
+      "required": ["kind", "from"],
+      "properties": {
+        "kind": {"const": "carryover"},
+        "from": {"$ref": "#/$defs/pointReference"}
+      },
+      "additionalProperties": false
+    },
+    "statePolicy": {
+      "oneOf": [
+        {"$ref": "#/$defs/freshState"},
+        {"$ref": "#/$defs/carryoverState"}
+      ]
+    },
+    "fixedSettle": {
+      "type": "object",
+      "required": ["kind", "duration"],
+      "properties": {
+        "kind": {"const": "fixed_time"},
+        "duration": {"$ref": "#/$defs/timeQuantity"}
+      },
+      "additionalProperties": false
+    },
+    "deltaSettle": {
+      "type": "object",
+      "required": ["kind", "probe_id", "tolerance", "hold_for", "maximum"],
+      "properties": {
+        "kind": {"const": "until_delta"},
+        "probe_id": {"$ref": "#/$defs/id"},
+        "tolerance": {"$ref": "#/$defs/quantity"},
+        "hold_for": {"$ref": "#/$defs/timeQuantity"},
+        "maximum": {"$ref": "#/$defs/timeQuantity"}
+      },
+      "additionalProperties": false
+    },
+    "settlePolicy": {
+      "oneOf": [
+        {"$ref": "#/$defs/fixedSettle"},
+        {"$ref": "#/$defs/deltaSettle"}
+      ]
+    },
+    "dcSweep": {
+      "type": "object",
+      "required": ["kind", "source_stimulus_id", "start", "stop", "step"],
+      "properties": {
+        "kind": {"const": "dc_sweep"},
+        "source_stimulus_id": {"$ref": "#/$defs/id"},
+        "start": {"$ref": "#/$defs/valueSource"},
+        "stop": {"$ref": "#/$defs/valueSource"},
+        "step": {"$ref": "#/$defs/valueSource"}
+      },
+      "additionalProperties": false
+    },
+    "pulseTransient": {
+      "type": "object",
+      "required": ["kind", "stimulus_id", "step", "stop"],
+      "properties": {
+        "kind": {"const": "pulse_train_transient"},
+        "stimulus_id": {"$ref": "#/$defs/id"},
+        "step": {"$ref": "#/$defs/valueSource"},
+        "stop": {"$ref": "#/$defs/valueSource"}
+      },
+      "additionalProperties": false
+    },
+    "phaseTransient": {
+      "type": "object",
+      "required": ["kind", "stimulus_id", "step", "stop"],
+      "properties": {
+        "kind": {"const": "phase_offset_pair_transient"},
+        "stimulus_id": {"$ref": "#/$defs/id"},
+        "step": {"$ref": "#/$defs/valueSource"},
+        "stop": {"$ref": "#/$defs/valueSource"}
+      },
+      "additionalProperties": false
+    },
+    "analysis": {
+      "oneOf": [
+        {"$ref": "#/$defs/dcSweep"},
+        {"$ref": "#/$defs/pulseTransient"},
+        {"$ref": "#/$defs/phaseTransient"}
+      ]
+    },
+    "normalization": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {"kind": {"const": "none"}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "stimulus_id", "count"],
+          "properties": {
+            "kind": {"const": "pulse_count"},
+            "stimulus_id": {"$ref": "#/$defs/id"},
+            "count": {"type": "integer", "minimum": 1, "maximum": 1000000}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "axisSelection": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {"kind": {"const": "analysis_axis"}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "parameter"],
+          "properties": {
+            "kind": {"const": "condition_parameter"},
+            "parameter": {"$ref": "#/$defs/id"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "measurementBase": {
+      "type": "object",
+      "required": ["id", "kind", "unit"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {
+          "enum": [
+            "integrate",
+            "linear_fit",
+            "crossing",
+            "sign",
+            "curve",
+            "max_abs",
+            "mismatch_fraction",
+            "compliance_interval"
+          ]
+        },
+        "unit": {"$ref": "#/$defs/unit"}
+      }
+    },
+    "integrateMeasurement": {
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": ["quantity", "probe_id", "window", "normalization"],
+          "properties": {
+            "kind": {"const": "integrate"},
+            "unit": {"const": "C"},
+            "quantity": {"enum": ["delivered_charge", "source_charge"]},
+            "probe_id": {"$ref": "#/$defs/id"},
+            "window": {"$ref": "#/$defs/window"},
+            "normalization": {"$ref": "#/$defs/normalization"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "linearFitMeasurement": {
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": ["input_measurement_id", "window", "minimum_samples"],
+          "properties": {
+            "kind": {"const": "linear_fit"},
+            "input_measurement_id": {"$ref": "#/$defs/id"},
+            "window": {"$ref": "#/$defs/window"},
+            "minimum_samples": {"type": "integer", "minimum": 2, "maximum": 1000000}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "crossingMeasurement": {
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": [
+            "input_measurement_id",
+            "threshold",
+            "direction",
+            "occurrence"
+          ],
+          "properties": {
+            "kind": {"const": "crossing"},
+            "input_measurement_id": {"$ref": "#/$defs/id"},
+            "threshold": {"$ref": "#/$defs/thresholdValue"},
+            "direction": {"enum": ["rising", "falling", "either"]},
+            "occurrence": {"type": "integer", "minimum": 1, "maximum": 1000000}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "signMeasurement": {
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": ["input_measurement_id", "zero_tolerance"],
+          "properties": {
+            "kind": {"const": "sign"},
+            "unit": {"const": "1"},
+            "input_measurement_id": {"$ref": "#/$defs/id"},
+            "zero_tolerance": {"$ref": "#/$defs/quantity"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "curveMeasurement": {
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": ["probe_id", "axis"],
+          "properties": {
+            "kind": {"const": "curve"},
+            "probe_id": {"$ref": "#/$defs/id"},
+            "axis": {"$ref": "#/$defs/axisSelection"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "maxAbsMeasurement": {
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": ["input_measurement_id"],
+          "properties": {
+            "kind": {"const": "max_abs"},
+            "input_measurement_id": {"$ref": "#/$defs/id"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "mismatchMeasurement": {
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": ["actual_measurement_id", "reference_measurement_id", "floor"],
+          "properties": {
+            "kind": {"const": "mismatch_fraction"},
+            "unit": {"const": "1"},
+            "actual_measurement_id": {"$ref": "#/$defs/id"},
+            "reference_measurement_id": {"$ref": "#/$defs/id"},
+            "floor": {"$ref": "#/$defs/quantity"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "complianceMeasurement": {
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": ["input_measurement_id", "lower", "upper"],
+          "properties": {
+            "kind": {"const": "compliance_interval"},
+            "input_measurement_id": {"$ref": "#/$defs/id"},
+            "lower": {"$ref": "#/$defs/quantity"},
+            "upper": {"$ref": "#/$defs/quantity"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "measurement": {
+      "oneOf": [
+        {"$ref": "#/$defs/integrateMeasurement"},
+        {"$ref": "#/$defs/linearFitMeasurement"},
+        {"$ref": "#/$defs/crossingMeasurement"},
+        {"$ref": "#/$defs/signMeasurement"},
+        {"$ref": "#/$defs/curveMeasurement"},
+        {"$ref": "#/$defs/maxAbsMeasurement"},
+        {"$ref": "#/$defs/mismatchMeasurement"},
+        {"$ref": "#/$defs/complianceMeasurement"}
+      ]
+    },
+    "invalidAction": {
+      "type": "object",
+      "required": ["verdict", "reason"],
+      "properties": {
+        "verdict": {"const": "invalid"},
+        "reason": {
+          "enum": [
+            "fit_quality",
+            "not_settled",
+            "non_monotone",
+            "ambiguous_zero_crossing",
+            "non_finite",
+            "threshold_violation",
+            "crossing_count",
+            "pulse_count"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "validityBase": {
+      "type": "object",
+      "required": ["id", "kind", "on_fail"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {
+          "enum": [
+            "r2",
+            "settling_delta",
+            "monotonicity",
+            "single_sign_change",
+            "finite",
+            "threshold",
+            "crossings",
+            "pulse_count"
+          ]
+        },
+        "on_fail": {"$ref": "#/$defs/invalidAction"}
+      }
+    },
+    "r2Rule": {
+      "allOf": [
+        {"$ref": "#/$defs/validityBase"},
+        {
+          "type": "object",
+          "required": ["measurement_id", "minimum"],
+          "properties": {
+            "kind": {"const": "r2"},
+            "measurement_id": {"$ref": "#/$defs/id"},
+            "minimum": {"$ref": "#/$defs/boundedFraction"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "settlingRule": {
+      "allOf": [
+        {"$ref": "#/$defs/validityBase"},
+        {
+          "type": "object",
+          "required": ["measurement_ids", "maximum"],
+          "properties": {
+            "kind": {"const": "settling_delta"},
+            "measurement_ids": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "uniqueItems": true,
+              "items": {"$ref": "#/$defs/id"}
+            },
+            "maximum": {"$ref": "#/$defs/quantity"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "monotonicityRule": {
+      "allOf": [
+        {"$ref": "#/$defs/validityBase"},
+        {
+          "type": "object",
+          "required": ["measurement_id", "direction", "tolerance"],
+          "properties": {
+            "kind": {"const": "monotonicity"},
+            "measurement_id": {"$ref": "#/$defs/id"},
+            "direction": {"enum": ["increasing", "decreasing"]},
+            "tolerance": {"$ref": "#/$defs/quantity"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "signChangeRule": {
+      "allOf": [
+        {"$ref": "#/$defs/validityBase"},
+        {
+          "type": "object",
+          "required": ["measurement_id", "zero_tolerance"],
+          "properties": {
+            "kind": {"const": "single_sign_change"},
+            "measurement_id": {"$ref": "#/$defs/id"},
+            "zero_tolerance": {"$ref": "#/$defs/quantity"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "finiteRule": {
+      "allOf": [
+        {"$ref": "#/$defs/validityBase"},
+        {
+          "type": "object",
+          "required": ["measurement_ids"],
+          "properties": {
+            "kind": {"const": "finite"},
+            "measurement_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {"$ref": "#/$defs/id"}
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "thresholdRule": {
+      "allOf": [
+        {"$ref": "#/$defs/validityBase"},
+        {
+          "type": "object",
+          "required": ["measurement_id", "comparison", "value"],
+          "properties": {
+            "kind": {"const": "threshold"},
+            "measurement_id": {"$ref": "#/$defs/id"},
+            "comparison": {"enum": ["lt", "lte", "gt", "gte", "abs_lte"]},
+            "value": {"$ref": "#/$defs/thresholdValue"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "crossingsRule": {
+      "allOf": [
+        {"$ref": "#/$defs/validityBase"},
+        {
+          "type": "object",
+          "required": [
+            "measurement_id",
+            "threshold",
+            "direction",
+            "minimum_count",
+            "maximum_count"
+          ],
+          "properties": {
+            "kind": {"const": "crossings"},
+            "measurement_id": {"$ref": "#/$defs/id"},
+            "threshold": {"$ref": "#/$defs/thresholdValue"},
+            "direction": {"enum": ["rising", "falling", "either"]},
+            "minimum_count": {"type": "integer", "minimum": 0, "maximum": 1000000},
+            "maximum_count": {"type": "integer", "minimum": 0, "maximum": 1000000}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "pulseCountRule": {
+      "allOf": [
+        {"$ref": "#/$defs/validityBase"},
+        {
+          "type": "object",
+          "required": ["stimulus_id", "minimum_count", "maximum_count"],
+          "properties": {
+            "kind": {"const": "pulse_count"},
+            "stimulus_id": {"$ref": "#/$defs/id"},
+            "minimum_count": {"type": "integer", "minimum": 1, "maximum": 1000000},
+            "maximum_count": {"type": "integer", "minimum": 1, "maximum": 1000000}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "validityRule": {
+      "oneOf": [
+        {"$ref": "#/$defs/r2Rule"},
+        {"$ref": "#/$defs/settlingRule"},
+        {"$ref": "#/$defs/monotonicityRule"},
+        {"$ref": "#/$defs/signChangeRule"},
+        {"$ref": "#/$defs/finiteRule"},
+        {"$ref": "#/$defs/thresholdRule"},
+        {"$ref": "#/$defs/crossingsRule"},
+        {"$ref": "#/$defs/pulseCountRule"}
+      ]
+    },
+    "pointMeasurementSource": {
+      "type": "object",
+      "required": ["point_id", "measurement_id", "component"],
+      "properties": {
+        "point_id": {"$ref": "#/$defs/id"},
+        "measurement_id": {"$ref": "#/$defs/id"},
+        "component": {"const": "value"}
+      },
+      "additionalProperties": false
+    },
+    "conditionIdentity": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": {
+        "name": {"$ref": "#/$defs/id"},
+        "value": {"$ref": "#/$defs/quantity"}
+      },
+      "additionalProperties": false
+    },
+    "arrayItem": {
+      "type": "object",
+      "required": ["source", "condition_values"],
+      "properties": {
+        "source": {"$ref": "#/$defs/pointMeasurementSource"},
+        "condition_values": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {"$ref": "#/$defs/conditionIdentity"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "sampleAxis": {
+      "oneOf": [
+        {"$ref": "#/$defs/quantity"},
+        {
+          "type": "object",
+          "required": ["kind", "name", "unit"],
+          "properties": {
+            "kind": {"const": "condition_parameter"},
+            "name": {"$ref": "#/$defs/id"},
+            "unit": {"$ref": "#/$defs/unit"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "curveSample": {
+      "type": "object",
+      "required": ["x", "source"],
+      "properties": {
+        "x": {"$ref": "#/$defs/sampleAxis"},
+        "source": {"$ref": "#/$defs/pointMeasurementSource"}
+      },
+      "additionalProperties": false
+    },
+    "reductionOperand": {
+      "oneOf": [
+        {"$ref": "#/$defs/quantity"},
+        {
+          "type": "object",
+          "required": ["kind", "reduction_id", "component", "unit"],
+          "properties": {
+            "kind": {"const": "reduction"},
+            "reduction_id": {"$ref": "#/$defs/id"},
+            "component": {
+              "enum": ["value", "slope", "intercept", "crossing", "r2", "lower", "upper", "span"]
+            },
+            "unit": {"$ref": "#/$defs/unit"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "collectArrayReduction": {
+      "type": "object",
+      "required": ["id", "kind", "unit", "items"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"const": "collect_array"},
+        "unit": {"$ref": "#/$defs/unit"},
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "items": {"$ref": "#/$defs/arrayItem"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "collectCurveReduction": {
+      "type": "object",
+      "required": ["id", "kind", "unit", "axis_unit", "samples"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"const": "collect_curve"},
+        "unit": {"$ref": "#/$defs/unit"},
+        "axis_unit": {"$ref": "#/$defs/unit"},
+        "samples": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 10000,
+          "items": {"$ref": "#/$defs/curveSample"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "reductionWindow": {
+      "type": "object",
+      "required": ["start", "stop"],
+      "properties": {
+        "start": {"$ref": "#/$defs/quantity"},
+        "stop": {"$ref": "#/$defs/quantity"}
+      },
+      "additionalProperties": false
+    },
+    "reductionLinearFit": {
+      "type": "object",
+      "required": ["id", "kind", "unit", "input_reduction_id", "window", "minimum_samples"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"const": "linear_fit"},
+        "unit": {"$ref": "#/$defs/unit"},
+        "input_reduction_id": {"$ref": "#/$defs/id"},
+        "window": {"$ref": "#/$defs/reductionWindow"},
+        "minimum_samples": {"type": "integer", "minimum": 2, "maximum": 1000000}
+      },
+      "additionalProperties": false
+    },
+    "reductionCrossing": {
+      "type": "object",
+      "required": ["id", "kind", "unit", "input_reduction_id", "threshold", "direction", "occurrence"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"const": "crossing"},
+        "unit": {"$ref": "#/$defs/unit"},
+        "input_reduction_id": {"$ref": "#/$defs/id"},
+        "threshold": {"$ref": "#/$defs/thresholdValue"},
+        "direction": {"enum": ["rising", "falling", "either"]},
+        "occurrence": {"type": "integer", "minimum": 1, "maximum": 1000000}
+      },
+      "additionalProperties": false
+    },
+    "reductionArithmetic": {
+      "type": "object",
+      "required": ["id", "kind", "unit", "operator", "operands"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"const": "arithmetic"},
+        "unit": {"$ref": "#/$defs/unit"},
+        "operator": {"enum": ["add", "subtract", "multiply", "divide", "absolute", "max_abs"]},
+        "operands": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {"$ref": "#/$defs/reductionOperand"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "reductionSelect": {
+      "type": "object",
+      "required": ["id", "kind", "unit", "input_reduction_id", "selector"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"const": "select"},
+        "unit": {"$ref": "#/$defs/unit"},
+        "input_reduction_id": {"$ref": "#/$defs/id"},
+        "selector": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["kind", "index"],
+              "properties": {
+                "kind": {"const": "index"},
+                "index": {"type": "integer", "minimum": 0, "maximum": 9999}
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": ["kind", "name", "equals"],
+              "properties": {
+                "kind": {"const": "condition_value"},
+                "name": {"$ref": "#/$defs/id"},
+                "equals": {"$ref": "#/$defs/quantity"}
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "reductionCompliance": {
+      "type": "object",
+      "required": ["id", "kind", "unit", "positive_curve_id", "negative_curve_id", "center", "tolerance"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"const": "compliance_intersection"},
+        "unit": {"$ref": "#/$defs/unit"},
+        "positive_curve_id": {"$ref": "#/$defs/id"},
+        "negative_curve_id": {"$ref": "#/$defs/id"},
+        "center": {"$ref": "#/$defs/reductionOperand"},
+        "tolerance": {"$ref": "#/$defs/quantity"}
+      },
+      "additionalProperties": false
+    },
+    "reduction": {
+      "oneOf": [
+        {"$ref": "#/$defs/collectArrayReduction"},
+        {"$ref": "#/$defs/collectCurveReduction"},
+        {"$ref": "#/$defs/reductionLinearFit"},
+        {"$ref": "#/$defs/reductionCrossing"},
+        {"$ref": "#/$defs/reductionArithmetic"},
+        {"$ref": "#/$defs/reductionSelect"},
+        {"$ref": "#/$defs/reductionCompliance"}
+      ]
+    },
+    "stageValidityRule": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["id", "kind", "reduction_id", "minimum", "on_fail"],
+          "properties": {
+            "id": {"$ref": "#/$defs/id"},
+            "kind": {"const": "r2"},
+            "reduction_id": {"$ref": "#/$defs/id"},
+            "minimum": {"$ref": "#/$defs/boundedFraction"},
+            "on_fail": {"$ref": "#/$defs/invalidAction"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["id", "kind", "reduction_ids", "maximum", "on_fail"],
+          "properties": {
+            "id": {"$ref": "#/$defs/id"},
+            "kind": {"const": "settling_delta"},
+            "reduction_ids": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "uniqueItems": true,
+              "items": {"$ref": "#/$defs/id"}
+            },
+            "maximum": {"$ref": "#/$defs/quantity"},
+            "on_fail": {"$ref": "#/$defs/invalidAction"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["id", "kind", "reduction_id", "direction", "tolerance", "on_fail"],
+          "properties": {
+            "id": {"$ref": "#/$defs/id"},
+            "kind": {"const": "monotonicity"},
+            "reduction_id": {"$ref": "#/$defs/id"},
+            "direction": {"enum": ["increasing", "decreasing"]},
+            "tolerance": {"$ref": "#/$defs/quantity"},
+            "on_fail": {"$ref": "#/$defs/invalidAction"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["id", "kind", "reduction_id", "zero_tolerance", "on_fail"],
+          "properties": {
+            "id": {"$ref": "#/$defs/id"},
+            "kind": {"const": "single_sign_change"},
+            "reduction_id": {"$ref": "#/$defs/id"},
+            "zero_tolerance": {"$ref": "#/$defs/quantity"},
+            "on_fail": {"$ref": "#/$defs/invalidAction"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["id", "kind", "reduction_ids", "on_fail"],
+          "properties": {
+            "id": {"$ref": "#/$defs/id"},
+            "kind": {"const": "finite"},
+            "reduction_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {"$ref": "#/$defs/id"}
+            },
+            "on_fail": {"$ref": "#/$defs/invalidAction"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["id", "kind", "reduction_id", "comparison", "value", "on_fail"],
+          "properties": {
+            "id": {"$ref": "#/$defs/id"},
+            "kind": {"const": "threshold"},
+            "reduction_id": {"$ref": "#/$defs/id"},
+            "comparison": {"enum": ["lt", "lte", "gt", "gte", "abs_lte"]},
+            "value": {"$ref": "#/$defs/thresholdValue"},
+            "on_fail": {"$ref": "#/$defs/invalidAction"}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["id", "kind", "reduction_id", "threshold", "direction", "minimum_count", "maximum_count", "on_fail"],
+          "properties": {
+            "id": {"$ref": "#/$defs/id"},
+            "kind": {"const": "crossings"},
+            "reduction_id": {"$ref": "#/$defs/id"},
+            "threshold": {"$ref": "#/$defs/thresholdValue"},
+            "direction": {"enum": ["rising", "falling", "either"]},
+            "minimum_count": {"type": "integer", "minimum": 0, "maximum": 1000000},
+            "maximum_count": {"type": "integer", "minimum": 0, "maximum": 1000000},
+            "on_fail": {"$ref": "#/$defs/invalidAction"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "conditionPoint": {
+      "type": "object",
+      "required": [
+        "id",
+        "condition",
+        "state_policy",
+        "settle_policy",
+        "active_stimulus_ids",
+        "analysis",
+        "measurements",
+        "validity_rules"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "condition": {"$ref": "#/$defs/condition"},
+        "state_policy": {"$ref": "#/$defs/statePolicy"},
+        "settle_policy": {"$ref": "#/$defs/settlePolicy"},
+        "active_stimulus_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"}
+        },
+        "analysis": {"$ref": "#/$defs/analysis"},
+        "measurements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {"$ref": "#/$defs/measurement"}
+        },
+        "validity_rules": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/validityRule"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "stage": {
+      "type": "object",
+      "required": ["id", "depends_on", "inputs", "points", "reductions", "validity_rules"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "depends_on": {
+          "type": "array",
+          "maxItems": 31,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"}
+        },
+        "inputs": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/stageInput"}
+        },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "items": {"$ref": "#/$defs/conditionPoint"}
+        },
+        "reductions": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {"$ref": "#/$defs/reduction"}
+        },
+        "validity_rules": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/stageValidityRule"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "measurementSource": {
+      "type": "object",
+      "required": ["stage_id", "point_id", "measurement_id", "component"],
+      "properties": {
+        "stage_id": {"$ref": "#/$defs/id"},
+        "point_id": {"$ref": "#/$defs/id"},
+        "measurement_id": {"$ref": "#/$defs/id"},
+        "component": {"enum": ["value", "slope", "intercept", "crossing"]}
+      },
+      "additionalProperties": false
+    },
+    "reductionSource": {
+      "type": "object",
+      "required": ["stage_id", "reduction_id", "component"],
+      "properties": {
+        "stage_id": {"$ref": "#/$defs/id"},
+        "reduction_id": {"$ref": "#/$defs/id"},
+        "component": {
+          "enum": ["value", "slope", "intercept", "crossing", "r2", "lower", "upper", "span"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "bindingSource": {
+      "oneOf": [
+        {"$ref": "#/$defs/measurementSource"},
+        {"$ref": "#/$defs/reductionSource"}
+      ]
+    },
+    "bindingTarget": {
+      "type": "object",
+      "required": ["stage_id", "input_id"],
+      "properties": {
+        "stage_id": {"$ref": "#/$defs/id"},
+        "input_id": {"$ref": "#/$defs/id"}
+      },
+      "additionalProperties": false
+    },
+    "bindingTransform": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {"kind": {"const": "identity"}},
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "factor"],
+          "properties": {
+            "kind": {"const": "scale"},
+            "factor": {"$ref": "#/$defs/boundedNumber"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "binding": {
+      "type": "object",
+      "required": ["id", "from", "to", "unit", "transform"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "from": {"$ref": "#/$defs/bindingSource"},
+        "to": {"$ref": "#/$defs/bindingTarget"},
+        "unit": {"$ref": "#/$defs/unit"},
+        "transform": {"$ref": "#/$defs/bindingTransform"}
+      },
+      "additionalProperties": false
+    },
+    "observableMeasurementSource": {
+      "type": "object",
+      "required": ["kind", "stage_id", "point_id", "measurement_id"],
+      "properties": {
+        "kind": {"const": "measurement"},
+        "stage_id": {"$ref": "#/$defs/id"},
+        "point_id": {"$ref": "#/$defs/id"},
+        "measurement_id": {"$ref": "#/$defs/id"}
+      },
+      "additionalProperties": false
+    },
+    "observableValiditySource": {
+      "type": "object",
+      "required": ["kind", "stage_id", "point_id", "rule_id"],
+      "properties": {
+        "kind": {"const": "validity"},
+        "stage_id": {"$ref": "#/$defs/id"},
+        "point_id": {"$ref": "#/$defs/id"},
+        "rule_id": {"$ref": "#/$defs/id"}
+      },
+      "additionalProperties": false
+    },
+    "observableReductionSource": {
+      "type": "object",
+      "required": ["kind", "stage_id", "reduction_id", "component"],
+      "properties": {
+        "kind": {"const": "reduction"},
+        "stage_id": {"$ref": "#/$defs/id"},
+        "reduction_id": {"$ref": "#/$defs/id"},
+        "component": {
+          "enum": ["value", "slope", "intercept", "crossing", "r2", "lower", "upper", "span"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "observableStageValiditySource": {
+      "type": "object",
+      "required": ["kind", "stage_id", "rule_id"],
+      "properties": {
+        "kind": {"const": "stage_validity"},
+        "stage_id": {"$ref": "#/$defs/id"},
+        "rule_id": {"$ref": "#/$defs/id"}
+      },
+      "additionalProperties": false
+    },
+    "lineage": {
+      "type": "object",
+      "required": ["kind", "required_digests", "one_per_condition"],
+      "properties": {
+        "kind": {"const": "condition_receipt"},
+        "required_digests": {
+          "const": [
+            "plan_sha256",
+            "dut_sha256",
+            "compiled_deck_sha256",
+            "waveform_sha256"
+          ]
+        },
+        "one_per_condition": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "observable": {
+      "type": "object",
+      "required": ["id", "source", "unit", "shape", "lineage"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "source": {
+          "oneOf": [
+            {"$ref": "#/$defs/observableMeasurementSource"},
+            {"$ref": "#/$defs/observableValiditySource"},
+            {"$ref": "#/$defs/observableReductionSource"},
+            {"$ref": "#/$defs/observableStageValiditySource"}
+          ]
+        },
+        "unit": {"$ref": "#/$defs/unit"},
+        "shape": {"enum": ["scalar", "array", "curve", "fit", "interval", "verdict"]},
+        "lineage": {"$ref": "#/$defs/lineage"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,538 @@
+{
+  "schema": "simra.testbench-plan/v1",
+  "id": "charge_pump_characterization",
+  "dut": {
+    "artifact": "/opt/openada-fixtures/closed_charge_pump.spice",
+    "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "namespace": "hidden_cp_variant",
+    "top": "CHARGE_PUMP",
+    "ports": [
+      {"name": "UP", "direction": "input", "internal_nodes": []},
+      {"name": "DOWN", "direction": "input", "internal_nodes": []},
+      {"name": "OUT", "direction": "output", "internal_nodes": ["CP_NODE"]},
+      {"name": "VDD", "direction": "supply", "internal_nodes": []},
+      {"name": "VSS", "direction": "reference", "internal_nodes": []}
+    ],
+    "connections": {
+      "UP": "IN_UP",
+      "DOWN": "IN_DOWN",
+      "OUT": "PUMP_OUT",
+      "VDD": "VDD",
+      "VSS": "0"
+    },
+    "immutable": true
+  },
+  "supplies": [
+    {
+      "id": "core_supply",
+      "positive": "VDD",
+      "negative": "0",
+      "voltage": {"kind": "corner_value", "value_id": "vdd", "unit": "V"}
+    }
+  ],
+  "corner_bindings": [
+    {
+      "id": "tt",
+      "temperature": {"value": 27, "unit": "degC"},
+      "values": [
+        {"id": "vdd", "value": {"value": 1.2, "unit": "V"}}
+      ]
+    }
+  ],
+  "stimuli": [
+    {
+      "id": "up_dc",
+      "kind": "dc_state",
+      "target_port": "UP",
+      "supply_id": "core_supply",
+      "state": "high",
+      "level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 1.0
+      }
+    },
+    {
+      "id": "up_pulses",
+      "kind": "pulse_train",
+      "target_port": "UP",
+      "supply_id": "core_supply",
+      "polarity": "active_high",
+      "low_level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 0.0
+      },
+      "high_level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 1.0
+      },
+      "delay": {"value": 1e-9, "unit": "s"},
+      "rise_time": {"value": 1e-10, "unit": "s"},
+      "fall_time": {"value": 1e-10, "unit": "s"},
+      "pulse_width": {"value": 4e-9, "unit": "s"},
+      "period": {"value": 10e-9, "unit": "s"},
+      "count": 8
+    },
+    {
+      "id": "phase_pair",
+      "kind": "phase_offset_pair",
+      "reference_port": "UP",
+      "offset_port": "DOWN",
+      "supply_id": "core_supply",
+      "reference_polarity": "active_low",
+      "offset_polarity": "active_high",
+      "low_level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 0.0
+      },
+      "high_level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 1.0
+      },
+      "delay": {"value": 1e-9, "unit": "s"},
+      "rise_time": {"value": 1e-10, "unit": "s"},
+      "fall_time": {"value": 1e-10, "unit": "s"},
+      "pulse_width": {"value": 4e-9, "unit": "s"},
+      "period": {"value": 10e-9, "unit": "s"},
+      "phase_offset": {"value": -2e-10, "unit": "s"},
+      "wrap": "modulo_period",
+      "count": 8
+    }
+  ],
+  "probes": [
+    {
+      "id": "output_voltage",
+      "kind": "dut_port_voltage",
+      "unit": "V",
+      "port": "OUT",
+      "reference_port": "VSS"
+    },
+    {
+      "id": "pump_current",
+      "kind": "dut_port_current",
+      "unit": "A",
+      "port": "OUT",
+      "direction": "into_dut"
+    },
+    {
+      "id": "internal_voltage",
+      "kind": "dut_internal_node",
+      "unit": "V",
+      "node": "CP_NODE",
+      "reference_port": "VSS"
+    },
+    {
+      "id": "command_current",
+      "kind": "stimulus_branch_current",
+      "unit": "A",
+      "stimulus_id": "up_pulses",
+      "direction": "delivered_by_stimulus"
+    }
+  ],
+  "stages": [
+    {
+      "id": "dc_characterize",
+      "depends_on": [],
+      "inputs": [],
+      "points": [
+        {
+          "id": "nominal",
+          "condition": {
+            "corner": "tt",
+            "temperature": {"value": 27, "unit": "degC"},
+            "parameters": [
+              {"name": "output_bias", "value": {"value": 0.6, "unit": "V"}}
+            ]
+          },
+          "state_policy": {
+            "kind": "fresh",
+            "initial_node_voltages": [
+              {"kind": "port", "port": "OUT", "value": {"value": 0.6, "unit": "V"}},
+              {"kind": "internal_node", "node": "CP_NODE", "value": {"value": 0.6, "unit": "V"}}
+            ]
+          },
+          "settle_policy": {
+            "kind": "fixed_time",
+            "duration": {"value": 2e-9, "unit": "s"}
+          },
+          "analysis": {
+            "kind": "dc_sweep",
+            "source_stimulus_id": "up_dc",
+            "start": {"value": 0.35, "unit": "V"},
+            "stop": {"value": 0.85, "unit": "V"},
+            "step": {"value": 0.01, "unit": "V"}
+          },
+          "active_stimulus_ids": ["up_dc"],
+          "measurements": [
+            {
+              "id": "dc_current_curve",
+              "kind": "curve",
+              "unit": "A",
+              "probe_id": "pump_current",
+              "axis": {"kind": "analysis_axis"}
+            },
+            {
+              "id": "local_gain_fit",
+              "kind": "linear_fit",
+              "unit": "A/V",
+              "input_measurement_id": "dc_current_curve",
+              "window": {
+                "start": {"value": 0.5, "unit": "V"},
+                "stop": {"value": 0.7, "unit": "V"}
+              },
+              "minimum_samples": 9
+            },
+            {
+              "id": "zero_crossing",
+              "kind": "crossing",
+              "unit": "V",
+              "input_measurement_id": "dc_current_curve",
+              "threshold": {"value": 0.0, "unit": "A"},
+              "direction": "either",
+              "occurrence": 1
+            },
+            {
+              "id": "dc_sign",
+              "kind": "sign",
+              "unit": "1",
+              "input_measurement_id": "dc_current_curve",
+              "zero_tolerance": {"value": 1e-9, "unit": "A"}
+            },
+            {
+              "id": "peak_dc_current",
+              "kind": "max_abs",
+              "unit": "A",
+              "input_measurement_id": "dc_current_curve"
+            },
+            {
+              "id": "dc_compliance",
+              "kind": "compliance_interval",
+              "unit": "A",
+              "input_measurement_id": "dc_current_curve",
+              "lower": {"value": -0.001, "unit": "A"},
+              "upper": {"value": 0.001, "unit": "A"}
+            }
+          ],
+          "validity_rules": [
+            {
+              "id": "fit_is_linear",
+              "kind": "r2",
+              "measurement_id": "local_gain_fit",
+              "minimum": 0.98,
+              "on_fail": {"verdict": "invalid", "reason": "fit_quality"}
+            },
+            {
+              "id": "dc_is_monotone",
+              "kind": "monotonicity",
+              "measurement_id": "dc_current_curve",
+              "direction": "increasing",
+              "tolerance": {"value": 1e-9, "unit": "A"},
+              "on_fail": {"verdict": "invalid", "reason": "non_monotone"}
+            },
+            {
+              "id": "one_zero_crossing",
+              "kind": "single_sign_change",
+              "measurement_id": "dc_current_curve",
+              "zero_tolerance": {"value": 1e-9, "unit": "A"},
+              "on_fail": {"verdict": "invalid", "reason": "ambiguous_zero_crossing"}
+            },
+            {
+              "id": "dc_is_finite",
+              "kind": "finite",
+              "measurement_ids": ["dc_current_curve", "local_gain_fit", "zero_crossing"],
+              "on_fail": {"verdict": "invalid", "reason": "non_finite"}
+            }
+          ]
+        }
+      ],
+      "reductions": [],
+      "validity_rules": []
+    },
+    {
+      "id": "pulse_characterize",
+      "depends_on": ["dc_characterize"],
+      "inputs": [
+        {"id": "dc_zero_bias", "unit": "V"}
+      ],
+      "points": [
+        {
+          "id": "nominal",
+          "condition": {
+            "corner": "tt",
+            "temperature": {"value": 27, "unit": "degC"},
+            "parameters": [
+              {"name": "output_bias", "value": {"input_id": "dc_zero_bias", "unit": "V"}}
+            ]
+          },
+          "state_policy": {
+            "kind": "fresh",
+            "initial_node_voltages": [
+              {"kind": "port", "port": "OUT", "value": {"value": 0.6, "unit": "V"}}
+            ]
+          },
+          "settle_policy": {
+            "kind": "until_delta",
+            "probe_id": "output_voltage",
+            "tolerance": {"value": 1e-6, "unit": "V"},
+            "hold_for": {"value": 2e-9, "unit": "s"},
+            "maximum": {"value": 20e-9, "unit": "s"}
+          },
+          "analysis": {
+            "kind": "pulse_train_transient",
+            "stimulus_id": "up_pulses",
+            "step": {"value": 1e-10, "unit": "s"},
+            "stop": {"value": 90e-9, "unit": "s"}
+          },
+          "active_stimulus_ids": ["up_pulses"],
+          "measurements": [
+            {
+              "id": "output_waveform",
+              "kind": "curve",
+              "unit": "V",
+              "probe_id": "output_voltage",
+              "axis": {"kind": "analysis_axis"}
+            },
+            {
+              "id": "delivered_charge",
+              "kind": "integrate",
+              "unit": "C",
+              "quantity": "delivered_charge",
+              "probe_id": "pump_current",
+              "window": {
+                "start": {"value": 1e-9, "unit": "s"},
+                "stop": {"value": 81e-9, "unit": "s"}
+              },
+              "normalization": {"kind": "pulse_count", "stimulus_id": "up_pulses", "count": 8}
+            },
+            {
+              "id": "source_charge",
+              "kind": "integrate",
+              "unit": "C",
+              "quantity": "source_charge",
+              "probe_id": "command_current",
+              "window": {
+                "start": {"value": 1e-9, "unit": "s"},
+                "stop": {"value": 81e-9, "unit": "s"}
+              },
+              "normalization": {"kind": "pulse_count", "stimulus_id": "up_pulses", "count": 8}
+            },
+            {
+              "id": "charge_divergence",
+              "kind": "mismatch_fraction",
+              "unit": "1",
+              "actual_measurement_id": "delivered_charge",
+              "reference_measurement_id": "source_charge",
+              "floor": {"value": 1e-15, "unit": "C"}
+            },
+            {
+              "id": "worst_divergence",
+              "kind": "max_abs",
+              "unit": "1",
+              "input_measurement_id": "charge_divergence"
+            },
+            {
+              "id": "voltage_compliance",
+              "kind": "compliance_interval",
+              "unit": "V",
+              "input_measurement_id": "output_waveform",
+              "lower": {"value": 0.2, "unit": "V"},
+              "upper": {"value": 1.0, "unit": "V"}
+            }
+          ],
+          "validity_rules": [
+            {
+              "id": "charge_settled",
+              "kind": "settling_delta",
+              "measurement_ids": ["delivered_charge", "source_charge"],
+              "maximum": {"value": 3e-15, "unit": "C"},
+              "on_fail": {"verdict": "invalid", "reason": "not_settled"}
+            },
+            {
+              "id": "divergence_bounded",
+              "kind": "threshold",
+              "measurement_id": "worst_divergence",
+              "comparison": "abs_lte",
+              "value": {"value": 1.0, "unit": "1"},
+              "on_fail": {"verdict": "invalid", "reason": "threshold_violation"}
+            },
+            {
+              "id": "output_crossings",
+              "kind": "crossings",
+              "measurement_id": "output_waveform",
+              "threshold": {"value": 0.6, "unit": "V"},
+              "direction": "either",
+              "minimum_count": 0,
+              "maximum_count": 16,
+              "on_fail": {"verdict": "invalid", "reason": "crossing_count"}
+            },
+            {
+              "id": "all_up_pulses",
+              "kind": "pulse_count",
+              "stimulus_id": "up_pulses",
+              "minimum_count": 8,
+              "maximum_count": 8,
+              "on_fail": {"verdict": "invalid", "reason": "pulse_count"}
+            }
+          ]
+        }
+      ],
+      "reductions": [],
+      "validity_rules": []
+    },
+    {
+      "id": "phase_characterize",
+      "depends_on": ["pulse_characterize"],
+      "inputs": [],
+      "points": [
+        {
+          "id": "negative_offset",
+          "condition": {
+            "corner": "tt",
+            "temperature": {"value": 27, "unit": "degC"},
+            "parameters": [
+              {"name": "phase_offset", "value": {"value": -2e-10, "unit": "s"}}
+            ]
+          },
+          "state_policy": {
+            "kind": "carryover",
+            "from": {"stage_id": "pulse_characterize", "point_id": "nominal"}
+          },
+          "settle_policy": {
+            "kind": "fixed_time",
+            "duration": {"value": 0.0, "unit": "s"}
+          },
+          "analysis": {
+            "kind": "phase_offset_pair_transient",
+            "stimulus_id": "phase_pair",
+            "step": {"value": 1e-10, "unit": "s"},
+            "stop": {"value": 90e-9, "unit": "s"}
+          },
+          "active_stimulus_ids": ["phase_pair"],
+          "measurements": [
+            {
+              "id": "phase_output_waveform",
+              "kind": "curve",
+              "unit": "V",
+              "probe_id": "internal_voltage",
+              "axis": {"kind": "condition_parameter", "parameter": "phase_offset"}
+            },
+            {
+              "id": "phase_charge",
+              "kind": "integrate",
+              "unit": "C",
+              "quantity": "delivered_charge",
+              "probe_id": "pump_current",
+              "window": {
+                "start": {"value": 1e-9, "unit": "s"},
+                "stop": {"value": 81e-9, "unit": "s"}
+              },
+              "normalization": {"kind": "pulse_count", "stimulus_id": "phase_pair", "count": 8}
+            }
+          ],
+          "validity_rules": [
+            {
+              "id": "phase_is_finite",
+              "kind": "finite",
+              "measurement_ids": ["phase_output_waveform", "phase_charge"],
+              "on_fail": {"verdict": "invalid", "reason": "non_finite"}
+            },
+            {
+              "id": "all_phase_pulses",
+              "kind": "pulse_count",
+              "stimulus_id": "phase_pair",
+              "minimum_count": 8,
+              "maximum_count": 8,
+              "on_fail": {"verdict": "invalid", "reason": "pulse_count"}
+            }
+          ]
+        }
+      ],
+      "reductions": [],
+      "validity_rules": []
+    }
+  ],
+  "bindings": [
+    {
+      "id": "bind_zero_bias",
+      "from": {
+        "stage_id": "dc_characterize",
+        "point_id": "nominal",
+        "measurement_id": "zero_crossing",
+        "component": "crossing"
+      },
+      "to": {"stage_id": "pulse_characterize", "input_id": "dc_zero_bias"},
+      "unit": "V",
+      "transform": {"kind": "identity"}
+    }
+  ],
+  "observables": [
+    {
+      "id": "dc_fit",
+      "source": {
+        "kind": "measurement",
+        "stage_id": "dc_characterize",
+        "point_id": "nominal",
+        "measurement_id": "local_gain_fit"
+      },
+      "unit": "A/V",
+      "shape": "fit",
+      "lineage": {
+        "kind": "condition_receipt",
+        "required_digests": ["plan_sha256", "dut_sha256", "compiled_deck_sha256", "waveform_sha256"],
+        "one_per_condition": true
+      }
+    },
+    {
+      "id": "charge_per_pulse",
+      "source": {
+        "kind": "measurement",
+        "stage_id": "pulse_characterize",
+        "point_id": "nominal",
+        "measurement_id": "delivered_charge"
+      },
+      "unit": "C",
+      "shape": "scalar",
+      "lineage": {
+        "kind": "condition_receipt",
+        "required_digests": ["plan_sha256", "dut_sha256", "compiled_deck_sha256", "waveform_sha256"],
+        "one_per_condition": true
+      }
+    },
+    {
+      "id": "phase_transfer_curve",
+      "source": {
+        "kind": "measurement",
+        "stage_id": "phase_characterize",
+        "point_id": "negative_offset",
+        "measurement_id": "phase_output_waveform"
+      },
+      "unit": "V",
+      "shape": "curve",
+      "lineage": {
+        "kind": "condition_receipt",
+        "required_digests": ["plan_sha256", "dut_sha256", "compiled_deck_sha256", "waveform_sha256"],
+        "one_per_condition": true
+      }
+    },
+    {
+      "id": "fit_validity",
+      "source": {
+        "kind": "validity",
+        "stage_id": "dc_characterize",
+        "point_id": "nominal",
+        "rule_id": "fit_is_linear"
+      },
+      "unit": "1",
+      "shape": "verdict",
+      "lineage": {
+        "kind": "condition_receipt",
+        "required_digests": ["plan_sha256", "dut_sha256", "compiled_deck_sha256", "waveform_sha256"],
+        "one_per_condition": true
+      }
+    }
+  ]
+}
