@@ -101,6 +101,44 @@
       "phase_offset": {"value": -2e-10, "unit": "s"},
       "wrap": "modulo_period",
       "count": 8
+    },
+    {
+      "id": "phase_pair_positive",
+      "kind": "phase_offset_pair",
+      "reference_port": "UP",
+      "offset_port": "DOWN",
+      "supply_id": "core_supply",
+      "reference_polarity": "active_low",
+      "offset_polarity": "active_high",
+      "low_level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 0.0
+      },
+      "high_level": {
+        "kind": "supply_scaled",
+        "supply_id": "core_supply",
+        "fraction": 1.0
+      },
+      "delay": {"value": 1e-9, "unit": "s"},
+      "rise_time": {"value": 1e-10, "unit": "s"},
+      "fall_time": {"value": 1e-10, "unit": "s"},
+      "pulse_width": {"value": 4e-9, "unit": "s"},
+      "period": {"value": 10e-9, "unit": "s"},
+      "phase_offset": {"value": 2e-10, "unit": "s"},
+      "wrap": "modulo_period",
+      "count": 8
+    },
+    {
+      "id": "loop_ac",
+      "kind": "small_signal_ac",
+      "source_kind": "current",
+      "target_port": "OUT",
+      "reference_port": "VSS",
+      "direction": "into_dut",
+      "dc_bias": {"value": 0.0, "unit": "A"},
+      "magnitude": {"value": 1.0, "unit": "A"},
+      "phase": {"value": 0.0, "unit": "deg"}
     }
   ],
   "probes": [
@@ -132,6 +170,27 @@
       "stimulus_id": "up_pulses",
       "branch": "single",
       "direction": "delivered_by_stimulus"
+    },
+    {
+      "id": "loop_gain",
+      "kind": "pll_loop_gain",
+      "unit": "1",
+      "injection_stimulus_id": "loop_ac",
+      "response_probe_id": "output_voltage",
+      "feedback": "negative",
+      "construction": {
+        "kind": "charge_pump_pll",
+        "charge_pump_gain": {"input_id": "icp_meas", "unit": "A"},
+        "vco_gain": {"value": 80e6, "unit": "Hz/V"},
+        "divider_ratio": {"value": 120.0, "unit": "1"},
+        "loop_filter": {
+          "kind": "dual_branch_passive",
+          "r1": {"value": 18000.0, "unit": "Ohm"},
+          "c1": {"value": 2.2e-9, "unit": "F"},
+          "r2": {"value": 18000.0, "unit": "Ohm"},
+          "c2": {"value": 120e-12, "unit": "F"}
+        }
+      }
     }
   ],
   "stages": [
@@ -450,6 +509,179 @@
               "on_fail": {"verdict": "invalid", "reason": "pulse_count"}
             }
           ]
+        },
+        {
+          "id": "positive_offset",
+          "condition": {
+            "corner": "tt",
+            "temperature": {"value": 27, "unit": "degC"},
+            "parameters": [
+              {"name": "phase_offset", "value": {"value": 2e-10, "unit": "s"}}
+            ]
+          },
+          "state_policy": {
+            "kind": "fresh",
+            "initial_node_voltages": [
+              {"kind": "port", "port": "OUT", "value": {"value": 0.6, "unit": "V"}},
+              {"kind": "internal_node", "node": "CP_NODE", "value": {"value": 0.6, "unit": "V"}}
+            ]
+          },
+          "settle_policy": {
+            "kind": "fixed_time",
+            "duration": {"value": 0.0, "unit": "s"}
+          },
+          "analysis": {
+            "kind": "phase_offset_pair_transient",
+            "stimulus_id": "phase_pair_positive",
+            "step": {"value": 1e-10, "unit": "s"},
+            "stop": {"value": 90e-9, "unit": "s"}
+          },
+          "active_stimulus_ids": ["phase_pair_positive"],
+          "measurements": [
+            {
+              "id": "phase_charge",
+              "kind": "integrate",
+              "unit": "C",
+              "quantity": "delivered_charge",
+              "probe_id": "pump_current",
+              "window": {
+                "start": {"value": 1e-9, "unit": "s"},
+                "stop": {"value": 81e-9, "unit": "s"}
+              },
+              "normalization": {"kind": "pulse_count", "stimulus_id": "phase_pair_positive", "count": 8}
+            }
+          ],
+          "validity_rules": [
+            {
+              "id": "phase_is_finite",
+              "kind": "finite",
+              "measurement_ids": ["phase_charge"],
+              "on_fail": {"verdict": "invalid", "reason": "non_finite"}
+            },
+            {
+              "id": "all_phase_pulses",
+              "kind": "pulse_count",
+              "stimulus_id": "phase_pair_positive",
+              "minimum_count": 8,
+              "maximum_count": 8,
+              "on_fail": {"verdict": "invalid", "reason": "pulse_count"}
+            }
+          ]
+        }
+      ],
+      "reductions": [
+        {
+          "id": "local_phase_curve",
+          "kind": "collect_curve",
+          "unit": "C",
+          "axis_unit": "s",
+          "samples": [
+            {
+              "x": {"kind": "condition_parameter", "name": "phase_offset", "unit": "s"},
+              "source": {"point_id": "negative_offset", "measurement_id": "phase_charge", "component": "value"}
+            },
+            {
+              "x": {"kind": "condition_parameter", "name": "phase_offset", "unit": "s"},
+              "source": {"point_id": "positive_offset", "measurement_id": "phase_charge", "component": "value"}
+            }
+          ]
+        },
+        {
+          "id": "local_phase_fit",
+          "kind": "linear_fit",
+          "unit": "A",
+          "input_reduction_id": "local_phase_curve",
+          "window": {
+            "start": {"value": -2e-10, "unit": "s"},
+            "stop": {"value": 2e-10, "unit": "s"}
+          },
+          "minimum_samples": 2
+        }
+      ],
+      "validity_rules": [
+        {
+          "id": "local_phase_fit_valid",
+          "kind": "r2",
+          "reduction_id": "local_phase_fit",
+          "minimum": 0.98,
+          "on_fail": {"verdict": "invalid", "reason": "fit_quality"}
+        }
+      ]
+    },
+    {
+      "id": "loop_grade",
+      "depends_on": ["phase_characterize"],
+      "inputs": [
+        {"id": "icp_meas", "unit": "A"}
+      ],
+      "points": [
+        {
+          "id": "linear_loop",
+          "condition": {
+            "corner": "tt",
+            "temperature": {"value": 27, "unit": "degC"},
+            "parameters": []
+          },
+          "state_policy": {
+            "kind": "fresh",
+            "initial_node_voltages": [
+              {"kind": "port", "port": "OUT", "value": {"value": 0.6, "unit": "V"}},
+              {"kind": "internal_node", "node": "CP_NODE", "value": {"value": 0.6, "unit": "V"}}
+            ]
+          },
+          "settle_policy": {
+            "kind": "fixed_time",
+            "duration": {"value": 0.0, "unit": "s"}
+          },
+          "active_stimulus_ids": ["loop_ac"],
+          "analysis": {
+            "kind": "linear_ac",
+            "stimulus_id": "loop_ac",
+            "sweep": "decade",
+            "points_per_decade": 200,
+            "start": {"value": 1e3, "unit": "Hz"},
+            "stop": {"value": 1e9, "unit": "Hz"}
+          },
+          "measurements": [
+            {
+              "id": "open_loop_transfer",
+              "kind": "loop_transfer",
+              "unit": "1",
+              "probe_id": "loop_gain",
+              "axis": {"kind": "analysis_axis"}
+            },
+            {
+              "id": "loop_unity_frequency",
+              "kind": "unity_frequency",
+              "unit": "Hz",
+              "input_measurement_id": "open_loop_transfer",
+              "crossing": "first_descending"
+            },
+            {
+              "id": "loop_phase_margin",
+              "kind": "negative_feedback_phase_margin",
+              "unit": "deg",
+              "input_measurement_id": "open_loop_transfer",
+              "unity_frequency_measurement_id": "loop_unity_frequency",
+              "phase_unwrap": "continuous"
+            }
+          ],
+          "validity_rules": [
+            {
+              "id": "one_loop_unity_crossing",
+              "kind": "unity_crossing",
+              "measurement_id": "open_loop_transfer",
+              "minimum_count": 1,
+              "maximum_count": 1,
+              "on_fail": {"verdict": "invalid", "reason": "no_unity_crossing"}
+            },
+            {
+              "id": "loop_metrics_finite",
+              "kind": "finite",
+              "measurement_ids": ["loop_unity_frequency", "loop_phase_margin"],
+              "on_fail": {"verdict": "invalid", "reason": "non_finite"}
+            }
+          ]
         }
       ],
       "reductions": [],
@@ -468,6 +700,17 @@
       "to": {"stage_id": "pulse_characterize", "input_id": "dc_zero_bias"},
       "unit": "V",
       "transform": {"kind": "identity"}
+    },
+    {
+      "id": "bind_local_phase_gain",
+      "from": {
+        "stage_id": "phase_characterize",
+        "reduction_id": "local_phase_fit",
+        "component": "slope"
+      },
+      "to": {"stage_id": "loop_grade", "input_id": "icp_meas"},
+      "unit": "A",
+      "transform": {"kind": "identity"}
     }
   ],
   "observables": [
@@ -481,6 +724,38 @@
       },
       "unit": "A/V",
       "shape": "fit",
+      "lineage": {
+        "kind": "condition_receipt",
+        "required_digests": ["plan_sha256", "dut_sha256", "compiled_deck_sha256", "waveform_sha256"],
+        "one_per_condition": true
+      }
+    },
+    {
+      "id": "loop_unity_freq_hz",
+      "source": {
+        "kind": "measurement",
+        "stage_id": "loop_grade",
+        "point_id": "linear_loop",
+        "measurement_id": "loop_unity_frequency"
+      },
+      "unit": "Hz",
+      "shape": "scalar",
+      "lineage": {
+        "kind": "condition_receipt",
+        "required_digests": ["plan_sha256", "dut_sha256", "compiled_deck_sha256", "waveform_sha256"],
+        "one_per_condition": true
+      }
+    },
+    {
+      "id": "loop_phase_margin_deg",
+      "source": {
+        "kind": "measurement",
+        "stage_id": "loop_grade",
+        "point_id": "linear_loop",
+        "measurement_id": "loop_phase_margin"
+      },
+      "unit": "deg",
+      "shape": "scalar",
       "lineage": {
         "kind": "condition_receipt",
         "required_digests": ["plan_sha256", "dut_sha256", "compiled_deck_sha256", "waveform_sha256"],

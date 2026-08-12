@@ -100,7 +100,12 @@
         "C/s",
         "A/V",
         "C/V",
-        "V/V"
+        "V/V",
+        "Hz",
+        "deg",
+        "Hz/V",
+        "Ohm",
+        "F"
       ]
     },
     "quantity": {
@@ -401,11 +406,73 @@
       ],
       "unevaluatedProperties": false
     },
+    "smallSignalAc": {
+      "description": "One explicitly oriented ideal small-signal current injection. No arbitrary source expression or simulator option is admitted.",
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "source_kind",
+        "target_port",
+        "reference_port",
+        "direction",
+        "dc_bias",
+        "magnitude",
+        "phase"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"const": "small_signal_ac"},
+        "source_kind": {"const": "current"},
+        "target_port": {"$ref": "#/$defs/spiceName"},
+        "reference_port": {"$ref": "#/$defs/spiceName"},
+        "direction": {"enum": ["into_dut", "out_of_dut"]},
+        "dc_bias": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {"$ref": "#/$defs/boundedNumber"},
+            "unit": {"const": "A"}
+          },
+          "additionalProperties": false
+        },
+        "magnitude": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {
+              "allOf": [
+                {"$ref": "#/$defs/boundedNumber"},
+                {"exclusiveMinimum": 0}
+              ]
+            },
+            "unit": {"const": "A"}
+          },
+          "additionalProperties": false
+        },
+        "phase": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {
+              "allOf": [
+                {"$ref": "#/$defs/boundedNumber"},
+                {"minimum": -360, "maximum": 360}
+              ]
+            },
+            "unit": {"const": "deg"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "stimulus": {
       "oneOf": [
         {"$ref": "#/$defs/dcState"},
         {"$ref": "#/$defs/pulseTrain"},
-        {"$ref": "#/$defs/phaseOffsetPair"}
+        {"$ref": "#/$defs/phaseOffsetPair"},
+        {"$ref": "#/$defs/smallSignalAc"}
       ]
     },
     "probeBase": {
@@ -418,10 +485,11 @@
             "dut_port_voltage",
             "dut_port_current",
             "dut_internal_node",
-            "stimulus_branch_current"
+            "stimulus_branch_current",
+            "pll_loop_gain"
           ]
         },
-        "unit": {"enum": ["V", "A"]}
+        "unit": {"enum": ["V", "A", "1"]}
       }
     },
     "dutPortVoltage": {
@@ -491,12 +559,68 @@
       ],
       "unevaluatedProperties": false
     },
+    "pllLoopFilter": {
+      "description": "Closed passive third-order loop-filter topology. For s=j2*pi*f, Ztrans=(1+s*r1*c1)/(s*(c1+c2+s*c1*c2*(r1+r2))).",
+      "type": "object",
+      "required": ["kind", "r1", "c1", "r2", "c2"],
+      "properties": {
+        "kind": {"const": "dual_branch_passive"},
+        "r1": {"$ref": "#/$defs/valueSource"},
+        "c1": {"$ref": "#/$defs/valueSource"},
+        "r2": {"$ref": "#/$defs/valueSource"},
+        "c2": {"$ref": "#/$defs/valueSource"}
+      },
+      "additionalProperties": false
+    },
+    "pllLoopConstruction": {
+      "description": "A negative-feedback charge-pump PLL loop. L(f)=(Icp/(2*pi))*Ztrans(j2*pi*f)*Kvco/(j*f*N); charge_pump_gain is the local Q-versus-phase-time slope, never a DC or pulse-average current.",
+      "type": "object",
+      "required": [
+        "kind",
+        "charge_pump_gain",
+        "vco_gain",
+        "divider_ratio",
+        "loop_filter"
+      ],
+      "properties": {
+        "kind": {"const": "charge_pump_pll"},
+        "charge_pump_gain": {"$ref": "#/$defs/valueSource"},
+        "vco_gain": {"$ref": "#/$defs/valueSource"},
+        "divider_ratio": {"$ref": "#/$defs/valueSource"},
+        "loop_filter": {"$ref": "#/$defs/pllLoopFilter"}
+      },
+      "additionalProperties": false
+    },
+    "pllLoopGain": {
+      "allOf": [
+        {"$ref": "#/$defs/probeBase"},
+        {
+          "type": "object",
+          "required": [
+            "injection_stimulus_id",
+            "response_probe_id",
+            "feedback",
+            "construction"
+          ],
+          "properties": {
+            "kind": {"const": "pll_loop_gain"},
+            "unit": {"const": "1"},
+            "injection_stimulus_id": {"$ref": "#/$defs/id"},
+            "response_probe_id": {"$ref": "#/$defs/id"},
+            "feedback": {"const": "negative"},
+            "construction": {"$ref": "#/$defs/pllLoopConstruction"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "probe": {
       "oneOf": [
         {"$ref": "#/$defs/dutPortVoltage"},
         {"$ref": "#/$defs/dutPortCurrent"},
         {"$ref": "#/$defs/dutInternalNode"},
-        {"$ref": "#/$defs/stimulusBranchCurrent"}
+        {"$ref": "#/$defs/stimulusBranchCurrent"},
+        {"$ref": "#/$defs/pllLoopGain"}
       ]
     },
     "stageInput": {
@@ -667,11 +791,37 @@
       },
       "additionalProperties": false
     },
+    "linearAc": {
+      "description": "Log-frequency small-signal sweep; the closed compiler chooses simulator directives and options.",
+      "type": "object",
+      "required": [
+        "kind",
+        "stimulus_id",
+        "sweep",
+        "points_per_decade",
+        "start",
+        "stop"
+      ],
+      "properties": {
+        "kind": {"const": "linear_ac"},
+        "stimulus_id": {"$ref": "#/$defs/id"},
+        "sweep": {"const": "decade"},
+        "points_per_decade": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "start": {"$ref": "#/$defs/valueSource"},
+        "stop": {"$ref": "#/$defs/valueSource"}
+      },
+      "additionalProperties": false
+    },
     "analysis": {
       "oneOf": [
         {"$ref": "#/$defs/dcSweep"},
         {"$ref": "#/$defs/pulseTransient"},
-        {"$ref": "#/$defs/phaseTransient"}
+        {"$ref": "#/$defs/phaseTransient"},
+        {"$ref": "#/$defs/linearAc"}
       ]
     },
     "normalization": {
@@ -727,7 +877,10 @@
             "curve",
             "max_abs",
             "mismatch_fraction",
-            "compliance_interval"
+            "compliance_interval",
+            "loop_transfer",
+            "unity_frequency",
+            "negative_feedback_phase_margin"
           ]
         },
         "unit": {"$ref": "#/$defs/unit"}
@@ -867,6 +1020,67 @@
       ],
       "unevaluatedProperties": false
     },
+    "loopTransferMeasurement": {
+      "description": "Complex negative-feedback loop gain versus frequency, retaining magnitude and continuously unwrap-able phase.",
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": ["probe_id", "axis"],
+          "properties": {
+            "kind": {"const": "loop_transfer"},
+            "unit": {"const": "1"},
+            "probe_id": {"$ref": "#/$defs/id"},
+            "axis": {
+              "type": "object",
+              "required": ["kind"],
+              "properties": {"kind": {"const": "analysis_axis"}},
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "unityFrequencyMeasurement": {
+      "description": "Frequency of the first descending |L|=1 crossing.",
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": ["input_measurement_id", "crossing"],
+          "properties": {
+            "kind": {"const": "unity_frequency"},
+            "unit": {"const": "Hz"},
+            "input_measurement_id": {"$ref": "#/$defs/id"},
+            "crossing": {"const": "first_descending"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "negativeFeedbackPhaseMarginMeasurement": {
+      "description": "180 degrees plus continuously unwrapped phase of negative-feedback L at the selected unity frequency.",
+      "allOf": [
+        {"$ref": "#/$defs/measurementBase"},
+        {
+          "type": "object",
+          "required": [
+            "input_measurement_id",
+            "unity_frequency_measurement_id",
+            "phase_unwrap"
+          ],
+          "properties": {
+            "kind": {"const": "negative_feedback_phase_margin"},
+            "unit": {"const": "deg"},
+            "input_measurement_id": {"$ref": "#/$defs/id"},
+            "unity_frequency_measurement_id": {"$ref": "#/$defs/id"},
+            "phase_unwrap": {"const": "continuous"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "measurement": {
       "oneOf": [
         {"$ref": "#/$defs/integrateMeasurement"},
@@ -876,7 +1090,10 @@
         {"$ref": "#/$defs/curveMeasurement"},
         {"$ref": "#/$defs/maxAbsMeasurement"},
         {"$ref": "#/$defs/mismatchMeasurement"},
-        {"$ref": "#/$defs/complianceMeasurement"}
+        {"$ref": "#/$defs/complianceMeasurement"},
+        {"$ref": "#/$defs/loopTransferMeasurement"},
+        {"$ref": "#/$defs/unityFrequencyMeasurement"},
+        {"$ref": "#/$defs/negativeFeedbackPhaseMarginMeasurement"}
       ]
     },
     "invalidAction": {
@@ -893,7 +1110,8 @@
             "non_finite",
             "threshold_violation",
             "crossing_count",
-            "pulse_count"
+            "pulse_count",
+            "no_unity_crossing"
           ]
         }
       },
@@ -913,7 +1131,8 @@
             "finite",
             "threshold",
             "crossings",
-            "pulse_count"
+            "pulse_count",
+            "unity_crossing"
           ]
         },
         "on_fail": {"$ref": "#/$defs/invalidAction"}
@@ -1062,6 +1281,22 @@
       ],
       "unevaluatedProperties": false
     },
+    "unityCrossingRule": {
+      "allOf": [
+        {"$ref": "#/$defs/validityBase"},
+        {
+          "type": "object",
+          "required": ["measurement_id", "minimum_count", "maximum_count"],
+          "properties": {
+            "kind": {"const": "unity_crossing"},
+            "measurement_id": {"$ref": "#/$defs/id"},
+            "minimum_count": {"type": "integer", "minimum": 1, "maximum": 128},
+            "maximum_count": {"type": "integer", "minimum": 1, "maximum": 128}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "validityRule": {
       "oneOf": [
         {"$ref": "#/$defs/r2Rule"},
@@ -1071,7 +1306,8 @@
         {"$ref": "#/$defs/finiteRule"},
         {"$ref": "#/$defs/thresholdRule"},
         {"$ref": "#/$defs/crossingsRule"},
-        {"$ref": "#/$defs/pulseCountRule"}
+        {"$ref": "#/$defs/pulseCountRule"},
+        {"$ref": "#/$defs/unityCrossingRule"}
       ]
     },
     "pointMeasurementSource": {
@@ -1270,15 +1506,39 @@
     },
     "reductionCompliance": {
       "type": "object",
-      "required": ["id", "kind", "unit", "positive_curve_id", "negative_curve_id", "center", "tolerance"],
+      "description": "Widest contiguous axis interval where each signed curve remains within relative_tolerance of its own explicit midrail reference: abs(y-ref)<=relative_tolerance*abs(ref).",
+      "required": [
+        "id",
+        "kind",
+        "unit",
+        "positive_curve_id",
+        "negative_curve_id",
+        "positive_reference",
+        "negative_reference",
+        "relative_tolerance"
+      ],
       "properties": {
         "id": {"$ref": "#/$defs/id"},
         "kind": {"const": "compliance_intersection"},
         "unit": {"$ref": "#/$defs/unit"},
         "positive_curve_id": {"$ref": "#/$defs/id"},
         "negative_curve_id": {"$ref": "#/$defs/id"},
-        "center": {"$ref": "#/$defs/reductionOperand"},
-        "tolerance": {"$ref": "#/$defs/quantity"}
+        "positive_reference": {"$ref": "#/$defs/reductionOperand"},
+        "negative_reference": {"$ref": "#/$defs/reductionOperand"},
+        "relative_tolerance": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {
+              "allOf": [
+                {"$ref": "#/$defs/boundedFraction"},
+                {"exclusiveMinimum": 0}
+              ]
+            },
+            "unit": {"const": "1"}
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },

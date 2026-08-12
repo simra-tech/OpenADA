@@ -28,6 +28,12 @@ def plan() -> dict:
     return json.loads(FIXTURE.read_text(encoding="utf-8"))
 
 
+def loop_plan() -> dict:
+    """Return the full staged characterization and loop-grading fixture."""
+
+    return plan()
+
+
 def codes(document: dict) -> set[str]:
     prepared, issues = validate_testbench_plan(document)
     assert prepared is None
@@ -53,6 +59,7 @@ def test_validator_prepares_typed_graph_and_stable_digests() -> None:
         "dc_characterize",
         "pulse_characterize",
         "phase_characterize",
+        "loop_grade",
     ]
     assert prepared_a.canonical_sha256 == prepared_b.canonical_sha256
     assert prepared_a.dut_binding_canonical_sha256 == prepared_b.dut_binding_canonical_sha256
@@ -275,3 +282,155 @@ def test_fresh_policy_is_explicit_for_independent_analysis_samples() -> None:
         "from": {"stage_id": "dc_characterize", "point_id": "nominal"},
     }
     assert "testbench_plan.graph.cycle" in codes(document)
+
+
+def test_linear_ac_loop_stage_is_closed_typed_and_bound_from_local_fit() -> None:
+    document = loop_plan()
+    schema = load_testbench_plan_schema()
+    Draft202012Validator(schema).validate(document)
+    prepared, issues = validate_testbench_plan(document)
+    assert issues == [] and prepared is not None
+    assert [stage.identifier for stage in prepared.stages][-2:] == [
+        "phase_characterize",
+        "loop_grade",
+    ]
+    loop = prepared.stages[-1].points[0]
+    assert loop.document["analysis"]["kind"] == "linear_ac"
+    assert [item.kind for item in loop.measurements] == [
+        "loop_transfer",
+        "unity_frequency",
+        "negative_feedback_phase_margin",
+    ]
+    assert document["bindings"][-1]["from"] == {
+        "stage_id": "phase_characterize",
+        "reduction_id": "local_phase_fit",
+        "component": "slope",
+    }
+
+
+def test_linear_ac_rejects_wrong_units_sources_and_loop_identities() -> None:
+    document = loop_plan()
+    loop_point = document["stages"][-1]["points"][0]
+    loop_point["analysis"]["start"]["unit"] = "s"
+    assert "testbench_plan.unit.mismatch" in codes(document)
+
+    document = loop_plan()
+    document["probes"][-1]["response_probe_id"] = "command_current"
+    assert "testbench_plan.probe.response_incompatible" in codes(document)
+
+    document = loop_plan()
+    document["probes"][-1]["construction"]["vco_gain"]["unit"] = "A"
+    assert "testbench_plan.unit.mismatch" in codes(document)
+
+    document = loop_plan()
+    loop_measurements = document["stages"][-1]["points"][0]["measurements"]
+    loop_measurements[2]["unity_frequency_measurement_id"] = "open_loop_transfer"
+    assert "testbench_plan.measurement.parent_incompatible" in codes(document)
+
+    document = loop_plan()
+    document["stages"][-1]["points"][0]["validity_rules"][0][
+        "measurement_id"
+    ] = "loop_unity_frequency"
+    assert "testbench_plan.validity.measurement_incompatible" in codes(document)
+
+
+def test_small_signal_ac_participates_in_active_target_conflict_checks() -> None:
+    document = loop_plan()
+    document["stimuli"].append(
+        {
+            "id": "output_clamp",
+            "kind": "dc_state",
+            "target_port": "OUT",
+            "supply_id": "core_supply",
+            "state": "bias",
+            "level": {
+                "kind": "supply_scaled",
+                "supply_id": "core_supply",
+                "fraction": 0.5,
+            },
+        }
+    )
+    document["stages"][-1]["points"][0]["active_stimulus_ids"].append(
+        "output_clamp"
+    )
+    assert "testbench_plan.stimulus.target_conflict" in codes(document)
+
+
+def test_compliance_intersection_uses_independent_signed_references() -> None:
+    document = plan()
+    stage = document["stages"][2]
+    stage["reductions"].append(
+        {
+            "id": "source_curve",
+            "kind": "collect_curve",
+            "unit": "C",
+            "axis_unit": "s",
+            "samples": [
+                {
+                    "x": {"value": -1.0, "unit": "s"},
+                    "source": {
+                        "point_id": "negative_offset",
+                        "measurement_id": "phase_charge",
+                        "component": "value",
+                    },
+                },
+                {
+                    "x": {"value": 1.0, "unit": "s"},
+                    "source": {
+                        "point_id": "negative_offset",
+                        "measurement_id": "source_charge_for_compliance",
+                        "component": "value",
+                    },
+                },
+            ],
+        }
+    )
+    # Use two distinct scalar measurements so each explicit curve has a closed,
+    # unique source list without inventing samples or interpolation.
+    point = stage["points"][0]
+    companion = deepcopy(point["measurements"][1])
+    companion["id"] = "source_charge_for_compliance"
+    point["measurements"].append(companion)
+    stage["reductions"].extend(
+        [
+            {
+                "id": "sink_curve",
+                "kind": "collect_curve",
+                "unit": "C",
+                "axis_unit": "s",
+                "samples": [
+                    {
+                        "x": {"value": -1.0, "unit": "s"},
+                        "source": {
+                            "point_id": "negative_offset",
+                            "measurement_id": "source_charge_for_compliance",
+                            "component": "value",
+                        },
+                    },
+                    {
+                        "x": {"value": 1.0, "unit": "s"},
+                        "source": {
+                            "point_id": "negative_offset",
+                            "measurement_id": "phase_charge",
+                            "component": "value",
+                        },
+                    },
+                ],
+            },
+            {
+                "id": "compliance",
+                "kind": "compliance_intersection",
+                "unit": "s",
+                "positive_curve_id": "source_curve",
+                "negative_curve_id": "sink_curve",
+                "positive_reference": {"value": 70e-15, "unit": "C"},
+                "negative_reference": {"value": -65e-15, "unit": "C"},
+                "relative_tolerance": {"value": 0.1, "unit": "1"},
+            },
+        ]
+    )
+    prepared, issues = validate_testbench_plan(document)
+    assert issues == [] and prepared is not None
+
+    stage["reductions"][-1]["negative_reference"]["unit"] = "A"
+    assert "testbench_plan.unit.mismatch" in codes(document)

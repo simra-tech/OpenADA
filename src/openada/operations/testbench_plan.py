@@ -681,18 +681,18 @@ class _PlanValidator:
                     "testbench_plan.id.duplicate", f"{path}/id", "duplicate stimulus id"
                 )
                 continue
-            supply_id = str(raw["supply_id"])
-            if supply_id not in supplies:
+            kind = str(raw["kind"])
+            supply_id = str(raw["supply_id"]) if "supply_id" in raw else None
+            if supply_id is not None and supply_id not in supplies:
                 self.add(
                     "testbench_plan.stimulus.supply_unknown",
                     f"{path}/supply_id",
                     f"unknown supply {supply_id!r}",
                 )
-            port_fields = (
-                ("target_port",)
-                if raw["kind"] in {"dc_state", "pulse_train"}
-                else ("reference_port", "offset_port")
-            )
+            if kind in {"dc_state", "pulse_train", "small_signal_ac"}:
+                port_fields = ("target_port",)
+            else:
+                port_fields = ("reference_port", "offset_port")
             for field in port_fields:
                 port_name = str(raw[field])
                 port = ports.get(port_name)
@@ -702,7 +702,14 @@ class _PlanValidator:
                         f"{path}/{field}",
                         f"unknown DUT port {port_name!r}",
                     )
-                elif raw["kind"] == "dc_state" and raw["state"] == "bias":
+                elif kind == "small_signal_ac":
+                    if port["direction"] not in {"input", "output", "inout"}:
+                        self.add(
+                            "testbench_plan.stimulus.port_incompatible",
+                            f"{path}/{field}",
+                            "AC current injection must name a signal DUT port",
+                        )
+                elif kind == "dc_state" and raw["state"] == "bias":
                     if port["direction"] not in {"output", "inout", "reference"}:
                         self.add(
                             "testbench_plan.stimulus.port_incompatible",
@@ -715,7 +722,30 @@ class _PlanValidator:
                         f"{path}/{field}",
                         "stimulus target must be an input or inout DUT port",
                     )
-            if raw["kind"] == "phase_offset_pair" and str(raw["reference_port"]).casefold() == str(raw["offset_port"]).casefold():
+            if kind == "small_signal_ac":
+                reference_name = str(raw["reference_port"])
+                reference = ports.get(reference_name)
+                if reference is None:
+                    self.add(
+                        "testbench_plan.stimulus.port_unknown",
+                        f"{path}/reference_port",
+                        f"unknown DUT reference port {reference_name!r}",
+                    )
+                elif reference["direction"] not in {"reference", "supply"}:
+                    self.add(
+                        "testbench_plan.stimulus.port_incompatible",
+                        f"{path}/reference_port",
+                        "AC injection reference must be a DUT reference or supply port",
+                    )
+                if reference_name.casefold() == str(raw["target_port"]).casefold():
+                    self.add(
+                        "testbench_plan.stimulus.port_incompatible",
+                        path,
+                        "AC injection target and reference must be distinct",
+                    )
+                output[identifier] = Stimulus(identifier, kind, dict(raw))
+                continue
+            if kind == "phase_offset_pair" and str(raw["reference_port"]).casefold() == str(raw["offset_port"]).casefold():
                 self.add(
                     "testbench_plan.stimulus.port_incompatible",
                     path,
@@ -723,7 +753,7 @@ class _PlanValidator:
                 )
             level_names = (
                 ("level",)
-                if raw["kind"] == "dc_state"
+                if kind == "dc_state"
                 else ("low_level", "high_level")
             )
             for field in level_names:
@@ -733,7 +763,7 @@ class _PlanValidator:
                         f"{path}/{field}/supply_id",
                         "supply-scaled level must use the stimulus supply",
                     )
-            if raw["kind"] == "dc_state":
+            if kind == "dc_state":
                 if raw["state"] != "bias":
                     fraction = float(raw["level"]["fraction"])
                     if (raw["state"] == "low" and fraction > 0.5) or (
@@ -777,7 +807,7 @@ class _PlanValidator:
                         f"{path}/period/value",
                         "period must cover rise, pulse width, and fall times",
                     )
-            output[identifier] = Stimulus(identifier, str(raw["kind"]), dict(raw))
+            output[identifier] = Stimulus(identifier, kind, dict(raw))
         return output
 
     def _validate_probes(
@@ -844,6 +874,33 @@ class _PlanValidator:
                             "phase-pair sources require an exact reference or "
                             "offset branch; single-output sources require 'single'",
                         )
+            if kind == "pll_loop_gain":
+                stimulus = stimuli.get(str(raw["injection_stimulus_id"]))
+                if stimulus is None:
+                    self.add(
+                        "testbench_plan.probe.stimulus_unknown",
+                        f"{path}/injection_stimulus_id",
+                        "PLL loop gain names an unknown AC injection",
+                    )
+                elif stimulus.kind != "small_signal_ac":
+                    self.add(
+                        "testbench_plan.probe.stimulus_incompatible",
+                        f"{path}/injection_stimulus_id",
+                        "PLL loop gain requires a small_signal_ac current injection",
+                    )
+                response = output.get(str(raw["response_probe_id"]))
+                if response is None:
+                    self.add(
+                        "testbench_plan.probe.response_unknown",
+                        f"{path}/response_probe_id",
+                        "loop response must name an earlier physical voltage probe",
+                    )
+                elif response.kind not in {"dut_port_voltage", "dut_internal_node"}:
+                    self.add(
+                        "testbench_plan.probe.response_incompatible",
+                        f"{path}/response_probe_id",
+                        "loop response must be a physical DUT voltage identity",
+                    )
             output[identifier] = Probe(
                 identifier, kind, str(raw["unit"]), dict(raw)
             )
@@ -1007,6 +1064,7 @@ class _PlanValidator:
                     probes,
                     stimuli,
                     supplies,
+                    point["analysis"],
                     point_path,
                 )
                 for item in point_measurements:
@@ -1231,9 +1289,10 @@ class _PlanValidator:
         point_path: str,
     ) -> None:
         path = f"{point_path}/analysis"
+        kind = str(analysis["kind"])
         stimulus_key = (
             "source_stimulus_id"
-            if analysis["kind"] == "dc_sweep"
+            if kind == "dc_sweep"
             else "stimulus_id"
         )
         stimulus = stimuli.get(str(analysis[stimulus_key]))
@@ -1241,7 +1300,8 @@ class _PlanValidator:
             "dc_sweep": "dc_state",
             "pulse_train_transient": "pulse_train",
             "phase_offset_pair_transient": "phase_offset_pair",
-        }[str(analysis["kind"])]
+            "linear_ac": "small_signal_ac",
+        }[kind]
         if stimulus is None:
             self.add(
                 "testbench_plan.analysis.stimulus_unknown",
@@ -1254,10 +1314,18 @@ class _PlanValidator:
                 f"{path}/{stimulus_key}",
                 f"analysis requires {expected_kind!r}, got {stimulus.kind!r}",
             )
-        fields = ("start", "stop", "step") if analysis["kind"] == "dc_sweep" else ("step", "stop")
+        fields = (
+            ("start", "stop", "step")
+            if kind == "dc_sweep"
+            else ("start", "stop")
+            if kind == "linear_ac"
+            else ("step", "stop")
+        )
+        expected_unit = "Hz" if kind == "linear_ac" else None
         units = [
             self._check_value_source(
-                analysis[field], stage_id, stage_inputs, f"{path}/{field}"
+                analysis[field], stage_id, stage_inputs, f"{path}/{field}",
+                expected_unit=expected_unit,
             )
             for field in fields
         ]
@@ -1270,12 +1338,19 @@ class _PlanValidator:
         literal = all("value" in analysis[field] for field in fields)
         if literal:
             values = [float(analysis[field]["value"]) for field in fields]
-            if analysis["kind"] == "dc_sweep":
+            if kind == "dc_sweep":
                 if values[1] <= values[0] or values[2] <= 0:
                     self.add(
                         "testbench_plan.analysis.range_invalid",
                         path,
                         "DC stop must exceed start and step must be positive",
+                    )
+            elif kind == "linear_ac":
+                if values[0] <= 0 or values[1] <= values[0]:
+                    self.add(
+                        "testbench_plan.analysis.range_invalid",
+                        path,
+                        "AC start must be positive and stop must exceed start",
                     )
             elif values[0] <= 0 or values[1] <= 0:
                 self.add(
@@ -1317,7 +1392,7 @@ class _PlanValidator:
             raw = stimulus.document
             target_names = (
                 (str(raw["target_port"]),)
-                if stimulus.kind in {"dc_state", "pulse_train"}
+                if stimulus.kind in {"dc_state", "pulse_train", "small_signal_ac"}
                 else (str(raw["reference_port"]), str(raw["offset_port"]))
             )
             for target in target_names:
@@ -1334,6 +1409,8 @@ class _PlanValidator:
                     raw["phase_offset"], stage_id, stage_inputs,
                     f"/stimuli/{identifier}/phase_offset", expected_unit="s"
                 )
+            if stimulus.kind == "small_signal_ac":
+                continue
             for level_name in (
                 ("level",) if stimulus.kind == "dc_state" else ("low_level", "high_level")
             ):
@@ -1353,6 +1430,7 @@ class _PlanValidator:
         probes: Mapping[str, Probe],
         stimuli: Mapping[str, Stimulus],
         supplies: Mapping[str, Supply],
+        analysis: Mapping[str, Any],
         point_path: str,
     ) -> list[Measurement]:
         del point_id
@@ -1374,13 +1452,19 @@ class _PlanValidator:
                 "input_measurement_id",
                 "actual_measurement_id",
                 "reference_measurement_id",
+                "unity_frequency_measurement_id",
             ):
                 if name in raw:
                     parents.append(str(raw[name]))
             dependency_graph[identifier] = tuple(parents)
             parent_items = [by_id.get(parent) for parent in parents]
             for field, parent, item in zip(
-                [name for name in ("input_measurement_id", "actual_measurement_id", "reference_measurement_id") if name in raw],
+                [name for name in (
+                    "input_measurement_id",
+                    "actual_measurement_id",
+                    "reference_measurement_id",
+                    "unity_frequency_measurement_id",
+                ) if name in raw],
                 parents,
                 parent_items,
             ):
@@ -1424,6 +1508,53 @@ class _PlanValidator:
                             f"{path}/probe_id",
                             "source_charge requires an explicitly identified stimulus branch",
                         )
+                elif kind == "loop_transfer":
+                    if analysis["kind"] != "linear_ac":
+                        self.add(
+                            "testbench_plan.measurement.analysis_incompatible",
+                            path,
+                            "loop_transfer requires a linear_ac analysis",
+                        )
+                    if probe.kind != "pll_loop_gain":
+                        self.add(
+                            "testbench_plan.measurement.probe_incompatible",
+                            f"{path}/probe_id",
+                            "loop_transfer requires an explicit pll_loop_gain probe",
+                        )
+                    else:
+                        if (
+                            probe.document["injection_stimulus_id"]
+                            != analysis["stimulus_id"]
+                        ):
+                            self.add(
+                                "testbench_plan.measurement.probe_incompatible",
+                                f"{path}/probe_id",
+                                "loop-gain probe injection must equal the active AC analysis source",
+                            )
+                        construction = probe.document["construction"]
+                        factors = (
+                            ("charge_pump_gain", construction["charge_pump_gain"], "A"),
+                            ("vco_gain", construction["vco_gain"], "Hz/V"),
+                            ("divider_ratio", construction["divider_ratio"], "1"),
+                            ("loop_filter/r1", construction["loop_filter"]["r1"], "Ohm"),
+                            ("loop_filter/c1", construction["loop_filter"]["c1"], "F"),
+                            ("loop_filter/r2", construction["loop_filter"]["r2"], "Ohm"),
+                            ("loop_filter/c2", construction["loop_filter"]["c2"], "F"),
+                        )
+                        for field, value, expected_unit in factors:
+                            self._check_value_source(
+                                value,
+                                stage_id,
+                                stage_inputs,
+                                f"/probes/{probe.identifier}/construction/{field}",
+                                expected_unit=expected_unit,
+                            )
+                            if "value" in value and float(value["value"]) <= 0:
+                                self.add(
+                                    "testbench_plan.probe.factor_invalid",
+                                    f"/probes/{probe.identifier}/construction/{field}/value",
+                                    "PLL loop construction factors must be positive",
+                                )
             if "window" in raw:
                 for field in ("start", "stop"):
                     self._check_value_source(
@@ -1501,6 +1632,38 @@ class _PlanValidator:
                         "testbench_plan.unit.mismatch",
                         f"{path}/zero_tolerance/unit",
                         "sign tolerance must match input unit",
+                    )
+            elif kind == "unity_frequency" and parent_items and parent_items[0] is not None:
+                if parent_items[0].kind != "loop_transfer" or unit != "Hz":
+                    self.add(
+                        "testbench_plan.measurement.parent_incompatible",
+                        path,
+                        "unity_frequency requires a loop_transfer parent and emits Hz",
+                    )
+            elif (
+                kind == "negative_feedback_phase_margin"
+                and len(parent_items) == 2
+                and all(parent_items)
+            ):
+                loop_transfer, unity = parent_items
+                same_loop = (
+                    unity.kind == "unity_frequency"
+                    and unity.document["input_measurement_id"]
+                    == loop_transfer.identifier
+                )
+                probe = probes.get(str(loop_transfer.document.get("probe_id", "")))
+                if (
+                    loop_transfer.kind != "loop_transfer"
+                    or not same_loop
+                    or probe is None
+                    or probe.kind != "pll_loop_gain"
+                    or probe.document.get("feedback") != "negative"
+                    or unit != "deg"
+                ):
+                    self.add(
+                        "testbench_plan.measurement.parent_incompatible",
+                        path,
+                        "phase margin requires the matching negative-feedback loop transfer and unity frequency",
                     )
             elif kind == "mismatch_fraction" and len(parent_items) == 2 and all(parent_items):
                 if parent_items[0].unit != parent_items[1].unit or raw["floor"]["unit"] != parent_items[0].unit:
@@ -1590,6 +1753,12 @@ class _PlanValidator:
                     f"{path}/measurement_id",
                     f"{kind} validity requires a curve measurement",
                 )
+            if kind == "unity_crossing" and selected and selected[0].kind != "loop_transfer":
+                self.add(
+                    "testbench_plan.validity.measurement_incompatible",
+                    f"{path}/measurement_id",
+                    "unity-crossing validity requires a loop_transfer measurement",
+                )
             quantity_field = {
                 "settling_delta": "maximum",
                 "monotonicity": "tolerance",
@@ -1608,7 +1777,7 @@ class _PlanValidator:
                     f"{path}/{quantity_field}/unit",
                     f"validity threshold must use measurement unit {selected[0].unit!r}",
                 )
-            if kind in {"crossings", "pulse_count"} and int(raw["maximum_count"]) < int(raw["minimum_count"]):
+            if kind in {"crossings", "pulse_count", "unity_crossing"} and int(raw["maximum_count"]) < int(raw["minimum_count"]):
                 self.add(
                     "testbench_plan.validity.range_invalid",
                     path,
@@ -1938,24 +2107,40 @@ class _PlanValidator:
                         "compliance curves must share y/axis units and emit an axis interval",
                     )
                 if positive is not None:
-                    center = raw["center"]
-                    center_unit = str(center["unit"])
-                    if "reduction_id" in center:
-                        center_parent = by_id.get(str(center["reduction_id"]))
-                        actual = (
-                            self._reduction_component_unit(center_parent, str(center["component"]), by_id)
-                            if center_parent is not None else None
-                        )
-                        if actual != center_unit:
-                            self.add(
-                                "testbench_plan.unit.mismatch", f"{path}/center/unit",
-                                "center component unit mismatch",
+                    for field in ("positive_reference", "negative_reference"):
+                        reference = raw[field]
+                        reference_unit = str(reference["unit"])
+                        if "reduction_id" in reference:
+                            reference_parent = by_id.get(
+                                str(reference["reduction_id"])
                             )
-                    if center_unit != positive.unit or raw["tolerance"]["unit"] != positive.unit:
-                        self.add(
-                            "testbench_plan.unit.mismatch", path,
-                            "compliance center/tolerance must match curve y unit",
-                        )
+                            actual = (
+                                self._reduction_component_unit(
+                                    reference_parent,
+                                    str(reference["component"]),
+                                    by_id,
+                                )
+                                if reference_parent is not None
+                                else None
+                            )
+                            if actual is None:
+                                self.add(
+                                    "testbench_plan.reduction.operand_unknown",
+                                    f"{path}/{field}",
+                                    "compliance reference must name an earlier scalar component",
+                                )
+                            elif actual != reference_unit:
+                                self.add(
+                                    "testbench_plan.unit.mismatch",
+                                    f"{path}/{field}/unit",
+                                    "compliance reference component unit mismatch",
+                                )
+                        if reference_unit != positive.unit:
+                            self.add(
+                                "testbench_plan.unit.mismatch",
+                                f"{path}/{field}/unit",
+                                "each compliance reference must match its curve y unit",
+                            )
             item = Reduction(identifier, kind, unit, dict(raw))
             by_id[identifier] = item
             output.append(item)
@@ -2226,6 +2411,7 @@ class _PlanValidator:
                 else:
                     expected_shape = {
                         "curve": "curve",
+                        "loop_transfer": "curve",
                         "linear_fit": "fit",
                         "compliance_interval": "interval",
                     }.get(item.kind, "scalar")
