@@ -6,7 +6,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/contract-test.json",
       "role": "contract-test",
-      "sha256": "d7ef7fc1b3ca04efcd94843bb20cf83af514036f63bc4bd0a60af453d441de6f",
+      "sha256": "37c9dad1669538b929fde33db7603eb0410a6837baf13632e03bda630af015a0",
       "source_output": "contract-test-verdict",
       "source_step": "materialize-pinned-sources"
     },
@@ -24,7 +24,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/ota-netlist.json",
       "role": "native-artifact",
-      "sha256": "88713ae20f4e453279ec5e4ad44c2c6e8deac75279e3175288ef400a12876bfa",
+      "sha256": "8c8a3fcaef2217a87ba1e7267a58f2a670dac78787d20b3f61e71ce682dd9e78",
       "source_output": "ota-netlist-result",
       "source_step": "netlist-ota"
     },
@@ -42,7 +42,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/inverter-netlist.json",
       "role": "native-artifact",
-      "sha256": "57640b8e3cbdedd828d5d56f80007afa5b8355083daf76377ced6391e0ed7bff",
+      "sha256": "b15bc3c8818de50a1aaaa0d9a0a79429327753842eb4c5afe4111544cd39f6cb",
       "source_output": "inverter-netlist-result",
       "source_step": "netlist-inverter"
     },
@@ -60,7 +60,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/provider-ac.json",
       "role": "native-artifact",
-      "sha256": "0132f58323c10381bb58c85ca97b790777e0bea458debb6ce1a5ed105518914d",
+      "sha256": "88b3ed637a0c91cc709d7ce3559ea69eb6591e6f1f43e4c41912f399c0ca5e25",
       "source_output": "ota-ac-provider-result",
       "source_step": "provider-ac"
     },
@@ -69,7 +69,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/provider-ac/work/ota_ac.raw",
       "role": "native-artifact",
-      "sha256": "428ba73cb4c38ec7e4decf075a8d7b5cf92fdda7336ae9ff15adc3cb6ef997aa",
+      "sha256": "4f57479cb16a31e0871c5e8baf893e4ebd245ecdcfb47e57d7bc5f417cc44eee",
       "source_output": "ota-ac-raw",
       "source_step": "provider-ac"
     },
@@ -96,7 +96,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/provider-tran.json",
       "role": "native-artifact",
-      "sha256": "64ddb4200c80be7988a6e68d7b136b4f3643271b4df25f26450abcbb519bb4a8",
+      "sha256": "cc0024421c623e196f6bb1dd40feefe90ff8c5a0ee5d4c373aa71d27eb57de9e",
       "source_output": "inverter-tran-provider-result",
       "source_step": "provider-tran"
     },
@@ -105,7 +105,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/provider-tran/work/inverter_spectral.raw",
       "role": "native-artifact",
-      "sha256": "333ef46670de60c4c0b627e5e3a15f27938a74c9caff01de8644b288fa6ffc8b",
+      "sha256": "94c86a7a792d92a007f0eb9b45e86239cd740b065b74b24b27322e57144314b1",
       "source_output": "inverter-tran-raw",
       "source_step": "provider-tran"
     },
@@ -132,7 +132,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/independent-oracle.json",
       "role": "independent-oracle",
-      "sha256": "1d8599f3713311f2bdcbeb0aeac430d6c42f130f1098aaebc02556f053b6ae4e",
+      "sha256": "2ffad00537eb1b40d82770f7f37ee5be4d1234e2936509afaf1bb83a37c6e0ca",
       "source_output": "independent-oracle-verdict",
       "source_step": "independent-native-oracle"
     },
@@ -141,7 +141,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/extract-ac.json",
       "role": "normalized-evidence",
-      "sha256": "fbfe235ae542e97f87b832453ee0e53e699dae88c617bd2cf8f972b3d6220c79",
+      "sha256": "891010b5ff9d75dd700a25a1f78b0862433acfe0423ff7832a66e9e2ea669801",
       "source_output": "ota-ac-extraction-result",
       "source_step": "extract-ac"
     },
@@ -150,7 +150,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/extract-tran.json",
       "role": "normalized-evidence",
-      "sha256": "87ed2aa0353e0274139b7e514554d39a365b33fee15ca2d2df6326a7f4087201",
+      "sha256": "d53dbc6c8a0808ee214e83b921cace75de10d67235db8eca77066a1b4bf55371",
       "source_output": "inverter-tran-extraction-result",
       "source_step": "extract-tran"
     },
@@ -159,7 +159,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/transfer-low_frequency_gain_db.json",
       "role": "normalized-evidence",
-      "sha256": "306b773075d23110ec0ce6c4d792c4cbb82dcdda7f7a1342c513ead18ce9b7ab",
+      "sha256": "c70687d4e3c78302ad69e1101b339c73cd8d228eb56a27d54b3e92fa7407652a",
       "source_output": "transfer-low_frequency_gain_db-result",
       "source_step": "transfer-low-frequency-gain-db"
     },
@@ -168,7 +168,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/transfer-bandwidth_3db.json",
       "role": "normalized-evidence",
-      "sha256": "232721306263158a52d6314edf744b05c2ebd35cdf23c8a9b012267b8d76731b",
+      "sha256": "6ae1652a9d5209a5513628d906b3186737721f7d457a64281b5c2f99f040c17d",
       "source_output": "transfer-bandwidth_3db-result",
       "source_step": "transfer-bandwidth-3db"
     },
@@ -177,7 +177,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/transfer-unity_gain_frequency.json",
       "role": "normalized-evidence",
-      "sha256": "1008c0553372f8f3d1d23d051639c785e56deb3d361dc08f95775921f0125675",
+      "sha256": "f3f7db41683cfcf19034ef1f9b8bd045b0dfb9edf1d7c97778e7417c00ff77e8",
       "source_output": "transfer-unity_gain_frequency-result",
       "source_step": "transfer-unity-gain-frequency"
     },
@@ -186,7 +186,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/transfer-phase_margin.json",
       "role": "normalized-evidence",
-      "sha256": "05908749eba0f2863cf7eddd1f92dce294ceef2c0993ddf1fce9f2bdcf58f9a3",
+      "sha256": "1efeabfa5d1fb6f069aa6b7af91eb39aea63ed88fc6f85af890d076f442c57f5",
       "source_output": "transfer-phase_margin-result",
       "source_step": "transfer-phase-margin"
     },
@@ -195,7 +195,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/transfer-low_frequency_impedance.json",
       "role": "normalized-evidence",
-      "sha256": "a39f13aa8befd1fd17acb104321f8894b6d6b9603aacf840eefc2ce5e6c8cce6",
+      "sha256": "9608a99150018b6a033ce188b32862386441323eaa24d7d150695849fb8fc7d3",
       "source_output": "transfer-low_frequency_impedance-result",
       "source_step": "transfer-low-frequency-impedance"
     },
@@ -204,7 +204,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/transfer-ac_magnitude_at_frequency.json",
       "role": "normalized-evidence",
-      "sha256": "b45413368705387b3127a1341f407079d56179f7f514ba434a33ac11eb889c0e",
+      "sha256": "8d2d6ebfb91a1355ccfc1197f03498533fc344e65bafd90c23248260fd7860c0",
       "source_output": "transfer-ac_magnitude_at_frequency-result",
       "source_step": "transfer-ac-magnitude-at-frequency"
     },
@@ -213,7 +213,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/spectral-snr.json",
       "role": "normalized-evidence",
-      "sha256": "d839fd97a2a38661eef0de415492138c291cdcc98eee4f22c454e96f74b6d569",
+      "sha256": "94b0d5fb4d023d857563d7b6114a76bb4b3001e661ae8b6105f467ddb0c74451",
       "source_output": "spectral-snr-result",
       "source_step": "spectral-snr"
     },
@@ -222,7 +222,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/spectral-sinad.json",
       "role": "normalized-evidence",
-      "sha256": "2e1720fcc8e0fc3644aaff05ce40af9070ab68a6774c5958f56bb3e51f3063ff",
+      "sha256": "784b949b6dbe88f527e5f76909cab6fb635a30e490f2dec15b8b8a6dd87acb55",
       "source_output": "spectral-sinad-result",
       "source_step": "spectral-sinad"
     },
@@ -231,7 +231,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/spectral-thd.json",
       "role": "normalized-evidence",
-      "sha256": "4fd3c3d994eeddefc9a56fbe4c353b273c484b71fad727b0d22c713ccae1c9f7",
+      "sha256": "927e143379cab445d87d5e29925df0a1f380b8f2ba738f198599660c754c887a",
       "source_output": "spectral-thd-result",
       "source_step": "spectral-thd"
     },
@@ -240,7 +240,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/results/spectral-sfdr.json",
       "role": "normalized-evidence",
-      "sha256": "2fb7173091782be543c849e1d71bc62349fd8aaea804dcae5bbb28af53001911",
+      "sha256": "a61d25130aa1281f0890893b06c12b37ff9ea01a07ef7cbeaedfa290f75fe733",
       "source_output": "spectral-sfdr-result",
       "source_step": "spectral-sfdr"
     },
@@ -249,7 +249,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/normalized-evidence.json",
       "role": "normalized-evidence",
-      "sha256": "1ba28ad3d11c5c165df5af870b51ce80698eed0f1ad9a0d7b45a9e4733aea164",
+      "sha256": "f89a9f88939101dae44f5f44f7f8f4bd3de2046f5ac79b877bbe4f4fa8a02e1d",
       "source_output": "normalized-measurement-evidence",
       "source_step": "spectral-sfdr"
     },
@@ -258,7 +258,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/engineering-decision.json",
       "role": "downstream-decision",
-      "sha256": "06a254304465de6095c66701606ec39ed7e7ab9a7e9bbdb4fbe14e4490f94cd9",
+      "sha256": "57b52db5869d3b1a8b27891484d579bf5e5a508edb1b1d8c83ffc768bd38a681",
       "source_output": "downstream-engineering-decision",
       "source_step": "spectral-sfdr"
     },
@@ -267,7 +267,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/agent-evidence.json",
       "role": "agent-visible-evidence",
-      "sha256": "774a6cb6c2f218078069b1226460d63d1e55f05c82a6cfd2188067b2b9436b6c",
+      "sha256": "79ff50cb3cb9fd4ac72e643e7174cb263b0094254e2be4a81455261a12f3707d",
       "source_output": "agent-visible-measurement-evidence",
       "source_step": "agent-evidence"
     },
@@ -276,7 +276,7 @@
       "replay_id": "netlist-missing-symbol",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/netlist-missing-symbol.json",
       "role": "negative-replay",
-      "sha256": "a65a403998cf5d2adf86d93a0008e988a23cec437253bf36a9b7e52b89b7fb1f",
+      "sha256": "548b63f47181ec222f1666cbc8f71df2cce8b2c29e3372dbdce5796ca4acf9a6",
       "source_output": null,
       "source_step": null
     },
@@ -285,7 +285,7 @@
       "replay_id": "provider-ac-parameter-mismatch",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/provider-ac-parameter-mismatch.json",
       "role": "negative-replay",
-      "sha256": "dbd28ff344813b88f85d1cd8085d229af62ccd360c792949cb245947e8b069e5",
+      "sha256": "58804439baf6aaae59c02b35b9e35ae15950a8b1cd0a96a68ca48b431c781c06",
       "source_output": null,
       "source_step": null
     },
@@ -294,7 +294,7 @@
       "replay_id": "provider-tran-parameter-mismatch",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/provider-tran-parameter-mismatch.json",
       "role": "negative-replay",
-      "sha256": "7133f5eb6475241dafa78418fdfb4d60db978d71790ddda627929084405a2c7c",
+      "sha256": "10b879e6fc067e6a9b44506ac9201d2fa4f06b730fb1c07a6040ede5257084c8",
       "source_output": null,
       "source_step": null
     },
@@ -303,7 +303,7 @@
       "replay_id": "extract-ac-missing-selector",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/extract-ac-missing-selector.json",
       "role": "negative-replay",
-      "sha256": "0e4f31bf4d0e98f651a60c8d6e44cf31b6e88340b0d0c66840c4bee512e7a712",
+      "sha256": "f2630a749518a44be2f1be24d149734ffb5a3db6c7128a282cbc4578935c1341",
       "source_output": null,
       "source_step": null
     },
@@ -312,7 +312,7 @@
       "replay_id": "extract-tran-missing-selector",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/extract-tran-missing-selector.json",
       "role": "negative-replay",
-      "sha256": "3698f792e8a34b9174686d11812d7e0c29273d629e40e8992bee77b50c183cdc",
+      "sha256": "b079a8734e49e3aa49fce08355bc84bdc0cbe8e6b7ec817dc809ed8ea546d7c8",
       "source_output": null,
       "source_step": null
     },
@@ -321,7 +321,7 @@
       "replay_id": "transfer-low-frequency-gain-invalid-unit",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/transfer-low_frequency_gain_db.json",
       "role": "negative-replay",
-      "sha256": "c17617e5e6d5e6d2bddc4651db9e5bbf96671a52a3d0ce27bf3eb309d21183d4",
+      "sha256": "5f67b79a16f1571d691deec0b59d157a11b812d87921e07ed133826edabae6c8",
       "source_output": null,
       "source_step": null
     },
@@ -330,7 +330,7 @@
       "replay_id": "transfer-bandwidth-unsupported-drop",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/transfer-bandwidth_3db.json",
       "role": "negative-replay",
-      "sha256": "b90dde01343868f091371415b9042d4ccadc43ba06d237e004c52472af869795",
+      "sha256": "4c3eef76a08522144330d2839643eebbaaebb51db00e33c483a031242a84360f",
       "source_output": null,
       "source_step": null
     },
@@ -339,7 +339,7 @@
       "replay_id": "transfer-unity-unsupported-policy",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/transfer-unity_gain_frequency.json",
       "role": "negative-replay",
-      "sha256": "dd4267d66e3fc9aedea773beab80e003d77209dc5954c037ae3cedca8670fc57",
+      "sha256": "19bdfd93ded5837481a32d5a644ece485e29458a08df73cb5fe2b99f97de2574",
       "source_output": null,
       "source_step": null
     },
@@ -348,7 +348,7 @@
       "replay_id": "transfer-phase-margin-invalid-context",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/transfer-phase_margin.json",
       "role": "negative-replay",
-      "sha256": "77e03020d582c6f55aeaf028743dc1d8ddba7325217d9e8fe73c720fac4e2a90",
+      "sha256": "2f743216cbb2015b0aa7964ca3a5a763216df68315950ff5684edd142618172f",
       "source_output": null,
       "source_step": null
     },
@@ -357,7 +357,7 @@
       "replay_id": "transfer-low-frequency-impedance-invalid-unit",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/transfer-low_frequency_impedance.json",
       "role": "negative-replay",
-      "sha256": "b429095311b60ffd59f0dc2afcdca5a8130f5887be07f92b8e421afde6282660",
+      "sha256": "4a34a3b944de5571cc82736d812ae2c72dc5b5619e89d62182a8b840dd45b5cb",
       "source_output": null,
       "source_step": null
     },
@@ -366,7 +366,7 @@
       "replay_id": "transfer-ac-magnitude-outside-domain",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/transfer-ac_magnitude_at_frequency.json",
       "role": "negative-replay",
-      "sha256": "712b2d5d448f15d9ce523c013556cc6af08e79978f842a026803c054598ec8c6",
+      "sha256": "ab9efc0bdbe9233e24311a9ed8bf1b788fc8a4756e1a89902a53b91b6df5dc06",
       "source_output": null,
       "source_step": null
     },
@@ -375,7 +375,7 @@
       "replay_id": "spectral-snr-noncoherent",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/spectral-snr.json",
       "role": "negative-replay",
-      "sha256": "85d236dbbe19f35df22d57b34cd854e51b2727cd516ed17603abd7a4714862d8",
+      "sha256": "a820219d59a4b967a90e84c976f22f391fc3feee328d2007d0c7184c39f27ba6",
       "source_output": null,
       "source_step": null
     },
@@ -384,7 +384,7 @@
       "replay_id": "spectral-sinad-record-length",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/spectral-sinad.json",
       "role": "negative-replay",
-      "sha256": "97df434b50d1d9bf548d446996e1e39cc7cfd2ed1da4d5617dbeba183ea0f21d",
+      "sha256": "c33062f6cd79907a83f61d49a89abf074ef8de23de4d3f945a93997ad114d527",
       "source_output": null,
       "source_step": null
     },
@@ -393,7 +393,7 @@
       "replay_id": "spectral-thd-unsupported-window",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/spectral-thd.json",
       "role": "negative-replay",
-      "sha256": "aeef420fdd161c3c61741634a23bb207ddc48a6d0c0c8ae573fb546ef4852281",
+      "sha256": "2a01c48399bced1e88fc5f839a3e9badd6cd726bcc54bf9ad635c7081a6a1935",
       "source_output": null,
       "source_step": null
     },
@@ -402,7 +402,7 @@
       "replay_id": "spectral-sfdr-invalid-standard-context",
       "repository_path": "conformance/ihp-analog-measurements/semantic-artifacts/negative/spectral-sfdr.json",
       "role": "negative-replay",
-      "sha256": "fcf64ba867c24b72480ef2ab93f8212b74f5047e50108e65af776978b80e490a",
+      "sha256": "5b823e56167771505bfc07518a1be95844083e814b19b0a45975b031da612a27",
       "source_output": null,
       "source_step": null
     },
@@ -453,7 +453,7 @@
     }
   ],
   "chain_id": "openada.chain/ihp-analog-measurements/v1",
-  "chain_manifest_sha256": "6a93ed0975c2d73d9991d2ad5397c6fd7cccd0fc8ed783f29924517061c454d2",
+  "chain_manifest_sha256": "0a1c2ed4d03d362716ced036afc0210e29cb29439eaa2e8016a361dd6c34ba8a",
   "checks": {
     "agent_visible_evidence": true,
     "contract_test": true,
@@ -468,19 +468,19 @@
   "extensions": {
     "org.openada.measurements": {
       "publication": "release fresh replay",
-      "source_revision": "e1f71c1b577d1f9291bb25702e726b50f3103907"
+      "source_revision": "8c53a913cdfd5a157f52e39484c40fae5b26f3f9"
     }
   },
   "schema": "openada.semantic-chain-run/v0alpha1",
-  "semantic_subject_sha256": "0229af949b527475d92606ef5ec3d99c33a0ae3463158065571f333e4c93f273",
+  "semantic_subject_sha256": "ef985eeb49f6d23d3aaea923ec898b57b51c5ff572e8f147f81a82846b832a82",
   "source_attestation": {
     "clean_after": true,
     "clean_before": true,
     "extensions": {},
     "receipt_class": "release",
-    "repository_revision": "e1f71c1b577d1f9291bb25702e726b50f3103907",
-    "repository_tree": "0c5dbd67152037d1c0b020f1622aab32765ce727",
-    "semantic_subject_sha256": "0229af949b527475d92606ef5ec3d99c33a0ae3463158065571f333e4c93f273",
+    "repository_revision": "8c53a913cdfd5a157f52e39484c40fae5b26f3f9",
+    "repository_tree": "ec03a22005c941f7ce55cd6c8d7c16af6597f4c6",
+    "semantic_subject_sha256": "ef985eeb49f6d23d3aaea923ec898b57b51c5ff572e8f147f81a82846b832a82",
     "state_unchanged": true
   },
   "status": "pass"
