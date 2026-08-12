@@ -88,10 +88,11 @@ sarg = exp(-M * log(arg))
 ```
 
 For `dsubw`, `vd` is approximately `-ctrl_v`. Immediately above the
-temperature crossing, `DIOtJctPot` is negative and arbitrarily close to zero,
-so `arg` becomes negative and `log(arg)` is outside its real domain. This
-produces the timestep failure; neither saturation-current overflow nor the
-MOSVAR OSDI module is on the failing path.
+temperature crossing, while `-ctrl_v < DIOtJctPot < 0`, `arg` is negative and
+`log(arg)` is outside its real domain. It becomes positive again only when the
+potential is more negative than the applied control. This produces the
+timestep failure over a temperature/bias interval; neither saturation-current
+overflow nor the MOSVAR OSDI module is on the failing path.
 
 The standalone calculation mirrors the ngspice-46 equations and constants:
 
@@ -133,11 +134,11 @@ This is preferable to an arbitrary numerical floor because it selects a
 documented diode temperature mode consistent with the coefficient already on
 the model card.
 
-Apply the candidate to an IHP-Open-PDK checkout from the directory containing
-`ihp-sg13g2/`:
+Apply the candidate with separate IHP-Open-PDK and OpenADA checkouts:
 
 ```console
-patch -p1 < ihp-sg13g2-dsubw-tlevc.patch
+patch -d /path/to/IHP-Open-PDK -p1 \
+  < /path/to/OpenADA/reproducers/ihp-sg13g2-mosvar-hot-temp/ihp-sg13g2-dsubw-tlevc.patch
 ```
 
 `run-patched.sh` instead copies the model directory and applies the patch in an
@@ -157,14 +158,16 @@ run time, outside `mosvar.osdi`. For completeness, the PDK's OSDI rebuild path
 in this image is:
 
 ```console
-cd /foss/pdks/ihp-sg13g2/libs.tech/verilog-a
+cd /path/to/IHP-Open-PDK/ihp-sg13g2/libs.tech/verilog-a
 ./openvaf-compile-va.sh
 # mosvar command selected by that script:
 openvaf-r -D__NGSPICE__ -o ../ngspice/osdi/mosvar.osdi mosvar/mosvar.va
 ```
 
-The compiler reports `OpenVAF-reloaded 20260616-2-gc592eed-dirty`, but its
-output is unchanged and is not on the defect path.
+The compiler available in the runtime reports
+`OpenVAF-reloaded 20260616-2-gc592eed-dirty`, but no rebuild is needed and the
+compiler is not on the defect path. Use a writable checkout because the build
+script overwrites the OSDI outputs.
 
 ### 27 °C small-signal behavior
 
