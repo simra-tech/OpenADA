@@ -676,6 +676,38 @@ def test_numeric_lineage_requires_a_contributing_receipt_not_every_plan_conditio
     assert _metric(result, "offset_error")["status"] == "PASS"
 
 
+def test_numeric_lineage_must_cover_every_receipt_that_declares_the_observable() -> None:
+    observed = _typed({"offset": 1.0})
+    observed["metadata"]["conditions"].append(
+        {
+            "id": "second_contributor",
+            "observables": ["offset"],
+            "receipt": {
+                "compiled_deck_sha256": _sha("e"),
+                "waveform_sha256": _sha("f"),
+            },
+        }
+    )
+    row = _scalar(
+        "offset_error",
+        "offset",
+        limit=0.0,
+        unit="s",
+        error={"kind": "absolute"},
+    )
+
+    result = compare_testbench_observables(
+        observed,
+        _legacy({"offset": 1.0}),
+        _spec(row, lineage_required=True),
+    )
+
+    assert _metric(result, "offset_error")["status"] == "UNKNOWN"
+    assert "complete execution-receipt lineage" in _metric(
+        result, "offset_error"
+    )["reason"]
+
+
 def test_cross_corner_values_cannot_produce_an_overall_pass() -> None:
     row = _scalar(
         "offset_error",

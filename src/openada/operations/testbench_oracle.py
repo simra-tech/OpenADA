@@ -596,12 +596,16 @@ def _lineage_coverage(
         for observable in observable_names:
             total += 1
             linked_ids = lineages.get(observable, set())
-            linked = any(
-                condition_id in conditions
-                and observable in conditions[condition_id].get("observables", [])
-                for condition_id in linked_ids
-            )
-            if observable in observed["observables"] and linked:
+            declared_ids = {
+                condition_id
+                for condition_id, condition in conditions.items()
+                if observable in condition.get("observables", [])
+            }
+            if (
+                observable in observed["observables"]
+                and bool(linked_ids)
+                and linked_ids == declared_ids
+            ):
                 covered += 1
             else:
                 missing.append(observable)
