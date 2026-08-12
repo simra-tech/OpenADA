@@ -27,7 +27,7 @@ replacement for them. The same simulation intent can run through ngspice or
 Xyce; the agent should not have to relearn every command surface and log
 grammar to understand whether valid evidence was produced.
 
-The `0.4.0` preview provides sixteen CLI command families, eight open-source EDA
+The `0.4.0` preview provides seventeen CLI command families, eight open-source EDA
 drivers, the versioned `openada.result/v0alpha1` evidence envelope, and nine
 agent skills. It closes the first native-artifact-to-specification chain with
 verified ngspice/Xyce series extraction and deterministic coherent single-tone
@@ -37,6 +37,12 @@ through the CLI. It also adds a hardened explicit-manifest, local JSON-stdio
 external-provider runtime for the active circuit-simulation profile. That
 runtime is intentionally not automatic discovery, a marketplace, or an MCP
 binding.
+
+The experimental testbench-plan family adds a closed, typed measurement graph,
+deterministic ngspice deck compilation, receipt-bound execution, and a pure
+oracle comparator for grading measurement accuracy and validity honesty. See
+[Closed testbench plans](docs/TESTBENCH_PLANS.md) for the implemented subset and
+the explicit production-PDK limitations.
 
 > **Early preview**
 >
@@ -281,7 +287,7 @@ adjacent command or be waived through prose.
 
 | Contract layer | Current checkout | Protocol target |
 |---|---|---|
-| Agent intent | Sixteen CLI command families; eight fixed scoped-preflight assertions; nine active typed operation profiles plus three immutable historical profiles; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
+| Agent intent | Seventeen CLI command families; eight fixed scoped-preflight assertions; fifteen typed operation profiles, nine active; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
 | Drivers | Eight open-source EDA drivers; circuit simulation, strict RTL lint, mapped synthesis, and synthesis-stage timing expose typed evidence at feature-specific maturity | Capability manifests and independently installable drivers |
 | Portability proof | Analysis-specific `circuit.simulate` requests have pinned native ngspice/Xyce success replay with independently parsed artifacts; the expanded replay does not yet cover every maturity outcome | More operations, open-source backends, runtime environments, and complete outcome corpora |
@@ -514,6 +520,7 @@ same reviewed commit rather than mixing runtime and skill revisions.
 | `spectral` | deterministic OpenADA kernel | structured alpha | Derive coherent single-tone SNR, SINAD, signed-dB THD, or SFDR from one fully declared hashed bin partition |
 | `transfer` | deterministic OpenADA kernel | structured alpha | Derive first-positive-frequency gain, dB magnitude at one declared in-domain frequency, unique falling −3 dB bandwidth, unity-gain frequency, or explicitly declared negative-feedback phase margin; retain the complete magnitude/phase trace |
 | `evaluate` | deterministic OpenADA kernel | structured alpha | Read a complete ordinary, spectral, or transfer measurement envelope, then compare its typed scalar with exact-unit bounds and explicit condition bindings |
+| `testbench-plan validate/compile/run/compare` | deterministic OpenADA kernels + ngspice | experimental | Validate a closed measurement graph, compile supported typed analyses, execute exhaustive receipt-bound conditions, or score emitted observables against an oracle without simulation inside the comparator |
 | `profile list/show` | installed contracts | preview | List packaged operation/assertion/feature IDs or emit one complete schema-bearing operation profile from any working directory |
 | `provider validate/list/invoke` | external local CLI | structured runtime boundary | Validate one explicit v0alpha1 manifest/request and invoke one active `circuit.simulate/v1alpha2` JSON-stdio wait capability; snapshot canonical request inputs within fixed target/configuration/aggregate bounds, and enforce status/evidence truth, artifact identity, zero transport exit, and descendant cleanup |
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
@@ -542,6 +549,7 @@ See [the current result contract](docs/CONTRACT.md),
 [request and driver protocol](docs/DRIVER_PROTOCOL.md),
 [providers, marketplaces, and MCP](docs/PROVIDERS_AND_MCP.md),
 [measurement methods and standards](docs/MEASUREMENT_METHODS.md),
+[closed testbench plans](docs/TESTBENCH_PLANS.md),
 [compatibility policy](docs/COMPATIBILITY.md),
 [release history](CHANGELOG.md),
 [driver status and roadmap](docs/ROADMAP.md), and

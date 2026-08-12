@@ -570,10 +570,10 @@ and specification binding available for audit.
 
 `profile list` and `profile show OPERATION-PROFILE-ID` inspect the packaged
 operation-profile catalog. `list` returns schema, operation, assertion, and
-feature identities for all nine active typed profiles plus the immutable
-historical `circuit.simulate/v1alpha1` profile. `show` returns one complete
-packaged profile or a typed `profile.not_found` failure. These commands validate
-the installed profile documents before returning them; they are control-plane
+feature identities for all fifteen packaged profiles; nine are active and the
+others identify their historical, retired, or experimental lifecycle. `show`
+returns one complete packaged profile or a typed `profile.not_found` failure.
+These commands validate the installed profile documents before returning them; they are control-plane
 inspection results, not engineering assertions and not provider discovery.
 
 ### `provider`

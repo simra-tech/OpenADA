@@ -293,10 +293,53 @@ Inspect the complete packaged ontology without guessing IDs:
 ./bin/openada profile show openada.operation/result.transfer.measure/v1alpha2
 ```
 
-The catalog contains nine active profiles plus the immutable historical
+The catalog contains nine active profiles; immutable historical
 `circuit.simulate/v1alpha1`, `result.measure/v1alpha1`, and
-`result.transfer.measure/v1alpha1` profiles. Catalog presence is not an
+`result.transfer.measure/v1alpha1`; the retired
+`testbench.simulate/v1alpha1`; and experimental `rtl.test/v1alpha1` and
+`testbench.oracle.compare/v1alpha1`. Catalog presence is not an
 external-provider capability.
+
+## Closed testbench plans and oracle comparison
+
+`testbench-plan` is an experimental artifact family for measurement programs
+whose boundary matters as much as their numeric results:
+
+```bash
+./bin/openada testbench-plan validate plan.json
+./bin/openada testbench-plan compile plan.json \
+  --corner tt --output-dir /tmp/testbench-compile
+./bin/openada testbench-plan run plan.json \
+  --corner tt --output-dir /tmp/testbench-run
+./bin/openada testbench-plan compare \
+  --observed /tmp/testbench-run/observables.json \
+  --oracle oracle.json --tolerances tolerances.json
+```
+
+The closed `simra.testbench-plan/v1` graph declares a digest-pinned immutable
+DUT namespace, supply/corner values, typed DC/pulse/phase/AC stimuli, exact DUT
+or source-branch probe identity, fresh/carryover state, explicit settle policy,
+measurements, validity gates, staged bindings, and observable lineage. It has no
+SPICE-text, include, behavioral-element, simulator-option, or argument field.
+The compiler emits deterministic independent ngspice conditions for DC,
+pulse-train transient, and phase-pair transient points. Typed linear-AC PLL
+grading is expressible but currently refused rather than partially executed.
+
+The runner attempts every compiled condition, hashes deck and raw-waveform
+bytes, and ties each emitted observable to contributing receipt IDs. Unsupported
+runner semantics are `UNKNOWN(runner: ...)` plus a refusal; only a successfully
+evaluated plan rule may declare `INVALID(cause)`. The comparator is a pure
+function over observed/oracle/tolerance JSON and implements all twelve ratified
+accuracy, coverage, validity-honesty, completeness, and runtime rows, plus a
+cross-cutting required-lineage gate. The ratified policy uses absolute error for
+leakage and other near-zero quantities.
+
+The native conformance case uses an authored MIT RC DUT. Production SG13G2
+execution is not yet supported: the current sealer accepts one primitive-only
+subcircuit and has no harness-owned digest-pinned model/OSDI collateral bundle
+or hierarchical namespace closure. See
+[Closed testbench plans](TESTBENCH_PLANS.md) for the full contract and precise
+runner limitations.
 
 ## Explicit external-provider runtime
 
@@ -583,6 +626,7 @@ measurement method.
 | `spectral` | deterministic OpenADA kernel | structured alpha | Derive coherent single-tone SNR, SINAD, signed-dB THD, or SFDR under one fixed partition |
 | `transfer` | deterministic OpenADA kernel | structured alpha | Derive one closed AC output/input gain, crossing, or explicitly declared negative-feedback phase-margin scalar |
 | `evaluate` | deterministic OpenADA kernel | structured alpha | Evaluate exact-unit bounds and explicit conditions over one typed measurement |
+| `testbench-plan validate/compile/run/compare` | deterministic OpenADA kernels + ngspice | experimental | Closed testbench graph, supported deterministic deck compilation, exhaustive receipt-bound execution, and pure oracle comparison; native conformance is synthetic-only |
 | `drc` | KLayout | workflow-validated | Validate one exact fresh deck-owned `.lyrdb`, weighted violations, and bounded transcript evidence |
 | `lvs` | Netgen | workflow-validated | Validate agreeing fresh native report/JSON plus a clean bounded setup transcript |
 | `rtl-check` | Yosys | structured alpha | Elaborate SystemVerilog/Verilog and run structural checks |
