@@ -391,10 +391,18 @@ def _execute_compilation_conditions(
             settle = point["settle_policy"]
             if settle["kind"] == "until_delta":
                 raise ValueError("until_delta settle enforcement is not implemented")
-            if (
-                point["analysis"]["kind"] != "dc_sweep"
-                and float(settle["duration"]["value"]) != 0.0
-            ):
+            analysis_kind = point["analysis"]["kind"]
+            if analysis_kind == "dc_sweep" and settle["kind"] != "operating_point":
+                raise ValueError(
+                    "DC execution requires explicit operating_point settling"
+                )
+            if analysis_kind != "dc_sweep" and settle["kind"] == "operating_point":
+                raise ValueError(
+                    "operating_point settling is incompatible with transient execution"
+                )
+            if settle["kind"] == "fixed_time" and float(
+                settle["duration"]["value"]
+            ) != 0.0:
                 raise ValueError(
                     "nonzero transient fixed_time settling is not implemented"
                 )
@@ -997,7 +1005,8 @@ def execute_testbench_plan_ngspice(
         },
         "settle_semantics": {
             "fresh_dc": "independent_operating_point_per_sample",
-            "fixed_time_dc": "dc_operating_point_solver",
+            "operating_point_dc": "dc_operating_point_solver",
+            "fixed_time_dc": "refused_as_semantically_incompatible",
             "transient_fixed_time": "only_zero_duration_supported",
             "until_delta": "unsupported_fail_closed",
             "carryover": "unsupported_fail_closed",
@@ -1293,6 +1302,10 @@ def _evaluate_measurements(
         kind = str(measurement["kind"])
         lineage = base_lineage
         if kind == "curve":
+            if measurement["axis"]["kind"] != "analysis_axis":
+                raise ValueError(
+                    f"measurement {identifier!r} uses an unsupported point-curve axis"
+                )
             selected_probe = probes.get(str(measurement["probe_id"]))
             if selected_probe is None or _signal_values(waveform, selected_probe[0]) is None:
                 raise ValueError(f"measurement {identifier!r} probe vector is absent")

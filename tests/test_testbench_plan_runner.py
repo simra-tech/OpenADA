@@ -169,8 +169,14 @@ def _plan_document(artifact: Path, *, dc: bool = False) -> dict:
                             ],
                         },
                         "settle_policy": {
-                            "kind": "fixed_time",
-                            "duration": {"value": 0, "unit": "s"},
+                            **(
+                                {"kind": "operating_point"}
+                                if dc
+                                else {
+                                    "kind": "fixed_time",
+                                    "duration": {"value": 0, "unit": "s"},
+                                }
+                            ),
                         },
                         "active_stimulus_ids": [stimulus_id],
                         "analysis": analysis,
@@ -537,6 +543,24 @@ def test_until_delta_and_transient_fixed_settle_fail_closed_before_execution(
     )
     assert calls == []
     assert "nonzero transient fixed_time" in result.attempts[0].reason
+
+    dc_plan = _prepared_plan(tmp_path, dc=True)
+    dc_point = dc_plan.document["stages"][0]["points"][0]
+    dc_point["settle_policy"] = {
+        "kind": "fixed_time",
+        "duration": {"value": 0, "unit": "s"},
+    }
+    dc_condition = _condition(
+        "characterize.nominal.dc_000000", sample_index=0, sample_value=0.0
+    )
+    result = execute_testbench_plan_ngspice(
+        dc_plan,
+        corner="tt",
+        executor=executor,
+        _prepared_compilation=_compilation(dc_plan, [dc_condition]),
+    )
+    assert calls == []
+    assert "requires explicit operating_point" in result.attempts[0].reason
 
 
 def test_validity_names_are_unambiguous_when_rule_ids_repeat(
