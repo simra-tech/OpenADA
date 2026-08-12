@@ -252,9 +252,39 @@ def test_loop_contract_does_not_poison_supported_stages_and_refuses_typed_ac() -
     assert caught.value.path.endswith("/analysis/kind")
 
 
-def test_compiler_rejects_mutated_prepared_typed_views() -> None:
+@pytest.mark.parametrize(
+    ("view", "expected_path"),
+    [
+        ("dut", "/dut"),
+        ("supply", "/supplies"),
+        ("corner", ""),
+        ("stimulus", "/stimuli"),
+        ("probe", "/probes"),
+        ("point", "/stages/0/points"),
+        ("reduction", "/stages/2/reductions"),
+        ("observable", "/observables/0"),
+    ],
+)
+def test_compiler_rejects_mutated_prepared_typed_views(
+    view: str, expected_path: str
+) -> None:
     prepared = _prepared()
-    prepared.dut.connections["UP"] = "UNDECLARED_COMMAND_NODE"
+    if view == "dut":
+        prepared.dut.connections["UP"] = "UNDECLARED_COMMAND_NODE"
+    elif view == "supply":
+        prepared.supplies[0].voltage["value_id"] = "mutated_vdd"
+    elif view == "corner":
+        prepared.corner_bindings[0]["temperature"]["value"] = 28
+    elif view == "stimulus":
+        prepared.stimuli[0].document["target_port"] = "DOWN"
+    elif view == "probe":
+        prepared.probes[0].document["port"] = "UP"
+    elif view == "point":
+        prepared.stages[0].points[0].document["id"] = "mutated_point"
+    elif view == "reduction":
+        prepared.stages[2].reductions[0].document["unit"] = "A"
+    else:
+        prepared.observables[0].source["measurement_id"] = "mutated_measurement"
 
     with pytest.raises(TestbenchPlanCompileError) as caught:
         prepare_testbench_plan_ngspice(
@@ -262,4 +292,4 @@ def test_compiler_rejects_mutated_prepared_typed_views() -> None:
         )
 
     assert caught.value.code == "testbench_plan.compiler.plan_changed"
-    assert caught.value.path == "/dut"
+    assert caught.value.path == expected_path
