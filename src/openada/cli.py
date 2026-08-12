@@ -2938,51 +2938,51 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             )
 
         binary = discovery.find_binary("ngspice")
-        if not binary:
-            return result(
-                operation,
-                tool={"name": "ngspice", "path": None, "version": None},
-                execution=static_execution("not_available"),
-                engineering_status="unknown",
-                summary="ngspice is unavailable for testbench-plan execution.",
-                diagnostics=[
-                    diagnostic("error", "tool.missing", "ngspice was not found.")
-                ],
-                data={
-                    "schema": "simra.testbench-plan-run/v1",
-                    "observables": None,
-                    "receipt": None,
-                    "refusals": [],
-                    "extensions": {},
-                },
-            )
         try:
             run = execute_testbench_plan_ngspice(
                 prepared,
                 corner=args.corner,
-                executor=HostNgspiceExecutor(binary),
+                executor=HostNgspiceExecutor(binary) if binary else None,
                 timeout_s=args.timeout,
                 output_dir=Path(args.output_dir),
             )
         except (OSError, ValueError) as exc:
             return _invalid_request(operation, str(exc))
-        complete = not run.refusals and all(
-            attempt.status == "completed" for attempt in run.attempts
+        validity = run.observables.get("validity")
+        validity_supported = isinstance(validity, Mapping) and all(
+            isinstance(verdict, str)
+            and not verdict.startswith(("UNKNOWN(runner:", "INVALID(runner:"))
+            for verdict in validity.values()
         )
+        complete = (
+            not run.refusals
+            and all(attempt.status == "completed" for attempt in run.attempts)
+            and validity_supported
+        )
+        runner_diagnostics = [
+            diagnostic("warning", item.code, item.message)
+            for item in run.refusals[:128]
+        ]
+        if not binary:
+            runner_diagnostics.insert(
+                0,
+                diagnostic("error", "tool.missing", "ngspice was not found."),
+            )
         return result(
             operation,
-            tool={"name": "ngspice", "path": str(binary), "version": None},
-            execution=static_execution(),
+            tool={
+                "name": "ngspice",
+                "path": str(binary) if binary else None,
+                "version": None,
+            },
+            execution=static_execution("completed" if binary else "not_available"),
             engineering_status="pass" if complete else "unknown",
             summary=(
                 "Every compiled testbench-plan condition produced receipt-bound evidence."
                 if complete
                 else "The runner retained incomplete or invalid condition evidence honestly."
             ),
-            diagnostics=[
-                diagnostic("warning", item.code, item.message)
-                for item in run.refusals[:128]
-            ],
+            diagnostics=runner_diagnostics,
             data={
                 "schema": "simra.testbench-plan-run/v1",
                 "observables": dict(run.observables),

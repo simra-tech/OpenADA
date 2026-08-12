@@ -12,6 +12,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 import pytest
 
 import openada.cli as cli
+import openada.operations.testbench_plan_runner as plan_runner
 
 
 ROOT = Path(__file__).parents[1]
@@ -199,3 +200,116 @@ def test_dut_binding_flag_accepts_only_the_full_sealed_binding(
     ) == 2
     emitted = _payload(capsys)
     assert emitted["data"]["refusals"][0]["code"] == "testbench_plan.dut.abi_mismatch"
+
+
+def test_run_without_ngspice_retains_every_condition_attempt(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    plan = json.loads(PLAN.read_text())
+    dut = FIXTURES / "compiler_charge_pump_dut.spice"
+    binding = deepcopy(plan["dut"])
+    binding["artifact"] = str(dut.resolve())
+    binding["sha256"] = hashlib.sha256(dut.read_bytes()).hexdigest()
+    binding_path = tmp_path / "binding.json"
+    binding_path.write_text(json.dumps(binding), encoding="utf-8")
+
+    monkeypatch.setattr(
+        cli.DiscoveryManager,
+        "find_binary",
+        lambda _discovery, _tool_name: None,
+    )
+
+    def unavailable_executor():
+        raise ValueError("ngspice executable 'ngspice' is unavailable")
+
+    monkeypatch.setattr(plan_runner, "HostNgspiceExecutor", unavailable_executor)
+    output = tmp_path / "run"
+    assert cli.main(
+        [
+            "--compact",
+            "testbench-plan",
+            "run",
+            str(PLAN),
+            "--corner",
+            "tt",
+            "--dut-binding",
+            str(binding_path),
+            "--output-dir",
+            str(output),
+        ]
+    ) == 2
+    emitted = _payload(capsys)
+
+    assert emitted["operation"] == "testbench.plan.run"
+    assert emitted["execution"]["status"] == "not_available"
+    assert emitted["engineering"]["status"] == "unknown"
+    assert emitted["tool"] == {"name": "ngspice", "path": None, "version": None}
+    assert emitted["diagnostics"][0]["code"] == "tool.missing"
+    receipt = emitted["data"]["receipt"]
+    assert receipt is not None
+    assert receipt["condition_inventory_complete"] is True
+    assert receipt["expected_condition_count"] == 55
+    assert receipt["attempted_condition_count"] == 55
+    assert receipt["not_executed_condition_count"] == 55
+    assert receipt["simulator_identities"] == []
+    assert all(
+        attempt["status"] == "invalid"
+        and attempt["returncode"] is None
+        for attempt in receipt["attempts"]
+    )
+    assert emitted["data"]["observables"] is not None
+    assert all(
+        verdict.startswith("UNKNOWN(runner:")
+        for verdict in emitted["data"]["observables"]["validity"].values()
+    )
+    assert json.loads((output / "run-receipt.json").read_text()) == receipt
+
+
+def test_runner_unknown_validity_cannot_surface_as_engineering_pass(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    executor = object()
+    monkeypatch.setattr(
+        cli.DiscoveryManager,
+        "find_binary",
+        lambda _discovery, _tool_name: "/synthetic/ngspice",
+    )
+    monkeypatch.setattr(cli, "HostNgspiceExecutor", lambda _binary: executor)
+
+    def fake_run(_plan, **kwargs):
+        assert kwargs["executor"] is executor
+        return SimpleNamespace(
+            attempts=(SimpleNamespace(status="completed"),),
+            refusals=(),
+            observables={
+                "schema": "simra.testbench-observables/v1",
+                "validity": {
+                    "observed_pulse_count": (
+                        "UNKNOWN(runner: observed pulse-count extraction is unsupported)"
+                    )
+                },
+            },
+            receipt={"schema": "simra.testbench-plan-run/v1"},
+        )
+
+    monkeypatch.setattr(cli, "execute_testbench_plan_ngspice", fake_run)
+    assert cli.main(
+        [
+            "--compact",
+            "testbench-plan",
+            "run",
+            str(PLAN),
+            "--corner",
+            "tt",
+            "--output-dir",
+            str(tmp_path / "run"),
+        ]
+    ) == 2
+    emitted = _payload(capsys)
+
+    assert emitted["execution"]["status"] == "completed"
+    assert emitted["engineering"]["status"] == "unknown"
+    assert emitted["data"]["refusals"] == []
+    assert emitted["data"]["observables"]["validity"][
+        "observed_pulse_count"
+    ].startswith("UNKNOWN(runner:")
