@@ -1,12 +1,12 @@
 {
   "chain_id": "openada.chain/ihp-inverter-agent-chain/v1",
-  "chain_manifest_sha256": "411d3344d4e1cd94c2249250067d6b3ba2e894c7b1705daedac3d9f34bf963be",
+  "chain_manifest_sha256": "73a5d6e68cabd6a6a475299fe8f7028e088a925c4adac0894b8cd776172f0b11",
   "container_command": [
     "docker",
     "run",
     "--rm",
     "--name",
-    "openada-ihp-agent-1023411-bd64b56c",
+    "openada-ihp-agent-1201274-157cf42a",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -32,11 +32,11 @@
     "--workdir",
     "/evidence",
     "--mount",
-    "type=bind,source=/home/specialpedrito/simra/openada-wt/osc-primitives,target=/openada,readonly",
+    "type=bind,source=/home/specialpedrito/simra/openada-wt/tbplan-ir,target=/openada,readonly",
     "--mount",
     "type=bind,source=/tmp/openada-native-cache/ihp/IHP-AnalogAcademy,target=/design,readonly",
     "--mount",
-    "type=bind,source=/tmp/openada-ihp-inverter-agent-release-skill-final,target=/evidence",
+    "type=bind,source=/tmp/openada-tbplan-a7b27d7-ihp-agent,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
@@ -46,7 +46,7 @@
     "--evidence",
     "/evidence"
   ],
-  "created_at": "2026-08-12T10:01:06.425343Z",
+  "created_at": "2026-08-12T10:48:44.251577Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "image": {
     "architecture": "amd64",
@@ -57,7 +57,7 @@
   "network": "none during EDA execution",
   "openada_checkout": {
     "after": {
-      "commit": "d82acf65d4e8e6c8db136561bf7de7f19169dbd2",
+      "commit": "8a91a07c9a87ef48040593f1be09965f364bdbe4",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -65,7 +65,7 @@
       "working_tree_modified": false
     },
     "before": {
-      "commit": "d82acf65d4e8e6c8db136561bf7de7f19169dbd2",
+      "commit": "8a91a07c9a87ef48040593f1be09965f364bdbe4",
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "tracked_files_modified": false,
@@ -1081,7 +1081,7 @@
       "provider_manifest": {
         "bytes": 3480,
         "path": "/openada/providers/ngspice-pdk-control/driver-manifest.json",
-        "sha256": "40535286125f639db22117409a1187995d6e3f2c8985c6912d1c21e0d05fa35d"
+        "sha256": "c9b134cc83cb15ea265cc71e153bdeb096e398e5339ef53f892a8d32ea59313a"
       },
       "psp103_osdi": {
         "bytes": 843184,

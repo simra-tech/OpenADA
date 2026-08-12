@@ -31,7 +31,7 @@
       },
       "measurement_id": "inverter.vout.falling-edge-slope",
       "source": {
-        "measurement_sha256": "d1d37f6d627ba98e6227a72550859a7fd92356f62a72d54ba388cd87a1e0c3c9",
+        "measurement_sha256": "0763237bfbcda3971bc52abedfcc9ada21b27d05d80f22e1d3715aff0339cd7c",
         "measurement_source": {
           "artifact_role": "measurement.source",
           "artifact_sha256": "64947f6cbdecf72286d7c388e8ed37379f2d671b5305d6c69bc62ef091d66f73",
@@ -50,7 +50,7 @@
           "conditions_sha256": "11294bbcfbf6c39e95aa9b6efcda4f8cf6aeff77dcd600a19c13b4c942f3345c",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "5b6b3996dd1ba378ac2ba0ce2838086a36e8c3e0f7766ab9433694a50c204770",
+            "artifact_sha256": "9fc6f5f9d60321399e4ad4f352176f843136713d7c4378dcc92978a7ee5fc2ab",
             "binding": "unverified",
             "operation": "circuit.simulate",
             "request_id": "10000000-0000-4000-8000-000000000001"
@@ -117,7 +117,7 @@
   "inputs": [],
   "operation": "specification.evaluate",
   "provenance": {
-    "created_at": "2026-08-12T10:01:05.889818Z",
+    "created_at": "2026-08-12T10:48:43.641270Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
