@@ -324,8 +324,8 @@
       "-s",
       "/evidence/synthesis/synthesize.ys"
     ],
-    "cwd": "/evidence/synthesis/.openada-synthesize-08aik8x4",
-    "duration_ms": 18931,
+    "cwd": "/evidence/synthesis/.openada-synthesize-p8n9m33k",
+    "duration_ms": 19495,
     "exit_code": 0,
     "status": "completed"
   },
@@ -549,7 +549,7 @@
   ],
   "operation": "synthesize",
   "provenance": {
-    "created_at": "2026-08-12T09:13:11.954996Z",
+    "created_at": "2026-08-12T09:54:13.821434Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
