@@ -53,6 +53,12 @@
       "extensions": {}
     },
     {
+      "repository_path": "profiles/result.osc.measure-v1alpha1.json",
+      "lifecycle": "experimental",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
       "repository_path": "profiles/result.series.extract-v1alpha1.json",
       "lifecycle": "active",
       "dispatchable": true,
@@ -277,6 +283,19 @@
       "classification": "semantic-execution",
       "lifecycle": "active",
       "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.oscillator/v1",
+      "command_path": [
+        "oscillator"
+      ],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": [
+        "openada.operation/result.osc.measure/v1alpha1"
+      ],
       "variants": [],
       "extensions": {}
     },
@@ -792,6 +811,73 @@
           "implementation_maturity": "workflow-validated",
           "conformance_ids": [
             "orfs-ibex-synthesis-timing"
+          ],
+          "extensions": {}
+        }
+      ],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.kernel.oscillator-evidence",
+      "provider_kind": "evidence-kernel",
+      "native_product": null,
+      "operation_profile": "openada.operation/result.osc.measure/v1alpha1",
+      "assertion_profile": "openada.assertion/oscillator.measurement.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/oscillator.crossing-frequency/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "oscillator-measurement-primitives-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/oscillator.startup-hold/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "oscillator-measurement-primitives-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/oscillator.differential-amplitude/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "oscillator-measurement-primitives-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/oscillator.average-supply-power/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "oscillator-measurement-primitives-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "oscillator-measurement-primitives-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/oscillator.frequency-span/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "oscillator-measurement-primitives-v0alpha1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/oscillator.perturbation-shift/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "oscillator-measurement-primitives-v0alpha1"
           ],
           "extensions": {}
         }

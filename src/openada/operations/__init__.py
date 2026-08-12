@@ -17,6 +17,12 @@ from .drc_compare import compare_drc
 from .experiment import run_experiment, validate_experiment
 from .experiment_template import compile_experiment_template
 from .result_measure import MEASUREMENT_KINDS, measure_result, normalized_series_sha256
+from .result_osc_measure import (
+    OSCILLATION_STATUSES,
+    OSCILLATOR_MEASUREMENT_KINDS,
+    measure_oscillator,
+    oscillator_receipt_sha256,
+)
 from .result_series_extract import extract_result_series
 from .result_spectral_measure import SPECTRAL_METRIC_KINDS, measure_spectrum
 from .result_transfer_measure import TRANSFER_METRIC_KINDS, measure_transfer

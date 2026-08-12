@@ -10,6 +10,10 @@ from openada.operations.result_measure import (
     ASSERTION_PROFILE as MEASUREMENT_ASSERTION,
     OPERATION_PROFILE as MEASUREMENT_OPERATION,
 )
+from openada.operations.result_osc_measure import (
+    ASSERTION_PROFILE as OSCILLATOR_ASSERTION,
+    OPERATION_PROFILE as OSCILLATOR_OPERATION,
+)
 from openada.operations.result_series_extract import (
     ASSERTION_PROFILE as SERIES_ASSERTION,
     OPERATION_PROFILE as SERIES_OPERATION,
@@ -34,6 +38,7 @@ PROFILES = ROOT / "profiles"
 V0ALPHA1 = SCHEMAS / "operation-profile-v0alpha1.schema.json"
 V0ALPHA2 = SCHEMAS / "operation-profile-v0alpha2.schema.json"
 MEASUREMENT_PROFILE = PROFILES / "result.measure-v1alpha2.json"
+OSCILLATOR_PROFILE = PROFILES / "result.osc.measure-v1alpha1.json"
 SERIES_PROFILE = PROFILES / "result.series.extract-v1alpha1.json"
 SPECTRAL_PROFILE = PROFILES / "result.spectral.measure-v1alpha1.json"
 TRANSFER_PROFILE = PROFILES / "result.transfer.measure-v1alpha2.json"
@@ -84,6 +89,7 @@ def test_typed_evidence_profiles_and_embedded_schemas_validate() -> None:
 
     for path in (
         MEASUREMENT_PROFILE,
+        OSCILLATOR_PROFILE,
         SERIES_PROFILE,
         SPECTRAL_PROFILE,
         TRANSFER_PROFILE,
@@ -114,6 +120,7 @@ def test_typed_evidence_profiles_and_embedded_schemas_validate() -> None:
 
 def test_module_profile_and_skills_share_exact_public_intent_ids() -> None:
     measurement = _load(MEASUREMENT_PROFILE)
+    oscillator = _load(OSCILLATOR_PROFILE)
     series = _load(SERIES_PROFILE)
     spectral = _load(SPECTRAL_PROFILE)
     transfer = _load(TRANSFER_PROFILE)
@@ -121,6 +128,12 @@ def test_module_profile_and_skills_share_exact_public_intent_ids() -> None:
 
     assert MEASUREMENT_OPERATION == "openada.operation/result.measure/v1alpha2"
     assert MEASUREMENT_ASSERTION == "openada.assertion/measurement.valid/v1alpha1"
+    assert OSCILLATOR_OPERATION == (
+        "openada.operation/result.osc.measure/v1alpha1"
+    )
+    assert OSCILLATOR_ASSERTION == (
+        "openada.assertion/oscillator.measurement.valid/v1alpha1"
+    )
     assert SPECIFICATION_OPERATION == (
         "openada.operation/specification.evaluate/v1alpha1"
     )
@@ -143,6 +156,8 @@ def test_module_profile_and_skills_share_exact_public_intent_ids() -> None:
     )
     assert measurement["operation"]["id"] == MEASUREMENT_OPERATION
     assert measurement["assertion"]["id"] == MEASUREMENT_ASSERTION
+    assert oscillator["operation"]["id"] == OSCILLATOR_OPERATION
+    assert oscillator["assertion"]["id"] == OSCILLATOR_ASSERTION
     assert specification["operation"]["id"] == SPECIFICATION_OPERATION
     assert specification["assertion"]["id"] == SPECIFICATION_ASSERTION
     assert series["operation"]["id"] == SERIES_OPERATION
@@ -159,6 +174,8 @@ def test_module_profile_and_skills_share_exact_public_intent_ids() -> None:
     for identifier in (
         MEASUREMENT_OPERATION,
         MEASUREMENT_ASSERTION,
+        OSCILLATOR_OPERATION,
+        OSCILLATOR_ASSERTION,
         SERIES_OPERATION,
         SERIES_ASSERTION,
         SPECTRAL_OPERATION,
@@ -175,6 +192,7 @@ def test_module_profile_and_skills_share_exact_public_intent_ids() -> None:
 def test_profile_schemas_close_extensions_and_bound_condition_strings() -> None:
     for path in (
         MEASUREMENT_PROFILE,
+        OSCILLATOR_PROFILE,
         SERIES_PROFILE,
         SPECTRAL_PROFILE,
         TRANSFER_PROFILE,

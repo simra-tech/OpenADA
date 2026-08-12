@@ -37,6 +37,7 @@ from .engines import (
 from .operations import (
     MAX_SHARED_ANALYSIS_POINTS,
     MEASUREMENT_KINDS,
+    OSCILLATOR_MEASUREMENT_KINDS,
     SPECTRAL_METRIC_KINDS,
     TRANSFER_METRIC_KINDS,
     evaluate_specification,
@@ -44,6 +45,7 @@ from .operations import (
     inspect_simulation_deck,
     invalid_circuit_simulation_request,
     measure_result,
+    measure_oscillator,
     measure_spectrum,
     measure_transfer,
     compare_drc,
@@ -113,6 +115,7 @@ _COMMAND_OPERATIONS = {
     "experiment": "experiment.run",
     "extract": "result.series.extract",
     "measure": "result.measure",
+    "oscillator": "result.osc.measure",
     "spectral": "result.spectral.measure",
     "transfer": "result.transfer.measure",
     "profile": "profile",
@@ -723,6 +726,40 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional canonical UUID for request correlation.",
     )
 
+    oscillator = commands.add_parser(
+        "oscillator",
+        help=(
+            "Measure sustained oscillation, a local tuning-gain grid, or a "
+            "paired perturbation shift."
+        ),
+        description=(
+            "Run one closed oscillator measurement.\n\n"
+            "measurement.kind must be one of:\n  "
+            + ", ".join(OSCILLATOR_MEASUREMENT_KINDS)
+            + "\n\nTransient mode requires --series and binds frequency, differential "
+            "peak-to-peak amplitude, and average supply power to one late "
+            "window. Grid and shift modes compose the typed oscillator "
+            "receipts embedded in --measurement and reject --series."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    oscillator.add_argument(
+        "--series",
+        help=(
+            "Transient-only normalized real series or passing "
+            "result.series.extract envelope."
+        ),
+    )
+    oscillator.add_argument(
+        "--measurement",
+        required=True,
+        help="JSON file containing one closed oscillator measurement request.",
+    )
+    oscillator.add_argument(
+        "--request-id",
+        help="Optional canonical UUID for oscillator-result correlation.",
+    )
+
     evaluate = commands.add_parser(
         "evaluate",
         help="Evaluate one typed measurement against explicit unit-bearing limits.",
@@ -1071,6 +1108,7 @@ def _overrides(values: list[str]) -> dict[str, str]:
 def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
     conformance_id = "model-free-op-dc-ac-tran-ngspice-xyce-v0alpha2"
     typed_conformance_id = "typed-evidence-measurement-specification-v0alpha2"
+    oscillator_conformance_id = "oscillator-measurement-primitives-v0alpha1"
     records: list[dict] = []
     for alias, driver in sorted(BUILTIN_DRIVERS.items()):
         tool = tools.get(driver.native_tool)
@@ -1175,6 +1213,39 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                         "conformance_ids": [],
                     }
                     for kind in SPECTRAL_METRIC_KINDS
+                ],
+            },
+            {
+                "provider_id": "org.openada.kernel.oscillator-evidence",
+                "provider_version": "1.0.0",
+                "provider_kind": "evidence-kernel",
+                "availability": "available",
+                "native_product": None,
+                "operation_profile": (
+                    "openada.operation/result.osc.measure/v1alpha1"
+                ),
+                "operation_profile_schema": "openada.operation-profile/v0alpha2",
+                "assertion_profile": (
+                    "openada.assertion/oscillator.measurement.valid/v1alpha1"
+                ),
+                "result_schema": "openada.result/v0alpha1",
+                "transports": ["local-cli", "in-process"],
+                "locator_types": ["artifact"],
+                "features": [
+                    {
+                        "id": feature,
+                        "maturity": "structured",
+                        "conformance_ids": [oscillator_conformance_id],
+                    }
+                    for feature in (
+                        "openada.feature/oscillator.crossing-frequency/v1alpha1",
+                        "openada.feature/oscillator.startup-hold/v1alpha1",
+                        "openada.feature/oscillator.differential-amplitude/v1alpha1",
+                        "openada.feature/oscillator.average-supply-power/v1alpha1",
+                        "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+                        "openada.feature/oscillator.frequency-span/v1alpha1",
+                        "openada.feature/oscillator.perturbation-shift/v1alpha1",
+                    )
                 ],
             },
             {
@@ -2715,6 +2786,20 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
         except ValueError as exc:
             return _invalid_request("result.measure", str(exc))
         return measure_result(series, measurement, request_id=args.request_id)
+    if args.command == "oscillator":
+        try:
+            measurement = _load_json_object(
+                args.measurement,
+                role="oscillator measurement",
+            )
+            series = (
+                _series_record(_load_json_object(args.series, role="series"))
+                if args.series is not None
+                else None
+            )
+        except ValueError as exc:
+            return _invalid_request("result.osc.measure", str(exc))
+        return measure_oscillator(series, measurement, request_id=args.request_id)
     if args.command == "spectral":
         try:
             series = _series_record(_load_json_object(args.series, role="series"))
@@ -3059,6 +3144,15 @@ def _invalid_request(operation: str, message: str) -> dict:
         payload["engineering"]["summary"] = "OpenADA could not parse the typed measurement request."
         payload["diagnostics"] = [
             diagnostic("error", "measurement.request.invalid", message)
+        ]
+        return payload
+    if operation == "result.osc.measure":
+        payload = measure_oscillator(None, {})
+        payload["engineering"]["summary"] = (
+            "OpenADA could not parse the typed oscillator measurement request."
+        )
+        payload["diagnostics"] = [
+            diagnostic("error", "oscillator.request.invalid", message)
         ]
         return payload
     if operation == "result.spectral.measure":

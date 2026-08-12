@@ -221,6 +221,27 @@ def test_capabilities_exposes_semantic_provider_records(capsys):
         "openada.feature/transfer.phase-margin/v1alpha1",
         "openada.feature/transfer.differential-operands/v1alpha1",
     }
+    oscillator = next(
+        record
+        for record in records
+        if record["operation_profile"]
+        == "openada.operation/result.osc.measure/v1alpha1"
+    )
+    assert oscillator["provider_id"] == "org.openada.kernel.oscillator-evidence"
+    assert {feature["id"] for feature in oscillator["features"]} == {
+        "openada.feature/oscillator.crossing-frequency/v1alpha1",
+        "openada.feature/oscillator.startup-hold/v1alpha1",
+        "openada.feature/oscillator.differential-amplitude/v1alpha1",
+        "openada.feature/oscillator.average-supply-power/v1alpha1",
+        "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+        "openada.feature/oscillator.frequency-span/v1alpha1",
+        "openada.feature/oscillator.perturbation-shift/v1alpha1",
+    }
+    assert all(
+        feature["conformance_ids"]
+        == ["oscillator-measurement-primitives-v0alpha1"]
+        for feature in oscillator["features"]
+    )
     assert {
         provider: by_provider[provider]["features"]
         for provider in (
@@ -491,6 +512,7 @@ def test_missing_input_is_unknown_not_engineering_fail(tmp_path, capsys):
         (["not-a-command"], "openada.invalid_request"),
         (["--tool-path", "not-an-override", "doctor"], "doctor"),
         (["measure"], "result.measure"),
+        (["oscillator"], "result.osc.measure"),
         (["extract"], "result.series.extract"),
         (["spectral"], "result.spectral.measure"),
         (["transfer"], "result.transfer.measure"),
@@ -513,6 +535,7 @@ def test_malformed_invocation_emits_one_invalid_request(argv, operation, capsys)
     assert len(payload["diagnostics"]) == 1
     expected_code = {
         "result.measure": "measurement.request.invalid",
+        "result.osc.measure": "oscillator.request.invalid",
         "result.series.extract": "series.request.invalid",
         "result.spectral.measure": "spectral.request.invalid",
         "result.transfer.measure": "transfer.request.invalid",
@@ -520,6 +543,8 @@ def test_malformed_invocation_emits_one_invalid_request(argv, operation, capsys)
     }.get(operation, "request.invalid")
     assert payload["diagnostics"][0]["code"] == expected_code
     if operation == "result.measure":
+        assert payload["data"]["measurement"]["status"] == "unknown"
+    if operation == "result.osc.measure":
         assert payload["data"]["measurement"]["status"] == "unknown"
     if operation == "result.series.extract":
         assert payload["data"]["extraction"]["status"] == "unknown"
@@ -1016,6 +1041,113 @@ def test_measure_and_evaluate_cli_form_a_typed_evidence_chain(tmp_path, capsys):
     }
 
 
+def test_oscillator_cli_measures_one_provenance_bound_late_window(
+    tmp_path, capsys
+) -> None:
+    frequency = 100e6
+    sample_count = 241
+    axis_values = [index * 200e-9 / (sample_count - 1) for index in range(sample_count)]
+    differential = [
+        0.8 * math.sin(2.0 * math.pi * frequency * time)
+        for time in axis_values
+    ]
+    axis = {"name": "time", "unit": "s", "values": axis_values}
+    signals = [
+        {
+            "name": "v(outp)",
+            "unit": "V",
+            "values": [value / 2.0 for value in differential],
+        },
+        {
+            "name": "v(outn)",
+            "unit": "V",
+            "values": [-value / 2.0 for value in differential],
+        },
+        {"name": "v(vdd)", "unit": "V", "values": [1.2] * sample_count},
+        {"name": "i(vdd)", "unit": "A", "values": [700e-6] * sample_count},
+    ]
+    conditions = [{"name": "vctrl", "value": 0.6, "unit": "V"}]
+    content = {"axis": axis, "signals": signals, "conditions": conditions}
+    series = {
+        "source": {
+            "operation": "result.series.extract",
+            "request_id": "00000000-0000-4000-8000-000000000031",
+            "artifact_role": "measurement.source",
+            "artifact_sha256": _canonical_digest(content),
+        },
+        **content,
+        "extensions": {},
+    }
+    measurement = {
+        "measurement_id": "vco.transient",
+        "kind": "transient",
+        "signals": {
+            "positive": "v(outp)",
+            "negative": "v(outn)",
+            "supply_voltage": "v(vdd)",
+            "supply_current": "i(vdd)",
+        },
+        "window": {
+            "start": {"value": 50e-9, "unit": "s"},
+            "stop": {"value": 200e-9, "unit": "s"},
+            "cycle_count": 10,
+        },
+        "startup": {
+            "search_start": {"value": 0.0, "unit": "s"},
+            "hold_for": {"value": 30e-9, "unit": "s"},
+            "minimum_peak_to_peak": {"value": 0.5, "unit": "V"},
+        },
+        "crossing": {
+            "threshold": {"value": 0.0, "unit": "V"},
+            "hysteresis": {"value": 0.1, "unit": "V"},
+            "direction": "rising",
+        },
+        "quality": {
+            "maximum_period_relative_deviation": 1e-6,
+            "maximum_amplitude_relative_deviation": 1e-6,
+            "minimum_samples_per_cycle": 10,
+        },
+        "power": {"current_orientation": "positive_into_load"},
+        "extensions": {},
+    }
+    series_path = tmp_path / "oscillator-series.json"
+    request_path = tmp_path / "oscillator-request.json"
+    series_path.write_text(json.dumps(series), encoding="utf-8")
+    request_path.write_text(json.dumps(measurement), encoding="utf-8")
+
+    exit_code = main(
+        [
+            "--compact",
+            "oscillator",
+            "--series",
+            str(series_path),
+            "--measurement",
+            str(request_path),
+            "--request-id",
+            "00000000-0000-4000-8000-000000000032",
+        ]
+    )
+    measured = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert measured["operation"] == "result.osc.measure"
+    assert measured["engineering"]["status"] == "pass"
+    transient = measured["data"]["transient"]
+    assert transient["frequency"]["value"] == pytest.approx(frequency, rel=1e-12)
+    assert transient["differential_peak_to_peak"]["value"] == pytest.approx(1.6)
+    assert transient["average_supply_power"]["value"] == pytest.approx(840e-6)
+    window_sha256 = transient["window"]["window_sha256"]
+    assert {
+        transient[name]["window_sha256"]
+        for name in (
+            "frequency",
+            "differential_peak_to_peak",
+            "average_supply_power",
+        )
+    } == {window_sha256}
+    assert measured["data"]["receipt"]["window_sha256"] == window_sha256
+
+
 def test_measure_cli_accepts_a_complete_passing_extraction_envelope(
     tmp_path, capsys
 ) -> None:
@@ -1092,6 +1224,7 @@ def test_profile_cli_lists_and_shows_packaged_contracts(capsys) -> None:
     assert list_exit == 0
     assert "openada.operation/result.transfer.measure/v1alpha2" in profile_ids
     assert "openada.operation/result.spectral.measure/v1alpha1" in profile_ids
+    assert "openada.operation/result.osc.measure/v1alpha1" in profile_ids
 
     show_exit = main(
         [
