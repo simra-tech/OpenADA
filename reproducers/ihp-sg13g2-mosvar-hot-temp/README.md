@@ -60,3 +60,58 @@ hot-temperature onset does not measurably move between 0.1, 0.2, and 0.3 V:
 all three brackets contain approximately 52.469802 °C. The generated decks
 retain every supplied digit even though ngspice rounds the temperature in its
 banner.
+
+## Root cause
+
+`dsubw` is not part of the MOSVAR Verilog-A module. It is a built-in ngspice
+diode in the IHP wrapper
+`libs.tech/ngspice/models/sg13g2_svaricaphv_mod.lib`:
+
+```spice
+dsubw W1 W dsubw off area=... pj=...
+.model dsubw d is=2.45e-17 ... vj=0.1 ... fc=0.95 cta=1e-6
+```
+
+The model omits `TLEVC`, so ngspice-46 selects its default `TLEVC=0`
+junction-capacitance temperature law. In `DIOtemp`, that law calculates
+
+```text
+DIOtJctPot = pbfact + (T / 300.15 K) * pbo
+```
+
+and the small `VJ=0.1 V` makes `DIOtJctPot` cross zero at
+52.46980204129827 °C. During transient charge evaluation, `DIOload` then uses
+
+```text
+arg = 1 - vd / DIOtJctPot
+sarg = exp(-M * log(arg))
+```
+
+For `dsubw`, `vd` is approximately `-ctrl_v`. Immediately above the
+temperature crossing, `DIOtJctPot` is negative and arbitrarily close to zero,
+so `arg` becomes negative and `log(arg)` is outside its real domain. This
+produces the timestep failure; neither saturation-current overflow nor the
+MOSVAR OSDI module is on the failing path.
+
+The standalone calculation mirrors the ngspice-46 equations and constants:
+
+```console
+python3 junction_temperature.py
+```
+
+Its relevant output is:
+
+```text
+DIOtJctPot zero: 52.46980204129827 degC
+temp_C       DIOtJctPot_V          log_argument          log(argument)
+52.4697000  +4.024700302752e-07  +7.453981163888e+05  13.52167...
+52.4697998  +8.840101484164e-09  +3.393626299172e+07  17.33999...
+52.4698028  -2.992462028173e-09  -1.002518976626e+08  nan
+52.4699000  -3.863675168414e-07  -7.764617897618e+05  nan
+60.0000000  -2.973935121787e-02  -9.087644407648e+00  nan
+```
+
+At 60 °C, the calculated magnitude `29.73935121790 mV` also predicts the
+measured control edge at `29.73935135 mV`; the roughly 0.13 nV difference is
+consistent with the internal `W1` node not being exactly at zero. The exact
+temperature zero lies inside every measured temperature bracket.
