@@ -629,7 +629,7 @@ def _condition_coverage(
     metadata = observed.get("metadata")
     if not isinstance(metadata, Mapping):
         return None
-    conditions = {
+    receipt_conditions = {
         item["id"]: item
         for item in metadata["conditions"]
         if isinstance(item, Mapping)
@@ -638,7 +638,12 @@ def _condition_coverage(
     total = 0
     present = 0
     for condition_id in condition_names:
-        condition = conditions.get(condition_id)
+        # A tolerance may score completeness at the comparison condition
+        # (normally the top-level corner) or at individual execution-receipt
+        # conditions.  The two namespaces are deliberately distinct: a
+        # runner's per-deck IDs must not have to impersonate a benchmark corner.
+        top_level = condition_id == observed["corner"]
+        condition = receipt_conditions.get(condition_id)
         declared_observables = (
             condition.get("observables", [])
             if isinstance(condition, Mapping)
@@ -648,7 +653,7 @@ def _condition_coverage(
             total += 1
             if (
                 observable in observed["observables"]
-                and observable in declared_observables
+                and (top_level or observable in declared_observables)
             ):
                 present += 1
             else:
@@ -707,11 +712,14 @@ def _scalar_row(
 def _curve_row(
     row: Mapping[str, Any], observed: Mapping[str, Any], oracle: Mapping[str, Any]
 ) -> dict[str, Any]:
-    observed_curve = _curve(
-        observed["observables"].get(row["observed"]),
-        x_name=row["x"],
-        y_name=row["y"],
-    )
+    observed_value = observed["observables"].get(row["observed"])
+    observed_curve = _curve(observed_value, x_name="x", y_name="y")
+    if observed_curve is None:
+        # Legacy submitted documents may already use the oracle's domain
+        # labels.  Native plan-runner output is the canonical {x,y} shape.
+        observed_curve = _curve(
+            observed_value, x_name=row["x"], y_name=row["y"]
+        )
     oracle_curve = _curve(
         oracle["observables"].get(row["oracle"]),
         x_name=row["x"],
@@ -837,6 +845,8 @@ def _compliance_row(
     left = observed["observables"].get(row["observed"])
     right = oracle["observables"].get(row["oracle"])
     required = {"lo_v", "hi_v"}
+    if isinstance(left, Mapping) and set(left) == {"lower", "upper"}:
+        left = {"lo_v": left["lower"], "hi_v": left["upper"]}
     if (
         not isinstance(left, Mapping)
         or not isinstance(right, Mapping)
@@ -863,11 +873,14 @@ def _compliance_row(
 def _signed_coverage_row(
     row: Mapping[str, Any], observed: Mapping[str, Any], oracle: Mapping[str, Any]
 ) -> dict[str, Any]:
-    left = _curve(
-        observed["observables"].get(row["observed"]),
-        x_name=row["x"],
-        y_name=row["y"],
-    )
+    observed_value = observed["observables"].get(row["observed"])
+    left = _curve(observed_value, x_name="x", y_name="y")
+    if left is None:
+        left = _curve(
+            observed_value,
+            x_name=row["x"],
+            y_name=row["y"],
+        )
     right = _curve(
         oracle["observables"].get(row["oracle"]),
         x_name=row["x"],

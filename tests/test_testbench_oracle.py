@@ -666,3 +666,64 @@ def test_mismatch_curve_refuses_ambiguous_mapping_values() -> None:
         _legacy(curves), _legacy(curves), _spec(row)
     )
     assert _metric(result, "mismatch_curve_error")["status"] == "UNKNOWN"
+
+
+def test_runner_canonical_curve_and_interval_shapes_match_oracle_labels() -> None:
+    observed = _typed(
+        {
+            "src": {"x": [0.0, 0.5], "y": [1e-6, 2e-6]},
+            "compliance": {"lower": 0.2, "upper": 1.0},
+        }
+    )
+    oracle = _legacy(
+        {
+            "src": {"v": [0.0, 0.5], "a": [1e-6, 2e-6]},
+            "compliance": {"lo_v": 0.2, "hi_v": 1.0},
+        }
+    )
+    curve = {
+        "name": "src_curve_error",
+        "kind": "curve",
+        "required": True,
+        "limit": _limit(0.0, "A"),
+        "observed": "src",
+        "oracle": "src",
+        "x": "v",
+        "y": "a",
+        "error": {"kind": "absolute"},
+    }
+    endpoints = {
+        "name": "compliance_endpoint_error",
+        "kind": "compliance_endpoints",
+        "required": True,
+        "limit": _limit(0.0, "V"),
+        "observed": "compliance",
+        "oracle": "compliance",
+    }
+
+    result = compare_testbench_observables(observed, oracle, _spec(curve, endpoints))
+
+    assert _metric(result, "src_curve_error")["status"] == "PASS"
+    assert _metric(result, "compliance_endpoint_error")["status"] == "PASS"
+
+
+def test_completeness_corner_namespace_is_distinct_from_receipt_conditions() -> None:
+    observed = _typed({"required_value": 1.0})
+    observed["metadata"]["conditions"][0]["id"] = "stage.point.dc_000000"
+    observed["metadata"]["lineage"][0]["condition_ids"] = [
+        "stage.point.dc_000000"
+    ]
+    completeness = {
+        "name": "completeness",
+        "kind": "completeness",
+        "required": True,
+        "limit": _limit(1.0, "frac", op=">="),
+        "observables": ["required_value"],
+        "conditions": ["tt_27c_1v20"],
+    }
+
+    result = compare_testbench_observables(
+        observed, _legacy({}), _spec(completeness)
+    )
+
+    assert _metric(result, "completeness")["status"] == "PASS"
