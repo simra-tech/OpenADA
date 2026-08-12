@@ -739,6 +739,15 @@
       },
       "additionalProperties": false
     },
+    "operatingPointSettle": {
+      "description": "Use the simulator's independent nonlinear DC operating-point solve; no elapsed settling time is implied.",
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {"const": "operating_point"}
+      },
+      "additionalProperties": false
+    },
     "deltaSettle": {
       "type": "object",
       "required": ["kind", "probe_id", "tolerance", "hold_for", "maximum"],
@@ -753,6 +762,7 @@
     },
     "settlePolicy": {
       "oneOf": [
+        {"$ref": "#/$defs/operatingPointSettle"},
         {"$ref": "#/$defs/fixedSettle"},
         {"$ref": "#/$defs/deltaSettle"}
       ]
@@ -845,23 +855,11 @@
       ]
     },
     "axisSelection": {
-      "oneOf": [
-        {
-          "type": "object",
-          "required": ["kind"],
-          "properties": {"kind": {"const": "analysis_axis"}},
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": ["kind", "parameter"],
-          "properties": {
-            "kind": {"const": "condition_parameter"},
-            "parameter": {"$ref": "#/$defs/id"}
-          },
-          "additionalProperties": false
-        }
-      ]
+      "description": "A point-level curve always uses the executed analysis axis. Condition-parameter axes belong to collect_curve stage reductions, where every sample has its own receipt.",
+      "type": "object",
+      "required": ["kind"],
+      "properties": {"kind": {"const": "analysis_axis"}},
+      "additionalProperties": false
     },
     "measurementBase": {
       "type": "object",

@@ -1043,7 +1043,7 @@ class _PlanValidator:
                     point_path,
                 )
                 self._validate_settle_policy(
-                    point["settle_policy"], probes, point_path
+                    point["settle_policy"], point["analysis"], probes, point_path
                 )
                 self._validate_analysis(
                     point["analysis"],
@@ -1242,11 +1242,27 @@ class _PlanValidator:
     def _validate_settle_policy(
         self,
         settle: Mapping[str, Any],
+        analysis: Mapping[str, Any],
         probes: Mapping[str, Probe],
         point_path: str,
     ) -> None:
         path = f"{point_path}/settle_policy"
+        analysis_kind = str(analysis["kind"])
+        if settle["kind"] == "operating_point":
+            if analysis_kind != "dc_sweep":
+                self.add(
+                    "testbench_plan.settle.analysis_incompatible",
+                    path,
+                    "operating_point settling is available only for a DC sweep",
+                )
+            return
         if settle["kind"] == "fixed_time":
+            if analysis_kind == "dc_sweep":
+                self.add(
+                    "testbench_plan.settle.analysis_incompatible",
+                    path,
+                    "a DC sweep must declare operating_point settling; fixed_time implies elapsed transient time",
+                )
             if float(settle["duration"]["value"]) < 0:
                 self.add(
                     "testbench_plan.settle.invalid",
@@ -1735,21 +1751,7 @@ class _PlanValidator:
     ) -> str | None:
         if measurement.kind not in {"curve", "loop_transfer"}:
             return None
-        axis = measurement.document.get("axis", {})
-        if axis.get("kind") == "condition_parameter":
-            parameter = next(
-                (
-                    item
-                    for item in condition["parameters"]
-                    if item["name"] == axis.get("parameter")
-                ),
-                None,
-            )
-            return (
-                str(parameter["value"]["unit"])
-                if parameter is not None
-                else None
-            )
+        del condition
         return {
             "dc_sweep": "V",
             "pulse_train_transient": "s",

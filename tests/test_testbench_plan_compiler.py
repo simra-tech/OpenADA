@@ -132,7 +132,7 @@ def test_fresh_dc_sweep_expands_to_independent_exact_op_decks() -> None:
     assert b"V_PROBE_PORT_OUT PUMP_OUT N_OPENADA_DUT_OUT DC 0\n" in first.deck_bytes
     assert b"X_OPENADA_DUT IN_UP IN_DOWN N_OPENADA_DUT_OUT VDD 0 OPENADA_hidden_cp_variant_CHARGE_PUMP\n" in first.deck_bytes
     assert hashlib.sha256(first.deck_bytes).hexdigest() == first.deck_sha256
-    assert first.deck_sha256 == "e74a974fea12eefca2927f16d5808f28457998e5d673e08b7eeb181fdb98d5a5"
+    assert first.deck_sha256 == "a1e08ac93a31c09930b26412e128bdc280edaf4095e716810460c1963e2ca547"
 
 
 def test_pulse_train_transient_has_exact_finite_count_and_branch_probe() -> None:
@@ -156,7 +156,7 @@ def test_pulse_train_transient_has_exact_finite_count_and_branch_probe() -> None
     }
     assert command["native_vectors"] == ["i(V_STIM_up_pulses)"]
     assert condition.receipt["condition"]["resolved_bindings"][0]["source_receipt_sha256"] == "a" * 64
-    assert condition.deck_sha256 == "b2a4c0d41ae373712accd877dd7b673b29fc2bb01989c72d186795a5861c1438"
+    assert condition.deck_sha256 == "274a597b554e30b95bfb67a4a44c7d32340ab2626d7840e7be6c7de4b0d5086e"
 
 
 def test_phase_pair_transient_uses_independent_polarities_and_wrapped_offset() -> None:
@@ -168,7 +168,7 @@ def test_phase_pair_transient_uses_independent_polarities_and_wrapped_offset() -
     deck = compilation.conditions[0].deck_bytes
     assert b"V_STIM_phase_pair_REF IN_UP 0 PULSE(1.2 0 1e-9 1e-10 1e-10 4e-9 1e-8 8)\n" in deck
     assert b"V_STIM_phase_pair_OFFSET IN_DOWN 0 PULSE(0 1.2 8e-10 1e-10 1e-10 4e-9 1e-8 8)\n" in deck
-    assert compilation.conditions[0].deck_sha256 == "7a52b5d7fb0f4fa40878e91a3d46883d42c3d409edbf7242fa58d85f090c201a"
+    assert compilation.conditions[0].deck_sha256 == "842fe5bda2c3ab131a3561680afe6e9750c684521eb3a148e85c37f8c2824e44"
 
 
 def test_compile_is_deterministic_and_publishes_only_into_empty_directory(tmp_path: Path) -> None:

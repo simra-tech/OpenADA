@@ -216,8 +216,7 @@
             ]
           },
           "settle_policy": {
-            "kind": "fixed_time",
-            "duration": {"value": 2e-9, "unit": "s"}
+            "kind": "operating_point"
           },
           "analysis": {
             "kind": "dc_sweep",
@@ -478,7 +477,7 @@
               "kind": "curve",
               "unit": "V",
               "probe_id": "internal_voltage",
-              "axis": {"kind": "condition_parameter", "parameter": "phase_offset"}
+              "axis": {"kind": "analysis_axis"}
             },
             {
               "id": "phase_charge",

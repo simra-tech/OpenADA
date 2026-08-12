@@ -199,6 +199,29 @@ def test_supply_scaled_threshold_and_independent_phase_polarities_validate() -> 
     assert issues == [] and prepared is not None
 
 
+def test_settle_policy_distinguishes_dc_solver_from_elapsed_time() -> None:
+    document = plan()
+    dc_point = document["stages"][0]["points"][0]
+    dc_point["settle_policy"] = {
+        "kind": "fixed_time",
+        "duration": {"value": 0, "unit": "s"},
+    }
+    assert "testbench_plan.settle.analysis_incompatible" in codes(document)
+
+    document = plan()
+    transient_point = document["stages"][1]["points"][0]
+    transient_point["settle_policy"] = {"kind": "operating_point"}
+    assert "testbench_plan.settle.analysis_incompatible" in codes(document)
+
+
+def test_point_curve_cannot_mislabel_analysis_axis_as_condition_parameter() -> None:
+    document = plan()
+    curve = document["stages"][2]["points"][0]["measurements"][0]
+    curve["axis"] = {"kind": "condition_parameter", "parameter": "phase_offset"}
+
+    assert "testbench_plan.document.unknown_field" in codes(document)
+
+
 def test_explicit_pulse_normalization_count_closes_measurement_window() -> None:
     document = plan()
     measurement = document["stages"][1]["points"][0]["measurements"][1]
