@@ -9,14 +9,14 @@
   "execution": {
     "status": "completed",
     "exit_code": 0,
-    "duration_ms": 34,
+    "duration_ms": 65,
     "command": [
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-m2efzbp2/simulation.raw",
+      "/tmp/openada-ngspice-a4jk66mc/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-m2efzbp2/simulation.log",
+      "/tmp/openada-ngspice-a4jk66mc/simulation.log",
       "/evidence/work/ota-ac.spice"
     ],
     "cwd": "/evidence"
@@ -42,7 +42,7 @@
       "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.log",
       "exists": true,
       "bytes": 757,
-      "sha256": "30729b8d477a16b4a08d11d89cda4d2a825c1ef76b2337ef44973434e70fdb51"
+      "sha256": "7e4b8cd3f6b19d41753c0a81ea25a6af727c8ccbf9adc7a1c429925c6e62132a"
     },
     {
       "kind": "ngspice-raw",
@@ -50,7 +50,7 @@
       "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.raw",
       "exists": true,
       "bytes": 24869,
-      "sha256": "997b70a328393bf4f8a9b277f3f72e71040a984a6f712b69330426cadbdf4aca"
+      "sha256": "b3febf75cbe3e742bb9bdaed1b10b1af8b8340c360e660737498255fc29f5ea4"
     }
   ],
   "diagnostics": [
@@ -62,7 +62,7 @@
   ],
   "data": {
     "protocol": {
-      "request_id": "12646f55-c273-4229-9451-7f3a2ed4f378",
+      "request_id": "adde49e7-8e87-4df4-960f-f56aca120396",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
       "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
       "driver_id": "org.openada.driver.ngspice",
@@ -145,19 +145,19 @@
           "solver_warning_count": 0,
           "solver_warning_examples": [],
           "solver_warning_examples_truncated": false,
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-ota/ota_testbench.sch\n\nbinary raw file \"/tmp/openada-ngspice-m2efzbp2/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\nNo. of Data Columns : 29  \n\nNo. of Data Rows : 51\n\nTotal analysis time (seconds) = 0.00448653\n\nTotal elapsed time (seconds) = 0.025 \n\nTotal DRAM available = 32098.402 MB.\nDRAM currently available = 5372.398 MB.\nMaximum ngspice program size =  531.730 MB.\nCurrent ngspice program size =   14.848 MB.\n\nShared ngspice pages =   11.340 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.215 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-ota/ota_testbench.sch\n\nbinary raw file \"/tmp/openada-ngspice-a4jk66mc/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\nNo. of Data Columns : 29  \n\nNo. of Data Rows : 51\n\nTotal analysis time (seconds) = 0.00532394\n\nTotal elapsed time (seconds) = 0.027 \n\nTotal DRAM available = 32098.402 MB.\nDRAM currently available = 1022.355 MB.\nMaximum ngspice program size =  531.730 MB.\nCurrent ngspice program size =   15.156 MB.\n\nShared ngspice pages =   11.648 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.215 MB.\n\n",
           "log_capture": {
             "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.log",
             "status": "valid",
             "bytes": 757,
-            "sha256": "30729b8d477a16b4a08d11d89cda4d2a825c1ef76b2337ef44973434e70fdb51"
+            "sha256": "7e4b8cd3f6b19d41753c0a81ea25a6af727c8ccbf9adc7a1c429925c6e62132a"
           },
           "output_captures": [
             {
               "path": "/evidence/sim/ngspice-ac/ota-ac/ota-ac.raw",
               "status": "valid",
               "bytes": 24869,
-              "sha256": "997b70a328393bf4f8a9b277f3f72e71040a984a6f712b69330426cadbdf4aca",
+              "sha256": "b3febf75cbe3e742bb9bdaed1b10b1af8b8340c360e660737498255fc29f5ea4",
               "validation": {
                 "valid": true,
                 "reason": "valid",
@@ -209,7 +209,7 @@
   },
   "provenance": {
     "openada_version": "0.4.0",
-    "created_at": "2026-08-12T09:52:03.955301Z",
+    "created_at": "2026-08-12T10:49:35.910817Z",
     "host": {
       "system": "Linux",
       "machine": "x86_64",

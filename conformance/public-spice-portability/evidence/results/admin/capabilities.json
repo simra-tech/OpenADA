@@ -475,6 +475,68 @@
         ]
       },
       {
+        "assertion_profile": "openada.assertion/testbench.oracle.comparison.valid/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [
+              "testbench-oracle-comparator-v1"
+            ],
+            "id": "openada.feature/testbench-oracle.scalar-error/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "testbench-oracle-comparator-v1"
+            ],
+            "id": "openada.feature/testbench-oracle.curve-exact-grid/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "testbench-oracle-comparator-v1"
+            ],
+            "id": "openada.feature/testbench-oracle.mismatch-compliance/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "testbench-oracle-comparator-v1"
+            ],
+            "id": "openada.feature/testbench-oracle.signed-coverage/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "testbench-oracle-comparator-v1"
+            ],
+            "id": "openada.feature/testbench-oracle.validity-honesty/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "testbench-oracle-comparator-v1"
+            ],
+            "id": "openada.feature/testbench-oracle.coverage-cost-lineage/v1alpha1",
+            "maturity": "structured"
+          }
+        ],
+        "locator_types": [
+          "artifact"
+        ],
+        "native_product": "org.openada.core.runtime",
+        "operation_profile": "openada.operation/testbench.oracle.compare/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.kernel.testbench-oracle",
+        "provider_kind": "evidence-kernel",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli",
+          "in-process"
+        ]
+      },
+      {
         "assertion_profile": "openada.assertion/rtl.lint.clean/v1alpha1",
         "availability": "available",
         "features": [
@@ -727,7 +789,7 @@
   "inputs": [],
   "operation": "doctor",
   "provenance": {
-    "created_at": "2026-08-12T09:52:12.482667Z",
+    "created_at": "2026-08-12T10:49:46.439785Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

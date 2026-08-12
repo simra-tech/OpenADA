@@ -9,13 +9,13 @@
   "execution": {
     "status": "completed",
     "exit_code": 0,
-    "duration_ms": 617,
+    "duration_ms": 667,
     "command": [
       "/foss/tools/xyce/bin/Xyce",
       "-l",
-      "/tmp/openada-xyce-tyvfgj28/simulation.log",
+      "/tmp/openada-xyce-5gj9fwxc/simulation.log",
       "-r",
-      "/tmp/openada-xyce-tyvfgj28/simulation.raw",
+      "/tmp/openada-xyce-5gj9fwxc/simulation.raw",
       "-a",
       "/evidence/work/xyce-dc.cir"
     ],
@@ -41,8 +41,8 @@
       "role": "simulation.log",
       "path": "/evidence/sim/xyce-dc/xyce-dc/xyce-dc.xyce.log",
       "exists": true,
-      "bytes": 2882,
-      "sha256": "efa2494d4a1fed3d858b099febe6f1abc41a45c259d73b14aeb5abd30874a489"
+      "bytes": 2881,
+      "sha256": "b3edc89f7a1f0a4f4c1f3f20c381e2f6a2423a17e5fd94dd4209023f6c2a97a3"
     },
     {
       "kind": "xyce-raw",
@@ -50,7 +50,7 @@
       "path": "/evidence/sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw",
       "exists": true,
       "bytes": 5535,
-      "sha256": "957431ceff292d0ce50541e3704ee10922f378291642081c8f2b89948a763253"
+      "sha256": "ed2d31d6f61e44438eee921e45b1938ecd75009270e0c2ec362937c672ea3577"
     }
   ],
   "diagnostics": [
@@ -62,7 +62,7 @@
   ],
   "data": {
     "protocol": {
-      "request_id": "2b14b49c-6bb0-4cc5-8e1c-78ba5b07eea3",
+      "request_id": "fec979a7-8fcc-4f1c-8acd-74e81b9e254a",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
       "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
       "driver_id": "org.openada.driver.xyce",
@@ -134,19 +134,19 @@
             "source_too_large": false,
             "source_unstable": false
           },
-          "log_tail": "\n*****\n***** Welcome to the Xyce(TM) Parallel Electronic Simulator\n*****\n***** This is version Xyce Release 7.10-opensource\n***** Date: Wed Aug 12 11:52:05 CEST 2026\n\n\n***** Executing netlist /evidence/work/xyce-dc.cir\n\n***** Reading and parsing netlist...\nNetlist warning: No print specified\n***** Setting up topology...\n\n***** Device Count Summary ...\n       R level 1 (Resistor)                   1\n       V level 1 (Independent Voltage Source) 1\n       ----------------------------------------\n       Total Devices                          2\n***** Setting up matrix structure...\n***** Number of Unknowns = 2\n***** Initializing...\n\n\n***** Solution Summary *****\n\tNumber Successful Steps Taken:\t\t101\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t201\n\tNumber Linear Solves:\t\t\t201\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t303\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t0.00197077 seconds\n\tTotal Jacobian Load Time:\t\t0.000282526 seconds\n\tTotal Linear Solution Time:\t\t0.00815201 seconds\n\n\n***** Total Simulation Solvers Run Time: 0.0302141 seconds\n***** Total Elapsed Run Time:            0.154453 seconds\n*****\n***** End of Xyce(TM) Simulation\n*****\n\nTiming summary of 1 processor\n                 Stats                   Count       CPU Time              Wall Time\n---------------------------------------- ----- --------------------- ---------------------\nXyce                                         1        0.054 (100.0%)        0.525 (100.0%)\n  Analysis                                   1        0.002 ( 3.29%)        0.029 ( 5.53%)\n    DC Sweep                                 1        0.002 ( 3.28%)        0.029 ( 5.52%)\n      Solve                                101        0.001 ( 2.65%)        0.026 ( 4.96%)\n        Residual                           303        0.000 ( 0.54%)        0.002 ( 0.44%)\n        Jacobian                           201        0.000 ( 0.19%)        0.000 ( 0.09%)\n        Linear Solve                       201        0.000 ( 0.50%)        0.008 ( 1.60%)\n      Successful Step                      101        0.000 ( 0.34%)        0.001 ( 0.21%)\n  Netlist Import                             1        0.002 ( 3.21%)        0.065 (12.33%)\n    Parse Context                            1        0.000 ( 0.23%)        0.003 ( 0.61%)\n    Distribute Devices                       1        0.000 ( 0.16%)        0.002 ( 0.29%)\n    Verify Devices                           1        0.000 (<0.01%)        0.000 (<0.01%)\n    Instantiate                              1        0.000 ( 0.04%)        0.000 ( 0.03%)\n  Late Initialization                        1        0.000 ( 0.04%)        0.018 ( 3.37%)\n    Global Indices                           1        0.000 ( 0.02%)        0.000 ( 0.02%)\n  Setup Matrix Structure                     1        0.000 ( 0.00%)        0.009 ( 1.81%)\n\n",
+          "log_tail": "\n*****\n***** Welcome to the Xyce(TM) Parallel Electronic Simulator\n*****\n***** This is version Xyce Release 7.10-opensource\n***** Date: Wed Aug 12 12:49:37 CEST 2026\n\n\n***** Executing netlist /evidence/work/xyce-dc.cir\n\n***** Reading and parsing netlist...\nNetlist warning: No print specified\n***** Setting up topology...\n\n***** Device Count Summary ...\n       R level 1 (Resistor)                   1\n       V level 1 (Independent Voltage Source) 1\n       ----------------------------------------\n       Total Devices                          2\n***** Setting up matrix structure...\n***** Number of Unknowns = 2\n***** Initializing...\n\n\n***** Solution Summary *****\n\tNumber Successful Steps Taken:\t\t101\n\tNumber Failed Steps Attempted:\t\t0\n\tNumber Jacobians Evaluated:\t\t201\n\tNumber Linear Solves:\t\t\t201\n\tNumber Failed Linear Solves:\t\t0\n\tNumber Residual Evaluations:\t\t303\n\tNumber Nonlinear Convergence Failures:\t0\n\tTotal Residual Load Time:\t\t0.00142908 seconds\n\tTotal Jacobian Load Time:\t\t0.000415325 seconds\n\tTotal Linear Solution Time:\t\t0.00776935 seconds\n\n\n***** Total Simulation Solvers Run Time: 0.033376 seconds\n***** Total Elapsed Run Time:            0.150719 seconds\n*****\n***** End of Xyce(TM) Simulation\n*****\n\nTiming summary of 1 processor\n                 Stats                   Count       CPU Time              Wall Time\n---------------------------------------- ----- --------------------- ---------------------\nXyce                                         1        0.055 (100.0%)        0.568 (100.0%)\n  Analysis                                   1        0.010 (17.89%)        0.033 ( 5.86%)\n    DC Sweep                                 1        0.010 (17.83%)        0.033 ( 5.86%)\n      Solve                                101        0.008 (14.61%)        0.031 ( 5.41%)\n        Residual                           303        0.001 ( 2.43%)        0.002 ( 0.33%)\n        Jacobian                           201        0.001 ( 0.95%)        0.001 ( 0.12%)\n        Linear Solve                       201        0.001 ( 2.18%)        0.008 ( 1.42%)\n      Successful Step                      101        0.001 ( 1.56%)        0.001 ( 0.24%)\n  Netlist Import                             1        0.001 ( 1.31%)        0.064 (11.28%)\n    Parse Context                            1        0.000 ( 0.26%)        0.003 ( 0.59%)\n    Distribute Devices                       1        0.000 ( 0.29%)        0.002 ( 0.40%)\n    Verify Devices                           1        0.000 (<0.01%)        0.000 (<0.01%)\n    Instantiate                              1        0.000 ( 0.06%)        0.000 ( 0.03%)\n  Late Initialization                        1        0.001 ( 2.45%)        0.014 ( 2.53%)\n    Global Indices                           1        0.000 ( 0.02%)        0.000 ( 0.01%)\n  Setup Matrix Structure                     1        0.000 ( 0.35%)        0.008 ( 1.46%)\n\n",
           "log_capture": {
             "path": "/evidence/sim/xyce-dc/xyce-dc/xyce-dc.xyce.log",
             "status": "valid",
-            "bytes": 2882,
-            "sha256": "efa2494d4a1fed3d858b099febe6f1abc41a45c259d73b14aeb5abd30874a489"
+            "bytes": 2881,
+            "sha256": "b3edc89f7a1f0a4f4c1f3f20c381e2f6a2423a17e5fd94dd4209023f6c2a97a3"
           },
           "output_captures": [
             {
               "path": "/evidence/sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw",
               "status": "valid",
               "bytes": 5535,
-              "sha256": "957431ceff292d0ce50541e3704ee10922f378291642081c8f2b89948a763253",
+              "sha256": "ed2d31d6f61e44438eee921e45b1938ecd75009270e0c2ec362937c672ea3577",
               "validation": {
                 "valid": true,
                 "reason": "valid",
@@ -198,7 +198,7 @@
   },
   "provenance": {
     "openada_version": "0.4.0",
-    "created_at": "2026-08-12T09:52:05.427527Z",
+    "created_at": "2026-08-12T10:49:37.709440Z",
     "host": {
       "system": "Linux",
       "machine": "x86_64",
