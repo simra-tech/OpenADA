@@ -72,7 +72,7 @@ The grade is about the assertion on one edge, not the prestige of its source.
 
 | Grade | Closed meaning | Allowed use |
 |---|---|---|
-| `measured` | The source reports an observed sweep, trial, or comparison under named conditions. | May carry numeric baseline, observation, delta, or ratio. Valid only inside its recorded design point and condition scope. |
+| `measured` | The source reports an observed sweep, trial, or comparison under named conditions. | Causal and tradeoff edges carry numeric baseline, observation, delta, ratio, or range. Valid only inside the recorded design point and condition scope. |
 | `derived` | The assertion is copied from a task/recipe contract, calculated from measured values, or is an explicitly stated causal interpretation. `basis` distinguishes `task_contract`, `recipe_contract`, `calculation`, and `causal_interpretation`. | May drive exact joins and deterministic path reasoning. It must not be presented as an independently varied measurement. |
 | `textbook` | General physical prior not established for this task instance. | May suggest a hypothesis or next experiment. It ranks below task-specific evidence and cannot supply a task-specific magnitude. |
 
@@ -103,7 +103,7 @@ makes task-version joins explicit.
 | `Topology` | A discrete or fixed connectivity choice implementing a block. | `pfd_drive2`, complementary LC-VCO |
 | `Parameter` | An agent-adjustable typed task lever with exact target paths and legal domain. | `w_cc_p_um`, `c1_mult` |
 | `Measurement` | A semantic observable independent of whether it is scored. | `osc.freq`, `charge.mismatch_worst` |
-| `SpecRow` | A task row binding a measurement to an operator, units, condition set, and global or per-corner limits. | `osc_freq_lock`, `cp_compliance_span` |
+| `SpecRow` | A task row binding a measurement to an operator, units, optional declared condition set, and global or per-corner limits. A conditionless report-only placeholder remains conditionless. | `osc_freq_lock`, `phase_noise_1m` |
 | `Corner` | A named process/temperature/supply/model combination. Active and historical corners remain distinguishable. | `ss_85c_1v08` |
 | `Condition` | A named stimulus, sweep, operating-point, or validity predicate that is not itself a PVT corner. | `ctrl_grid`, unpatched hot biased svaricap |
 | `Mechanism` | A physical, model, or measurement mechanism through which influence propagates. | tank loading, partial edge collection |
@@ -134,15 +134,15 @@ new schema version.
 | `targets` | `Parameter` -> `Device` | Which physical instances or matched group does this lever change? | `derived/task_contract`. |
 | `specifies` | `SpecRow` -> `Measurement` | Which observable, rather than a similarly named row, is evaluated? | `derived/task_contract`. |
 | `evaluated_under` | `SpecRow|Measurement|RecipeStage` -> `Condition|Corner` | Under which stimulus set or PVT corner is the statement evaluated? | `derived/task_contract|recipe_contract`, or `measured` for an observed dataset. |
-| `influences` | `Parameter|Condition|Corner|Mechanism` -> `Mechanism|Measurement` | If the source increases or changes as declared, what downstream quantity changes, in which direction, by how much, and through what path? | `measured`, `derived`, or `textbook`; task-specific magnitudes require `measured` observations. |
-| `trades_off` | `SpecRow` -> `SpecRow`, with `Tradeoff` and `Mechanism` references | Which scored/report-only objectives fight, and why? | `measured` or `derived/causal_interpretation`; `textbook` may propose but cannot establish a task tradeoff. |
+| `influences` | `Parameter|Topology|Condition|Corner|Mechanism` -> `Mechanism|Measurement` | If the source increases or changes as declared, what downstream quantity changes, in which direction, by how much, and through what path? | `measured`, `derived`, or `textbook`; task-specific magnitudes require `measured` observations. |
+| `trades_off` | `SpecRow` -> `SpecRow`, with `Tradeoff` and `Mechanism` references | Which scored/report-only objectives fight, by how much in the recorded intervention, and why? | `measured` with numeric observations or `derived/causal_interpretation`; `textbook` may propose but cannot establish a task tradeoff. |
 | `measured_by` | `Measurement` -> `RecipeStage` | Which stage produces this observable, under what output binding? | `derived/recipe_contract`. |
 | `depends_on` | `RecipeStage` -> prerequisite `RecipeStage` | What must run first, and which named values flow into this stage? | `derived/recipe_contract`. |
-| `models` | `ModelArtifact` -> `Device` | Which physical/model-bearing device is governed by this artifact? | `derived/task_contract|causal_interpretation`. |
-| `valid_when` | `ModelArtifact` -> `Condition|Corner` | Within which explicitly checked range may this model evidence be used? | `measured` for validated points or `derived` for a bounded rule. Never silently extrapolated. |
-| `invalid_when` | `ModelArtifact` -> `Condition|Corner` | Which condition makes evidence unknown or invalid, and what symptom occurs? | `measured` and/or `derived/causal_interpretation`. |
-| `repairs` | fixed `ModelArtifact` -> defective `ModelArtifact` | Which exact artifact change addresses which defect, and what was rechecked? | `measured` or `derived/causal_interpretation`. |
-| `guards` | `ValidityGate` -> `RecipeStage|Measurement|SpecRow|Corner` | Which downstream interpretation is blocked if this gate fails? | `derived/recipe_contract`; a threshold may be measured only if the source says so. |
+| `models` | `ModelArtifact` -> `Device` | Which physical/model-bearing device is governed by this artifact? | `derived/task_contract|causal_interpretation|model_debug`. |
+| `valid_when` | `ModelArtifact` -> `Condition|Corner`, with optional `Mechanism` reference | Within which explicitly checked range may this model evidence be used, and through which model mechanism? | `measured/model_debug` for validated points or `derived/model_debug|calculation` for a bounded rule. Never silently extrapolated. |
+| `invalid_when` | `ModelArtifact` -> `Condition|Corner`, with optional `Mechanism` reference | Which condition makes evidence unknown or invalid, through what model mechanism, and what symptom occurs? | `measured/model_debug` or a bounded `derived/model_debug|calculation|causal_interpretation` rule. |
+| `repairs` | fixed `ModelArtifact` -> defective `ModelArtifact` | Which exact artifact change addresses which defect, and what was rechecked? | `measured/model_debug` or `derived/model_debug|causal_interpretation`. |
+| `guards` | `ValidityGate` -> `RecipeStage|Measurement|SpecRow|Corner` | Which downstream interpretation is blocked if this gate fails? | `derived/recipe_contract|causal_interpretation`; a threshold may be measured only if the source says so. |
 | `catches` | `SpecRow|ValidityGate` -> `Trap` | Which row or gate prevents an attractive but invalid shortcut? | `derived/causal_interpretation`, normally backed by measured trials. |
 
 ### Influence sign and strength
@@ -157,9 +157,10 @@ An `influences` edge declares one of `positive`, `negative`, `mixed`, `none`, or
 - `none`: the measured change was negligible for the stated conclusion; and
 - `unknown`: the source establishes relevance but not a defensible direction.
 
-Path signs compose only through `positive` and `negative` edges. Any `mixed`,
-`none`, or `unknown` member makes the composed sign respectively mixed, none,
-or unknown; the engine never guesses a direction.
+Path signs compose only through `positive` and `negative` edges. A `none`
+segment absorbs the path. Otherwise `unknown` takes precedence over `mixed`;
+only a path containing none of those three values uses positive/negative parity.
+The engine never guesses a direction.
 
 Strength is an ordinal provenance aid: `structural`, `strong`, `moderate`,
 `weak`, or `unknown`. `structural` means an identity or contract dependency,
@@ -171,7 +172,8 @@ they shared a scale.
 
 ### Quantification and scope
 
-Measured influence may carry one or more closed observation records:
+Measured influence and tradeoff edges carry one or more closed observation
+records; qualitative derived/textbook causal priors may use an empty list:
 
 ```json
 {
@@ -190,29 +192,43 @@ ratio, but it must contain at least one numeric fact. Units are explicit and no
 conversion is implicit.
 
 Scope can name condition IDs, corner IDs, a design point, intervention text,
-co-varied parameters, and an extrapolation policy. Measured seed edges use
-`extrapolation: forbidden`: they describe local evidence at the recorded
-reference/golden designs. A query may return such an edge outside its scope only
-as a caveat-marked prior; it may not silently present the magnitude as a
-prediction.
+co-varied parameters, and an extrapolation policy. Every influence edge must
+carry a scope and explicit extrapolation policy. Measured seed edges normally
+use `extrapolation: forbidden`: they describe local evidence at the recorded
+reference/golden designs. Multi-hop results report `compatible`,
+`requires_review`, or `incompatible` scope composition. Distinct condition sets
+or prose-scoped interventions require review; disjoint explicit corner sets are
+incompatible. Such paths remain visible as caveat-marked reasoning priors, never
+as silently extrapolated end-to-end sensitivities.
 
 ## Graph invariants
 
 The JSON Schema provides closed local shapes. The prototype semantic validator
 adds these graph-wide invariants:
 
-1. Node IDs and edge IDs are individually unique.
+1. Every ID is unique across the combined node-and-edge namespace.
 2. Every edge source and target exists.
 3. Endpoints match the relation table above.
 4. Referenced mechanisms, tradeoffs, conditions, corners, and co-varied
    parameters exist and have the required entity kind.
-5. Every edge has a nonempty evidence-pointer list; every pointer uses an
-   immutable commit revision.
-6. Parameter target arrays and recipe bindings are nonempty where their relation
-   requires them.
-7. A dependency cycle is invalid; a recipe query cannot invent an execution
-   order for cyclic stages.
-8. JSON duplicate keys, non-finite numbers, and unknown fields fail closed.
+5. Every edge has a nonempty evidence-pointer list. Pointer repository and
+   revision equal the graph's public `source_snapshot`, and paths are normalized
+   repository-relative paths without `.` or `..` traversal.
+6. Relation-specific evidence grade/basis combinations follow the taxonomy
+   table; for example, a `contains` declaration cannot masquerade as textbook
+   evidence.
+7. Parameter value type, domain shape, bounds, and reference agree. Spec
+   operator/report-only/limit shapes agree; conditionless report-only rows are
+   allowed, while scored rows require a condition and limit.
+8. Parameter target arrays equal the union of their `targets` edges. Each
+   SpecRow's measurement and optional condition agree with exactly one
+   `specifies` and, when present, one condition-set `evaluated_under` edge.
+9. Influence edges carry explicit scope/extrapolation; parameter target arrays
+   and recipe bindings are nonempty where their relation requires them.
+10. A dependency cycle is invalid; a recipe query cannot invent an execution
+    order for cyclic stages.
+11. JSON duplicate keys, non-finite numbers, and unknown fields at every nested
+    layer fail closed in the standalone CLI as well as formal schema validation.
 
 Canonical graph hashing uses UTF-8 JSON with sorted keys, no insignificant
 whitespace, no NaN/infinity, and a terminal-free byte string equivalent to
@@ -229,16 +245,23 @@ and deterministic ordering.
 
 | Query | Result meaning |
 |---|---|
-| `influences(parameter)` | Traverse forward over `influences` edges through zero or more `Mechanism` nodes. Return each reachable measurement, composed sign/strength, mechanism path, bound SpecRows, quantification, scope, and evidence. |
-| `levers(measurement)` | Traverse the same paths in reverse. Rank parameters by task-specific evidence grade, then declared strength, then shortest path and stable ID. This is a search priority, not normalized sensitivity. |
-| `tradeoffs(spec_row)` | Search `trades_off` symmetrically and return the coupled row, first-class tradeoff, mechanism, scope, and evidence. |
+| `influences(parameter|topology|condition|corner)` | Traverse forward over `influences` edges through zero or more `Mechanism` nodes. Return each reachable measurement, composed sign/strength, scope-compatibility status, mechanism path, bound SpecRows, quantification, scope, and evidence. |
+| `levers(measurement)` | Traverse the same paths in reverse. Rank parameters by scope compatibility, then task-specific evidence grade, declared strength, shortest path, and stable ID. This is a search priority, not normalized sensitivity. |
+| `tradeoffs(spec_row)` | Search `trades_off` symmetrically and return the coupled row, first-class tradeoff, mechanism, numeric observations, scope, and evidence. |
 | `recipe(measurement)` | Resolve `measured_by`, recursively close `depends_on`, reject cycles, and return prerequisites before the producing stage with named bindings. |
-| `validity(condition)` | Return matching `valid_when` and `invalid_when` assertions, affected model/device, predicates, validation bounds, repair relation, and evidence. Invalid or unpatched evidence remains visible even when a patched artifact exists. |
+| `validity(condition)` | Return matching `valid_when` and `invalid_when` assertions, affected model/device, model-validity mechanism, predicates, validation bounds, repair relation, and evidence. Invalid or unpatched evidence remains visible even when a patched artifact exists. |
 
 The prototype does not apply algebraic inference across arbitrary edge kinds.
 In particular, `contains` and `targets` do not imply physical causality, a
 tradeoff does not imply Pareto optimality, and two parameters targeting the same
 device are not automatically substitutes.
+
+A ranked lever whose best path names `co_varied_parameters` is explicitly a
+**joint candidate**, not an independently established lever. The result carries
+`requires_co_variation: true`, lists those parameters, and warns that rank and
+sign are conditional on the recorded joint intervention. Separate list entries
+make task-parameter discovery convenient; they do not split one experiment into
+independent sensitivities.
 
 ## Seed policy and public-data boundary
 
@@ -256,12 +279,17 @@ Important authoring rules exposed by this seed are:
   paths retain that joint-intervention qualifier.
 - The historical SS/40 °C VCO dataset remains evidence but is not an active task
   corner after the svaricap fix restored SS/85 °C.
+- The task's `phase_noise_1m` placeholder declares no condition; the graph does
+  not invent `ctrl_grid` merely to satisfy a schema shape.
 - The unpatched svaricap model's mathematical temperature-law boundary and the
   empirically exercised failure condition are separate predicates. “Above
   52.5 °C” alone is not asserted to make every transient fail.
-- The PLL1 drive-strength choice is present in the task topology surface, but no
-  requested public sweep isolates drive1 versus drive2. The graph does not
-  fabricate a measured drive-strength sensitivity.
+- The PLL1 drive-strength choice is present in the task topology surface. Its
+  public design rationale connects drive strength to reset-pulse/dead-zone and
+  charge-injection behavior, so topology influence paths are queryable with
+  `unknown` sign/strength and bounded derived evidence. No public sweep isolates
+  drive1 versus drive2, so the graph does not fabricate a measured sensitivity
+  or include either topology in the parameter-only `levers` ranking.
 
 ## Honest limits
 
@@ -300,9 +328,210 @@ an extension field.
 6. **Historical evidence:** should retired conditions such as SS/40 °C remain in
    the operational seed by default, or move to a separate history graph loaded
    only on request?
+7. **Empty-result status:** v0 recommends a successful query with an explicit
+   empty result and coverage warning. Should a future assertion instead use
+   engineering `fail` for “known graph contains no matching assertion,” despite
+   the risk that agents read that as proof of no physical effect?
+8. **Graph composition:** should v1alpha1 accept exactly one precomposed,
+   hash-bound graph, or define a deterministic base-plus-task overlay/precedence
+   model? The latter is more reusable but adds conflict and revocation semantics.
+9. **Publication authority:** who may promote a new measured or derived causal
+   edge into a scored task release, and what review/receipt binds that decision?
+   A valid schema proves shape, not engineering correctness.
+10. **Discrete topology levers:** v0 permits `Topology` as an `influences`
+    source but keeps `levers` parameter-only. Should a later result union rank
+    topology choices beside scalar parameters, or expose a separate
+    `choices(measurement)` query to avoid incomparable candidate kinds?
+11. **Recipe analysis versus role:** should `RecipeStage` split simulator
+    `analysis` (`dc|tran|ac`) from stage role (`simulation|extraction|gate`)? V0
+    follows the public stage labels, which means `dz_fine` and
+    `loop_bhv_lock` do not expose their underlying transient analysis as a
+    separate typed field.
+12. **Scope algebra:** should a later profile define task-authored equivalence
+    IDs for compatible design points/interventions? V0 can prove disjoint
+    corners, but prose-scoped multi-hop composition remains conservatively
+    `requires_review` rather than pretending string equality is physical proof.
 
 ## Integration sketch
 
-Deferred to the final spike tier after the prototype query and negative tests
-establish the smallest viable request/result surface. No runtime integration or
-`src/openada/` change is part of this spike.
+Rung 2 should serve this graph as one read-only semantic operation beside rung
+1's EDA operations. The research CLI demonstrates behavior:
+
+```bash
+python3 evaluation/kg/kg_query.py influences w_cc_p_um
+python3 evaluation/kg/kg_query.py levers osc.startup_time
+python3 evaluation/kg/kg_query.py tradeoffs cp_mismatch_pulse
+python3 evaluation/kg/kg_query.py recipe linear.phase_margin
+python3 evaluation/kg/kg_query.py validity unpatched_hot_biased_svaricap
+```
+
+Production naming should use:
+
+- operation: `openada.operation/kg.query/v1alpha1`;
+- assertion: `openada.assertion/kg.query.valid/v1alpha1`;
+- side-effect mode: `read-only`;
+- target kind: `analog-knowledge-graph`;
+- locator: one content-bound `artifact` initially; and
+- features:
+  `openada.feature/kg.query.influences/v1alpha1`,
+  `openada.feature/kg.query.levers/v1alpha1`,
+  `openada.feature/kg.query.tradeoffs/v1alpha1`,
+  `openada.feature/kg.query.recipe/v1alpha1`, and
+  `openada.feature/kg.query.validity/v1alpha1`.
+
+The package would add the profile, graph catalog/binding, and driver only after
+the owner rulings above. This spike intentionally does not change protected
+runtime surfaces.
+
+### Proposed `kg.query/v1alpha1` profile
+
+The operation profile should use `openada.operation-profile/v0alpha2`, an
+`openada.request/v0alpha1` base request, and an `openada.result/v0alpha1`
+normalized result. Its operation-owned request parameters are closed:
+
+```json
+{
+  "query": {
+    "kind": "influences",
+    "entity_id": "parameter.pll3.w_cc_p_um"
+  },
+  "extensions": {}
+}
+```
+
+`kind` is exactly one of `influences`, `levers`, `tradeoffs`, `recipe`, or
+`validity`. `entity_id` is a stable full node ID in the versioned operation;
+the research prototype's friendly-name resolution is CLI convenience and
+should not enter the portable request contract. The base request's target is
+the graph artifact and must carry its SHA-256. The semantic implementation
+must verify the exact schema ID, canonical graph digest, closed JSON shape, and
+graph-wide invariants before resolving the query. V1alpha1 should accept one
+precomposed graph only unless the owner explicitly chooses overlay semantics.
+
+Normalized `data` should contain:
+
+```json
+{
+  "protocol": {
+    "graph_schema": "openada.eval/analog-knowledge-graph/v0",
+    "graph_id": "tapeoutbench.pll-public-seed",
+    "graph_version": "0.1.0",
+    "graph_sha256": "<64 lowercase hex characters>",
+    "algorithm": "openada.algorithm/kg-query/v1alpha1"
+  },
+  "query": {
+    "kind": "influences",
+    "entity_id": "parameter.pll3.w_cc_p_um"
+  },
+  "matches": [],
+  "coverage": {
+    "match_count": 0,
+    "empty_means_no_recorded_assertion": true
+  },
+  "limitations": [],
+  "extensions": {}
+}
+```
+
+Each kind needs a closed discriminated match schema corresponding to the v0
+prototype result:
+
+- influence matches bind measurement and SpecRow IDs, composed sign/strength,
+  mechanism-node and edge paths, evidence pointers, quantification, scope, and
+  extrapolation policy plus path-scope compatibility;
+- lever matches add deterministic rank and its scope/grade/strength/path-length
+  basis, `requires_co_variation`, co-varied parameter IDs, and a joint-trial
+  warning, never a fabricated cross-unit sensitivity;
+- tradeoff matches bind both SpecRows plus the `Tradeoff` and `Mechanism` IDs
+  and measured numeric observations;
+- recipe matches put prerequisites before the producer and retain every named
+  binding; and
+- validity matches retain valid and invalid assertions together, including
+  artifact/device and model-mechanism identity, repair path, condition
+  predicate, bounded validation, and applicable gates.
+
+Assertion truth should be narrow:
+
+| Status | Meaning |
+|---|---|
+| `pass` | The exact content-bound graph passed formal and semantic validation, the typed entity resolved, and the deterministic algorithm completed. An empty match list is allowed and explicitly means only “no recorded assertion in this graph.” |
+| `fail` | Not emitted in v1alpha1. A closed graph's silence cannot conclusively prove absence of a physical dependency, lever, tradeoff, recipe, or validity issue. |
+| `unknown` | The request, schema/digest binding, graph invariants, entity identity, query kind, or algorithm execution was invalid or insufficient. A stable diagnostic identifies the boundary. |
+
+The result's tool identity should name the deterministic KG implementation, not
+an EDA backend. No native command, simulator, graph server, or network lookup is
+needed. Query execution must not follow source links, execute graph text, or
+load unbound overlays.
+
+### Task-author extension workflow
+
+Task authors extend one family in five reviewable steps:
+
+1. Generate the mechanical task surface from the committed task contract:
+   `Task`, `Topology`, `Parameter`, `Measurement`, `SpecRow`, `Condition`, and
+   `Corner` nodes plus `targets`, `specifies`, and `evaluated_under` edges. The
+   generator cannot create causality.
+2. Transcribe the public stage recipe into `RecipeStage`, `ValidityGate`,
+   `measured_by`, `depends_on`, and `guards`, preserving named bindings and
+   whose-fault outcomes.
+3. Add mechanisms, influences, tradeoffs, and traps only from a committed
+   source. Grade each edge, retain numeric observations and exact scope, mark
+   joint interventions, and make extrapolation policy explicit.
+4. Validate the Draft 2020-12 schema and graph-wide semantics, add one fixture
+   for every new query answer, and add a negative test for each new invariant.
+   Reviewers separately assess engineering truth; schema validity is not that
+   review.
+5. Canonicalize and hash the graph, bind graph ID/version/digest to the task
+   release, and retain the old graph for old evidence. Correcting a causal edge
+   creates a new graph version/digest rather than rewriting prior task history.
+
+A shared base graph may eventually hold genuinely task-independent textbook
+priors. Until overlay conflict semantics are ruled, authors should ship one
+precomposed task-family graph so query results have one unambiguous identity.
+
+### Composition with skills and rung-1 operations
+
+Skills consume rung 2 as bounded decision context, then use rung 1 for fresh
+evidence. A characterization skill can query `levers` before choosing one
+experiment; a stability skill can query `recipe` to discover the design-specific
+gain binding; a PVT skill can query `validity` before scheduling a hot corner.
+The returned edge scope becomes an assumption in the skill's context ledger.
+
+A normal reasoning loop is:
+
+```text
+task + hash-bound graph
+  -> kg.query: retrieve scoped mechanism/dependency prior
+  -> skill: form one explicit hypothesis and choose one justified intent
+  -> OpenADA rung-1 operation: produce fresh analysis evidence
+  -> measurement/specification contracts: evaluate the exact new condition
+  -> reviewed public task update: optionally publish a new graph version
+```
+
+Skills must not silently add edges, promote textbook priors, convert an empty
+query into proof, or reuse a magnitude outside its returned scope. A simulation
+result does not mutate the released graph in-session; graph authoring is a
+separate reviewed publication action. Likewise, the graph may recommend a
+measurement recipe, but only the corresponding OpenADA operation can establish
+fresh analysis, measurement, or specification evidence.
+
+### Operational and epistemic limits
+
+Rung 2 improves search and explanation, not truth by decree. The integration
+must continue to expose the limits already listed above, especially:
+
+- content hash and evidence pointers prove identity, not that an engineering
+  interpretation is correct;
+- public measured edges in this seed are simulator characterization, not
+  silicon data;
+- graph coverage is incomplete by design, and absence remains unknown;
+- quantified edges are design-point-, topology-, model-, and condition-specific;
+- joint interventions remain joint; a query cannot manufacture isolated
+  derivatives;
+- ordinal strength is a ranking aid within this corpus, never a unitless global
+  sensitivity; and
+- no graph answer satisfies a task row, validates a simulator run, authorizes a
+  mutation, or claims signoff.
+
+Those boundaries belong in the future profile assertion and normalized result,
+not only in skill prose, so every agent receives them with the answer.

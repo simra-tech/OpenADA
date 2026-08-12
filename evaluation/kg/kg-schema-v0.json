@@ -188,40 +188,46 @@
     "limit": {
       "oneOf": [
         {
-          "type": "object",
-          "required": [
-            "value"
-          ],
-          "properties": {
-            "corner": {
-              "$ref": "#/$defs/id"
-            },
-            "value": {
-              "type": "number"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/$defs/scalarLimit"
         },
         {
-          "type": "object",
-          "required": [
-            "minimum",
-            "maximum"
-          ],
-          "properties": {
-            "corner": {
-              "$ref": "#/$defs/id"
-            },
-            "minimum": {
-              "type": "number"
-            },
-            "maximum": {
-              "type": "number"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "#/$defs/rangeLimit"
         }
       ]
+    },
+    "scalarLimit": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "corner": {
+          "$ref": "#/$defs/id"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rangeLimit": {
+      "type": "object",
+      "required": [
+        "minimum",
+        "maximum"
+      ],
+      "properties": {
+        "corner": {
+          "$ref": "#/$defs/id"
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "maximum": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
     },
     "taskAttributes": {
       "type": "object",
@@ -383,6 +389,49 @@
           "type": "number"
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "value_type": {
+                "const": "continuous"
+              }
+            },
+            "required": [
+              "value_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "domain": {
+                "$ref": "#/$defs/continuousDomain"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "value_type": {
+                "const": "integer"
+              }
+            },
+            "required": [
+              "value_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "domain": {
+                "$ref": "#/$defs/integerDomain"
+              },
+              "reference": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ],
       "additionalProperties": false
     },
     "measurementAttributes": {
@@ -414,7 +463,6 @@
         "task_id",
         "semantic_name",
         "measurement",
-        "condition",
         "operator",
         "unit",
         "report_only",
@@ -463,6 +511,92 @@
           }
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "report_only": {
+                "const": true
+              }
+            },
+            "required": [
+              "report_only"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operator": {
+                "const": "report_only"
+              },
+              "limits": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "required": [
+              "condition"
+            ],
+            "properties": {
+              "operator": {
+                "enum": [
+                  "<=",
+                  ">=",
+                  "between"
+                ]
+              },
+              "limits": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operator": {
+                "const": "between"
+              }
+            },
+            "required": [
+              "operator"
+            ]
+          },
+          "then": {
+            "properties": {
+              "limits": {
+                "items": {
+                  "$ref": "#/$defs/rangeLimit"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operator": {
+                "enum": [
+                  "<=",
+                  ">="
+                ]
+              }
+            },
+            "required": [
+              "operator"
+            ]
+          },
+          "then": {
+            "properties": {
+              "limits": {
+                "items": {
+                  "$ref": "#/$defs/scalarLimit"
+                }
+              }
+            }
+          }
+        }
+      ],
       "additionalProperties": false
     },
     "cornerAttributes": {
@@ -1022,7 +1156,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 1024,
-          "pattern": "^[^/]"
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\u0000]+$"
         },
         "section": {
           "$ref": "#/$defs/nonemptyString"
@@ -1280,7 +1414,8 @@
       "required": [
         "tradeoff",
         "mechanism",
-        "coupling"
+        "coupling",
+        "quantification"
       ],
       "properties": {
         "tradeoff": {
@@ -1294,6 +1429,13 @@
             "antagonistic",
             "coupled"
           ]
+        },
+        "quantification": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/observation"
+          }
         }
       },
       "additionalProperties": false
@@ -1355,6 +1497,9 @@
         },
         "validation": {
           "$ref": "#/$defs/boundedString"
+        },
+        "mechanism": {
+          "$ref": "#/$defs/id"
         }
       },
       "additionalProperties": false
@@ -1456,6 +1601,46 @@
           "if": {
             "properties": {
               "kind": {
+                "enum": [
+                  "influences",
+                  "trades_off"
+                ]
+              },
+              "evidence": {
+                "properties": {
+                  "grade": {
+                    "const": "measured"
+                  }
+                },
+                "required": [
+                  "grade"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "evidence"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attributes": {
+                "properties": {
+                  "quantification": {
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "quantification"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
                 "const": "contains"
               }
             }
@@ -1541,7 +1726,22 @@
             }
           },
           "then": {
+            "required": [
+              "scope"
+            ],
             "properties": {
+              "scope": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/scope"
+                  },
+                  {
+                    "required": [
+                      "extrapolation"
+                    ]
+                  }
+                ]
+              },
               "attributes": {
                 "$ref": "#/$defs/influencesAttributes"
               }

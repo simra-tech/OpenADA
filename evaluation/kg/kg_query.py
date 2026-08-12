@@ -57,7 +57,7 @@ EDGE_ENDPOINT_KINDS: dict[str, tuple[frozenset[str], frozenset[str]]] = {
         frozenset({"Condition", "Corner"}),
     ),
     "influences": (
-        frozenset({"Parameter", "Condition", "Corner", "Mechanism"}),
+        frozenset({"Parameter", "Topology", "Condition", "Corner", "Mechanism"}),
         frozenset({"Mechanism", "Measurement"}),
     ),
     "trades_off": (frozenset({"SpecRow"}), frozenset({"SpecRow"})),
@@ -126,6 +126,143 @@ BASIS_VALUES = frozenset(
     }
 )
 GIT_REVISION_RE = re.compile(r"^[0-9a-f]{40}$")
+ID_RE = re.compile(r"^[a-z][a-z0-9_.:-]{2,159}$")
+SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+SEMVER_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
+
+NODE_ATTRIBUTE_SHAPES: dict[str, tuple[frozenset[str], frozenset[str]]] = {
+    "Task": (
+        frozenset({"task_id", "task_version", "schema_version", "harness", "pdk", "simulator", "status", "image_digest"}),
+        frozenset({"task_id", "task_version", "schema_version", "harness", "pdk", "simulator", "status", "image_digest"}),
+    ),
+    "Device": (
+        frozenset({"task_id", "device_class", "instances", "model_name"}),
+        frozenset({"task_id", "device_class", "instances"}),
+    ),
+    "Block": (frozenset({"task_id", "role"}), frozenset({"task_id", "role"})),
+    "Topology": (
+        frozenset({"task_id", "topology_id", "fixed", "template_hash"}),
+        frozenset({"task_id", "topology_id", "fixed"}),
+    ),
+    "Parameter": (
+        frozenset({"task_id", "semantic_name", "value_type", "targets", "domain", "reference"}),
+        frozenset({"task_id", "semantic_name", "value_type", "targets", "domain"}),
+    ),
+    "Measurement": (
+        frozenset({"task_id", "semantic_name", "unit", "method_summary"}),
+        frozenset({"task_id", "semantic_name", "unit"}),
+    ),
+    "SpecRow": (
+        frozenset({"task_id", "semantic_name", "measurement", "condition", "operator", "unit", "report_only", "limits", "qualifiers"}),
+        frozenset({"task_id", "semantic_name", "measurement", "operator", "unit", "report_only", "limits", "qualifiers"}),
+    ),
+    "Corner": (
+        frozenset({"corner_id", "process", "temperature_c", "supply_v", "model_bundle_hash", "status", "task_ids"}),
+        frozenset({"corner_id", "process", "temperature_c", "supply_v", "model_bundle_hash", "status", "task_ids"}),
+    ),
+    "Condition": (
+        frozenset({"task_id", "condition_id", "role", "values"}),
+        frozenset({"task_id", "condition_id", "role", "values"}),
+    ),
+    "Mechanism": (
+        frozenset({"task_id", "category", "summary"}),
+        frozenset({"task_id", "category", "summary"}),
+    ),
+    "Tradeoff": (
+        frozenset({"task_id", "summary", "observed"}),
+        frozenset({"task_id", "summary", "observed"}),
+    ),
+    "RecipeStage": (
+        frozenset({"task_id", "stage_id", "order", "analysis", "deck", "outputs"}),
+        frozenset({"task_id", "stage_id", "order", "analysis", "deck", "outputs"}),
+    ),
+    "ValidityGate": (
+        frozenset({"task_id", "gate_id", "predicate", "failure_state", "thresholds"}),
+        frozenset({"task_id", "gate_id", "predicate", "failure_state", "thresholds"}),
+    ),
+    "Trap": (
+        frozenset({"task_id", "claim", "correction"}),
+        frozenset({"task_id", "claim", "correction"}),
+    ),
+    "ModelArtifact": (
+        frozenset({"task_id", "artifact_name", "state", "version", "digest"}),
+        frozenset({"task_id", "artifact_name", "state", "version"}),
+    ),
+}
+
+EDGE_ATTRIBUTE_SHAPES: dict[str, tuple[frozenset[str], frozenset[str]]] = {
+    "contains": (frozenset({"role"}), frozenset()),
+    "implements": (frozenset(), frozenset()),
+    "targets": (frozenset({"target_paths"}), frozenset({"target_paths"})),
+    "specifies": (frozenset(), frozenset()),
+    "evaluated_under": (frozenset({"role"}), frozenset({"role"})),
+    "influences": (
+        frozenset({"sign", "strength", "quantification"}),
+        frozenset({"sign", "strength", "quantification"}),
+    ),
+    "trades_off": (
+        frozenset({"tradeoff", "mechanism", "coupling", "quantification"}),
+        frozenset({"tradeoff", "mechanism", "coupling", "quantification"}),
+    ),
+    "measured_by": (frozenset({"binding"}), frozenset({"binding"})),
+    "depends_on": (frozenset({"bindings"}), frozenset({"bindings"})),
+    "models": (frozenset({"model_role"}), frozenset({"model_role"})),
+    "valid_when": (
+        frozenset({"predicate", "conclusion", "validation", "mechanism"}),
+        frozenset({"predicate", "conclusion", "validation"}),
+    ),
+    "invalid_when": (
+        frozenset({"predicate", "conclusion", "validation", "mechanism"}),
+        frozenset({"predicate", "conclusion", "validation"}),
+    ),
+    "repairs": (
+        frozenset({"change", "validation"}),
+        frozenset({"change", "validation"}),
+    ),
+    "guards": (frozenset({"on_fail"}), frozenset({"on_fail"})),
+    "catches": (frozenset({"rationale"}), frozenset({"rationale"})),
+}
+
+EVIDENCE_POLICIES: dict[str, frozenset[tuple[str, str]]] = {
+    "contains": frozenset({("derived", "task_contract")}),
+    "implements": frozenset({("derived", "task_contract")}),
+    "targets": frozenset({("derived", "task_contract")}),
+    "specifies": frozenset({("derived", "task_contract")}),
+    "evaluated_under": frozenset({
+        ("derived", "task_contract"), ("derived", "recipe_contract"),
+        ("measured", "simulation_sweep"),
+    }),
+    "influences": frozenset({
+        ("measured", "simulation_sweep"), ("derived", "calculation"),
+        ("derived", "causal_interpretation"), ("textbook", "textbook_prior"),
+    }),
+    "trades_off": frozenset({
+        ("measured", "simulation_sweep"), ("derived", "causal_interpretation"),
+        ("textbook", "textbook_prior"),
+    }),
+    "measured_by": frozenset({("derived", "recipe_contract")}),
+    "depends_on": frozenset({("derived", "recipe_contract")}),
+    "models": frozenset({
+        ("derived", "task_contract"), ("derived", "causal_interpretation"),
+        ("derived", "model_debug"),
+    }),
+    "valid_when": frozenset({
+        ("measured", "model_debug"), ("derived", "model_debug"),
+        ("derived", "calculation"),
+    }),
+    "invalid_when": frozenset({
+        ("measured", "model_debug"), ("derived", "model_debug"),
+        ("derived", "calculation"), ("derived", "causal_interpretation"),
+    }),
+    "repairs": frozenset({
+        ("measured", "model_debug"), ("derived", "model_debug"),
+        ("derived", "causal_interpretation"),
+    }),
+    "guards": frozenset({
+        ("derived", "recipe_contract"), ("derived", "causal_interpretation"),
+    }),
+    "catches": frozenset({("derived", "causal_interpretation")}),
+}
 
 # Lower is a better search priority.  The final ID tie-break makes every order
 # total and reproducible.  ``structural`` means an exact dependency/identity,
@@ -138,6 +275,7 @@ STRENGTH_RANK = {
     "weak": 3,
     "unknown": 4,
 }
+SCOPE_RANK = {"compatible": 0, "requires_review": 1, "incompatible": 2}
 
 
 class GraphError(ValueError):
@@ -213,6 +351,14 @@ def _require_exact_fields(
 def _require_string(value: Any, *, path: str) -> str:
     if not isinstance(value, str) or not value:
         raise GraphError(f"{path}: expected a nonempty string")
+    if len(value) > 512:
+        raise GraphError(f"{path}: string exceeds 512 characters")
+    return value
+
+
+def _require_bounded_string(value: Any, *, path: str) -> str:
+    if not isinstance(value, str) or len(value) > 4000:
+        raise GraphError(f"{path}: expected a string of at most 4000 characters")
     return value
 
 
@@ -222,6 +368,108 @@ def _require_list(value: Any, *, path: str, nonempty: bool = False) -> list[Any]
     if nonempty and not value:
         raise GraphError(f"{path}: array must not be empty")
     return value
+
+
+def _require_id(value: Any, *, path: str) -> str:
+    identifier = _require_string(value, path=path)
+    if not ID_RE.fullmatch(identifier):
+        raise GraphError(f"{path}: invalid graph identifier {identifier!r}")
+    return identifier
+
+
+def _require_number(value: Any, *, path: str) -> float | int:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise GraphError(f"{path}: expected a finite number")
+    if isinstance(value, float) and not math.isfinite(value):
+        raise GraphError(f"{path}: expected a finite number")
+    return value
+
+
+def _require_integer(value: Any, *, path: str, minimum: int | None = None) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise GraphError(f"{path}: expected an integer")
+    if minimum is not None and value < minimum:
+        raise GraphError(f"{path}: expected integer >= {minimum}")
+    return value
+
+
+def _require_bool(value: Any, *, path: str) -> bool:
+    if not isinstance(value, bool):
+        raise GraphError(f"{path}: expected a boolean")
+    return value
+
+
+def _require_enum(value: Any, allowed: Iterable[str], *, path: str) -> str:
+    if value not in allowed:
+        raise GraphError(f"{path}: expected one of {', '.join(sorted(allowed))}")
+    return value
+
+
+def _require_string_list(
+    value: Any,
+    *,
+    path: str,
+    nonempty: bool = False,
+    identifiers: bool = False,
+) -> list[str]:
+    items = _require_list(value, path=path, nonempty=nonempty)
+    result: list[str] = []
+    for index, item in enumerate(items):
+        validator = _require_id if identifiers else _require_string
+        result.append(validator(item, path=f"{path}[{index}]"))
+    if len(set(result)) != len(result):
+        raise GraphError(f"{path}: duplicate array items are forbidden")
+    return result
+
+
+def _require_sha256(value: Any, *, path: str) -> str:
+    digest = _require_string(value, path=path)
+    if not SHA256_RE.fullmatch(digest):
+        raise GraphError(f"{path}: expected sha256:<64 lowercase hex characters>")
+    return digest
+
+
+def _validate_scalar(value: Any, *, path: str) -> None:
+    if isinstance(value, bool):
+        return
+    if isinstance(value, (int, float)):
+        _require_number(value, path=path)
+        return
+    if isinstance(value, str):
+        if len(value) > 512:
+            raise GraphError(f"{path}: string exceeds 512 characters")
+        return
+    if isinstance(value, list):
+        if len(value) > 256:
+            raise GraphError(f"{path}: array exceeds 256 items")
+        if not value:
+            # Empty lists satisfy both homogeneous array branches in JSON
+            # Schema's oneOf and are therefore intentionally rejected.
+            raise GraphError(f"{path}: empty scalar arrays are ambiguous")
+        item_type = str if isinstance(value[0], str) else type(value[0])
+        for index, item in enumerate(value):
+            if item_type is str:
+                if not isinstance(item, str) or len(item) > 256:
+                    raise GraphError(f"{path}[{index}]: expected bounded string")
+            else:
+                _require_number(item, path=f"{path}[{index}]")
+        return
+    raise GraphError(f"{path}: invalid scalar value")
+
+
+def _validate_named_value(value: Any, *, path: str) -> None:
+    if not isinstance(value, dict):
+        raise GraphError(f"{path}: expected an object")
+    _require_exact_fields(
+        value,
+        allowed=frozenset({"name", "value", "unit"}),
+        required=frozenset({"name", "value"}),
+        path=path,
+    )
+    _require_string(value.get("name"), path=f"{path}.name")
+    _validate_scalar(value.get("value"), path=f"{path}.value")
+    if "unit" in value:
+        _require_string(value["unit"], path=f"{path}.unit")
 
 
 def _node_view(node: Mapping[str, Any]) -> dict[str, Any]:
@@ -292,10 +540,14 @@ class KnowledgeGraph:
             raise GraphError(
                 f"unsupported graph schema: {self.payload.get('schema')!r}"
             )
-        for field in ("graph_id", "graph_version", "title"):
-            _require_string(self.payload.get(field), path=f"$.{field}")
-        if not isinstance(self.payload.get("description"), str):
-            raise GraphError("$.description: expected a string")
+        _require_id(self.payload.get("graph_id"), path="$.graph_id")
+        graph_version = _require_string(
+            self.payload.get("graph_version"), path="$.graph_version"
+        )
+        if len(graph_version) > 32 or not SEMVER_RE.fullmatch(graph_version):
+            raise GraphError("$.graph_version: expected numeric semantic version")
+        _require_string(self.payload.get("title"), path="$.title")
+        _require_bounded_string(self.payload.get("description"), path="$.description")
         source_snapshot = self.payload.get("source_snapshot")
         if not isinstance(source_snapshot, dict):
             raise GraphError("$.source_snapshot: expected an object")
@@ -308,12 +560,19 @@ class KnowledgeGraph:
         revision = _require_string(
             source_snapshot.get("revision"), path="$.source_snapshot.revision"
         )
+        _require_string(
+            source_snapshot.get("repository"), path="$.source_snapshot.repository"
+        )
         if not GIT_REVISION_RE.fullmatch(revision):
             raise GraphError("$.source_snapshot.revision: expected a full Git SHA")
         if source_snapshot.get("policy") != "tracked-public-files-only":
             raise GraphError("$.source_snapshot.policy: unsupported source policy")
-        _require_list(self.payload.get("nodes"), path="$.nodes", nonempty=True)
-        _require_list(self.payload.get("edges"), path="$.edges", nonempty=True)
+        nodes = _require_list(self.payload.get("nodes"), path="$.nodes", nonempty=True)
+        edges = _require_list(self.payload.get("edges"), path="$.edges", nonempty=True)
+        if len(nodes) > 4096:
+            raise GraphError("$.nodes: exceeds 4096 items")
+        if len(edges) > 16384:
+            raise GraphError("$.edges: exceeds 16384 items")
 
     def _index_nodes(self) -> None:
         for index, raw_node in enumerate(self.payload["nodes"]):
@@ -326,20 +585,280 @@ class KnowledgeGraph:
                 required=NODE_FIELDS,
                 path=path,
             )
-            node_id = _require_string(raw_node.get("id"), path=f"{path}.id")
+            node_id = _require_id(raw_node.get("id"), path=f"{path}.id")
             kind = _require_string(raw_node.get("kind"), path=f"{path}.kind")
             if kind not in NODE_KINDS:
                 raise GraphError(f"{path}.kind: unknown node kind {kind!r}")
             _require_string(raw_node.get("name"), path=f"{path}.name")
-            if not isinstance(raw_node.get("description"), str):
-                raise GraphError(f"{path}.description: expected a string")
+            _require_bounded_string(
+                raw_node.get("description"), path=f"{path}.description"
+            )
             if not isinstance(raw_node.get("attributes"), dict):
                 raise GraphError(f"{path}.attributes: expected an object")
+            self._validate_node_attributes(
+                kind, raw_node["attributes"], path=f"{path}.attributes"
+            )
             if node_id in self.nodes_by_id:
                 raise GraphError(f"duplicate node id: {node_id}")
             node = dict(raw_node)
             self.nodes_by_id[node_id] = node
             self._add_aliases(node)
+
+    def _validate_node_attributes(
+        self, kind: str, attributes: Mapping[str, Any], *, path: str
+    ) -> None:
+        allowed, required = NODE_ATTRIBUTE_SHAPES[kind]
+        _require_exact_fields(
+            attributes, allowed=allowed, required=required, path=path
+        )
+
+        def strings(*fields: str) -> None:
+            for field in fields:
+                if field in attributes:
+                    _require_string(attributes[field], path=f"{path}.{field}")
+
+        if kind == "Task":
+            strings("task_id", "schema_version", "harness", "pdk", "simulator")
+            _require_integer(
+                attributes["task_version"], path=f"{path}.task_version", minimum=0
+            )
+            _require_enum(
+                attributes["status"], {"active", "draft"}, path=f"{path}.status"
+            )
+            _require_sha256(attributes["image_digest"], path=f"{path}.image_digest")
+        elif kind == "Device":
+            strings("task_id", "model_name")
+            _require_enum(
+                attributes["device_class"],
+                {"matched_group", "transistor", "passive", "model_element"},
+                path=f"{path}.device_class",
+            )
+            _require_string_list(
+                attributes["instances"], path=f"{path}.instances", nonempty=True
+            )
+        elif kind == "Block":
+            strings("task_id", "role")
+        elif kind == "Topology":
+            strings("task_id", "topology_id")
+            _require_bool(attributes["fixed"], path=f"{path}.fixed")
+            if "template_hash" in attributes:
+                _require_sha256(
+                    attributes["template_hash"], path=f"{path}.template_hash"
+                )
+        elif kind == "Parameter":
+            strings("task_id", "semantic_name")
+            value_type = _require_enum(
+                attributes["value_type"],
+                {"continuous", "integer"},
+                path=f"{path}.value_type",
+            )
+            _require_string_list(
+                attributes["targets"], path=f"{path}.targets", nonempty=True
+            )
+            domain = attributes["domain"]
+            if not isinstance(domain, dict):
+                raise GraphError(f"{path}.domain: expected an object")
+            if value_type == "continuous":
+                _require_exact_fields(
+                    domain,
+                    allowed=frozenset({"minimum", "maximum", "quantum", "unit"}),
+                    required=frozenset({"minimum", "maximum", "quantum"}),
+                    path=f"{path}.domain",
+                )
+                minimum = _require_number(
+                    domain["minimum"], path=f"{path}.domain.minimum"
+                )
+                maximum = _require_number(
+                    domain["maximum"], path=f"{path}.domain.maximum"
+                )
+                quantum = _require_number(
+                    domain["quantum"], path=f"{path}.domain.quantum"
+                )
+                if minimum > maximum:
+                    raise GraphError(f"{path}.domain: minimum exceeds maximum")
+                if quantum <= 0:
+                    raise GraphError(f"{path}.domain.quantum: expected > 0")
+                if "unit" in domain:
+                    _require_string(domain["unit"], path=f"{path}.domain.unit")
+                if "reference" in attributes:
+                    reference = _require_number(
+                        attributes["reference"], path=f"{path}.reference"
+                    )
+                    if not minimum <= reference <= maximum:
+                        raise GraphError(f"{path}.reference: outside continuous domain")
+            else:
+                _require_exact_fields(
+                    domain,
+                    allowed=frozenset({"allowed"}),
+                    required=frozenset({"allowed"}),
+                    path=f"{path}.domain",
+                )
+                raw_allowed = _require_list(
+                    domain["allowed"], path=f"{path}.domain.allowed", nonempty=True
+                )
+                allowed_values = [
+                    _require_integer(item, path=f"{path}.domain.allowed[{index}]")
+                    for index, item in enumerate(raw_allowed)
+                ]
+                if len(set(allowed_values)) != len(allowed_values):
+                    raise GraphError(f"{path}.domain.allowed: duplicate values")
+                if "reference" in attributes:
+                    reference = _require_integer(
+                        attributes["reference"], path=f"{path}.reference"
+                    )
+                    if reference not in allowed_values:
+                        raise GraphError(f"{path}.reference: outside integer domain")
+        elif kind == "Measurement":
+            strings("task_id", "semantic_name", "unit")
+            if "method_summary" in attributes:
+                _require_bounded_string(
+                    attributes["method_summary"], path=f"{path}.method_summary"
+                )
+        elif kind == "SpecRow":
+            strings("task_id", "semantic_name", "unit")
+            _require_id(attributes["measurement"], path=f"{path}.measurement")
+            if "condition" in attributes:
+                _require_id(attributes["condition"], path=f"{path}.condition")
+            operator = _require_enum(
+                attributes["operator"],
+                {"<=", ">=", "between", "report_only"},
+                path=f"{path}.operator",
+            )
+            report_only = _require_bool(
+                attributes["report_only"], path=f"{path}.report_only"
+            )
+            limits = _require_list(attributes["limits"], path=f"{path}.limits")
+            if len(limits) > 64:
+                raise GraphError(f"{path}.limits: exceeds 64 items")
+            if report_only:
+                if operator != "report_only" or limits:
+                    raise GraphError(
+                        f"{path}: report-only rows require report_only operator and no limits"
+                    )
+            elif operator == "report_only" or "condition" not in attributes or not limits:
+                raise GraphError(
+                    f"{path}: scored rows require a condition, scored operator, and limits"
+                )
+            for index, limit in enumerate(limits):
+                limit_path = f"{path}.limits[{index}]"
+                if not isinstance(limit, dict):
+                    raise GraphError(f"{limit_path}: expected an object")
+                if operator == "between":
+                    _require_exact_fields(
+                        limit,
+                        allowed=frozenset({"corner", "minimum", "maximum"}),
+                        required=frozenset({"minimum", "maximum"}),
+                        path=limit_path,
+                    )
+                    minimum = _require_number(
+                        limit["minimum"], path=f"{limit_path}.minimum"
+                    )
+                    maximum = _require_number(
+                        limit["maximum"], path=f"{limit_path}.maximum"
+                    )
+                    if minimum > maximum:
+                        raise GraphError(f"{limit_path}: minimum exceeds maximum")
+                else:
+                    _require_exact_fields(
+                        limit,
+                        allowed=frozenset({"corner", "value"}),
+                        required=frozenset({"value"}),
+                        path=limit_path,
+                    )
+                    _require_number(limit["value"], path=f"{limit_path}.value")
+                if "corner" in limit:
+                    _require_id(limit["corner"], path=f"{limit_path}.corner")
+            qualifiers = _require_list(
+                attributes["qualifiers"], path=f"{path}.qualifiers"
+            )
+            if len(qualifiers) > 32:
+                raise GraphError(f"{path}.qualifiers: exceeds 32 items")
+            for index, qualifier in enumerate(qualifiers):
+                _validate_named_value(
+                    qualifier, path=f"{path}.qualifiers[{index}]"
+                )
+        elif kind == "Corner":
+            strings("corner_id", "process")
+            _require_number(attributes["temperature_c"], path=f"{path}.temperature_c")
+            _require_number(attributes["supply_v"], path=f"{path}.supply_v")
+            _require_sha256(
+                attributes["model_bundle_hash"], path=f"{path}.model_bundle_hash"
+            )
+            _require_enum(
+                attributes["status"], {"active", "historical"}, path=f"{path}.status"
+            )
+            _require_string_list(
+                attributes["task_ids"], path=f"{path}.task_ids", nonempty=True
+            )
+        elif kind == "Condition":
+            strings("task_id", "condition_id")
+            _require_enum(
+                attributes["role"],
+                {"condition_set", "operating_point", "validity_predicate"},
+                path=f"{path}.role",
+            )
+            values = _require_list(
+                attributes["values"], path=f"{path}.values", nonempty=True
+            )
+            if len(values) > 128:
+                raise GraphError(f"{path}.values: exceeds 128 items")
+            for index, value in enumerate(values):
+                _validate_named_value(value, path=f"{path}.values[{index}]")
+        elif kind == "Mechanism":
+            strings("task_id")
+            _require_enum(
+                attributes["category"],
+                {"physical", "model", "measurement", "structural"},
+                path=f"{path}.category",
+            )
+            _require_bounded_string(attributes["summary"], path=f"{path}.summary")
+        elif kind == "Tradeoff":
+            strings("task_id")
+            _require_bounded_string(attributes["summary"], path=f"{path}.summary")
+            _require_bool(attributes["observed"], path=f"{path}.observed")
+        elif kind == "RecipeStage":
+            strings("task_id", "stage_id", "deck")
+            _require_integer(attributes["order"], path=f"{path}.order", minimum=0)
+            _require_enum(
+                attributes["analysis"],
+                {"dc", "tran", "ac", "derived", "gate"},
+                path=f"{path}.analysis",
+            )
+            _require_string_list(
+                attributes["outputs"], path=f"{path}.outputs", nonempty=True
+            )
+        elif kind == "ValidityGate":
+            strings("task_id", "gate_id")
+            _require_bounded_string(attributes["predicate"], path=f"{path}.predicate")
+            _require_enum(
+                attributes["failure_state"],
+                {"unknown", "invalid", "fail"},
+                path=f"{path}.failure_state",
+            )
+            thresholds = _require_list(
+                attributes["thresholds"], path=f"{path}.thresholds"
+            )
+            if len(thresholds) > 64:
+                raise GraphError(f"{path}.thresholds: exceeds 64 items")
+            for index, threshold in enumerate(thresholds):
+                _validate_named_value(
+                    threshold, path=f"{path}.thresholds[{index}]"
+                )
+        elif kind == "Trap":
+            strings("task_id")
+            _require_bounded_string(attributes["claim"], path=f"{path}.claim")
+            _require_bounded_string(
+                attributes["correction"], path=f"{path}.correction"
+            )
+        elif kind == "ModelArtifact":
+            strings("task_id", "artifact_name", "version")
+            _require_enum(
+                attributes["state"],
+                {"unpatched", "patched", "base", "unresolved"},
+                path=f"{path}.state",
+            )
+            if "digest" in attributes:
+                _require_sha256(attributes["digest"], path=f"{path}.digest")
 
     def _add_aliases(self, node: Mapping[str, Any]) -> None:
         candidates: set[str] = {node["id"], node["name"]}
@@ -370,23 +889,33 @@ class KnowledgeGraph:
                 required=EDGE_REQUIRED_FIELDS,
                 path=path,
             )
-            edge_id = _require_string(raw_edge.get("id"), path=f"{path}.id")
+            edge_id = _require_id(raw_edge.get("id"), path=f"{path}.id")
             kind = _require_string(raw_edge.get("kind"), path=f"{path}.kind")
             if kind not in EDGE_ENDPOINT_KINDS:
                 raise GraphError(f"{path}.kind: unknown edge kind {kind!r}")
-            source = _require_string(raw_edge.get("source"), path=f"{path}.source")
-            target = _require_string(raw_edge.get("target"), path=f"{path}.target")
+            source = _require_id(raw_edge.get("source"), path=f"{path}.source")
+            target = _require_id(raw_edge.get("target"), path=f"{path}.target")
             if edge_id in self.edges_by_id:
                 raise GraphError(f"duplicate edge id: {edge_id}")
+            if edge_id in self.nodes_by_id:
+                raise GraphError(f"graph id collides across node and edge: {edge_id}")
             if source not in self.nodes_by_id:
                 raise GraphError(f"{path}.source: missing node {source!r}")
             if target not in self.nodes_by_id:
                 raise GraphError(f"{path}.target: missing node {target!r}")
             if not isinstance(raw_edge.get("attributes"), dict):
                 raise GraphError(f"{path}.attributes: expected an object")
-            self._validate_evidence(raw_edge.get("evidence"), path=f"{path}.evidence")
+            self._validate_evidence(
+                raw_edge.get("evidence"), kind=kind, path=f"{path}.evidence"
+            )
             if "scope" in raw_edge:
                 self._validate_scope(raw_edge["scope"], path=f"{path}.scope")
+            elif kind == "influences":
+                raise GraphError(f"{path}.scope: influences edges require explicit scope")
+            if kind == "influences" and "extrapolation" not in raw_edge["scope"]:
+                raise GraphError(
+                    f"{path}.scope.extrapolation: influences edges require an explicit policy"
+                )
             source_kind = self.nodes_by_id[source]["kind"]
             target_kind = self.nodes_by_id[target]["kind"]
             allowed_sources, allowed_targets = EDGE_ENDPOINT_KINDS[kind]
@@ -395,8 +924,17 @@ class KnowledgeGraph:
                     f"{path}: {kind} forbids endpoint kinds "
                     f"{source_kind}->{target_kind}"
                 )
-            if kind == "influences":
-                self._validate_influence(raw_edge, path=path)
+            self._validate_edge_attributes(
+                kind, raw_edge["attributes"], path=f"{path}.attributes"
+            )
+            if (
+                kind in {"influences", "trades_off"}
+                and raw_edge["evidence"]["grade"] == "measured"
+                and not raw_edge["attributes"]["quantification"]
+            ):
+                raise GraphError(
+                    f"{path}.attributes.quantification: measured {kind} requires numeric observations"
+                )
             edge = dict(raw_edge)
             self.edges_by_id[edge_id] = edge
             self.out_edges[source].append(edge)
@@ -406,7 +944,7 @@ class KnowledgeGraph:
         for edges in self.in_edges.values():
             edges.sort(key=lambda edge: edge["id"])
 
-    def _validate_evidence(self, value: Any, *, path: str) -> None:
+    def _validate_evidence(self, value: Any, *, kind: str, path: str) -> None:
         if not isinstance(value, dict):
             raise GraphError(f"{path}: expected an object")
         _require_exact_fields(
@@ -425,9 +963,18 @@ class KnowledgeGraph:
             raise GraphError(f"{path}: textbook evidence requires textbook_prior basis")
         if basis == "textbook_prior" and grade != "textbook":
             raise GraphError(f"{path}: textbook_prior basis requires textbook grade")
+        if (grade, basis) not in EVIDENCE_POLICIES[kind]:
+            raise GraphError(
+                f"{path}: evidence {grade}/{basis} is forbidden for {kind}"
+            )
+        if "summary" in value:
+            _require_bounded_string(value["summary"], path=f"{path}.summary")
         pointers = _require_list(
             value.get("pointers"), path=f"{path}.pointers", nonempty=True
         )
+        if len(pointers) > 16:
+            raise GraphError(f"{path}.pointers: exceeds 16 items")
+        seen_pointers: set[str] = set()
         for index, pointer in enumerate(pointers):
             pointer_path = f"{path}.pointers[{index}]"
             if not isinstance(pointer, dict):
@@ -438,10 +985,39 @@ class KnowledgeGraph:
                 required=POINTER_REQUIRED_FIELDS,
                 path=pointer_path,
             )
-            for field in POINTER_REQUIRED_FIELDS:
+            for field in ("repository", "revision", "section"):
                 _require_string(pointer.get(field), path=f"{pointer_path}.{field}")
             if not GIT_REVISION_RE.fullmatch(pointer["revision"]):
                 raise GraphError(f"{pointer_path}.revision: expected a full Git SHA")
+            snapshot = self.payload["source_snapshot"]
+            if pointer["repository"] != snapshot["repository"]:
+                raise GraphError(
+                    f"{pointer_path}.repository: does not match source_snapshot"
+                )
+            if pointer["revision"] != snapshot["revision"]:
+                raise GraphError(
+                    f"{pointer_path}.revision: does not match source_snapshot"
+                )
+            source_path = pointer.get("path")
+            if not isinstance(source_path, str) or not source_path:
+                raise GraphError(f"{pointer_path}.path: expected a nonempty string")
+            if len(source_path) > 1024:
+                raise GraphError(f"{pointer_path}.path: exceeds 1024 characters")
+            path_parts = source_path.split("/")
+            if source_path.startswith("/") or any(
+                part in {"", ".", ".."} for part in path_parts
+            ):
+                raise GraphError(
+                    f"{pointer_path}.path: expected a normalized repository-relative path"
+                )
+            if "locator" in pointer:
+                _require_string(pointer["locator"], path=f"{pointer_path}.locator")
+            canonical_pointer = json.dumps(
+                pointer, sort_keys=True, separators=(",", ":"), allow_nan=False
+            )
+            if canonical_pointer in seen_pointers:
+                raise GraphError(f"{path}.pointers: duplicate pointers are forbidden")
+            seen_pointers.add(canonical_pointer)
 
     def _validate_scope(self, value: Any, *, path: str) -> None:
         if not isinstance(value, dict) or not value:
@@ -449,30 +1025,129 @@ class KnowledgeGraph:
         unknown = sorted(set(value) - SCOPE_FIELDS)
         if unknown:
             raise GraphError(f"{path}: unknown fields: {', '.join(unknown)}")
-        if value.get("extrapolation") not in {
-            None,
+        if "extrapolation" in value and value["extrapolation"] not in {
             "forbidden",
             "bounded",
             "not_applicable",
         }:
             raise GraphError(f"{path}.extrapolation: unknown policy")
+        for field in ("condition_ids", "corner_ids", "co_varied_parameters"):
+            if field in value:
+                _require_string_list(
+                    value[field],
+                    path=f"{path}.{field}",
+                    nonempty=True,
+                    identifiers=True,
+                )
+        for field in ("design_point", "intervention"):
+            if field in value:
+                _require_string(value[field], path=f"{path}.{field}")
 
-    def _validate_influence(self, edge: Mapping[str, Any], *, path: str) -> None:
-        attributes = edge["attributes"]
-        sign = attributes.get("sign")
-        strength = attributes.get("strength")
-        quantification = attributes.get("quantification")
-        if sign not in SIGN_VALUES:
-            raise GraphError(f"{path}.attributes.sign: unknown sign {sign!r}")
-        if strength not in STRENGTH_VALUES:
-            raise GraphError(
-                f"{path}.attributes.strength: unknown strength {strength!r}"
-            )
-        _require_list(
-            quantification,
-            path=f"{path}.attributes.quantification",
-            nonempty=False,
+    def _validate_edge_attributes(
+        self, kind: str, attributes: Mapping[str, Any], *, path: str
+    ) -> None:
+        allowed, required = EDGE_ATTRIBUTE_SHAPES[kind]
+        _require_exact_fields(
+            attributes, allowed=allowed, required=required, path=path
         )
+        if kind == "contains":
+            if "role" in attributes:
+                _require_string(attributes["role"], path=f"{path}.role")
+        elif kind == "targets":
+            _require_string_list(
+                attributes["target_paths"],
+                path=f"{path}.target_paths",
+                nonempty=True,
+            )
+        elif kind == "evaluated_under":
+            _require_enum(
+                attributes["role"],
+                {"condition_set", "corner", "observed_at", "limit"},
+                path=f"{path}.role",
+            )
+        elif kind == "influences":
+            _require_enum(attributes["sign"], SIGN_VALUES, path=f"{path}.sign")
+            _require_enum(
+                attributes["strength"], STRENGTH_VALUES, path=f"{path}.strength"
+            )
+            self._validate_observations(
+                attributes["quantification"], path=f"{path}.quantification"
+            )
+        elif kind == "trades_off":
+            _require_id(attributes["tradeoff"], path=f"{path}.tradeoff")
+            _require_id(attributes["mechanism"], path=f"{path}.mechanism")
+            _require_enum(
+                attributes["coupling"],
+                {"antagonistic", "coupled"},
+                path=f"{path}.coupling",
+            )
+            self._validate_observations(
+                attributes["quantification"],
+                path=f"{path}.quantification",
+            )
+        elif kind == "measured_by":
+            _require_string(attributes["binding"], path=f"{path}.binding")
+        elif kind == "depends_on":
+            _require_string_list(
+                attributes["bindings"], path=f"{path}.bindings", nonempty=True
+            )
+        elif kind == "models":
+            _require_string(attributes["model_role"], path=f"{path}.model_role")
+        elif kind in {"valid_when", "invalid_when"}:
+            for field in ("predicate", "conclusion", "validation"):
+                _require_bounded_string(attributes[field], path=f"{path}.{field}")
+            if "mechanism" in attributes:
+                _require_id(attributes["mechanism"], path=f"{path}.mechanism")
+        elif kind == "repairs":
+            for field in ("change", "validation"):
+                _require_bounded_string(attributes[field], path=f"{path}.{field}")
+        elif kind == "guards":
+            _require_enum(
+                attributes["on_fail"],
+                {"unavailable", "invalid", "fail", "unknown"},
+                path=f"{path}.on_fail",
+            )
+        elif kind == "catches":
+            _require_bounded_string(attributes["rationale"], path=f"{path}.rationale")
+
+    def _validate_observations(
+        self, value: Any, *, path: str, nonempty: bool = False
+    ) -> None:
+        observations = _require_list(value, path=path, nonempty=nonempty)
+        if len(observations) > 64:
+            raise GraphError(f"{path}: exceeds 64 items")
+        numeric_fields = {
+            "baseline", "observed", "delta", "ratio", "minimum", "maximum"
+        }
+        for index, observation in enumerate(observations):
+            observation_path = f"{path}[{index}]"
+            if not isinstance(observation, dict):
+                raise GraphError(f"{observation_path}: expected an object")
+            _require_exact_fields(
+                observation,
+                allowed=frozenset(
+                    {"quantity", "intervention", "unit", "note"} | numeric_fields
+                ),
+                required=frozenset({"quantity", "intervention", "unit"}),
+                path=observation_path,
+            )
+            for field in ("quantity", "intervention", "unit"):
+                _require_string(
+                    observation[field], path=f"{observation_path}.{field}"
+                )
+            present_numeric = numeric_fields & set(observation)
+            if not present_numeric:
+                raise GraphError(
+                    f"{observation_path}: expected at least one numeric observation"
+                )
+            for field in present_numeric:
+                _require_number(
+                    observation[field], path=f"{observation_path}.{field}"
+                )
+            if "note" in observation:
+                _require_bounded_string(
+                    observation["note"], path=f"{observation_path}.note"
+                )
 
     def _validate_node_references(self) -> None:
         for node in self.nodes_by_id.values():
@@ -484,11 +1159,12 @@ class KnowledgeGraph:
                 {"Measurement"},
                 context=f"{node['id']}.attributes.measurement",
             )
-            self._require_node_kind(
-                attributes.get("condition"),
-                {"Condition"},
-                context=f"{node['id']}.attributes.condition",
-            )
+            if "condition" in attributes:
+                self._require_node_kind(
+                    attributes["condition"],
+                    {"Condition"},
+                    context=f"{node['id']}.attributes.condition",
+                )
             for index, limit in enumerate(attributes.get("limits", [])):
                 if not isinstance(limit, dict):
                     raise GraphError(
@@ -538,11 +1214,63 @@ class KnowledgeGraph:
                     raise GraphError(
                         f"{edge['id']}.attributes.bindings: expected nonempty array"
                     )
+            if edge["kind"] in {"valid_when", "invalid_when"}:
+                mechanism = edge["attributes"].get("mechanism")
+                if mechanism is not None:
+                    self._require_node_kind(
+                        mechanism,
+                        {"Mechanism"},
+                        context=f"{edge['id']}.attributes.mechanism",
+                    )
+
+        for node in self.nodes_by_id.values():
+            if node["kind"] == "SpecRow":
+                attributes = node["attributes"]
+                specifies = [
+                    edge
+                    for edge in self.out_edges.get(node["id"], [])
+                    if edge["kind"] == "specifies"
+                ]
+                if len(specifies) != 1 or specifies[0]["target"] != attributes["measurement"]:
+                    raise GraphError(
+                        f"{node['id']}: measurement attribute must match exactly one specifies edge"
+                    )
+                condition_edges = [
+                    edge
+                    for edge in self.out_edges.get(node["id"], [])
+                    if edge["kind"] == "evaluated_under"
+                    and edge["attributes"]["role"] == "condition_set"
+                ]
+                condition = attributes.get("condition")
+                if condition is None:
+                    if condition_edges:
+                        raise GraphError(
+                            f"{node['id']}: conditionless row has a condition_set edge"
+                        )
+                elif len(condition_edges) != 1 or condition_edges[0]["target"] != condition:
+                    raise GraphError(
+                        f"{node['id']}: condition attribute must match exactly one condition_set edge"
+                    )
+            elif node["kind"] == "Parameter":
+                target_edges = [
+                    edge
+                    for edge in self.out_edges.get(node["id"], [])
+                    if edge["kind"] == "targets"
+                ]
+                bound_paths = {
+                    target_path
+                    for edge in target_edges
+                    for target_path in edge["attributes"]["target_paths"]
+                }
+                if bound_paths != set(node["attributes"]["targets"]):
+                    raise GraphError(
+                        f"{node['id']}: targets attribute disagrees with targets edges"
+                    )
 
     def _require_node_kind(
         self, value: Any, allowed: set[str], *, context: str
     ) -> dict[str, Any]:
-        node_id = _require_string(value, path=context)
+        node_id = _require_id(value, path=context)
         node = self.nodes_by_id.get(node_id)
         if node is None:
             raise GraphError(f"{context}: missing node {node_id!r}")
@@ -652,7 +1380,7 @@ class KnowledgeGraph:
         ]
         return [_node_view(node) for node in sorted(specs, key=lambda item: item["id"])]
 
-    def _influence_paths(self, parameter_id: str) -> list[dict[str, Any]]:
+    def _influence_paths(self, source_id: str) -> list[dict[str, Any]]:
         found: list[tuple[dict[str, Any], list[dict[str, Any]]]] = []
 
         def walk(
@@ -676,7 +1404,7 @@ class KnowledgeGraph:
                 elif target["kind"] == "Mechanism":
                     walk(target_id, next_path, seen | {target_id})
 
-        walk(parameter_id, [], frozenset({parameter_id}))
+        walk(source_id, [], frozenset({source_id}))
         results = [self._format_influence_path(measurement, path) for measurement, path in found]
         results.sort(
             key=lambda item: (
@@ -704,6 +1432,7 @@ class KnowledgeGraph:
                 if edge.get("scope", {}).get("extrapolation") is not None
             }
         )
+        scope_compatibility, scope_warning = _assess_path_scope(path)
         return {
             "measurement": _node_view(measurement),
             "spec_rows": self._bound_specs(measurement["id"]),
@@ -713,11 +1442,15 @@ class KnowledgeGraph:
             "mechanism_path": [_node_view(node) for node in mechanism_nodes],
             "path": [_edge_view(edge) for edge in path],
             "extrapolation_policies": extrapolation,
+            "scope_compatibility": scope_compatibility,
+            "scope_warning": scope_warning,
         }
 
     def influences(self, entity: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-        parameter = self.resolve_node(entity, expected_kinds={"Parameter"})
-        return parameter, self._influence_paths(parameter["id"])
+        source = self.resolve_node(
+            entity, expected_kinds={"Parameter", "Topology", "Condition", "Corner"}
+        )
+        return source, self._influence_paths(source["id"])
 
     def levers(self, entity: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         measurement = self.resolve_node(entity, expected_kinds={"Measurement"})
@@ -740,6 +1473,16 @@ class KnowledgeGraph:
                 continue
             paths.sort(key=_lever_path_score)
             best = paths[0]
+            co_varied_ids = sorted(
+                {
+                    node_id
+                    for edge in best["path"]
+                    for node_id in edge.get("scope", {}).get(
+                        "co_varied_parameters", []
+                    )
+                    if node_id != parameter["id"]
+                }
+            )
             candidates.append(
                 {
                     "parameter": _node_view(parameter),
@@ -748,7 +1491,19 @@ class KnowledgeGraph:
                     "evidence_grade": best["evidence_grade"],
                     "best_path": best,
                     "alternative_paths": paths[1:],
+                    "requires_co_variation": bool(co_varied_ids),
+                    "co_varied_parameters": [
+                        _node_view(self.nodes_by_id[node_id])
+                        for node_id in co_varied_ids
+                    ],
+                    "joint_intervention_warning": (
+                        "Rank and sign are conditional on the recorded joint intervention; "
+                        "this is not an isolated parameter sensitivity."
+                        if co_varied_ids
+                        else None
+                    ),
                     "rank_basis": {
+                        "scope_compatibility": best["scope_compatibility"],
                         "evidence_grade": best["evidence_grade"],
                         "strength": best["strength"],
                         "path_length": len(best["path"]),
@@ -757,6 +1512,7 @@ class KnowledgeGraph:
             )
         candidates.sort(
             key=lambda item: (
+                SCOPE_RANK[item["best_path"]["scope_compatibility"]],
                 GRADE_RANK[item["evidence_grade"]],
                 STRENGTH_RANK[item["strength"]],
                 len(item["best_path"]["path"]),
@@ -788,6 +1544,7 @@ class KnowledgeGraph:
                         self.nodes_by_id[edge["attributes"]["mechanism"]]
                     ),
                     "coupling": edge["attributes"]["coupling"],
+                    "quantification": edge["attributes"]["quantification"],
                     "evidence": edge["evidence"],
                     "scope": edge.get("scope"),
                     "edge_id": edge["id"],
@@ -930,6 +1687,13 @@ class KnowledgeGraph:
                     "predicate": edge["attributes"]["predicate"],
                     "conclusion": edge["attributes"]["conclusion"],
                     "validation": edge["attributes"]["validation"],
+                    "mechanism": (
+                        _node_view(
+                            self.nodes_by_id[edge["attributes"]["mechanism"]]
+                        )
+                        if "mechanism" in edge["attributes"]
+                        else None
+                    ),
                     "scope": edge.get("scope"),
                     "evidence": edge["evidence"],
                     "repairs": repairs,
@@ -949,12 +1713,14 @@ class KnowledgeGraph:
 
 def _compose_signs(signs: Iterable[str]) -> str:
     values = list(signs)
+    # A no-effect segment absorbs the chain.  Otherwise uncertainty takes
+    # precedence over interval-dependent direction before parity composition.
+    if "none" in values:
+        return "none"
     if "unknown" in values:
         return "unknown"
     if "mixed" in values:
         return "mixed"
-    if "none" in values:
-        return "none"
     negative_count = sum(value == "negative" for value in values)
     return "negative" if negative_count % 2 else "positive"
 
@@ -973,8 +1739,56 @@ def _compose_grade(grades: Iterable[str]) -> str:
     return max(values, key=lambda value: GRADE_RANK[value])
 
 
+def _assess_path_scope(
+    path: Sequence[Mapping[str, Any]],
+) -> tuple[str, str | None]:
+    """Conservatively assess whether scoped claims may be composed.
+
+    Condition/corner identifiers are machine identities, so disjoint explicit
+    sets are incompatible.  Design-point and intervention prose are not a
+    formal algebra: differing strings trigger review instead of being silently
+    treated as the same experiment or rejected as provably disjoint.
+    """
+
+    corner_sets = [
+        set(edge.get("scope", {}).get("corner_ids", []))
+        for edge in path
+        if edge.get("scope", {}).get("corner_ids")
+    ]
+    if corner_sets and not set.intersection(*corner_sets):
+        return (
+            "incompatible",
+            "Path joins disjoint corner_ids; it is returned only as a caveat and must not be extrapolated.",
+        )
+    condition_sets = [
+        set(edge.get("scope", {}).get("condition_ids", []))
+        for edge in path
+        if edge.get("scope", {}).get("condition_ids")
+    ]
+    conditions_require_review = bool(
+        condition_sets and not set.intersection(*condition_sets)
+    )
+    design_points = {
+        edge.get("scope", {}).get("design_point")
+        for edge in path
+        if edge.get("scope", {}).get("design_point")
+    }
+    interventions = {
+        edge.get("scope", {}).get("intervention")
+        for edge in path
+        if edge.get("scope", {}).get("intervention")
+    }
+    if conditions_require_review or len(design_points) > 1 or len(interventions) > 1:
+        return (
+            "requires_review",
+            "Path edges use distinct condition sets, prose-scoped design points, or interventions; composition is a reasoning prior, not a measured end-to-end sensitivity.",
+        )
+    return "compatible", None
+
+
 def _lever_path_score(path: Mapping[str, Any]) -> tuple[Any, ...]:
     return (
+        SCOPE_RANK[path["scope_compatibility"]],
         GRADE_RANK[path["evidence_grade"]],
         STRENGTH_RANK[path["strength"]],
         len(path["path"]),
