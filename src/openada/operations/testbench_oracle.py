@@ -553,6 +553,11 @@ def _unknown(row: Mapping[str, Any], reason: str) -> dict[str, Any]:
 def _measured(
     row: Mapping[str, Any], value: float, *, reason: str, details: Mapping[str, Any]
 ) -> dict[str, Any]:
+    if not math.isfinite(value):
+        return _unknown(
+            row,
+            "metric arithmetic overflowed the finite JSON result domain",
+        )
     return {
         "name": row["name"],
         "kind": row["kind"],

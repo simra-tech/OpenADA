@@ -336,6 +336,45 @@ def test_runner_unknown_is_not_credited_as_invalid_detection() -> None:
     }
 
 
+def test_finite_extreme_inputs_cannot_emit_nonfinite_comparison_values() -> None:
+    scalar = _scalar(
+        "extreme_scalar",
+        "value",
+        limit=1.0,
+        unit="A",
+        error={"kind": "absolute"},
+    )
+    curve = {
+        "name": "extreme_curve",
+        "kind": "curve",
+        "required": True,
+        "limit": _limit(1.0, "A"),
+        "observed": "curve",
+        "oracle": "curve",
+        "x": "v",
+        "y": "a",
+        "error": {"kind": "absolute"},
+    }
+    observed = _legacy(
+        {"value": 1e308, "curve": {"v": [0.0], "a": [1e308]}}
+    )
+    oracle = _legacy(
+        {"value": -1e308, "curve": {"v": [0.0], "a": [-1e308]}}
+    )
+
+    result = compare_testbench_observables(observed, oracle, _spec(scalar, curve))
+
+    assert result["status"] == "UNKNOWN"
+    assert all(item["status"] == "UNKNOWN" for item in result["metrics"])
+    encoded = json.dumps(result, allow_nan=False)
+    assert encoded
+    assert not list(
+        Draft202012Validator(
+            _schema("testbench-oracle-comparison-v1.schema.json")
+        ).iter_errors(result)
+    )
+
+
 def test_lineage_required_turns_untraced_numeric_value_unknown() -> None:
     row = _scalar(
         "offset_error_vs_oracle",
