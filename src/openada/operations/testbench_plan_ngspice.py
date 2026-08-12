@@ -1258,12 +1258,21 @@ def _compile_receipt(
 def _publish_compilation(
     prepared: PreparedNgspiceCompilation, target: Path
 ) -> None:
-    target = target.resolve()
+    candidate = Path(target).expanduser()
+    target = Path(os.path.abspath(os.fspath(candidate)))
     parent = target.parent
     parent.mkdir(parents=True, exist_ok=True)
+    parent = parent.resolve()
+    target = parent / target.name
     target_was_empty = False
+    if target.is_symlink():
+        _fail(
+            "testbench_plan.compiler.output_exists",
+            "/output_dir",
+            "output path must not be a symbolic link",
+        )
     if target.exists():
-        if target.is_symlink() or not target.is_dir():
+        if not target.is_dir():
             _fail(
                 "testbench_plan.compiler.output_exists",
                 "/output_dir",

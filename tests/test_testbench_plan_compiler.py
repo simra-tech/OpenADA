@@ -195,6 +195,17 @@ def test_compile_is_deterministic_and_publishes_only_into_empty_directory(tmp_pa
     assert caught.value.code == "testbench_plan.compiler.output_not_empty"
     assert (occupied / "keep").read_text() == "mine"
 
+    symlink_target = tmp_path / "symlink_target"
+    symlink_target.mkdir()
+    symlink = tmp_path / "output_symlink"
+    symlink.symlink_to(symlink_target, target_is_directory=True)
+    with pytest.raises(TestbenchPlanCompileError) as caught:
+        compile_testbench_plan_ngspice(
+            prepared, symlink, corner="tt", stage_ids=("dc_characterize",)
+        )
+    assert caught.value.code == "testbench_plan.compiler.output_exists"
+    assert symlink.is_symlink()
+
 
 def test_compile_rejects_unknown_corner_and_unresolved_stage_binding() -> None:
     prepared = _prepared()
