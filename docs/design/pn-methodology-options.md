@@ -13,9 +13,12 @@ Last evidence review: 2026-08-12
 The analog owner must choose and ratify a complete observation model before an
 autonomous-oscillator phase-noise primitive can be versioned. This memo surveys
 the methods that are defensible, conditionally useful, or unavailable in the
-required ngspice-46 environment. Prototype closure and cost evidence will be
-added in later commits; this first revision deliberately does not turn a
-candidate into a recommendation.
+required ngspice-46 environment. It is accompanied by a working
+[`phase_noise.py`](../../evaluation/pn-methodology/phase_noise.py) prototype,
+[`synthetic-closure.json`](../../evaluation/pn-methodology/synthetic-closure.json),
+and [measured cost evidence](../../evaluation/pn-methodology/cost-results.md).
+Those artifacts make the recommendation evidence-based; they do not themselves
+freeze a method or authorize a primitive.
 
 The decision is not whether an FFT can display a skirt. It is whether two
 implementations, given the same waveform and method declaration, will produce
@@ -38,6 +41,20 @@ The current OpenADA boundary is explicit:
 - Typed `circuit.simulate/v1alpha2` has no noise-analysis capability. Native
   control-deck research below is therefore outside the current typed evidence
   chain.
+
+## Recommended ruling at a glance
+
+Ratify Candidate A's crossing-phase/Welch architecture as the direction for a
+future point-PN method and Candidate B as mandatory correlation evidence, but
+do **not** freeze a scored method or authorize a versioned primitive yet. Two
+blocking decisions have no defensible stock-ngspice default: the physical
+device-to-transient-noise mapping and a reproducible random-sequence policy.
+Keep `phase_noise_1m` report-only with a null value until both blockers and
+every parameter and validity gate in the owner checklist are ratified,
+implemented, and validated. The [ranked recommendation](#ranked-recommendation),
+[owner checklist](#frozen-method-checklist-awaiting-owner-ruling), and
+[interim payload](#interim-report-only-bench-row) below state the exact ruling
+surface.
 
 ## Definitions shared by the candidates
 
@@ -133,6 +150,11 @@ all such sources. The manual describes this as an experimental, low-frequency
 facility and expressly lists unresolved calibration, timestep, numerical-floor,
 device-noise-generation, and applicability questions.
 
+White samples force breakpoints at `NT`. The documented Kasdin colored-noise
+path also preallocates roughly `tstop/NT` values rounded up to a power of two,
+so long close-in records can incur a separate memory cliff even before circuit
+state and waveform retention.
+
 In particular, `TRNOISE` does not translate the thermal, shot, or flicker noise
 inside a compact transistor model into a noisy transient. The manual's shot
 noise example authors a unit-noise source and scales it with a behavioral
@@ -144,11 +166,15 @@ There is also a seed blocker in this installed build. The manual says that
 `setseed nn` in `spinit` or `.spiceinit` should reproduce a sequence. Two
 isolated, byte-identical ngspice-46 runs loaded the same `.spiceinit` containing
 `setseed 12345` before loading the same white `TRNOISE(1m 10p 0 0)` deck. They
-still produced different samples—for example the last value at `50 ps` was
-`-85.596 uV` in one process and `-9.45917 uV` in the other. This is stronger
-than a control-block placement test: it exercises the documented startup
-placement. Until a retained automated replay test passes, the documented
-control must not be represented as a deterministic seed contract.
+still produced different waveform hashes; their last values at `50 ps` were
+`1.60407 mV` and `86.6490 uV`. A third run with seed 54321 was distinct, and
+each process printed an init-loaded marker. This is stronger than a
+control-block placement test: it exercises the documented startup placement
+and a different-seed control. The deck/init/output digests and logs are
+retained in
+[`ngspice-capability-probes.json`](../../evaluation/pn-methodology/ngspice-capability-probes.json).
+Until this automated replay test passes, the documented control must not be
+represented as a deterministic seed contract.
 
 ## Candidate A: noisy transient, crossing phase, and phase PSD
 
@@ -172,11 +198,12 @@ control must not be represented as a deterministic seed contract.
    declared time, retain a declared settling interval, and analyze one
    continuous post-startup record. Freeze `.tran` output step and `tmax`
    separately from `TRNOISE` `NT`: `tmax` controls oscillator/crossing fidelity;
-   `NT` controls noise bandwidth and forced breakpoints. Initial planning
-   values are `tmax <= T0/20` and a source-specific `NT`, followed by a
-   convergence study. They are not calibration facts. Bind the actual adaptive
-   timestamps and saved native vector values as authoritative—do not infer them
-   from requested steps. Freeze the saved vectors and exact differential
+   `NT` controls noise bandwidth and forced breakpoints. The owner proposal is
+   `TMAX = T0/40`, checked at `T0/80`, and a source-specific `NT` followed by a
+   bandwidth/update convergence study. These are not calibration facts. Bind
+   the actual adaptive timestamps and saved native vector values as
+   authoritative—do not infer them from requested steps. Freeze the saved
+   vectors and exact differential
    expression, raw encoding/precision, disabled waveform compression or
    decimation, crop endpoint inclusion, and SHA-256 of the retained artifact.
    Do not `linearize` or otherwise resample before crossing extraction.
@@ -194,8 +221,9 @@ control must not be represented as a deterministic seed contract.
    with fewer events than required. Rising-only differential zero crossings
    are the initial candidate; falling-polarity and threshold perturbations are
    systematic-sensitivity checks, not extra averages.
-5. **Remove only nuisance carrier terms.** Index accepted crossings
-   `k = 0 ... N-1` and fit one affine ephemeris over the whole analysis record:
+5. **Remove only nuisance carrier terms.** Apply the declared analysis-block
+   policy, index exactly its accepted crossings `k=0...N_used-1`, and fit one
+   affine ephemeris over that whole block:
 
    ```text
    [a, T_hat] = arg min sum_k (t_k - a - k T)^2
@@ -210,13 +238,25 @@ control must not be represented as a deterministic seed contract.
    suppresses close-in noise.
    A deterministic frequency ramp must fail stationarity or be reported with a
    separately frozen drift statistic; it is not silently fitted away.
-6. **Estimate a one-sided phase density.** Require an even, power-of-two `M` and
-   define the integer hop `H = M/2`. For `N` phase events use exactly
-   `K = 1 + floor((N-M)/H)` complete segments starting at event indices
-   `0, H, ... (K-1)H`; reject `N < M`, ignore only the emitted trailing count
-   `N - (M + (K-1)H)`, and never zero-pad a partial segment. Before windowing,
-   subtract the arithmetic mean of the unwindowed phase values in each segment.
-   Freeze the *periodic* Hann window exactly:
+6. **Estimate a one-sided phase density.** Freeze an even, power-of-two segment
+   length `M`, a positive segment count `K`, and integer hop `H=M/2` before the
+   run. Require at least
+
+   ```text
+   N_used = M + (K-1) H
+   ```
+
+   primary events, one immediately following valid crossing for the mandatory
+   period-error correlation, and the waveform samples needed to bracket all
+   crossings. Select exactly one declared consecutive primary block of
+   `N_used` events; the proposal is the earliest complete block after the
+   startup crop. Emit the observed, leading-discarded, analyzed,
+   correlation-guard, and trailing-discarded event counts.
+   Do not opportunistically add a `(K+1)`th segment when a long acquisition has
+   extra events, and never zero-pad a partial segment. Start the `K` segments at
+   analyzed event indices `0,H,...,(K-1)H`. Before windowing, subtract the
+   arithmetic mean of the unwindowed phase values in each segment. Freeze the
+   *periodic* Hann window exactly:
 
    ```text
    w[n] = 0.5 - 0.5 cos(2 pi n/M),  n = 0 ... M-1.
@@ -245,28 +285,60 @@ control must not be represented as a deterministic seed contract.
    `k_min`; initial closure hypotheses are at most 5% mismatch and `k_min = 4`
    for white-PM and `1/f^2` phase tests. Bin zero, bins below `k_min`, and
    offsets at or above the one-event-per-cycle Nyquist limit are invalid.
+   Choose the common integer `k` once using
+   `delta_f_ref=mean_r(1/T_hat,r)/M` and the same lower-tie rule. Because each
+   seed has its own `T_hat`, emit every `f_actual,r = k/(M T_hat,r)`, their
+   arithmetic mean and spread, and gate every requested/actual mismatch plus
+   the inter-seed spread.
+   Never interpolate or average densities from materially different offsets.
+   The one-event/cycle observable also aliases phase above `Fs_phase/2`; freeze
+   whether that folding is part of the claimed timing observable, the modeled
+   source cutoff/update/interpolation, and a cutoff/`NT` convergence gate.
    Discrete tones must be tagged under an explicit spur policy rather than
    silently pooled with random PN.
 8. **Report density and uncertainty.** Emit `S_phi`,
-   `10 log10(S_phi/2) dBc/Hz`, segment/bin ledger, and uncertainty. For `K`
-   independent averages a locally white Gaussian PSD estimate has `2K`
-   chi-square degrees of freedom. With 50%-overlapped periodic Hann, a useful
-   approximation is
+   `10 log10(S_phi/2) dBc/Hz`, segment/bin ledger, and uncertainty. For one
+   record with `K` 50%-overlapped periodic-Hann segments, use the locally white
+   Gaussian approximation
 
    ```text
-   nu_eff = 36 K^2 / (19 K - 1).
+   nu_seed = 36 K^2 / (19 K - 1).
    ```
 
-   At `K=8`, this is about `15.26` degrees of freedom and an approximate 95%
-   interval of `-2.61/+3.75 dB` around an estimate. This is not an exact
-   close-in uncertainty for phase diffusion: unwrapped oscillator phase is
-   nonstationary, the global fit makes the lowest bins Brownian-bridge-like,
-   and red spectra correlate windowed estimates. Synthetic red-noise closure
-   plus empirical across-seed spread are required.
-9. **Correlate, do not self-certify.** On the same crossings, compare the
-   direct phase PSD to period-increment PSD and overlapping Allan deviation,
-   and compare halves/quarters of the record. Agreement within a declared
-   statistical band supports the record; disagreement makes PN unknown.
+   For `R` independent, equal-weight records having equal `K`, set
+   `nu=R nu_seed` and let `S_hat` be their linear PSD mean. At confidence
+   `1-alpha`, the approximate interval for the true density is
+
+   ```text
+   [nu S_hat / chi2_quantile(1-alpha/2, nu),
+    nu S_hat / chi2_quantile(alpha/2, nu)].
+   ```
+
+   Convert the estimate and both density bounds to dB only after all linear
+   averaging. At `K=8,R=1`, `nu=15.258` and the 95% true-density interval is
+   `-2.612/+3.754 dB` relative to the estimate. At `K=8,R=8`, `nu=122.066`
+   and it is `-1.024/+1.163 dB`. This is not exact close-in uncertainty for
+   phase diffusion: unwrapped oscillator phase is nonstationary, the global fit
+   makes the lowest bins Brownian-bridge-like, and red spectra correlate
+   windowed estimates. The owner proposal therefore also computes a
+   10,000-replicate percentile bootstrap in which each replicate draws `R` of
+   the `R` seed-level linear densities with replacement and averages them,
+   using NumPy PCG64 seed 0. Take the 2.5th/97.5th percentiles with NumPy's
+   `method="linear"`, then use the convex hull of that interval and the
+   chi-square interval for the validity-width gate. The bootstrap algorithm,
+   library version, and seed are method provenance, not hidden implementation
+   choices.
+9. **Correlate, do not self-certify.** Use the main block's `a,T_hat`, define
+   `x_N=t_guard-(a+N_used T_hat)`, and form `N_used` consecutive period errors
+   from the main crossings plus that one following guard crossing. This gives
+   the period PSD the same
+   `M,K,H` ledger as the direct phase PSD. Apply the exact sampled transfer
+   function and freeze the comparison bins/statistic and finite-window
+   tolerance. Emit period/cycle jitter and Allan-family rows;
+   they become quantitative model gates only when the noisy model supplies a
+   corresponding expected statistic and uncertainty. Also compare
+   halves/quarters of amplitude, carrier, and density under a frozen stationarity
+   rule. A failed quantitative gate makes PN unknown.
 
 ### What it measures
 
@@ -297,9 +369,10 @@ transient source model.
 
 ### Expected cost at 2.4 GHz
 
-The carrier period is `416.667 ps`. With `tmax = T0/20 = 20.833 ps`, the
-retained solver-interval lower bound is 20 per carrier cycle before Newton
-iterations, rejected timesteps, noise breakpoints, and startup.
+The carrier period is `416.667 ps`. With the proposed
+`TMAX=T0/40=10.417 ps`, the solver-interval lower bound is 40 per carrier cycle
+before Newton iterations, rejected timesteps, noise breakpoints, and startup.
+The requested `TSTEP=T0/20` does not loosen this explicit `TMAX` bound.
 
 For 50%-overlapped Hann, `K=8`, and first usable bin `k_min=4`, a target
 lowest offset requires
@@ -309,12 +382,15 @@ T_segment >= k_min/f_min
 T_record  >= (K+1) T_segment / 2 = 18/f_min.
 ```
 
-| Lowest usable offset | Post-startup record | Carrier cycles | `T0/20` interval lower bound |
+| Lowest usable offset | Welch support | Carrier cycles | `T0/40` interval lower bound |
 |---:|---:|---:|---:|
-| 1 MHz | 18 us | 43,200 | 864,000 |
-| 100 kHz | 180 us | 432,000 | 8.64 million |
-| 10 kHz | 1.8 ms | 4.32 million | 86.4 million |
-| 1 kHz | 18 ms | 43.2 million | 864 million |
+| 1 MHz | 18 us | 43,200 | 1.728 million |
+| 100 kHz | 180 us | 432,000 | 17.28 million |
+| 10 kHz | 1.8 ms | 4.32 million | 172.8 million |
+| 1 kHz | 18 ms | 43.2 million | 1.728 billion |
+
+These are continuous-geometry planning bounds; the `T0/80` convergence run
+doubles them, and actual adaptive rows may be more numerous still.
 
 The bench context is about 12 seconds for a 500 ns deterministic transient.
 Purely linear extrapolation gives about 7.2 minutes per 18 us seed, 72 minutes
@@ -322,6 +398,28 @@ per 180 us seed, and 12 hours per 1.8 ms seed. Those are optimistic planning
 figures, not measurements: `TRNOISE` adds forced breakpoints and colored-noise
 storage, and nonlinear solver cost need not scale linearly. Eight independent
 seeds multiply simulator cost again.
+
+The prototype additionally requires power-of-two `M`. At nominal 2.4 GHz,
+`K=8`, and `k_min=4`, a 1 MHz request within the candidate 5% bin tolerance
+needs `M=16384`, 73,728 analyzed phase events, and 30.72 us of conventional
+Welch support, mapping nominally to bin 7 at 1.02539 MHz. A 100 kHz request
+needs `M=262144` and 491.52 us to map nominally to 100.708 kHz. A 10 kHz
+request needs `M=2097152` and 3.93216 ms to map nominally to 10.300 kHz. Actual
+bin spacing is `(1/T_hat)/M`, not `f0/M`. Acquisition must continue until the
+fixed block, one following correlation-guard crossing, and their interpolation
+brackets exist, so startup, crop phase, endpoint guards, and frequency
+variation add simulator time. Exact discrete geometry must replace the
+continuous lower bound when scheduling a run.
+
+The captured synthetic analyzer reached 4,718,592 analyzed phase events and a
+nominal 9.155 kHz first usable offset in 0.555 s median for the candidate path.
+In contrast, the PDK-free behavioral ngspice specimen took 3.45 s for 0.5 us
+and 102.05 s for 18 us, including ASCII evidence export; the latter produced
+4.47 million adaptive rows and still only supported `M=8192`, or a 1.172 MHz
+first usable offset. This behavioral source is cheaper than a transistor
+oscillator and is not a physical-PN model. Simulation and ASCII artifact
+handling dominated the measured behavioral workflow; that dominance is
+expected but remains unmeasured for a transistor VCO.
 
 A 500 ns whole record has only 2 MHz raw bin spacing before averaging. Under
 the `K=8`, `k_min=4` policy its first usable offset would be about 36 MHz. The
@@ -334,23 +432,25 @@ Candidate A may emit a numeric PN value only when all of these pass:
 
 - exact backend/binary, deck, model, corner, init, and stochastic-source
   manifests are digest-bound;
-- requested output step and `tmax`, actual time/value vectors, raw
+- requested `TSTEP` and `TMAX`, actual time/value vectors, raw
   encoding/precision, compression policy, crop endpoint rule, saved signal
   expression, and waveform digest are bound;
-- every noise mechanism, bandwidth/update interval, correlation, and seed is
-  declared, calibrated, and replayable;
+- every noise mechanism, cutoff/update/interpolation rule, timing-alias policy,
+  correlation, and seed is declared, calibrated, replayable, and converged;
 - startup crop, probe, signal mode, threshold, polarity, and interpolation are
   fixed;
-- amplitude/slope, one-event-per-cycle, no-slip/no-gap, and phase-sample
-  Nyquist checks pass;
+- amplitude/slope, one-event-per-cycle, no-slip/no-gap, fixed event-block/count,
+  interpolation-guard, and phase-sample Nyquist checks pass;
 - `tmax`, solver tolerance, threshold/polarity, and analysis-probe sensitivity
   studies remain within a ratified systematic bound;
 - the global carrier fit and no-segment-linear-detrend rule are followed;
-- segment length, periodic Hann, overlap, normalization, `K`, `k_min`, bin
-  mismatch, spur, and seed-aggregation rules exactly match the method;
+- segment length, periodic Hann, overlap, normalization, fixed `K`, `k_min`,
+  per-seed bin/spread, spur, and seed-aggregation rules exactly match the
+  method;
 - stationarity and phase-PSD/period-PSD/Allan correlation gates pass;
-- a 95% statistical interval and separate systematic sensitivity budget are
-  emitted and are narrower than an owner-set maximum;
+- the noise-disabled numerical-floor/headroom gate passes;
+- the exact parametric and empirical 95% intervals and a separate systematic
+  sensitivity budget are emitted and narrower than owner-set maxima;
 - integrated phase over the declared interpretation band passes the ratified
   small-modulation/correction policy before `L(f)` is described as a literal RF
   sideband-to-carrier power ratio.
@@ -444,11 +544,12 @@ These are valuable oscillator-quality observables. They are not aliases for
 
 ### Expected cost at 2.4 GHz
 
-The edge artifact is small and the estimator is cheap: a 500 ns record contains
-about 1,200 rising events instead of tens of thousands of raw waveform points.
-That record can yield a noisy short-term RMS screen and a few high-confidence
-small-`tau` stability values. It still cannot resolve a 1 MHz point density
-under Candidate A's window/averaging policy.
+The crossing sequence is compact and the estimator is cheap: a 500 ns record
+contains about 1,200 rising events instead of tens of thousands of raw waveform
+points. That record can yield a noisy short-term RMS screen and many
+small-`tau` overlapping terms, but their uncertainty still depends on noise
+type, `tau`, overlap, and effective degrees of freedom. It cannot resolve a
+1 MHz point density under Candidate A's window/averaging policy.
 
 The simulation itself is not cheaper if it uses the same physical noisy
 transient: every carrier cycle and noise breakpoint must still be solved. The
@@ -527,6 +628,17 @@ external sequence is presently the cleanest way to obtain deterministic replay,
 but freezing it would be a new model policy, not a workaround to hide the v46
 seed failure.
 
+### Cost and grader gate
+
+DC `.noise` and a short carrier FFT are inexpensive relative to Candidate A
+and fit ordinary bench-scale runs, precisely because they do not solve the
+autonomous noisy-orbit question. Their grader gate is categorical: the analysis
+kind may emit its native diagnostic, but an autonomous-PN field remains
+`not_evaluated`. `TRRANDOM` or a file-driven stochastic transient has
+Candidate A's carrier-resolution and record-length cost and must pass the same
+source-calibration, replay, crossing, PSD, and uncertainty gates. Its native
+availability removes no physical-model requirement.
+
 ## Comparison for the owner
 
 | Candidate | Produces point `L(f)` without a model conversion? | Physical transistor PN in stock ngspice-46? | Main cost | Present status |
@@ -536,22 +648,282 @@ seed failure.
 | C. PSS/HB + periodic noise | Yes in capable simulators | Not runnable here | Usually much lower than long transient | Out: backend capability unavailable |
 | D. `.noise` or carrier FFT/PSD | No | No | Cheap | Diagnostic only; invalid for autonomous PN |
 
-## Evidence still required before a ruling
+## Prototype and measured evidence
 
-The next commits must provide, in order:
+The standalone prototype closes the event extractor and PSD normalization
+against two analytically known constructions. It uses eight fixed, distinct
+NumPy PCG64 seeds, 32,768 events per seed, a 10 kHz scaled carrier, 64 waveform
+samples/cycle, `M=4096`, and 15 Hann segments/seed. Linear seed aggregation has
+about 228.17 locally-white effective degrees of freedom.
 
-1. a standalone phase/crossing/PSD prototype with deterministic synthetic
-   closure against known `S_phi` and `L(f)`, including white PM and diffusive
-   phase;
-2. negative tests for ambiguous crossings, insufficient records, forbidden
-   bins, and nonstationarity-sensitive choices;
-3. measured analysis runtime and memory scaling versus segment/record length;
-4. if feasible, a PDK-free behavioral or ideal-element ngspice noisy-transient
-   specimen, explicitly labeled a pipeline/cost test rather than physical VCO
-   PN; and
-5. a ranked recommendation, interim report-only payload, and exact owner
-   ratification checklist informed by those measurements.
+That closure runner deliberately consumes all complete segments. The separate
+cost harness exercises fixed `K=8` for the direct phase path. Neither is a
+versioned implementation of the newly proposed fixed-block plus following-guard
+correlation contract; that contract remains an explicit implementation and
+ratification item rather than being smuggled in as already frozen.
 
-Until those artifacts exist and the owner rules, the bench must continue to
-represent phase noise as report-only and method-unavailable, never as a passing
-or failing scalar.
+- For white PM at a true `-60 dBc/Hz`, the recovered band-median error was
+  `-0.037 dB`, fitted exponent `-0.0066`, and pointwise nominal-95% coverage
+  `94.94%`. Extracted and oracle PSDs differed by at most `0.00084 dB` in the
+  scored band.
+- For Wiener phase/white FM at a true `-80 dBc/Hz` at 97.65625 Hz, the
+  recovered band-median error was `-0.038 dB`, fitted exponent `-1.9971`, and
+  coverage `95.04%`. Extracted and oracle PSDs differed by at most `0.00715 dB`.
+- The same Wiener records recovered period jitter within `-0.281%`, one-period
+  Allan variance within `-0.481%`, and period-PSD inversion within `-0.043 dB`
+  median. This closes the prototype Candidate-B correlation calculations for
+  this Wiener construction while also showing that scalar jitter/Allan values
+  are not point-PN estimators.
+- Changing from 32 to 64 samples/cycle moved the scored PSD by at most
+  `0.0329 dB`, below the prototype's 0.05 dB regression gate.
+
+The 18 focused extraction/closure tests plus four cost-harness tests fail
+closed on nonmonotone/nonfinite waveforms, absent or wrong event counts,
+missing cycles, invalid Welch shapes, forbidden offsets, duplicate seeds, short Allan records,
+and nonfinite simulator output.
+
+The explicitly driven, non-autonomous behavioral ngspice specimen independently
+saved `v(phi)` as truth. Across 0.5--18 us records, crossing-extracted phase
+agreed within `1.00e-5--1.58e-5 rad` RMS and the PSD within 0.00683 dB. That
+closes the ngspice-to-extractor pipeline only. Separate retained capability and
+replay probes establish that `.pss` and `.hb` are unavailable, current-source
+TRNOISE is functional, and two startup-loaded `setseed 12345` runs do not
+replay. See
+[`ngspice-capability-probes.json`](../../evaluation/pn-methodology/ngspice-capability-probes.json).
+
+## Ranked recommendation
+
+1. **Select Candidate A as the future point-PN observation and estimator
+   architecture, but do not freeze or ship it yet.** It is the only runnable
+   ngspice-46 path that measures a declared event-phase density, and synthetic
+   plus behavioral closure show that its extraction and normalization are
+   implementable. The physical noisy-transient model and deterministic random
+   sequence policy remain unresolved methodology gates. Stock TRNOISE must not
+   be used for a scored transistor VCO until both are solved.
+2. **Make Candidate B mandatory supporting evidence.** Emit period jitter,
+   overlapping Allan rows, and period-PSD correlation from the same crossings.
+   They are useful screens and consistency checks. Never convert a scalar
+   jitter or Allan value to `dBc/Hz` without a separately ratified power-law
+   type, applicable band, and cutoff model.
+3. **Reconsider Candidate C only when a backend with autonomous PSS and
+   periodic noise is actually versioned.** It may ultimately be faster and
+   more physical, but ngspice-46 cannot run it. Adding such a backend requires
+   a new method/version and transient correlation; it must not silently change
+   Candidate A.
+4. **Reject Candidate D for scoring.** DC `.noise`, a carrier FFT, native
+   `psd ave`, or a Blackman skirt may remain diagnostic plots but cannot emit
+   autonomous-oscillator PN.
+
+The immediate owner ruling recommended by this memo is therefore **no numeric
+score and no versioned primitive**. Ratify the estimator direction and interim
+reporting contract, then commission the physical noise-source model/replay work
+below. A deterministic external PWL/file sequence is the recommended replay
+mechanism if ngspice-46 remains the backend, but it solves only reproducibility;
+the analog owner must still approve how each physical device-noise mechanism is
+mapped and calibrated.
+
+## Frozen-method checklist awaiting owner ruling
+
+The following is the exact decision surface. Values labeled **proposed** are
+supported by this spike but are not normative until the analog owner signs off.
+Items labeled **blocking selection** have no defensible default in stock
+ngspice-46.
+
+### Claim and noise model
+
+- Method identifier/version and claim: event-timing phase PSD of one declared
+  oscillator probe, not a unique isochronal phase and not signoff.
+- One-sided convention `L(f)=S_phi(f)/2`, `10 log10`, units `dBc/Hz`.
+- Integrated-phase band, quadrature, and small-modulation policy. **Proposed:**
+  sum `S_phi[k] delta_f` for every admitted bin whose center lies in the exact
+  closed `[f_lo,f_hi]` band, include separately tagged spur phase power, and
+  require the modeled source to bound unresolved phase below/above that band.
+  Tie `f_hi` to the source/model bandwidth rather than selecting a favorable
+  narrow band. Describe `L` as a literal RF sideband/carrier ratio only when
+  all included phase modulation has total variance at most `0.01 rad^2`;
+  otherwise report conventional `S_phi/2` with that RF-power interpretation
+  disabled.
+- Exact ngspice build/binary digest, init files, netlist/model digests, process
+  corner, temperature, supplies, bias/load, and startup stimulus.
+- **Blocking selection:** complete device-to-transient-noise source manifest:
+  thermal/shot/flicker/RTS mechanisms included and excluded, source locations,
+  equations, units, bias/temperature dependence, correlations, bandwidth,
+  interpolation, and calibration evidence. Compact-model `.noise` parameters
+  are not automatically a transient manifest.
+- **Blocking selection:** native TRNOISE after a repaired replay test versus a
+  provenance-bound deterministic external sequence. If external, freeze PRNG
+  family/version, generation algorithm, numeric dtype, file encoding/digest,
+  update interval, interpolation, and scaling.
+- Noise start time, high-frequency cutoff, update interval/interpolation,
+  intended sampled-timing alias folding, number of independent sequences,
+  exact seed list, and replay/distinct-seed controls. **Proposed:** exactly
+  `R=8` independent equal-weight sequences, a declared seed list, linear PSD
+  aggregation, and no dB averaging. The owner must choose whether source
+  content above `Fs_phase/2` is intentionally included through timing alias
+  folding or excluded by a model/anti-alias bandwidth rule; cutoff/`NT`
+  perturbation must keep every scored point within the convergence tolerance.
+
+### Transient acquisition and events
+
+- Exact saved probe/expression, signal mode, units, threshold, and polarity.
+  **Proposed:** one rising crossing/cycle of the declared differential output
+  at zero volts, using the half-open predicate `v_i < 0 <= v_(i+1)`.
+- Startup/settling criterion, noise-on time, crop start (inclusive), crop stop
+  (exclusive), post-crop guard, and stationarity test. Acquisition must continue
+  until `N_used+1` validated crossings plus the native samples bracketing the
+  first and correlation-guard events exist; the final crossing supplies the
+  `N_used`th period error and is not included in the global phase fit.
+  `N_used/Fs_phase` is conventional Welch support, not a guaranteed simulator
+  stop time.
+- Requested `.tran` `TSTEP`, explicit `TMAX`, integration method/order,
+  tolerances, initial-condition policy, and convergence perturbations.
+  **Proposed initial acquisition:** `TSTEP=T0/20`, `TMAX=T0/40`, compression
+  disabled, followed by a `TMAX=T0/80` scored-offset check whose change must be
+  at most 0.5 dB. These are fidelity settings, not physical-noise bandwidth.
+- Authoritative adaptive timestamp/value retention, saved-vector list, binary
+  or at least 17-digit ASCII encoding, no decimation/compression, crop endpoint
+  rule, artifact byte count, and SHA-256. If crossings are streamed, freeze
+  chunk size and boundary carry behavior and retain an auditable source digest.
+- Adjacent-sample linear crossing interpolation and minimum amplitude/slope
+  gate. The numeric slope/amplitude limits are **awaiting owner selection**.
+- Missing/double-event and phase-slip policy. **Proposed:** reject rather than
+  repair; require every crossing interval to lie in `0.5--1.5 T_hat`, then
+  tighten from measured oscillator behavior if appropriate.
+- Event-block policy. **Proposed:** after the inclusive/exclusive crop, analyze
+  exactly the earliest consecutive `N_used=M+(K-1)M/2` valid events; fit phase
+  only on that block; reserve the next crossing as the period-correlation
+  guard; emit observed, leading-discarded, analyzed, guard, and
+  trailing-discarded event counts. Extra events never create an unrequested
+  ninth segment.
+- Threshold, rising/falling polarity, output-probe, solver-tolerance, `TMAX`,
+  and noise-update/bandwidth systematic sweeps; **proposed:** each
+  scored-offset change no larger than 0.5 dB, reported separately from
+  statistical uncertainty.
+
+### Phase and PSD estimator
+
+- One exact-analysis-block OLS affine ephemeris, unwrapped
+  `phi_k=-2 pi (t_k-a-k T_hat)/T_hat`, no polynomial detrend and no use of
+  discarded events in the fit.
+- Segment detrend; **proposed:** subtract the unwindowed arithmetic mean of each
+  segment and do no segment-wise linear detrend.
+- Even power-of-two segment length `M`, fixed `K`, analyzed count
+  `N_used=M+(K-1)M/2`, periodic Hann exactly as defined above, hop `M/2`,
+  segment starts `0,M/2,...,(K-1)M/2`, and no opportunistic segment, partial
+  segment, or zero padding.
+- Welch segment count; **proposed:** `K=8` per seed. Combined with eight
+  independent seeds this gives about 122 locally-white effective degrees of
+  freedom and an approximate 95% true-density interval near
+  `-1.02/+1.16 dB`, before red-noise and systematic qualifications.
+- One-sided `rad^2/Hz` scaling, no second ENBW correction, ENBW `1.5 delta_f`,
+  linear segment/seed averaging, then the single conversion to dB.
+- First usable bin; **proposed:** `k_min=4`, with synthetic closure retained for
+  white and `1/f^2` phase and a farther exclusion required for steeper red
+  processes if closure fails.
+- Offset mapping; **proposed:** nearest admissible bin, exact tie to the lower
+  bin, requested/actual frequency both emitted, no dB interpolation, maximum
+  mismatch 5%, and event Nyquist excluded.
+- Cross-seed grid policy; **proposed:** use the same integer bin `k` in every
+  seed, selecting it once from `mean_r(1/T_hat,r)/M` with the lower-tie rule;
+  emit all `f_actual,r=k/(M T_hat,r)`, their mean and maximum spread, require
+  every requested/actual mismatch to be at most 5%, and reject rather than
+  average materially different offsets. The owner must ratify the maximum
+  allowed inter-seed frequency spread.
+- Target-specific record geometry at 2.4 GHz under `K=8`, `k_min=4`,
+  power-of-two `M`; **proposed conventional support:** 1 MHz uses `M=16384`,
+  `N_used=73728`, 30.72 us; 100 kHz uses `M=262144`, `N_used=1179648`,
+  491.52 us; 10 kHz uses `M=2097152`, `N_used=9437184`, 3.93216 ms. These
+  values use nominal `f0`; each run emits actual `(1/T_hat)/M`. Startup, crop
+  phase, event/bracket guards, and frequency variation add acquisition time.
+- Spur policy: whether each declared tone is included, excluded, or separately
+  tagged; guard-bin width and emitted spur ledger are **awaiting owner
+  selection**. Never silently call a window-dependent spur peak random PN.
+
+### Validity, uncertainty, and correlation
+
+- Statistical confidence level and model; **proposed:** 95%, equal `K` and
+  equal seed weights, `nu_seed=36K^2/(19K-1)`, `nu=R nu_seed`, and true-density
+  bounds
+  `[nu S_hat/chi2(0.975,nu), nu S_hat/chi2(0.025,nu)]`. Convert bounds to dB
+  after linear averaging. Also compute the specified 10,000-replicate PCG64-0
+  percentile bootstrap, drawing and averaging `R` seed-level linear densities
+  with replacement per replicate and taking 2.5/97.5 percentiles using
+  `method="linear"`; use the convex hull of the two intervals for validity, and
+  label both approximations for close-in red processes.
+- Maximum allowed statistical interval and systematic budget; **proposed:**
+  statistical 95% total width at most 2.5 dB at a scored point and each declared
+  convergence sensitivity at most 0.5 dB. The owner must decide whether and
+  how to combine systematic components.
+- Numerical-floor control; **proposed:** run the identical acquisition and
+  extraction with all declared stochastic sources disabled, retain its
+  waveform/phase PSD, and require at least 10 dB density headroom at every
+  scored offset. Repeat the floor at the tighter solver/`TMAX` setting. The
+  owner must ratify the headroom and treatment of a zero/upper-bound floor.
+- Stationarity rule for amplitude, fitted carrier, and density across
+  halves/quarters; exact tolerances are **awaiting owner selection** and must
+  account for the declared statistical model rather than compare raw dB
+  equality.
+- Mandatory same-record checks: extrapolate the main `a,T_hat` to the required
+  following guard crossing, form exactly `N_used` period errors, and compute
+  their PSD with the same `M,K`, periodic Hann, and segment-mean rule; invert
+  its sampled transfer function and compare over bins `k_min...floor(0.1M)`
+  and at each scored bin. **Proposed:** band-median absolute disagreement at
+  most 0.5 dB after applying a synthetic power-law-specific finite-window bias
+  bound; the owner must ratify the scored-bin tolerance and every bias table.
+  Emit period/cycle jitter and overlapping Allan rows, but treat them as
+  independent validity gates only when the noisy model predicts their value
+  and uncertainty; otherwise they are identities/diagnostics. A failed defined
+  comparison makes PN unknown and never selects the more favorable estimator.
+- Candidate-B details: period/cycle RMS definitions, Allan or modified/Hadamard
+  estimator, exact `m`/`tau` grid, overlap, dead time, drift policy, bandwidth,
+  noise-type-dependent confidence model, and any power-law/cutoff model. No
+  scalar-to-point-PN conversion is the proposed default.
+- Invalid-result contract and reason codes. Any missing manifest, failed replay,
+  insufficient record/bin, cross-seed grid or alias-policy failure,
+  nonstationarity, event defect, numerical-floor/headroom failure, convergence
+  failure, excessive uncertainty, or model/correlation failure emits
+  `unknown`/`null`, never a numeric fallback.
+
+## Interim report-only bench row
+
+Until both blocking selections and every method parameter and validity gate
+above are ratified, implemented, and automated, the existing row should emit
+the following semantic payload (field spelling may be adapted to the bench
+schema, but meaning must not change):
+
+```json
+{
+  "metric": "phase_noise_1m",
+  "intent": "osc.pnoise_1meg",
+  "status": "not_evaluated",
+  "value": null,
+  "unit": "dBc/Hz",
+  "report_only": true,
+  "limit": null,
+  "requested_offset_hz": 1000000.0,
+  "actual_offset_hz": null,
+  "uncertainty_db": null,
+  "method_id": null,
+  "method_candidate": "research.openada.pn-zero-crossing-welch/0",
+  "reason_codes": [
+    "owner_method_ruling_pending",
+    "method_parameters_unratified",
+    "validity_gates_unimplemented",
+    "physical_transient_noise_model_unavailable",
+    "deterministic_trnoise_replay_failed",
+    "versioned_openada_capability_unavailable"
+  ],
+  "paper_context": {
+    "value": -100.8,
+    "unit": "dBc/Hz",
+    "offset_hz": 1000000.0,
+    "role": "context_only_not_a_limit"
+  }
+}
+```
+
+A deterministic noiseless bench run may be linked as startup/frequency context,
+but its carrier FFT, the behavioral specimen's telemetry, and the paper number
+must not populate `value`. This row is neither pass nor fail. It explicitly
+states what is missing so a future owner ruling can replace `method_id: null`
+with a versioned, reproducible method rather than silently changing semantics.

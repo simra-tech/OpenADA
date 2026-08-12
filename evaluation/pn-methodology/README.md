@@ -54,6 +54,13 @@ checks are median normalization, spectral slope, pointwise coverage across
 hundreds of bins, extracted-versus-oracle phase/PSD agreement, 32/64/128
 samples-per-cycle convergence, and period/Allan analytic correlation.
 
+The self-test uses every complete segment available in its synthetic record.
+It proves the estimator and correlation calculations; it does not freeze the
+decision memo's proposed fixed-`K` event-block/guard contract. The cost harness
+does exercise a fixed `K=8` direct phase path. A future primitive must implement
+the complete ratified contract rather than treating either research runner's
+defaults as normative.
+
 ## Analyze a waveform CSV
 
 The CSV must retain native timestamps and have a header. For example:

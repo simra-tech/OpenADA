@@ -12,26 +12,37 @@ embedded digests bind the Python estimator, benchmark script, ngspice binary,
 and behavioral-deck template where applicable. Large transient waveforms were
 hashed and summarized, then deleted; they are explicitly marked not retained.
 
-## Frozen planning geometry
+## Captured planning geometry
 
 These measurements use a 2.4 GHz carrier, periodic Hann segments, 50% overlap,
-`K=8`, and first usable bin `k_min=4`. For segment length `M`, the exact phase
-event count is
+fixed `K=8`, and first usable bin `k_min=4`. For segment length `M`, the exact
+analyzed phase-event count is
 
 ```text
-N = M + (K-1) M/2 = 4.5 M
-record support = N/f0
-first usable offset = 4 f0/M.
+N_used = M + (K-1) M/2 = 4.5 M
+conventional Welch support = N_used/f0
+nominal first usable offset = 4 f0/M.
 ```
 
-Power-of-two `M` matters. The continuous lower bound of `18/f_min` gives an
-18 us record at 1 MHz, but 43,200 events support only `M=8192`; its first usable
-bin is 1.171875 MHz. Under this prototype's power-of-two rule, a 1 MHz request
-within 5% requires `M=16384`, 73,728 events, and 30.72 us. It maps to bin 7 at
-1.025390625 MHz (`+2.539%`). Similarly, 100 kHz needs `M=262144` and 491.52 us
+Here `f0` is the nominal planning carrier. A result uses
+`Fs_phase=1/T_hat`, `delta_f=Fs_phase/M`, and each seed's actual offset. A
+simulator run must continue until `N_used+1` validated crossings and the native
+samples bracketing the first and final guard crossings exist; the extra crossing
+supplies `N_used` period errors for the fixed-`K` correlation. Startup, crop
+phase, frequency variation, and post-crop guards therefore make acquisition
+longer than the support number. Extra observed crossings are reported and
+discarded under the fixed-`K` contract rather than silently creating another
+segment.
+
+Power-of-two `M` matters. The continuous lower bound `18/f_min` gives 18 us of
+support at 1 MHz, but its nominal 43,200 event-equivalents allow only `M=8192`
+under fixed `K=8`; the first usable bin is 1.171875 MHz. Under this prototype's
+power-of-two rule, a 1 MHz request within 5% requires `M=16384`, 73,728 analyzed
+events, and 30.72 us nominal support. It maps to bin 7 at 1.025390625 MHz
+(`+2.539%`). Similarly, 100 kHz needs `M=262144` and 491.52 us nominal support
 to map within 5% (bin 11, 100.708 kHz). The measured `M=1048576` row resolves
 to 9.155 kHz, but that is `-8.447%` from 10 kHz; `M=2097152` and 3.93216 ms
-would be needed for a within-5% 10 kHz bin.
+nominal support would be needed for a within-5% 10 kHz bin.
 
 ## Synthetic Python scaling
 
@@ -42,7 +53,7 @@ and one Welch PSD. Fixture generation and the second oracle fit/PSD are
 reported separately. Maximum RSS is for the entire validation fixture and
 must not be read as isolated estimator memory.
 
-| `M` | phase events | record support | first usable offset | event-path median | fixture peak RSS median |
+| `M` | analyzed events | nominal support | nominal first usable offset | event-path median | fixture peak RSS median |
 |---:|---:|---:|---:|---:|---:|
 | 4,096 | 18,432 | 7.68 us | 2.34375 MHz | 1.31 ms | 102.6 MB |
 | 16,384 | 73,728 | 30.72 us | 585.94 kHz | 4.02 ms | 109.7 MB |
@@ -65,6 +76,12 @@ frequency-error source and a saved phase integrator. It has no oscillator
 startup, amplitude dynamics, compact-model device noise, ISF, AM-to-PM, or
 physical calibration. These numbers measure only ngspice transient generation,
 portable ASCII export, parsing, and the candidate pipeline.
+
+Cost-sensitive settings were requested `TSTEP=T0/20`, `TMAX=T0/40`, TRNOISE
+`NT=T0/20`, trapezoidal integration with `maxord=2`, compression disabled, and
+17-digit ASCII. The three retained columns were adaptive `time`, `v(out)`, and
+simulator-side `v(phi)` truth. These settings and the exact binary/deck digests
+are part of the evidence; the runtime table is not portable without them.
 
 Each duration was run once because the 18 us point itself took 102 s. The
 ngspice/export interval scaled as follows:
@@ -103,11 +120,12 @@ deterministic-replay methodology gate failed.
 
 ## Interpretation
 
-- Analyzer cost is small after crossings exist; carrier-resolved noisy
-  transient generation and evidence retention dominate.
+- Analyzer cost was small after crossings existed; ngspice generation and
+  ASCII evidence retention dominated this measured behavioral workflow. The
+  same dominance is expected but unmeasured for a transistor VCO.
 - Streaming crossings could avoid retaining hundreds of megabytes, but cannot
   reduce simulator generation cost.
 - The current 500 ns grading context has 2 MHz whole-record spacing before
   averaging and cannot produce a valid 1 MHz, `K=8`, `k_min=4` score.
-- The physical noisy-transient model and reproducible-seed policy remain the
-  blockers, not FFT implementation speed.
+- The evidence points to the physical noisy-transient model and reproducible
+  seed policy as blockers; estimator speed was not the measured bottleneck.
