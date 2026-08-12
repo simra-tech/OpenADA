@@ -1,0 +1,6 @@
+* SPDX-License-Identifier: MIT
+* Synthetic RC DUT for deterministic testbench-plan compiler tests.
+.SUBCKT RC_DUT IN OUT VSS
+R_DUT IN OUT 1k
+C_DUT OUT VSS 1p
+.ENDS RC_DUT
