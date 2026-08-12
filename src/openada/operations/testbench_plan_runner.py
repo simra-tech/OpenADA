@@ -3,8 +3,8 @@
 The runner owns process isolation and exact artifact hashing; it never accepts
 simulator arguments or environment overrides from a plan.  Execution is
 exhaustive over compiler-emitted conditions.  Unsupported extraction or
-measurement nodes fail closed: they emit a typed INVALID verdict and no
-observable value.
+measurement nodes fail closed: they emit a typed runner-owned UNKNOWN verdict
+and no observable value, so they cannot receive credit as DUT invalidity.
 """
 
 from __future__ import annotations
@@ -41,6 +41,10 @@ MAX_WAVEFORM_BYTES = 256 * 1024 * 1024
 MAX_ENVELOPE_CONDITIONS = 10_000
 
 
+class _UnsupportedValidityError(ValueError):
+    """The plan node is valid v1 IR but has no runner implementation yet."""
+
+
 def _canonical_bytes(value: object) -> bytes:
     return json.dumps(
         value,
@@ -64,10 +68,10 @@ def _read_capture(path: Path) -> bytes:
         return handle.read(MAX_PROCESS_CAPTURE_BYTES)
 
 
-def _invalid_verdict(reason: object) -> str:
-    """Return a schema-bounded INVALID verdict without losing its class."""
+def _unknown_verdict(reason: object) -> str:
+    """Return a bounded non-scoreable verdict for runner-owned uncertainty."""
 
-    prefix = "INVALID(runner: "
+    prefix = "UNKNOWN(runner: "
     suffix = ")"
     message = str(reason).replace("\x00", "")
     return prefix + message[: 1024 - len(prefix) - len(suffix)] + suffix
@@ -625,7 +629,7 @@ def _resolved_stage_bindings(
                         rule, condition_values[key], plan, corner
                     )
                 except Exception:
-                    verdict = _invalid_verdict("validity evaluation failed")
+                    verdict = _unknown_verdict("validity evaluation failed")
                 if verdict != "VALID":
                     source_valid = False
                     break
@@ -1445,17 +1449,21 @@ def _evaluate_plan_outputs(
                     rule_lineage.update(point_conditions.get(key, ()))
                 validity_lineage[identity] = frozenset(rule_lineage)
                 if invalid_conditions:
-                    verdict = _invalid_verdict(invalid_conditions[0].reason)
+                    verdict = _unknown_verdict(invalid_conditions[0].reason)
                 else:
                     try:
                         verdict = _evaluate_validity_rule(rule, values, plan, corner)
                     except Exception as exc:
-                        verdict = _invalid_verdict(
+                        verdict = _unknown_verdict(
                             f"validity evaluation failed: {str(exc)[:512]}"
                         )
                         refusals.append(
                             TestbenchPlanRunRefusal(
-                                "testbench_plan.runner.validity_invalid",
+                                (
+                                    "testbench_plan.runner.validity_unsupported"
+                                    if isinstance(exc, _UnsupportedValidityError)
+                                    else "testbench_plan.runner.validity_invalid"
+                                ),
                                 None,
                                 f"{stage_id}.{point_id}.{rule['id']}: {str(exc)[:1024]}",
                             )
@@ -1469,7 +1477,14 @@ def _evaluate_plan_outputs(
             for rule in stage["validity_rules"]:
                 identity = ("stage", stage_id, str(rule["id"]))
                 validity_by_source[identity] = (
-                    _invalid_verdict("stage reductions unsupported")
+                    _unknown_verdict("stage reductions unsupported")
+                )
+                refusals.append(
+                    TestbenchPlanRunRefusal(
+                        "testbench_plan.runner.validity_unsupported",
+                        None,
+                        f"{stage_id}.{rule['id']}: stage reduction validity is unsupported",
+                    )
                 )
                 transitive = set(selected_stage_attempts)
                 for (value_stage, _), values in condition_values.items():
@@ -1569,9 +1584,11 @@ def _evaluate_validity_rule(
     )
     selected = [values.get(str(item)) for item in selected_ids]
     if kind == "pulse_count":
-        return _invalid_verdict("observed pulse-count extraction unsupported")
+        raise _UnsupportedValidityError(
+            "observed pulse-count extraction is unsupported"
+        )
     elif any(item is None for item in selected):
-        return _invalid_verdict("validity input unavailable")
+        raise ValueError("validity input is unavailable")
     elif kind == "finite":
         passed = all(_finite_json(item.value) for item in selected if item is not None)
     elif kind == "r2":
@@ -1590,7 +1607,7 @@ def _evaluate_validity_rule(
     elif kind == "settling_delta":
         passed = abs(float(selected[0].value) - float(selected[1].value)) <= _literal(rule["maximum"], label="settling.maximum")
     else:
-        return _invalid_verdict(f"validity kind {kind} unsupported")
+        raise _UnsupportedValidityError(f"validity kind {kind!r} is unsupported")
     return "VALID" if passed else f"INVALID({rule['on_fail']['reason']})"
 
 

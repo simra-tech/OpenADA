@@ -307,6 +307,35 @@ def test_validity_recall_and_false_valid_have_nonredundant_denominators() -> Non
         )
 
 
+def test_runner_unknown_is_not_credited_as_invalid_detection() -> None:
+    oracle = _legacy({}, validity={"pulse": "INVALID(design: missed pulse)"})
+    observed = _legacy(
+        {},
+        validity={
+            "pulse": "UNKNOWN(runner: pulse-count extraction is unsupported)"
+        },
+    )
+    recall = {
+        "name": "invalid_detection_recall",
+        "kind": "invalid_detection_recall",
+        "required": True,
+        "limit": _limit(0.8, "frac", op=">="),
+        "denominator": "oracle_invalid",
+    }
+
+    result = compare_testbench_observables(observed, oracle, _spec(recall))
+
+    assert _metric(result, "invalid_detection_recall")["status"] == "FAIL"
+    assert _metric(result, "invalid_detection_recall")["value"] == 0.0
+    assert result["validity"] == {
+        "oracle_invalid": 1,
+        "detected_invalid": 0,
+        "observed_valid": 0,
+        "false_valid": 0,
+        "missing_or_unknown": 1,
+    }
+
+
 def test_lineage_required_turns_untraced_numeric_value_unknown() -> None:
     row = _scalar(
         "offset_error_vs_oracle",

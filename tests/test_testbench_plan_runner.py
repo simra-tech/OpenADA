@@ -390,7 +390,9 @@ def test_every_condition_is_attempted_after_failure_and_no_partial_curve_is_emit
         "completed",
     ]
     assert "output_curve" not in result.observables["observables"]
-    assert result.observables["validity"]["waveform_finite"].startswith("INVALID(")
+    assert result.observables["validity"]["waveform_finite"].startswith(
+        "UNKNOWN(runner:"
+    )
     assert result.observables["metadata"]["lineage"] == []
     assert result.receipt["expected_condition_count"] == 3
     assert result.receipt["attempted_condition_count"] == 3
@@ -829,3 +831,48 @@ def test_duplicate_compiler_condition_ids_refuse_before_execution(
             _prepared_compilation=_compilation(plan, [condition, condition]),
         )
     assert calls == []
+
+
+def test_unsupported_validity_is_unknown_and_cannot_look_like_dut_invalidity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    artifact = tmp_path / "rc_dut.spice"
+    artifact.write_bytes(_dut_body())
+    document = _plan_document(artifact)
+    document["stages"][0]["points"][0]["validity_rules"] = [
+        {
+            "id": "observed_pulse_count",
+            "kind": "pulse_count",
+            "stimulus_id": "input_pulses",
+            "minimum_count": 2,
+            "maximum_count": 2,
+            "on_fail": {"verdict": "invalid", "reason": "pulse_count"},
+        }
+    ]
+    plan, issues = validate_testbench_plan(document)
+    assert issues == [] and plan is not None
+    condition = _condition("characterize.nominal")
+    monkeypatch.setattr(
+        runner,
+        "_extract_waveform",
+        lambda *_: runner._Waveform(
+            "time", (0.0, 1.0), {"v(out)": (0.0, 1.0)}
+        ),
+    )
+
+    result = execute_testbench_plan_ngspice(
+        plan,
+        corner="tt",
+        executor=lambda *_args, **_kwargs: SimulatorExecution(
+            0, b"", b"", b"raw", "ngspice-46"
+        ),
+        _prepared_compilation=_compilation(plan, [condition]),
+    )
+
+    assert result.observables["validity"]["observed_pulse_count"].startswith(
+        "UNKNOWN(runner:"
+    )
+    assert any(
+        refusal.code == "testbench_plan.runner.validity_unsupported"
+        for refusal in result.refusals
+    )
