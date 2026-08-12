@@ -36,7 +36,7 @@ jobs:
           report = json.loads(Path("semantic-coverage.json").read_text())
           assert report["status"] == "pass", report
           assert report["issues"] == [], report["issues"]
-          assert report["summary"]["row_count"] == 255, report["summary"]
+          assert report["summary"]["row_count"] == 279, report["summary"]
           assert report["summary"]["active_row_count"] == 159, report["summary"]
           assert report["summary"]["gap_count"] == 0, report["summary"]
           assert report["gaps"] == [], report["gaps"]
@@ -101,6 +101,10 @@ jobs:
               "share/openada/schemas/semantic-chain-manifest-v0alpha1.schema.json",
               "share/openada/schemas/semantic-chain-run-v0alpha1.schema.json",
               "share/openada/schemas/semantic-surface-catalog-v0alpha1.schema.json",
+              "share/openada/schemas/testbench-plan-v1.schema.json",
+              "share/openada/schemas/testbench-observables-v1.schema.json",
+              "share/openada/schemas/testbench-oracle-tolerances-v1.schema.json",
+              "share/openada/schemas/testbench-oracle-comparison-v1.schema.json",
               "share/openada/catalog/semantic-surfaces-v0alpha1.json",
               "share/openada/profiles/circuit.simulate-v1alpha1.json",
               "share/openada/profiles/circuit.simulate-v1alpha2.json",
@@ -114,6 +118,7 @@ jobs:
               "share/openada/profiles/result.transfer.measure-v1alpha2.json",
               "share/openada/profiles/rtl.lint-v1alpha1.json",
               "share/openada/profiles/specification.evaluate-v1alpha1.json",
+              "share/openada/profiles/testbench.oracle.compare-v1alpha1.json",
               "share/openada/profiles/timing.analyze-v1alpha1.json",
               "share/openada/providers/ngspice-pdk-control/driver-manifest.json",
               "share/openada/providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
@@ -202,6 +207,23 @@ jobs:
               "conformance/oscillator-measure-v0alpha1/run.py",
               "conformance/oscillator-measure-v0alpha1/verify.py",
               "conformance/oscillator-measure-v0alpha1/fixtures/cases.json",
+              "conformance/testbench-oracle-v1/README.md",
+              "conformance/testbench-oracle-v1/manifest.json",
+              "conformance/testbench-oracle-v1/run.py",
+              "conformance/testbench-oracle-v1/verify.py",
+              "conformance/testbench-oracle-v1/fixtures/expected-comparison.json",
+              "conformance/testbench-oracle-v1/fixtures/observed.json",
+              "conformance/testbench-oracle-v1/fixtures/oracle.json",
+              "conformance/testbench-oracle-v1/fixtures/tamper-cases.json",
+              "conformance/testbench-oracle-v1/fixtures/tolerances.json",
+              "conformance/testbench-plan-v1/README.md",
+              "conformance/testbench-plan-v1/manifest.json",
+              "conformance/testbench-plan-v1/run.py",
+              "conformance/testbench-plan-v1/verify.py",
+              "conformance/testbench-plan-v1/fixtures/closed-rc-plan.json",
+              "conformance/testbench-plan-v1/fixtures/rc-dut.spice",
+              "conformance/testbench-plan-v1/fixtures/expected.json",
+              "conformance/testbench-plan-v1/fixtures/tamper-cases.json",
               "evaluation/paired-agent/README.md",
               "evaluation/paired-agent/common.py",
               "evaluation/paired-agent/keygen.py",
@@ -239,11 +261,16 @@ jobs:
               "profiles/result.transfer.measure-v1alpha2.json",
               "profiles/rtl.lint-v1alpha1.json",
               "profiles/specification.evaluate-v1alpha1.json",
+              "profiles/testbench.oracle.compare-v1alpha1.json",
               "profiles/timing.analyze-v1alpha1.json",
               "providers/ngspice-pdk-control/README.md",
               "providers/ngspice-pdk-control/driver-manifest.json",
               "providers/ngspice-pdk-control/provider-config-v0alpha1.schema.json",
               "schemas/operation-profile-v0alpha2.schema.json",
+              "schemas/testbench-plan-v1.schema.json",
+              "schemas/testbench-observables-v1.schema.json",
+              "schemas/testbench-oracle-tolerances-v1.schema.json",
+              "schemas/testbench-oracle-comparison-v1.schema.json",
               "src/openada/providers/__init__.py",
               "src/openada/providers/ngspice_pdk_control.py",
               "skills/openada/SKILL.md",

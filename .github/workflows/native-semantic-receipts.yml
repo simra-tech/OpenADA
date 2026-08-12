@@ -196,7 +196,7 @@ jobs:
           report = json.loads(Path("/tmp/semantic-coverage.json").read_text())
           assert report["status"] == "pass", report
           assert report["issues"] == [], report["issues"]
-          assert report["summary"]["row_count"] == 255, report["summary"]
+          assert report["summary"]["row_count"] == 279, report["summary"]
           assert report["summary"]["active_row_count"] == 159, report["summary"]
           assert report["summary"]["gap_count"] == 0, report["summary"]
           assert report["gaps"] == [], report["gaps"]

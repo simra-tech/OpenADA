@@ -1,0 +1,72 @@
+{
+  "schema": "simra.testbench-plan-conformance-manifest/v1",
+  "id": "testbench-plan-v1",
+  "public_api": {
+    "module": "openada.operations",
+    "validator": "validate_testbench_plan",
+    "compiler": "prepare_testbench_plan_ngspice",
+    "runner": "execute_testbench_plan_ngspice"
+  },
+  "implementations": {
+    "validator": {
+      "repository_path": "src/openada/operations/testbench_plan.py",
+      "sha256": "0741470a44194d7264f8a86e9614376cd054b85b4f1750276448df4c7e75e221"
+    },
+    "compiler": {
+      "repository_path": "src/openada/operations/testbench_plan_ngspice.py",
+      "sha256": "7f71a71d26005ce2a20876381c546907d2ab518e01794972575c53f8c39187dd"
+    },
+    "runner": {
+      "repository_path": "src/openada/operations/testbench_plan_runner.py",
+      "sha256": "f76f31483a03c19f3ff29690eefe5429508b5e8e7dcda3d592919f05e3cc9c65"
+    }
+  },
+  "contracts": {
+    "plan": {
+      "id": "simra.testbench-plan/v1",
+      "repository_path": "schemas/testbench-plan-v1.schema.json",
+      "sha256": "633ed632e3b8b9ce7689ea125a20fc3d28fd2af0c6c7e8857c25327d39f90f08"
+    },
+    "observables": {
+      "id": "simra.testbench-observables/v1",
+      "repository_path": "schemas/testbench-observables-v1.schema.json",
+      "sha256": "96807d41d09b9ae8b36f04a80ba4306ccc19f884004b04b793b8547cf0d40787"
+    }
+  },
+  "fixtures": {
+    "plan": {
+      "repository_path": "conformance/testbench-plan-v1/fixtures/closed-rc-plan.json",
+      "sha256": "b1d78d923351a32c22c484d1bd9e471007ea1cc1c3e8645a3d1b1a5321b5bccd",
+      "license": "MIT"
+    },
+    "dut": {
+      "repository_path": "conformance/testbench-plan-v1/fixtures/rc-dut.spice",
+      "sha256": "03a94eb0740e2bf85238964e8157b958992e14f2f55d59934c0a1a494cad49c7",
+      "license": "MIT"
+    },
+    "expected": {
+      "repository_path": "conformance/testbench-plan-v1/fixtures/expected.json",
+      "sha256": "012f5d8e87ab891d2763888a39762451f42aed4a4c9d3e9462dbd7c2cefa10ae",
+      "license": "MIT"
+    },
+    "tamper_cases": {
+      "repository_path": "conformance/testbench-plan-v1/fixtures/tamper-cases.json",
+      "sha256": "d5b9daf2c34b1e59d8698d7df059a943b6af718e5f26a39ca8d00f3bec939acc",
+      "license": "MIT"
+    }
+  },
+  "tamper_cases": [
+    "plan-binding",
+    "compiled-deck",
+    "waveform-receipt",
+    "observable-lineage"
+  ],
+  "policy": {
+    "native_eda": "host-ngspice",
+    "network": "none",
+    "dut_binding": "runtime-full-override",
+    "input_mode": "read-only-fixtures",
+    "evidence_mode": "new-file-only",
+    "maximum_evidence_bytes": 8388608
+  }
+}

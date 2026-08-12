@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/testbench-observables-v1.schema.json",
+  "title": "Simra testbench observables v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "plan_sha256",
+    "dut_sha256",
+    "corner",
+    "validity",
+    "observables",
+    "metadata",
+    "extensions"
+  ],
+  "properties": {
+    "schema": {"const": "simra.testbench-observables/v1"},
+    "plan_sha256": {"$ref": "#/$defs/sha256"},
+    "dut_sha256": {"$ref": "#/$defs/sha256"},
+    "corner": {"type": "string", "minLength": 1, "maxLength": 256},
+    "validity": {"$ref": "#/$defs/validity"},
+    "observables": {"$ref": "#/$defs/jsonObject"},
+    "metadata": {"$ref": "#/$defs/metadata"},
+    "extensions": {"$ref": "#/$defs/emptyObject"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "emptyObject": {
+      "type": "object",
+      "maxProperties": 0,
+      "additionalProperties": false
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^\\S+$"
+    },
+    "uniqueNames": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/name"},
+      "uniqueItems": true,
+      "maxItems": 10000
+    },
+    "validity": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "required": ["compiled_deck_sha256", "waveform_sha256"],
+      "properties": {
+        "compiled_deck_sha256": {"$ref": "#/$defs/sha256"},
+        "waveform_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "condition": {
+      "type": "object",
+      "required": ["id", "observables", "receipt"],
+      "properties": {
+        "id": {"$ref": "#/$defs/name"},
+        "observables": {"$ref": "#/$defs/uniqueNames"},
+        "receipt": {"$ref": "#/$defs/receipt"}
+      },
+      "additionalProperties": false
+    },
+    "lineage": {
+      "type": "object",
+      "required": ["observable", "condition_ids"],
+      "properties": {
+        "observable": {"$ref": "#/$defs/name"},
+        "condition_ids": {
+          "allOf": [
+            {"$ref": "#/$defs/uniqueNames"},
+            {"minItems": 1}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["grading_runtime_s", "conditions", "lineage", "extensions"],
+      "properties": {
+        "grading_runtime_s": {"type": "number", "minimum": 0},
+        "conditions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/condition"},
+          "maxItems": 10000
+        },
+        "lineage": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/lineage"},
+          "maxItems": 10000
+        },
+        "extensions": {"$ref": "#/$defs/emptyObject"}
+      },
+      "additionalProperties": false
+    },
+    "jsonObject": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/jsonValue"}
+    },
+    "jsonValue": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "boolean"},
+        {"type": "number"},
+        {"type": "string"},
+        {
+          "type": "array",
+          "items": {"$ref": "#/$defs/jsonValue"}
+        },
+        {"$ref": "#/$defs/jsonObject"}
+      ]
+    }
+  }
+}

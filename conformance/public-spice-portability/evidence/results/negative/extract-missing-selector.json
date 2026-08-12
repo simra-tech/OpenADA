@@ -5,7 +5,7 @@
     "extraction": {
       "extensions": {},
       "plot": null,
-      "request_sha256": "641a8057e1a496f843aff36e2de58389fb4fe1e9e6a26d35dc45edcbdb207fb7",
+      "request_sha256": "ca96c7ed314b3396e7c3edff796aecb5f9ef9fd4434a09e768ca494e14dfef8c",
       "series": null,
       "source": {
         "analysis_type": "dc",
@@ -15,14 +15,14 @@
           "kind": "xyce-raw",
           "path": "/evidence/sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw",
           "role": "simulation.result",
-          "sha256": "957431ceff292d0ce50541e3704ee10922f378291642081c8f2b89948a763253"
+          "sha256": "ed2d31d6f61e44438eee921e45b1938ecd75009270e0c2ec362937c672ea3577"
         },
         "backend": "xyce",
         "binding": "not-established",
         "driver_id": "org.openada.driver.xyce",
         "driver_version": "0.4.0",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-        "request_id": "2b14b49c-6bb0-4cc5-8e1c-78ba5b07eea3"
+        "request_id": "fec979a7-8fcc-4f1c-8acd-74e81b9e254a"
       },
       "status": "unknown"
     },
@@ -58,12 +58,12 @@
       "kind": "xyce-raw",
       "path": "/evidence/sim/xyce-dc/xyce-dc/xyce-dc.xyce.raw",
       "role": "simulation.result",
-      "sha256": "957431ceff292d0ce50541e3704ee10922f378291642081c8f2b89948a763253"
+      "sha256": "ed2d31d6f61e44438eee921e45b1938ecd75009270e0c2ec362937c672ea3577"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-08-12T09:52:24.558300Z",
+    "created_at": "2026-08-12T10:49:59.174456Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

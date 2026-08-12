@@ -636,11 +636,12 @@ and specification binding available for audit.
 
 `profile list` and `profile show OPERATION-PROFILE-ID` inspect the packaged
 operation-profile catalog. `list` returns schema, operation, assertion, and
-feature identities for 15 profiles: nine active, two dispatchable experimental
-(`result.osc.measure/v1alpha1` and `rtl.test/v1alpha1`), and four historical or
-retired profiles. `show` returns one complete
-packaged profile or a typed `profile.not_found` failure. These commands validate
-the installed profile documents before returning them; they are control-plane
+feature identities for 16 profiles: nine active, three dispatchable experimental
+(`result.osc.measure/v1alpha1`, `rtl.test/v1alpha1`, and
+`testbench.oracle.compare/v1alpha1`), and four historical or retired profiles.
+`show` returns one complete packaged profile or a typed `profile.not_found`
+failure. These commands validate the installed profile documents before
+returning them; they are control-plane
 inspection results, not engineering assertions and not provider discovery.
 
 ### `provider`

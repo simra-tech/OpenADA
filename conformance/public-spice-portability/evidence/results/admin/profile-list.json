@@ -150,6 +150,19 @@
         "schema": "openada.operation-profile/v0alpha2"
       },
       {
+        "assertion_profile": "openada.assertion/testbench.oracle.comparison.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/testbench-oracle.scalar-error/v1alpha1",
+          "openada.feature/testbench-oracle.curve-exact-grid/v1alpha1",
+          "openada.feature/testbench-oracle.mismatch-compliance/v1alpha1",
+          "openada.feature/testbench-oracle.signed-coverage/v1alpha1",
+          "openada.feature/testbench-oracle.validity-honesty/v1alpha1",
+          "openada.feature/testbench-oracle.coverage-cost-lineage/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/testbench.oracle.compare/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
         "assertion_profile": "openada.assertion/testbench.analyses.evidence.valid/v1alpha1",
         "feature_ids": [
           "openada.feature/testbench.analysis.split/v1alpha1",
@@ -171,7 +184,7 @@
   "diagnostics": [],
   "engineering": {
     "status": "pass",
-    "summary": "Listed 15 packaged operation profiles."
+    "summary": "Listed 16 packaged operation profiles."
   },
   "execution": {
     "command": [],
@@ -182,7 +195,7 @@
   "inputs": [],
   "operation": "profile.list",
   "provenance": {
-    "created_at": "2026-08-12T09:52:17.009415Z",
+    "created_at": "2026-08-12T10:49:51.169334Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

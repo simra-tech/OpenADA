@@ -1,9 +1,9 @@
 {
-  "chain_manifest_sha256": "fbfae9f772def07d4847e21e86c2ee0824485392f141aa13d64ea555fa834a02",
+  "chain_manifest_sha256": "6db06a361fce3be11834de9181d608c320c7316c73bbd35867fbb0b7428bcf17",
   "checkout_before": {
     "clean": true,
-    "repository_revision": "6f83dd3c743da44f1b6335bc6ce037173af6245d",
-    "repository_tree": "a240888f186725f44c59aca5826834b0f5d3b7e7",
+    "repository_revision": "b52b41e2f4fb84c3a4ab2bb8dacb7153645d44d6",
+    "repository_tree": "e6ec17b69722ebf3164f096890d13c1fd00ef552",
     "status_entry_count": 0,
     "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -12,7 +12,7 @@
     "run",
     "--rm",
     "--name",
-    "openada-ihp-analog-measurements-1018022",
+    "openada-ihp-analog-measurements-1190300",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -42,21 +42,21 @@
     "--workdir",
     "/evidence",
     "--mount",
-    "type=bind,source=/home/specialpedrito/simra/openada-wt/osc-primitives,target=/openada,readonly",
+    "type=bind,source=/home/specialpedrito/simra/openada-wt/tbplan-ir,target=/openada,readonly",
     "--mount",
     "type=bind,source=/tmp/openada-native-cache/ihp/IHP-AnalogAcademy,target=/design,readonly",
     "--mount",
-    "type=bind,source=/tmp/openada-ihp-analog-measurements-release-skill-final,target=/evidence",
+    "type=bind,source=/tmp/openada-tbplan-a7b27d7-ihp-analog,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
     "/openada/conformance/ihp-analog-measurements/inside.py"
   ],
-  "created_at": "2026-08-12T09:57:01.870254Z",
+  "created_at": "2026-08-12T10:45:33.430627Z",
   "design_revision": "133ecf657572e021b5921b5a1b7693abfb209623",
   "extensions": {},
   "image_reference": "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
   "network": "none during all EDA execution",
   "schema": "openada.ihp-analog-measurement-run/v0alpha1",
-  "semantic_subject_before": "d4491756f98108b0a8fa5c8771ed096eb54254c0ff83cae97156027e5b586527"
+  "semantic_subject_before": "74e1473ab34f8b3d25f820e13bb6372a3620a29f15637642c975eca2d274b90f"
 }

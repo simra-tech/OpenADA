@@ -1,0 +1,82 @@
+{
+  "schema": "simra.testbench-oracle-conformance-manifest/v1",
+  "id": "testbench-oracle-comparator-v1",
+  "operation_profile": "openada.operation/testbench.oracle.compare/v1alpha1",
+  "implementation": {
+    "module": "openada.operations.testbench_oracle",
+    "callable": "compare_testbench_observables",
+    "repository_path": "src/openada/operations/testbench_oracle.py",
+    "sha256": "25d2a4f7add6fe1cf7859eeca98e71bf71aeafb463cd9f11380a5ad5557ebc89"
+  },
+  "contracts": {
+    "observables": {
+      "id": "simra.testbench-observables/v1",
+      "repository_path": "schemas/testbench-observables-v1.schema.json",
+      "sha256": "96807d41d09b9ae8b36f04a80ba4306ccc19f884004b04b793b8547cf0d40787"
+    },
+    "tolerances": {
+      "id": "simra.testbench-oracle-tolerances/v1",
+      "repository_path": "schemas/testbench-oracle-tolerances-v1.schema.json",
+      "sha256": "a2b71ef902488d024ccca5be8b45ec8c802b45621c50f9e65aa45f9de5523822"
+    },
+    "comparison": {
+      "id": "simra.testbench-oracle-comparison/v1",
+      "repository_path": "schemas/testbench-oracle-comparison-v1.schema.json",
+      "sha256": "8fbeec5d74b77f5bc7ca16d6c3341dc2b764dc9d24d140af865aa66c20f922b2"
+    }
+  },
+  "fixtures": {
+    "observed": {
+      "repository_path": "conformance/testbench-oracle-v1/fixtures/observed.json",
+      "sha256": "035f1f037cc2169d868803ee11eda2773514daa1e880bf11f568a9f9c63c2c51",
+      "license": "MIT"
+    },
+    "oracle": {
+      "repository_path": "conformance/testbench-oracle-v1/fixtures/oracle.json",
+      "sha256": "d5a78a4c28f705e11e9d6862b65f8b34ef9394ba7e34ba013bb9927764bd7b54",
+      "license": "MIT"
+    },
+    "tolerances": {
+      "repository_path": "conformance/testbench-oracle-v1/fixtures/tolerances.json",
+      "sha256": "168381eac9df6446f98b1ad0bde0f7b9439ce1e8660b3b1fc1973347027ca555",
+      "license": "MIT"
+    },
+    "expected_comparison": {
+      "repository_path": "conformance/testbench-oracle-v1/fixtures/expected-comparison.json",
+      "sha256": "5badfcda50afe4b10f436ac410983daf43d6ce14e3956264de4f8a64f672abb4",
+      "license": "MIT"
+    },
+    "tamper_cases": {
+      "repository_path": "conformance/testbench-oracle-v1/fixtures/tamper-cases.json",
+      "sha256": "2c13590aae4dd52d78cd1a7ca45d08c2d7f1f3713408b79f2bbb1e1fa00bb465",
+      "license": "MIT"
+    }
+  },
+  "metric_rows": [
+    "signed_response_coverage",
+    "offset_error_vs_oracle",
+    "local_gain_error",
+    "src_curve_error",
+    "snk_curve_error",
+    "mismatch_curve_error",
+    "compliance_endpoint_error",
+    "leak_error",
+    "invalid_detection_recall",
+    "false_valid_rate",
+    "completeness",
+    "grading_runtime"
+  ],
+  "tamper_cases": [
+    "metric-value",
+    "metric-status",
+    "summary-count",
+    "fixture-binding"
+  ],
+  "policy": {
+    "native_eda": "none",
+    "network": "none",
+    "input_mode": "read-only-fixtures",
+    "evidence_mode": "new-file-only",
+    "maximum_evidence_bytes": 1048576
+  }
+}

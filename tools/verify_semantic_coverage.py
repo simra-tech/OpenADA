@@ -154,6 +154,10 @@ SURFACE_CLASSIFICATIONS: dict[tuple[str, ...], str] = {
     ("rtl-test",): "semantic-execution",
     ("simulate",): "semantic-execution",
     ("synthesize",): "semantic-execution",
+    ("testbench-plan", "compare"): "semantic-execution",
+    ("testbench-plan", "compile"): "semantic-execution",
+    ("testbench-plan", "run"): "semantic-execution",
+    ("testbench-plan", "validate"): "semantic-execution",
     ("testbench-simulate",): "semantic-execution",
     ("timing-analyze",): "semantic-execution",
     ("spectral",): "semantic-execution",
@@ -171,6 +175,7 @@ NATIVE_EDA_SURFACES = frozenset(
         "rtl-test",
         "simulate",
         "synthesize",
+        "testbench-plan-run",
         "testbench-simulate",
         "timing-analyze",
     }
@@ -183,6 +188,9 @@ ARTIFACT_KERNEL_SURFACES = frozenset(
         "measure",
         "oscillator",
         "spectral",
+        "testbench-plan-compare",
+        "testbench-plan-compile",
+        "testbench-plan-validate",
         "transfer",
     }
 )

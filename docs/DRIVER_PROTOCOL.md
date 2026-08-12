@@ -57,6 +57,9 @@ The published protocol documents are:
   were absorbed into `circuit.simulate/v1alpha2`, whose contract already
   declared the `artifact` locator and the `pdk` and `corner` configuration
   roles. Nothing produces a result carrying this identifier.
+- [`testbench.oracle.compare/v1alpha1`](../profiles/testbench.oracle.compare-v1alpha1.json),
+  the experimental pure comparator for scalar/curve errors, validity honesty,
+  completeness, runtime, and receipt-lineage enforcement.
 
 The digital set adds:
 
@@ -69,9 +72,10 @@ The digital set adds:
 - [`timing.analyze/v1alpha1`](../profiles/timing.analyze-v1alpha1.json),
   single-corner setup/hold timing evidence.
 
-The complete catalog contains 15 profiles: nine active, the two dispatchable
-experimental oscillator/RTL-test profiles, and four historical or retired
-profiles (the three immutable predecessors plus retired `testbench.simulate`).
+The complete catalog contains 16 profiles: nine active, the three dispatchable
+experimental oscillator/RTL-test/testbench-oracle profiles, and four historical
+or retired profiles (the three immutable predecessors plus retired
+`testbench.simulate`).
 `openada profile list` returns their installed identities and
 `openada profile show OPERATION-PROFILE-ID` returns one complete validated
 document. Profile inspection is not external-provider discovery.

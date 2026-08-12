@@ -1,12 +1,12 @@
 {
   "chain_id": "openada.chain/public-spice-portability/v1",
-  "chain_manifest_sha256": "6a693a7f2aeee738c35934b186548f859146705237c463ecb53c2696b0a86c2d",
+  "chain_manifest_sha256": "2e0eb90e8b99931cc16f815761965988b772f4463d26cbd3c3f56c192ab6291a",
   "container_command": [
     "docker",
     "run",
     "--rm",
     "--name",
-    "openada-portability-1000971-7e2b4f6e",
+    "openada-portability-1210729-e888482b",
     "--pull=never",
     "--platform",
     "linux/amd64",
@@ -32,13 +32,13 @@
     "--workdir",
     "/evidence",
     "--mount",
-    "type=bind,source=/home/specialpedrito/simra/openada-wt/osc-primitives,target=/openada,readonly",
+    "type=bind,source=/home/specialpedrito/simra/openada-wt/tbplan-ir,target=/openada,readonly",
     "--mount",
     "type=bind,source=/tmp/openada-native-cache/ihp/Xyce_Regression,target=/xyce,readonly",
     "--mount",
     "type=bind,source=/tmp/openada-native-cache/ihp/IHP-AnalogAcademy,target=/ihp,readonly",
     "--mount",
-    "type=bind,source=/tmp/openada-public-spice-portability-release-skill-final,target=/evidence",
+    "type=bind,source=/tmp/openada-tbplan-a7b27d7-public-spice,target=/evidence",
     "--entrypoint",
     "/usr/bin/python3",
     "hpretl/iic-osic-tools@sha256:fd38cb07a29d49d5f9720494cc4497cd8e8c80dfa06b4224d46447bc0f3c2ef0",
@@ -48,7 +48,7 @@
     "--evidence",
     "/evidence"
   ],
-  "created_at": "2026-08-12T09:52:27.543661Z",
+  "created_at": "2026-08-12T10:50:01.702766Z",
   "execution_policy": {
     "container_root": "read-only",
     "evidence_mount": "writable",
@@ -858,7 +858,7 @@
     },
     "openada": {
       "after": {
-        "commit": "d98173c68abd666798e371be0ec619f41059af5d",
+        "commit": "c6af1dd0a5ee40e82810e2e1e362d522125ca563",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,
@@ -866,7 +866,7 @@
         "working_tree_modified": false
       },
       "before": {
-        "commit": "d98173c68abd666798e371be0ec619f41059af5d",
+        "commit": "c6af1dd0a5ee40e82810e2e1e362d522125ca563",
         "status_entry_count": 0,
         "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "tracked_files_modified": false,

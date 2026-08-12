@@ -43,6 +43,27 @@ from .simulate import (
 # ``driver_registry`` and its driver lookup to the alias module itself; a second
 # spelling of either here is how a retired name keeps finding new callers.
 from .testbench_simulate import simulate_testbench
+from .testbench_oracle import compare_testbench_observables
+from .testbench_plan import (
+    PreparedTestbenchPlan,
+    TestbenchPlanIssue,
+    load_testbench_plan_schema,
+    validate_testbench_plan,
+)
+from .testbench_plan_ngspice import (
+    NgspiceCompilationBundle,
+    PreparedNgspiceCompilation,
+    ResolvedBindingValue,
+    TestbenchPlanCompileError,
+    compile_testbench_plan_ngspice,
+    prepare_testbench_plan_ngspice,
+)
+from .testbench_plan_runner import (
+    HostNgspiceExecutor,
+    TestbenchPlanRunResult,
+    execute_testbench_plan_ngspice,
+    publish_testbench_plan_run,
+)
 
 __all__ = [
     "MAX_SHARED_ANALYSIS_POINTS",
@@ -83,4 +104,19 @@ __all__ = [
     "run_experiment",
     "validate_experiment",
     "compile_experiment_template",
+    "PreparedTestbenchPlan",
+    "TestbenchPlanIssue",
+    "load_testbench_plan_schema",
+    "validate_testbench_plan",
+    "NgspiceCompilationBundle",
+    "PreparedNgspiceCompilation",
+    "ResolvedBindingValue",
+    "TestbenchPlanCompileError",
+    "compile_testbench_plan_ngspice",
+    "prepare_testbench_plan_ngspice",
+    "HostNgspiceExecutor",
+    "TestbenchPlanRunResult",
+    "execute_testbench_plan_ngspice",
+    "publish_testbench_plan_run",
+    "compare_testbench_observables",
 ]

@@ -14,7 +14,7 @@
   "native_replay": {
     "independent_verification": "pass",
     "repository_path": "conformance/ihp-inverter/semantic-artifacts/run.json",
-    "sha256": "42e185be716b6f1edd2ca4da1839f08440b611e072939cfab704a6a6239c7597"
+    "sha256": "dd861ec3a66bd0afaf7b71591198a8e64186d6323a6fd50ec5dc44a24ad2f1de"
   },
   "schema": "openada.semantic-contract-verdict/v0alpha1",
   "status": "pass",

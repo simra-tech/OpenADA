@@ -15,9 +15,9 @@ emitted by `capabilities`. It also inventories every shipped
 conformance claim. The verifier expands every profile feature and native
 mapping, so adding an enum-backed analysis, implementation mapping, provider
 feature, or packaged provider creates a new uncovered row automatically.
-The current inventory has 15 profiles (nine active), 59 profile features, 29
-surfaces, 29 CLI leaves, 13 built-in provider mappings, and 14 provider mappings
-in total. Expansion yields 255 rows: 159 active `agent-ready` obligations and 96
+The current inventory has 16 profiles (nine active), 65 profile features, 33
+surfaces, 33 CLI leaves, 14 built-in provider mappings, and 15 provider mappings
+in total. Expansion yields 279 rows: 159 active `agent-ready` obligations and 120
 historical or experimental `unverified` rows.
 
 Run the normal offline audit with:

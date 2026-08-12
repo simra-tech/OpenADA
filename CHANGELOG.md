@@ -127,6 +127,24 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
 
 ### Added
 
+- **Closed testbench plans and oracle scoring.**
+  `simra.testbench-plan/v1` is a reject-on-unknown-field measurement graph for
+  digest-pinned immutable DUT bindings, corner-scaled supplies, typed DC,
+  finite-pulse, signed phase-pair, and small-signal PLL stimuli, exact DUT/source
+  probe identities, fresh/carryover state, explicit DC-operating-point or
+  transient settling, measurements, staged bindings/reductions, validity gates,
+  and receipt lineage. `openada testbench-plan validate|compile|run|compare`
+  exposes deterministic ngspice compilation for the supported DC/pulse/phase
+  subset, exhaustive condition attempts with deck/waveform hashes, and a pure
+  comparator implementing the twelve ratified accuracy, validity-honesty,
+  completeness, and runtime rows plus required lineage enforcement. Runner
+  uncertainty remains UNKNOWN and cannot earn invalid-detection credit; the
+  ratified near-zero metrics use absolute error. Independent comparator and native synthetic-RC
+  conformance bundles exercise exact outputs and tamper cases. The surface is
+  experimental: typed linear-AC/stage reductions remain fail-closed, and real
+  PDK DUT execution still needs a trusted digest-pinned hierarchical model/OSDI
+  collateral bundle.
+
 - The repository root is now a conformant [Agent Plugins](https://agent-plugins.org/)
   1.0.0 package: a root `plugin.json` carries the standard `$schema` and the
   same metadata as the client-specific manifests, and the existing `skills/`
@@ -307,7 +325,7 @@ versions as described in the [compatibility policy](docs/COMPATIBILITY.md).
   ASIC-timing skills that stay inside those evidence boundaries.
 - A closed semantic-surface catalog and non-waivable release ledger covering
   all 159 active rows through seven pinned public-design chains. The complete
-  audit inventory has 255 rows; 96 historical or experimental rows remain
+  audit inventory has 279 rows; 120 historical or experimental rows remain
   explicitly unverified. Each accepted
   row now carries contract tests, a real native EDA run, independent artifact
   verification, normalized evidence, a downstream engineering decision,

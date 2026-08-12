@@ -95,15 +95,16 @@ Nine published typed profiles are active:
 `openada.operation/result.transfer.measure/v1alpha2`, and
 `openada.operation/rtl.lint/v1alpha1`,
 `openada.operation/specification.evaluate/v1alpha1`, and
-`openada.operation/timing.analyze/v1alpha1`. Two dispatchable profiles are
-explicitly experimental: `openada.operation/result.osc.measure/v1alpha1` and
-`openada.operation/rtl.test/v1alpha1`. Four historical or retired profiles
+`openada.operation/timing.analyze/v1alpha1`. Three dispatchable profiles are
+explicitly experimental: `openada.operation/result.osc.measure/v1alpha1`,
+`openada.operation/rtl.test/v1alpha1`, and
+`openada.operation/testbench.oracle.compare/v1alpha1`. Four historical or retired profiles
 remain packaged, including the immutable v1alpha1 predecessors for simulation,
 ordinary measurement, and AC transfer plus retired `testbench.simulate`.
 The existing result envelope still emits short top-level operation names such
 as `simulate`, `drc`, and `lvs`; typed bridges record full profile and
 implementation identity inside operation-owned data. `openada profile list`
-and `openada profile show` expose all 15 packaged profiles without making those
+and `openada profile show` expose all 16 packaged profiles without making those
 control-plane commands engineering operations.
 
 `openada.operation-profile/v0alpha2` is additive and immutable beside
@@ -535,7 +536,7 @@ The distinction between shipped behavior and intended protocol is material.
 |---|---|---|
 | Result envelope | Closed `openada.result/v0alpha1` with execution/engineering separation, bounded diagnostics, artifact records, and provenance. | New immutable result version linked to typed operation and assertion profiles, with multi-step driver identity where needed. |
 | Requests | Per-operation built-in CLI arguments plus explicit external invocation of one complete `openada.request/v0alpha1`. | Catalog/session/remote request dispatch over installed typed profiles. |
-| Operations | Fifteen profiles are packaged: nine active, two dispatchable experimental (`result.osc.measure` and `rtl.test`), and four historical/retired. Active profiles cover simulation, verified series extraction, scalar/spectral/AC-transfer measurement, specification evaluation, strict RTL lint, Liberty-mapped synthesis, and single-corner timing; oscillator measurement adds an experimental typed path. `profile list/show` provides local machine-readable inspection. | Independently versioned profiles for noise/campaign and remaining operations plus ecosystem discovery. |
+| Operations | Sixteen profiles are packaged: nine active, three dispatchable experimental (`result.osc.measure`, `rtl.test`, and `testbench.oracle.compare`), and four historical/retired. Active profiles cover simulation, verified series extraction, scalar/spectral/AC-transfer measurement, specification evaluation, strict RTL lint, Liberty-mapped synthesis, and single-corner timing; oscillator measurement and testbench-oracle comparison add experimental typed paths. `profile list/show` provides local machine-readable inspection. | Independently versioned profiles for noise/campaign and remaining operations plus ecosystem discovery. |
 | Drivers | Built-in discovery/static drivers plus explicit-manifest local JSON-stdio invocation for `circuit.simulate/v1alpha2`. | Trusted manifest discovery, deterministic catalog selection, more registered profiles, independent installation, sessions, and remote jobs. |
 | Portability proof | `circuit.simulate` maps one alpha profile to ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN, with pinned analysis-specific replay. | More operations, open-source backends, and runtime environments pass equivalent independently checked conformance. |
 | Artifacts | Declared files have roles, paths, sizes, and hashes; several drivers enforce fresh evidence. | Cross-run invocation and derivation lineage, including explicit incomplete-provenance records. |

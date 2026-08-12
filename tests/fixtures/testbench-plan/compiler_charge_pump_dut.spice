@@ -1,0 +1,9 @@
+* SPDX-License-Identifier: MIT
+* Synthetic passive DUT for deterministic compiler tests.
+.SUBCKT CHARGE_PUMP UP DOWN OUT VDD VSS
+R_UP UP CP_NODE 1k
+R_DOWN DOWN CP_NODE 1k
+C_OUT CP_NODE VSS 1p
+R_OUT CP_NODE OUT 1
+R_SUPPLY VDD VSS 1meg
+.ENDS CHARGE_PUMP

@@ -25,8 +25,8 @@ JSON-stdio `wait` transport. It does not discover, install, rank, or approve
 providers, and it does not implement session, remote-job, marketplace, or MCP
 transport semantics. External dispatch is currently registered only for
 `circuit.simulate/v1alpha2`; operation-specific CLI bridges execute all nine
-active typed profiles and the two dispatchable experimental profiles directly.
-The complete packaged catalog has 15 profiles: nine active, two experimental,
+active typed profiles and the three dispatchable experimental profiles directly.
+The complete packaged catalog has 16 profiles: nine active, three experimental,
 and four historical or retired. Publishing any other schema or transport
 binding still does not imply runtime support. `request_id` equality is
 correlation, not a complete request digest.

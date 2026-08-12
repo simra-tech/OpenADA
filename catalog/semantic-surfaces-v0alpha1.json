@@ -101,6 +101,12 @@
       "extensions": {}
     },
     {
+      "repository_path": "profiles/testbench.oracle.compare-v1alpha1.json",
+      "lifecycle": "experimental",
+      "dispatchable": true,
+      "extensions": {}
+    },
+    {
       "repository_path": "profiles/testbench.simulate-v1alpha1.json",
       "lifecycle": "historical",
       "dispatchable": false,
@@ -539,6 +545,56 @@
       "extensions": {}
     },
     {
+      "surface_id": "openada.surface/cli.testbench-plan-compare/v1",
+      "command_path": [
+        "testbench-plan",
+        "compare"
+      ],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": [
+        "openada.operation/testbench.oracle.compare/v1alpha1"
+      ],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.testbench-plan-compile/v1",
+      "command_path": [
+        "testbench-plan",
+        "compile"
+      ],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.testbench-plan-run/v1",
+      "command_path": [
+        "testbench-plan",
+        "run"
+      ],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
+      "surface_id": "openada.surface/cli.testbench-plan-validate/v1",
+      "command_path": [
+        "testbench-plan",
+        "validate"
+      ],
+      "classification": "semantic-execution",
+      "lifecycle": "experimental",
+      "profile_bindings": [],
+      "variants": [],
+      "extensions": {}
+    },
+    {
       "surface_id": "openada.surface/cli.testbench-simulate/v1",
       "command_path": [
         "testbench-simulate"
@@ -927,6 +983,65 @@
       "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
       "operation_maturity": null,
       "features": [],
+      "extensions": {}
+    },
+    {
+      "provider_id": "org.openada.kernel.testbench-oracle",
+      "provider_kind": "evidence-kernel",
+      "native_product": "org.openada.core.runtime",
+      "operation_profile": "openada.operation/testbench.oracle.compare/v1alpha1",
+      "assertion_profile": "openada.assertion/testbench.oracle.comparison.valid/v1alpha1",
+      "operation_maturity": null,
+      "features": [
+        {
+          "id": "openada.feature/testbench-oracle.coverage-cost-lineage/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "testbench-oracle-comparator-v1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/testbench-oracle.curve-exact-grid/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "testbench-oracle-comparator-v1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/testbench-oracle.mismatch-compliance/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "testbench-oracle-comparator-v1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/testbench-oracle.scalar-error/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "testbench-oracle-comparator-v1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/testbench-oracle.signed-coverage/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "testbench-oracle-comparator-v1"
+          ],
+          "extensions": {}
+        },
+        {
+          "id": "openada.feature/testbench-oracle.validity-honesty/v1alpha1",
+          "implementation_maturity": "structured",
+          "conformance_ids": [
+            "testbench-oracle-comparator-v1"
+          ],
+          "extensions": {}
+        }
+      ],
       "extensions": {}
     },
     {

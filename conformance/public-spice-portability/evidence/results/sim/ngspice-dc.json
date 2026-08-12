@@ -6,7 +6,7 @@
       "kind": "simulation-log",
       "path": "/evidence/sim/ngspice-dc/inverter-dc/inverter-dc.log",
       "role": "simulation.log",
-      "sha256": "d2b58862d8ef4fe78944fccc050bf6a7e0aec202d7915edd1989eebb873ceb6b"
+      "sha256": "3e1f9c7baa081179964c947d82b65b6f3ded5b8e781ccd9c72173dd97064971b"
     },
     {
       "bytes": 1862,
@@ -14,7 +14,7 @@
       "kind": "ngspice-raw",
       "path": "/evidence/sim/ngspice-dc/inverter-dc/inverter-dc.raw",
       "role": "simulation.result",
-      "sha256": "f90223884f11d64d6867996049ded4350b4fda76f388d0ea06f3feb5aff5d0a9"
+      "sha256": "394d351487a61b058b60654252417ff93780010aad7d91c5ab85717b1019d458"
     }
   ],
   "data": {
@@ -81,10 +81,10 @@
           "log_capture": {
             "bytes": 685,
             "path": "/evidence/sim/ngspice-dc/inverter-dc/inverter-dc.log",
-            "sha256": "d2b58862d8ef4fe78944fccc050bf6a7e0aec202d7915edd1989eebb873ceb6b",
+            "sha256": "3e1f9c7baa081179964c947d82b65b6f3ded5b8e781ccd9c72173dd97064971b",
             "status": "valid"
           },
-          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-tczili5c/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nNo. of Data Rows : 13\n\nTotal analysis time (seconds) = 0.00305172\n\nTotal elapsed time (seconds) = 0.018 \n\nTotal DRAM available = 32098.402 MB.\nDRAM currently available = 5370.066 MB.\nMaximum ngspice program size =  531.715 MB.\nCurrent ngspice program size =   14.578 MB.\n\nShared ngspice pages =   11.277 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.199 MB.\n\n",
+          "log_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: ** sch_path: /evidence/work/ihp-inverter/inverter_tb.sch\n\nbinary raw file \"/tmp/openada-ngspice-52wzg88u/simulation.raw\"\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\nNo. of Data Columns : 12  \n\nNo. of Data Rows : 13\n\nTotal analysis time (seconds) = 0.00411789\n\nTotal elapsed time (seconds) = 0.020 \n\nTotal DRAM available = 32098.402 MB.\nDRAM currently available =  613.098 MB.\nMaximum ngspice program size =  531.715 MB.\nCurrent ngspice program size =   14.668 MB.\n\nShared ngspice pages =   11.371 MB.\nText (code) pages =    5.875 MB.\nStack = 0 bytes.\nLibrary pages =   60.199 MB.\n\n",
           "measurement_section_count": 0,
           "measurements": [],
           "measurements_truncated": false,
@@ -95,7 +95,7 @@
               "kind": "raw",
               "origin": "wrapper",
               "path": "/evidence/sim/ngspice-dc/inverter-dc/inverter-dc.raw",
-              "sha256": "f90223884f11d64d6867996049ded4350b4fda76f388d0ea06f3feb5aff5d0a9",
+              "sha256": "394d351487a61b058b60654252417ff93780010aad7d91c5ab85717b1019d458",
               "status": "valid",
               "validation": {
                 "metadata": {
@@ -162,7 +162,7 @@
       "driver_id": "org.openada.driver.ngspice",
       "driver_version": "0.4.0",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-      "request_id": "836dadfc-de9f-4f62-bc0d-75d69a7db1fc"
+      "request_id": "22f23228-f701-42d2-855c-6ab20f351bc2"
     }
   },
   "diagnostics": [
@@ -181,9 +181,9 @@
       "/foss/tools/ngspice/bin/ngspice",
       "-b",
       "-r",
-      "/tmp/openada-ngspice-tczili5c/simulation.raw",
+      "/tmp/openada-ngspice-52wzg88u/simulation.raw",
       "-o",
-      "/tmp/openada-ngspice-tczili5c/simulation.log",
+      "/tmp/openada-ngspice-52wzg88u/simulation.log",
       "/evidence/work/inverter-dc.spice"
     ],
     "cwd": "/evidence",
@@ -203,7 +203,7 @@
   ],
   "operation": "simulate",
   "provenance": {
-    "created_at": "2026-08-12T09:52:03.663308Z",
+    "created_at": "2026-08-12T10:49:35.530686Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

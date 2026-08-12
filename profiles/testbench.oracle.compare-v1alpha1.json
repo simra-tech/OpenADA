@@ -1,0 +1,389 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/testbench.oracle.compare/v1alpha1",
+    "title": "Closed testbench-plan oracle comparison",
+    "summary": "Purely compare one testbench-plan observable artifact with one trusted oracle artifact under one closed tolerance artifact, retaining per-row accuracy, validity-honesty, coverage, runtime, and lineage verdicts.",
+    "side_effect_mode": "read-only",
+    "target_kinds": ["testbench-observables"],
+    "locator_types": ["artifact"],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/testbench.oracle.comparison.valid/v1alpha1",
+    "statement": "The declared observable and oracle artifacts were deterministically compared under the exact closed tolerance contract, with every required metric classified PASS, FAIL, or UNKNOWN and no required UNKNOWN silently promoted to PASS.",
+    "non_goals": [
+      "This assertion does not run a simulator or establish that either observable artifact represents physical DUT behavior.",
+      "This assertion does not authenticate oracle trust, execution receipts, runner wall-clock data, DUT identity, or waveform provenance.",
+      "This assertion does not interpolate curve grids, infer compliance endpoints from a span, substitute relative error for an absolute near-zero quantity, or choose undeclared denominator guards.",
+      "This assertion does not claim DUT specification satisfaction, PVT closure, manufacturing fitness, or signoff."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "Every required row is PASS, the observed and oracle corners match, and the closed artifacts and tolerance semantics were valid.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.comparison.status is PASS and data.comparison.summary.required_pass equals data.comparison.summary.required.",
+          "data.comparison.summary.required_fail and data.comparison.summary.required_unknown are zero.",
+          "Every metric retains its explicit limit, status, value or null, reason, and method-specific details."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "At least one validly evaluated required row exceeds or falls below its declared tolerance bound.",
+        "allowed_execution_statuses": ["completed"],
+        "required_evidence": [
+          "data.comparison.status is FAIL and data.comparison.summary.required_fail is positive.",
+          "Each failed row retains the numeric value, declared bound, error unit, and explicit comparison reason."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The request was invalid or at least one required comparison could not be established without guessing, including missing evidence, grid mismatch, empty validity denominator, missing lineage, or corner mismatch.",
+        "allowed_execution_statuses": ["completed", "invalid_request", "failed"],
+        "required_evidence": [
+          "For a completed comparison, data.comparison.status is UNKNOWN and at least one required row is UNKNOWN or corner_match is false.",
+          "For an invalid request, a stable diagnostic identifies the closed-contract violation and no numeric score is invented."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "testbench.oracle.compare v1alpha1 request parameters",
+      "description": "Three bounded inline JSON artifact objects. Their normative closed contracts are named by semantic_constraints and are not duplicated here.",
+      "type": "object",
+      "required": ["observed", "oracle", "tolerances", "extensions"],
+      "properties": {
+        "observed": {"$ref": "#/$defs/artifactObject"},
+        "oracle": {"$ref": "#/$defs/artifactObject"},
+        "tolerances": {"$ref": "#/$defs/artifactObject"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "artifactObject": {
+          "type": "object",
+          "description": "One inline JSON artifact, strictly revalidated against its normative published contract by the operation implementation."
+        },
+        "extensions": {
+          "type": "object",
+          "maxProperties": 0,
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "observed must satisfy schemas/testbench-observables-v1.schema.json with identity simra.testbench-observables/v1, or the explicitly supported closed legacy oracle fixture shape {sizing,corner,validity,observables} plus optional closed metadata.",
+      "oracle must satisfy the closed legacy oracle fixture shape {sizing,corner,validity,observables}; a typed simra.testbench-observables/v1 artifact is also accepted without weakening its contract.",
+      "tolerances must satisfy schemas/testbench-oracle-tolerances-v1.schema.json with identity simra.testbench-oracle-tolerances/v1; every row kind and field is closed and every relative or guarded-relative denominator is explicit and positive.",
+      "The normalized comparison document in data.comparison must satisfy schemas/testbench-oracle-comparison-v1.schema.json with identity simra.testbench-oracle-comparison/v1.",
+      "Scalar absolute and fraction-absolute errors are absolute differences. Relative scalar error is abs(observed-oracle)/max(abs(oracle),denominator_floor).",
+      "Curve domains must match exactly and v1alpha1 performs no interpolation. Guarded-relative curve error uses the explicit absolute_guard as its denominator floor and reports the worst point.",
+      "Mismatch fractions are derived pointwise from positional source/sink magnitude arrays as abs(abs(source)-abs(sink))/max(abs(source),abs(sink)); values below the explicit denominator floor are UNKNOWN.",
+      "Compliance comparison consumes explicit dense-sweep {lo_v,hi_v} endpoints and never reconstructs them from compliance_span_v.",
+      "Signed-response coverage excludes oracle values within zero_epsilon and divides matching nonzero signs by the remaining oracle point count.",
+      "Invalid-detection recall uses oracle-invalid declarations as its denominator. False-valid rate uses submitted VALID declarations whose oracle state is known as its denominator. INVALID and NEEDS_FINE_SWEEP require a nonempty cause.",
+      "Completeness counts declared condition-observable pairs that are both present in the top-level observable map and in the condition inventory. Lineage presence independently requires a contributing condition receipt with compiled-deck and waveform SHA-256 digests.",
+      "A required UNKNOWN row or a corner mismatch prevents overall PASS; required FAIL takes precedence over required UNKNOWN. Optional UNKNOWN rows do not prevent PASS."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "testbench.oracle.compare v1alpha1 normalized result data",
+      "type": "object",
+      "required": ["protocol", "comparison", "request_sha256", "extensions"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/protocol"},
+        "comparison": {
+          "type": ["object", "null"],
+          "description": "When non-null, this object must independently satisfy simra.testbench-oracle-comparison/v1."
+        },
+        "request_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "$defs": {
+        "protocol": {
+          "type": "object",
+          "required": ["request_id", "operation_profile", "assertion_profile", "implementation_id", "conformance_id"],
+          "properties": {
+            "request_id": {"type": "string", "format": "uuid"},
+            "operation_profile": {"const": "openada.operation/testbench.oracle.compare/v1alpha1"},
+            "assertion_profile": {"const": "openada.assertion/testbench.oracle.comparison.valid/v1alpha1"},
+            "implementation_id": {"const": "org.openada.kernel.testbench-oracle"},
+            "conformance_id": {"const": "testbench-oracle-comparator-v1"}
+          },
+          "additionalProperties": false
+        },
+        "extensions": {
+          "type": "object",
+          "maxProperties": 0,
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {
+        "path": "data.comparison.status",
+        "type": ["string", "null"],
+        "required_for": ["pass", "fail", "unknown"],
+        "description": "Aggregate PASS, FAIL, or UNKNOWN after required-row and corner policy, or null for an invalid request.",
+        "extensions": {}
+      },
+      {
+        "path": "data.comparison.metrics",
+        "type": ["array", "null"],
+        "required_for": ["pass", "fail", "unknown"],
+        "description": "Ordered per-metric status, value, limit, reason, and method-specific details when comparison completed.",
+        "extensions": {}
+      },
+      {
+        "path": "data.comparison.validity",
+        "type": ["object", "null"],
+        "required_for": ["pass", "fail", "unknown"],
+        "description": "Validity confusion counts retaining oracle-invalid, detected-invalid, submitted-valid, false-valid, and missing-or-unknown totals.",
+        "extensions": {}
+      },
+      {
+        "path": "data.comparison.summary",
+        "type": ["object", "null"],
+        "required_for": ["pass", "fail", "unknown"],
+        "description": "All-row and required-row PASS, FAIL, and UNKNOWN counts.",
+        "extensions": {}
+      },
+      {
+        "path": "data.request_sha256",
+        "type": ["string", "null"],
+        "required_for": ["pass", "fail", "unknown"],
+        "description": "Canonical digest of the three exact input artifacts and empty extensions, or null when canonical validation fails.",
+        "extensions": {}
+      }
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {
+        "role": "comparison.observed",
+        "kind": "testbench-observables",
+        "required_for": ["pass", "fail", "unknown"],
+        "freshness": "immutable-input",
+        "integrity": [
+          "Validate the closed observed artifact before scoring.",
+          "Retain declared receipt lineage when numeric lineage or lineage coverage is required."
+        ],
+        "native_authority": "The observed artifact is authoritative only as the submitted claim under comparison; this operation does not authenticate its measurements or receipts.",
+        "extensions": {}
+      },
+      {
+        "role": "comparison.oracle",
+        "kind": "oracle-observables",
+        "required_for": ["pass", "fail", "unknown"],
+        "freshness": "immutable-input",
+        "integrity": ["Validate the closed oracle fixture shape and exact corner identity before scoring."],
+        "native_authority": "Oracle trust is supplied by the caller and remains outside this assertion.",
+        "extensions": {}
+      },
+      {
+        "role": "comparison.tolerances",
+        "kind": "oracle-tolerances",
+        "required_for": ["pass", "fail", "unknown"],
+        "freshness": "immutable-input",
+        "integrity": ["Validate the closed tolerance schema and every explicit error guard and denominator policy."],
+        "native_authority": "The tolerance artifact is authoritative for scoring policy only; this operation does not approve its engineering limits.",
+        "extensions": {}
+      }
+    ],
+    "integrity_rules": [
+      "Reject non-finite, cyclic, non-JSON, unknown-field, over-depth, and over-count inputs before scoring.",
+      "Retain every required UNKNOWN and never silently convert it to PASS.",
+      "Bind conformance to testbench-oracle-comparator-v1 and its independently verified all-12 fixture."
+    ],
+    "provenance_limitations": [
+      "Receipt digests establish declared lineage presence, not cryptographic authenticity or successful simulation.",
+      "The comparator is a pure scoring kernel; runtime and oracle trust enter as caller-supplied evidence.",
+      "Exact curve-grid comparison intentionally declines interpolation or extrapolation."
+    ],
+    "limits": {
+      "max_log_bytes": 4000,
+      "max_artifact_bytes": 67108864,
+      "max_artifact_count": 3,
+      "extensions": {}
+    },
+    "extensions": {}
+  },
+  "features": [
+    {
+      "id": "openada.feature/testbench-oracle.scalar-error/v1alpha1",
+      "parameter_path": "tolerances.metrics.kind",
+      "parameter_values": ["scalar"],
+      "request_effect": "Evaluate an absolute, fraction-absolute, or explicitly floor-guarded relative scalar error.",
+      "conformance_case": "The conformance record freezes absolute offset/leakage and guarded relative local-gain rows.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/testbench-oracle.curve-exact-grid/v1alpha1",
+      "parameter_path": "tolerances.metrics.kind",
+      "parameter_values": ["curve"],
+      "request_effect": "Require identical x arrays and report worst-point absolute, relative, or explicitly guarded-relative error without interpolation.",
+      "conformance_case": "Source and sink current curves cover signed rail-near values and explicit absolute guards.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/testbench-oracle.mismatch-compliance/v1alpha1",
+      "parameter_path": "tolerances.metrics.kind",
+      "parameter_values": ["mismatch_curve", "compliance_endpoints"],
+      "request_effect": "Derive pointwise source/sink mismatch fractions or compare explicit dense-sweep compliance endpoints with absolute semantics.",
+      "conformance_case": "The fixture freezes three delivered-charge pairs and explicit lo/hi compliance endpoints.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/testbench-oracle.signed-coverage/v1alpha1",
+      "parameter_path": "tolerances.metrics.kind",
+      "parameter_values": ["signed_response_coverage"],
+      "request_effect": "Score polarity coverage on an exactly aligned signed curve outside an explicit zero band.",
+      "conformance_case": "A symmetric five-point phase-charge curve freezes eligible and matching-sign counts.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/testbench-oracle.validity-honesty/v1alpha1",
+      "parameter_path": "tolerances.metrics.kind",
+      "parameter_values": ["invalid_detection_recall", "false_valid_rate"],
+      "request_effect": "Score invalid recall and false-valid declarations with two explicit, nonredundant denominator policies.",
+      "conformance_case": "One authentic invalid and four valid stages freeze recall 1.0, false-valid 0.0, and confusion counts.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/testbench-oracle.coverage-cost-lineage/v1alpha1",
+      "parameter_path": "tolerances.metrics.kind",
+      "parameter_values": ["completeness", "grading_runtime", "lineage_presence"],
+      "request_effect": "Independently score executed condition-observable inventory, submitted grading duration, and receipt-linked observable coverage.",
+      "conformance_case": "The all-12 record freezes ten complete condition-observable pairs, 42 seconds, and mandatory receipt lineage.",
+      "extensions": {}
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "testbench_oracle.request.invalid",
+      "severity": "error",
+      "condition": "An input is non-JSON, non-finite, cyclic, over-limit, has unknown fields, or violates its closed published artifact contract.",
+      "next_action": "Repair the exact observed, oracle, or tolerance artifact without adding expressions or undeclared fields.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench_oracle.metric.unknown",
+      "severity": "warning",
+      "condition": "A valid request cannot establish one metric because evidence, domain alignment, denominator population, endpoints, or required lineage is absent.",
+      "next_action": "Retain UNKNOWN and supply the missing typed evidence or explicitly revise the tolerance policy.",
+      "extensions": {}
+    },
+    {
+      "code": "testbench_oracle.corner.mismatch",
+      "severity": "warning",
+      "condition": "Observed and oracle corner identities differ.",
+      "next_action": "Compare artifacts from the same exact corner; do not extrapolate across corners.",
+      "extensions": {}
+    }
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.kernel.testbench-oracle",
+      "native_product_id": "org.openada.core.runtime",
+      "backend_name": "OpenADA deterministic testbench-oracle evidence kernel",
+      "supported_features": [
+        "openada.feature/testbench-oracle.scalar-error/v1alpha1",
+        "openada.feature/testbench-oracle.curve-exact-grid/v1alpha1",
+        "openada.feature/testbench-oracle.mismatch-compliance/v1alpha1",
+        "openada.feature/testbench-oracle.signed-coverage/v1alpha1",
+        "openada.feature/testbench-oracle.validity-honesty/v1alpha1",
+        "openada.feature/testbench-oracle.coverage-cost-lineage/v1alpha1"
+      ],
+      "semantic_bindings": [
+        {
+          "feature_id": "openada.feature/testbench-oracle.scalar-error/v1alpha1",
+          "implementation": "Finite absolute, fraction-absolute, and explicit denominator-floor relative scalar comparison.",
+          "output_fact_paths": ["data.comparison.metrics", "data.comparison.summary"],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/testbench-oracle.curve-exact-grid/v1alpha1",
+          "implementation": "Exact-domain worst-point curve comparison with no interpolation and explicit near-zero guard.",
+          "output_fact_paths": ["data.comparison.metrics", "data.comparison.summary"],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/testbench-oracle.mismatch-compliance/v1alpha1",
+          "implementation": "Magnitude-normalized mismatch derivation and absolute explicit-endpoint comparison.",
+          "output_fact_paths": ["data.comparison.metrics", "data.comparison.summary"],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/testbench-oracle.signed-coverage/v1alpha1",
+          "implementation": "Exact-domain sign agreement outside the declared oracle zero band.",
+          "output_fact_paths": ["data.comparison.metrics", "data.comparison.summary"],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/testbench-oracle.validity-honesty/v1alpha1",
+          "implementation": "Closed validity classification and explicit oracle-invalid or submitted-valid denominator selection.",
+          "output_fact_paths": ["data.comparison.metrics", "data.comparison.validity"],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/testbench-oracle.coverage-cost-lineage/v1alpha1",
+          "implementation": "Independent condition-observable inventory, duration, and receipt-lineage coverage accounting.",
+          "output_fact_paths": ["data.comparison.metrics", "data.comparison.summary"],
+          "extensions": {}
+        }
+      ],
+      "native_actions": [
+        "Validate the three closed JSON artifact contracts and exact corner identity.",
+        "Evaluate every declared row in tolerance order using only its explicit error and denominator semantics.",
+        "Aggregate required-row verdicts without promoting missing or unknown evidence."
+      ],
+      "artifact_bindings": [
+        {"native_kind": "closed testbench observable JSON", "canonical_role": "comparison.observed", "extensions": {}},
+        {"native_kind": "trusted oracle observable JSON", "canonical_role": "comparison.oracle", "extensions": {}},
+        {"native_kind": "closed oracle tolerance JSON", "canonical_role": "comparison.tolerances", "extensions": {}}
+      ],
+      "limitations": [
+        "The kernel consumes in-process JSON artifacts and performs no IO, simulation, interpolation, or oracle authentication.",
+        "Lineage checks verify declared receipt presence and bindings, not signatures or execution authenticity.",
+        "The conformance identity testbench-oracle-comparator-v1 freezes one all-12 policy case but does not qualify hidden-fixture physics."
+      ],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": [
+      "operation and assertion identities and truth table",
+      "the three published artifact schema identities and closed request semantics",
+      "absolute, fraction-absolute, relative, and guarded-relative error definitions",
+      "exact curve-domain, mismatch normalization, and compliance-endpoint semantics",
+      "signed-response eligibility and matching-sign semantics",
+      "invalid-recall and false-valid denominator policies",
+      "completeness, runtime, lineage, corner, required-UNKNOWN, and aggregate-status policies",
+      "normalized per-row, validity-confusion, summary, and request-digest facts",
+      "testbench-oracle-comparator-v1 conformance binding"
+    ],
+    "change_policy": "Any change to an error formula or guard, curve alignment, mismatch normalization, endpoint interpretation, validity classification or denominator, coverage/lineage accounting, corner handling, required-row aggregation, normalized fact, published artifact schema, or conformance identity requires a new profile or feature identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}

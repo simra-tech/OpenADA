@@ -1,0 +1,35 @@
+{
+  "sizing": {
+    "topology": "synthetic_charge_pump",
+    "parameters": {"bias_scale": 1.0}
+  },
+  "corner": "tt_27c_1v20",
+  "validity": {
+    "dc": "VALID",
+    "pulse": "VALID",
+    "dz": "VALID",
+    "loop": "VALID",
+    "hidden_invalid": "INVALID(design: missed pulse)"
+  },
+  "observables": {
+    "src_current_vs_vcp": {
+      "v": [0.0, 0.6, 1.2],
+      "a": [4.93249014e-05, 4.87608311e-05, -3.63829683e-09]
+    },
+    "snk_current_vs_vcp": {
+      "v": [0.0, 0.6, 1.2],
+      "a": [1.56607556e-09, -5.16767057e-05, -5.64909082e-05]
+    },
+    "compliance_endpoints_v": {"lo_v": 0.2, "hi_v": 1.065},
+    "leak_worst_a": 2.56841838e-09,
+    "pulse_charge_src_c": [7.09675e-13, 7.0744375e-13, 7.0261375e-13],
+    "pulse_charge_snk_c": [5.177625e-13, 5.5117125e-13, 5.76715e-13],
+    "mismatch_worst_frac": 0.2704,
+    "signed_charge_vs_phase_offset": {
+      "phase_offset_s": [-2e-10, -1e-10, 0.0, 1e-10, 2e-10],
+      "charge_c": [-2e-14, -1e-14, 0.0, 1e-14, 2e-14]
+    },
+    "zero_cross_offset_s": 1.8508e-10,
+    "local_gain_a": 0.000263054
+  }
+}

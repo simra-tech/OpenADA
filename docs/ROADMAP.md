@@ -36,7 +36,7 @@ one-off wrappers does not substitute for passing the gate.
 Current status: milestone A is published in this repository. Milestone B now
 includes executable request and driver-manifest v0alpha1 validation, immutable
 operation-profile schemas v0alpha1 and v0alpha2, valid contributor templates,
-15 packaged profiles (nine active, two dispatchable experimental, and four
+16 packaged profiles (nine active, three dispatchable experimental, and four
 historical or retired), cwd-independent profile inspection, and an
 explicit-manifest local JSON-stdio
 wait resolver registered for active circuit simulation. Automatic discovery,

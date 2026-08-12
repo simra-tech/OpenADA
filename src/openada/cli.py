@@ -61,6 +61,16 @@ from .operations.simulate import (
 )
 from .operations.experiment import run_experiment
 from .operations.experiment_template import compile_experiment_template
+from .operations.testbench_oracle import compare_testbench_observables
+from .operations.testbench_plan import validate_testbench_plan
+from .operations.testbench_plan_ngspice import (
+    TestbenchPlanCompileError,
+    compile_testbench_plan_ngspice,
+)
+from .operations.testbench_plan_runner import (
+    HostNgspiceExecutor,
+    execute_testbench_plan_ngspice,
+)
 from .pdk_bindings import available_pdk_ids, simulatable_pdk_ids
 from .preflight import PREFLIGHT_SPECS
 from .provider_runtime import (
@@ -113,6 +123,7 @@ _COMMAND_OPERATIONS = {
     # simulation semantic, so there is one envelope operation name.
     "testbench-simulate": "simulate",
     "experiment": "experiment.run",
+    "testbench-plan": "testbench.plan.validate",
     "extract": "result.series.extract",
     "measure": "result.measure",
     "oscillator": "result.osc.measure",
@@ -693,6 +704,70 @@ def build_parser() -> argparse.ArgumentParser:
             "Bind one declared template parameter to a strict SPICE numeric "
             "scalar. Repeatable; every parameter without a default must be set."
         ),
+    )
+
+    testbench_plan = commands.add_parser(
+        "testbench-plan",
+        help=(
+            "Validate, compile, run, or oracle-compare one closed typed "
+            "testbench-plan artifact."
+        ),
+    )
+    testbench_plan_commands = testbench_plan.add_subparsers(
+        dest="testbench_plan_command",
+        required=True,
+    )
+    testbench_plan_validate = testbench_plan_commands.add_parser(
+        "validate",
+        help="Validate one closed simra.testbench-plan/v1 graph.",
+    )
+    testbench_plan_validate.add_argument("plan", help="Testbench-plan JSON path.")
+    testbench_plan_validate.add_argument(
+        "--dut-binding",
+        help=(
+            "Optional closed full DUT-binding JSON. Only artifact and digest "
+            "may differ from the plan's sealed ABI."
+        ),
+    )
+
+    testbench_plan_compile = testbench_plan_commands.add_parser(
+        "compile",
+        help="Compile one validated plan/corner into deterministic ngspice decks.",
+    )
+    testbench_plan_compile.add_argument("plan", help="Testbench-plan JSON path.")
+    testbench_plan_compile.add_argument("--corner", required=True)
+    testbench_plan_compile.add_argument("--output-dir", required=True)
+    testbench_plan_compile.add_argument("--dut-binding")
+    testbench_plan_compile.add_argument(
+        "--stage",
+        action="append",
+        default=[],
+        help=(
+            "Compile one declared stage. Repeatable. Without this selector all "
+            "stages must already have receipt-backed inputs."
+        ),
+    )
+
+    testbench_plan_run = testbench_plan_commands.add_parser(
+        "run",
+        help="Execute every declared condition and retain receipt-bound observables.",
+    )
+    testbench_plan_run.add_argument("plan", help="Testbench-plan JSON path.")
+    testbench_plan_run.add_argument("--corner", required=True)
+    testbench_plan_run.add_argument("--output-dir", required=True)
+    testbench_plan_run.add_argument("--dut-binding")
+    testbench_plan_run.add_argument("--timeout", type=_positive_float, default=120.0)
+
+    testbench_plan_compare = testbench_plan_commands.add_parser(
+        "compare",
+        help="Purely compare plan observables with an oracle and tolerance artifact.",
+    )
+    testbench_plan_compare.add_argument("--observed", required=True)
+    testbench_plan_compare.add_argument("--oracle", required=True)
+    testbench_plan_compare.add_argument("--tolerances", required=True)
+    testbench_plan_compare.add_argument(
+        "--request-id",
+        help="Optional canonical UUID for comparator request correlation.",
     )
 
     measure = commands.add_parser(
@@ -1322,6 +1397,38 @@ def _semantic_capability_records(tools: dict[str, dict]) -> list[dict]:
                         "maturity": "structured",
                         "conformance_ids": [typed_conformance_id],
                     },
+                ],
+            },
+            {
+                "provider_id": "org.openada.kernel.testbench-oracle",
+                "provider_version": "1.0.0",
+                "provider_kind": "evidence-kernel",
+                "availability": "available",
+                "native_product": "org.openada.core.runtime",
+                "operation_profile": (
+                    "openada.operation/testbench.oracle.compare/v1alpha1"
+                ),
+                "operation_profile_schema": "openada.operation-profile/v0alpha2",
+                "assertion_profile": (
+                    "openada.assertion/testbench.oracle.comparison.valid/v1alpha1"
+                ),
+                "result_schema": "openada.result/v0alpha1",
+                "transports": ["local-cli", "in-process"],
+                "locator_types": ["artifact"],
+                "features": [
+                    {
+                        "id": feature,
+                        "maturity": "structured",
+                        "conformance_ids": ["testbench-oracle-comparator-v1"],
+                    }
+                    for feature in (
+                        "openada.feature/testbench-oracle.scalar-error/v1alpha1",
+                        "openada.feature/testbench-oracle.curve-exact-grid/v1alpha1",
+                        "openada.feature/testbench-oracle.mismatch-compliance/v1alpha1",
+                        "openada.feature/testbench-oracle.signed-coverage/v1alpha1",
+                        "openada.feature/testbench-oracle.validity-honesty/v1alpha1",
+                        "openada.feature/testbench-oracle.coverage-cost-lineage/v1alpha1",
+                    )
                 ],
             },
         ]
@@ -2756,6 +2863,205 @@ def _dispatch(args: argparse.Namespace, discovery: DiscoveryManager) -> dict:
             pdk=args.pdk,
             pdk_root=_experiment_pdk_root_argument(args),
         )
+    if args.command == "testbench-plan":
+        leaf = str(args.testbench_plan_command)
+        operation = {
+            "validate": "testbench.plan.validate",
+            "compile": "testbench.plan.compile",
+            "run": "testbench.plan.run",
+            "compare": "testbench.oracle.compare",
+        }[leaf]
+        if leaf == "compare":
+            try:
+                observed = _load_json_object(args.observed, role="plan observables")
+                oracle = _load_json_object(args.oracle, role="oracle observables")
+                tolerances = _load_json_object(args.tolerances, role="oracle tolerances")
+                correlation_id = (
+                    str(uuid.uuid4())
+                    if args.request_id is None
+                    else str(uuid.UUID(str(args.request_id)))
+                )
+                if args.request_id is not None and correlation_id != args.request_id:
+                    raise ValueError("request-id must be one canonical UUID")
+                comparison = compare_testbench_observables(
+                    observed, oracle, tolerances
+                )
+                request_sha256 = hashlib.sha256(
+                    json.dumps(
+                        {
+                            "observed": observed,
+                            "oracle": oracle,
+                            "tolerances": tolerances,
+                            "extensions": {},
+                        },
+                        allow_nan=False,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        sort_keys=True,
+                    ).encode("utf-8")
+                ).hexdigest()
+            except (ValueError, OverflowError) as exc:
+                return _invalid_request(operation, str(exc))
+            engineering = {
+                "PASS": "pass",
+                "FAIL": "fail",
+                "UNKNOWN": "unknown",
+            }[comparison["status"]]
+            return result(
+                operation,
+                tool=None,
+                execution=static_execution(),
+                engineering_status=engineering,
+                summary=(
+                    "The closed oracle comparison completed with "
+                    f"{comparison['status']} evidence."
+                ),
+                data={
+                    "protocol": {
+                        "request_id": correlation_id,
+                        "operation_profile": (
+                            "openada.operation/testbench.oracle.compare/v1alpha1"
+                        ),
+                        "assertion_profile": (
+                            "openada.assertion/testbench.oracle.comparison.valid/v1alpha1"
+                        ),
+                        "implementation_id": "org.openada.kernel.testbench-oracle",
+                        "conformance_id": "testbench-oracle-comparator-v1",
+                    },
+                    "comparison": comparison,
+                    "request_sha256": request_sha256,
+                    "extensions": {},
+                },
+            )
+
+        try:
+            dut_binding = (
+                _load_json_object(args.dut_binding, role="DUT binding")
+                if args.dut_binding
+                else None
+            )
+        except ValueError as exc:
+            return _invalid_request(operation, str(exc))
+        prepared, plan_issues = validate_testbench_plan(
+            Path(args.plan), dut_binding=dut_binding
+        )
+        if prepared is None:
+            message = (
+                plan_issues[0].message
+                if plan_issues
+                else "testbench-plan validation failed"
+            )
+            payload = _invalid_request(operation, message)
+            payload["diagnostics"] = [
+                diagnostic("error", item.code, item.message)
+                for item in plan_issues[:128]
+            ]
+            payload["data"]["refusals"] = [
+                item.record() for item in plan_issues[:128]
+            ]
+            return payload
+
+        if leaf == "validate":
+            return result(
+                operation,
+                tool=None,
+                execution=static_execution(),
+                engineering_status="pass",
+                summary="The closed testbench plan is structurally and semantically valid.",
+                data={
+                    "schema": "simra.testbench-plan-validation/v1",
+                    "plan_id": prepared.identifier,
+                    "raw_sha256": prepared.raw_sha256,
+                    "canonical_sha256": prepared.canonical_sha256,
+                    "dut_binding_canonical_sha256": (
+                        prepared.dut_binding_canonical_sha256
+                    ),
+                    "refusals": [],
+                    "extensions": {},
+                },
+            )
+        if leaf == "compile":
+            try:
+                bundle = compile_testbench_plan_ngspice(
+                    prepared,
+                    Path(args.output_dir),
+                    corner=args.corner,
+                    stage_ids=tuple(args.stage) if args.stage else None,
+                )
+            except (TestbenchPlanCompileError, OSError, ValueError) as exc:
+                payload = _invalid_request(operation, str(exc))
+                if isinstance(exc, TestbenchPlanCompileError):
+                    payload["diagnostics"] = [
+                        diagnostic("error", exc.code, exc.message)
+                    ]
+                    payload["data"]["refusals"] = [exc.record()]
+                return payload
+            return result(
+                operation,
+                tool=None,
+                execution=static_execution(),
+                engineering_status="pass",
+                summary=(
+                    f"Compiled {len(bundle.receipt['conditions'])} deterministic "
+                    "ngspice condition decks."
+                ),
+                data={**dict(bundle.receipt), "refusals": [], "extensions": {}},
+            )
+
+        binary = discovery.find_binary("ngspice")
+        try:
+            run = execute_testbench_plan_ngspice(
+                prepared,
+                corner=args.corner,
+                executor=HostNgspiceExecutor(binary) if binary else None,
+                timeout_s=args.timeout,
+                output_dir=Path(args.output_dir),
+            )
+        except (OSError, ValueError) as exc:
+            return _invalid_request(operation, str(exc))
+        validity = run.observables.get("validity")
+        validity_supported = isinstance(validity, Mapping) and all(
+            isinstance(verdict, str)
+            and not verdict.startswith(("UNKNOWN(runner:", "INVALID(runner:"))
+            for verdict in validity.values()
+        )
+        complete = (
+            not run.refusals
+            and all(attempt.status == "completed" for attempt in run.attempts)
+            and validity_supported
+        )
+        runner_diagnostics = [
+            diagnostic("warning", item.code, item.message)
+            for item in run.refusals[:128]
+        ]
+        if not binary:
+            runner_diagnostics.insert(
+                0,
+                diagnostic("error", "tool.missing", "ngspice was not found."),
+            )
+        return result(
+            operation,
+            tool={
+                "name": "ngspice",
+                "path": str(binary) if binary else None,
+                "version": None,
+            },
+            execution=static_execution("completed" if binary else "not_available"),
+            engineering_status="pass" if complete else "unknown",
+            summary=(
+                "Every compiled testbench-plan condition produced receipt-bound evidence."
+                if complete
+                else "The runner retained incomplete or invalid condition evidence honestly."
+            ),
+            diagnostics=runner_diagnostics,
+            data={
+                "schema": "simra.testbench-plan-run/v1",
+                "observables": dict(run.observables),
+                "receipt": dict(run.receipt),
+                "refusals": [item.record() for item in run.refusals],
+                "extensions": {},
+            },
+        )
     if args.command == "extract":
         try:
             simulation = _load_json_object(args.simulation, role="simulation result")
@@ -3015,6 +3321,14 @@ def _requested_operation(argv: list[str]) -> str:
             return "openada.invalid_request"
         if token == "experiment" and "compile" in argv[index + 1 : index + 2]:
             return "experiment.compile"
+        if token == "testbench-plan":
+            leaf = argv[index + 1] if index + 1 < len(argv) else None
+            return {
+                "validate": "testbench.plan.validate",
+                "compile": "testbench.plan.compile",
+                "run": "testbench.plan.run",
+                "compare": "testbench.oracle.compare",
+            }.get(leaf, "testbench.plan.validate")
         return _COMMAND_OPERATIONS.get(token, "openada.invalid_request")
     return "openada.invalid_request"
 
@@ -3084,6 +3398,63 @@ def _requested_shared_simulation(
 
 
 def _invalid_request(operation: str, message: str) -> dict:
+    if operation.startswith("testbench.plan.") or operation == "testbench.oracle.compare":
+        schema = {
+            "testbench.plan.validate": "simra.testbench-plan-validation/v1",
+            "testbench.plan.compile": "simra.testbench-plan-compile/v1",
+            "testbench.plan.run": "simra.testbench-plan-run/v1",
+            "testbench.oracle.compare": "simra.testbench-oracle-comparison/v1",
+        }[operation]
+        issue_code = (
+            "testbench_oracle.request.invalid"
+            if operation == "testbench.oracle.compare"
+            else "testbench_plan.request.invalid"
+        )
+        refusal = {
+            "code": issue_code,
+            "path": "",
+            "message": message,
+        }
+        if operation == "testbench.oracle.compare":
+            data = {
+                "protocol": {
+                    "request_id": str(uuid.uuid4()),
+                    "operation_profile": (
+                        "openada.operation/testbench.oracle.compare/v1alpha1"
+                    ),
+                    "assertion_profile": (
+                        "openada.assertion/testbench.oracle.comparison.valid/v1alpha1"
+                    ),
+                    "implementation_id": "org.openada.kernel.testbench-oracle",
+                    "conformance_id": "testbench-oracle-comparator-v1",
+                },
+                "comparison": None,
+                "request_sha256": None,
+                "extensions": {},
+            }
+        elif operation == "testbench.plan.validate":
+            data = {"schema": schema, "plan": None, "refusals": [refusal], "extensions": {}}
+        elif operation == "testbench.plan.compile":
+            data = {"schema": schema, "receipt": None, "refusals": [refusal], "extensions": {}}
+        else:
+            data = {
+                "schema": schema,
+                "observables": None,
+                "receipt": None,
+                "refusals": [refusal],
+                "extensions": {},
+            }
+        return result(
+            operation,
+            tool=None,
+            execution=static_execution("invalid_request"),
+            engineering_status="unknown",
+            summary="OpenADA could not validate the closed testbench-plan request.",
+            diagnostics=[
+                diagnostic("error", issue_code, message)
+            ],
+            data=data,
+        )
     if operation == "experiment.compile":
         return result(
             "experiment.compile",
