@@ -6,7 +6,7 @@
       "kind": "verilator-log",
       "path": "/evidence/positive-2023/rtl-lint.log",
       "role": "rtl.lint.log",
-      "sha256": "c11a6c8bb13525c022a6430f87250a38459717354a2901dc8dd09f93187b944b"
+      "sha256": "67c0cf4dbd79788d891fb60553241e9b486e0f884aef55e5d4bbd6a6e0e82754"
     }
   ],
   "data": {
@@ -61,8 +61,8 @@
       "+1800-2023ext+svh",
       "/design/modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/verilog/sar_logic.v"
     ],
-    "cwd": "/evidence/positive-2023/.openada-verilator-gfwsu4iq",
-    "duration_ms": 16,
+    "cwd": "/evidence/positive-2023/.openada-verilator-ucvna2dp",
+    "duration_ms": 17,
     "exit_code": 0,
     "status": "completed"
   },
@@ -78,7 +78,7 @@
   ],
   "operation": "rtl-lint",
   "provenance": {
-    "created_at": "2026-08-10T09:04:32.418380Z",
+    "created_at": "2026-08-12T09:50:10.654872Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

@@ -112,16 +112,29 @@ Use this order for autonomous or injection-driven timing circuits:
 
 1. **OP:** use only to inspect bias and static state. Do not require an
    autonomous oscillator's desired behavior to appear in DC equilibrium.
-2. **Transient:** startup, amplitude envelope, frequency, duty cycle, settling,
-   tuning range, and supply/load sensitivity over an observation interval long
-   enough for the declared metric.
+2. **Transient oscillator evidence:** when the experimental
+   `openada.operation/result.osc.measure/v1alpha1` profile is advertised, use
+   its declared late crop, hysteresis, cycle count, minimum amplitude, and hold
+   interval for differential frequency, peak-to-peak amplitude, and supply
+   power. Keep period/amplitude relative-deviation limits at or below
+   0.05/0.20 and require complete crop-edge coverage; a partial tail or missing
+   hysteresis confirmation is under-coverage, not collapse. Keep its typed
+   `never_started`, `collapsed`, `not_sustained`, and
+   `multimode` outcomes; only `sustained` supports period/frequency. Duty cycle
+   and arbitrary envelope settling remain separate questions.
 3. **Spectrum:** route waveform-based harmonic or spur questions to
    `$openada:analyze-spectral-linearity` with an explicit steady-state crop.
-4. **Specialized timing/noise:** phase noise, cycle-to-cycle jitter, periodic
-   steady-state, and injection locking require semantic primitives that the
-   basic OP/DC/AC/transient profile does not establish. Mark them not evaluated
-   unless a capable versioned operation is advertised.
-5. **Variation:** preserve startup failures and non-oscillating points as real
+4. **Tuning and sensitivity:** compose every sustained control-point receipt
+   through `tuning_grid`, preserving per-point unequal-spacing central Kvco,
+   monotonicity, and span. Verify the embedded request, fixed producer, and
+   recomputable receipt hashes as integrity bindings, not authorship. Use
+   `frequency_shift` for signed/absolute supply
+   pushing or load pulling; never fit one Kvco or discard a failed point.
+5. **Specialized timing/noise:** phase noise, cycle-to-cycle jitter, periodic
+   steady-state, and injection locking require separate semantic primitives.
+   `result.osc.measure/v1alpha1` explicitly excludes phase noise. Mark them not
+   evaluated unless a capable versioned operation is advertised.
+6. **Variation:** preserve startup failures and non-oscillating points as real
    fail or unknown outcomes according to their underlying assertions.
 
 ## Data converter and sampled analog front end

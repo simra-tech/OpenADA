@@ -63,17 +63,17 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     payload = json.loads(first.stdout)
     assert payload["inventory"] == {
         "active_profile_count": 9,
-        "builtin_provider_mapping_count": 12,
-        "cli_leaf_count": 28,
+        "builtin_provider_mapping_count": 13,
+        "cli_leaf_count": 29,
         "preflight_assertion_count": 8,
-        "profile_count": 14,
-        "profile_feature_count": 52,
-        "provider_mapping_count": 13,
+        "profile_count": 15,
+        "profile_feature_count": 59,
+        "provider_mapping_count": 14,
         "shipped_provider_capability_count": 1,
         "shipped_provider_manifest_count": 1,
-        "surface_count": 28,
+        "surface_count": 29,
     }
-    assert payload["summary"]["row_count"] == 231
+    assert payload["summary"]["row_count"] == 255
     assert payload["summary"]["active_row_count"] == 159
     # Receipt-bound expectations: these require the seven-receipt chain index
     # to be current for the semantic subject under test.
@@ -83,7 +83,7 @@ def test_audit_emits_the_complete_deterministic_release_matrix() -> None:
     assert payload["summary"]["gap_count"] == 0
     assert payload["summary"]["rows_by_coverage_level"] == {
         "agent-ready": 159,
-        "unverified": 72,
+        "unverified": 96,
     }
     assert payload["gaps"] == []
 
@@ -458,7 +458,7 @@ def test_untouched_hidden_variant_stays_hidden_without_issues() -> None:
     )
     assert cosim_row["lifecycle"] == "experimental"
     assert cosim_row["required_coverage_level"] is None
-    assert payload["summary"]["row_count"] == 231
+    assert payload["summary"]["row_count"] == 255
     assert payload["summary"]["active_row_count"] == 159
 
 

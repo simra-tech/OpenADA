@@ -317,6 +317,75 @@
         ]
       },
       {
+        "assertion_profile": "openada.assertion/oscillator.measurement.valid/v1alpha1",
+        "availability": "available",
+        "features": [
+          {
+            "conformance_ids": [
+              "oscillator-measurement-primitives-v0alpha1"
+            ],
+            "id": "openada.feature/oscillator.crossing-frequency/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "oscillator-measurement-primitives-v0alpha1"
+            ],
+            "id": "openada.feature/oscillator.startup-hold/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "oscillator-measurement-primitives-v0alpha1"
+            ],
+            "id": "openada.feature/oscillator.differential-amplitude/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "oscillator-measurement-primitives-v0alpha1"
+            ],
+            "id": "openada.feature/oscillator.average-supply-power/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "oscillator-measurement-primitives-v0alpha1"
+            ],
+            "id": "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "oscillator-measurement-primitives-v0alpha1"
+            ],
+            "id": "openada.feature/oscillator.frequency-span/v1alpha1",
+            "maturity": "structured"
+          },
+          {
+            "conformance_ids": [
+              "oscillator-measurement-primitives-v0alpha1"
+            ],
+            "id": "openada.feature/oscillator.perturbation-shift/v1alpha1",
+            "maturity": "structured"
+          }
+        ],
+        "locator_types": [
+          "artifact"
+        ],
+        "native_product": null,
+        "operation_profile": "openada.operation/result.osc.measure/v1alpha1",
+        "operation_profile_schema": "openada.operation-profile/v0alpha2",
+        "provider_id": "org.openada.kernel.oscillator-evidence",
+        "provider_kind": "evidence-kernel",
+        "provider_version": "1.0.0",
+        "result_schema": "openada.result/v0alpha1",
+        "transports": [
+          "local-cli",
+          "in-process"
+        ]
+      },
+      {
         "assertion_profile": "openada.assertion/transfer.measurement.valid/v1alpha1",
         "availability": "available",
         "features": [
@@ -658,7 +727,7 @@
   "inputs": [],
   "operation": "doctor",
   "provenance": {
-    "created_at": "2026-08-10T09:04:46.261391Z",
+    "created_at": "2026-08-12T09:52:14.288290Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

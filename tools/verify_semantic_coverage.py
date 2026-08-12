@@ -143,6 +143,7 @@ SURFACE_CLASSIFICATIONS: dict[tuple[str, ...], str] = {
     ("lvs",): "semantic-execution",
     ("measure",): "semantic-execution",
     ("netlist",): "semantic-execution",
+    ("oscillator",): "semantic-execution",
     ("profile", "list"): "administrative",
     ("profile", "show"): "administrative",
     ("provider", "invoke"): "transport-execution",
@@ -175,7 +176,15 @@ NATIVE_EDA_SURFACES = frozenset(
     }
 )
 ARTIFACT_KERNEL_SURFACES = frozenset(
-    {"evaluate", "experiment-compile", "extract", "measure", "spectral", "transfer"}
+    {
+        "evaluate",
+        "experiment-compile",
+        "extract",
+        "measure",
+        "oscillator",
+        "spectral",
+        "transfer",
+    }
 )
 NATIVE_EDA_OPERATIONS = frozenset(
     {

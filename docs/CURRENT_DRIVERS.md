@@ -212,7 +212,7 @@ components into a canonical normalized series:
   --selection series-selection.json
 ```
 
-The `measure`, `spectral`, `transfer`, and `evaluate` operations are
+The `measure`, `spectral`, `transfer`, `oscillator`, and `evaluate` operations are
 backend-independent OpenADA kernels rather than EDA drivers:
 
 ```bash
@@ -222,12 +222,15 @@ backend-independent OpenADA kernels rather than EDA drivers:
   --measurement spectral-request.json
 ./bin/openada transfer --series series-or-extraction-result.json \
   --measurement transfer-request.json
+./bin/openada oscillator --series series-or-extraction-result.json \
+  --measurement oscillator-transient-request.json
 ./bin/openada evaluate --measurement measurement-result.json \
   --specification specification.json
 ```
 
-`measure`, `spectral`, and `transfer` accept either a bounded normalized real
-inline series or one complete passing extraction envelope. The CLI validates
+`measure`, `spectral`, `transfer`, and transient `oscillator` accept either a
+bounded normalized real inline series or one complete passing extraction
+envelope. The CLI validates
 the latter against the packaged extraction profile and unwraps only a verified
 embedded series. Each downstream kernel then validates the canonical
 axis/signal/condition digest. Optional native-artifact lineage inside that
@@ -286,17 +289,35 @@ crossing, the unique falling 0 dB crossing, or—only for explicitly declared
 negative-feedback loop gain—phase margin. It does not call the first point DC, infer gain margin, choose among
 multiple crossings, or make a general stability claim.
 
+Experimental `oscillator` implements
+`openada.operation/result.osc.measure/v1alpha1` with
+`openada.assertion/oscillator.measurement.valid/v1alpha1`. One transient
+receipt binds differential hysteretic crossing frequency, peak-to-peak
+amplitude, and trapezoidal supply power to the same declared late window and
+canonical series. Crossing confirmation cancels on a return through negative
+hysteresis, QC tolerances are capped at 5% period/20% amplitude deviation, and
+the crop must have complete edge coverage without calling a partial tail a
+collapse. The receipt embeds its normalized request and fixed producer so all
+content hashes can be recomputed (they do not authenticate authorship). Its
+startup hold gate distinguishes `never_started`,
+`collapsed`, and `not_sustained`; inconsistent beating or multimode evidence is
+an explicit QC `unknown`, never an arbitrary frequency. Receipt-only
+`tuning_grid` mode returns endpoint secants and per-point unequal-spacing
+central Kvco, checks monotonicity, and retains span. `frequency_shift` retains
+signed and absolute supply/load perturbation shift. Phase noise is excluded.
+
 Inspect the complete packaged ontology without guessing IDs:
 
 ```bash
 ./bin/openada profile list
 ./bin/openada profile show openada.operation/result.transfer.measure/v1alpha2
+./bin/openada profile show openada.operation/result.osc.measure/v1alpha1
 ```
 
-The catalog contains nine active profiles plus the immutable historical
-`circuit.simulate/v1alpha1`, `result.measure/v1alpha1`, and
-`result.transfer.measure/v1alpha1` profiles. Catalog presence is not an
-external-provider capability.
+The catalog contains 15 profiles: nine active, two dispatchable experimental,
+and four historical or retired. Catalog presence is not an external-provider
+capability; external invocation remains registered only for active
+`circuit.simulate/v1alpha2`.
 
 ## Explicit external-provider runtime
 

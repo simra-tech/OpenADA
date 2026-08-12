@@ -13,6 +13,9 @@ metric is already supported.
 | Settling time | Transient simulation → series extraction → `settling_time` | Caller supplies target, tolerance, reference, hold duration, and optional window |
 | Minimum, maximum, arithmetic mean, or RMS | Any compatible real series → `result.measure` | Retained samples, optional closed window, exact units |
 | Coherent single-tone SNR, SINAD, THD, or SFDR | Transient simulation → series extraction → `result.spectral.measure` | Uniform power-of-two coherent record and fixed rectangular partition only |
+| Oscillator startup, frequency, differential amplitude, and supply power | Transient simulation → selected differential/supply series → experimental `result.osc.measure` `transient` | One declared late crop and receipt; hysteretic N-cycle crossings, capped 0.05/0.20 period/amplitude QC, and complete crop-edge coverage; typed sustained/never-started/collapsed/not-sustained/multimode verdict |
+| Local Kvco curve and frequency span | Complete sustained oscillator receipts on a strictly increasing control grid → `result.osc.measure` `tuning_grid` | One local value per point: endpoint secants and unequal-spacing central differences; monotonicity retained; no single fitted Kvco or omitted point |
+| Supply pushing or load pulling | Matched sustained reference/perturbed oscillator receipts → `result.osc.measure` `frequency_shift` | Exact non-perturbation context match; signed and absolute frequency shift both retained |
 | AC output-over-input trace and first-frequency gain | AC simulation → four Cartesian series → `result.transfer.measure` | Same-unit input/output phasors; first positive simulated frequency is explicitly not DC |
 | −3 dB bandwidth or unity-gain frequency | AC transfer trace → `result.transfer.measure` | Exactly one falling crossing; linear-value interpolation over log10 frequency |
 | Negative-feedback phase margin | Reviewed loop-gain testbench → AC transfer trace → `result.transfer.measure` | Explicit negative-feedback interpretation; 180° plus unwrapped phase at the unique falling unity crossing |
@@ -29,8 +32,8 @@ Do not force these into the closest implemented primitive:
 - device-region or headroom interpretation not represented as selected finite
   voltage/current series;
 - noise analysis or integrated noise;
-- arbitrary signal expressions, differential combination, resampling, or unit
-  conversion;
+- arbitrary signal expressions, generic differential combination outside the
+  declared transfer/oscillator operands, resampling, or unit conversion;
 - noncoherent/windowed spectra, HD2/HD3 as individual outputs, SNDR alias,
   ENOB, jitter, or phase noise;
 - nested sweeps, corners, Monte Carlo, statistical yield, or campaign

@@ -116,7 +116,7 @@
     },
     {
       "repository_path": "tools/verify_semantic_coverage.py",
-      "sha256": "49d161af78f09610b91f8757eb27257b6fdfef262c46ee6c081d4d4af9982040",
+      "sha256": "77ea895c0ed0e9226d30aa5d01deb3a72adce616ce054d5da1b52af174d4b00c",
       "extensions": {}
     },
     {
@@ -151,7 +151,7 @@
     },
     {
       "repository_path": "docs/MEASUREMENT_METHODS.md",
-      "sha256": "ea6193dac467a5294a9d8947925b0b7921b54faa62270684b5b17699009ee89c",
+      "sha256": "449f26ee585e62f3085362bf1497b45d8f816e63e0d109d6c7aad176b2f58437",
       "extensions": {}
     },
     {

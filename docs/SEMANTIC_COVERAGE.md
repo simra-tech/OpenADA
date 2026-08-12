@@ -15,6 +15,10 @@ emitted by `capabilities`. It also inventories every shipped
 conformance claim. The verifier expands every profile feature and native
 mapping, so adding an enum-backed analysis, implementation mapping, provider
 feature, or packaged provider creates a new uncovered row automatically.
+The current inventory has 15 profiles (nine active), 59 profile features, 29
+surfaces, 29 CLI leaves, 13 built-in provider mappings, and 14 provider mappings
+in total. Expansion yields 255 rows: 159 active `agent-ready` obligations and 96
+historical or experimental `unverified` rows.
 
 Run the normal offline audit with:
 
@@ -49,7 +53,7 @@ python tools/verify_semantic_coverage.py --mode release
 The release index at
 [`conformance/semantic-chains/index.json`](../conformance/semantic-chains/index.json)
 is generated only from the seven declared source-frozen receipts. Release mode
-requires 147 active rows, zero gaps, zero issues, a passing offline verifier for
+requires 159 active rows, zero gaps, zero issues, a passing offline verifier for
 every chain, and a resolved provider receipt digest. The ledger never infers
 coverage from maturity prose, unit-test counts, or self-declared provider
 conformance metadata.

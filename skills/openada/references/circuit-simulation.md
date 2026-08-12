@@ -56,6 +56,7 @@ profiles before constructing requests:
 ```bash
 openada profile show openada.operation/result.series.extract/v1alpha1
 openada profile show openada.operation/result.measure/v1alpha2
+openada profile show openada.operation/result.osc.measure/v1alpha1
 openada profile show openada.operation/specification.evaluate/v1alpha1
 ```
 
@@ -91,6 +92,16 @@ retained `specification.evaluate` result before reporting that a numeric limit
 passed. Requests and selections are supporting inputs, not result evidence.
 Use typed minimum and maximum results over the same series for peak-to-peak
 ripple; an absolute maximum alone is not ripple.
+
+For oscillator evidence, use `openada oscillator` with the experimental
+`openada.operation/result.osc.measure/v1alpha1` profile instead of subtracting
+independently cropped scalars. Its transient receipt binds differential
+frequency, peak-to-peak amplitude, and average supply power to one window and
+returns a typed non-result for failed startup, collapse, or multimode QC.
+Receipt-only grid and perturbation modes return the local Kvco curve, span, or
+signed/absolute shift after verifying the embedded request, fixed producer,
+and recomputable receipt hashes. Treat those hashes as content integrity, not
+authorship authentication. Phase noise remains outside this operation.
 
 Preserve exact deck, backend, tool version, raw artifact, selectors, units,
 conditions, measurement ID, specification ID, bounds, result envelopes,

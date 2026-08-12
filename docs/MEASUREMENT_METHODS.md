@@ -93,6 +93,149 @@ candidate-context workflow therefore needs an already prepared,
 provenance-bound scalar code series until those operations receive their own
 versioned contract.
 
+## Oscillator transient and sweep method v1alpha1
+
+`openada.operation/result.osc.measure/v1alpha1` is a separate profile family rather than another
+scalar kind in `result.measure`. It establishes
+`openada.assertion/oscillator.measurement.valid/v1alpha1`; the closed semantic implementation is
+`org.openada.kernel.oscillator-evidence` version `1.0.0`. An oscillator
+observation has a coupled validity decision: frequency, differential amplitude,
+and supply power must come from one declared waveform crop, and a frequency is
+not a result unless the waveform passes the startup and
+sustained-oscillation gates. The profile is an `openada-definition` and has
+three mutually exclusive modes:
+
+- `transient` measures one provenance-bound transient record;
+- `tuning_grid` composes sustained transient observations over a declared
+  control grid; and
+- `frequency_shift` compares declared reference and perturbed observations for
+  supply pushing, load pulling, or another named perturbation.
+
+Transient mode returns a typed oscillator verdict. `sustained` validates finite
+period and frequency. `never_started` means the record never reached the
+minimum amplitude and crossing qualification. `collapsed` means it qualified
+as started and subsequently lost the hold criteria. `not_sustained` means
+oscillatory activity was visible but no complete qualifying hold interval was
+established, or a qualifying onset/window did not contain the declared count
+with complete edge coverage. `multimode` is the QC outcome for beating,
+two-tone behavior, or
+inconsistent periods that cannot honestly be represented by one oscillator
+frequency. `unknown` covers an invalid request, invalid source, or insufficient
+evidence. The latter five statuses are typed non-results, with numeric values
+for period and frequency left null; they are never encoded as NaN, infinity,
+zero frequency, or a best-looking sub-window. Grid and shift compositions
+return typed `measured` or `unknown` status and retain every input verdict. On a structurally valid transient
+crop, differential amplitude and supply power remain `measured` even when the
+oscillator verdict is not sustained. Their availability describes the crop; it
+does not upgrade the oscillator verdict or make period and frequency valid.
+
+### One crop, three transient measurements
+
+The caller declares the late measurement window explicitly, including its
+settle crop and integer cycle count. The result retains the source identity and
+a canonical SHA-256 window identity. Frequency, differential peak-to-peak
+amplitude, and average supply power in the same transient receipt all cite that
+same window hash. A consumer can therefore reject a record assembled from a
+frequency crop, amplitude crop, or power crop with a different source or
+window, even when the reported endpoints happen to be equal.
+
+The receipt embeds the complete normalized transient request and fixed producer
+identity (`openada.operation/result.osc.measure/v1alpha1`, its oscillator
+assertion, `org.openada.kernel.oscillator-evidence`, version `1.0.0`). A
+consumer can therefore independently recompute the request, method, window,
+and whole-receipt digests. These hashes establish exact content identity and
+internal consistency, not cryptographic authorship; a workflow exposed to
+hostile receipt injection must authenticate the containing prior result at its
+trust boundary.
+
+For terminal signals `a` and `b`, the measured oscillator signal is exactly
+`d(t) = a(t) - b(t)`. A rising event arms only after `d` reaches the declared
+negative hysteresis level. The algorithm remembers the linearly interpolated
+zero time on the subsequent rising sign crossing, emits that time only after
+`d` reaches the positive hysteresis level, and must re-arm below the negative
+level before another event. An unconfirmed candidate is cancelled if `d`
+returns to or below the negative level. Hysteresis therefore rejects chatter without
+shifting the reported event from zero to a hysteresis threshold. Counting `N`
+complete cycles uses the first `N + 1` qualified rising events at or after the
+window start. The elapsed time between the first and last counted event gives
+
+```text
+period    = (t[N] - t[0]) / N
+frequency = N / (t[N] - t[0])
+```
+
+The period sequence must also satisfy the declared consistency tolerance. The
+request caps period relative deviation at 0.05 and amplitude relative deviation
+at 0.20 so a caller cannot relax QC enough to hide beating. All remaining late
+crossings and crop-edge coverage remain QC inputs: the first crossing must be
+within one mean late period of the start and the last within 1.1 mean periods of
+the stop, with the trailing allowance reserved for hysteresis confirmation.
+Every complete late cycle must meet minimum amplitude. A partial tail or missing
+confirmation is `not_sustained`, not positive collapse evidence; collapse
+requires observed post-onset amplitude loss. These checks prevent startup
+ringing or an isolated edge from becoming a frequency measurement.
+
+Differential amplitude is `max(d) - min(d)` over the exact shared crop. Supply
+power uses the declared supply-voltage and supply-current signals. Its explicit
+orientation is operative: `positive_into_load` gives instantaneous consumption
+as `vdd(t) * i(vdd)(t)`, while `positive_into_source` gives
+`-vdd(t) * i(vdd)(t)`. The selected orientation is retained in the result. The
+mean is the trapezoidal time integral divided by the crop duration, not the
+arithmetic mean of samples, so a nonuniform transient time axis does not bias
+the result.
+
+Startup is assessed over its declared hold interval, not just at the first
+threshold crossing. The minimum differential amplitude and period-consistency
+criteria must remain satisfied for the complete hold. The result retains the
+first qualifying startup time and the hold assessment when sustained; loss of
+qualification after an apparent start is `collapsed`, while period structure
+consistent with beating or multiple modes is surfaced as `multimode` for QC.
+
+### Tuning grids and perturbation shifts
+
+A `tuning_grid` request binds every control coordinate to its typed transient
+observation. Every declared point must be sustained before the mode returns
+numeric frequency, span, or Kvco values; an invalid point is retained as a
+typed non-result, never dropped to make a shorter grid pass. The frequency span
+is `max(f) - min(f)` over the complete declared grid. Adjacent frequencies are
+checked for a consistent monotonic direction; a reversal remains explicit in
+the result rather than being hidden by the span.
+
+Local Kvco is a curve, never one fitted or averaged number. The declared
+control coordinates must be strictly increasing. Each endpoint uses its
+adjacent one-sided secant. At every interior point, the profile evaluates the
+derivative of the quadratic interpolant through that point and its two
+neighbors; this is the unequal-spacing central difference, not a uniform-grid
+shortcut. For `h- = x[i] - x[i-1]` and `h+ = x[i+1] - x[i]`, it is
+
+```text
+Kvco[i] = -h+ / (h- * (h- + h+)) * f[i-1]
+          + (h+ - h-) / (h- * h+) * f[i]
+          + h- / (h+ * (h- + h+)) * f[i+1]
+```
+
+The result retains every control coordinate, local `df/dV`, and source
+identity. A nonuniform control grid therefore remains nonuniform and a strongly
+nonlinear curve such as roughly 33 through 130 MHz/V remains visible point by
+point.
+
+`frequency_shift` binds one sustained reference observation and one sustained
+perturbed observation. It returns both
+
+```text
+signed_shift   = f(perturbed) - f(reference)
+absolute_shift = abs(signed_shift)
+```
+
+along with both input identities and the named perturbation. The signed value
+preserves pushing or pulling direction; the absolute value supports symmetric
+limits without discarding that direction.
+
+Phase-noise, jitter, spectral-density, and offset-frequency measurements are
+explicitly outside `openada.operation/result.osc.measure/v1alpha1`. Phase noise requires its own
+method and profile; this oscillator primitive must not manufacture a phase-noise
+number from transient crossings.
+
 ## Why ENOB, SNDR, and jitter are not aliases
 
 `sinad` is the canonical implemented name. `sndr` is not accepted as an

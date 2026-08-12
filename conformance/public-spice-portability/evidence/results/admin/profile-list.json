@@ -67,6 +67,20 @@
         "schema": "openada.operation-profile/v0alpha2"
       },
       {
+        "assertion_profile": "openada.assertion/oscillator.measurement.valid/v1alpha1",
+        "feature_ids": [
+          "openada.feature/oscillator.crossing-frequency/v1alpha1",
+          "openada.feature/oscillator.startup-hold/v1alpha1",
+          "openada.feature/oscillator.differential-amplitude/v1alpha1",
+          "openada.feature/oscillator.average-supply-power/v1alpha1",
+          "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+          "openada.feature/oscillator.frequency-span/v1alpha1",
+          "openada.feature/oscillator.perturbation-shift/v1alpha1"
+        ],
+        "operation_profile": "openada.operation/result.osc.measure/v1alpha1",
+        "schema": "openada.operation-profile/v0alpha2"
+      },
+      {
         "assertion_profile": "openada.assertion/series.extraction.valid/v1alpha1",
         "feature_ids": [],
         "operation_profile": "openada.operation/result.series.extract/v1alpha1",
@@ -157,7 +171,7 @@
   "diagnostics": [],
   "engineering": {
     "status": "pass",
-    "summary": "Listed 14 packaged operation profiles."
+    "summary": "Listed 15 packaged operation profiles."
   },
   "execution": {
     "command": [],
@@ -168,7 +182,7 @@
   "inputs": [],
   "operation": "profile.list",
   "provenance": {
-    "created_at": "2026-08-10T09:04:48.743251Z",
+    "created_at": "2026-08-12T09:52:17.009415Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",
