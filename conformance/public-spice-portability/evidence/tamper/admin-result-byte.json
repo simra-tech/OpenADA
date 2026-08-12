@@ -6,5 +6,5 @@
   "required_diagnostic": "conformance.admin.tampered",
   "schema": "openada.tamper-replay/v0alpha1",
   "status": "unknown",
-  "verifier_message": "agent.admin.provider-validate.digest differs: expected 'f50bcfa24f47edfb0b68bce719ebeafed6e1ac5bd7eedf4079ecba12101bcab9', observed 'c7b934a91185192bbd57033eb4e3517fe89035e1429d1591ed85e3aeb05875c7'"
+  "verifier_message": "agent.admin.provider-validate.digest differs: expected '7f456f76c16f0c567837dd2ae9689b4493d7fd7d0bf112ff372159c286ea56dc', observed '397ce499097fa1ec1520aaf59bf06c0bf6b891ccb6e1c7790d07bce808c41ed4'"
 }
