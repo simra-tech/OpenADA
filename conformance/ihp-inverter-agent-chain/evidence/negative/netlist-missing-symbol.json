@@ -40,11 +40,11 @@
       "-q",
       "-x",
       "-o",
-      "/tmp/openada-xschem-s3xejldg",
+      "/tmp/openada-xschem-u2oumep5",
       "/evidence/work/inverter_missing_symbol.sch"
     ],
     "cwd": "/evidence/work",
-    "duration_ms": 116,
+    "duration_ms": 65,
     "exit_code": 0,
     "status": "completed"
   },
@@ -68,7 +68,7 @@
   ],
   "operation": "netlist",
   "provenance": {
-    "created_at": "2026-08-12T09:09:44.670745Z",
+    "created_at": "2026-08-12T09:59:29.022477Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

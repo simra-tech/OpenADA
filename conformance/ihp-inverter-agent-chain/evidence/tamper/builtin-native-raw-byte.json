@@ -2,11 +2,11 @@
   "diagnostic": "conformance.evidence.tampered",
   "independent_rejection": {
     "exception": "ConformanceError",
-    "message": "file[/tampered-evidence/builtin/simulation/inverter_shared/inverter_shared.raw].sha256: expected '59db31931ebf2992d75e65b5a29d0ce26c6e65526ba6d0b3cd9f2d43b26ff086', got 'f6a776d21d3bee5104bfca313e43fe771362389016809e3cf1f3a79b8170f209'"
+    "message": "file[/tampered-evidence/builtin/simulation/inverter_shared/inverter_shared.raw].sha256: expected 'b78eec0073faf3efb59258483fef768065e791f637f12e7f87f8a01e1e6fd00c', got '2bf6b28098f7ac563018264c1df044421c777f00cf8a87ff96781acf9a63a8d7'"
   },
   "mutation": {
-    "baseline_sha256": "f6a776d21d3bee5104bfca313e43fe771362389016809e3cf1f3a79b8170f209",
-    "mutated_sha256": "59db31931ebf2992d75e65b5a29d0ce26c6e65526ba6d0b3cd9f2d43b26ff086",
+    "baseline_sha256": "2bf6b28098f7ac563018264c1df044421c777f00cf8a87ff96781acf9a63a8d7",
+    "mutated_sha256": "b78eec0073faf3efb59258483fef768065e791f637f12e7f87f8a01e1e6fd00c",
     "target": "builtin/simulation/inverter_shared/inverter_shared.raw"
   },
   "replay_id": "builtin-native-raw-byte",
