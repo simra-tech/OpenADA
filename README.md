@@ -27,13 +27,17 @@ replacement for them. The same simulation intent can run through ngspice or
 Xyce; the agent should not have to relearn every command surface and log
 grammar to understand whether valid evidence was produced.
 
-The `0.4.0` preview provides seventeen CLI command families, eight open-source EDA
+The `0.4.0` preview provides eighteen CLI command families, eight open-source EDA
 drivers, the versioned `openada.result/v0alpha1` evidence envelope, and nine
 agent skills. It closes the first native-artifact-to-specification chain with
 verified ngspice/Xyce series extraction and deterministic coherent single-tone
 SNR, SINAD, THD, and SFDR measurements, plus closed AC gain, bandwidth,
-unity-frequency, and phase-margin evidence. Packaged profiles are inspectable
-through the CLI. It also adds a hardened explicit-manifest, local JSON-stdio
+unity-frequency, and phase-margin evidence. An experimental dispatchable
+`openada.operation/result.osc.measure/v1alpha1` family adds typed oscillator
+startup/hold verdicts and same-window frequency, amplitude, and power evidence,
+plus provenance-bound tuning-gain curves, span, and perturbation shift; phase
+noise remains outside that profile. Packaged profiles are inspectable through
+the CLI. It also adds a hardened explicit-manifest, local JSON-stdio
 external-provider runtime for the active circuit-simulation profile. That
 runtime is intentionally not automatic discovery, a marketplace, or an MCP
 binding.
@@ -182,6 +186,10 @@ circuit.simulate/v1alpha2
      or result.spectral.measure/v1alpha1
      or result.transfer.measure/v1alpha2
   -> specification.evaluate/v1alpha1
+
+circuit.simulate/v1alpha2
+  -> result.series.extract/v1alpha1
+  -> result.osc.measure/v1alpha1
 ```
 
 `openada extract` requires the complete simulation result plus the exact raw
@@ -189,10 +197,18 @@ artifact path and explicit native-name/output-name/unit/Cartesian-component
 selectors. The simulation result is passed whole, exactly as `simulate` wrote
 it; no field is ever stripped to get it accepted. Selectors name *signals* -
 the sweep axis is always returned as `series.axis` and must not also be
-selected. The three measurement commands accept the complete passing
+selected. The four waveform measurement commands accept the complete passing
 extraction envelope directly. `openada spectral` implements one deliberately
 narrow coherent single-tone method; `openada transfer` implements an explicit
-same-unit Cartesian output-over-input trace with closed crossing semantics.
+same-unit Cartesian output-over-input trace with closed crossing semantics;
+and experimental `openada oscillator` binds differential crossing frequency,
+peak-to-peak amplitude, and average supply power to one declared late window.
+It returns typed `sustained`, `never_started`, `collapsed`, `not_sustained`,
+`multimode`, or `unknown` evidence under
+`openada.assertion/oscillator.measurement.valid/v1alpha1`, never a fabricated
+frequency for startup ringing, collapse, or beating.
+The current `specification.evaluate/v1alpha1` bridge accepts ordinary,
+spectral, and transfer scalars, not oscillator receipts.
 See [Measurement methods and standards
 context](docs/MEASUREMENT_METHODS.md) for their methods, IEEE scope map, and
 non-conformance boundary.
@@ -257,11 +273,16 @@ contribution gate.
 ## Evidence-backed semantic release
 
 Every active semantic command, feature, provider mapping, and preflight route
-is derived into a closed coverage row. The current source has 147 active rows,
-and release CI requires every one to reach `agent-ready` through one of seven
-pinned public-design chains: physical DRC/LVS, analog measurements, the full
-inverter agent workflow, all four ngspice-provider analyses, SAR RTL, and
-ngspice/Xyce portability, plus ORFS Ibex synthesis and timing.
+is derived into a closed coverage row. The current catalog contains 16
+profiles, 65 features, 33 surfaces, 33 CLI leaves, 14 built-in provider
+mappings, and 15 provider mappings in total. Audit expansion produces 279 semantic rows:
+all 159 active rows are `agent-ready`, while 120 historical or experimental
+rows remain visibly `unverified`. Release CI requires every active row to reach
+`agent-ready` through one of seven pinned public-design chains: physical
+DRC/LVS, analog measurements, the full inverter agent workflow, all four
+ngspice-provider analyses, SAR RTL, and ngspice/Xyce portability, plus ORFS
+Ibex synthesis and timing. The dispatchable experimental oscillator rows do
+not borrow that release maturity from adjacent scalar-measurement rows.
 
 A release row needs a real native run, independently parsed native artifacts,
 normalized evidence, an engineering decision, a trustworthy negative, a
@@ -287,12 +308,12 @@ adjacent command or be waived through prose.
 
 | Contract layer | Current checkout | Protocol target |
 |---|---|---|
-| Agent intent | Seventeen CLI command families; eight fixed scoped-preflight assertions; fifteen typed operation profiles, nine active; validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
+| Agent intent | Eighteen CLI command families and 33 cataloged leaves; eight fixed scoped-preflight assertions; 16 packaged profiles (nine active, three dispatchable experimental, and four historical/retired); validated explicit `openada.request/v0alpha1` circuit-simulation dispatch | Remaining immutable profiles plus catalog/session/remote transport revisions |
 | Result | Closed `openada.result/v0alpha1` envelope; open operation data | Typed per-operation evidence inside a versioned common envelope |
 | Drivers | Eight open-source EDA drivers; circuit simulation, strict RTL lint, mapped synthesis, and synthesis-stage timing expose typed evidence at feature-specific maturity | Capability manifests and independently installable drivers |
 | Portability proof | Analysis-specific `circuit.simulate` requests have pinned native ngspice/Xyce success replay with independently parsed artifacts; the expanded replay does not yet cover every maturity outcome | More operations, open-source backends, runtime environments, and complete outcome corpora |
 | Engineering skills | One execution skill plus eight experimental capability-gated engineering skills across analog and digital review; one separate experimental ASIC onboarding coordinator | Contributed workflows that compose stable operations across backends |
-| Workflow composition | Simulation → verified native series extraction → scalar, coherent spectral, or closed AC transfer measurement → explicit specification evaluation, with digest lineage and the verified extraction envelope retained separately | Integrated noise, corners, statistical campaigns, and richer standard-reviewed methods |
+| Workflow composition | Simulation → verified native series extraction → scalar, coherent spectral, closed AC transfer, or experimental typed oscillator measurement → explicit specification evaluation where supported, with digest lineage and the verified extraction envelope retained separately | Integrated noise, corners, statistical campaigns, and richer standard-reviewed methods |
 | Design mutation | Deliberately outside the current preview | Preconditioned, transactional change sets with declared writes, native diffs, rollback evidence, and source-revision identity |
 
 Mutation is part of the long-term design because chip projects need safer
@@ -519,6 +540,7 @@ same reviewed commit rather than mixing runtime and skill revisions.
 | `measure` | deterministic OpenADA kernel | structured alpha | Derive one typed scalar (including a least-squares signal-versus-axis slope) from a canonical-digest-bound normalized real inline series using a closed algorithm kind |
 | `spectral` | deterministic OpenADA kernel | structured alpha | Derive coherent single-tone SNR, SINAD, signed-dB THD, or SFDR from one fully declared hashed bin partition |
 | `transfer` | deterministic OpenADA kernel | structured alpha | Derive first-positive-frequency gain, dB magnitude at one declared in-domain frequency, unique falling −3 dB bandwidth, unity-gain frequency, or explicitly declared negative-feedback phase margin; retain the complete magnitude/phase trace |
+| `oscillator` | deterministic OpenADA kernel | experimental structured alpha | Return a typed startup/hold/QC verdict and same-window differential frequency, amplitude, and supply power, or compose receipt-bound local nonuniform-central-difference Kvco, span, and perturbation-shift results; phase noise is excluded |
 | `evaluate` | deterministic OpenADA kernel | structured alpha | Read a complete ordinary, spectral, or transfer measurement envelope, then compare its typed scalar with exact-unit bounds and explicit condition bindings |
 | `testbench-plan validate/compile/run/compare` | deterministic OpenADA kernels + ngspice | experimental | Validate a closed measurement graph, compile supported typed analyses, execute exhaustive receipt-bound conditions, or score emitted observables against an oracle without simulation inside the comparator |
 | `profile list/show` | installed contracts | preview | List packaged operation/assertion/feature IDs or emit one complete schema-bearing operation profile from any working directory |

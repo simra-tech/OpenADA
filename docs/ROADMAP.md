@@ -23,7 +23,7 @@ OpenADA uses explicit maturity levels:
 | OpenROAD / LibreLane | yes | no | no |
 | Icarus / standalone slang / Surelog | yes | no | no |
 | OpenVAF / Qucs-S / GTKWave | yes | no | no |
-| OpenADA evidence kernels | n/a | verified series extraction; scalar/specification; coherent SNR/SINAD/THD/SFDR; closed AC transfer/gain/bandwidth/unity-frequency/phase-margin | structured unit/profile conformance; public native-chain bundle pending |
+| OpenADA evidence kernels | n/a | verified series extraction; scalar/specification; coherent SNR/SINAD/THD/SFDR; closed AC transfer/gain/bandwidth/unity-frequency/phase-margin; experimental typed oscillator transient/Kvco/span/shift | structured unit/profile conformance; oscillator has deterministic synthetic-waveform conformance; public native-chain bundle pending |
 | Explicit external provider | explicit manifest | local JSON-stdio wait dispatch for active `circuit.simulate/v1alpha2` | hardened out-of-tree fake-provider suite; independent real provider pending |
 
 ## Protocol program
@@ -36,15 +36,18 @@ one-off wrappers does not substitute for passing the gate.
 Current status: milestone A is published in this repository. Milestone B now
 includes executable request and driver-manifest v0alpha1 validation, immutable
 operation-profile schemas v0alpha1 and v0alpha2, valid contributor templates,
-nine active implemented typed profiles, one historical simulation profile,
-cwd-independent profile inspection, and an explicit-manifest local JSON-stdio
+16 packaged profiles (nine active, three dispatchable experimental, and four
+historical or retired), cwd-independent profile inspection, and an
+explicit-manifest local JSON-stdio
 wait resolver registered for active circuit simulation. Automatic discovery,
 session/remote transports, and
 MCP remain unimplemented. Milestone C's bounded portability gate now covers
 ngspice OP/DC/AC/TRAN and Xyce DC/AC/TRAN success paths through pinned native
 replay; the new OP/DC/AC rows remain structured until broader outcome cases are
-published. The same native formats now feed verified normalized series and a
-closed spectral and AC transfer kernels. Milestone D has eight experimental
+published. The same native formats now feed verified normalized series and
+closed spectral, AC-transfer, and experimental oscillator kernels. The
+oscillator profile binds same-window transient evidence and receipt-composed
+grids but is not promoted by the native portability chains. Milestone D has eight experimental
 tool-independent engineering skills above the execution adapter; the analog
 coordinator now uses an immutable intent ledger and implemented-primitive
 routing. One separate experimental onboarding coordinator freezes a fresh ASIC
@@ -93,8 +96,8 @@ evidence without changing an agent harness.
   analysis with no includes, measurements, print directives, control-language
   blocks, FFT, noise, Monte Carlo, or multiple analyses.
 - Demonstrate that execution success, valid simulation evidence, measurement
-  extraction, spectral/scalar measurement, and specification satisfaction
-  remain separate claims outside the shared simulation assertion.
+  extraction, spectral/scalar/oscillator measurement, and specification
+  satisfaction remain separate claims outside the shared simulation assertion.
 
 **Success-path gate (passed for the advertised analysis rows):** ngspice 46 passes
 OP/DC/AC/TRAN and Xyce 7.10-opensource passes DC/AC/TRAN in the pinned

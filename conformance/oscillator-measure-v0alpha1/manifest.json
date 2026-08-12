@@ -1,0 +1,71 @@
+{
+  "schema": "openada.oscillator-measure-conformance/v0alpha1",
+  "id": "oscillator-measurement-primitives-v0alpha1",
+  "implementation": {
+    "id": "org.openada.kernel.oscillator-evidence",
+    "runtime": "python",
+    "version": "1.0.0"
+  },
+  "contracts": {
+    "result_schema": {
+      "id": "openada.result/v0alpha1",
+      "repository_path": "schemas/result-v0alpha1.schema.json",
+      "sha256": "76963fa421f7b9e7592aa9a88dd82e82acceedf502fcb016411d86204a009d15"
+    },
+    "oscillator": {
+      "id": "openada.operation/result.osc.measure/v1alpha1",
+      "repository_path": "profiles/result.osc.measure-v1alpha1.json",
+      "sha256": "43d11dc381e016cd4c6dc06f215865d96ae03dfc75ed74eb2483e3ad3c5841d4"
+    }
+  },
+  "fixture": {
+    "schema": "openada.oscillator-measure-conformance-cases/v0alpha1",
+    "repository_path": "conformance/oscillator-measure-v0alpha1/fixtures/cases.json",
+    "sha256": "ecf1971ec3c12402e7b30d6da7bd20239a5218278bae7ce6cb220effc1d4c5da",
+    "license": "MIT"
+  },
+  "features": [
+    "openada.feature/oscillator.crossing-frequency/v1alpha1",
+    "openada.feature/oscillator.startup-hold/v1alpha1",
+    "openada.feature/oscillator.differential-amplitude/v1alpha1",
+    "openada.feature/oscillator.average-supply-power/v1alpha1",
+    "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+    "openada.feature/oscillator.frequency-span/v1alpha1",
+    "openada.feature/oscillator.perturbation-shift/v1alpha1"
+  ],
+  "cases": {
+    "transient": [
+      "clean-sustained-reference",
+      "decaying-startup-ringing",
+      "never-started",
+      "started-then-collapsed",
+      "beating-two-tone-qc"
+    ],
+    "grid": [
+      "benchmark-irregular-nine-point-grid",
+      "nonmonotonic-grid-qc",
+      "incomplete-grid-propagates-unknown"
+    ],
+    "shift": [
+      "signed-supply-perturbation-shift",
+      "incomplete-shift-propagates-unknown"
+    ],
+    "receipt_rejection": [
+      "tampered-receipt-rejected",
+      "rehashed-forged-producer-rejected",
+      "rehashed-forged-startup-rejected",
+      "rehashed-forged-quality-rejected"
+    ],
+    "request_rejection": [
+      "loose-period-qc-cap-rejected",
+      "loose-amplitude-qc-cap-rejected"
+    ]
+  },
+  "policy": {
+    "native_eda": "none",
+    "network": "none",
+    "input_mode": "read-only-fixture",
+    "evidence_mode": "new-file-only",
+    "maximum_evidence_bytes": 8388608
+  }
+}

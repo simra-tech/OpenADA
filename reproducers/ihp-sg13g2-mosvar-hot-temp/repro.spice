@@ -1,0 +1,13 @@
+* Minimal IHP SG13G2 sg13_hv_svaricap hot-temperature transient reproducer
+.param ctrl_v=0.3
+.temp 60
+
+.lib cornerMOShv.lib mos_tt
+
+VCTRL ctrl 0 {ctrl_v}
+VEXC gate 0 PULSE(0 1m 1n 100p 100p 5n 10n)
+XVAR gate ctrl 0 0 sg13_hv_svaricap l=300n w=3.74u Nx=1 Ny=1
+
+.tran 100p 20n
+.print tran v(gate)
+.end

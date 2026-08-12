@@ -2,11 +2,11 @@
   "diagnostic": "conformance.evidence.tampered",
   "independent_rejection": {
     "exception": "ConformanceError",
-    "message": "file[/tampered-evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log].bytes: expected 1491, got 1483"
+    "message": "file[/tampered-evidence/builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log].bytes: expected 1493, got 1485"
   },
   "mutation": {
-    "baseline_sha256": "31c9de1f4f8bd3a4049c1e47d53a1aa4c31aae7cc481cbb7016190258b36ba71",
-    "mutated_sha256": "85186818c9076a4f8a3727f126d716edca9aa80732867f7b5b0f4632e35c8440",
+    "baseline_sha256": "b5e2abfced41bdb1f3553329fbb704b8692367ec7e4235adb8d246e82dce5c60",
+    "mutated_sha256": "53a5b1cc5fe5d5973e08008987a14de07599b24a41f6116bc1d1a29aeb0469af",
     "target": "builtin-fail/simulation/inverter_shared_terminal_nonconvergence/inverter_shared_terminal_nonconvergence.log"
   },
   "replay_id": "builtin-terminal-native-log-byte",

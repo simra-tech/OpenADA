@@ -1,0 +1,30 @@
+PDK-free 2.4 GHz behavioral noisy carrier for methodology cost evidence
+* PIPELINE/RUNTIME SPECIMEN ONLY -- not a physical autonomous oscillator.
+* v(nf) is an authored instantaneous-frequency error in Hz.  Integrating it
+* produces v(phi) in radians, which is retained as extraction ground truth.
+.param fc=2.4e9
+.param tc={1/fc}
+.param noise_dt={tc/20}
+.param max_dt={tc/40}
+.param df_rms=10e6
+.param cphi=1e-9
+.temp 27
+
+VNF nf 0 DC 0 TRNOISE({df_rms} {noise_dt} 0 0)
+Cphi phi 0 {cphi} IC=0
+Bphi 0 phi I={cphi*2*pi*v(nf)}
+Bosc out 0 V={sin(2*pi*fc*time+v(phi))}
+Rout out 0 1e9
+
+.options method=trap maxord=2 reltol=1e-6 noacct noinit plotwinsize=0
+.control
+set noaskquit
+set plotwinsize=0
+set wr_singlescale
+set wr_vecnames
+set numdgt=17
+save v(out) v(phi)
+tran __TSTEP_S__ __TSTOP_S__ 0 __TMAX_S__ uic
+wrdata __OUTPUT_PATH__ v(out) v(phi)
+.endc
+.end

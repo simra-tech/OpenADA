@@ -1,5 +1,5 @@
 {
-  "agent_evidence_sha256": "d3eee07b91ffbeb542c1bb1257ad35f60020ce928c77350636c1158d55e96586",
+  "agent_evidence_sha256": "2ec14e376d57dd200e82010140cf750b840e25601a40e9df3d7ceb01ff3b1f23",
   "chain_id": "openada.chain/public-spice-portability/v1",
   "checks": {
     "admin_surface_semantics": "pass",
@@ -14,56 +14,56 @@
     "strict_contracts": "pass"
   },
   "extensions": {},
-  "manifest_sha256": "95eef1a5d07b9ab096262fca88438d044479adcfb90aa9de359daf4cb2445438",
+  "manifest_sha256": "6a693a7f2aeee738c35934b186548f859146705237c463ecb53c2696b0a86c2d",
   "provisional": false,
   "raw_summary": {
     "legacy-ngspice-op": {
       "encoding": "binary",
       "numeric_type": "real",
       "point_count": 1,
-      "sha256": "a79606c5a0a31d50df26a809fe41acc02334bc41fecb36b8f46195fd9b5f5ca8",
+      "sha256": "4690baebb30a8d3ff562f84f4cd583b11e31552663492365a75955201d38e769",
       "variable_count": 11
     },
     "ngspice-ac": {
       "encoding": "binary",
       "numeric_type": "complex",
       "point_count": 51,
-      "sha256": "39abbfa71c79c8b7e7fb33b21a7149495798c84a5cddffebf71eece202be2ac5",
+      "sha256": "997b70a328393bf4f8a9b277f3f72e71040a984a6f712b69330426cadbdf4aca",
       "variable_count": 29
     },
     "ngspice-dc": {
       "encoding": "binary",
       "numeric_type": "real",
       "point_count": 13,
-      "sha256": "76f220116e3a2c62956d3ec22367383e284afd225565438eb190dcacae192ee6",
+      "sha256": "f90223884f11d64d6867996049ded4350b4fda76f388d0ea06f3feb5aff5d0a9",
       "variable_count": 12
     },
     "ngspice-op": {
       "encoding": "binary",
       "numeric_type": "real",
       "point_count": 1,
-      "sha256": "8567f3cb5736a6380ac909c8092dfef1503ce146f07286991d7c6148f1dcecab",
+      "sha256": "588f5fd74bb54f878b518b64013069ee30506e7ed5de4a88da5f0d6c7505e13f",
       "variable_count": 11
     },
     "xyce-ac": {
       "encoding": "ascii",
       "numeric_type": "complex",
       "point_count": 51,
-      "sha256": "d8e228494b90e2786d08dd3fb07d0243a0b07ba419813642dfabb48a4291053c",
+      "sha256": "862d36ad0ad39720dd2835982a14993578ddfa386e1754864f140170c320ca4c",
       "variable_count": 2
     },
     "xyce-dc": {
       "encoding": "ascii",
       "numeric_type": "real",
       "point_count": 101,
-      "sha256": "c491544db45ed6e2d99e6fd3cbde8cec21613aa6c6198601441646312eae71d7",
+      "sha256": "957431ceff292d0ce50541e3704ee10922f378291642081c8f2b89948a763253",
       "variable_count": 3
     },
     "xyce-tran": {
       "encoding": "ascii",
       "numeric_type": "real",
       "point_count": 18,
-      "sha256": "669c5df6291f68c8a5f0dc127cc1fc8b8edba0887148d5030b5c70bb7e41b8ed",
+      "sha256": "089dc18c87fb63902b61032b2c3265c073f6586f3633d7628232615a8976d35b",
       "variable_count": 3
     }
   },
@@ -108,7 +108,7 @@
       "required_diagnostic": "conformance.native.tampered",
       "schema": "openada.tamper-replay/v0alpha1",
       "status": "unknown",
-      "verifier_message": "native artifact sha256 differs: expected 'dbd5e3a0843dba93b63e35624b9fc8559e5c23a7092feb39f6685da0855f72a1', observed 'c491544db45ed6e2d99e6fd3cbde8cec21613aa6c6198601441646312eae71d7'"
+      "verifier_message": "native artifact sha256 differs: expected '272a17463eacab8a51904a2293f085ed1b288df74d6c73bcb5952a1074e242de', observed '957431ceff292d0ce50541e3704ee10922f378291642081c8f2b89948a763253'"
     },
     {
       "extensions": {},
@@ -138,7 +138,7 @@
       "required_diagnostic": "conformance.lineage.tampered",
       "schema": "openada.tamper-replay/v0alpha1",
       "status": "unknown",
-      "verifier_message": "ngspice-dc.extract.lineage differs: expected '76f220116e3a2c62956d3ec22367383e284afd225565438eb190dcacae192ee6', observed '0000000000000000000000000000000000000000000000000000000000000000'"
+      "verifier_message": "ngspice-dc.extract.lineage differs: expected 'f90223884f11d64d6867996049ded4350b4fda76f388d0ea06f3feb5aff5d0a9', observed '0000000000000000000000000000000000000000000000000000000000000000'"
     },
     {
       "extensions": {},
@@ -148,7 +148,7 @@
       "required_diagnostic": "conformance.admin.tampered",
       "schema": "openada.tamper-replay/v0alpha1",
       "status": "unknown",
-      "verifier_message": "agent.admin.provider-validate.digest differs: expected 'f50bcfa24f47edfb0b68bce719ebeafed6e1ac5bd7eedf4079ecba12101bcab9', observed 'c7b934a91185192bbd57033eb4e3517fe89035e1429d1591ed85e3aeb05875c7'"
+      "verifier_message": "agent.admin.provider-validate.digest differs: expected '28c4045c4556c80d023e45399a392fafabe0c03c7cad3d976749ccb0c3ed67ae', observed 'd4439f8aa4758d8aa317b9af543aaebd4c7710086e83b5f1ff2d64fc9d489c5a'"
     },
     {
       "extensions": {},

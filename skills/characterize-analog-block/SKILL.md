@@ -22,6 +22,7 @@ Keep these conclusions separate at every step:
 | Scalar simulation result | `openada.operation/result.measure/v1alpha2` with `openada.assertion/measurement.valid/v1alpha1` | The declared metric was validly extracted from identified source evidence |
 | Spectral simulation result | `openada.operation/result.spectral.measure/v1alpha1` with `openada.assertion/spectral.measurement.valid/v1alpha1` | One declared coherent SNR, SINAD, THD, or SFDR ratio was validly derived |
 | AC transfer simulation result | `openada.operation/result.transfer.measure/v1alpha2` with `openada.assertion/transfer.measurement.valid/v1alpha1` | One declared gain, driving-point impedance, bandwidth, unity-frequency, or negative-feedback phase-margin scalar was validly derived, over single-ended or differential operands |
+| Oscillator simulation result | Experimental `openada.operation/result.osc.measure/v1alpha1` with `openada.assertion/oscillator.measurement.valid/v1alpha1` | One declared same-window oscillator transient has a typed sustained/non-result verdict, or complete transient receipts were validly composed into local Kvco, span, or perturbation shift |
 | Specification | `openada.operation/specification.evaluate/v1alpha1` with `openada.assertion/specification.satisfied/v1alpha1` | The declared simulation result satisfies or violates the explicit limit under its recorded conditions |
 | Signoff | Outside these assertions | Only a separately qualified flow and accountable reviewer may make a signoff claim |
 
@@ -157,6 +158,11 @@ circuit.simulate
   -> result.series.extract when a native vector is needed
   -> result.measure, result.spectral.measure, or result.transfer.measure
   -> specification.evaluate only when an authoritative limit exists
+
+circuit.simulate
+  -> result.series.extract
+  -> experimental result.osc.measure
+     (no specification.evaluate/v1alpha1 oscillator-receipt adapter)
 ```
 
 **Preferred: a typed experiment against a DUT artifact.** When the block is a

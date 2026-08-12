@@ -1,0 +1,226 @@
+{
+  "analysis_wallclock_s": 9.000929971996811,
+  "claim": "synthetic method closure only; no physical oscillator PN or signoff",
+  "configuration": {
+    "carrier_hz": 10000.0,
+    "event_count_per_seed": 32768,
+    "named_bin": 40,
+    "named_offset_hz": 97.65625,
+    "prng": "numpy.random.PCG64",
+    "samples_per_cycle": 64,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "segment_length_events": 4096,
+    "waveform_sample_rate_hz": 640000.0
+  },
+  "limitations": [
+    "The chi-square interval is a locally-white Gaussian approximation.",
+    "Pointwise coverage is a diagnostic, not a simultaneous confidence band.",
+    "Wiener phase is nonstationary; global OLS and window leakage bias the lowest bins.",
+    "The C1 waveform is a synthetic event-timing construct, not a device-noise model."
+  ],
+  "prototype": "research.openada.pn-zero-crossing-welch/0",
+  "prototype_version": "0.1.0",
+  "runtime": {
+    "numpy": "2.4.6",
+    "python": "3.11.2",
+    "scipy": "1.17.1",
+    "script_path": "/home/specialpedrito/simra/openada-wt/pn-method/evaluation/pn-methodology/phase_noise.py",
+    "script_sha256": "36d98fb8e47290eb553c266560bf372b8a2c4822938cd7027d43167b9f54a7df"
+  },
+  "sampling_convergence": {
+    "acceptance_max_abs_psd_delta_32_to_64_db": 0.05,
+    "max_abs_psd_delta_32_to_64_db": 0.03287708308783009,
+    "process": "wiener_phase_seed_0",
+    "rows": [
+      {
+        "phase_rms_error_rad": 6.380018404612503e-05,
+        "samples_per_cycle": 32,
+        "scored_band_max_abs_psd_delta_db": 0.039332436096240736,
+        "scored_band_median_psd_delta_db": 0.02401693764035743
+      },
+      {
+        "phase_rms_error_rad": 9.60447117602479e-06,
+        "samples_per_cycle": 64,
+        "scored_band_max_abs_psd_delta_db": 0.006455353008410311,
+        "scored_band_median_psd_delta_db": 0.0014783215389120013
+      },
+      {
+        "phase_rms_error_rad": 1.350300256984241e-06,
+        "samples_per_cycle": 128,
+        "scored_band_max_abs_psd_delta_db": 0.0010784476398182348,
+        "scored_band_median_psd_delta_db": 2.6633576039063482e-05
+      }
+    ],
+    "status": "pass"
+  },
+  "status": "pass",
+  "white_pm": {
+    "acceptance": {
+      "band_median_absolute_error_db_max": 0.5,
+      "crossing_phase_rms_error_rad_max": 0.0001,
+      "extracted_oracle_psd_delta_db_max": 0.05,
+      "named_bin_absolute_error_db_max_regression_not_ci": 1.5,
+      "pointwise_interval_coverage_min": 0.9,
+      "power_law_exponent_range": [
+        -0.1,
+        0.1
+      ]
+    },
+    "construction": {
+      "one_sided_s_phi_rad2_per_hz": 2.0000000000000003e-06,
+      "phase_sigma_before_detrend_rad": 0.1,
+      "target_l_db_per_hz": -60.0
+    },
+    "crossing_closure": {
+      "maximum_phase_absolute_error_rad": 9.932587254984915e-05,
+      "maximum_phase_rms_error_rad": 1.9858309085457385e-05,
+      "maximum_scored_band_psd_delta_db": 0.0008437114047229579
+    },
+    "event_count_per_seed": 32768,
+    "kind": "white_pm",
+    "recovered_event_sample_rate_hz": {
+      "maximum": 10000.00000001977,
+      "mean": 10000.000000005546,
+      "minimum": 9999.999999989861
+    },
+    "samples_per_cycle": 64,
+    "seed_count": 8,
+    "spectral_closure": {
+      "bin_count": 395,
+      "first_bin": 16,
+      "fitted_db_per_decade": -0.0661242277550588,
+      "fitted_power_law_exponent": -0.00661242277550588,
+      "last_bin": 410,
+      "linear_mean_error_db": -0.02375094058913223,
+      "maximum_error_db": 1.1782792952353374,
+      "median_error_db": -0.03737147558941619,
+      "minimum_error_db": -1.3202736294709336,
+      "named_bin": 40,
+      "named_error_db": 0.8590054182829385,
+      "named_estimate_db_per_hz": -59.14099458171947,
+      "named_offset_hz": 97.65625000010357,
+      "named_truth_db_per_hz": -60.00000000000241,
+      "pointwise_interval_coverage_fraction": 0.9493670886075949
+    },
+    "status": "pass",
+    "welch": {
+      "bin_spacing_hz": 2.441406250002589,
+      "chi_square_local_white_approximation": {
+        "estimate_over_true_db": [
+          -0.8357848885756902,
+          0.761507323452713
+        ],
+        "true_over_estimate_db": [
+          -0.7615073234527132,
+          0.8357848885756904
+        ]
+      },
+      "confidence": 0.95,
+      "detrend": "unwindowed-arithmetic-mean-per-segment",
+      "effective_degrees_of_freedom": 228.16901408450704,
+      "enbw_hz": 3.662109375003884,
+      "hop_length": 2048,
+      "segment_count_per_seed": 15,
+      "segment_length": 4096,
+      "window": "periodic-hann"
+    }
+  },
+  "wiener_phase": {
+    "acceptance": {
+      "band_median_absolute_error_db_max": 0.5,
+      "crossing_phase_rms_error_rad_max": 0.0001,
+      "extracted_oracle_psd_delta_db_max": 0.05,
+      "named_bin_absolute_error_db_max_regression_not_ci": 1.5,
+      "pointwise_interval_coverage_min": 0.9,
+      "power_law_exponent_range": [
+        -2.1,
+        -1.9
+      ]
+    },
+    "construction": {
+      "increment_sigma_rad": 0.0006134960635327324,
+      "increment_variance_rad2": 3.763774199701585e-07,
+      "reference_l_db_per_hz": -80.0,
+      "reference_offset_hz": 97.65625
+    },
+    "crossing_closure": {
+      "maximum_phase_absolute_error_rad": 2.1797419864966194e-05,
+      "maximum_phase_rms_error_rad": 1.153350093345081e-05,
+      "maximum_scored_band_psd_delta_db": 0.007152953316970872
+    },
+    "event_count_per_seed": 32768,
+    "kind": "wiener_phase",
+    "recovered_event_sample_rate_hz": {
+      "maximum": 10000.000000549579,
+      "mean": 10000.00000012267,
+      "minimum": 9999.999999874382
+    },
+    "samples_per_cycle": 64,
+    "seed_count": 8,
+    "spectral_closure": {
+      "bin_count": 403,
+      "first_bin": 8,
+      "fitted_db_per_decade": -19.970517277729265,
+      "fitted_power_law_exponent": -1.9970517277729265,
+      "last_bin": 410,
+      "linear_mean_error_db": -0.021440508064693862,
+      "maximum_error_db": 1.181664595585961,
+      "median_error_db": -0.03812315865061727,
+      "minimum_error_db": -1.31760993260511,
+      "named_bin": 40,
+      "named_error_db": 0.8625588232776826,
+      "named_estimate_db_per_hz": -79.1374411767756,
+      "named_offset_hz": 97.65625000110947,
+      "named_truth_db_per_hz": -80.00000000005328,
+      "pointwise_interval_coverage_fraction": 0.9503722084367245
+    },
+    "status": "pass",
+    "time_domain_correlation": {
+      "acceptance": {
+        "allan_variance_absolute_error_percent_max": 2.0,
+        "period_jitter_absolute_error_percent_max": 2.0,
+        "period_psd_reconstruction_median_absolute_error_db_max": 0.5
+      },
+      "allan_variance_error_percent": -0.4814522385400588,
+      "allan_variance_tau_one_period_mean": 9.487850962268816e-09,
+      "allan_variance_tau_one_period_theory": 9.533751421906429e-09,
+      "note": "Period-PSD inversion retains spectral information; scalar RMS period jitter and Allan variance do not identify point L(f).",
+      "period_jitter_error_percent": -0.28061987094342156,
+      "period_jitter_rms_s_mean": 9.736693122387295e-09,
+      "period_jitter_rms_s_theory": 9.764093107865383e-09,
+      "period_psd_reconstructed_l_max_abs_error_db": 1.3473273078871468,
+      "period_psd_reconstructed_l_median_error_db": -0.04319084509304459,
+      "status": "pass"
+    },
+    "welch": {
+      "bin_spacing_hz": 2.441406250027737,
+      "chi_square_local_white_approximation": {
+        "estimate_over_true_db": [
+          -0.8357848885756902,
+          0.761507323452713
+        ],
+        "true_over_estimate_db": [
+          -0.7615073234527132,
+          0.8357848885756904
+        ]
+      },
+      "confidence": 0.95,
+      "detrend": "unwindowed-arithmetic-mean-per-segment",
+      "effective_degrees_of_freedom": 228.16901408450704,
+      "enbw_hz": 3.662109375041606,
+      "hop_length": 2048,
+      "segment_count_per_seed": 15,
+      "segment_length": 4096,
+      "window": "periodic-hann"
+    }
+  }
+}

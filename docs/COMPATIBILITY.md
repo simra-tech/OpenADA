@@ -25,10 +25,11 @@ JSON-stdio `wait` transport. It does not discover, install, rank, or approve
 providers, and it does not implement session, remote-job, marketplace, or MCP
 transport semantics. External dispatch is currently registered only for
 `circuit.simulate/v1alpha2`; operation-specific CLI bridges execute all nine
-active typed profiles directly, and one historical simulation profile remains
-packaged. Publishing any other schema or transport binding still does not imply
-runtime support. `request_id` equality is correlation, not a complete request
-digest.
+active typed profiles and the three dispatchable experimental profiles directly.
+The complete packaged catalog has 16 profiles: nine active, three experimental,
+and four historical or retired. Publishing any other schema or transport
+binding still does not imply runtime support. `request_id` equality is
+correlation, not a complete request digest.
 
 ## Immutable protocol identifiers
 
@@ -153,7 +154,7 @@ explicit init inputs use the same ceiling. Conflicting generic native errors
 keep a terminal non-convergence observation `unknown` rather than allowing an
 engineering `fail` classification.
 
-The `extract`, `measure`, `spectral`, `transfer`, and `evaluate` commands are
+The `extract`, `measure`, `spectral`, `transfer`, `oscillator`, and `evaluate` commands are
 operation names inside the open operation namespace of
 `openada.result/v0alpha1`. Their
 operation-owned data is defined by immutable profiles rather than a change to
@@ -164,8 +165,9 @@ single-tone FFT partition and the closed SNR, SINAD, THD, and SFDR vocabulary to
 one normalized time series. `result.transfer.measure/v1alpha2` binds a
 same-unit Cartesian output-over-input AC ratio, deterministic phase unwrap,
 first-simulated-frequency reference, and closed falling-crossing metrics. The
-`measure`, `spectral`, and `transfer` commands may receive either a normalized
-series document or a complete passing extraction envelope; accepting that
+`measure`, `spectral`, `transfer`, and transient `oscillator` commands may
+receive either a normalized series document or a complete passing extraction
+envelope; accepting that
 envelope is a CLI handoff, not a change to either profile's normalized source
 schema. Changing raw-format interpretation, projection, FFT partition, window,
 harmonic folding, ratio direction, crossing semantics, phase convention, or
@@ -180,6 +182,45 @@ profile ID. Optional native-artifact lineage is `unverified` and cannot be
 upgraded silently inside a downstream measurement profile; callers that need
 verified waveform lineage use the separate extraction operation and retain both
 result envelopes.
+
+`result.osc.measure/v1alpha1` is an additive profile family, not a successor to
+`result.measure`. Its `transient`, `tuning_grid`, and `frequency_shift` modes
+share oscillator-specific validity states and compose several coupled values;
+forcing those shapes into the immutable one-scalar `measured`/`not_found`/
+`unknown` contract would change that profile's meaning. Transient oscillator
+results use the closed statuses `sustained`, `never_started`, `collapsed`,
+`not_sustained`, `multimode`, and `unknown`. Only `sustained` permits measured
+period and frequency; otherwise those metrics repeat the applicable non-result
+verdict and remain null. On a structurally valid transient crop, differential
+amplitude and supply power remain `measured` even under a non-sustained
+oscillator verdict. Beating or multimode evidence therefore cannot silently
+select a frequency, while the independently valid crop metrics are not
+discarded. Grid and shift compositions instead have typed `measured` or
+`unknown` status and retain all contributing transient verdicts. The profile binds assertion
+`openada.assertion/oscillator.measurement.valid/v1alpha1` to semantic implementation
+`org.openada.kernel.oscillator-evidence` version `1.0.0`.
+
+The transient mode binds frequency, differential peak-to-peak amplitude, and
+trapezoidal mean supply power to one source and one canonical window SHA-256.
+Its N-cycle hysteretic rising-crossing rule, startup hold gate, minimum-amplitude
+and consistency tests, cancellation of unconfirmed crossings, capped period
+(0.05) and amplitude (0.20) relative-deviation requests, complete-cycle
+collapse evidence, and crop-edge coverage are part of the profile identity.
+Each receipt embeds the normalized request and fixed producer identity so its
+request, method, window, and whole-receipt digests are independently
+recomputable. Those digests prove content integrity, not cryptographic
+authorship; an untrusted composition boundary must authenticate the enclosing
+prior result. Explicit consumption normalization
+(`positive_into_load` uses `v*i`; `positive_into_source` uses `-v*i`), and
+trapezoidal integration are part of the profile identity. Tuning grids require
+every declared point, retain endpoint secants and per-interior-point
+unequal-spacing central Kvco values, a monotonicity assessment, and
+`max(f) - min(f)` span. Frequency-shift records retain both the signed
+`f(perturbed) - f(reference)` result and its absolute value. Changing any of
+those algorithms, status meanings, provenance bindings, or comparison
+directions requires a new oscillator profile identifier. Adding phase noise to
+this profile would likewise be incompatible; phase noise is deliberately
+reserved for a separate versioned method.
 
 `profile list` and `profile show` are additive control-plane commands over the
 packaged catalog. Their result operations do not establish an engineering

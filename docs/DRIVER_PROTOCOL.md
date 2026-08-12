@@ -36,6 +36,10 @@ The published protocol documents are:
   immutable historical measurement profile;
 - [`result.measure/v1alpha2`](../profiles/result.measure-v1alpha2.json), the
   active canonical-digest-bound normalized-series measurement profile;
+- [`result.osc.measure/v1alpha1`](../profiles/result.osc.measure-v1alpha1.json),
+  the experimental dispatchable
+  `openada.operation/result.osc.measure/v1alpha1` transient/grid/shift profile
+  with `openada.assertion/oscillator.measurement.valid/v1alpha1`;
 - [`result.series.extract/v1alpha1`](../profiles/result.series.extract-v1alpha1.json),
   the exact native-artifact-to-normalized-series profile;
 - [`result.spectral.measure/v1alpha1`](../profiles/result.spectral.measure-v1alpha1.json),
@@ -61,24 +65,34 @@ The digital set adds:
 
 - [`rtl.lint/v1alpha1`](../profiles/rtl.lint-v1alpha1.json), strict
   SystemVerilog lint evidence;
+- [`rtl.test/v1alpha1`](../profiles/rtl.test-v1alpha1.json), experimental
+  self-checking HDL test evidence;
 - [`logic.synthesize/v1alpha1`](../profiles/logic.synthesize-v1alpha1.json),
   generic inference and Liberty-mapped synthesis evidence; and
 - [`timing.analyze/v1alpha1`](../profiles/timing.analyze-v1alpha1.json),
   single-corner setup/hold timing evidence.
 
-The packaged catalog contains fifteen profiles in total, nine active; the
-remainder are historical, retired, or experimental as their documents state.
+The complete catalog contains 16 profiles: nine active, the three dispatchable
+experimental oscillator/RTL-test/testbench-oracle profiles, and four historical
+or retired profiles (the three immutable predecessors plus retired
+`testbench.simulate`).
 `openada profile list` returns their installed identities and
 `openada profile show OPERATION-PROFILE-ID` returns one complete validated
 document. Profile inspection is not external-provider discovery.
 
-The built-in `measure`, `spectral`, and `transfer` bridges accept either their
+The built-in `measure`, `spectral`, `transfer`, and transient `oscillator`
+bridges accept either their
 canonical normalized-series document or one complete passing
 `result.series.extract/v1alpha1` envelope. In the latter form the host validates
 the envelope and extraction-profile data and unwraps only a verified embedded
 series; the downstream operation still validates its own canonical series
 digest, while the workflow retains the extraction result as the upstream
-native-binding record.
+native-binding record. Oscillator grid and shift modes instead compose complete
+transient receipts that embed the normalized request and fixed producer. They
+recompute request, method, source/window, and whole-content digests before
+returning a curve or scalar. These are integrity checks, not cryptographic
+proof of authorship; authenticate an enclosing prior result at an untrusted
+composition boundary.
 
 Complete valid examples that are safe to copy and replace live in the
 [request template](../conformance/driver-kit/request.template.json) and
@@ -165,7 +179,8 @@ v0alpha1 profile schema. `result.measure/v1alpha1` and `result.transfer.measure/
 immutable historical profiles with additive `v1alpha2` successors. The
 deterministic `result.measure/v1alpha2`,
 `result.series.extract/v1alpha1`, `result.spectral.measure/v1alpha1`,
-`result.transfer.measure/v1alpha2`, and `specification.evaluate/v1alpha1`
+`result.transfer.measure/v1alpha2`, `result.osc.measure/v1alpha1`, and
+`specification.evaluate/v1alpha1`
 profiles use additive v0alpha2; they require semantic implementation mappings
 rather than pretending every evidence kernel is a native EDA backend. Their CLI
 bridges record profile and implementation identities in the existing

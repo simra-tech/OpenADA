@@ -370,9 +370,10 @@ transient to `time/s`. The operation does not infer units, expressions,
 magnitude, phase, dB, interpolation, or resampling.
 
 Engineering `pass` records `data.extraction.source.binding: verified`, native
-plot facts, and a canonical normalized series. The `measure`, `spectral`, and
-`transfer` CLI commands accept that complete passing extraction envelope
-directly and unwrap only its verified embedded series. Each downstream
+plot facts, and a canonical normalized series. The `measure`, `spectral`,
+`transfer`, and transient `oscillator` CLI commands accept that complete
+passing extraction envelope directly and unwrap only its verified embedded
+series. Each downstream
 operation's source digest covers the axis, signals, and caller-declared
 condition bindings. Embedded native lineage remains `unverified` inside the
 separate downstream assertion; the retained extraction envelope is what
@@ -529,6 +530,71 @@ an invalid source or interpretation are `unknown`. The profile does not define
 gain margin, a phase-crossing search, multi-crossing selection, true DC gain,
 smoothing, fitting, extrapolation, de-embedding, or a general stability claim.
 
+### `oscillator`
+
+`oscillator` is the experimental dispatchable bridge for
+`openada.operation/result.osc.measure/v1alpha1` and
+`openada.assertion/oscillator.measurement.valid/v1alpha1`:
+
+```text
+openada oscillator --series SERIES.json --measurement OSCILLATOR-REQUEST.json
+```
+
+`transient` mode requires one canonical normalized transient series (or the
+complete passing extraction envelope that contains it), a strictly increasing
+seconds axis, explicit positive/negative differential terminals, supply-voltage
+and supply-current signals, a late crop, a cycle count, hysteresis levels, and
+startup/hold/QC thresholds. It forms exactly `positive - negative`. A qualified
+rising event arms below negative hysteresis, records the linearly interpolated
+zero crossing, confirms above positive hysteresis, and must re-arm before the
+next event. Returning to or below negative hysteresis cancels an unconfirmed
+candidate. Frequency and period use the first `N + 1` qualified rising events
+after the crop begins for the declared `N` cycles; remaining late crossings and
+tail coverage stay in the consistency assessment.
+
+The closed transient verdicts are `sustained`, `never_started`, `collapsed`,
+`not_sustained`, `multimode`, and `unknown`. Only `sustained` carries a finite
+frequency and period. Minimum amplitude and consistency must hold for the
+complete declared hold interval; period relative deviation is capped at 0.05
+and amplitude relative deviation at 0.20. The first late event must cover the
+crop start within one mean period and the last must cover the stop within 1.1
+mean periods, where the trailing allowance exists only for hysteresis
+confirmation. A missing/partial tail is `not_sustained`; `collapsed` requires
+observed post-onset amplitude loss. Startup ringing, collapse, and
+beating/two-tone evidence therefore cannot silently become a number. Conclusive
+non-start/collapse/non-sustained records are engineering `fail`; multimode and
+invalid or insufficient evidence are engineering `unknown`. A structurally
+valid crop may still report its differential peak-to-peak amplitude and
+trapezoidal average supply power while frequency and period remain null.
+
+One receipt embeds the complete normalized transient request plus fixed
+producer profile, assertion, implementation, and version, then binds the
+canonical series digest, signal identities, operating conditions, method,
+crop, and window SHA-256. Consumers recompute `request_sha256` over the embedded
+request, `method_sha256` over kind/signals/window/startup/crossing/quality/power,
+and the receipt digest over canonical JSON after removing only top-level
+`sha256`. Frequency, amplitude, and power all cite that exact window, so
+consumers can reject independently cherry-cropped values. The digest proves
+content integrity, not cryptographic authorship; authenticate an enclosing
+prior result when receipts cross an untrusted boundary. Power orientation is explicit: `positive_into_load`
+integrates `vdd * i(vdd)`, and `positive_into_source` integrates
+`-vdd * i(vdd)`. The average is the trapezoidal time integral divided by crop
+duration, not an unweighted sample mean.
+
+For receipt composition, omit `--series` and put all source receipts in the
+measurement request. `tuning_grid` requires every declared control point to be
+sustained and strictly increasing. It returns one local Kvco value per point:
+adjacent one-sided secants at the endpoints and the derivative of the
+three-point quadratic interpolant (the unequal-spacing central difference) at
+each interior point. It also retains a monotonicity check and
+`max(frequency) - min(frequency)` span. `frequency_shift` verifies matched
+non-perturbation context and retains both signed
+`f(perturbed) - f(reference)` and absolute shift. It never reduces a nonlinear
+Kvco curve to one fitted number or drops an invalid grid point.
+
+The profile defines no phase-noise, jitter, spectral-density, duty-cycle, PSS,
+or periodic-noise result. Those require separately versioned methods.
+
 ### `evaluate`
 
 `evaluate` implements `openada.operation/specification.evaluate/v1alpha1` and
@@ -570,10 +636,12 @@ and specification binding available for audit.
 
 `profile list` and `profile show OPERATION-PROFILE-ID` inspect the packaged
 operation-profile catalog. `list` returns schema, operation, assertion, and
-feature identities for all fifteen packaged profiles; nine are active and the
-others identify their historical, retired, or experimental lifecycle. `show`
-returns one complete packaged profile or a typed `profile.not_found` failure.
-These commands validate the installed profile documents before returning them; they are control-plane
+feature identities for 16 profiles: nine active, three dispatchable experimental
+(`result.osc.measure/v1alpha1`, `rtl.test/v1alpha1`, and
+`testbench.oracle.compare/v1alpha1`), and four historical or retired profiles.
+`show` returns one complete packaged profile or a typed `profile.not_found`
+failure. These commands validate the installed profile documents before
+returning them; they are control-plane
 inspection results, not engineering assertions and not provider discovery.
 
 ### `provider`
