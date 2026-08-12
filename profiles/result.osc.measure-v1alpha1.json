@@ -1,0 +1,2709 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema": "openada.operation-profile/v0alpha2",
+  "status": "alpha",
+  "operation": {
+    "id": "openada.operation/result.osc.measure/v1alpha1",
+    "title": "Typed oscillator transient and sweep measurement",
+    "summary": "Establish sustained oscillation and derive same-window transient frequency, amplitude, and power, or compose provenance-bound transient receipts into local tuning-gain, span, and perturbation-shift evidence.",
+    "side_effect_mode": "read-only",
+    "target_kinds": [
+      "normalized-series",
+      "oscillator-transient-receipt"
+    ],
+    "locator_types": [
+      "artifact",
+      "uri",
+      "workspace"
+    ],
+    "extensions": {}
+  },
+  "assertion": {
+    "id": "openada.assertion/oscillator.measurement.valid/v1alpha1",
+    "statement": "The declared oscillator observation is sustained, has a typed non-oscillation or QC verdict, or is a closed composition of provenance-bound sustained transient receipts under the versioned oscillator methods.",
+    "non_goals": [
+      "This assertion does not state that a design specification is satisfied.",
+      "This assertion does not establish signoff accuracy or validate the simulator, model, native waveform decoder, or upstream operating conditions.",
+      "This assertion does not define phase noise, jitter, duty cycle, periodic steady-state analysis, or any spectral-density measurement.",
+      "This assertion does not infer signal polarity, supply-current orientation, startup duration, control identity, perturbation identity, or acceptable quality limits.",
+      "This assertion does not select a favorable sub-window, tone, grid subset, or perturbation context when the declared evidence is inconsistent."
+    ],
+    "truth_table": {
+      "pass": {
+        "meaning": "A transient record is sustained and its coupled waveform metrics are provenance-bound, or a complete receipt composition produced the declared finite curve or shift.",
+        "allowed_execution_statuses": [
+          "completed"
+        ],
+        "required_evidence": [
+          "For transient mode, data.measurement.status and data.transient.status are sustained, frequency and period are measured, and data.receipt is present with a valid self-digest.",
+          "Transient frequency, period, differential peak-to-peak amplitude, and average supply power cite the exact same data.receipt.window_sha256 and series_sha256.",
+          "For tuning_grid or frequency_shift mode, data.measurement.status is measured and every numeric composition is bound to all declared input receipt SHA-256 identities."
+        ],
+        "extensions": {}
+      },
+      "fail": {
+        "meaning": "A valid transient record conclusively never started, started and collapsed, or showed activity that did not satisfy the declared hold interval.",
+        "allowed_execution_statuses": [
+          "completed"
+        ],
+        "required_evidence": [
+          "data.measurement.status is never_started, collapsed, or not_sustained and the frequency and period values are null.",
+          "The shared crop, startup assessment, quality facts, amplitude, power, and typed receipt are retained without manufacturing a frequency."
+        ],
+        "extensions": {}
+      },
+      "unknown": {
+        "meaning": "The request, source, receipt composition, or resolution is invalid or insufficient, or beating or multimode behavior makes one oscillator frequency unjustified.",
+        "allowed_execution_statuses": [
+          "completed",
+          "invalid_request",
+          "failed"
+        ],
+        "required_evidence": [
+          "data.measurement.status is multimode or unknown and no unjustified composed value is returned.",
+          "A stable diagnostic identifies the invalid source, request, receipt, resolution, incomplete composition, or multimode QC condition."
+        ],
+        "extensions": {}
+      }
+    },
+    "extensions": {}
+  },
+  "request": {
+    "base_schema": "openada.request/v0alpha1",
+    "configuration_roles": [],
+    "parameters_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.osc.measure v1alpha1 request parameters",
+      "description": "One transient normalized series and oscillator method, or one closed composition over embedded transient receipts.",
+      "type": "object",
+      "required": [
+        "measurement",
+        "extensions"
+      ],
+      "properties": {
+        "series": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/series"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "measurement": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/transientRequest"
+            },
+            {
+              "$ref": "#/$defs/gridRequest"
+            },
+            {
+              "$ref": "#/$defs/shiftRequest"
+            }
+          ]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "measurement": {
+                "properties": {
+                  "kind": {
+                    "const": "transient"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            },
+            "required": [
+              "measurement"
+            ]
+          },
+          "then": {
+            "required": [
+              "series"
+            ],
+            "properties": {
+              "series": {
+                "$ref": "#/$defs/series"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "series": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "$defs": {
+        "extensions": {
+          "type": "object",
+          "maxProperties": 0,
+          "additionalProperties": false
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "quantity": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "additionalProperties": false
+        },
+        "quantitySeconds": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "const": "s"
+            }
+          },
+          "additionalProperties": false
+        },
+        "quantityVolts": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "const": "V"
+            }
+          },
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object",
+          "required": [
+            "name",
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "name": {
+              "$ref": "#/$defs/name"
+            },
+            "value": {
+              "type": [
+                "number",
+                "string",
+                "boolean"
+              ],
+              "maxLength": 256
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "additionalProperties": false
+        },
+        "lineage": {
+          "type": "object",
+          "required": [
+            "operation",
+            "request_id",
+            "artifact_role",
+            "artifact_sha256",
+            "binding"
+          ],
+          "properties": {
+            "operation": {
+              "$ref": "#/$defs/name"
+            },
+            "request_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "artifact_role": {
+              "$ref": "#/$defs/role"
+            },
+            "artifact_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "binding": {
+              "const": "unverified"
+            }
+          },
+          "additionalProperties": false
+        },
+        "inputSource": {
+          "type": "object",
+          "required": [
+            "operation",
+            "request_id",
+            "artifact_role",
+            "artifact_sha256"
+          ],
+          "properties": {
+            "operation": {
+              "$ref": "#/$defs/name"
+            },
+            "request_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "artifact_role": {
+              "const": "measurement.source"
+            },
+            "artifact_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "lineage": {
+              "$ref": "#/$defs/lineage"
+            }
+          },
+          "additionalProperties": false
+        },
+        "receiptSource": {
+          "type": "object",
+          "required": [
+            "operation",
+            "request_id",
+            "artifact_role",
+            "artifact_sha256",
+            "series_sha256",
+            "conditions_sha256",
+            "conditions",
+            "lineage"
+          ],
+          "properties": {
+            "operation": {
+              "$ref": "#/$defs/name"
+            },
+            "request_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            "artifact_role": {
+              "const": "measurement.source"
+            },
+            "artifact_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "series_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "conditions_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "conditions": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/condition"
+              }
+            },
+            "lineage": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/lineage"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "vector": {
+          "type": "object",
+          "required": [
+            "name",
+            "unit",
+            "values"
+          ],
+          "properties": {
+            "name": {
+              "$ref": "#/$defs/name"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100000,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "series": {
+          "type": "object",
+          "required": [
+            "source",
+            "axis",
+            "signals",
+            "conditions",
+            "extensions"
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/inputSource"
+            },
+            "axis": {
+              "$ref": "#/$defs/vector"
+            },
+            "signals": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/vector"
+              }
+            },
+            "conditions": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/condition"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "signals": {
+          "type": "object",
+          "required": [
+            "positive",
+            "negative",
+            "supply_voltage",
+            "supply_current"
+          ],
+          "properties": {
+            "positive": {
+              "$ref": "#/$defs/name"
+            },
+            "negative": {
+              "$ref": "#/$defs/name"
+            },
+            "supply_voltage": {
+              "$ref": "#/$defs/name"
+            },
+            "supply_current": {
+              "$ref": "#/$defs/name"
+            }
+          },
+          "additionalProperties": false
+        },
+        "windowRequest": {
+          "type": "object",
+          "required": [
+            "start",
+            "stop",
+            "cycle_count"
+          ],
+          "properties": {
+            "start": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "stop": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "cycle_count": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 100000
+            }
+          },
+          "additionalProperties": false
+        },
+        "startupRequest": {
+          "type": "object",
+          "required": [
+            "search_start",
+            "hold_for",
+            "minimum_peak_to_peak"
+          ],
+          "properties": {
+            "search_start": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "hold_for": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/quantitySeconds"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "minimum_peak_to_peak": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/quantityVolts"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "crossingRequest": {
+          "type": "object",
+          "required": [
+            "threshold",
+            "hysteresis",
+            "direction"
+          ],
+          "properties": {
+            "threshold": {
+              "type": "object",
+              "required": [
+                "value",
+                "unit"
+              ],
+              "properties": {
+                "value": {
+                  "const": 0
+                },
+                "unit": {
+                  "const": "V"
+                }
+              },
+              "additionalProperties": false
+            },
+            "hysteresis": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/quantityVolts"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "direction": {
+              "const": "rising"
+            }
+          },
+          "additionalProperties": false
+        },
+        "qualityRequest": {
+          "type": "object",
+          "required": [
+            "maximum_period_relative_deviation",
+            "maximum_amplitude_relative_deviation",
+            "minimum_samples_per_cycle"
+          ],
+          "properties": {
+            "maximum_period_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "maximum_amplitude_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "minimum_samples_per_cycle": {
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 100000
+            }
+          },
+          "additionalProperties": false
+        },
+        "powerRequest": {
+          "type": "object",
+          "required": [
+            "current_orientation"
+          ],
+          "properties": {
+            "current_orientation": {
+              "enum": [
+                "positive_into_load",
+                "positive_into_source"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "transientRequest": {
+          "type": "object",
+          "required": [
+            "measurement_id",
+            "kind",
+            "signals",
+            "window",
+            "startup",
+            "crossing",
+            "quality",
+            "power",
+            "extensions"
+          ],
+          "properties": {
+            "measurement_id": {
+              "$ref": "#/$defs/role"
+            },
+            "kind": {
+              "const": "transient"
+            },
+            "signals": {
+              "$ref": "#/$defs/signals"
+            },
+            "window": {
+              "$ref": "#/$defs/windowRequest"
+            },
+            "startup": {
+              "$ref": "#/$defs/startupRequest"
+            },
+            "crossing": {
+              "$ref": "#/$defs/crossingRequest"
+            },
+            "quality": {
+              "$ref": "#/$defs/qualityRequest"
+            },
+            "power": {
+              "$ref": "#/$defs/powerRequest"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "oscillatorStatus": {
+          "enum": [
+            "sustained",
+            "never_started",
+            "collapsed",
+            "not_sustained",
+            "multimode",
+            "unknown"
+          ]
+        },
+        "metricStatus": {
+          "enum": [
+            "measured",
+            "never_started",
+            "collapsed",
+            "not_sustained",
+            "multimode",
+            "unknown"
+          ]
+        },
+        "windowMetric": {
+          "type": "object",
+          "required": [
+            "status",
+            "value",
+            "unit",
+            "window_sha256",
+            "extensions"
+          ],
+          "properties": {
+            "status": {
+              "$ref": "#/$defs/metricStatus"
+            },
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "unit": {
+              "enum": [
+                "Hz",
+                "s",
+                "V",
+                "W"
+              ]
+            },
+            "window_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "windowReceipt": {
+          "type": "object",
+          "required": [
+            "start",
+            "stop",
+            "cycle_count",
+            "boundary_policy",
+            "sample_count",
+            "series_sha256",
+            "window_sha256",
+            "signals",
+            "extensions"
+          ],
+          "properties": {
+            "start": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "stop": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "cycle_count": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 100000
+            },
+            "boundary_policy": {
+              "const": "closed-linear-interpolation"
+            },
+            "sample_count": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 100002
+            },
+            "series_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "window_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "signals": {
+              "$ref": "#/$defs/signals"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "nullableSeconds": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "startupResult": {
+          "type": "object",
+          "required": [
+            "status",
+            "started_at",
+            "time",
+            "collapse_at",
+            "search_start",
+            "hold_for",
+            "minimum_peak_to_peak",
+            "extensions"
+          ],
+          "properties": {
+            "status": {
+              "$ref": "#/$defs/oscillatorStatus"
+            },
+            "started_at": {
+              "$ref": "#/$defs/nullableSeconds"
+            },
+            "time": {
+              "$ref": "#/$defs/nullableSeconds"
+            },
+            "collapse_at": {
+              "$ref": "#/$defs/nullableSeconds"
+            },
+            "search_start": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "hold_for": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "minimum_peak_to_peak": {
+              "$ref": "#/$defs/quantityVolts"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "qualityResult": {
+          "type": "object",
+          "required": [
+            "status",
+            "period_relative_deviation",
+            "amplitude_relative_deviation",
+            "minimum_samples_per_cycle_observed",
+            "maximum_period_relative_deviation",
+            "maximum_amplitude_relative_deviation",
+            "minimum_samples_per_cycle_required",
+            "flags",
+            "extensions"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "pass",
+                "fail",
+                "unknown"
+              ]
+            },
+            "period_relative_deviation": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "amplitude_relative_deviation": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "minimum_samples_per_cycle_observed": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100002
+            },
+            "maximum_period_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "maximum_amplitude_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "minimum_samples_per_cycle_required": {
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 100000
+            },
+            "flags": {
+              "type": "array",
+              "maxItems": 8,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "period_inconsistent",
+                  "amplitude_inconsistent",
+                  "sampling_resolution_insufficient",
+                  "amplitude_below_minimum",
+                  "window_not_fully_covered",
+                  "late_crossings_insufficient",
+                  "startup_hold_not_met",
+                  "oscillation_activity_absent"
+                ]
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "receipt": {
+          "type": "object",
+          "required": [
+            "schema",
+            "sha256",
+            "measurement_id",
+            "status",
+            "request_sha256",
+            "method_sha256",
+            "series_sha256",
+            "window_sha256",
+            "source",
+            "window",
+            "frequency",
+            "period",
+            "differential_peak_to_peak",
+            "average_supply_power",
+            "startup",
+            "quality",
+            "extensions"
+          ],
+          "properties": {
+            "schema": {
+              "const": "openada.oscillator-transient-receipt/v1alpha1"
+            },
+            "sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "measurement_id": {
+              "$ref": "#/$defs/role"
+            },
+            "status": {
+              "$ref": "#/$defs/oscillatorStatus"
+            },
+            "request_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "method_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "series_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "window_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "source": {
+              "$ref": "#/$defs/receiptSource"
+            },
+            "window": {
+              "$ref": "#/$defs/windowReceipt"
+            },
+            "frequency": {
+              "$ref": "#/$defs/windowMetric"
+            },
+            "period": {
+              "$ref": "#/$defs/windowMetric"
+            },
+            "differential_peak_to_peak": {
+              "$ref": "#/$defs/windowMetric"
+            },
+            "average_supply_power": {
+              "$ref": "#/$defs/windowMetric"
+            },
+            "startup": {
+              "$ref": "#/$defs/startupResult"
+            },
+            "quality": {
+              "$ref": "#/$defs/qualityResult"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "gridPointRequest": {
+          "type": "object",
+          "required": [
+            "control",
+            "receipt"
+          ],
+          "properties": {
+            "control": {
+              "$ref": "#/$defs/quantityVolts"
+            },
+            "receipt": {
+              "$ref": "#/$defs/receipt"
+            }
+          },
+          "additionalProperties": false
+        },
+        "gridRequest": {
+          "type": "object",
+          "required": [
+            "measurement_id",
+            "kind",
+            "control_condition",
+            "control_unit",
+            "expected_monotonicity",
+            "points",
+            "extensions"
+          ],
+          "properties": {
+            "measurement_id": {
+              "$ref": "#/$defs/role"
+            },
+            "kind": {
+              "const": "tuning_grid"
+            },
+            "control_condition": {
+              "$ref": "#/$defs/role"
+            },
+            "control_unit": {
+              "const": "V"
+            },
+            "expected_monotonicity": {
+              "enum": [
+                "nondecreasing",
+                "nonincreasing"
+              ]
+            },
+            "points": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 256,
+              "items": {
+                "$ref": "#/$defs/gridPointRequest"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "shiftMemberRequest": {
+          "type": "object",
+          "required": [
+            "condition",
+            "receipt"
+          ],
+          "properties": {
+            "condition": {
+              "$ref": "#/$defs/quantity"
+            },
+            "receipt": {
+              "$ref": "#/$defs/receipt"
+            }
+          },
+          "additionalProperties": false
+        },
+        "shiftRequest": {
+          "type": "object",
+          "required": [
+            "measurement_id",
+            "kind",
+            "perturbation_condition",
+            "reference",
+            "perturbed",
+            "extensions"
+          ],
+          "properties": {
+            "measurement_id": {
+              "$ref": "#/$defs/role"
+            },
+            "kind": {
+              "const": "frequency_shift"
+            },
+            "perturbation_condition": {
+              "$ref": "#/$defs/role"
+            },
+            "reference": {
+              "$ref": "#/$defs/shiftMemberRequest"
+            },
+            "perturbed": {
+              "$ref": "#/$defs/shiftMemberRequest"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantic_constraints": [
+      "Every JSON number must be finite; NaN and infinity are invalid even if a permissive parser accepts them.",
+      "Transient mode requires exactly one normalized series. Tuning-grid and frequency-shift modes accept no series and compose only the embedded receipts declared in the request.",
+      "The normalized axis must contain 1 to 100000 strictly increasing values in exact unit s; every signal must have the same length; names must be unique; the four selected signals must be distinct and have exact units V, V, V, and A respectively.",
+      "The normalized artifact digest is the canonical SHA-256 over axis, signals, and conditions exactly as defined by result.measure; optional upstream lineage remains unverified.",
+      "The late window is closed, stop is greater than start, both endpoints lie inside the source domain, startup.search_start is no later than window.start and inside the source domain, and startup.hold_for fits before window.stop.",
+      "The oscillator signal is pointwise positive minus negative. Window boundary samples are inserted by linear interpolation; differential peak-to-peak is max minus min over that exact closed crop.",
+      "A rising event arms only at or below threshold minus hysteresis, remembers the linearly interpolated threshold crossing on a rising segment, emits it only after reaching threshold plus hysteresis, and must re-arm before another event. Threshold is fixed at 0 V and hysteresis is positive.",
+      "Counting N cycles requires the first N+1 qualified rising events at or after window.start. Period is (t[N]-t[0])/N and frequency is N/(t[N]-t[0]); the late window may extend beyond the counted interval, and every late cycle through window.stop participates in quality and coverage assessment.",
+      "Every late-cycle amplitude must meet startup.minimum_peak_to_peak, relative period and amplitude deviations must not exceed their declared maxima, each cycle must meet the requested sample count, and the first and last late event must cover each crop edge within 1.5 mean periods for a sustained verdict.",
+      "Startup is the first sequence of at least three complete cycles lasting at least hold_for whose per-cycle amplitude, period consistency, amplitude consistency, and sample resolution all pass. A record with no amplitude-qualified activity is never_started; activity without a complete hold is not_sustained; a qualifying start that fails the late crop is collapsed; inconsistent period or amplitude after adequate late crossings is multimode; insufficient sampling is unknown.",
+      "Frequency and period are measured only for sustained oscillation; otherwise each is null and repeats the transient verdict. Differential amplitude and average supply power remain measured waveform reducers for every structurally valid crop, independent of whether frequency is sustained.",
+      "Instantaneous consumed supply power is supply_voltage times supply_current for positive_into_load and its negation for positive_into_source. Average supply power is the trapezoidal time integral divided by the exact crop duration, never an unweighted sample mean.",
+      "window_sha256 is the canonical SHA-256 over series_sha256, start, stop, boundary_policy, and all four signal bindings. Frequency, period, amplitude, power, receipt, and window must carry that identical digest; their series identity must also agree.",
+      "A receipt sha256 is the canonical sorted-key compact UTF-8 JSON SHA-256 of the complete closed receipt after removing only its top-level sha256 member. request_sha256 covers the closed normalized measurement request and method_sha256 covers kind, signals, window, startup, crossing, quality, and power.",
+      "Tuning control coordinates are exact-unit V quantities, strictly increasing in request order, unique by receipt identity, and exactly equal the named numeric receipt condition. Every point must be sustained before any local tuning gain or span is returned.",
+      "Endpoint local tuning gain is the adjacent one-sided secant. At interior i with h0=x[i]-x[i-1] and h1=x[i+1]-x[i], the unequal-spacing quadratic derivative is -h1*f[i-1]/(h0*(h0+h1)) + (h1-h0)*f[i]/(h0*h1) + h0*f[i+1]/(h1*(h0+h1)). Every per-point value is retained in Hz/V.",
+      "Observed grid monotonicity is nondecreasing when every adjacent frequency difference is nonnegative, nonincreasing when every difference is nonpositive, and non_monotonic otherwise. The check compares that value to expected_monotonicity without deleting or reordering points; span is max(f)-min(f) over the complete grid.",
+      "Frequency shift requires distinct sustained reference and perturbed receipts, exact equality of every condition other than the one named perturbation, matching perturbation units, and receipt condition values equal to the request. signed_shift is f(perturbed)-f(reference) and absolute_shift is abs(signed_shift)."
+    ],
+    "extensions": {}
+  },
+  "normalized_result": {
+    "result_schema": "openada.result/v0alpha1",
+    "data_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "result.osc.measure v1alpha1 normalized result data",
+      "type": "object",
+      "required": [
+        "protocol",
+        "measurement",
+        "transient",
+        "grid",
+        "shift",
+        "receipt",
+        "extensions"
+      ],
+      "properties": {
+        "protocol": {
+          "$ref": "#/$defs/protocol"
+        },
+        "measurement": {
+          "$ref": "#/$defs/measurement"
+        },
+        "transient": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/transient"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grid": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/grid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shift": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/shift"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "receipt": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/receipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "measurement": {
+                "properties": {
+                  "kind": {
+                    "const": "transient"
+                  },
+                  "request_sha256": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "request_sha256"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "transient": {
+                "$ref": "#/$defs/transient"
+              },
+              "grid": {
+                "type": "null"
+              },
+              "shift": {
+                "type": "null"
+              },
+              "receipt": {
+                "$ref": "#/$defs/receipt"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "measurement": {
+                "properties": {
+                  "kind": {
+                    "const": "tuning_grid"
+                  },
+                  "request_sha256": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "request_sha256"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "transient": {
+                "type": "null"
+              },
+              "grid": {
+                "$ref": "#/$defs/grid"
+              },
+              "shift": {
+                "type": "null"
+              },
+              "receipt": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "measurement": {
+                "properties": {
+                  "kind": {
+                    "const": "frequency_shift"
+                  },
+                  "request_sha256": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "request_sha256"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "transient": {
+                "type": "null"
+              },
+              "grid": {
+                "type": "null"
+              },
+              "shift": {
+                "$ref": "#/$defs/shift"
+              },
+              "receipt": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "$defs": {
+        "extensions": {
+          "type": "object",
+          "maxProperties": 0,
+          "additionalProperties": false
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "protocol": {
+          "type": "object",
+          "required": [
+            "request_id",
+            "operation_profile",
+            "assertion_profile",
+            "implementation_id",
+            "implementation_version"
+          ],
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "operation_profile": {
+              "const": "openada.operation/result.osc.measure/v1alpha1"
+            },
+            "assertion_profile": {
+              "const": "openada.assertion/oscillator.measurement.valid/v1alpha1"
+            },
+            "implementation_id": {
+              "const": "org.openada.kernel.oscillator-evidence"
+            },
+            "implementation_version": {
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "algorithm": {
+          "type": "object",
+          "required": [
+            "id",
+            "version"
+          ],
+          "properties": {
+            "id": {
+              "enum": [
+                "openada.method/oscillator-transient-hysteretic/v1alpha1",
+                "openada.method/oscillator-local-tuning-gain/v1alpha1",
+                "openada.method/oscillator-frequency-shift/v1alpha1",
+                null
+              ]
+            },
+            "version": {
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "measurement": {
+          "type": "object",
+          "required": [
+            "measurement_id",
+            "kind",
+            "status",
+            "request_sha256",
+            "algorithm",
+            "source_count",
+            "extensions"
+          ],
+          "properties": {
+            "measurement_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 120
+            },
+            "kind": {
+              "enum": [
+                "transient",
+                "tuning_grid",
+                "frequency_shift",
+                null
+              ]
+            },
+            "status": {
+              "enum": [
+                "sustained",
+                "never_started",
+                "collapsed",
+                "not_sustained",
+                "multimode",
+                "measured",
+                "unknown"
+              ]
+            },
+            "request_sha256": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "algorithm": {
+              "$ref": "#/$defs/algorithm"
+            },
+            "source_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 256
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "quantity": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "additionalProperties": false
+        },
+        "quantitySeconds": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "const": "s"
+            }
+          },
+          "additionalProperties": false
+        },
+        "quantityVolts": {
+          "type": "object",
+          "required": [
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "const": "V"
+            }
+          },
+          "additionalProperties": false
+        },
+        "condition": {
+          "type": "object",
+          "required": [
+            "name",
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "name": {
+              "$ref": "#/$defs/name"
+            },
+            "value": {
+              "type": [
+                "number",
+                "string",
+                "boolean"
+              ],
+              "maxLength": 256
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "additionalProperties": false
+        },
+        "lineage": {
+          "type": "object",
+          "required": [
+            "operation",
+            "request_id",
+            "artifact_role",
+            "artifact_sha256",
+            "binding"
+          ],
+          "properties": {
+            "operation": {
+              "$ref": "#/$defs/name"
+            },
+            "request_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "artifact_role": {
+              "$ref": "#/$defs/role"
+            },
+            "artifact_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "binding": {
+              "const": "unverified"
+            }
+          },
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "operation",
+            "request_id",
+            "artifact_role",
+            "artifact_sha256",
+            "series_sha256",
+            "conditions_sha256",
+            "conditions",
+            "lineage"
+          ],
+          "properties": {
+            "operation": {
+              "$ref": "#/$defs/name"
+            },
+            "request_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "artifact_role": {
+              "const": "measurement.source"
+            },
+            "artifact_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "series_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "conditions_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "conditions": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/condition"
+              }
+            },
+            "lineage": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/lineage"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "signals": {
+          "type": "object",
+          "required": [
+            "positive",
+            "negative",
+            "supply_voltage",
+            "supply_current"
+          ],
+          "properties": {
+            "positive": {
+              "$ref": "#/$defs/name"
+            },
+            "negative": {
+              "$ref": "#/$defs/name"
+            },
+            "supply_voltage": {
+              "$ref": "#/$defs/name"
+            },
+            "supply_current": {
+              "$ref": "#/$defs/name"
+            }
+          },
+          "additionalProperties": false
+        },
+        "oscillatorStatus": {
+          "enum": [
+            "sustained",
+            "never_started",
+            "collapsed",
+            "not_sustained",
+            "multimode",
+            "unknown"
+          ]
+        },
+        "metricStatus": {
+          "enum": [
+            "measured",
+            "never_started",
+            "collapsed",
+            "not_sustained",
+            "multimode",
+            "unknown"
+          ]
+        },
+        "metric": {
+          "type": "object",
+          "required": [
+            "status",
+            "value",
+            "unit",
+            "window_sha256",
+            "extensions"
+          ],
+          "properties": {
+            "status": {
+              "$ref": "#/$defs/metricStatus"
+            },
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "unit": {
+              "enum": [
+                "Hz",
+                "s",
+                "V",
+                "W",
+                "Hz/V"
+              ]
+            },
+            "window_sha256": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/sha256"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "window": {
+          "type": "object",
+          "required": [
+            "start",
+            "stop",
+            "cycle_count",
+            "boundary_policy",
+            "sample_count",
+            "series_sha256",
+            "window_sha256",
+            "signals",
+            "extensions"
+          ],
+          "properties": {
+            "start": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "stop": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "cycle_count": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 100000
+            },
+            "boundary_policy": {
+              "const": "closed-linear-interpolation"
+            },
+            "sample_count": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 100002
+            },
+            "series_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "window_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "signals": {
+              "$ref": "#/$defs/signals"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "nullableSeconds": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "startup": {
+          "type": "object",
+          "required": [
+            "status",
+            "started_at",
+            "time",
+            "collapse_at",
+            "search_start",
+            "hold_for",
+            "minimum_peak_to_peak",
+            "extensions"
+          ],
+          "properties": {
+            "status": {
+              "$ref": "#/$defs/oscillatorStatus"
+            },
+            "started_at": {
+              "$ref": "#/$defs/nullableSeconds"
+            },
+            "time": {
+              "$ref": "#/$defs/nullableSeconds"
+            },
+            "collapse_at": {
+              "$ref": "#/$defs/nullableSeconds"
+            },
+            "search_start": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "hold_for": {
+              "$ref": "#/$defs/quantitySeconds"
+            },
+            "minimum_peak_to_peak": {
+              "$ref": "#/$defs/quantityVolts"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "quality": {
+          "type": "object",
+          "required": [
+            "status",
+            "period_relative_deviation",
+            "amplitude_relative_deviation",
+            "minimum_samples_per_cycle_observed",
+            "maximum_period_relative_deviation",
+            "maximum_amplitude_relative_deviation",
+            "minimum_samples_per_cycle_required",
+            "flags",
+            "extensions"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "pass",
+                "fail",
+                "unknown"
+              ]
+            },
+            "period_relative_deviation": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "amplitude_relative_deviation": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "minimum_samples_per_cycle_observed": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100002
+            },
+            "maximum_period_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "maximum_amplitude_relative_deviation": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "minimum_samples_per_cycle_required": {
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 100000
+            },
+            "flags": {
+              "type": "array",
+              "maxItems": 8,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "period_inconsistent",
+                  "amplitude_inconsistent",
+                  "sampling_resolution_insufficient",
+                  "amplitude_below_minimum",
+                  "window_not_fully_covered",
+                  "late_crossings_insufficient",
+                  "startup_hold_not_met",
+                  "oscillation_activity_absent"
+                ]
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "transient": {
+          "type": "object",
+          "required": [
+            "status",
+            "frequency",
+            "period",
+            "differential_peak_to_peak",
+            "average_supply_power",
+            "startup",
+            "quality",
+            "crossings",
+            "periods",
+            "window",
+            "extensions"
+          ],
+          "properties": {
+            "status": {
+              "$ref": "#/$defs/oscillatorStatus"
+            },
+            "frequency": {
+              "$ref": "#/$defs/metric"
+            },
+            "period": {
+              "$ref": "#/$defs/metric"
+            },
+            "differential_peak_to_peak": {
+              "$ref": "#/$defs/metric"
+            },
+            "average_supply_power": {
+              "$ref": "#/$defs/metric"
+            },
+            "startup": {
+              "$ref": "#/$defs/startup"
+            },
+            "quality": {
+              "$ref": "#/$defs/quality"
+            },
+            "crossings": {
+              "type": "array",
+              "maxItems": 100001,
+              "items": {
+                "$ref": "#/$defs/quantitySeconds"
+              }
+            },
+            "periods": {
+              "type": "array",
+              "maxItems": 100000,
+              "items": {
+                "$ref": "#/$defs/quantitySeconds"
+              }
+            },
+            "window": {
+              "$ref": "#/$defs/window"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "receipt": {
+          "type": "object",
+          "required": [
+            "schema",
+            "sha256",
+            "measurement_id",
+            "status",
+            "request_sha256",
+            "method_sha256",
+            "series_sha256",
+            "window_sha256",
+            "source",
+            "window",
+            "frequency",
+            "period",
+            "differential_peak_to_peak",
+            "average_supply_power",
+            "startup",
+            "quality",
+            "extensions"
+          ],
+          "properties": {
+            "schema": {
+              "const": "openada.oscillator-transient-receipt/v1alpha1"
+            },
+            "sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "measurement_id": {
+              "$ref": "#/$defs/role"
+            },
+            "status": {
+              "$ref": "#/$defs/oscillatorStatus"
+            },
+            "request_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "method_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "series_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "window_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "source": {
+              "$ref": "#/$defs/source"
+            },
+            "window": {
+              "$ref": "#/$defs/window"
+            },
+            "frequency": {
+              "$ref": "#/$defs/metric"
+            },
+            "period": {
+              "$ref": "#/$defs/metric"
+            },
+            "differential_peak_to_peak": {
+              "$ref": "#/$defs/metric"
+            },
+            "average_supply_power": {
+              "$ref": "#/$defs/metric"
+            },
+            "startup": {
+              "$ref": "#/$defs/startup"
+            },
+            "quality": {
+              "$ref": "#/$defs/quality"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "pointScalar": {
+          "type": "object",
+          "required": [
+            "status",
+            "value",
+            "unit"
+          ],
+          "properties": {
+            "status": {
+              "$ref": "#/$defs/metricStatus"
+            },
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "unit": {
+              "enum": [
+                "Hz",
+                "Hz/V"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "gridPoint": {
+          "type": "object",
+          "required": [
+            "control",
+            "frequency",
+            "local_tuning_gain",
+            "stencil",
+            "receipt_sha256",
+            "extensions"
+          ],
+          "properties": {
+            "control": {
+              "$ref": "#/$defs/quantityVolts"
+            },
+            "frequency": {
+              "$ref": "#/$defs/pointScalar"
+            },
+            "local_tuning_gain": {
+              "$ref": "#/$defs/pointScalar"
+            },
+            "stencil": {
+              "enum": [
+                "forward",
+                "central_nonuniform_quadratic",
+                "backward"
+              ]
+            },
+            "receipt_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "grid": {
+          "type": "object",
+          "required": [
+            "status",
+            "control_condition",
+            "control_unit",
+            "expected_monotonicity",
+            "observed_monotonicity",
+            "monotonicity_check",
+            "grid_sha256",
+            "points",
+            "span",
+            "extensions"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "measured",
+                "unknown"
+              ]
+            },
+            "control_condition": {
+              "$ref": "#/$defs/role"
+            },
+            "control_unit": {
+              "const": "V"
+            },
+            "expected_monotonicity": {
+              "enum": [
+                "nondecreasing",
+                "nonincreasing"
+              ]
+            },
+            "observed_monotonicity": {
+              "enum": [
+                "nondecreasing",
+                "nonincreasing",
+                "non_monotonic",
+                "unknown"
+              ]
+            },
+            "monotonicity_check": {
+              "enum": [
+                "pass",
+                "fail",
+                "unknown"
+              ]
+            },
+            "grid_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "points": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 256,
+              "items": {
+                "$ref": "#/$defs/gridPoint"
+              }
+            },
+            "span": {
+              "$ref": "#/$defs/metric"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "shift": {
+          "type": "object",
+          "required": [
+            "status",
+            "perturbation_condition",
+            "condition_unit",
+            "reference_condition",
+            "perturbed_condition",
+            "reference_receipt_sha256",
+            "perturbed_receipt_sha256",
+            "pair_sha256",
+            "signed_shift",
+            "absolute_shift",
+            "extensions"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "measured",
+                "unknown"
+              ]
+            },
+            "perturbation_condition": {
+              "$ref": "#/$defs/role"
+            },
+            "condition_unit": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "reference_condition": {
+              "$ref": "#/$defs/quantity"
+            },
+            "perturbed_condition": {
+              "$ref": "#/$defs/quantity"
+            },
+            "reference_receipt_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "perturbed_receipt_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "pair_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "signed_shift": {
+              "$ref": "#/$defs/metric"
+            },
+            "absolute_shift": {
+              "$ref": "#/$defs/metric"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": [
+      {
+        "path": "data.measurement.status",
+        "type": "string",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "description": "Typed top-level oscillator or composition verdict; never a numeric sentinel.",
+        "extensions": {}
+      },
+      {
+        "path": "data.transient.frequency",
+        "type": [
+          "object",
+          "null"
+        ],
+        "unit": "Hz",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "description": "N-cycle hysteretic frequency when sustained, or the typed null non-result for a valid non-oscillating transient.",
+        "extensions": {}
+      },
+      {
+        "path": "data.transient.differential_peak_to_peak",
+        "type": [
+          "object",
+          "null"
+        ],
+        "unit": "V",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "description": "Differential max-minus-min over the exact shared crop.",
+        "extensions": {}
+      },
+      {
+        "path": "data.transient.average_supply_power",
+        "type": [
+          "object",
+          "null"
+        ],
+        "unit": "W",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "description": "Orientation-normalized trapezoidal mean supply power over the exact shared crop.",
+        "extensions": {}
+      },
+      {
+        "path": "data.receipt.window_sha256",
+        "type": [
+          "string",
+          "null"
+        ],
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "description": "Canonical identity that couples all transient waveform measurements to one source and window.",
+        "extensions": {}
+      },
+      {
+        "path": "data.grid.points",
+        "type": [
+          "array",
+          "null"
+        ],
+        "required_for": [
+          "pass",
+          "unknown"
+        ],
+        "description": "The complete declared control grid with per-point frequency, local tuning gain, stencil, and receipt identity.",
+        "extensions": {}
+      },
+      {
+        "path": "data.grid.span",
+        "type": [
+          "object",
+          "null"
+        ],
+        "unit": "Hz",
+        "required_for": [
+          "pass",
+          "unknown"
+        ],
+        "description": "Maximum minus minimum frequency over the complete sustained grid, or a typed unknown when the grid is incomplete.",
+        "extensions": {}
+      },
+      {
+        "path": "data.shift.signed_shift",
+        "type": [
+          "object",
+          "null"
+        ],
+        "unit": "Hz",
+        "required_for": [
+          "pass",
+          "unknown"
+        ],
+        "description": "Perturbed minus reference frequency under one named perturbation and otherwise identical condition context.",
+        "extensions": {}
+      }
+    ],
+    "extensions": {}
+  },
+  "evidence": {
+    "artifact_roles": [
+      {
+        "role": "measurement.source",
+        "kind": "normalized-inline-series",
+        "required_for": [
+          "pass",
+          "fail"
+        ],
+        "freshness": "immutable-input",
+        "integrity": [
+          "Verify the canonical normalized-series digest before selecting signals or cropping the waveform.",
+          "Retain the complete operating-condition bindings and optional unverified upstream lineage."
+        ],
+        "native_authority": "The normalized transient series is authoritative only for this deterministic oscillator calculation; native waveform decoding remains an upstream assertion.",
+        "extensions": {}
+      },
+      {
+        "role": "oscillator.receipt",
+        "kind": "semantic-receipt",
+        "required_for": [
+          "pass",
+          "fail",
+          "unknown"
+        ],
+        "freshness": "immutable-input",
+        "integrity": [
+          "Verify every receipt self-digest after removing only its top-level sha256 member.",
+          "Verify source, condition, method, and shared-window identities before composing grid or shift evidence."
+        ],
+        "native_authority": "The receipt is authoritative for the closed oscillator facts it binds, not for native simulation correctness, specification satisfaction, or signoff.",
+        "extensions": {}
+      }
+    ],
+    "integrity_rules": [
+      "Never serialize NaN or infinity and never substitute zero, a dominant FFT tone, or a favorable sub-window for a typed non-result.",
+      "The transient receipt binds request, method, normalized series, operating conditions, exact crop, signal selections, frequency, amplitude, power, startup, and quality under canonical SHA-256 identities.",
+      "A tuning grid retains every declared point and receipt identity; a frequency shift retains both receipt identities and all non-perturbation context.",
+      "Receipt composition verifies input identities rather than trusting anonymous copied scalar values."
+    ],
+    "provenance_limitations": [
+      "The operation does not independently validate native transient decoding, model loading, initial conditions, simulator convergence, or adequate physical simulation duration.",
+      "The startup and quality verdict is valid only for the declared thresholds, hold interval, crop, resolution, and exact selected differential signal.",
+      "A monotonicity check, span, tuning gain, or perturbation shift is measurement evidence and not specification satisfaction or signoff."
+    ],
+    "limits": {
+      "max_log_bytes": 8000,
+      "max_artifact_bytes": 67108864,
+      "max_artifact_count": 256,
+      "extensions": {}
+    },
+    "extensions": {}
+  },
+  "features": [
+    {
+      "id": "openada.feature/oscillator.crossing-frequency/v1alpha1",
+      "parameter_path": "measurement.kind",
+      "parameter_values": [
+        "transient"
+      ],
+      "request_effect": "Measure period and frequency from the first N+1 hysteresis-qualified rising differential zero crossings in the declared late crop, while using every late cycle for the sustained-quality verdict.",
+      "conformance_case": "Clean, decaying-startup, collapsed, and two-tone deterministic waveforms freeze event qualification, N-cycle arithmetic, typed non-results, and multimode QC.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/oscillator.startup-hold/v1alpha1",
+      "parameter_path": "measurement.kind",
+      "parameter_values": [
+        "transient"
+      ],
+      "request_effect": "Classify a waveform as sustained, never_started, collapsed, not_sustained, multimode, or unknown using the declared minimum amplitude, consistency, sample-resolution, and complete hold interval.",
+      "conformance_case": "Deterministic absent, delayed-start, decaying-ring, collapse, clean, under-resolved, and beating fixtures freeze every verdict.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/oscillator.differential-amplitude/v1alpha1",
+      "parameter_path": "measurement.kind",
+      "parameter_values": [
+        "transient"
+      ],
+      "request_effect": "Report max(positive-negative) minus min(positive-negative) over the exact shared closed crop.",
+      "conformance_case": "Synthetic differential records freeze subtraction order, boundary interpolation, peak-to-peak reduction, and shared-window identity.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/oscillator.average-supply-power/v1alpha1",
+      "parameter_path": "measurement.power.current_orientation",
+      "parameter_values": [
+        "positive_into_load",
+        "positive_into_source"
+      ],
+      "request_effect": "Report the trapezoidal time mean of orientation-normalized supply_voltage times supply_current over the exact shared crop.",
+      "conformance_case": "Nonuniform-axis and both-current-orientation fixtures freeze sign, trapezoidal integration, and shared-window identity.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+      "parameter_path": "measurement.kind",
+      "parameter_values": [
+        "tuning_grid"
+      ],
+      "request_effect": "Return a per-control-point local Hz/V curve using endpoint secants and the unequal-spacing three-point quadratic derivative at every interior point, retaining the monotonicity assessment.",
+      "conformance_case": "A deterministic strongly nonlinear nonuniform grid freezes every local derivative, stencil, receipt identity, and monotonic reversal result.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/oscillator.frequency-span/v1alpha1",
+      "parameter_path": "measurement.kind",
+      "parameter_values": [
+        "tuning_grid"
+      ],
+      "request_effect": "Return max frequency minus min frequency over every declared sustained grid point without dropping failures or reversals.",
+      "conformance_case": "Complete and incomplete receipt grids freeze full-set span and typed unknown behavior.",
+      "extensions": {}
+    },
+    {
+      "id": "openada.feature/oscillator.perturbation-shift/v1alpha1",
+      "parameter_path": "measurement.kind",
+      "parameter_values": [
+        "frequency_shift"
+      ],
+      "request_effect": "Return signed perturbed-minus-reference frequency and its absolute value from two sustained receipts whose context differs only in the named perturbation.",
+      "conformance_case": "Supply-pushing and load-pulling pairs freeze sign, magnitude, receipt pairing, condition equality, and typed incomplete behavior.",
+      "extensions": {}
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "oscillator.request.invalid",
+      "severity": "error",
+      "condition": "The closed request shape, identity, number, or parameter is invalid.",
+      "next_action": "Correct the declared oscillator request without adding simulator-native expressions or undeclared fields.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.kind.unsupported",
+      "severity": "error",
+      "condition": "The requested oscillator mode is outside transient, tuning_grid, and frequency_shift.",
+      "next_action": "Select one advertised mode or define a new versioned feature and profile.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.source.missing",
+      "severity": "error",
+      "condition": "Transient mode has no normalized waveform series.",
+      "next_action": "Provide the exact provenance-bound transient series.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.source.unexpected",
+      "severity": "error",
+      "condition": "A receipt-composition mode also supplied an unrelated waveform series.",
+      "next_action": "Remove the series and compose only the declared embedded receipts.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.source.over_limit",
+      "severity": "error",
+      "condition": "The normalized series or validated crossing set exceeds a published resource bound.",
+      "next_action": "Reduce the source to the declared bounded observation while preserving the requested crop.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.signal.missing",
+      "severity": "error",
+      "condition": "A selected positive, negative, supply-voltage, or supply-current vector is absent.",
+      "next_action": "Extract and name all four required transient signals.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.signal.invalid",
+      "severity": "error",
+      "condition": "The four required signal roles are not bound to four distinct source vectors.",
+      "next_action": "Declare reviewed, distinct differential and supply signal bindings.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.unit.mismatch",
+      "severity": "error",
+      "condition": "The time, differential, supply, control, or paired condition unit violates the exact-unit contract.",
+      "next_action": "Use seconds, volts, amperes, and the exact matching condition units without implicit conversion.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.window.invalid",
+      "severity": "error",
+      "condition": "The startup search or late crop is unordered or lies outside the source domain.",
+      "next_action": "Declare a closed in-domain late crop and an earlier in-domain startup search.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.startup.invalid",
+      "severity": "error",
+      "condition": "The startup search, hold duration, or amplitude threshold is invalid.",
+      "next_action": "Use a positive hold and amplitude threshold that fit in the declared observation interval.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.crossing.invalid",
+      "severity": "error",
+      "condition": "The crossing request changes the fixed zero, rising, or positive-hysteresis convention.",
+      "next_action": "Use exact 0 V rising crossings with a positive declared hysteresis.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.quality.invalid",
+      "severity": "error",
+      "condition": "A relative-deviation or minimum-sample declaration lies outside its closed bound.",
+      "next_action": "Use finite relative limits from zero through one and at least three samples per cycle.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.power.invalid",
+      "severity": "error",
+      "condition": "Supply-current orientation is absent or unsupported.",
+      "next_action": "Declare positive_into_load or positive_into_source explicitly.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.never_started",
+      "severity": "error",
+      "condition": "No amplitude-qualified hysteretic oscillatory activity is present.",
+      "next_action": "Report never_started and inspect bias, startup conditions, or simulation duration.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.not_sustained",
+      "severity": "error",
+      "condition": "Oscillatory activity is visible but no complete qualifying hold interval exists.",
+      "next_action": "Report not_sustained and inspect startup ringing, growth, and declared hold criteria.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.collapsed",
+      "severity": "error",
+      "condition": "The oscillator met startup criteria and later failed the declared late-window criteria.",
+      "next_action": "Report collapsed and inspect the retained late-window quality flags.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.quality.multimode",
+      "severity": "warning",
+      "condition": "Sustained crossings and amplitude are present but period or amplitude inconsistency indicates beating or multimode behavior.",
+      "next_action": "Withhold frequency and review the retained QC facts and waveform.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.source.resolution_insufficient",
+      "severity": "error",
+      "condition": "One or more late cycles does not meet the declared minimum sample resolution.",
+      "next_action": "Regenerate the transient waveform with adequate time resolution.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.receipt.invalid",
+      "severity": "error",
+      "condition": "An embedded transient receipt is structurally or semantically inconsistent.",
+      "next_action": "Use an unchanged receipt emitted by this profile's transient mode.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.receipt.digest_mismatch",
+      "severity": "error",
+      "condition": "An embedded receipt self-digest does not match its canonical content.",
+      "next_action": "Reject the modified receipt and regenerate it from the source waveform.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.condition.mismatch",
+      "severity": "error",
+      "condition": "A declared control or perturbation value differs from its receipt, or an undeclared comparison condition also changed.",
+      "next_action": "Use receipts whose exact condition bindings match the declared composition.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.grid.invalid",
+      "severity": "error",
+      "condition": "A tuning grid is too short, unordered, duplicated, or otherwise invalid.",
+      "next_action": "Provide at least three strictly increasing unique control points with unique receipts.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.grid.incomplete",
+      "severity": "error",
+      "condition": "One or more declared grid receipts is not sustained.",
+      "next_action": "Retain the incomplete typed grid and withhold local gains and span.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.grid.method_mismatch",
+      "severity": "error",
+      "condition": "Tuning-grid receipts do not share one exact transient measurement method.",
+      "next_action": "Regenerate every point with identical signal, crop, startup, crossing, quality, and power declarations.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.grid.non_monotonic",
+      "severity": "warning",
+      "condition": "The measured frequency curve does not follow the declared monotonic direction.",
+      "next_action": "Inspect every retained point and local gain without hiding the reversal.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.shift.invalid",
+      "severity": "error",
+      "condition": "A frequency-shift pair uses equal perturbation values, duplicate receipts, or mismatched units.",
+      "next_action": "Provide two distinct receipts and distinct same-unit perturbation values.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.shift.incomplete",
+      "severity": "error",
+      "condition": "Reference or perturbed receipt is not sustained.",
+      "next_action": "Retain the typed pair and withhold both shift scalars.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.shift.method_mismatch",
+      "severity": "error",
+      "condition": "Reference and perturbed receipts do not share one exact transient measurement method.",
+      "next_action": "Regenerate the pair with identical signal, crop, startup, crossing, quality, and power declarations.",
+      "extensions": {}
+    },
+    {
+      "code": "oscillator.value.non_finite",
+      "severity": "error",
+      "condition": "A differential, period, frequency, power, tuning-gain, span, or shift calculation is not finite.",
+      "next_action": "Inspect source dynamic range and return unknown rather than NaN or infinity.",
+      "extensions": {}
+    }
+  ],
+  "native_mappings": [
+    {
+      "driver_id": "org.openada.kernel.oscillator-evidence",
+      "native_product_id": "org.openada.core.runtime",
+      "backend_name": "OpenADA deterministic oscillator evidence kernel",
+      "supported_features": [
+        "openada.feature/oscillator.crossing-frequency/v1alpha1",
+        "openada.feature/oscillator.startup-hold/v1alpha1",
+        "openada.feature/oscillator.differential-amplitude/v1alpha1",
+        "openada.feature/oscillator.average-supply-power/v1alpha1",
+        "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+        "openada.feature/oscillator.frequency-span/v1alpha1",
+        "openada.feature/oscillator.perturbation-shift/v1alpha1"
+      ],
+      "semantic_bindings": [
+        {
+          "feature_id": "openada.feature/oscillator.crossing-frequency/v1alpha1",
+          "implementation": "First N+1 rising zero events qualified by symmetric hysteresis, followed by N-cycle elapsed-time frequency and all-late-cycle QC, algorithm 1.0.0.",
+          "output_fact_paths": [
+            "data.transient.frequency",
+            "data.transient.period",
+            "data.transient.crossings",
+            "data.receipt.window_sha256"
+          ],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/oscillator.startup-hold/v1alpha1",
+          "implementation": "Minimum-amplitude, sample-resolution, period-consistency, and amplitude-consistency qualification across one complete declared hold interval and the late crop, algorithm 1.0.0.",
+          "output_fact_paths": [
+            "data.measurement.status",
+            "data.transient.startup",
+            "data.transient.quality"
+          ],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/oscillator.differential-amplitude/v1alpha1",
+          "implementation": "Pointwise positive-minus-negative and finite max-minus-min over the exact boundary-interpolated shared crop, algorithm 1.0.0.",
+          "output_fact_paths": [
+            "data.transient.differential_peak_to_peak",
+            "data.receipt.window_sha256"
+          ],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/oscillator.average-supply-power/v1alpha1",
+          "implementation": "Orientation-normalized pointwise voltage-current product followed by trapezoidal time integration over the exact shared crop, algorithm 1.0.0.",
+          "output_fact_paths": [
+            "data.transient.average_supply_power",
+            "data.receipt.window_sha256"
+          ],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/oscillator.local-tuning-gain/v1alpha1",
+          "implementation": "One-sided endpoint secants and unequal-spacing three-point quadratic interior derivatives over every sustained receipt point, algorithm 1.0.0.",
+          "output_fact_paths": [
+            "data.grid.points",
+            "data.grid.monotonicity_check"
+          ],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/oscillator.frequency-span/v1alpha1",
+          "implementation": "Finite maximum frequency minus minimum frequency over the complete declared sustained control grid, algorithm 1.0.0.",
+          "output_fact_paths": [
+            "data.grid.span",
+            "data.grid.grid_sha256"
+          ],
+          "extensions": {}
+        },
+        {
+          "feature_id": "openada.feature/oscillator.perturbation-shift/v1alpha1",
+          "implementation": "Signed perturbed-minus-reference sustained frequency and absolute magnitude under identical non-perturbation context, algorithm 1.0.0.",
+          "output_fact_paths": [
+            "data.shift.signed_shift",
+            "data.shift.absolute_shift",
+            "data.shift.pair_sha256"
+          ],
+          "extensions": {}
+        }
+      ],
+      "native_actions": [
+        "Validate the provenance-bound transient series or every embedded oscillator receipt and its exact closed method.",
+        "For transient mode, crop all four signals once, classify startup and sustained behavior, and return coupled typed waveform metrics under one window identity.",
+        "For composition modes, verify every receipt and condition binding before calculating the complete local-gain curve, span, or paired shift.",
+        "Return typed non-results and QC diagnostics without selecting favorable cycles, points, tones, or conditions."
+      ],
+      "artifact_bindings": [
+        {
+          "native_kind": "provenance-bound normalized real inline transient series",
+          "canonical_role": "measurement.source",
+          "extensions": {}
+        },
+        {
+          "native_kind": "canonical oscillator transient semantic receipt",
+          "canonical_role": "oscillator.receipt",
+          "extensions": {}
+        }
+      ],
+      "limitations": [
+        "Only one time-domain differential oscillator signal, one supply pair, rising zero crossings, symmetric hysteresis, and the declared bounded late crop are supported.",
+        "Only transient startup and same-window reducers, receipt-composed tuning grids, and paired frequency shifts are implemented.",
+        "No phase noise, jitter, duty cycle, PSS, spectral density, fitting, extrapolation, cherry-cropping, specification verdict, or signoff claim is inferred."
+      ],
+      "extensions": {}
+    }
+  ],
+  "compatibility": {
+    "published_identifiers_immutable": true,
+    "breaking_change_requires_new_identifier": true,
+    "normative_surfaces": [
+      "operation and assertion identities, modes, typed statuses, and truth table",
+      "closed normalized-series, transient, tuning-grid, frequency-shift, receipt, and result shapes",
+      "differential polarity, rising zero event, hysteresis, N-cycle selection, interpolation, startup hold, and late-window QC rules",
+      "same-source shared-window identity, receipt self-digest, and condition-binding rules",
+      "peak-to-peak amplitude and orientation-normalized trapezoidal average supply-power definitions",
+      "complete-grid monotonicity, unequal-spacing local tuning-gain curve, and max-minus-min span definitions",
+      "paired-context signed and absolute perturbation-shift definitions",
+      "explicit phase-noise, jitter, duty-cycle, PSS, signoff, and specification-satisfaction exclusions"
+    ],
+    "change_policy": "This is a separate profile family because oscillator validity couples several same-window measurements and typed startup or QC outcomes that cannot fit the immutable one-scalar result.measure contract. Any change to a status, request or receipt field, digest input, crossing, startup, quality, crop, power, tuning-gain, monotonicity, span, shift, or excluded-metric meaning requires a new profile or feature identifier.",
+    "extensions": {}
+  },
+  "extensions": {}
+}
