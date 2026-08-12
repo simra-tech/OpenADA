@@ -1,0 +1,96 @@
+{
+  "current_source_trnoise": {
+    "combined_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: current trnoise probe\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nout                                          0\n\n\nNo. of Data Rows : 33\nNote: Simulation executed from .control section \n",
+    "deck_sha256": "08c4c2db5efa7c73b79634494b6a3aab28831d4a143f9b93a6ac9e6f6478885a",
+    "functional": true,
+    "maximum_absolute_output_v": 1.326663506463804,
+    "name": "current",
+    "output_sha256": "c120f9ce125a1e9bdc65ecb14143ab2fccccd6b27eb467c7e60b64da4ce296dc",
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "\nNote: No compatibility mode selected!\n\n\nCircuit: current trnoise probe\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nout                                          0\n\n\nNo. of Data Rows : 33\nNote: Simulation executed from .control section \n"
+  },
+  "documented_startup_seed_replay": {
+    "different_seed_control": 54321,
+    "different_seed_output_distinct": true,
+    "gate": "fail",
+    "runs": [
+      {
+        "combined_tail": "OPENADA_PN_SETSEED_12345_LOADED\n\nNote: No compatibility mode selected!\n\n\nCircuit: trnoise startup-seed reproducibility probe\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nout                                          0\nvnoise#branch                                0\n\n\nNo. of Data Rows : 37\nNote: Simulation executed from .control section \n",
+        "deck_sha256": "52b3b9f34b687b5ee366db851b0564ac3767a022e622f7c5e43d825e6dab598f",
+        "init_sha256": "aa485511a1db538b7663ea1a437ca62b189abb44695771c80357491f03503037",
+        "last_output_v": 0.001604066142055762,
+        "name": "seed",
+        "output_sha256": "7544ded890c03b62c5633d4cd451024e4ac915da56dd8959a218b4ed4734cbf2",
+        "requested_seed": 12345,
+        "returncode": 0,
+        "startup_init_loaded": true,
+        "stderr": "",
+        "stdout": "OPENADA_PN_SETSEED_12345_LOADED\n\nNote: No compatibility mode selected!\n\n\nCircuit: trnoise startup-seed reproducibility probe\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nout                                          0\nvnoise#branch                                0\n\n\nNo. of Data Rows : 37\nNote: Simulation executed from .control section \n"
+      },
+      {
+        "combined_tail": "OPENADA_PN_SETSEED_12345_LOADED\n\nNote: No compatibility mode selected!\n\n\nCircuit: trnoise startup-seed reproducibility probe\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nout                                          0\nvnoise#branch                                0\n\n\nNo. of Data Rows : 37\nNote: Simulation executed from .control section \n",
+        "deck_sha256": "52b3b9f34b687b5ee366db851b0564ac3767a022e622f7c5e43d825e6dab598f",
+        "init_sha256": "aa485511a1db538b7663ea1a437ca62b189abb44695771c80357491f03503037",
+        "last_output_v": 8.664903983818577e-05,
+        "name": "seed",
+        "output_sha256": "8bef9fb536ab4f9a77b357b41de9a25b936776b44581bbda225749fb6515e703",
+        "requested_seed": 12345,
+        "returncode": 0,
+        "startup_init_loaded": true,
+        "stderr": "",
+        "stdout": "OPENADA_PN_SETSEED_12345_LOADED\n\nNote: No compatibility mode selected!\n\n\nCircuit: trnoise startup-seed reproducibility probe\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nout                                          0\nvnoise#branch                                0\n\n\nNo. of Data Rows : 37\nNote: Simulation executed from .control section \n"
+      },
+      {
+        "combined_tail": "OPENADA_PN_SETSEED_54321_LOADED\n\nNote: No compatibility mode selected!\n\n\nCircuit: trnoise startup-seed reproducibility probe\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nout                                          0\nvnoise#branch                                0\n\n\nNo. of Data Rows : 37\nNote: Simulation executed from .control section \n",
+        "deck_sha256": "52b3b9f34b687b5ee366db851b0564ac3767a022e622f7c5e43d825e6dab598f",
+        "init_sha256": "c6d17cb5932ced7fa0e2ab5eea4c632747d525c31999fabff39a1d693048bdfa",
+        "last_output_v": -0.00022357541509767265,
+        "name": "seed",
+        "output_sha256": "bcaa886ba67d334cb4c5a6c7b0955bd616b80009d2013971cf55b7b9b729363a",
+        "requested_seed": 54321,
+        "returncode": 0,
+        "startup_init_loaded": true,
+        "stderr": "",
+        "stdout": "OPENADA_PN_SETSEED_54321_LOADED\n\nNote: No compatibility mode selected!\n\n\nCircuit: trnoise startup-seed reproducibility probe\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nout                                          0\nvnoise#branch                                0\n\n\nNo. of Data Rows : 37\nNote: Simulation executed from .control section \n"
+      }
+    ],
+    "same_seed": 12345,
+    "same_seed_outputs_identical": false,
+    "startup_init_loaded": true
+  },
+  "harmonic_balance": {
+    "capability_available": false,
+    "capability_state": "unavailable",
+    "combined_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: hb availability probe\n\nError on line 4 or its substitute:\n  .hb 1k 5\n unimplemented dot command '.hb'\n    Simulation interrupted due to error!\n\nError: incomplete or empty netlist\n       or no \".plot\", \".print\", or \".fourier\" lines in batch mode;\nno simulations run!\n",
+    "deck_sha256": "8f90215fd5a29be813ea858b49353b7ebc94d6e7e0aeb3c938be8e2851a9166b",
+    "name": "hb",
+    "returncode": 1,
+    "stderr": "Error on line 4 or its substitute:\n  .hb 1k 5\n unimplemented dot command '.hb'\n    Simulation interrupted due to error!\n\nError: incomplete or empty netlist\n       or no \".plot\", \".print\", or \".fourier\" lines in batch mode;\nno simulations run!\n",
+    "stdout": "\nNote: No compatibility mode selected!\n\n\nCircuit: hb availability probe\n\n"
+  },
+  "interpretation": {
+    "current_trnoise": "functional source probe only; no calibration claim",
+    "pss_hb": "not evaluated - capability unavailable",
+    "seed_contract": "replay gate failed"
+  },
+  "methodology_gate": "fail",
+  "probe": "research.openada.pn-ngspice-capability-probes/0",
+  "pss": {
+    "capability_available": false,
+    "capability_state": "unavailable",
+    "combined_tail": "\nNote: No compatibility mode selected!\n\n\nCircuit: pss availability probe\n\nError on line 4 or its substitute:\n  .pss 1k 1m out 128 5 10 1e-3\n unimplemented dot command '.pss'\n    Simulation interrupted due to error!\n\nError: incomplete or empty netlist\n       or no \".plot\", \".print\", or \".fourier\" lines in batch mode;\nno simulations run!\n",
+    "deck_sha256": "6bb378ffd1ba1270c18e5f219b02020f6a84bd97ed35d89046626d59a451a20c",
+    "name": "pss",
+    "returncode": 1,
+    "stderr": "Error on line 4 or its substitute:\n  .pss 1k 1m out 128 5 10 1e-3\n unimplemented dot command '.pss'\n    Simulation interrupted due to error!\n\nError: incomplete or empty netlist\n       or no \".plot\", \".print\", or \".fourier\" lines in batch mode;\nno simulations run!\n",
+    "stdout": "\nNote: No compatibility mode selected!\n\n\nCircuit: pss availability probe\n\n"
+  },
+  "runtime": {
+    "ngspice_path": "/home/specialpedrito/.local/bin/ngspice",
+    "ngspice_sha256": "c0b252f4b91a030abf210062e8383975786bfb6d0718e064a3b2265e62310be7",
+    "ngspice_version_full": "******\n** ngspice-46 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2025, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Tue Aug 11 11:54:45 UTC 2026\n**\n** XSPICE extensions included\n** Relevant compilation options (refer to user's manual):\n** OpenMP multithreading for BSIM3, BSIM4 enabled\n** X11 interface not compiled into ngspice\n**\n******\n"
+  },
+  "status": "pass",
+  "status_meaning": "capability-probe evidence captured and recognized"
+}

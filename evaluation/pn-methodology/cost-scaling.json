@@ -1,0 +1,3719 @@
+{
+  "benchmark": "research.openada.pn-cost-scaling/0",
+  "benchmark_version": "0.1.0",
+  "claim": "measured synthetic Python cost on this host; no ngspice or physical-PN claim",
+  "event_only": [
+    {
+      "bin_spacing_hz": {
+        "maximum": 2343750.0000000005,
+        "median": 2343750.0000000005,
+        "minimum": 2343750.0000000005
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.0018857000031857751,
+        "median": 0.001192518997413572,
+        "minimum": 0.0010372300021117553
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 3515625.000000001,
+        "median": 3515625.000000001,
+        "minimum": 3515625.000000001
+      },
+      "event_count": 4608,
+      "exact_event_span_s": {
+        "maximum": 1.9195959937715674e-06,
+        "median": 1.9195842780922166e-06,
+        "minimum": 1.9195677190376986e-06
+      },
+      "lowest_usable_offset_hz": 9375000.0,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 1.3239262699935352,
+        "median": 1.3123042509978404,
+        "minimum": 1.2548737789984443
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 2343750.0000000005,
+          "construction": {
+            "increment_sigma_rad": 0.01202360286361681,
+            "increment_variance_rad2": 0.00014456702582197435,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 9375000.0
+          },
+          "enbw_hz": 3515625.000000001,
+          "exact_event_span_s": 1.9195842780922166e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 102,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.3239262699935352,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0018857000031857751,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.003883339995809365,
+            "global_phase_fit": 0.0007411900005536154,
+            "oracle_validation": 0.000894799995876383,
+            "phase_process_and_events": 0.001102079993870575,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.0011445100026321597
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 100786176
+        },
+        {
+          "bin_spacing_hz": 2343750.0000000005,
+          "construction": {
+            "increment_sigma_rad": 0.01202360286361681,
+            "increment_variance_rad2": 0.00014456702582197435,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 9375000.0
+          },
+          "enbw_hz": 3515625.000000001,
+          "exact_event_span_s": 1.9195677190376986e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 102,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.3123042509978404,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0010372300021117553,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.002814699000737164,
+            "global_phase_fit": 0.0003184300003340468,
+            "oracle_validation": 0.0006858389970147982,
+            "phase_process_and_events": 0.0010905700037255883,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.0007188000017777085
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 100913152
+        },
+        {
+          "bin_spacing_hz": 2343750.0000000005,
+          "construction": {
+            "increment_sigma_rad": 0.01202360286361681,
+            "increment_variance_rad2": 0.00014456702582197435,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 9375000.0
+          },
+          "enbw_hz": 3515625.000000001,
+          "exact_event_span_s": 1.9195959937715674e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 102,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.2548737789984443,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.001192518997413572,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.0034113899964722805,
+            "global_phase_fit": 0.00029358900064835325,
+            "oracle_validation": 0.001255579998542089,
+            "phase_process_and_events": 0.0009622910001780838,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.0008989299967652187
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 100958208
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 4608,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 1024,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.0003184300003340468,
+        "oracle_validation": 0.000894799995876383,
+        "phase_process_and_events": 0.0010905700037255883,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.0008989299967652187
+      },
+      "status": "pass",
+      "welch_record_support_s": 1.92e-06,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 100958208,
+        "median": 100913152,
+        "minimum": 100786176
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 1171875.0,
+        "median": 1171874.9999999998,
+        "minimum": 1171874.9999999998
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.0009283100007451139,
+        "median": 0.0009186200040858239,
+        "minimum": 0.0009138800014625303
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 1757812.5,
+        "median": 1757812.4999999995,
+        "minimum": 1757812.4999999995
+      },
+      "event_count": 9216,
+      "exact_event_span_s": {
+        "maximum": 3.839619274943899e-06,
+        "median": 3.839597031780887e-06,
+        "minimum": 3.8395699718817885e-06
+      },
+      "lowest_usable_offset_hz": 4687500.0,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 1.3363717989996076,
+        "median": 1.2359498029982205,
+        "minimum": 1.0811322549998295
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 1171874.9999999998,
+          "construction": {
+            "increment_sigma_rad": 0.006011914604401859,
+            "increment_variance_rad2": 3.6143117210620356e-05,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 4687500.0
+          },
+          "enbw_hz": 1757812.4999999995,
+          "exact_event_span_s": 3.8395699718817885e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 204,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.2359498029982205,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0009186200040858239,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.0028571590009960346,
+            "global_phase_fit": 0.0002537000036682002,
+            "oracle_validation": 0.0007546199994976632,
+            "phase_process_and_events": 0.0011828389979200438,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.0006649200004176237
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 101490688
+        },
+        {
+          "bin_spacing_hz": 1171875.0,
+          "construction": {
+            "increment_sigma_rad": 0.006011914604401859,
+            "increment_variance_rad2": 3.6143117210620356e-05,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 4687500.0
+          },
+          "enbw_hz": 1757812.5,
+          "exact_event_span_s": 3.839619274943899e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 204,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.3363717989996076,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0009283100007451139,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.0033239499971386977,
+            "global_phase_fit": 0.00033270999847445637,
+            "oracle_validation": 0.0009579499965184368,
+            "phase_process_and_events": 0.0014367299954756163,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.0005956000022706576
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 101302272
+        },
+        {
+          "bin_spacing_hz": 1171874.9999999998,
+          "construction": {
+            "increment_sigma_rad": 0.006011914604401859,
+            "increment_variance_rad2": 3.6143117210620356e-05,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 4687500.0
+          },
+          "enbw_hz": 1757812.4999999995,
+          "exact_event_span_s": 3.839597031780887e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 204,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.0811322549998295,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0009138800014625303,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.002568000003520865,
+            "global_phase_fit": 0.0003381200003786944,
+            "oracle_validation": 0.0007293300004675984,
+            "phase_process_and_events": 0.0009238200000254437,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.000575760001083836
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 101322752
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 9216,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 2048,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.00033270999847445637,
+        "oracle_validation": 0.0007546199994976632,
+        "phase_process_and_events": 0.0011828389979200438,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.0005956000022706576
+      },
+      "status": "pass",
+      "welch_record_support_s": 3.84e-06,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 101490688,
+        "median": 101322752,
+        "minimum": 101302272
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 585937.5000000001,
+        "median": 585937.5,
+        "minimum": 585937.5
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.0013780489971395582,
+        "median": 0.0013106499973218888,
+        "minimum": 0.0011560400016605854
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 878906.2500000003,
+        "median": 878906.2500000001,
+        "minimum": 878906.2500000001
+      },
+      "event_count": 18432,
+      "exact_event_span_s": {
+        "maximum": 7.67960418800495e-06,
+        "median": 7.679578835851757e-06,
+        "minimum": 7.679555797092612e-06
+      },
+      "lowest_usable_offset_hz": 2343750.0,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 1.0058900459989673,
+        "median": 0.9555441839984269,
+        "minimum": 0.9546939240026404
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 585937.5,
+          "construction": {
+            "increment_sigma_rad": 0.0030059714488749763,
+            "increment_variance_rad2": 9.035864351451525e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 2343750.0
+          },
+          "enbw_hz": 878906.2500000001,
+          "exact_event_span_s": 7.679555797092612e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 409,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.0058900459989673,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0013780489971395582,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.004179408999334555,
+            "global_phase_fit": 0.0006051999953342602,
+            "oracle_validation": 0.0011860700033139437,
+            "phase_process_and_events": 0.0016141799933393486,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.000772849001805298
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 102621184
+        },
+        {
+          "bin_spacing_hz": 585937.5000000001,
+          "construction": {
+            "increment_sigma_rad": 0.0030059714488749763,
+            "increment_variance_rad2": 9.035864351451525e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 2343750.0
+          },
+          "enbw_hz": 878906.2500000003,
+          "exact_event_span_s": 7.679578835851757e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 409,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9546939240026404,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0011560400016605854,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.003832169000816066,
+            "global_phase_fit": 0.0004594100028043613,
+            "oracle_validation": 0.0012646390023292042,
+            "phase_process_and_events": 0.0014106800008448772,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.0006966299988562241
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 102580224
+        },
+        {
+          "bin_spacing_hz": 585937.5,
+          "construction": {
+            "increment_sigma_rad": 0.0030059714488749763,
+            "increment_variance_rad2": 9.035864351451525e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 2343750.0
+          },
+          "enbw_hz": 878906.2500000001,
+          "exact_event_span_s": 7.67960418800495e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 409,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9555441839984269,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0013106499973218888,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.004238809000526089,
+            "global_phase_fit": 0.0005008099979022518,
+            "oracle_validation": 0.0014307090023066849,
+            "phase_process_and_events": 0.0014968100003898144,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.000809839999419637
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 102584320
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 18432,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 4096,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.0005008099979022518,
+        "oracle_validation": 0.0012646390023292042,
+        "phase_process_and_events": 0.0014968100003898144,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.000772849001805298
+      },
+      "status": "pass",
+      "welch_record_support_s": 7.68e-06,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 102621184,
+        "median": 102584320,
+        "minimum": 102580224
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 292968.75000000006,
+        "median": 292968.75000000006,
+        "minimum": 292968.7499999998
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.002246159994683694,
+        "median": 0.002008940005907789,
+        "minimum": 0.001844719001383055
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 439453.12500000023,
+        "median": 439453.12500000023,
+        "minimum": 439453.1249999999
+      },
+      "event_count": 36864,
+      "exact_event_span_s": {
+        "maximum": 1.5359590139623336e-05,
+        "median": 1.5359584399631182e-05,
+        "minimum": 1.5359568856649746e-05
+      },
+      "lowest_usable_offset_hz": 1171875.0,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 0.9657752530038124,
+        "median": 0.9228851500010933,
+        "minimum": 0.8996237809988088
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 292968.75000000006,
+          "construction": {
+            "increment_sigma_rad": 0.0015029874927748649,
+            "increment_variance_rad2": 2.2589714034376742e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 1171875.0
+          },
+          "enbw_hz": 439453.12500000023,
+          "exact_event_span_s": 1.5359590139623336e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 819,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1171875.0000000002,
+              "bin": 4,
+              "mismatch_percent": 17.18750000000002,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9228851500010933,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.001844719001383055,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.006541908995131962,
+            "global_phase_fit": 0.0008181189987226389,
+            "oracle_validation": 0.0020028699946124107,
+            "phase_process_and_events": 0.0026929899977403693,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.001026600002660416
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 105402368
+        },
+        {
+          "bin_spacing_hz": 292968.75000000006,
+          "construction": {
+            "increment_sigma_rad": 0.0015029874927748649,
+            "increment_variance_rad2": 2.2589714034376742e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 1171875.0
+          },
+          "enbw_hz": 439453.12500000023,
+          "exact_event_span_s": 1.5359568856649746e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 819,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1171875.0000000002,
+              "bin": 4,
+              "mismatch_percent": 17.18750000000002,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.8996237809988088,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.002246159994683694,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.008804679004242644,
+            "global_phase_fit": 0.001061269998899661,
+            "oracle_validation": 0.003211979004845489,
+            "phase_process_and_events": 0.003344980003021192,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.001184889995784033
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 105324544
+        },
+        {
+          "bin_spacing_hz": 292968.7499999998,
+          "construction": {
+            "increment_sigma_rad": 0.0015029874927748649,
+            "increment_variance_rad2": 2.2589714034376742e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 1171875.0
+          },
+          "enbw_hz": 439453.1249999999,
+          "exact_event_span_s": 1.5359584399631182e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 819,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1171874.9999999993,
+              "bin": 4,
+              "mismatch_percent": 17.187499999999932,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9657752530038124,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.002008940005907789,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.007621488002769183,
+            "global_phase_fit": 0.0008310500052175485,
+            "oracle_validation": 0.0029228589992271736,
+            "phase_process_and_events": 0.002688259002752602,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.0011778900006902404
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 105398272
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 36864,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 8192,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.0008310500052175485,
+        "oracle_validation": 0.0029228589992271736,
+        "phase_process_and_events": 0.0026929899977403693,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.0011778900006902404
+      },
+      "status": "pass",
+      "welch_record_support_s": 1.536e-05,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 105402368,
+        "median": 105398272,
+        "minimum": 105324544
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 146484.37500000003,
+        "median": 146484.37499999994,
+        "minimum": 146484.37499999983
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.005351250001695007,
+        "median": 0.004024749003292527,
+        "minimum": 0.0033264700032304972
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 219726.56250000006,
+        "median": 219726.5624999999,
+        "minimum": 219726.56249999974
+      },
+      "event_count": 73728,
+      "exact_event_span_s": {
+        "maximum": 3.07195873356225e-05,
+        "median": 3.071958453236336e-05,
+        "minimum": 3.0719580154303547e-05
+      },
+      "lowest_usable_offset_hz": 585937.5,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 0.9804774919975898,
+        "median": 0.9798416610065033,
+        "minimum": 0.9527025339993997
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 146484.37500000003,
+          "construction": {
+            "increment_sigma_rad": 0.000751493967429702,
+            "increment_variance_rad2": 5.64743183083234e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 585937.5
+          },
+          "enbw_hz": 219726.56250000006,
+          "exact_event_span_s": 3.071958453236336e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 1638,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6250000002,
+              "bin": 7,
+              "mismatch_percent": 2.539062500000022,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9527025339993997,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.004024749003292527,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.013158968999050558,
+            "global_phase_fit": 0.001460749001125805,
+            "oracle_validation": 0.004489989994908683,
+            "phase_process_and_events": 0.004643140004191082,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.002564000002166722
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 109727744
+        },
+        {
+          "bin_spacing_hz": 146484.37499999994,
+          "construction": {
+            "increment_sigma_rad": 0.000751493967429702,
+            "increment_variance_rad2": 5.64743183083234e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 585937.5
+          },
+          "enbw_hz": 219726.5624999999,
+          "exact_event_span_s": 3.07195873356225e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 1638,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6249999995,
+              "bin": 7,
+              "mismatch_percent": 2.5390624999999556,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9798416610065033,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0033264700032304972,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.011872827999468427,
+            "global_phase_fit": 0.0015501000016229227,
+            "oracle_validation": 0.0037595889953081496,
+            "phase_process_and_events": 0.004785449003975373,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.0017763700016075745
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 109731840
+        },
+        {
+          "bin_spacing_hz": 146484.37499999983,
+          "construction": {
+            "increment_sigma_rad": 0.000751493967429702,
+            "increment_variance_rad2": 5.64743183083234e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 585937.5
+          },
+          "enbw_hz": 219726.56249999974,
+          "exact_event_span_s": 3.0719580154303547e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 1638,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6249999988,
+              "bin": 7,
+              "mismatch_percent": 2.539062499999889,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9804774919975898,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.005351250001695007,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.015497316999244504,
+            "global_phase_fit": 0.0023345400040852837,
+            "oracle_validation": 0.004667899003834464,
+            "phase_process_and_events": 0.005476887999975588,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.0030167099976097234
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 109776896
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 73728,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 16384,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.0015501000016229227,
+        "oracle_validation": 0.004489989994908683,
+        "phase_process_and_events": 0.004785449003975373,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.002564000002166722
+      },
+      "status": "pass",
+      "welch_record_support_s": 3.072e-05,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 109776896,
+        "median": 109731840,
+        "minimum": 109727744
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 73242.18750000006,
+        "median": 73242.18750000003,
+        "minimum": 73242.18749999999
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.007949328995891847,
+        "median": 0.007104550000804011,
+        "minimum": 0.007021769000857603
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 109863.2812500001,
+        "median": 109863.28125000006,
+        "minimum": 109863.28125
+      },
+      "event_count": 147456,
+      "exact_event_span_s": {
+        "maximum": 6.143958918432556e-05,
+        "median": 6.14395845602009e-05,
+        "minimum": 6.143958174719838e-05
+      },
+      "lowest_usable_offset_hz": 292968.75,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 0.9654170229987358,
+        "median": 0.93953561699891,
+        "minimum": 0.9361736579958233
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 73242.18750000006,
+          "construction": {
+            "increment_sigma_rad": 0.0003757470113451377,
+            "increment_variance_rad2": 1.4118581653480308e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 292968.75
+          },
+          "enbw_hz": 109863.2812500001,
+          "exact_event_span_s": 6.143958918432556e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 3276,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6250000008,
+              "bin": 14,
+              "mismatch_percent": 2.539062500000089,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.93953561699891,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.007021769000857603,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.023963065999851096,
+            "global_phase_fit": 0.0038213099978747778,
+            "oracle_validation": 0.007185688999015838,
+            "phase_process_and_events": 0.00975355900300201,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.003200459002982825
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 117436416
+        },
+        {
+          "bin_spacing_hz": 73242.18749999999,
+          "construction": {
+            "increment_sigma_rad": 0.0003757470113451377,
+            "increment_variance_rad2": 1.4118581653480308e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 292968.75
+          },
+          "enbw_hz": 109863.28125,
+          "exact_event_span_s": 6.143958174719838e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 3276,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6249999998,
+              "bin": 14,
+              "mismatch_percent": 2.539062499999978,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9361736579958233,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.007104550000804011,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.02668908600026043,
+            "global_phase_fit": 0.0038727400024072267,
+            "oracle_validation": 0.01012283800082514,
+            "phase_process_and_events": 0.009460178000153974,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.003231809998396784
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 117440512
+        },
+        {
+          "bin_spacing_hz": 73242.18750000003,
+          "construction": {
+            "increment_sigma_rad": 0.0003757470113451377,
+            "increment_variance_rad2": 1.4118581653480308e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 292968.75
+          },
+          "enbw_hz": 109863.28125000006,
+          "exact_event_span_s": 6.14395845602009e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 3276,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6250000005,
+              "bin": 14,
+              "mismatch_percent": 2.5390625000000444,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9654170229987358,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.007949328995891847,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.02684668599977158,
+            "global_phase_fit": 0.004511198996624444,
+            "oracle_validation": 0.007618228999490384,
+            "phase_process_and_events": 0.011277477999101393,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.003438129999267403
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 117432320
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 147456,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 32768,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.0038727400024072267,
+        "oracle_validation": 0.007618228999490384,
+        "phase_process_and_events": 0.00975355900300201,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.003231809998396784
+      },
+      "status": "pass",
+      "welch_record_support_s": 6.144e-05,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 117440512,
+        "median": 117436416,
+        "minimum": 117432320
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 36621.09375000001,
+        "median": 36621.09374999998,
+        "minimum": 36621.09374999997
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.017015027995512355,
+        "median": 0.01698117799969623,
+        "minimum": 0.015245848000631668
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 54931.64062500003,
+        "median": 54931.640624999985,
+        "minimum": 54931.64062499997
+      },
+      "event_count": 294912,
+      "exact_event_span_s": {
+        "maximum": 0.00012287958399258197,
+        "median": 0.00012287958190871615,
+        "minimum": 0.00012287957859044324
+      },
+      "lowest_usable_offset_hz": 146484.375,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 1.0072270679957,
+        "median": 0.9660516439980711,
+        "minimum": 0.9483784059993923
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 36621.09375000001,
+          "construction": {
+            "increment_sigma_rad": 0.0001878735091263548,
+            "increment_variance_rad2": 3.529645543145052e-08,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 146484.375
+          },
+          "enbw_hz": 54931.64062500003,
+          "exact_event_span_s": 0.00012287958399258197,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 6553,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 988769.5312500002,
+              "bin": 27,
+              "mismatch_percent": -1.1230468749999778,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.0072270679957,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.017015027995512355,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.0520028819955769,
+            "global_phase_fit": 0.009289759000239428,
+            "oracle_validation": 0.016661957000906114,
+            "phase_process_and_events": 0.018323456999496557,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.007725268995272927
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 133967872
+        },
+        {
+          "bin_spacing_hz": 36621.09374999997,
+          "construction": {
+            "increment_sigma_rad": 0.0001878735091263548,
+            "increment_variance_rad2": 3.529645543145052e-08,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 146484.375
+          },
+          "enbw_hz": 54931.64062499997,
+          "exact_event_span_s": 0.00012287957859044324,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 6553,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 988769.5312499992,
+              "bin": 27,
+              "mismatch_percent": -1.1230468750000777,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9660516439980711,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.01698117799969623,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.0500557330014999,
+            "global_phase_fit": 0.00808675900043454,
+            "oracle_validation": 0.015091248002136126,
+            "phase_process_and_events": 0.017981737000809517,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.008894418999261688
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 134037504
+        },
+        {
+          "bin_spacing_hz": 36621.09374999998,
+          "construction": {
+            "increment_sigma_rad": 0.0001878735091263548,
+            "increment_variance_rad2": 3.529645543145052e-08,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 146484.375
+          },
+          "enbw_hz": 54931.640624999985,
+          "exact_event_span_s": 0.00012287958190871615,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 6553,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 988769.5312499994,
+              "bin": 27,
+              "mismatch_percent": -1.1230468750000555,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9483784059993923,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.015245848000631668,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.0521498129965039,
+            "global_phase_fit": 0.008209799998439848,
+            "oracle_validation": 0.017281587999605108,
+            "phase_process_and_events": 0.019619667997176293,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.007036048002191819
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 134156288
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 294912,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 65536,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.008209799998439848,
+        "oracle_validation": 0.016661957000906114,
+        "phase_process_and_events": 0.018323456999496557,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.007725268995272927
+      },
+      "status": "pass",
+      "welch_record_support_s": 0.00012288,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 134156288,
+        "median": 134037504,
+        "minimum": 133967872
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 18310.54687500004,
+        "median": 18310.546874999985,
+        "minimum": 18310.546874999975
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.03881184499914525,
+        "median": 0.034410255000693724,
+        "minimum": 0.03339170599792851
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 27465.82031250006,
+        "median": 27465.820312499978,
+        "minimum": 27465.820312499964
+      },
+      "event_count": 589824,
+      "exact_event_span_s": {
+        "maximum": 0.00024575958434621444,
+        "median": 0.00024575958283872164,
+        "minimum": 0.0002457595823762459
+      },
+      "lowest_usable_offset_hz": 73242.1875,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 1.0580699409983936,
+        "median": 1.0369303240004228,
+        "minimum": 1.014704867004184
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 18310.546874999975,
+          "construction": {
+            "increment_sigma_rad": 9.393675499490067e-05,
+            "increment_variance_rad2": 8.824113938971994e-09,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 73242.1875
+          },
+          "enbw_hz": 27465.820312499964,
+          "exact_event_span_s": 0.00024575958283872164,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 13107,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1007080.0781249986,
+              "bin": 55,
+              "mismatch_percent": 0.7080078124998668,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 91552.73437499987,
+              "bin": 5,
+              "mismatch_percent": -8.447265625000133,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.014704867004184,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.03881184499914525,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.11412922500312561,
+            "global_phase_fit": 0.019678196993481833,
+            "oracle_validation": 0.0377713150010095,
+            "phase_process_and_events": 0.037542855003266595,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.019133648005663417
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 166952960
+        },
+        {
+          "bin_spacing_hz": 18310.54687500004,
+          "construction": {
+            "increment_sigma_rad": 9.393675499490067e-05,
+            "increment_variance_rad2": 8.824113938971994e-09,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 73242.1875
+          },
+          "enbw_hz": 27465.82031250006,
+          "exact_event_span_s": 0.0002457595823762459,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 13107,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1007080.0781250022,
+              "bin": 55,
+              "mismatch_percent": 0.708007812500222,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 91552.7343750002,
+              "bin": 5,
+              "mismatch_percent": -8.447265624999801,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.0580699409983936,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.03339170599792851,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.10424116499780212,
+            "global_phase_fit": 0.01881498799775727,
+            "oracle_validation": 0.03368057499756105,
+            "phase_process_and_events": 0.03716616400197381,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.01457671800017124
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 166916096
+        },
+        {
+          "bin_spacing_hz": 18310.546874999985,
+          "construction": {
+            "increment_sigma_rad": 9.393675499490067e-05,
+            "increment_variance_rad2": 8.824113938971994e-09,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 73242.1875
+          },
+          "enbw_hz": 27465.820312499978,
+          "exact_event_span_s": 0.00024575958434621444,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 13107,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1007080.0781249992,
+              "bin": 55,
+              "mismatch_percent": 0.7080078124999112,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 91552.73437499993,
+              "bin": 5,
+              "mismatch_percent": -8.447265625000078,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.0369303240004228,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.034410255000693724,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.10647230500035221,
+            "global_phase_fit": 0.01887677700142376,
+            "oracle_validation": 0.03462071499961894,
+            "phase_process_and_events": 0.03743912400386762,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.015533477999269962
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 166838272
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 589824,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 131072,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.01887677700142376,
+        "oracle_validation": 0.03462071499961894,
+        "phase_process_and_events": 0.03743912400386762,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.015533477999269962
+      },
+      "status": "pass",
+      "welch_record_support_s": 0.00024576,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 166952960,
+        "median": 166916096,
+        "minimum": 166838272
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 9155.273437482465,
+        "median": 9155.27343748245,
+        "minimum": 9155.273437482443
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.08018308899772819,
+        "median": 0.0794474389986135,
+        "minimum": 0.07523597899853485
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 13732.910156223701,
+        "median": 13732.91015622368,
+        "minimum": 13732.910156223668
+      },
+      "event_count": 1179648,
+      "exact_event_span_s": {
+        "maximum": 0.0004915195872381925,
+        "median": 0.00049151958625433,
+        "minimum": 0.0004915195803904426
+      },
+      "lowest_usable_offset_hz": 36621.09375,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 1.2143981289991643,
+        "median": 1.1901566429951345,
+        "minimum": 1.185660563998681
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 9155.27343748245,
+          "construction": {
+            "increment_sigma_rad": 4.696837755141573e-05,
+            "increment_variance_rad2": 2.206028489812333e-09,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 36621.09375
+          },
+          "enbw_hz": 13732.91015622368,
+          "exact_event_span_s": 0.0004915195872381925,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 26214,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 997924.8046855871,
+              "bin": 109,
+              "mismatch_percent": -0.20751953144129143,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 100708.00781230695,
+              "bin": 11,
+              "mismatch_percent": 0.7080078123069544,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.185660563998681,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0794474389986135,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.23721372700674692,
+            "global_phase_fit": 0.042870454002695624,
+            "oracle_validation": 0.08245003800402628,
+            "phase_process_and_events": 0.07531329000630649,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.03657698499591788
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 232996864
+        },
+        {
+          "bin_spacing_hz": 9155.273437482443,
+          "construction": {
+            "increment_sigma_rad": 4.696837755141573e-05,
+            "increment_variance_rad2": 2.206028489812333e-09,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 36621.09375
+          },
+          "enbw_hz": 13732.910156223668,
+          "exact_event_span_s": 0.0004915195803904426,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 26214,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 997924.8046855862,
+              "bin": 109,
+              "mismatch_percent": -0.20751953144138024,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 100708.00781230687,
+              "bin": 11,
+              "mismatch_percent": 0.7080078123068656,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.1901566429951345,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.08018308899772819,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.23648857700027293,
+            "global_phase_fit": 0.04187817399360938,
+            "oracle_validation": 0.07680136899580248,
+            "phase_process_and_events": 0.07950140900356928,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.03830491500411881
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 233283584
+        },
+        {
+          "bin_spacing_hz": 9155.273437482465,
+          "construction": {
+            "increment_sigma_rad": 4.696837755141573e-05,
+            "increment_variance_rad2": 2.206028489812333e-09,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 36621.09375
+          },
+          "enbw_hz": 13732.910156223701,
+          "exact_event_span_s": 0.00049151958625433,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 26214,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 997924.8046855887,
+              "bin": 109,
+              "mismatch_percent": -0.207519531441136,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 100708.00781230711,
+              "bin": 11,
+              "mismatch_percent": 0.7080078123071099,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.2143981289991643,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.07523597899853485,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.2326320670035784,
+            "global_phase_fit": 0.03951207399950363,
+            "oracle_validation": 0.07849854900268838,
+            "phase_process_and_events": 0.07889457900455454,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.03572390499903122
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 233168896
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 1179648,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 262144,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.04187817399360938,
+        "oracle_validation": 0.07849854900268838,
+        "phase_process_and_events": 0.07889457900455454,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.03657698499591788
+      },
+      "status": "pass",
+      "welch_record_support_s": 0.00049152,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 233283584,
+        "median": 233168896,
+        "minimum": 232996864
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 4577.63671875634,
+        "median": 4577.636718756335,
+        "minimum": 4577.636718756332
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.16399247699882835,
+        "median": 0.15854029800539138,
+        "minimum": 0.15389028799836524
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 6866.455078134508,
+        "median": 6866.4550781345,
+        "minimum": 6866.455078134496
+      },
+      "event_count": 2359296,
+      "exact_event_span_s": {
+        "maximum": 0.0009830395858225545,
+        "median": 0.0009830395827763105,
+        "minimum": 0.0009830395813913418
+      },
+      "lowest_usable_offset_hz": 18310.546875,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 1.4627127050043782,
+        "median": 1.4625181450028322,
+        "minimum": 1.4329872599992086
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 4577.636718756332,
+          "construction": {
+            "increment_sigma_rad": 2.3484188782453544e-05,
+            "increment_variance_rad2": 5.515071227699169e-10,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 18310.546875
+          },
+          "enbw_hz": 6866.455078134496,
+          "exact_event_span_s": 0.0009830395827763105,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 52428,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 997924.8046888803,
+              "bin": 218,
+              "mismatch_percent": -0.20751953111196597,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 100708.0078126393,
+              "bin": 22,
+              "mismatch_percent": 0.7080078126393108,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.4625181450028322,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.16399247699882835,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.5008418989964412,
+            "global_phase_fit": 0.088686877003056,
+            "oracle_validation": 0.17324822500086157,
+            "phase_process_and_events": 0.16359807700064266,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.07530559999577235
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 365264896
+        },
+        {
+          "bin_spacing_hz": 4577.63671875634,
+          "construction": {
+            "increment_sigma_rad": 2.3484188782453544e-05,
+            "increment_variance_rad2": 5.515071227699169e-10,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 18310.546875
+          },
+          "enbw_hz": 6866.455078134508,
+          "exact_event_span_s": 0.0009830395813913418,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 52428,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 997924.8046888821,
+              "bin": 218,
+              "mismatch_percent": -0.20751953111178834,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 100708.00781263948,
+              "bin": 22,
+              "mismatch_percent": 0.7080078126394884,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.4627127050043782,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.15389028799836524,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.47182555400650017,
+            "global_phase_fit": 0.08220632799930172,
+            "oracle_validation": 0.1584611480066087,
+            "phase_process_and_events": 0.15947115800372558,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.07168395999906352
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 365199360
+        },
+        {
+          "bin_spacing_hz": 4577.636718756335,
+          "construction": {
+            "increment_sigma_rad": 2.3484188782453544e-05,
+            "increment_variance_rad2": 5.515071227699169e-10,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 18310.546875
+          },
+          "enbw_hz": 6866.4550781345,
+          "exact_event_span_s": 0.0009830395858225545,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 52428,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 997924.8046888809,
+              "bin": 218,
+              "mismatch_percent": -0.20751953111191046,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 100708.00781263936,
+              "bin": 22,
+              "mismatch_percent": 0.7080078126393552,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.4329872599992086,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.15854029800539138,
+            "crossing_extraction": 0.0,
+            "fixture_total": 0.4838608520003618,
+            "global_phase_fit": 0.08215464900422376,
+            "oracle_validation": 0.16352501700021094,
+            "phase_process_and_events": 0.16179165699577425,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.07638564900116762
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 365088768
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 2359296,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 524288,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.08220632799930172,
+        "oracle_validation": 0.16352501700021094,
+        "phase_process_and_events": 0.16179165699577425,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.07530559999577235
+      },
+      "status": "pass",
+      "welch_record_support_s": 0.00098304,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 365264896,
+        "median": 365199360,
+        "minimum": 365088768
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 2288.8183593759113,
+        "median": 2288.818359375907,
+        "minimum": 2288.8183593758968
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.6111679839959834,
+        "median": 0.5554643029972794,
+        "minimum": 0.5453797539958032
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 3433.227539063864,
+        "median": 3433.227539063858,
+        "minimum": 3433.227539063842
+      },
+      "event_count": 4718592,
+      "exact_event_span_s": {
+        "maximum": 0.0019660795838275825,
+        "median": 0.001966079583758542,
+        "minimum": 0.0019660795837415142
+      },
+      "lowest_usable_offset_hz": 9155.2734375,
+      "minimum_usable_bin": 4,
+      "mode": "event-only",
+      "process_wallclock_s": {
+        "maximum": 2.9278232630022103,
+        "median": 2.600944317993708,
+        "minimum": 2.574920212995494
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 2288.818359375907,
+          "construction": {
+            "increment_sigma_rad": 1.1742094392069982e-05,
+            "increment_variance_rad2": 1.378767807122813e-10,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 9155.2734375
+          },
+          "enbw_hz": 3433.227539063858,
+          "exact_event_span_s": 0.0019660795837415142,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 104857,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1000213.6230472715,
+              "bin": 437,
+              "mismatch_percent": 0.021362304727157166,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 100708.00781253992,
+              "bin": 44,
+              "mismatch_percent": 0.7080078125399236,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 9155.273437503629,
+              "bin": 4,
+              "mismatch_percent": -8.447265624963707,
+              "requested_hz": 10000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            }
+          ],
+          "process_wallclock_s": 2.9278232630022103,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.6111679839959834,
+            "crossing_extraction": 0.0,
+            "fixture_total": 1.9281283620002796,
+            "global_phase_fit": 0.29684674800228095,
+            "oracle_validation": 0.8313326450006571,
+            "phase_process_and_events": 0.4856210819998523,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.31432123599370243
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 604487680
+        },
+        {
+          "bin_spacing_hz": 2288.8183593758968,
+          "construction": {
+            "increment_sigma_rad": 1.1742094392069982e-05,
+            "increment_variance_rad2": 1.378767807122813e-10,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 9155.2734375
+          },
+          "enbw_hz": 3433.227539063842,
+          "exact_event_span_s": 0.0019660795838275825,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 104857,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1000213.6230472669,
+              "bin": 437,
+              "mismatch_percent": 0.021362304726690873,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 100708.00781253946,
+              "bin": 44,
+              "mismatch_percent": 0.7080078125394573,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 9155.273437503587,
+              "bin": 4,
+              "mismatch_percent": -8.447265624964128,
+              "requested_hz": 10000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            }
+          ],
+          "process_wallclock_s": 2.600944317993708,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.5554643029972794,
+            "crossing_extraction": 0.0,
+            "fixture_total": 1.5647988920027274,
+            "global_phase_fit": 0.24973636600043392,
+            "oracle_validation": 0.5301536260012654,
+            "phase_process_and_events": 0.4791766030029976,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.30572793699684553
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 604360704
+        },
+        {
+          "bin_spacing_hz": 2288.8183593759113,
+          "construction": {
+            "increment_sigma_rad": 1.1742094392069982e-05,
+            "increment_variance_rad2": 1.378767807122813e-10,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 9155.2734375
+          },
+          "enbw_hz": 3433.227539063864,
+          "exact_event_span_s": 0.001966079583758542,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0,
+            "psd_ratio_db_abs_p99": 0.0,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 104857,
+            "psd_ratio_db_max_abs": 0.0,
+            "psd_ratio_db_median": 0.0
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1000213.6230472733,
+              "bin": 437,
+              "mismatch_percent": 0.021362304727334802,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 100708.0078125401,
+              "bin": 44,
+              "mismatch_percent": 0.7080078125401013,
+              "requested_hz": 100000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "actual_hz": 9155.273437503645,
+              "bin": 4,
+              "mismatch_percent": -8.447265624963551,
+              "requested_hz": 10000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            }
+          ],
+          "process_wallclock_s": 2.574920212995494,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.5453797539958032,
+            "crossing_extraction": 0.0,
+            "fixture_total": 1.55161939500249,
+            "global_phase_fit": 0.24294453599577537,
+            "oracle_validation": 0.5304939870038652,
+            "phase_process_and_events": 0.4757413240004098,
+            "waveform_generation": 0.0,
+            "welch_psd": 0.3024352180000278
+          },
+          "waveform_sample_count": null,
+          "worker_fixture_maximum_rss_bytes": 604479488
+        }
+      ],
+      "samples_per_cycle": null,
+      "scale_count": 4718592,
+      "scale_count_kind": "phase events",
+      "segment_count": 8,
+      "segment_length_events": 1048576,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0,
+        "global_phase_fit": 0.24973636600043392,
+        "oracle_validation": 0.5304939870038652,
+        "phase_process_and_events": 0.4791766030029976,
+        "waveform_generation": 0.0,
+        "welch_psd": 0.30572793699684553
+      },
+      "status": "pass",
+      "welch_record_support_s": 0.00196608,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 604487680,
+        "median": 604479488,
+        "minimum": 604360704
+      }
+    }
+  ],
+  "limitations": [
+    "Each repeat is a fresh process; worker timing excludes Python import startup.",
+    "Candidate-pipeline timing includes crossings (waveform mode), one global phase fit, and one Welch PSD; fixture generation and oracle validation are separate.",
+    "Worker-fixture maximum RSS includes Python/NumPy/SciPy, synthetic construction, candidate analysis, and oracle validation; it is not an isolated estimator-memory measurement.",
+    "Waveform cases stop before memory-heavy low-offset cases; event-only cases continue.",
+    "Synthetic cost is not a transistor-level ngspice cost model."
+  ],
+  "policy": {
+    "carrier_hz": 2400000000.0,
+    "lowest_usable_offset_formula": "k_min*f_carrier/M",
+    "minimum_usable_bin": 4,
+    "periodic_hann_overlap_fraction": 0.5,
+    "record_event_count_formula": "M + (K-1)*(M/2)",
+    "samples_per_cycle_for_waveform": 20,
+    "segment_count": 8
+  },
+  "runtime": {
+    "child_thread_environment": {
+      "MKL_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    },
+    "cpu_count_visible": 32,
+    "cpu_model": "AMD EPYC 7B12",
+    "machine": "x86_64",
+    "numpy": "2.4.6",
+    "phase_noise_script_sha256": "36d98fb8e47290eb553c266560bf372b8a2c4822938cd7027d43167b9f54a7df",
+    "platform": "Linux-6.1.0-52-cloud-amd64-x86_64-with-glibc2.36",
+    "python": "3.11.2",
+    "scipy": "1.17.1",
+    "script_path": "/home/specialpedrito/simra/openada-wt/pn-method/evaluation/pn-methodology/benchmark.py",
+    "script_sha256": "98f50c3f5a07e63fcc6117c7a160adad1928589e1bbf546a325f7ca1e4ef9366"
+  },
+  "scaling_fits": {
+    "event_only": {
+      "fit_point_count": 5,
+      "log10_intercept": -8.526101019342383,
+      "note": "descriptive fit to largest measured cases; not a simulator forecast",
+      "r_squared": 0.9867721485548561,
+      "runtime_power_law_exponent": 1.2267310606909005
+    },
+    "waveform": {
+      "fit_point_count": 5,
+      "log10_intercept": -7.931103715262774,
+      "note": "descriptive fit to largest measured cases; not a simulator forecast",
+      "r_squared": 0.9962908716655658,
+      "runtime_power_law_exponent": 0.9893123401927537
+    }
+  },
+  "status": "pass",
+  "waveform": [
+    {
+      "bin_spacing_hz": {
+        "maximum": 2343750.0028127558,
+        "median": 2343749.979487863,
+        "minimum": 2343749.975757852
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.001533209993795026,
+        "median": 0.0012144299980718642,
+        "minimum": 0.001119579996156972
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 3515625.0042191334,
+        "median": 3515624.9692317946,
+        "minimum": 3515624.9636367783
+      },
+      "event_count": 4608,
+      "exact_event_span_s": {
+        "maximum": 1.9195959754808544e-06,
+        "median": 1.9195842917178965e-06,
+        "minimum": 1.919567751153374e-06
+      },
+      "lowest_usable_offset_hz": 9375000.0,
+      "minimum_usable_bin": 4,
+      "mode": "waveform",
+      "process_wallclock_s": {
+        "maximum": 0.982287194005039,
+        "median": 0.9715405149981962,
+        "minimum": 0.9377418110016151
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 2343749.975757852,
+          "construction": {
+            "increment_sigma_rad": 0.01202360286361681,
+            "increment_variance_rad2": 0.00014456702582197435,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 9375000.0
+          },
+          "enbw_hz": 3515624.9636367783,
+          "exact_event_span_s": 1.9195842917178965e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00034496066100043175,
+            "psd_ratio_db_abs_p99": 0.0393838816388685,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 102,
+            "psd_ratio_db_max_abs": 0.043639494079532805,
+            "psd_ratio_db_median": -0.010850540063139132
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9715405149981962,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0012144299980718642,
+            "crossing_extraction": 0.0004923800006508827,
+            "fixture_total": 0.013535668003896717,
+            "global_phase_fit": 0.00016884999786270782,
+            "oracle_validation": 0.0005886790022486821,
+            "phase_process_and_events": 0.0006933200056664646,
+            "waveform_generation": 0.010520058996917214,
+            "welch_psd": 0.0005531999995582737
+          },
+          "waveform_sample_count": 92182,
+          "worker_fixture_maximum_rss_bytes": 108503040
+        },
+        {
+          "bin_spacing_hz": 2343749.979487863,
+          "construction": {
+            "increment_sigma_rad": 0.01202360286361681,
+            "increment_variance_rad2": 0.00014456702582197435,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 9375000.0
+          },
+          "enbw_hz": 3515624.9692317946,
+          "exact_event_span_s": 1.919567751153374e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.000347111114596531,
+            "psd_ratio_db_abs_p99": 0.041485434512215334,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 102,
+            "psd_ratio_db_max_abs": 0.04385155366775444,
+            "psd_ratio_db_median": -0.0012018596133463052
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9377418110016151,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.001119579996156972,
+            "crossing_extraction": 0.0005152399971848354,
+            "fixture_total": 0.01305899699946167,
+            "global_phase_fit": 0.00014630999794462696,
+            "oracle_validation": 0.00046617900079581887,
+            "phase_process_and_events": 0.0006352990021696314,
+            "waveform_generation": 0.010380368999904022,
+            "welch_psd": 0.00045803000102750957
+          },
+          "waveform_sample_count": 92181,
+          "worker_fixture_maximum_rss_bytes": 108466176
+        },
+        {
+          "bin_spacing_hz": 2343750.0028127558,
+          "construction": {
+            "increment_sigma_rad": 0.01202360286361681,
+            "increment_variance_rad2": 0.00014456702582197435,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 9375000.0
+          },
+          "enbw_hz": 3515625.0042191334,
+          "exact_event_span_s": 1.9195959754808544e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00034719294236698275,
+            "psd_ratio_db_abs_p99": 0.041233317431418684,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 102,
+            "psd_ratio_db_max_abs": 0.055472249087018956,
+            "psd_ratio_db_median": 0.001176141625865789
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.982287194005039,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.001533209993795026,
+            "crossing_extraction": 0.0008372599986614659,
+            "fixture_total": 0.016372487996704876,
+            "global_phase_fit": 0.00022226999863050878,
+            "oracle_validation": 0.0005400800000643358,
+            "phase_process_and_events": 0.0006343409986584447,
+            "waveform_generation": 0.013127607002388686,
+            "welch_psd": 0.00047367999650305137
+          },
+          "waveform_sample_count": 92182,
+          "worker_fixture_maximum_rss_bytes": 108331008
+        }
+      ],
+      "samples_per_cycle": 20,
+      "scale_count": 92182,
+      "scale_count_kind": "waveform samples",
+      "segment_count": 8,
+      "segment_length_events": 1024,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0005152399971848354,
+        "global_phase_fit": 0.00016884999786270782,
+        "oracle_validation": 0.0005400800000643358,
+        "phase_process_and_events": 0.0006352990021696314,
+        "waveform_generation": 0.010520058996917214,
+        "welch_psd": 0.00047367999650305137
+      },
+      "status": "pass",
+      "waveform_sample_count": {
+        "maximum": 92182,
+        "median": 92182,
+        "minimum": 92181
+      },
+      "welch_record_support_s": 1.92e-06,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 108503040,
+        "median": 108466176,
+        "minimum": 108331008
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 1171874.9988466047,
+        "median": 1171874.997598577,
+        "minimum": 1171874.9974405405
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.0023026989947538823,
+        "median": 0.002036669000517577,
+        "minimum": 0.0019670299952849746
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 1757812.4982699072,
+        "median": 1757812.4963978655,
+        "minimum": 1757812.4961608108
+      },
+      "event_count": 9216,
+      "exact_event_span_s": {
+        "maximum": 3.839619243809898e-06,
+        "median": 3.839597007922728e-06,
+        "minimum": 3.839569994136567e-06
+      },
+      "lowest_usable_offset_hz": 4687500.0,
+      "minimum_usable_bin": 4,
+      "mode": "waveform",
+      "process_wallclock_s": {
+        "maximum": 0.9620164970037877,
+        "median": 0.9495849090017145,
+        "minimum": 0.9190157530028955
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 1171874.997598577,
+          "construction": {
+            "increment_sigma_rad": 0.006011914604401859,
+            "increment_variance_rad2": 3.6143117210620356e-05,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 4687500.0
+          },
+          "enbw_hz": 1757812.4963978655,
+          "exact_event_span_s": 3.839569994136567e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00031904327061230326,
+            "psd_ratio_db_abs_p99": 0.05785372633992324,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 204,
+            "psd_ratio_db_max_abs": 0.05944025570520776,
+            "psd_ratio_db_median": -0.02338807942727981
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9620164970037877,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.002036669000517577,
+            "crossing_extraction": 0.0010827489968505688,
+            "fixture_total": 0.025136607000604272,
+            "global_phase_fit": 0.0002454799978295341,
+            "oracle_validation": 0.0004886099995928816,
+            "phase_process_and_events": 0.0008904400019673631,
+            "waveform_generation": 0.020477477999520488,
+            "welch_psd": 0.000708440005837474
+          },
+          "waveform_sample_count": 184341,
+          "worker_fixture_maximum_rss_bytes": 116244480
+        },
+        {
+          "bin_spacing_hz": 1171874.9988466047,
+          "construction": {
+            "increment_sigma_rad": 0.006011914604401859,
+            "increment_variance_rad2": 3.6143117210620356e-05,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 4687500.0
+          },
+          "enbw_hz": 1757812.4982699072,
+          "exact_event_span_s": 3.839619243809898e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00034128599566142466,
+            "psd_ratio_db_abs_p99": 0.05210135116928423,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 204,
+            "psd_ratio_db_max_abs": 0.06403049654596683,
+            "psd_ratio_db_median": 0.00568054517358644
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9190157530028955,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0023026989947538823,
+            "crossing_extraction": 0.0013097490009386092,
+            "fixture_total": 0.02541313700203318,
+            "global_phase_fit": 0.000246319999860134,
+            "oracle_validation": 0.0007734400060144253,
+            "phase_process_and_events": 0.0009065400008694269,
+            "waveform_generation": 0.020393658000102732,
+            "welch_psd": 0.0007466299939551391
+          },
+          "waveform_sample_count": 184343,
+          "worker_fixture_maximum_rss_bytes": 116297728
+        },
+        {
+          "bin_spacing_hz": 1171874.9974405405,
+          "construction": {
+            "increment_sigma_rad": 0.006011914604401859,
+            "increment_variance_rad2": 3.6143117210620356e-05,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 4687500.0
+          },
+          "enbw_hz": 1757812.4961608108,
+          "exact_event_span_s": 3.839597007922728e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0003597217029577727,
+            "psd_ratio_db_abs_p99": 0.05164453520110672,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 204,
+            "psd_ratio_db_max_abs": 0.053161155148167216,
+            "psd_ratio_db_median": 0.00045895184585135264
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9495849090017145,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0019670299952849746,
+            "crossing_extraction": 0.0012100499952794053,
+            "fixture_total": 0.023905127003672533,
+            "global_phase_fit": 0.00018431000353302807,
+            "oracle_validation": 0.0005264500068733469,
+            "phase_process_and_events": 0.000986070001090411,
+            "waveform_generation": 0.019383867002034094,
+            "welch_psd": 0.0005726699964725412
+          },
+          "waveform_sample_count": 184342,
+          "worker_fixture_maximum_rss_bytes": 116269056
+        }
+      ],
+      "samples_per_cycle": 20,
+      "scale_count": 184342,
+      "scale_count_kind": "waveform samples",
+      "segment_count": 8,
+      "segment_length_events": 2048,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0012100499952794053,
+        "global_phase_fit": 0.0002454799978295341,
+        "oracle_validation": 0.0005264500068733469,
+        "phase_process_and_events": 0.0009065400008694269,
+        "waveform_generation": 0.020393658000102732,
+        "welch_psd": 0.000708440005837474
+      },
+      "status": "pass",
+      "waveform_sample_count": {
+        "maximum": 184343,
+        "median": 184342,
+        "minimum": 184341
+      },
+      "welch_record_support_s": 3.84e-06,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 116297728,
+        "median": 116269056,
+        "minimum": 116244480
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 585937.5022234613,
+        "median": 585937.5008915183,
+        "minimum": 585937.4969840413
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.0036845700087724254,
+        "median": 0.00364790900493972,
+        "minimum": 0.0031802800003788434
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 878906.2533351921,
+        "median": 878906.2513372776,
+        "minimum": 878906.2454760621
+      },
+      "event_count": 18432,
+      "exact_event_span_s": {
+        "maximum": 7.679604188358929e-06,
+        "median": 7.679578802680803e-06,
+        "minimum": 7.679555770737444e-06
+      },
+      "lowest_usable_offset_hz": 2343750.0,
+      "minimum_usable_bin": 4,
+      "mode": "waveform",
+      "process_wallclock_s": {
+        "maximum": 1.0102379509989987,
+        "median": 1.002219652000349,
+        "minimum": 0.9554802690036013
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 585937.4969840413,
+          "construction": {
+            "increment_sigma_rad": 0.0030059714488749763,
+            "increment_variance_rad2": 9.035864351451525e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 2343750.0
+          },
+          "enbw_hz": 878906.2454760621,
+          "exact_event_span_s": 7.679555770737444e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0002967444258932271,
+            "psd_ratio_db_abs_p99": 0.04970932424595873,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 409,
+            "psd_ratio_db_max_abs": 0.05496451808907693,
+            "psd_ratio_db_median": 0.006347045895994344
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.002219652000349,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0036845700087724254,
+            "crossing_extraction": 0.002351770002860576,
+            "fixture_total": 0.05665119199693436,
+            "global_phase_fit": 0.00032454000029247254,
+            "oracle_validation": 0.0010695199962356128,
+            "phase_process_and_events": 0.001901689000078477,
+            "waveform_generation": 0.04733968399523292,
+            "welch_psd": 0.001008260005619377
+          },
+          "waveform_sample_count": 368660,
+          "worker_fixture_maximum_rss_bytes": 131432448
+        },
+        {
+          "bin_spacing_hz": 585937.5022234613,
+          "construction": {
+            "increment_sigma_rad": 0.0030059714488749763,
+            "increment_variance_rad2": 9.035864351451525e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 2343750.0
+          },
+          "enbw_hz": 878906.2533351921,
+          "exact_event_span_s": 7.679578802680803e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00034319026554262006,
+            "psd_ratio_db_abs_p99": 0.06268474442209297,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 409,
+            "psd_ratio_db_max_abs": 0.07551982607474636,
+            "psd_ratio_db_median": 0.021934104535137763
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 0.9554802690036013,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.0031802800003788434,
+            "crossing_extraction": 0.002155289999791421,
+            "fixture_total": 0.05364054299570853,
+            "global_phase_fit": 0.00030153999978210777,
+            "oracle_validation": 0.0007946400000946596,
+            "phase_process_and_events": 0.0013728599951718934,
+            "waveform_generation": 0.04613324400270358,
+            "welch_psd": 0.0007234500008053146
+          },
+          "waveform_sample_count": 368661,
+          "worker_fixture_maximum_rss_bytes": 131313664
+        },
+        {
+          "bin_spacing_hz": 585937.5008915183,
+          "construction": {
+            "increment_sigma_rad": 0.0030059714488749763,
+            "increment_variance_rad2": 9.035864351451525e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 2343750.0
+          },
+          "enbw_hz": 878906.2513372776,
+          "exact_event_span_s": 7.679604188358929e-06,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.000352527707066012,
+            "psd_ratio_db_abs_p99": 0.05063923462738534,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 409,
+            "psd_ratio_db_max_abs": 0.0556419752869108,
+            "psd_ratio_db_median": -0.013190317658551165
+          },
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.0102379509989987,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.00364790900493972,
+            "crossing_extraction": 0.0026610200002323836,
+            "fixture_total": 0.05480874299973948,
+            "global_phase_fit": 0.00027726000553229824,
+            "oracle_validation": 0.0008271909973700531,
+            "phase_process_and_events": 0.0015348300003097393,
+            "waveform_generation": 0.046690452996699605,
+            "welch_psd": 0.0007096289991750382
+          },
+          "waveform_sample_count": 368663,
+          "worker_fixture_maximum_rss_bytes": 131219456
+        }
+      ],
+      "samples_per_cycle": 20,
+      "scale_count": 368661,
+      "scale_count_kind": "waveform samples",
+      "segment_count": 8,
+      "segment_length_events": 4096,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.002351770002860576,
+        "global_phase_fit": 0.00030153999978210777,
+        "oracle_validation": 0.0008271909973700531,
+        "phase_process_and_events": 0.0015348300003097393,
+        "waveform_generation": 0.046690452996699605,
+        "welch_psd": 0.0007234500008053146
+      },
+      "status": "pass",
+      "waveform_sample_count": {
+        "maximum": 368663,
+        "median": 368661,
+        "minimum": 368660
+      },
+      "welch_record_support_s": 7.68e-06,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 131432448,
+        "median": 131313664,
+        "minimum": 131219456
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 292968.7499468715,
+        "median": 292968.74975991,
+        "minimum": 292968.74948354426
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.007193307996203657,
+        "median": 0.006887850002385676,
+        "minimum": 0.006179778996738605
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 439453.12492030737,
+        "median": 439453.1246398651,
+        "minimum": 439453.1242253165
+      },
+      "event_count": 36864,
+      "exact_event_span_s": {
+        "maximum": 1.5359590165744497e-05,
+        "median": 1.535958441471421e-05,
+        "minimum": 1.535956888511989e-05
+      },
+      "lowest_usable_offset_hz": 1171875.0,
+      "minimum_usable_bin": 4,
+      "mode": "waveform",
+      "process_wallclock_s": {
+        "maximum": 1.0203814009946655,
+        "median": 1.013319360994501,
+        "minimum": 1.011746061994927
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 292968.74948354426,
+          "construction": {
+            "increment_sigma_rad": 0.0015029874927748649,
+            "increment_variance_rad2": 2.2589714034376742e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 1171875.0
+          },
+          "enbw_hz": 439453.1242253165,
+          "exact_event_span_s": 1.5359590165744497e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0002784932243278207,
+            "psd_ratio_db_abs_p99": 0.04658640936192978,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 819,
+            "psd_ratio_db_max_abs": 0.06787810890453269,
+            "psd_ratio_db_median": -0.003732149632540242
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1171874.997934177,
+              "bin": 4,
+              "mismatch_percent": 17.187499793417714,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.013319360994501,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.006887850002385676,
+            "crossing_extraction": 0.004566640003758948,
+            "fixture_total": 0.11072496500128182,
+            "global_phase_fit": 0.0009259299986297265,
+            "oracle_validation": 0.0014633500031777658,
+            "phase_process_and_events": 0.002745500001765322,
+            "waveform_generation": 0.09519047599314945,
+            "welch_psd": 0.0013952799999970011
+          },
+          "waveform_sample_count": 737302,
+          "worker_fixture_maximum_rss_bytes": 162004992
+        },
+        {
+          "bin_spacing_hz": 292968.74975991,
+          "construction": {
+            "increment_sigma_rad": 0.0015029874927748649,
+            "increment_variance_rad2": 2.2589714034376742e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 1171875.0
+          },
+          "enbw_hz": 439453.1246398651,
+          "exact_event_span_s": 1.535956888511989e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.000333476975769593,
+            "psd_ratio_db_abs_p99": 0.08563006271714646,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 819,
+            "psd_ratio_db_max_abs": 0.09162413947970903,
+            "psd_ratio_db_median": 0.04783357023793461
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1171874.99903964,
+              "bin": 4,
+              "mismatch_percent": 17.187499903964,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.011746061994927,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.007193307996203657,
+            "crossing_extraction": 0.005428329001006205,
+            "fixture_total": 0.11191036499803886,
+            "global_phase_fit": 0.0005347189944586717,
+            "oracle_validation": 0.0013253400029498152,
+            "phase_process_and_events": 0.0026626999970176257,
+            "waveform_generation": 0.09630237700184807,
+            "welch_psd": 0.001230260000738781
+          },
+          "waveform_sample_count": 737301,
+          "worker_fixture_maximum_rss_bytes": 161976320
+        },
+        {
+          "bin_spacing_hz": 292968.7499468715,
+          "construction": {
+            "increment_sigma_rad": 0.0015029874927748649,
+            "increment_variance_rad2": 2.2589714034376742e-06,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 1171875.0
+          },
+          "enbw_hz": 439453.12492030737,
+          "exact_event_span_s": 1.535958441471421e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.0002892732269875441,
+            "psd_ratio_db_abs_p99": 0.07793435073192778,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 819,
+            "psd_ratio_db_max_abs": 0.0876004462431866,
+            "psd_ratio_db_median": 0.03655507097428443
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1171874.999787486,
+              "bin": 4,
+              "mismatch_percent": 17.187499978748598,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.0203814009946655,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.006179778996738605,
+            "crossing_extraction": 0.004448330000741407,
+            "fixture_total": 0.10735808599565644,
+            "global_phase_fit": 0.0004929399947286583,
+            "oracle_validation": 0.0012581810005940497,
+            "phase_process_and_events": 0.0026594699957058765,
+            "waveform_generation": 0.09291232700343244,
+            "welch_psd": 0.0012385090012685396
+          },
+          "waveform_sample_count": 737302,
+          "worker_fixture_maximum_rss_bytes": 162037760
+        }
+      ],
+      "samples_per_cycle": 20,
+      "scale_count": 737302,
+      "scale_count_kind": "waveform samples",
+      "segment_count": 8,
+      "segment_length_events": 8192,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.004566640003758948,
+        "global_phase_fit": 0.0005347189944586717,
+        "oracle_validation": 0.0013253400029498152,
+        "phase_process_and_events": 0.0026626999970176257,
+        "waveform_generation": 0.09519047599314945,
+        "welch_psd": 0.0012385090012685396
+      },
+      "status": "pass",
+      "waveform_sample_count": {
+        "maximum": 737302,
+        "median": 737302,
+        "minimum": 737301
+      },
+      "welch_record_support_s": 1.536e-05,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 162037760,
+        "median": 162004992,
+        "minimum": 161976320
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 146484.37503495792,
+        "median": 146484.3749725585,
+        "minimum": 146484.37496387138
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.01636848699854454,
+        "median": 0.014533828005369287,
+        "minimum": 0.01286034900113009
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 219726.5625524369,
+        "median": 219726.56245883775,
+        "minimum": 219726.56244580707
+      },
+      "event_count": 73728,
+      "exact_event_span_s": {
+        "maximum": 3.071958736855822e-05,
+        "median": 3.071958454896827e-05,
+        "minimum": 3.071958012326634e-05
+      },
+      "lowest_usable_offset_hz": 585937.5,
+      "minimum_usable_bin": 4,
+      "mode": "waveform",
+      "process_wallclock_s": {
+        "maximum": 1.1633487010039971,
+        "median": 1.1262724369953503,
+        "minimum": 1.1209324369992828
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 146484.37496387138,
+          "construction": {
+            "increment_sigma_rad": 0.000751493967429702,
+            "increment_variance_rad2": 5.64743183083234e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 585937.5
+          },
+          "enbw_hz": 219726.56244580707,
+          "exact_event_span_s": 3.071958454896827e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00014131972278981852,
+            "psd_ratio_db_abs_p99": 0.03907277518714917,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 1638,
+            "psd_ratio_db_max_abs": 0.05645786676914184,
+            "psd_ratio_db_median": -0.003222479462902373
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6247470996,
+              "bin": 7,
+              "mismatch_percent": 2.5390624747099633,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.1262724369953503,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.01636848699854454,
+            "crossing_extraction": 0.012449658002879005,
+            "fixture_total": 0.22465974900114816,
+            "global_phase_fit": 0.0011836699995910749,
+            "oracle_validation": 0.0028578199999174103,
+            "phase_process_and_events": 0.006125699001131579,
+            "waveform_generation": 0.1900529539998388,
+            "welch_psd": 0.0027351589960744604
+          },
+          "waveform_sample_count": 1474582,
+          "worker_fixture_maximum_rss_bytes": 223006720
+        },
+        {
+          "bin_spacing_hz": 146484.3749725585,
+          "construction": {
+            "increment_sigma_rad": 0.000751493967429702,
+            "increment_variance_rad2": 5.64743183083234e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 585937.5
+          },
+          "enbw_hz": 219726.56245883775,
+          "exact_event_span_s": 3.071958736855822e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00035081241980839013,
+            "psd_ratio_db_abs_p99": 0.0810988180711006,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 1638,
+            "psd_ratio_db_max_abs": 0.10050653215805017,
+            "psd_ratio_db_median": 0.03583447263029568
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6248079095,
+              "bin": 7,
+              "mismatch_percent": 2.5390624807909434,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.1633487010039971,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.014533828005369287,
+            "crossing_extraction": 0.011347329003911,
+            "fixture_total": 0.22364578900305787,
+            "global_phase_fit": 0.000982229998044204,
+            "oracle_validation": 0.00255019999895012,
+            "phase_process_and_events": 0.004785159006132744,
+            "waveform_generation": 0.19126687399693765,
+            "welch_psd": 0.0022042690034140833
+          },
+          "waveform_sample_count": 1474582,
+          "worker_fixture_maximum_rss_bytes": 223002624
+        },
+        {
+          "bin_spacing_hz": 146484.37503495792,
+          "construction": {
+            "increment_sigma_rad": 0.000751493967429702,
+            "increment_variance_rad2": 5.64743183083234e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 585937.5
+          },
+          "enbw_hz": 219726.5625524369,
+          "exact_event_span_s": 3.071958012326634e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00035598774652058763,
+            "psd_ratio_db_abs_p99": 0.08433481560504807,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 1638,
+            "psd_ratio_db_max_abs": 0.09883170908777641,
+            "psd_ratio_db_median": 0.048063199062928
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6252447055,
+              "bin": 7,
+              "mismatch_percent": 2.5390625244705367,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.1209324369992828,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.01286034900113009,
+            "crossing_extraction": 0.010133048999705352,
+            "fixture_total": 0.21882214099605335,
+            "global_phase_fit": 0.0008962909996625967,
+            "oracle_validation": 0.0027693099982570857,
+            "phase_process_and_events": 0.004886229995463509,
+            "waveform_generation": 0.18947567400027765,
+            "welch_psd": 0.0018310090017621405
+          },
+          "waveform_sample_count": 1474581,
+          "worker_fixture_maximum_rss_bytes": 222965760
+        }
+      ],
+      "samples_per_cycle": 20,
+      "scale_count": 1474582,
+      "scale_count_kind": "waveform samples",
+      "segment_count": 8,
+      "segment_length_events": 16384,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.011347329003911,
+        "global_phase_fit": 0.000982229998044204,
+        "oracle_validation": 0.0027693099982570857,
+        "phase_process_and_events": 0.004886229995463509,
+        "waveform_generation": 0.1900529539998388,
+        "welch_psd": 0.0022042690034140833
+      },
+      "status": "pass",
+      "waveform_sample_count": {
+        "maximum": 1474582,
+        "median": 1474582,
+        "minimum": 1474581
+      },
+      "welch_record_support_s": 3.072e-05,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 223006720,
+        "median": 223002624,
+        "minimum": 222965760
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 73242.18751340952,
+        "median": 73242.18750971746,
+        "minimum": 73242.18749286867
+      },
+      "candidate_pipeline_wallclock_s": {
+        "maximum": 0.032273155004077125,
+        "median": 0.03145990699704271,
+        "minimum": 0.030062856996664777
+      },
+      "carrier_hz": 2400000000.0,
+      "enbw_hz": {
+        "maximum": 109863.2812701143,
+        "median": 109863.28126457622,
+        "minimum": 109863.28123930303
+      },
+      "event_count": 147456,
+      "exact_event_span_s": {
+        "maximum": 6.143958921478015e-05,
+        "median": 6.143958457711453e-05,
+        "minimum": 6.143958172658177e-05
+      },
+      "lowest_usable_offset_hz": 292968.75,
+      "minimum_usable_bin": 4,
+      "mode": "waveform",
+      "process_wallclock_s": {
+        "maximum": 1.3725082829987514,
+        "median": 1.3567610160025652,
+        "minimum": 1.3410786570020719
+      },
+      "repeat_count": 3,
+      "repeat_measurements": [
+        {
+          "bin_spacing_hz": 73242.18751340952,
+          "construction": {
+            "increment_sigma_rad": 0.0003757470113451377,
+            "increment_variance_rad2": 1.4118581653480308e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 292968.75
+          },
+          "enbw_hz": 109863.2812701143,
+          "exact_event_span_s": 6.143958921478015e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00032314334988671955,
+            "psd_ratio_db_abs_p99": 0.09602162223172589,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 3276,
+            "psd_ratio_db_max_abs": 0.12243625915271922,
+            "psd_ratio_db_median": 0.06269498445189818
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6251877332,
+              "bin": 14,
+              "mismatch_percent": 2.5390625187733162,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.3567610160025652,
+          "seed": 1000,
+          "timing_s": {
+            "candidate_pipeline_total": 0.03145990699704271,
+            "crossing_extraction": 0.0248158069953206,
+            "fixture_total": 0.44491423900035443,
+            "global_phase_fit": 0.0019509600024321117,
+            "oracle_validation": 0.005667528996127658,
+            "phase_process_and_events": 0.0099121279999963,
+            "waveform_generation": 0.3813413380048587,
+            "welch_psd": 0.004693139999289997
+          },
+          "waveform_sample_count": 2949142,
+          "worker_fixture_maximum_rss_bytes": 343961600
+        },
+        {
+          "bin_spacing_hz": 73242.18750971746,
+          "construction": {
+            "increment_sigma_rad": 0.0003757470113451377,
+            "increment_variance_rad2": 1.4118581653480308e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 292968.75
+          },
+          "enbw_hz": 109863.28126457622,
+          "exact_event_span_s": 6.143958172658177e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00015875552667721053,
+            "psd_ratio_db_abs_p99": 0.057255184976621756,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 3276,
+            "psd_ratio_db_max_abs": 0.08840946559311709,
+            "psd_ratio_db_median": 0.000510133828090571
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6251360445,
+              "bin": 14,
+              "mismatch_percent": 2.539062513604451,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.3725082829987514,
+          "seed": 1001,
+          "timing_s": {
+            "candidate_pipeline_total": 0.032273155004077125,
+            "crossing_extraction": 0.025438826000026893,
+            "fixture_total": 0.4451771189997089,
+            "global_phase_fit": 0.0021143900012248196,
+            "oracle_validation": 0.005266798994853161,
+            "phase_process_and_events": 0.01088867900398327,
+            "waveform_generation": 0.37977101800061064,
+            "welch_psd": 0.004719939002825413
+          },
+          "waveform_sample_count": 2949141,
+          "worker_fixture_maximum_rss_bytes": 343920640
+        },
+        {
+          "bin_spacing_hz": 73242.18749286867,
+          "construction": {
+            "increment_sigma_rad": 0.0003757470113451377,
+            "increment_variance_rad2": 1.4118581653480308e-07,
+            "reference_l_db_per_hz": -100.0,
+            "reference_offset_hz": 292968.75
+          },
+          "enbw_hz": 109863.28123930303,
+          "exact_event_span_s": 6.143958457711453e-05,
+          "extraction_vs_event_oracle": {
+            "phase_error_rms_rad": 0.00022355848940437217,
+            "psd_ratio_db_abs_p99": 0.10642371855175314,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 3276,
+            "psd_ratio_db_max_abs": 0.12578830150664724,
+            "psd_ratio_db_median": 0.07600244532255483
+          },
+          "named_offset_bins": [
+            {
+              "actual_hz": 1025390.6249001614,
+              "bin": 14,
+              "mismatch_percent": 2.539062490016142,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": true
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "process_wallclock_s": 1.3410786570020719,
+          "seed": 1002,
+          "timing_s": {
+            "candidate_pipeline_total": 0.030062856996664777,
+            "crossing_extraction": 0.0245419069979107,
+            "fixture_total": 0.4375385399980587,
+            "global_phase_fit": 0.0020883499964838848,
+            "oracle_validation": 0.005985047995636705,
+            "phase_process_and_events": 0.00947814899700461,
+            "waveform_generation": 0.37543910900421906,
+            "welch_psd": 0.003432600002270192
+          },
+          "waveform_sample_count": 2949142,
+          "worker_fixture_maximum_rss_bytes": 343793664
+        }
+      ],
+      "samples_per_cycle": 20,
+      "scale_count": 2949142,
+      "scale_count_kind": "waveform samples",
+      "segment_count": 8,
+      "segment_length_events": 32768,
+      "stage_wallclock_s_median": {
+        "crossing_extraction": 0.0248158069953206,
+        "global_phase_fit": 0.0020883499964838848,
+        "oracle_validation": 0.005667528996127658,
+        "phase_process_and_events": 0.0099121279999963,
+        "waveform_generation": 0.37977101800061064,
+        "welch_psd": 0.004693139999289997
+      },
+      "status": "pass",
+      "waveform_sample_count": {
+        "maximum": 2949142,
+        "median": 2949142,
+        "minimum": 2949141
+      },
+      "welch_record_support_s": 6.144e-05,
+      "worker_fixture_maximum_rss_bytes": {
+        "maximum": 343961600,
+        "median": 343920640,
+        "minimum": 343793664
+      }
+    }
+  ]
+}
