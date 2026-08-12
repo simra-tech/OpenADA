@@ -1,0 +1,142 @@
+{
+  "corner_match": true,
+  "extensions": {},
+  "metrics": [
+    {
+      "details": {"eligible": 4, "matching_sign": 4, "zero_epsilon": 1e-15},
+      "kind": "signed_response_coverage",
+      "limit": {"op": ">=", "unit": "frac", "value": 0.9},
+      "name": "signed_response_coverage",
+      "reason": "signed response coverage evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "frac",
+      "value": 1.0
+    },
+    {
+      "details": {"absolute_error": 0.0, "observed": 1.8508e-10, "oracle": 1.8508e-10},
+      "kind": "scalar",
+      "limit": {"op": "<=", "unit": "s", "value": 2.5e-11},
+      "name": "offset_error_vs_oracle",
+      "reason": "absolute scalar error evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "s",
+      "value": 0.0
+    },
+    {
+      "details": {"absolute_error": 0.0, "denominator_floor": 1e-12, "observed": 0.000263054, "oracle": 0.000263054},
+      "kind": "scalar",
+      "limit": {"op": "<=", "unit": "frac", "value": 0.15},
+      "name": "local_gain_error",
+      "reason": "relative scalar error evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "frac",
+      "value": 0.0
+    },
+    {
+      "details": {"absolute_error": 0.0, "absolute_guard": 5e-10, "point_count": 3, "worst_index": 0, "worst_x": 0.0},
+      "kind": "curve",
+      "limit": {"op": "<=", "unit": "frac", "value": 0.05},
+      "name": "src_curve_error",
+      "reason": "worst-point guarded_relative curve error evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "frac",
+      "value": 0.0
+    },
+    {
+      "details": {"absolute_error": 0.0, "absolute_guard": 5e-10, "point_count": 3, "worst_index": 0, "worst_x": 0.0},
+      "kind": "curve",
+      "limit": {"op": "<=", "unit": "frac", "value": 0.05},
+      "name": "snk_curve_error",
+      "reason": "worst-point guarded_relative curve error evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "frac",
+      "value": 0.0
+    },
+    {
+      "details": {"denominator_floor": 1e-18, "observed_fraction": 0.27042308098777607, "oracle_fraction": 0.27042308098777607, "point_count": 3, "worst_index": 0},
+      "kind": "mismatch_curve",
+      "limit": {"op": "<=", "unit": "frac_abs", "value": 0.03},
+      "name": "mismatch_curve_error",
+      "reason": "worst absolute mismatch-fraction error evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "frac_abs",
+      "value": 0.0
+    },
+    {
+      "details": {"hi_v": 0.0, "lo_v": 0.0},
+      "kind": "compliance_endpoints",
+      "limit": {"op": "<=", "unit": "V", "value": 0.025},
+      "name": "compliance_endpoint_error",
+      "reason": "worst absolute compliance-endpoint error evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "V",
+      "value": 0.0
+    },
+    {
+      "details": {"absolute_error": 0.0, "observed": 2.56841838e-09, "oracle": 2.56841838e-09},
+      "kind": "scalar",
+      "limit": {"op": "<=", "unit": "A", "value": 5e-10},
+      "name": "leak_error",
+      "reason": "absolute scalar error evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "A",
+      "value": 0.0
+    },
+    {
+      "details": {"detected_invalid": 1, "false_valid": 0, "missing_or_unknown": 0, "observed_valid": 4, "oracle_invalid": 1},
+      "kind": "invalid_detection_recall",
+      "limit": {"op": ">=", "unit": "frac", "value": 0.8},
+      "name": "invalid_detection_recall",
+      "reason": "invalid recall uses oracle-invalid as its denominator",
+      "required": true,
+      "status": "PASS",
+      "unit": "frac",
+      "value": 1.0
+    },
+    {
+      "details": {"detected_invalid": 1, "false_valid": 0, "missing_or_unknown": 0, "observed_valid": 4, "oracle_invalid": 1},
+      "kind": "false_valid_rate",
+      "limit": {"op": "<=", "unit": "frac", "value": 0.1},
+      "name": "false_valid_rate",
+      "reason": "false-valid rate uses submitted VALID as its denominator",
+      "required": true,
+      "status": "PASS",
+      "unit": "frac",
+      "value": 0.0
+    },
+    {
+      "details": {"missing": [], "present": 10, "required": 10},
+      "kind": "completeness",
+      "limit": {"op": ">=", "unit": "frac", "value": 0.95},
+      "name": "completeness",
+      "reason": "declared condition-observable completeness evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "frac",
+      "value": 1.0
+    },
+    {
+      "details": {},
+      "kind": "grading_runtime",
+      "limit": {"op": "<=", "unit": "s", "value": 900.0},
+      "name": "grading_runtime",
+      "reason": "reported runner wall-clock duration evaluated",
+      "required": true,
+      "status": "PASS",
+      "unit": "s",
+      "value": 42.0
+    }
+  ],
+  "schema": "simra.testbench-oracle-comparison/v1",
+  "status": "PASS",
+  "summary": {"fail": 0, "pass": 12, "required": 12, "required_fail": 0, "required_pass": 12, "required_unknown": 0, "unknown": 0},
+  "validity": {"detected_invalid": 1, "false_valid": 0, "missing_or_unknown": 0, "observed_valid": 4, "oracle_invalid": 1}
+}

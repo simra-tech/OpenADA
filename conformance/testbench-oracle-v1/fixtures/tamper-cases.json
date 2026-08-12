@@ -1,0 +1,29 @@
+{
+  "schema": "simra.testbench-oracle-conformance-tampers/v1",
+  "cases": [
+    {
+      "id": "metric-value",
+      "path": ["comparison", "metrics", 1, "value"],
+      "replacement": 1e-06,
+      "expected_message": "comparison_sha256"
+    },
+    {
+      "id": "metric-status",
+      "path": ["comparison", "metrics", 7, "status"],
+      "replacement": "FAIL",
+      "expected_message": "comparison_sha256"
+    },
+    {
+      "id": "summary-count",
+      "path": ["comparison", "summary", "pass"],
+      "replacement": 11,
+      "expected_message": "comparison_sha256"
+    },
+    {
+      "id": "fixture-binding",
+      "path": ["fixture_sha256"],
+      "replacement": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "expected_message": "fixture_sha256"
+    }
+  ]
+}
