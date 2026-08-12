@@ -717,6 +717,15 @@ def _stimulus_source_names(stimulus: Mapping[str, Any]) -> tuple[str, ...]:
     return (base,)
 
 
+_SUPPORTED_ANALYSIS_KINDS = frozenset(
+    {
+        "dc_sweep",
+        "pulse_train_transient",
+        "phase_offset_pair_transient",
+    }
+)
+
+
 def _compile_one_condition(
     plan: PreparedTestbenchPlan,
     sealed: SealedDut,
@@ -1092,6 +1101,19 @@ def _expected_probes(
             )
             if not native:
                 item["available"] = False
+        elif probe.kind == "pll_loop_gain":
+            # The plan contract can describe the staged analytical PLL loop
+            # construction, but this compiler does not yet lower it.  Keeping
+            # an unused loop probe explicitly unavailable allows supported
+            # stages in the same closed graph to compile without silently
+            # pretending that the loop vector exists.
+            native = ()
+            item["identity"] = {
+                "injection_stimulus_id": raw["injection_stimulus_id"],
+                "response_probe_id": raw["response_probe_id"],
+                "feedback": raw["feedback"],
+            }
+            item["available"] = False
         else:
             _fail(
                 "testbench_plan.compiler.probe_unsupported",
@@ -1158,12 +1180,23 @@ def _compile_conditions(
     matching_points = 0
     for stage_id in selected_ids:
         stage = stage_documents[stage_id]
+        selected_points = tuple(
+            point
+            for point in stage["points"]
+            if point["condition"]["corner"] == corner["id"]
+        )
+        for point in selected_points:
+            analysis_kind = str(point["analysis"]["kind"])
+            if analysis_kind not in _SUPPORTED_ANALYSIS_KINDS:
+                _fail(
+                    "testbench_plan.compiler.analysis_unsupported",
+                    f"/stages/{stage_id}/points/{point['id']}/analysis/kind",
+                    f"unsupported analysis kind {analysis_kind!r}",
+                )
         stage_inputs = _stage_input_values(
             plan, stage, binding_values=binding_values
         )
-        for point in stage["points"]:
-            if point["condition"]["corner"] != corner["id"]:
-                continue
+        for point in selected_points:
             matching_points += 1
             state = point["state_policy"]
             if state["kind"] == "carryover":

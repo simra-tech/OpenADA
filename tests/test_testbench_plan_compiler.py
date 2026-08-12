@@ -132,7 +132,7 @@ def test_fresh_dc_sweep_expands_to_independent_exact_op_decks() -> None:
     assert b"V_PROBE_PORT_OUT PUMP_OUT N_OPENADA_DUT_OUT DC 0\n" in first.deck_bytes
     assert b"X_OPENADA_DUT IN_UP IN_DOWN N_OPENADA_DUT_OUT VDD 0 OPENADA_hidden_cp_variant_CHARGE_PUMP\n" in first.deck_bytes
     assert hashlib.sha256(first.deck_bytes).hexdigest() == first.deck_sha256
-    assert first.deck_sha256 == "9d3771c957e60a2ff13abbb4370efe8cc3f9227aa493cd7ed7933a2082d79973"
+    assert first.deck_sha256 == "3551828ae43a39c48d8f272da9c516824fcee405bc120f34c7f9711cab511293"
 
 
 def test_pulse_train_transient_has_exact_finite_count_and_branch_probe() -> None:
@@ -156,7 +156,7 @@ def test_pulse_train_transient_has_exact_finite_count_and_branch_probe() -> None
     }
     assert command["native_vectors"] == ["i(V_STIM_up_pulses)"]
     assert condition.receipt["condition"]["resolved_bindings"][0]["source_receipt_sha256"] == "a" * 64
-    assert condition.deck_sha256 == "be141a8694ea74860bce12affa7f7903c903d89c87863e4c25df46fa821fb72f"
+    assert condition.deck_sha256 == "19e1f44c3929076d01aaeb3b9324c85ce65561f0252185ffb14927d7672002e4"
 
 
 def test_phase_pair_transient_uses_independent_polarities_and_wrapped_offset() -> None:
@@ -168,7 +168,7 @@ def test_phase_pair_transient_uses_independent_polarities_and_wrapped_offset() -
     deck = compilation.conditions[0].deck_bytes
     assert b"V_STIM_phase_pair_REF IN_UP 0 PULSE(1.2 0 1e-9 1e-10 1e-10 4e-9 1e-8 8)\n" in deck
     assert b"V_STIM_phase_pair_OFFSET IN_DOWN 0 PULSE(0 1.2 8e-10 1e-10 1e-10 4e-9 1e-8 8)\n" in deck
-    assert compilation.conditions[0].deck_sha256 == "5dfbd963e2d8999aafde10ae9227aff94aed6af051e844622c03249c40cc45e2"
+    assert compilation.conditions[0].deck_sha256 == "a6d5a334baa6f036416a3450b961657f4f3c33eda43bf5ae345cd1c82e04a8b3"
 
 
 def test_compile_is_deterministic_and_publishes_only_into_empty_directory(tmp_path: Path) -> None:
@@ -220,3 +220,33 @@ def test_compile_rejects_unknown_corner_and_unresolved_stage_binding() -> None:
             prepared, corner="tt", stage_ids=("pulse_characterize",)
         )
     assert caught.value.code == "testbench_plan.compiler.binding_unresolved"
+
+
+def test_loop_contract_does_not_poison_supported_stages_and_refuses_typed_ac() -> None:
+    prepared = _prepared()
+
+    supported = prepare_testbench_plan_ngspice(
+        prepared, corner="tt", stage_ids=("dc_characterize",)
+    )
+    assert len(supported.conditions) == 51
+    loop_probe = next(
+        item
+        for item in supported.conditions[0].expected_probes
+        if item["id"] == "loop_gain"
+    )
+    assert loop_probe["available"] is False
+    assert loop_probe["native_vectors"] == []
+
+    with pytest.raises(TestbenchPlanCompileError) as caught:
+        prepare_testbench_plan_ngspice(
+            prepared,
+            corner="tt",
+            stage_ids=("loop_grade",),
+            binding_values=(
+                ResolvedBindingValue(
+                    "bind_local_phase_gain", 270e-6, "A", "b" * 64
+                ),
+            ),
+        )
+    assert caught.value.code == "testbench_plan.compiler.analysis_unsupported"
+    assert caught.value.path.endswith("/analysis/kind")
