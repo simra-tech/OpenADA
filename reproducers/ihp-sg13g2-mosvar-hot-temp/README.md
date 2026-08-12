@@ -36,3 +36,27 @@ timeout 600 docker run --rm \
 The local `.spiceinit` loads only `mosvar.osdi`, the one OSDI module used by
 this deck, and selects the PDK-required `ngbehavior=hsa` compatibility mode.
 The PDK model files and OSDI binary are not copied into this repository.
+
+## Measured pass/fail boundary
+
+A run passes only when ngspice exits successfully and prints the final sample
+at 20 ns. A run fails when ngspice exits nonzero with `Timestep too small`.
+The boundary was bisected with this runner and the unmodified PDK model:
+
+| Temperature | Control voltage | Result |
+|---:|---:|:---|
+| 60 °C | 0.0297393513281250 V | pass (235 rows through 20 ns) |
+| 60 °C | 0.02973935136718750 V | fail (at 4.52183 ps) |
+| 52.46980094909668 °C | 0.1 V | pass |
+| 52.46980285644531 °C | 0.1 V | fail at the initial point (`dsubw`) |
+| 52.46980094909668 °C | 0.2 V | pass |
+| 52.46980285644531 °C | 0.2 V | fail at the initial point (`dsubw`) |
+| 52.4697998 °C | 0.3 V | pass |
+| 52.4698028 °C | 0.3 V | fail at the initial point (`dsubw`) |
+
+At 60 °C the minimum failing control is therefore bracketed within
+`29.739351328125` to `29.739351367188` mV (39.1 pV wide). The first
+hot-temperature onset does not measurably move between 0.1, 0.2, and 0.3 V:
+all three brackets contain approximately 52.469802 °C. The generated decks
+retain every supplied digit even though ngspice rounds the temperature in its
+banner.
