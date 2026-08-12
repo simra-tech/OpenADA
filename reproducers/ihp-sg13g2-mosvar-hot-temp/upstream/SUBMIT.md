@@ -1,7 +1,10 @@
 # Upstream submission runbook — IHP-Open-PDK svaricap hot-temperature fix
 
-NOTHING in this directory has been submitted. A human runs these steps after
-reviewing `issue-body.md`, `pr-body.md`, and the commit described below.
+STATUS 2026-08-12: SUBMITTED with owner authorization —
+issue https://github.com/IHP-GmbH/IHP-Open-PDK/issues/1098,
+PR https://github.com/IHP-GmbH/IHP-Open-PDK/pull/1099
+(branch `fix-svaricaphv-dsubw-tlevc` pushed to the amirmabhout fork).
+The runbook below is kept as the record of the procedure.
 
 ## What is already prepared
 

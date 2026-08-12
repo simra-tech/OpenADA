@@ -1,4 +1,4 @@
-Fixes #ISSUE_NUMBER (sg13_hv_svaricap hot-temperature transient failure).
+Fixes #1098 (sg13_hv_svaricap hot-temperature transient failure).
 
 **What**: adds `tlevc = 1` to the `dsubw` substrate-diode model cards in `sg13g2_svaricaphv_mod.lib` and `sg13g2_svaricaphv_mod_mismatch.lib` (one token per file, no other changes).
 
