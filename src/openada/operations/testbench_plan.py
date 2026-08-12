@@ -811,12 +811,28 @@ class _PlanValidator:
                     f"{path}/node",
                     "DUT-internal node is absent from the sealed probe ABI",
                 )
-            if kind == "stimulus_branch_current" and raw["stimulus_id"] not in stimuli:
-                self.add(
-                    "testbench_plan.probe.stimulus_unknown",
-                    f"{path}/stimulus_id",
-                    f"unknown stimulus {raw['stimulus_id']!r}",
-                )
+            if kind == "stimulus_branch_current":
+                stimulus = stimuli.get(str(raw["stimulus_id"]))
+                if stimulus is None:
+                    self.add(
+                        "testbench_plan.probe.stimulus_unknown",
+                        f"{path}/stimulus_id",
+                        f"unknown stimulus {raw['stimulus_id']!r}",
+                    )
+                else:
+                    branch = str(raw["branch"])
+                    expected = (
+                        {"reference", "offset"}
+                        if stimulus.kind == "phase_offset_pair"
+                        else {"single"}
+                    )
+                    if branch not in expected:
+                        self.add(
+                            "testbench_plan.probe.branch_incompatible",
+                            f"{path}/branch",
+                            "phase-pair sources require an exact reference or "
+                            "offset branch; single-output sources require 'single'",
+                        )
             output[identifier] = Probe(
                 identifier, kind, str(raw["unit"]), dict(raw)
             )

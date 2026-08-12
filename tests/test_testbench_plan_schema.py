@@ -114,6 +114,20 @@ def test_internal_probe_requires_explicit_dut_abi_exposure() -> None:
     assert "testbench_plan.probe.internal_node_unexposed" in codes(document)
 
 
+def test_stimulus_current_probe_names_one_exact_physical_branch() -> None:
+    document = plan()
+    probe = document["probes"][3]
+    probe["stimulus_id"] = "phase_pair"
+    assert "testbench_plan.probe.branch_incompatible" in codes(document)
+
+    probe["branch"] = "reference"
+    prepared, issues = validate_testbench_plan(document)
+    assert issues == [] and prepared is not None
+
+    probe["stimulus_id"] = "up_pulses"
+    assert "testbench_plan.probe.branch_incompatible" in codes(document)
+
+
 def test_dut_override_can_change_only_locator_and_digest() -> None:
     document = plan()
     override = deepcopy(document["dut"])

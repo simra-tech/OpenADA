@@ -130,6 +130,7 @@
       "kind": "stimulus_branch_current",
       "unit": "A",
       "stimulus_id": "up_pulses",
+      "branch": "single",
       "direction": "delivered_by_stimulus"
     }
   ],

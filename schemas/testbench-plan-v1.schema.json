@@ -477,11 +477,12 @@
         {"$ref": "#/$defs/probeBase"},
         {
           "type": "object",
-          "required": ["stimulus_id", "direction"],
+          "required": ["stimulus_id", "branch", "direction"],
           "properties": {
             "kind": {"const": "stimulus_branch_current"},
             "unit": {"const": "A"},
             "stimulus_id": {"$ref": "#/$defs/id"},
+            "branch": {"enum": ["single", "reference", "offset"]},
             "direction": {
               "enum": ["delivered_by_stimulus", "drawn_from_stimulus"]
             }
