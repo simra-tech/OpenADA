@@ -6,7 +6,7 @@
     "module": "openada.operations.testbench_oracle",
     "callable": "compare_testbench_observables",
     "repository_path": "src/openada/operations/testbench_oracle.py",
-    "sha256": "812d0b38dc6ab357a5192c1636414cc710d425490b3a0d46159a79e21cd24c33"
+    "sha256": "28435135e9fd511bc564ca79ca76f93100a40ede63c2271ba36751c8aea9702f"
   },
   "contracts": {
     "observables": {
