@@ -1065,6 +1065,7 @@ class _PlanValidator:
                     stimuli,
                     supplies,
                     point["analysis"],
+                    point["condition"],
                     point_path,
                 )
                 for item in point_measurements:
@@ -1431,6 +1432,7 @@ class _PlanValidator:
         stimuli: Mapping[str, Stimulus],
         supplies: Mapping[str, Supply],
         analysis: Mapping[str, Any],
+        condition: Mapping[str, Any],
         point_path: str,
     ) -> list[Measurement]:
         del point_id
@@ -1598,14 +1600,21 @@ class _PlanValidator:
                             )
             if kind == "linear_fit" and parent_items and parent_items[0] is not None:
                 parent = parent_items[0]
-                expected = self._fit_unit(parent.unit)
+                axis_unit = self._point_curve_axis_unit(
+                    parent, analysis=analysis, condition=condition
+                )
+                expected = (
+                    self._divide_units(parent.unit, axis_unit)
+                    if axis_unit is not None
+                    else None
+                )
                 if unit != expected:
                     self.add(
                         "testbench_plan.unit.mismatch",
                         f"{path}/unit",
                         f"linear-fit slope unit must be {expected!r}",
                     )
-            elif kind in {"max_abs", "compliance_interval"} and parent_items and parent_items[0] is not None:
+            elif kind == "max_abs" and parent_items and parent_items[0] is not None:
                 if unit != parent_items[0].unit:
                     self.add(
                         "testbench_plan.unit.mismatch",
@@ -1613,6 +1622,9 @@ class _PlanValidator:
                         f"derived unit must equal parent unit {parent_items[0].unit!r}",
                     )
             elif kind == "crossing" and parent_items and parent_items[0] is not None:
+                axis_unit = self._point_curve_axis_unit(
+                    parent_items[0], analysis=analysis, condition=condition
+                )
                 threshold_unit = self._threshold_unit(raw["threshold"], supplies)
                 if threshold_unit is None:
                     self.add(
@@ -1625,6 +1637,12 @@ class _PlanValidator:
                         "testbench_plan.unit.mismatch",
                         f"{path}/threshold/unit",
                         "crossing threshold must match input curve unit",
+                    )
+                if axis_unit is not None and unit != axis_unit:
+                    self.add(
+                        "testbench_plan.unit.mismatch",
+                        f"{path}/unit",
+                        f"crossing output must use curve axis unit {axis_unit!r}",
                     )
             elif kind == "sign" and parent_items and parent_items[0] is not None:
                 if raw["zero_tolerance"]["unit"] != parent_items[0].unit:
@@ -1673,11 +1691,28 @@ class _PlanValidator:
                         "mismatch operands and floor must use one exact unit",
                     )
             if kind == "compliance_interval":
-                if raw["lower"]["unit"] != unit or raw["upper"]["unit"] != unit:
+                parent = parent_items[0] if parent_items else None
+                axis_unit = (
+                    self._point_curve_axis_unit(
+                        parent, analysis=analysis, condition=condition
+                    )
+                    if parent is not None
+                    else None
+                )
+                if parent is not None and (
+                    raw["lower"]["unit"] != parent.unit
+                    or raw["upper"]["unit"] != parent.unit
+                ):
                     self.add(
                         "testbench_plan.unit.mismatch",
                         path,
-                        "compliance interval and measurement must use one unit",
+                        "compliance bounds must match the input curve value unit",
+                    )
+                if axis_unit is not None and unit != axis_unit:
+                    self.add(
+                        "testbench_plan.unit.mismatch",
+                        f"{path}/unit",
+                        f"compliance interval must use curve axis unit {axis_unit!r}",
                     )
                 if float(raw["upper"]["value"]) <= float(raw["lower"]["value"]):
                     self.add(
@@ -1690,6 +1725,37 @@ class _PlanValidator:
             output.append(item)
         self._check_dag(dependency_graph, path=f"{point_path}/measurements")
         return output
+
+    @staticmethod
+    def _point_curve_axis_unit(
+        measurement: Measurement,
+        *,
+        analysis: Mapping[str, Any],
+        condition: Mapping[str, Any],
+    ) -> str | None:
+        if measurement.kind not in {"curve", "loop_transfer"}:
+            return None
+        axis = measurement.document.get("axis", {})
+        if axis.get("kind") == "condition_parameter":
+            parameter = next(
+                (
+                    item
+                    for item in condition["parameters"]
+                    if item["name"] == axis.get("parameter")
+                ),
+                None,
+            )
+            return (
+                str(parameter["value"]["unit"])
+                if parameter is not None
+                else None
+            )
+        return {
+            "dc_sweep": "V",
+            "pulse_train_transient": "s",
+            "phase_offset_pair_transient": "s",
+            "linear_ac": "Hz",
+        }.get(str(analysis["kind"]))
 
     @staticmethod
     def _fit_unit(parent_unit: str) -> str:

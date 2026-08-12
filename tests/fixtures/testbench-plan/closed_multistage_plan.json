@@ -271,7 +271,7 @@
             {
               "id": "dc_compliance",
               "kind": "compliance_interval",
-              "unit": "A",
+              "unit": "V",
               "input_measurement_id": "dc_current_curve",
               "lower": {"value": -0.001, "unit": "A"},
               "upper": {"value": 0.001, "unit": "A"}
@@ -397,7 +397,7 @@
             {
               "id": "voltage_compliance",
               "kind": "compliance_interval",
-              "unit": "V",
+              "unit": "s",
               "input_measurement_id": "output_waveform",
               "lower": {"value": 0.2, "unit": "V"},
               "upper": {"value": 1.0, "unit": "V"}
