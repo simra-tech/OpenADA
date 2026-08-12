@@ -1,5 +1,5 @@
 {
-  "agent_evidence_sha256": "607e6f99432be30b6b75a1ba6a2e058127d2e0d3daccc28e3469c577aa5aee60",
+  "agent_evidence_sha256": "2ec14e376d57dd200e82010140cf750b840e25601a40e9df3d7ceb01ff3b1f23",
   "chain_id": "openada.chain/public-spice-portability/v1",
   "checks": {
     "admin_surface_semantics": "pass",
@@ -21,49 +21,49 @@
       "encoding": "binary",
       "numeric_type": "real",
       "point_count": 1,
-      "sha256": "649d4c9ca529666741b146e46a821b091850982008d64a63d276935b8cd9a29f",
+      "sha256": "4690baebb30a8d3ff562f84f4cd583b11e31552663492365a75955201d38e769",
       "variable_count": 11
     },
     "ngspice-ac": {
       "encoding": "binary",
       "numeric_type": "complex",
       "point_count": 51,
-      "sha256": "476561f3c2fbcf973d3a2a9ff3daef50120f54471c4eea91280efe3390798c9e",
+      "sha256": "997b70a328393bf4f8a9b277f3f72e71040a984a6f712b69330426cadbdf4aca",
       "variable_count": 29
     },
     "ngspice-dc": {
       "encoding": "binary",
       "numeric_type": "real",
       "point_count": 13,
-      "sha256": "115ff08a16d89e7576288fdab9af6fead21259e255e4cef501ff9aad28d50f7d",
+      "sha256": "f90223884f11d64d6867996049ded4350b4fda76f388d0ea06f3feb5aff5d0a9",
       "variable_count": 12
     },
     "ngspice-op": {
       "encoding": "binary",
       "numeric_type": "real",
       "point_count": 1,
-      "sha256": "8c3c8bd80b824c3a856bab04d1364f7f8c2d851255f556deb7c839bcca870f4e",
+      "sha256": "588f5fd74bb54f878b518b64013069ee30506e7ed5de4a88da5f0d6c7505e13f",
       "variable_count": 11
     },
     "xyce-ac": {
       "encoding": "ascii",
       "numeric_type": "complex",
       "point_count": 51,
-      "sha256": "b0a7ab9e76eb84691a9d275fc2e7d9e03aca1aecaa67ae1e0769188c9f6a48f7",
+      "sha256": "862d36ad0ad39720dd2835982a14993578ddfa386e1754864f140170c320ca4c",
       "variable_count": 2
     },
     "xyce-dc": {
       "encoding": "ascii",
       "numeric_type": "real",
       "point_count": 101,
-      "sha256": "7805a48b5d68c7ddd2413974f7dc532525e9bb1793a79f9d5989a4baaff75c1a",
+      "sha256": "957431ceff292d0ce50541e3704ee10922f378291642081c8f2b89948a763253",
       "variable_count": 3
     },
     "xyce-tran": {
       "encoding": "ascii",
       "numeric_type": "real",
       "point_count": 18,
-      "sha256": "ef3b38673a06a15e6a871084a21bfb7722a857d441a180dded82490ec10aac98",
+      "sha256": "089dc18c87fb63902b61032b2c3265c073f6586f3633d7628232615a8976d35b",
       "variable_count": 3
     }
   },
@@ -108,7 +108,7 @@
       "required_diagnostic": "conformance.native.tampered",
       "schema": "openada.tamper-replay/v0alpha1",
       "status": "unknown",
-      "verifier_message": "native artifact sha256 differs: expected '139888bfbc7da1ac5ad9f1d277781ae3f02ef992a4810e5905fe353a20aaf29c', observed '7805a48b5d68c7ddd2413974f7dc532525e9bb1793a79f9d5989a4baaff75c1a'"
+      "verifier_message": "native artifact sha256 differs: expected '272a17463eacab8a51904a2293f085ed1b288df74d6c73bcb5952a1074e242de', observed '957431ceff292d0ce50541e3704ee10922f378291642081c8f2b89948a763253'"
     },
     {
       "extensions": {},
@@ -138,7 +138,7 @@
       "required_diagnostic": "conformance.lineage.tampered",
       "schema": "openada.tamper-replay/v0alpha1",
       "status": "unknown",
-      "verifier_message": "ngspice-dc.extract.lineage differs: expected '115ff08a16d89e7576288fdab9af6fead21259e255e4cef501ff9aad28d50f7d', observed '0000000000000000000000000000000000000000000000000000000000000000'"
+      "verifier_message": "ngspice-dc.extract.lineage differs: expected 'f90223884f11d64d6867996049ded4350b4fda76f388d0ea06f3feb5aff5d0a9', observed '0000000000000000000000000000000000000000000000000000000000000000'"
     },
     {
       "extensions": {},
@@ -148,7 +148,7 @@
       "required_diagnostic": "conformance.admin.tampered",
       "schema": "openada.tamper-replay/v0alpha1",
       "status": "unknown",
-      "verifier_message": "agent.admin.provider-validate.digest differs: expected '7f456f76c16f0c567837dd2ae9689b4493d7fd7d0bf112ff372159c286ea56dc', observed '397ce499097fa1ec1520aaf59bf06c0bf6b891ccb6e1c7790d07bce808c41ed4'"
+      "verifier_message": "agent.admin.provider-validate.digest differs: expected '28c4045c4556c80d023e45399a392fafabe0c03c7cad3d976749ccb0c3ed67ae', observed 'd4439f8aa4758d8aa317b9af543aaebd4c7710086e83b5f1ff2d64fc9d489c5a'"
     },
     {
       "extensions": {},

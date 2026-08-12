@@ -13,7 +13,7 @@
         "plotname": "AC Analysis",
         "point_count": 51
       },
-      "request_sha256": "5c1d338c1b16530f0936296a7e767560d0417fd346ae6b0e83ac32f19deb4545",
+      "request_sha256": "43e88c55e4b64f4dc15ebbda655f5fa6fe1b7c4f3f17fd390a4bba40f3c34d82",
       "series": {
         "axis": {
           "name": "frequency",
@@ -211,10 +211,10 @@
           "artifact_sha256": "2b07af44ecc2b36be25a6342198c2fcfc39882c227ec260f4a499dcb875d3181",
           "lineage": {
             "artifact_role": "simulation.result",
-            "artifact_sha256": "b0a7ab9e76eb84691a9d275fc2e7d9e03aca1aecaa67ae1e0769188c9f6a48f7",
+            "artifact_sha256": "862d36ad0ad39720dd2835982a14993578ddfa386e1754864f140170c320ca4c",
             "binding": "unverified",
             "operation": "circuit.simulate",
-            "request_id": "d6683b60-b77c-4135-92ab-fc8ddfb16092"
+            "request_id": "9d01fc07-4edf-4e03-ae87-ce7548b23efd"
           },
           "operation": "openada.operation/result.series.extract/v1alpha1",
           "request_id": "21000000-0000-4000-8000-000000000005"
@@ -228,14 +228,14 @@
           "kind": "xyce-raw",
           "path": "/evidence/sim/xyce-ac/xyce-ac-derived/xyce-ac-derived.xyce.raw",
           "role": "simulation.result",
-          "sha256": "b0a7ab9e76eb84691a9d275fc2e7d9e03aca1aecaa67ae1e0769188c9f6a48f7"
+          "sha256": "862d36ad0ad39720dd2835982a14993578ddfa386e1754864f140170c320ca4c"
         },
         "backend": "xyce",
         "binding": "verified",
         "driver_id": "org.openada.driver.xyce",
         "driver_version": "0.4.0",
         "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
-        "request_id": "d6683b60-b77c-4135-92ab-fc8ddfb16092"
+        "request_id": "9d01fc07-4edf-4e03-ae87-ce7548b23efd"
       },
       "status": "extracted"
     },
@@ -265,12 +265,12 @@
       "kind": "xyce-raw",
       "path": "/evidence/sim/xyce-ac/xyce-ac-derived/xyce-ac-derived.xyce.raw",
       "role": "simulation.result",
-      "sha256": "b0a7ab9e76eb84691a9d275fc2e7d9e03aca1aecaa67ae1e0769188c9f6a48f7"
+      "sha256": "862d36ad0ad39720dd2835982a14993578ddfa386e1754864f140170c320ca4c"
     }
   ],
   "operation": "result.series.extract",
   "provenance": {
-    "created_at": "2026-08-12T09:12:06.630716Z",
+    "created_at": "2026-08-12T09:52:09.322145Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

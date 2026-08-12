@@ -727,7 +727,7 @@
   "inputs": [],
   "operation": "doctor",
   "provenance": {
-    "created_at": "2026-08-12T09:12:14.786937Z",
+    "created_at": "2026-08-12T09:52:14.288290Z",
     "host": {
       "machine": "x86_64",
       "python": "3.12.3",

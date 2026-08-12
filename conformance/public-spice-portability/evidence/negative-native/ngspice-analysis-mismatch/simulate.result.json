@@ -42,7 +42,7 @@
   ],
   "data": {
     "protocol": {
-      "request_id": "169b41c6-badc-42ff-a582-f5b4472483c0",
+      "request_id": "e2c94da6-ac51-468c-a52f-3e00ff78ae4a",
       "operation_profile": "openada.operation/circuit.simulate/v1alpha2",
       "assertion_profile": "openada.assertion/simulation.evidence.valid/v1alpha1",
       "driver_id": "org.openada.driver.ngspice",
@@ -100,7 +100,7 @@
   },
   "provenance": {
     "openada_version": "0.4.0",
-    "created_at": "2026-08-12T09:12:30.023766Z",
+    "created_at": "2026-08-12T09:52:24.326906Z",
     "host": {
       "system": "Linux",
       "machine": "x86_64",
