@@ -33,7 +33,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/op.json",
       "role": "native-artifact",
-      "sha256": "f2d03cee7a67361c55d8822583bc474a90248ce18fa74176d0da4e197e541f01",
+      "sha256": "284fc6bda80e09ea9ed05b097d6193a4136f947c62a6db29072ec91a4c21b5c2",
       "source_output": "op-result",
       "source_step": "provider-op"
     },
@@ -42,7 +42,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/op/work/op.raw",
       "role": "native-artifact",
-      "sha256": "51e0c338ceb3886b95cd73b933ff6e34b2e2c1cb287a92902508f3649fd93ce9",
+      "sha256": "5d6f25ed02f8ee53b5c4ac6affdce3328f7acaccb8fe44ede9c8d2e6854fa53f",
       "source_output": "op-raw",
       "source_step": "provider-op"
     },
@@ -87,7 +87,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/dc.json",
       "role": "native-artifact",
-      "sha256": "b474def2ca48f5a709037fbc87c9120159f542591aca749c951ce68d37428a32",
+      "sha256": "f834c134aa752feda542e56797579e8bd4b137bdfbadd5fb592fb37715615498",
       "source_output": "dc-result",
       "source_step": "provider-dc"
     },
@@ -96,7 +96,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/dc/work/dc.raw",
       "role": "native-artifact",
-      "sha256": "cfe50ac241430f4a9a03e41b24c4c678af159e18fdfc37eedce302056985859e",
+      "sha256": "93a1704ffb6c29028fcbb4d79cc2d81c36eb5016541cc779cdae60ba15f4ec5c",
       "source_output": "dc-raw",
       "source_step": "provider-dc"
     },
@@ -141,7 +141,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/ac.json",
       "role": "native-artifact",
-      "sha256": "005f6931d90503c61a89d2aefb63f07479ba86db1d2aef9da8ff3a05313b0b10",
+      "sha256": "e1f128d3620294bf1100075b405da24a3403c41ef90ee7593abc4dc1d9f58618",
       "source_output": "ac-result",
       "source_step": "provider-ac"
     },
@@ -150,7 +150,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/ac/work/ac.raw",
       "role": "native-artifact",
-      "sha256": "f95202f18504299278648bbb1fb6a329a965c6be9f6f1c9c958709aad27a274c",
+      "sha256": "525e31682e9cc7d5d6e906ca3ff3733df97903822f3b1ee3d1e77b6eff6c1886",
       "source_output": "ac-raw",
       "source_step": "provider-ac"
     },
@@ -195,7 +195,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/results/tran.json",
       "role": "native-artifact",
-      "sha256": "0fa73a08923fcecb752c692804f7c8f0cb71a2b42ab68ccdf580289b01fc27eb",
+      "sha256": "26b6bf4c55c214f6c05c063b7c47c11ae10d1b602472747396fb119546cbff0d",
       "source_output": "tran-result",
       "source_step": "provider-tran"
     },
@@ -204,7 +204,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/native-replay/native/tran/work/tran.raw",
       "role": "native-artifact",
-      "sha256": "ed185da2eb851fb1fcf5aa5c5938f63f9976acbab27ebe16c7e8cbd3b3110330",
+      "sha256": "e49a3f61bf3243c8c80c2c4e01dcceefc936de07725795bcef34efbbcef40d9f",
       "source_output": "tran-raw",
       "source_step": "provider-tran"
     },
@@ -231,7 +231,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/oracle.json",
       "role": "independent-oracle",
-      "sha256": "5b047978af85aa5eaac2b7c8269db45a42a1801e03fd3eed3c9bb6cbd585ccc9",
+      "sha256": "dfa62b1273e195f562ae283c34bf2204f2afd8180a1981bab2377f0b134f3d85",
       "source_output": "independent-oracle",
       "source_step": "independent-native-oracle"
     },
@@ -240,7 +240,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/normalized.json",
       "role": "normalized-evidence",
-      "sha256": "819801c852fa0922a418d4a92c387238ed55c2cfdd633e2cd9af0f70f70e6b5f",
+      "sha256": "9625b6e3fee9c2b262d873f4e9d22bf4a442ca210353ee8dc8832b07e09b892a",
       "source_output": "normalized-evidence",
       "source_step": "normalize-evidence"
     },
@@ -249,7 +249,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/decision.json",
       "role": "downstream-decision",
-      "sha256": "b138d3b6a035fbb3d1f86f173c668f5551089f3ae5ac554152f2aae117636651",
+      "sha256": "f5467c00041030add03f145d2e4005589f3f90e17d9ccbd8b5ce5b39fe0f6db9",
       "source_output": "downstream-decision",
       "source_step": "publish-scoped-decision"
     },
@@ -258,7 +258,7 @@
       "replay_id": null,
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/agent-evidence.json",
       "role": "agent-visible-evidence",
-      "sha256": "2b0cc48eea0bc7b0916d1d3e0eb316254bdf40097a61b2d774ca8e77cd903186",
+      "sha256": "0ccdae85c260ae92e93c9bb514ef52bfb32ebaee92997187777de04029340afd",
       "source_output": "agent-visible-evidence",
       "source_step": "agent-decision"
     },
@@ -276,7 +276,7 @@
       "replay_id": "op-unsafe-command",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/op-unsafe-command.json",
       "role": "negative-replay",
-      "sha256": "948bb42cc50381ecc7288631ad81c94f898f3eca785a753b9b43c2a86e904486",
+      "sha256": "030ee5fd9eb89662685fd6fbc78381fdff9db7a6bd1448a337332a0547967e25",
       "source_output": null,
       "source_step": null
     },
@@ -285,7 +285,7 @@
       "replay_id": "dc-parameter-mismatch",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/dc-parameter-mismatch.json",
       "role": "negative-replay",
-      "sha256": "df6a52523b1a4dfd9c79f924481606d03c5d99fb650bd37bb359864f47f9a601",
+      "sha256": "ab96364f16a6acfe4a867430cae1e7853bd79ab78f3a32d1991105ecf65fd504",
       "source_output": null,
       "source_step": null
     },
@@ -294,7 +294,7 @@
       "replay_id": "ac-feature-mismatch",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/ac-feature-mismatch.json",
       "role": "negative-replay",
-      "sha256": "eade221118046cfefa2c2885864289ba1dcbfd6fb6d7b83f318f8989238b32ba",
+      "sha256": "d04656e89eecf0ec759bd5a12b2dbad5d5f1ab32a316b2c4d7c596f1e4ed1cf4",
       "source_output": null,
       "source_step": null
     },
@@ -303,7 +303,7 @@
       "replay_id": "tran-duplicate-write",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/tran-duplicate-write.json",
       "role": "negative-replay",
-      "sha256": "2db7a669bd40456eaff464cc7c215fb48f31d76bf99d2fbaec566b5dd8d8acfb",
+      "sha256": "57652186dc5500782531f2c3ee22f2d7e4190d1eeea1205b328fc9ce948be6bf",
       "source_output": null,
       "source_step": null
     },
@@ -312,7 +312,7 @@
       "replay_id": "tran-native-error",
       "repository_path": "conformance/ihp-ngspice-provider-analyses/artifacts/negative/tran-native-error.json",
       "role": "negative-replay",
-      "sha256": "123c6782cd9cd2e07a55627df19f2d98e511e7ba25ec399698e67d1077bcd4a5",
+      "sha256": "ebf0f88c1e456845c530c69aa75314ea77da12bf9214a41a7e61ddc7b50d3c73",
       "source_output": null,
       "source_step": null
     },
@@ -382,15 +382,15 @@
     }
   },
   "schema": "openada.semantic-chain-run/v0alpha1",
-  "semantic_subject_sha256": "0229af949b527475d92606ef5ec3d99c33a0ae3463158065571f333e4c93f273",
+  "semantic_subject_sha256": "beb29e4fc1329c5594e9d165e89ba5ea92d9fae6fcf038f85c3ef312224dfdce",
   "source_attestation": {
     "clean_after": true,
     "clean_before": true,
     "extensions": {},
     "receipt_class": "release",
-    "repository_revision": "dee2fa7a7291ba88afbe2a5ba42af936a85acd2d",
-    "repository_tree": "46ab6811289449d2be3e2128b2db729b096a7c58",
-    "semantic_subject_sha256": "0229af949b527475d92606ef5ec3d99c33a0ae3463158065571f333e4c93f273",
+    "repository_revision": "dc20bc769ce309672020733bafd61572eefd5755",
+    "repository_tree": "7a02f3e6af337fdbc0214780723075fb769506f4",
+    "semantic_subject_sha256": "beb29e4fc1329c5594e9d165e89ba5ea92d9fae6fcf038f85c3ef312224dfdce",
     "state_unchanged": true
   },
   "status": "pass"
