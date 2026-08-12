@@ -1,0 +1,1022 @@
+{
+  "benchmark": "research.openada.pn-ngspice-behavioral-cost/0",
+  "benchmark_version": "0.1.0",
+  "claim": "PDK-free behavioral TRNOISE pipeline/runtime evidence only",
+  "configuration": {
+    "ascii_significant_digits": 17,
+    "carrier_hz": 2400000000.0,
+    "durations_s": [
+      5e-07,
+      1e-06,
+      2e-06,
+      4e-06,
+      8e-06,
+      1.8e-05
+    ],
+    "initial_condition_policy": "UIC with Cphi IC=0",
+    "integration_method": "trap, maxord=2, uic",
+    "maximum_step_s": 1.0416666666666666e-11,
+    "ngspice_user_init": "disabled with -n",
+    "phase_integrator_capacitance_f": 1e-09,
+    "reltol": 1e-06,
+    "saved_vectors": [
+      "time",
+      "v(out)",
+      "v(phi)"
+    ],
+    "temperature_c": 27.0,
+    "transient_requested_tstep_s": 2.0833333333333332e-11,
+    "trnoise_frequency_error_sample_rms_hz": 10000000.0,
+    "trnoise_update_s": 2.0833333333333332e-11,
+    "waveform_compression": "disabled",
+    "waveform_encoding": "ngspice wrdata ASCII, one shared time column"
+  },
+  "limitations": [
+    "The oscillator uses an explicit behavioral carrier and authored phase injector.",
+    "TRNOISE is experimental and does not represent compact-model device noise here.",
+    "TRNOISE replay is not claimed; repeats are runtime samples, not common-seed comparisons.",
+    "The reported ngspice interval includes portable ASCII wrdata export time.",
+    "Large waveform artifacts are hashed and summarized, then deleted rather than committed."
+  ],
+  "ngspice_and_ascii_export_linear_fit": {
+    "note": "descriptive fit for this behavioral deck, ASCII export path, and host only",
+    "r_squared": 0.9997464457217308,
+    "seconds_per_simulated_second": 5609967.242234275,
+    "wallclock_intercept_s": 0.8690757296917556
+  },
+  "rows": [
+    {
+      "bin_spacing_hz": {
+        "maximum": 9375068.443213811,
+        "median": 9375068.443213811,
+        "minimum": 9375068.443213811
+      },
+      "discarded_trailing_crossings": {
+        "maximum": 48,
+        "median": 48,
+        "minimum": 48
+      },
+      "enbw_hz": {
+        "maximum": 14062602.664820716,
+        "median": 14062602.664820716,
+        "minimum": 14062602.664820716
+      },
+      "extraction_vs_simulator_phase_truth": {
+        "phase_error_max_abs_rad": {
+          "maximum": 5.4852920202122166e-05,
+          "median": 5.4852920202122166e-05,
+          "minimum": 5.4852920202122166e-05
+        },
+        "phase_error_rms_rad": {
+          "maximum": 1.581800032628352e-05,
+          "median": 1.581800032628352e-05,
+          "minimum": 1.581800032628352e-05
+        },
+        "psd_ratio_db_max_abs": {
+          "maximum": 0.004513191154322691,
+          "median": 0.004513191154322691,
+          "minimum": 0.004513191154322691
+        },
+        "psd_ratio_db_median": {
+          "maximum": -4.385338020432691e-05,
+          "median": -4.385338020432691e-05,
+          "minimum": -4.385338020432691e-05
+        }
+      },
+      "fitted_carrier_hz": {
+        "maximum": 2400017521.4627357,
+        "median": 2400017521.4627357,
+        "minimum": 2400017521.4627357
+      },
+      "lowest_usable_offset_hz": {
+        "maximum": 37500273.772855245,
+        "median": 37500273.772855245,
+        "minimum": 37500273.772855245
+      },
+      "maximum_child_rss_bytes": {
+        "maximum": 100159488,
+        "median": 100159488,
+        "minimum": 100159488
+      },
+      "minimum_usable_bin": 4,
+      "ngspice_and_ascii_export_wallclock_s": {
+        "maximum": 3.454438485998253,
+        "median": 3.454438485998253,
+        "minimum": 3.454438485998253
+      },
+      "ngspice_returncode": 0,
+      "observed_crossing_count": {
+        "maximum": 1200,
+        "median": 1200,
+        "minimum": 1200
+      },
+      "phase_and_psd_wallclock_s": {
+        "maximum": 0.006242869996640366,
+        "median": 0.006242869996640366,
+        "minimum": 0.006242869996640366
+      },
+      "pipeline_l_at_lowest_bin_db_per_hz": {
+        "maximum": -122.71688571217601,
+        "median": -122.71688571217601,
+        "minimum": -122.71688571217601
+      },
+      "pipeline_l_interpretation": "behavioral injector/pipeline telemetry only; not physical oscillator PN",
+      "process_wallclock_s": {
+        "maximum": 4.534942272999615,
+        "median": 4.534942272999615,
+        "minimum": 4.534942272999615
+      },
+      "repeat_artifacts": [
+        {
+          "bin_spacing_hz": 9375068.443213811,
+          "enbw_hz": 14062602.664820716,
+          "extraction_vs_simulator_phase_truth": {
+            "phase_error_max_abs_rad": 5.4852920202122166e-05,
+            "phase_error_rms_rad": 1.581800032628352e-05,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 25,
+            "psd_ratio_db_max_abs": 0.004513191154322691,
+            "psd_ratio_db_median": -4.385338020432691e-05
+          },
+          "fitted_carrier_hz": 2400017521.4627357,
+          "lowest_usable_offset_hz": 37500273.772855245,
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "observed_crossing_count": 1200,
+          "pipeline_l_at_lowest_bin_db_per_hz": -122.71688571217601,
+          "resolved_deck_sha256": "3d5c945de19e4f44cf5204f20f7b568f0b075a8dc959640e3e2e956ef8692bed",
+          "terminal_phase_truth_rad": 0.24348025896144593,
+          "used_crossing_count": 1152,
+          "waveform": {
+            "bytes": 11612040,
+            "observed_timestep_s": {
+              "maximum": 1.0416457829286994e-11,
+              "median": 2.6009339157784917e-12,
+              "minimum": 2.52267587516012e-18
+            },
+            "retained_after_summary": false,
+            "row_count": 152789,
+            "sha256": "adb852e34e42aaa290c8fb4365d5c70cd86fb2e28e00f94703c49a8d0bd76eb2",
+            "time_start_s": 2.083333333333333e-13,
+            "time_stop_s": 5e-07
+          }
+        }
+      ],
+      "repeat_count": 1,
+      "resolved_deck_sha256": "3d5c945de19e4f44cf5204f20f7b568f0b075a8dc959640e3e2e956ef8692bed",
+      "status": "pass",
+      "stop_s": 5e-07,
+      "terminal_phase_truth_rad": {
+        "maximum": 0.24348025896144593,
+        "median": 0.24348025896144593,
+        "minimum": 0.24348025896144593
+      },
+      "used_crossing_count": {
+        "maximum": 1152,
+        "median": 1152,
+        "minimum": 1152
+      },
+      "welch_segment_count": 8,
+      "welch_segment_length_events": 256,
+      "worker_total_wallclock_s": {
+        "maximum": 3.599497496994445,
+        "median": 3.599497496994445,
+        "minimum": 3.599497496994445
+      },
+      "wrdata_parse_wallclock_s": {
+        "maximum": 0.13881614099955186,
+        "median": 0.13881614099955186,
+        "minimum": 0.13881614099955186
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 4687425.658036712,
+        "median": 4687425.658036712,
+        "minimum": 4687425.658036712
+      },
+      "discarded_trailing_crossings": {
+        "maximum": 95,
+        "median": 95,
+        "minimum": 95
+      },
+      "enbw_hz": {
+        "maximum": 7031138.487055067,
+        "median": 7031138.487055067,
+        "minimum": 7031138.487055067
+      },
+      "extraction_vs_simulator_phase_truth": {
+        "phase_error_max_abs_rad": {
+          "maximum": 5.4825829336288545e-05,
+          "median": 5.4825829336288545e-05,
+          "minimum": 5.4825829336288545e-05
+        },
+        "phase_error_rms_rad": {
+          "maximum": 1.1660115958038683e-05,
+          "median": 1.1660115958038683e-05,
+          "minimum": 1.1660115958038683e-05
+        },
+        "psd_ratio_db_max_abs": {
+          "maximum": 0.005457821322250764,
+          "median": 0.005457821322250764,
+          "minimum": 0.005457821322250764
+        },
+        "psd_ratio_db_median": {
+          "maximum": -0.0001333263796816024,
+          "median": -0.0001333263796816024,
+          "minimum": -0.0001333263796816024
+        }
+      },
+      "fitted_carrier_hz": {
+        "maximum": 2399961936.9147964,
+        "median": 2399961936.9147964,
+        "minimum": 2399961936.9147964
+      },
+      "lowest_usable_offset_hz": {
+        "maximum": 18749702.632146847,
+        "median": 18749702.632146847,
+        "minimum": 18749702.632146847
+      },
+      "maximum_child_rss_bytes": {
+        "maximum": 100147200,
+        "median": 100147200,
+        "minimum": 100147200
+      },
+      "minimum_usable_bin": 4,
+      "ngspice_and_ascii_export_wallclock_s": {
+        "maximum": 6.629373381998448,
+        "median": 6.629373381998448,
+        "minimum": 6.629373381998448
+      },
+      "ngspice_returncode": 0,
+      "observed_crossing_count": {
+        "maximum": 2399,
+        "median": 2399,
+        "minimum": 2399
+      },
+      "phase_and_psd_wallclock_s": {
+        "maximum": 0.012064107999322005,
+        "median": 0.012064107999322005,
+        "minimum": 0.012064107999322005
+      },
+      "pipeline_l_at_lowest_bin_db_per_hz": {
+        "maximum": -111.56262169698351,
+        "median": -111.56262169698351,
+        "minimum": -111.56262169698351
+      },
+      "pipeline_l_interpretation": "behavioral injector/pipeline telemetry only; not physical oscillator PN",
+      "process_wallclock_s": {
+        "maximum": 7.8592070219965535,
+        "median": 7.8592070219965535,
+        "minimum": 7.8592070219965535
+      },
+      "repeat_artifacts": [
+        {
+          "bin_spacing_hz": 4687425.658036712,
+          "enbw_hz": 7031138.487055067,
+          "extraction_vs_simulator_phase_truth": {
+            "phase_error_max_abs_rad": 5.4825829336288545e-05,
+            "phase_error_rms_rad": 1.1660115958038683e-05,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 51,
+            "psd_ratio_db_max_abs": 0.005457821322250764,
+            "psd_ratio_db_median": -0.0001333263796816024
+          },
+          "fitted_carrier_hz": 2399961936.9147964,
+          "lowest_usable_offset_hz": 18749702.632146847,
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "observed_crossing_count": 2399,
+          "pipeline_l_at_lowest_bin_db_per_hz": -111.56262169698351,
+          "resolved_deck_sha256": "dd220185a60425876669bd64e68cdcd1d3ee6344b2a71dc13542ca329cde9f5e",
+          "terminal_phase_truth_rad": -0.2830783616052011,
+          "used_crossing_count": 2304,
+          "waveform": {
+            "bytes": 22183412,
+            "observed_timestep_s": {
+              "maximum": 1.0416174636685392e-11,
+              "median": 2.887059441566554e-12,
+              "minimum": 4.954083950253589e-18
+            },
+            "retained_after_summary": false,
+            "row_count": 291886,
+            "sha256": "d3fd48ca99236825d265e841689369d58c92afb21bd4d39b2d8c527080cabd3e",
+            "time_start_s": 2.083333333333333e-13,
+            "time_stop_s": 1e-06
+          }
+        }
+      ],
+      "repeat_count": 1,
+      "resolved_deck_sha256": "dd220185a60425876669bd64e68cdcd1d3ee6344b2a71dc13542ca329cde9f5e",
+      "status": "pass",
+      "stop_s": 1e-06,
+      "terminal_phase_truth_rad": {
+        "maximum": -0.2830783616052011,
+        "median": -0.2830783616052011,
+        "minimum": -0.2830783616052011
+      },
+      "used_crossing_count": {
+        "maximum": 2304,
+        "median": 2304,
+        "minimum": 2304
+      },
+      "welch_segment_count": 8,
+      "welch_segment_length_events": 512,
+      "worker_total_wallclock_s": {
+        "maximum": 6.898899366999103,
+        "median": 6.898899366999103,
+        "minimum": 6.898899366999103
+      },
+      "wrdata_parse_wallclock_s": {
+        "maximum": 0.25746187700133305,
+        "median": 0.25746187700133305,
+        "minimum": 0.25746187700133305
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 2343765.6139650163,
+        "median": 2343765.6139650163,
+        "minimum": 2343765.6139650163
+      },
+      "discarded_trailing_crossings": {
+        "maximum": 192,
+        "median": 192,
+        "minimum": 192
+      },
+      "enbw_hz": {
+        "maximum": 3515648.4209475247,
+        "median": 3515648.4209475247,
+        "minimum": 3515648.4209475247
+      },
+      "extraction_vs_simulator_phase_truth": {
+        "phase_error_max_abs_rad": {
+          "maximum": 5.929622781286614e-05,
+          "median": 5.929622781286614e-05,
+          "minimum": 5.929622781286614e-05
+        },
+        "phase_error_rms_rad": {
+          "maximum": 1.3624310514622634e-05,
+          "median": 1.3624310514622634e-05,
+          "minimum": 1.3624310514622634e-05
+        },
+        "psd_ratio_db_max_abs": {
+          "maximum": 0.005851214220476244,
+          "median": 0.005851214220476244,
+          "minimum": 0.005851214220476244
+        },
+        "psd_ratio_db_median": {
+          "maximum": 4.8877707488078376e-05,
+          "median": 4.8877707488078376e-05,
+          "minimum": 4.8877707488078376e-05
+        }
+      },
+      "fitted_carrier_hz": {
+        "maximum": 2400015988.7001767,
+        "median": 2400015988.7001767,
+        "minimum": 2400015988.7001767
+      },
+      "lowest_usable_offset_hz": {
+        "maximum": 9375062.455860065,
+        "median": 9375062.455860065,
+        "minimum": 9375062.455860065
+      },
+      "maximum_child_rss_bytes": {
+        "maximum": 100208640,
+        "median": 100208640,
+        "minimum": 100208640
+      },
+      "minimum_usable_bin": 4,
+      "ngspice_and_ascii_export_wallclock_s": {
+        "maximum": 13.055267878997256,
+        "median": 13.055267878997256,
+        "minimum": 13.055267878997256
+      },
+      "ngspice_returncode": 0,
+      "observed_crossing_count": {
+        "maximum": 4800,
+        "median": 4800,
+        "minimum": 4800
+      },
+      "phase_and_psd_wallclock_s": {
+        "maximum": 0.020275577997381333,
+        "median": 0.020275577997381333,
+        "minimum": 0.020275577997381333
+      },
+      "pipeline_l_at_lowest_bin_db_per_hz": {
+        "maximum": -107.31686585987129,
+        "median": -107.31686585987129,
+        "minimum": -107.31686585987129
+      },
+      "pipeline_l_interpretation": "behavioral injector/pipeline telemetry only; not physical oscillator PN",
+      "process_wallclock_s": {
+        "maximum": 14.632183884998085,
+        "median": 14.632183884998085,
+        "minimum": 14.632183884998085
+      },
+      "repeat_artifacts": [
+        {
+          "bin_spacing_hz": 2343765.6139650163,
+          "enbw_hz": 3515648.4209475247,
+          "extraction_vs_simulator_phase_truth": {
+            "phase_error_max_abs_rad": 5.929622781286614e-05,
+            "phase_error_rms_rad": 1.3624310514622634e-05,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 102,
+            "psd_ratio_db_max_abs": 0.005851214220476244,
+            "psd_ratio_db_median": 4.8877707488078376e-05
+          },
+          "fitted_carrier_hz": 2400015988.7001767,
+          "lowest_usable_offset_hz": 9375062.455860065,
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "observed_crossing_count": 4800,
+          "pipeline_l_at_lowest_bin_db_per_hz": -107.31686585987129,
+          "resolved_deck_sha256": "f1b0e9781560a0a8d53e907cd5937f64b1fba1b7875d300a1b9bb11a6d6493e2",
+          "terminal_phase_truth_rad": 0.17671910005916874,
+          "used_crossing_count": 4608,
+          "waveform": {
+            "bytes": 44033640,
+            "observed_timestep_s": {
+              "maximum": 1.0416435047753542e-11,
+              "median": 2.972448443681594e-12,
+              "minimum": 9.723091201532114e-18
+            },
+            "retained_after_summary": false,
+            "row_count": 579389,
+            "sha256": "2ccc946849f2f9417bb83791e802cbc3051ccc4bc6b933f9947eb5a1c4f83d61",
+            "time_start_s": 2.083333333333333e-13,
+            "time_stop_s": 2e-06
+          }
+        }
+      ],
+      "repeat_count": 1,
+      "resolved_deck_sha256": "f1b0e9781560a0a8d53e907cd5937f64b1fba1b7875d300a1b9bb11a6d6493e2",
+      "status": "pass",
+      "stop_s": 2e-06,
+      "terminal_phase_truth_rad": {
+        "maximum": 0.17671910005916874,
+        "median": 0.17671910005916874,
+        "minimum": 0.17671910005916874
+      },
+      "used_crossing_count": {
+        "maximum": 4608,
+        "median": 4608,
+        "minimum": 4608
+      },
+      "welch_segment_count": 8,
+      "welch_segment_length_events": 1024,
+      "worker_total_wallclock_s": {
+        "maximum": 13.606348267996509,
+        "median": 13.606348267996509,
+        "minimum": 13.606348267996509
+      },
+      "wrdata_parse_wallclock_s": {
+        "maximum": 0.5308048110018717,
+        "median": 0.5308048110018717,
+        "minimum": 0.5308048110018717
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 1171897.9241132855,
+        "median": 1171897.9241132855,
+        "minimum": 1171897.9241132855
+      },
+      "discarded_trailing_crossings": {
+        "maximum": 384,
+        "median": 384,
+        "minimum": 384
+      },
+      "enbw_hz": {
+        "maximum": 1757846.8861699281,
+        "median": 1757846.8861699281,
+        "minimum": 1757846.8861699281
+      },
+      "extraction_vs_simulator_phase_truth": {
+        "phase_error_max_abs_rad": {
+          "maximum": 6.080557895379868e-05,
+          "median": 6.080557895379868e-05,
+          "minimum": 6.080557895379868e-05
+        },
+        "phase_error_rms_rad": {
+          "maximum": 1.0253311889396388e-05,
+          "median": 1.0253311889396388e-05,
+          "minimum": 1.0253311889396388e-05
+        },
+        "psd_ratio_db_max_abs": {
+          "maximum": 0.004798226099172539,
+          "median": 0.004798226099172539,
+          "minimum": 0.004798226099172539
+        },
+        "psd_ratio_db_median": {
+          "maximum": 0.0004747999927214549,
+          "median": 0.0004747999927214549,
+          "minimum": 0.0004747999927214549
+        }
+      },
+      "fitted_carrier_hz": {
+        "maximum": 2400046948.5840087,
+        "median": 2400046948.5840087,
+        "minimum": 2400046948.5840087
+      },
+      "lowest_usable_offset_hz": {
+        "maximum": 4687591.696453142,
+        "median": 4687591.696453142,
+        "minimum": 4687591.696453142
+      },
+      "maximum_child_rss_bytes": {
+        "maximum": 100245504,
+        "median": 100245504,
+        "minimum": 100245504
+      },
+      "minimum_usable_bin": 4,
+      "ngspice_and_ascii_export_wallclock_s": {
+        "maximum": 22.50782950300345,
+        "median": 22.50782950300345,
+        "minimum": 22.50782950300345
+      },
+      "ngspice_returncode": 0,
+      "observed_crossing_count": {
+        "maximum": 9600,
+        "median": 9600,
+        "minimum": 9600
+      },
+      "phase_and_psd_wallclock_s": {
+        "maximum": 0.04390087399951881,
+        "median": 0.04390087399951881,
+        "minimum": 0.04390087399951881
+      },
+      "pipeline_l_at_lowest_bin_db_per_hz": {
+        "maximum": -99.97444429011722,
+        "median": -99.97444429011722,
+        "minimum": -99.97444429011722
+      },
+      "pipeline_l_interpretation": "behavioral injector/pipeline telemetry only; not physical oscillator PN",
+      "process_wallclock_s": {
+        "maximum": 24.516796468000393,
+        "median": 24.516796468000393,
+        "minimum": 24.516796468000393
+      },
+      "repeat_artifacts": [
+        {
+          "bin_spacing_hz": 1171897.9241132855,
+          "enbw_hz": 1757846.8861699281,
+          "extraction_vs_simulator_phase_truth": {
+            "phase_error_max_abs_rad": 6.080557895379868e-05,
+            "phase_error_rms_rad": 1.0253311889396388e-05,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 204,
+            "psd_ratio_db_max_abs": 0.004798226099172539,
+            "psd_ratio_db_median": 0.0004747999927214549
+          },
+          "fitted_carrier_hz": 2400046948.5840087,
+          "lowest_usable_offset_hz": 4687591.696453142,
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "observed_crossing_count": 9600,
+          "pipeline_l_at_lowest_bin_db_per_hz": -99.97444429011722,
+          "resolved_deck_sha256": "b5ac42a393f2b3117a60091a1287ddd53dc71bedaaed5b24170b376ea1ab0153",
+          "terminal_phase_truth_rad": 0.8498425221135698,
+          "used_crossing_count": 9216,
+          "waveform": {
+            "bytes": 76483740,
+            "observed_timestep_s": {
+              "maximum": 1.0416234442584834e-11,
+              "median": 4.166666666675803e-12,
+              "minimum": 1.741584442849567e-17
+            },
+            "retained_after_summary": false,
+            "row_count": 1006364,
+            "sha256": "6601ad30605c14e5cd40f206bf24165aa739605951aa2a33bb64cc59682a0432",
+            "time_start_s": 2.083333333333333e-13,
+            "time_stop_s": 4e-06
+          }
+        }
+      ],
+      "repeat_count": 1,
+      "resolved_deck_sha256": "b5ac42a393f2b3117a60091a1287ddd53dc71bedaaed5b24170b376ea1ab0153",
+      "status": "pass",
+      "stop_s": 4e-06,
+      "terminal_phase_truth_rad": {
+        "maximum": 0.8498425221135698,
+        "median": 0.8498425221135698,
+        "minimum": 0.8498425221135698
+      },
+      "used_crossing_count": {
+        "maximum": 9216,
+        "median": 9216,
+        "minimum": 9216
+      },
+      "welch_segment_count": 8,
+      "welch_segment_length_events": 2048,
+      "worker_total_wallclock_s": {
+        "maximum": 23.476721231003467,
+        "median": 23.476721231003467,
+        "minimum": 23.476721231003467
+      },
+      "wrdata_parse_wallclock_s": {
+        "maximum": 0.9249908540004981,
+        "median": 0.9249908540004981,
+        "minimum": 0.9249908540004981
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 585937.2398522234,
+        "median": 585937.2398522234,
+        "minimum": 585937.2398522234
+      },
+      "discarded_trailing_crossings": {
+        "maximum": 768,
+        "median": 768,
+        "minimum": 768
+      },
+      "enbw_hz": {
+        "maximum": 878905.8597783353,
+        "median": 878905.8597783353,
+        "minimum": 878905.8597783353
+      },
+      "extraction_vs_simulator_phase_truth": {
+        "phase_error_max_abs_rad": {
+          "maximum": 6.162012890717494e-05,
+          "median": 6.162012890717494e-05,
+          "minimum": 6.162012890717494e-05
+        },
+        "phase_error_rms_rad": {
+          "maximum": 1.0881013009485927e-05,
+          "median": 1.0881013009485927e-05,
+          "minimum": 1.0881013009485927e-05
+        },
+        "psd_ratio_db_max_abs": {
+          "maximum": 0.00682902552732907,
+          "median": 0.00682902552732907,
+          "minimum": 0.00682902552732907
+        },
+        "psd_ratio_db_median": {
+          "maximum": -4.6933007268901246e-05,
+          "median": -4.6933007268901246e-05,
+          "minimum": -4.6933007268901246e-05
+        }
+      },
+      "fitted_carrier_hz": {
+        "maximum": 2399998934.434707,
+        "median": 2399998934.434707,
+        "minimum": 2399998934.434707
+      },
+      "lowest_usable_offset_hz": {
+        "maximum": 2343748.9594088937,
+        "median": 2343748.9594088937,
+        "minimum": 2343748.9594088937
+      },
+      "maximum_child_rss_bytes": {
+        "maximum": 124571648,
+        "median": 124571648,
+        "minimum": 124571648
+      },
+      "minimum_usable_bin": 4,
+      "ngspice_and_ascii_export_wallclock_s": {
+        "maximum": 45.45313749399793,
+        "median": 45.45313749399793,
+        "minimum": 45.45313749399793
+      },
+      "ngspice_returncode": 0,
+      "observed_crossing_count": {
+        "maximum": 19200,
+        "median": 19200,
+        "minimum": 19200
+      },
+      "phase_and_psd_wallclock_s": {
+        "maximum": 0.09026353900117101,
+        "median": 0.09026353900117101,
+        "minimum": 0.09026353900117101
+      },
+      "pipeline_l_at_lowest_bin_db_per_hz": {
+        "maximum": -93.52353000567355,
+        "median": -93.52353000567355,
+        "minimum": -93.52353000567355
+      },
+      "pipeline_l_interpretation": "behavioral injector/pipeline telemetry only; not physical oscillator PN",
+      "process_wallclock_s": {
+        "maximum": 48.50135672000033,
+        "median": 48.50135672000033,
+        "minimum": 48.50135672000033
+      },
+      "repeat_artifacts": [
+        {
+          "bin_spacing_hz": 585937.2398522234,
+          "enbw_hz": 878905.8597783353,
+          "extraction_vs_simulator_phase_truth": {
+            "phase_error_max_abs_rad": 6.162012890717494e-05,
+            "phase_error_rms_rad": 1.0881013009485927e-05,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 409,
+            "psd_ratio_db_max_abs": 0.00682902552732907,
+            "psd_ratio_db_median": -4.6933007268901246e-05
+          },
+          "fitted_carrier_hz": 2399998934.434707,
+          "lowest_usable_offset_hz": 2343748.9594088937,
+          "named_offset_bins": [
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 1000000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "observed_crossing_count": 19200,
+          "pipeline_l_at_lowest_bin_db_per_hz": -93.52353000567355,
+          "resolved_deck_sha256": "6a32a4634c4be65c89df50409a1cdedab62c8d1267bd8eaaa2cde877d08fd455",
+          "terminal_phase_truth_rad": 0.07915696202491143,
+          "used_crossing_count": 18432,
+          "waveform": {
+            "bytes": 155100344,
+            "observed_timestep_s": {
+              "maximum": 1.0416318706401808e-11,
+              "median": 4.166666666675803e-12,
+              "minimum": 3.5815941141700836e-17
+            },
+            "retained_after_summary": false,
+            "row_count": 2040793,
+            "sha256": "fda8d37500e4802e624e3ea8e454b54aa15dfd53b7f5c879da5248503e954839",
+            "time_start_s": 2.083333333333333e-13,
+            "time_stop_s": 7.999999999999998e-06
+          }
+        }
+      ],
+      "repeat_count": 1,
+      "resolved_deck_sha256": "6a32a4634c4be65c89df50409a1cdedab62c8d1267bd8eaaa2cde877d08fd455",
+      "status": "pass",
+      "stop_s": 8e-06,
+      "terminal_phase_truth_rad": {
+        "maximum": 0.07915696202491143,
+        "median": 0.07915696202491143,
+        "minimum": 0.07915696202491143
+      },
+      "used_crossing_count": {
+        "maximum": 18432,
+        "median": 18432,
+        "minimum": 18432
+      },
+      "welch_segment_count": 8,
+      "welch_segment_length_events": 4096,
+      "worker_total_wallclock_s": {
+        "maximum": 47.355329193000216,
+        "median": 47.355329193000216,
+        "minimum": 47.355329193000216
+      },
+      "wrdata_parse_wallclock_s": {
+        "maximum": 1.8119281600011163,
+        "median": 1.8119281600011163,
+        "minimum": 1.8119281600011163
+      }
+    },
+    {
+      "bin_spacing_hz": {
+        "maximum": 292969.9913397393,
+        "median": 292969.9913397393,
+        "minimum": 292969.9913397393
+      },
+      "discarded_trailing_crossings": {
+        "maximum": 6335,
+        "median": 6335,
+        "minimum": 6335
+      },
+      "enbw_hz": {
+        "maximum": 439454.98700960906,
+        "median": 439454.98700960906,
+        "minimum": 439454.98700960906
+      },
+      "extraction_vs_simulator_phase_truth": {
+        "phase_error_max_abs_rad": {
+          "maximum": 6.277376766311571e-05,
+          "median": 6.277376766311571e-05,
+          "minimum": 6.277376766311571e-05
+        },
+        "phase_error_rms_rad": {
+          "maximum": 1.0040665704654249e-05,
+          "median": 1.0040665704654249e-05,
+          "minimum": 1.0040665704654249e-05
+        },
+        "psd_ratio_db_max_abs": {
+          "maximum": 0.006221383103347026,
+          "median": 0.006221383103347026,
+          "minimum": 0.006221383103347026
+        },
+        "psd_ratio_db_median": {
+          "maximum": 9.758914951698379e-05,
+          "median": 9.758914951698379e-05,
+          "minimum": 9.758914951698379e-05
+        }
+      },
+      "fitted_carrier_hz": {
+        "maximum": 2400010169.0551443,
+        "median": 2400010169.0551443,
+        "minimum": 2400010169.0551443
+      },
+      "lowest_usable_offset_hz": {
+        "maximum": 1171879.9653589572,
+        "median": 1171879.9653589572,
+        "minimum": 1171879.9653589572
+      },
+      "maximum_child_rss_bytes": {
+        "maximum": 260284416,
+        "median": 260284416,
+        "minimum": 260284416
+      },
+      "minimum_usable_bin": 4,
+      "ngspice_and_ascii_export_wallclock_s": {
+        "maximum": 102.0483102490034,
+        "median": 102.0483102490034,
+        "minimum": 102.0483102490034
+      },
+      "ngspice_returncode": 0,
+      "observed_crossing_count": {
+        "maximum": 43199,
+        "median": 43199,
+        "minimum": 43199
+      },
+      "phase_and_psd_wallclock_s": {
+        "maximum": 0.1914123489987105,
+        "median": 0.1914123489987105,
+        "minimum": 0.1914123489987105
+      },
+      "pipeline_l_at_lowest_bin_db_per_hz": {
+        "maximum": -88.24601047137594,
+        "median": -88.24601047137594,
+        "minimum": -88.24601047137594
+      },
+      "pipeline_l_interpretation": "behavioral injector/pipeline telemetry only; not physical oscillator PN",
+      "process_wallclock_s": {
+        "maximum": 107.59388466199744,
+        "median": 107.59388466199744,
+        "minimum": 107.59388466199744
+      },
+      "repeat_artifacts": [
+        {
+          "bin_spacing_hz": 292969.9913397393,
+          "enbw_hz": 439454.98700960906,
+          "extraction_vs_simulator_phase_truth": {
+            "phase_error_max_abs_rad": 6.277376766311571e-05,
+            "phase_error_rms_rad": 1.0040665704654249e-05,
+            "psd_ratio_db_band_first_bin": 4,
+            "psd_ratio_db_band_last_bin": 819,
+            "psd_ratio_db_max_abs": 0.006221383103347026,
+            "psd_ratio_db_median": 9.758914951698379e-05
+          },
+          "fitted_carrier_hz": 2400010169.0551443,
+          "lowest_usable_offset_hz": 1171879.9653589572,
+          "named_offset_bins": [
+            {
+              "actual_hz": 1171879.9653589572,
+              "bin": 4,
+              "mismatch_percent": 17.18799653589571,
+              "requested_hz": 1000000.0,
+              "status": "available",
+              "within_candidate_five_percent": false
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 100000.0,
+              "status": "unavailable"
+            },
+            {
+              "diagnostic": "requested offset lies outside the admissible bin range",
+              "requested_hz": 10000.0,
+              "status": "unavailable"
+            }
+          ],
+          "observed_crossing_count": 43199,
+          "pipeline_l_at_lowest_bin_db_per_hz": -88.24601047137594,
+          "resolved_deck_sha256": "fe4e7ad68755bf0b649624e2b44003eb8911e2f166049e20bdcf6b990a24466a",
+          "terminal_phase_truth_rad": -0.40141372056467367,
+          "used_crossing_count": 36864,
+          "waveform": {
+            "bytes": 339395176,
+            "observed_timestep_s": {
+              "maximum": 1.0416618675073265e-11,
+              "median": 4.16666666582877e-12,
+              "minimum": 9.201149499434014e-17
+            },
+            "retained_after_summary": false,
+            "row_count": 4465725,
+            "sha256": "ed893a69aa24b4143be24cc6efc35ff29842c8787260b9f4b53a3b430df7edb5",
+            "time_start_s": 2.083333333333333e-13,
+            "time_stop_s": 1.8e-05
+          }
+        }
+      ],
+      "repeat_count": 1,
+      "resolved_deck_sha256": "fe4e7ad68755bf0b649624e2b44003eb8911e2f166049e20bdcf6b990a24466a",
+      "status": "pass",
+      "stop_s": 1.8e-05,
+      "terminal_phase_truth_rad": {
+        "maximum": -0.40141372056467367,
+        "median": -0.40141372056467367,
+        "minimum": -0.40141372056467367
+      },
+      "used_crossing_count": {
+        "maximum": 36864,
+        "median": 36864,
+        "minimum": 36864
+      },
+      "welch_segment_count": 8,
+      "welch_segment_length_events": 8192,
+      "worker_total_wallclock_s": {
+        "maximum": 106.23703969099734,
+        "median": 106.23703969099734,
+        "minimum": 106.23703969099734
+      },
+      "wrdata_parse_wallclock_s": {
+        "maximum": 3.9973170929952175,
+        "median": 3.9973170929952175,
+        "minimum": 3.9973170929952175
+      }
+    }
+  ],
+  "runtime": {
+    "benchmark_script_sha256": "98f50c3f5a07e63fcc6117c7a160adad1928589e1bbf546a325f7ca1e4ef9366",
+    "cpu_model": "AMD EPYC 7B12",
+    "machine": "x86_64",
+    "ngspice_path": "/home/specialpedrito/.local/bin/ngspice",
+    "ngspice_sha256": "c0b252f4b91a030abf210062e8383975786bfb6d0718e064a3b2265e62310be7",
+    "ngspice_version_full": "******\n** ngspice-46 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2025, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Tue Aug 11 11:54:45 UTC 2026\n**\n** XSPICE extensions included\n** Relevant compilation options (refer to user's manual):\n** OpenMP multithreading for BSIM3, BSIM4 enabled\n** X11 interface not compiled into ngspice\n**\n******\n",
+    "numpy": "2.4.6",
+    "phase_noise_script_sha256": "36d98fb8e47290eb553c266560bf372b8a2c4822938cd7027d43167b9f54a7df",
+    "platform": "Linux-6.1.0-52-cloud-amd64-x86_64-with-glibc2.36",
+    "python": "3.11.2",
+    "scipy": "1.17.1",
+    "template_path": "/home/specialpedrito/simra/openada-wt/pn-method/evaluation/pn-methodology/behavioral-noisy-oscillator.cir",
+    "template_sha256": "886fd89f9696aaf6cb1a87a4e6d866a41ddb77474605263b0f061fefe7ce292a"
+  },
+  "status": "pass"
+}

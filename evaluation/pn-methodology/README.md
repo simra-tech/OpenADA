@@ -28,6 +28,7 @@ From the repository root:
 ```bash
 python3 -m pip install -r evaluation/pn-methodology/requirements.txt
 python3 evaluation/pn-methodology/test_phase_noise.py
+python3 evaluation/pn-methodology/test_benchmark.py
 python3 evaluation/pn-methodology/phase_noise.py self-test \
   --output evaluation/pn-methodology/synthetic-closure.json
 ```
@@ -79,6 +80,32 @@ A valid research estimate emits the source digest, exact crossing/phase/Welch
 ledger, requested and actual bins, phase density, statistical interval, jitter,
 and Allan rows. It still does not establish the missing physical transient-noise
 model, stationarity, spur, systematic-uncertainty, or owner-ratification gates.
+
+## Reproduce the cost and capability evidence
+
+On a host with ngspice-46 on `PATH`:
+
+```bash
+python3 evaluation/pn-methodology/benchmark.py synthetic \
+  --repeats 3 \
+  --output evaluation/pn-methodology/cost-scaling.json
+python3 evaluation/pn-methodology/benchmark.py probes \
+  --output evaluation/pn-methodology/ngspice-capability-probes.json
+python3 evaluation/pn-methodology/benchmark.py ngspice \
+  --repeats 1 \
+  --timeout 600 \
+  --output evaluation/pn-methodology/ngspice-behavioral-cost.json
+```
+
+The ngspice command has a hard per-run subprocess timeout. If the documented
+container fallback is used instead, wrap the entire Docker invocation in the
+required outer `timeout` as well. Full results and their claim boundaries are
+summarized in [`cost-results.md`](cost-results.md).
+
+`behavioral-noisy-oscillator.cir` is a PDK-free pipeline/runtime specimen. It
+integrates an explicitly authored TRNOISE frequency-error source, saves phase
+truth, and emits a carrier. It is intentionally not autonomous and cannot
+stand in for a physical transistor oscillator or validate compact-model noise.
 
 ## Scope limits
 
