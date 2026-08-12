@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/testbench-oracle-comparison-v1.schema.json",
+  "title": "Simra testbench oracle comparison v1",
+  "type": "object",
+  "required": ["schema", "status", "corner_match", "metrics", "validity", "summary", "extensions"],
+  "properties": {
+    "schema": {"const": "simra.testbench-oracle-comparison/v1"},
+    "status": {"$ref": "#/$defs/status"},
+    "corner_match": {"type": "boolean"},
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/metric"}
+    },
+    "validity": {"$ref": "#/$defs/validityCounts"},
+    "summary": {"$ref": "#/$defs/summary"},
+    "extensions": {"$ref": "#/$defs/emptyObject"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "emptyObject": {
+      "type": "object",
+      "maxProperties": 0,
+      "additionalProperties": false
+    },
+    "status": {"enum": ["PASS", "FAIL", "UNKNOWN"]},
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,119}$"
+    },
+    "limit": {
+      "type": "object",
+      "required": ["op", "value", "unit"],
+      "properties": {
+        "op": {"enum": ["<=", ">="]},
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 64}
+      },
+      "additionalProperties": false
+    },
+    "missing": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "scalarDetails": {
+      "type": "object",
+      "required": ["observed", "oracle", "absolute_error"],
+      "properties": {
+        "observed": {"type": "number"},
+        "oracle": {"type": "number"},
+        "absolute_error": {"type": "number", "minimum": 0},
+        "denominator_floor": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "curveDetails": {
+      "type": "object",
+      "required": ["point_count", "worst_index", "worst_x", "absolute_error"],
+      "properties": {
+        "point_count": {"type": "integer", "minimum": 1},
+        "worst_index": {"type": "integer", "minimum": 0},
+        "worst_x": {"type": "number"},
+        "absolute_error": {"type": "number", "minimum": 0},
+        "absolute_guard": {"type": "number", "exclusiveMinimum": 0},
+        "denominator_floor": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "mismatchDetails": {
+      "type": "object",
+      "required": ["point_count", "worst_index", "observed_fraction", "oracle_fraction", "denominator_floor"],
+      "properties": {
+        "point_count": {"type": "integer", "minimum": 1},
+        "worst_index": {"type": "integer", "minimum": 0},
+        "observed_fraction": {"type": "number", "minimum": 0},
+        "oracle_fraction": {"type": "number", "minimum": 0},
+        "denominator_floor": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "complianceDetails": {
+      "type": "object",
+      "required": ["lo_v", "hi_v"],
+      "properties": {
+        "lo_v": {"type": "number", "minimum": 0},
+        "hi_v": {"type": "number", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "signedDetails": {
+      "type": "object",
+      "required": ["eligible", "matching_sign", "zero_epsilon"],
+      "properties": {
+        "eligible": {"type": "integer", "minimum": 1},
+        "matching_sign": {"type": "integer", "minimum": 0},
+        "zero_epsilon": {"type": "number", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "validityCounts": {
+      "type": "object",
+      "required": ["oracle_invalid", "detected_invalid", "observed_valid", "false_valid", "missing_or_unknown"],
+      "properties": {
+        "oracle_invalid": {"type": "integer", "minimum": 0},
+        "detected_invalid": {"type": "integer", "minimum": 0},
+        "observed_valid": {"type": "integer", "minimum": 0},
+        "false_valid": {"type": "integer", "minimum": 0},
+        "missing_or_unknown": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "completenessDetails": {
+      "type": "object",
+      "required": ["present", "required", "missing"],
+      "properties": {
+        "present": {"type": "integer", "minimum": 0},
+        "required": {"type": "integer", "minimum": 1},
+        "missing": {"$ref": "#/$defs/missing"}
+      },
+      "additionalProperties": false
+    },
+    "lineageDetails": {
+      "type": "object",
+      "required": ["covered", "required", "missing"],
+      "properties": {
+        "covered": {"type": "integer", "minimum": 0},
+        "required": {"type": "integer", "minimum": 1},
+        "missing": {"$ref": "#/$defs/missing"}
+      },
+      "additionalProperties": false
+    },
+    "details": {
+      "oneOf": [
+        {"$ref": "#/$defs/emptyObject"},
+        {"$ref": "#/$defs/scalarDetails"},
+        {"$ref": "#/$defs/curveDetails"},
+        {"$ref": "#/$defs/mismatchDetails"},
+        {"$ref": "#/$defs/complianceDetails"},
+        {"$ref": "#/$defs/signedDetails"},
+        {"$ref": "#/$defs/validityCounts"},
+        {"$ref": "#/$defs/completenessDetails"},
+        {"$ref": "#/$defs/lineageDetails"}
+      ]
+    },
+    "metric": {
+      "type": "object",
+      "required": ["name", "kind", "required", "status", "value", "unit", "limit", "reason", "details"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {
+          "enum": [
+            "scalar",
+            "curve",
+            "mismatch_curve",
+            "compliance_endpoints",
+            "signed_response_coverage",
+            "invalid_detection_recall",
+            "false_valid_rate",
+            "completeness",
+            "grading_runtime",
+            "lineage_presence"
+          ]
+        },
+        "required": {"type": "boolean"},
+        "status": {"$ref": "#/$defs/status"},
+        "value": {"type": ["number", "null"]},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 64},
+        "limit": {"$ref": "#/$defs/limit"},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 2048},
+        "details": {"$ref": "#/$defs/details"}
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": ["pass", "fail", "unknown", "required", "required_pass", "required_fail", "required_unknown"],
+      "properties": {
+        "pass": {"type": "integer", "minimum": 0},
+        "fail": {"type": "integer", "minimum": 0},
+        "unknown": {"type": "integer", "minimum": 0},
+        "required": {"type": "integer", "minimum": 0},
+        "required_pass": {"type": "integer", "minimum": 0},
+        "required_fail": {"type": "integer", "minimum": 0},
+        "required_unknown": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  }
+}

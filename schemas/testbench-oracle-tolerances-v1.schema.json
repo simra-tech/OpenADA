@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simra-tech/OpenADA/main/schemas/testbench-oracle-tolerances-v1.schema.json",
+  "title": "Simra testbench oracle tolerances v1",
+  "type": "object",
+  "required": ["schema", "metrics", "lineage_required", "extensions"],
+  "properties": {
+    "schema": {"const": "simra.testbench-oracle-tolerances/v1"},
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {"$ref": "#/$defs/metric"}
+    },
+    "lineage_required": {"type": "boolean"},
+    "extensions": {"$ref": "#/$defs/emptyObject"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "emptyObject": {
+      "type": "object",
+      "maxProperties": 0,
+      "additionalProperties": false
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,119}$"
+    },
+    "fieldName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^\\S+$"
+    },
+    "names": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/fieldName"}
+    },
+    "limit": {
+      "type": "object",
+      "required": ["op", "value", "unit"],
+      "properties": {
+        "op": {"enum": ["<=", ">="]},
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 64}
+      },
+      "additionalProperties": false
+    },
+    "absoluteError": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {"kind": {"const": "absolute"}},
+      "additionalProperties": false
+    },
+    "fractionAbsoluteError": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {"kind": {"const": "fraction_absolute"}},
+      "additionalProperties": false
+    },
+    "relativeError": {
+      "type": "object",
+      "required": ["kind", "denominator_floor"],
+      "properties": {
+        "kind": {"const": "relative"},
+        "denominator_floor": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "guardedRelativeError": {
+      "type": "object",
+      "required": ["kind", "absolute_guard"],
+      "properties": {
+        "kind": {"const": "guarded_relative"},
+        "absolute_guard": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "scalarError": {
+      "oneOf": [
+        {"$ref": "#/$defs/absoluteError"},
+        {"$ref": "#/$defs/fractionAbsoluteError"},
+        {"$ref": "#/$defs/relativeError"}
+      ]
+    },
+    "curveError": {
+      "oneOf": [
+        {"$ref": "#/$defs/absoluteError"},
+        {"$ref": "#/$defs/relativeError"},
+        {"$ref": "#/$defs/guardedRelativeError"}
+      ]
+    },
+    "scalar": {
+      "type": "object",
+      "required": ["name", "kind", "required", "limit", "observed", "oracle", "error"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "scalar"},
+        "required": {"type": "boolean"},
+        "limit": {"$ref": "#/$defs/limit"},
+        "observed": {"$ref": "#/$defs/fieldName"},
+        "oracle": {"$ref": "#/$defs/fieldName"},
+        "error": {"$ref": "#/$defs/scalarError"}
+      },
+      "additionalProperties": false
+    },
+    "curve": {
+      "type": "object",
+      "required": ["name", "kind", "required", "limit", "observed", "oracle", "x", "y", "error"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "curve"},
+        "required": {"type": "boolean"},
+        "limit": {"$ref": "#/$defs/limit"},
+        "observed": {"$ref": "#/$defs/fieldName"},
+        "oracle": {"$ref": "#/$defs/fieldName"},
+        "x": {"$ref": "#/$defs/fieldName"},
+        "y": {"$ref": "#/$defs/fieldName"},
+        "error": {"$ref": "#/$defs/curveError"}
+      },
+      "additionalProperties": false
+    },
+    "mismatchCurve": {
+      "type": "object",
+      "required": ["name", "kind", "required", "limit", "observed_source", "observed_sink", "oracle_source", "oracle_sink", "denominator_floor"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "mismatch_curve"},
+        "required": {"type": "boolean"},
+        "limit": {"$ref": "#/$defs/limit"},
+        "observed_source": {"$ref": "#/$defs/fieldName"},
+        "observed_sink": {"$ref": "#/$defs/fieldName"},
+        "oracle_source": {"$ref": "#/$defs/fieldName"},
+        "oracle_sink": {"$ref": "#/$defs/fieldName"},
+        "denominator_floor": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "complianceEndpoints": {
+      "type": "object",
+      "required": ["name", "kind", "required", "limit", "observed", "oracle"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "compliance_endpoints"},
+        "required": {"type": "boolean"},
+        "limit": {"$ref": "#/$defs/limit"},
+        "observed": {"$ref": "#/$defs/fieldName"},
+        "oracle": {"$ref": "#/$defs/fieldName"}
+      },
+      "additionalProperties": false
+    },
+    "signedResponseCoverage": {
+      "type": "object",
+      "required": ["name", "kind", "required", "limit", "observed", "oracle", "x", "y", "zero_epsilon"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "signed_response_coverage"},
+        "required": {"type": "boolean"},
+        "limit": {"$ref": "#/$defs/limit"},
+        "observed": {"$ref": "#/$defs/fieldName"},
+        "oracle": {"$ref": "#/$defs/fieldName"},
+        "x": {"$ref": "#/$defs/fieldName"},
+        "y": {"$ref": "#/$defs/fieldName"},
+        "zero_epsilon": {"type": "number", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "invalidRecallMetric": {
+      "type": "object",
+      "required": ["name", "kind", "required", "limit", "denominator"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "invalid_detection_recall"},
+        "required": {"type": "boolean"},
+        "limit": {"$ref": "#/$defs/limit"},
+        "denominator": {"const": "oracle_invalid"}
+      },
+      "additionalProperties": false
+    },
+    "falseValidMetric": {
+      "type": "object",
+      "required": ["name", "kind", "required", "limit", "denominator"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "false_valid_rate"},
+        "required": {"type": "boolean"},
+        "limit": {"$ref": "#/$defs/limit"},
+        "denominator": {"const": "submitted_valid"}
+      },
+      "additionalProperties": false
+    },
+    "coverageMetric": {
+      "type": "object",
+      "required": ["name", "kind", "required", "limit", "observables", "conditions"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"enum": ["completeness", "lineage_presence"]},
+        "required": {"type": "boolean"},
+        "limit": {"$ref": "#/$defs/limit"},
+        "observables": {"$ref": "#/$defs/names"},
+        "conditions": {"$ref": "#/$defs/names"}
+      },
+      "additionalProperties": false
+    },
+    "runtimeMetric": {
+      "type": "object",
+      "required": ["name", "kind", "required", "limit"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "grading_runtime"},
+        "required": {"type": "boolean"},
+        "limit": {"$ref": "#/$defs/limit"}
+      },
+      "additionalProperties": false
+    },
+    "metric": {
+      "oneOf": [
+        {"$ref": "#/$defs/scalar"},
+        {"$ref": "#/$defs/curve"},
+        {"$ref": "#/$defs/mismatchCurve"},
+        {"$ref": "#/$defs/complianceEndpoints"},
+        {"$ref": "#/$defs/signedResponseCoverage"},
+        {"$ref": "#/$defs/invalidRecallMetric"},
+        {"$ref": "#/$defs/falseValidMetric"},
+        {"$ref": "#/$defs/coverageMetric"},
+        {"$ref": "#/$defs/runtimeMetric"}
+      ]
+    }
+  }
+}

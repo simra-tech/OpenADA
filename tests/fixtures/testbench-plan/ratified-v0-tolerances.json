@@ -1,0 +1,125 @@
+{
+  "schema": "simra.testbench-oracle-tolerances/v1",
+  "metrics": [
+    {
+      "name": "signed_response_coverage",
+      "kind": "signed_response_coverage",
+      "required": true,
+      "limit": {"op": ">=", "value": 0.9, "unit": "frac"},
+      "observed": "signed_charge_vs_phase_offset",
+      "oracle": "signed_charge_vs_phase_offset",
+      "x": "phase_offset_s",
+      "y": "charge_c",
+      "zero_epsilon": 1e-15
+    },
+    {
+      "name": "offset_error_vs_oracle",
+      "kind": "scalar",
+      "required": true,
+      "limit": {"op": "<=", "value": 2.5e-11, "unit": "s"},
+      "observed": "zero_cross_offset_s",
+      "oracle": "zero_cross_offset_s",
+      "error": {"kind": "absolute"}
+    },
+    {
+      "name": "local_gain_error",
+      "kind": "scalar",
+      "required": true,
+      "limit": {"op": "<=", "value": 0.15, "unit": "frac"},
+      "observed": "local_gain_a",
+      "oracle": "local_gain_a",
+      "error": {"kind": "relative", "denominator_floor": 1e-12}
+    },
+    {
+      "name": "src_curve_error",
+      "kind": "curve",
+      "required": true,
+      "limit": {"op": "<=", "value": 0.05, "unit": "frac"},
+      "observed": "src_current_vs_vcp",
+      "oracle": "src_current_vs_vcp",
+      "x": "v",
+      "y": "a",
+      "error": {"kind": "guarded_relative", "absolute_guard": 5e-10}
+    },
+    {
+      "name": "snk_curve_error",
+      "kind": "curve",
+      "required": true,
+      "limit": {"op": "<=", "value": 0.05, "unit": "frac"},
+      "observed": "snk_current_vs_vcp",
+      "oracle": "snk_current_vs_vcp",
+      "x": "v",
+      "y": "a",
+      "error": {"kind": "guarded_relative", "absolute_guard": 5e-10}
+    },
+    {
+      "name": "mismatch_curve_error",
+      "kind": "mismatch_curve",
+      "required": true,
+      "limit": {"op": "<=", "value": 0.03, "unit": "frac_abs"},
+      "observed_source": "pulse_charge_src_c",
+      "observed_sink": "pulse_charge_snk_c",
+      "oracle_source": "pulse_charge_src_c",
+      "oracle_sink": "pulse_charge_snk_c",
+      "denominator_floor": 1e-18
+    },
+    {
+      "name": "compliance_endpoint_error",
+      "kind": "compliance_endpoints",
+      "required": true,
+      "limit": {"op": "<=", "value": 0.025, "unit": "V"},
+      "observed": "compliance_endpoints_v",
+      "oracle": "compliance_endpoints_v"
+    },
+    {
+      "name": "leak_error",
+      "kind": "scalar",
+      "required": true,
+      "limit": {"op": "<=", "value": 5e-10, "unit": "A"},
+      "observed": "leak_worst_a",
+      "oracle": "leak_worst_a",
+      "error": {"kind": "absolute"}
+    },
+    {
+      "name": "invalid_detection_recall",
+      "kind": "invalid_detection_recall",
+      "required": true,
+      "limit": {"op": ">=", "value": 0.8, "unit": "frac"},
+      "denominator": "oracle_invalid"
+    },
+    {
+      "name": "false_valid_rate",
+      "kind": "false_valid_rate",
+      "required": true,
+      "limit": {"op": "<=", "value": 0.1, "unit": "frac"},
+      "denominator": "submitted_valid"
+    },
+    {
+      "name": "completeness",
+      "kind": "completeness",
+      "required": true,
+      "limit": {"op": ">=", "value": 0.95, "unit": "frac"},
+      "observables": [
+        "src_current_vs_vcp",
+        "snk_current_vs_vcp",
+        "compliance_endpoints_v",
+        "leak_worst_a",
+        "pulse_charge_src_c",
+        "pulse_charge_snk_c",
+        "mismatch_worst_frac",
+        "signed_charge_vs_phase_offset",
+        "zero_cross_offset_s",
+        "local_gain_a"
+      ],
+      "conditions": ["tt_27c_1v20"]
+    },
+    {
+      "name": "grading_runtime",
+      "kind": "grading_runtime",
+      "required": true,
+      "limit": {"op": "<=", "value": 900, "unit": "s"}
+    }
+  ],
+  "lineage_required": true,
+  "extensions": {}
+}
